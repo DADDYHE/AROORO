@@ -66,8 +66,8 @@ class LoginManager {
         this.app.globalData.isLogout = false;
       }
 
-      // 清除本地存储的退出状态
-      centralIdentityManager.setLogoutStatus(false);
+      // 注意：登录时不在这里设置状态
+      // 状态会在后续登录流程中自动设置
 
       // 检查是否已有有效的登录状态
       if (this.checkLoginStatusValid()) {
@@ -1045,9 +1045,8 @@ class LoginManager {
       // 清除UserSig缓存
       this.userSigManager.clearUserSigCache();
 
-      // 清除本地存储的状态
-      centralIdentityManager.setLogoutStatus(true);
-      centralIdentityManager.remove('loginState');
+      // 使用 CentralIdentityManager 的 logout 方法清除状态
+      centralIdentityManager.logout();
 
       // 清除性能数据
       this.performanceData = {
