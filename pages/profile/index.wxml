@@ -1,0 +1,285 @@
+<view class="page-container">
+  <!-- 身份切换加载遮罩层 -->
+  <view class="role-switch-overlay" wx:if="{{isSwitchingRole}}">
+    <view class="overlay-content">
+      <view class="loading-spinner-large"></view>
+      <text class="overlay-text">切换身份中...</text>
+      <text class="overlay-subtext">{{switchingRoleText}}</text>
+    </view>
+  </view>
+
+  <!-- 模糊背景层 - 当登录表单显示时显示 -->
+  <view class="blur-background" wx:if="{{showLoginForm}}"></view>
+  <!-- 头部区域 - 按照首页样式调整 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      
+      <!-- 用户信息展示区域 - 无论用户信息是否完整都显示 -->
+      <view class="user-info {{isLoggedIn ? 'logged-in' : ''}}">
+        <view class="avatar-container" wx:if="{{isLoggedIn}}">
+          <image 
+            class="avatar-image" 
+            wx:if="{{ userRole === 'host' ? (hostProfile && hostProfile.avatarUrl) : (userInfo && userInfo.avatarUrl) }}"
+            src="{{ userRole === 'host' ? hostProfile.avatarUrl : userInfo.avatarUrl }}" 
+            binderror="onAvatarLoadError"
+            mode="aspectFill"
+          ></image>
+          <image class="svg-avatar" wx:else src="/images/default-avatar.svg" mode="aspectFit"></image>
+        </view>
+        <!-- 未登录状态 - 与登录状态使用相同的头像容器结构 -->
+        <view 
+          class="avatar-container" 
+          wx:if="{{!isLoggedIn && !isLoading && !showLoginForm}}"
+          bindtap="onLoginButtonTap"
+          style="cursor: pointer;"
+        >
+          <image class="svg-avatar" src="/images/default-avatar.svg" mode="aspectFit"></image>
+        </view>
+        <!-- 未登录状态下的文字提示，与登录状态下的文字位置一致 -->
+        <view class="user-details" wx:if="{{!isLoggedIn && !isLoading && !showLoginForm}}">
+          <text class="welcome">点击头像登录</text>
+        </view>
+        
+        <!-- 登录表单 - 获取用户头像和昵称，必须完成的流程 -->
+        <view class="login-form" wx:if="{{showLoginForm}}">
+          <!-- 头像选择 - 直接放在最顶部 -->
+          <view class="form-item">
+            <view class="avatar-upload-container">
+              <button 
+                class="avatar-upload-btn" 
+                open-type="chooseAvatar" 
+                bindchooseavatar="onChooseAvatar"
+              >
+                <image class="avatar-preview" src="{{avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill"></image>
+                <view class="upload-text">点击选择头像</view>
+              </button>
+            </view>
+          </view>
+          
+          <!-- 昵称输入 -->
+          <view class="form-item nickname-form-item">
+            <input 
+              class="nickname-input" 
+              type="nickname" 
+              placeholder="点击输入昵称" 
+              value="{{nickName}}" 
+              bindinput="onNicknameInput"
+            />
+          </view>
+          
+          <!-- 登录和取消按钮 - 同一行显示 -->
+          <view class="buttons-container">
+            <button 
+              class="cancel-btn" 
+              bindtap="onCancelLogin"
+            >
+              取消
+            </button>
+            <button 
+              class="login-submit-btn" 
+              bindtap="onSubmitLogin" 
+              disabled="{{!avatarUrl || !nickName}}"
+            >
+              完成登录
+            </button>
+          </view>
+        </view>
+        
+        <!-- 加载状态 -->
+        <view class="loading-container" wx:if="{{isLoading}}">
+          <view class="loading-spinner"></view>
+          <text class="loading-text">加载中...</text>
+        </view>
+        <view class="user-details" wx:if="{{isLoggedIn}}">
+          <text class="welcome">{{userRole === 'host' ? (hostProfile && hostProfile.hostName ? hostProfile.hostName : '未设置寄养家庭名称') : (userInfo && userInfo.nickName ? userInfo.nickName : '未设置昵称')}}</text>
+          <view class="role-container">
+            <text class="role-tag">{{ userRole === 'owner' ? '宠物主人' : '寄养家庭' }}</text>
+            <button class="switch-role-btn" bindtap="switchRole">
+              切换角色
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="page-content">
+    <!-- 用户信息不完整时，显示补全信息的提示 -->
+    <view class="complete-info-section" wx:if="{{ isLoggedIn && ( !userInfo.avatarUrl || !userInfo.nickName || userInfo.nickName === '未知用户') }}">
+      <view class="card">
+        <view class="form-item" bindtap="onCompleteInfo">
+          <view class="form-label">完善个人信息</view>
+          <view class="form-value">
+            <view class="picker-trigger">
+              <text class="picker-value">点击完善头像和昵称</text>
+              <text class="picker-arrow">></text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="menu">
+      <view class="card">
+        <!-- 我的订单 -->
+        <view class="form-item" bindtap="goToOrders">
+          <view class="form-label">我的订单</view>
+          <view class="form-value">
+            <view class="picker-trigger">
+              <text class="picker-arrow">></text>
+            </view>
+          </view>
+        </view>
+        <!-- 我的宠物 -->
+        <view class="form-item" bindtap="goToPets" wx:if="{{ userRole === 'owner' }}">
+          <view class="form-label">我的宠物</view>
+          <view class="form-value">
+            <view class="picker-trigger">
+              <text class="picker-arrow">></text>
+            </view>
+          </view>
+        </view>
+        <!-- 我的寄养服务 -->
+        <view class="form-item" bindtap="goToHostingServices" wx:if="{{ userRole === 'host' }}">
+          <view class="form-label">我的寄养服务</view>
+          <view class="form-value">
+            <view class="picker-trigger">
+              <text class="picker-arrow">></text>
+            </view>
+          </view>
+        </view>
+        <!-- 我的评价 -->
+        <view class="form-item" bindtap="goToReviews">
+          <view class="form-label">我的评价</view>
+          <view class="form-value">
+            <view class="picker-trigger">
+              <text class="picker-arrow">></text>
+            </view>
+          </view>
+        </view>
+        <!-- 用户设置 -->
+        <view class="form-item" bindtap="goToSettings">
+          <view class="form-label">用户设置</view>
+          <view class="form-value">
+            <view class="picker-trigger">
+              <text class="picker-arrow">></text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="stats" wx:if="{{ userRole === 'owner' }}">
+      <view class="card">
+        <!-- 已寄养次数 -->
+        <view class="form-item">
+          <view class="form-label">已寄养次数</view>
+          <view class="form-value">
+            <text class="form-value-text">{{ stats.bookingCount }}</text>
+          </view>
+        </view>
+        <!-- 累计消费 -->
+        <view class="form-item">
+          <view class="form-label">累计消费</view>
+          <view class="form-value">
+            <text class="form-value-text">¥{{ stats.totalSpent }}</text>
+          </view>
+        </view>
+        <!-- 平均评分 -->
+        <view class="form-item">
+          <view class="form-label">平均评分</view>
+          <view class="form-value">
+            <text class="form-value-text">{{ stats.avgRating }}分</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="stats" wx:if="{{ userRole === 'host' }}">
+      <view class="card">
+        <!-- 已接待次数 -->
+        <view class="form-item">
+          <view class="form-label">已接待次数</view>
+          <view class="form-value">
+            <text class="form-value-text">{{ stats.bookingCount }}</text>
+          </view>
+        </view>
+        <!-- 累计收入 -->
+        <view class="form-item">
+          <view class="form-label">累计收入</view>
+          <view class="form-value">
+            <text class="form-value-text">¥{{ stats.totalIncome }}</text>
+          </view>
+        </view>
+        <!-- 平均评分 -->
+        <view class="form-item">
+          <view class="form-label">平均评分</view>
+          <view class="form-value">
+            <text class="form-value-text">{{ stats.avgRating }}分</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="quick-actions" wx:if="{{ isLoggedIn }}">
+      <button 
+        class="logout-button" 
+        bindtap="logout"
+      >
+        退出登录
+      </button>
+    </view>
+  </view>
+
+  <!-- 身份选择弹窗 -->
+  <view class="role-selection-modal" wx:if="{{showRoleSelection}}">
+    <view class="modal-mask" bindtap="onCancelRoleSelection"></view>
+    <view class="modal-container">
+      <view class="modal-header">
+        <text class="modal-title">选择登录身份</text>
+        <view class="modal-close" bindtap="onCancelRoleSelection">
+          <text class="close-icon">×</text>
+        </view>
+      </view>
+      <view class="modal-body">
+        <text class="modal-description">请选择您要使用的身份登录</text>
+        <view class="role-options">
+          <view 
+            class="role-option {{selectedRole === 'owner' ? 'selected' : ''}}" 
+            data-role-type="owner"
+            bindtap="onRoleSelect"
+          >
+            <image class="role-icon" src="/images/owner-icon.svg" mode="aspectFit"></image>
+            <view class="role-info">
+              <text class="role-name">宠物主人</text>
+              <text class="role-desc">我的宠物需要寄养</text>
+            </view>
+            <view class="role-check" wx:if="{{selectedRole === 'owner'}}">
+              <text class="check-icon">✓</text>
+            </view>
+          </view>
+          <view 
+            class="role-option {{selectedRole === 'host' ? 'selected' : ''}}" 
+            data-role-type="host"
+            bindtap="onRoleSelect"
+          >
+            <image class="role-icon" src="/images/host-icon.svg" mode="aspectFit"></image>
+            <view class="role-info">
+              <text class="role-name">寄养家庭</text>
+              <text class="role-desc">我可以为宠物提供寄养服务</text>
+            </view>
+            <view class="role-check" wx:if="{{selectedRole === 'host'}}">
+              <text class="check-icon">✓</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="modal-btn cancel-btn" bindtap="onCancelRoleSelection">取消</button>
+        <button class="modal-btn confirm-btn" bindtap="onConfirmRoleSelection" disabled="{{!selectedRole}}">确认</button>
+      </view>
+    </view>
+  </view>
+</view>

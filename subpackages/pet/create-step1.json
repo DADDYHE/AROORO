@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "创建宠物档案",
+  "usingComponents": {
+    "van-field": "@vant/field/index",
+    "van-cell-group": "@vant/cell-group/index",
+    "van-button": "@vant/button/index",
+    "van-action-sheet": "@vant/action-sheet/index",
+    "custom-steps": "/components/custom-steps/index"
+  }
+}

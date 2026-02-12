@@ -1,0 +1,107 @@
+<view class="pet-detail-container">
+  <!-- 头像区域 -->
+  <view class="avatar-container" bindtap="chooseAvatar">
+    <image wx:if="{{ pet.avatarUrl }}" class="pet-avatar" src="{{ pet.avatarUrl }}" mode="aspectFill" />
+    <view wx:else class="avatar-placeholder">
+      <view class="plus-icon">+</view>
+      <text class="avatar-placeholder-text">点击上传头像照片</text>
+    </view>
+  </view>
+  
+  <!-- 内容区域 -->
+  <view class="content-area">
+    <!-- 宠物基本信息区域 -->
+    <view class="profile-section">
+      <view class="name-section">
+        <text class="title">{{ pet.name }}</text>
+      </view>
+      <text class="subtitle">{{ pet.age }}岁 · {{ pet.breed ? pet.breed : (pet.type === 'dog' ? '狗狗' : '猫咪') }}</text>
+      <van-icon name="edit" size="20rpx" color="#1989fa" class="edit-icon" bindtap="editPetInfo" />
+    </view>
+    
+    <!-- 宠物详细信息区域 -->
+    <van-cell-group class="pet-info-group">
+      <van-cell title="体重" value="{{ pet.weight }}kg" />
+      <van-cell title="品种" value="{{ pet.breed }}" />
+      <van-cell title="是否绝育" value="{{ pet.isSterilized ? '是' : '否' }}" />
+      <van-cell title="是否接种疫苗" value="{{ pet.isVaccinated ? '是' : '否' }}" />
+      <van-cell title="健康状况" value="{{ pet.healthStatus || '未填写' }}" />
+      <van-cell title="过敏史" value="{{ pet.allergies || '未填写' }}" />
+      <van-cell title="特殊需求" value="{{ pet.specialNeeds || '未填写' }}" />
+      <van-cell title="饮食习惯" value="{{ pet.dietaryHabit || '未填写' }}" />
+      <van-cell title="运动需求" value="{{ pet.exerciseNeed || '未填写' }}" />
+      <van-cell title="睡眠习惯" value="{{ pet.sleepingHabit || '未填写' }}" />
+      <van-cell title="社交行为" value="{{ pet.socialBehavior || '未填写' }}" />
+      <van-cell title="紧急联系人" value="{{ pet.emergencyContactName || '未填写' }}" />
+      <van-cell title="紧急联系电话" value="{{ pet.emergencyContactPhone || '未填写' }}" />
+      <van-cell title="紧急联系人关系" value="{{ pet.emergencyContactRelation || '未填写' }}" />
+      <van-cell title="紧急联系人备注" value="{{ pet.emergencyContactNote || '未填写' }}" />
+    </van-cell-group>
+  </view>
+  
+  <!-- 编辑宠物信息的弹窗 -->
+  <van-action-sheet
+    use-slot
+    show="{{ showEditModal }}"
+    close-on-click-action
+    cancel-text="取消"
+    bind:close="onEditModalClose"
+    bind:cancel="onEditModalClose"
+  >
+    <view class="edit-form">
+      <view class="form-item avatar-item" bindtap="chooseAvatar">
+        <text class="label">头像照片</text>
+        <view class="avatar-upload-container">
+          <image class="avatar-thumbnail" src="{{ pet.avatarUrl || '/images/default-avatar.svg' }}" mode="aspectFill" />
+          <view class="avatar-upload-overlay">
+            <van-icon name="camera" size="24rpx" color="#1989fa" />
+          </view>
+          <van-icon name="arrow" size="18rpx" color="#969799" class="arrow-icon" />
+        </view>
+      </view>
+      <view class="form-item" bindtap="editPetName">
+        <text class="label">宠物名字</text>
+        <view class="field-container">
+          <text class="field-value">{{ editData.name || '请输入宠物名字' }}</text>
+          <van-icon name="arrow" size="18rpx" color="#969799" class="arrow-icon" />
+        </view>
+      </view>
+      <view class="form-item" bindtap="editPetAge">
+        <text class="label">宠物年龄</text>
+        <view class="field-container">
+          <text class="field-value">{{ editData.age ? editData.age + '岁' : '请输入宠物年龄' }}</text>
+          <van-icon name="arrow" size="18rpx" color="#969799" class="arrow-icon" />
+        </view>
+      </view>
+      <van-button 
+        type="primary" 
+        block 
+        bindtap="savePetInfo"
+        loading="{{ saving }}"
+      >
+        保存修改
+      </van-button>
+    </view>
+  </van-action-sheet>
+
+  <!-- 更新宠物档案按钮或确认选择按钮 -->
+  <view class="update-profile-section">
+    <van-button 
+      type="primary" 
+      block 
+      bindtap="goToUpdateProfile"
+      wx:if="{{ !fromPetSelect }}"
+    >
+      更新宠物档案
+    </van-button>
+    
+    <van-button 
+      type="primary" 
+      block 
+      bindtap="confirmSelect"
+      wx:else
+    >
+      确认选择
+    </van-button>
+  </view>
+</view>

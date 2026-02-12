@@ -1,0 +1,8 @@
+<!-- TUIKit 聊天页面 -->
+<view class="chat-page">
+  <TUIChat
+    id="tui-chat"
+    currentConversationID="{{conversationID}}"
+    bind:onError="onError"
+  />
+</view>

@@ -1,0 +1,88 @@
+/* custom-tab-bar/index.wxss */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140rpx;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  padding-bottom: 40rpx;
+  box-sizing: border-box;
+}
+
+.tab-bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  border-radius: 24rpx;
+  position: relative;
+  overflow: hidden;
+  touch-action: manipulation; /* 防止双击缩放 */
+}
+
+.tab-bar-item::before {
+  content: '';
+  position: absolute;
+  top: 10rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 0;
+  background-color: #FF6B00;
+  border-radius: 24rpx;
+  transition: height 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.tab-bar-item.active::before {
+  height: 90%;
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.3);
+}
+
+.tab-bar-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-bottom: 8rpx;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-bar-text {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #666666;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-bar-item.active .tab-bar-text {
+  color: #ffffff !important;
+  font-weight: 700;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+}
+
+.tab-bar-item.active .tab-bar-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 1rpx 2rpx rgba(0, 0, 0, 0.1));
+}
+
+/* 添加平滑的切换特效 */
+.tab-bar-item {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 确保 active 状态的样式优先级更高，防止被其他样式覆盖 */
+.tab-bar-item.active {
+  /* 强制保持 active 状态的样式 */
+}

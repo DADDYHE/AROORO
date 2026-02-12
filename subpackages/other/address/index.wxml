@@ -1,0 +1,106 @@
+<view class="page-container">
+  <!-- 导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-back" bindtap="goBack">
+      <text class="nav-back-icon">←</text>
+    </view>
+    <view class="nav-title">地址管理</view>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 地址列表 -->
+  <view class="address-list">
+    <block wx:if="{{ addresses.length > 0 }}">
+      <view 
+        class="address-item {{ item.isDefault ? 'address-item-default' : '' }} {{ selectedAddressId === item._id ? 'address-item-selected' : '' }}" 
+        wx:for="{{ addresses }}" 
+        wx:key="_id"
+        bindtap="selectAddress" 
+        data-id="{{ item._id }}"
+      >
+        <view class="address-header">
+          <view class="address-name">{{ item.name }}</view>
+          <view class="address-phone">{{ item.phone }}</view>
+          <view class="address-default" wx:if="{{ item.isDefault }}">默认</view>
+        </view>
+        <view class="address-detail">{{ item.detail }}</view>
+        <view class="address-actions">
+          <text class="address-action-edit" bindtap="editAddress" data-id="{{ item._id }}">编辑</text>
+          <text class="address-action-delete" bindtap="deleteAddress" data-id="{{ item._id }}">删除</text>
+        </view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="address-empty">
+        <text class="address-empty-text">暂无地址</text>
+      </view>
+    </block>
+  </view>
+
+  <!-- 添加新地址按钮 -->
+  <view class="add-address-button-container">
+    <button class="add-address-button" bindtap="addAddress">
+      <text class="add-address-icon">+</text>
+      <text class="add-address-text">添加新地址</text>
+    </button>
+  </view>
+
+  <!-- 地址编辑弹窗 -->
+  <view class="address-popup" wx:if="{{ showEditPopup }}">
+    <view class="address-popup-mask" bindtap="closeEditPopup"></view>
+    <view class="address-popup-content">
+      <view class="address-popup-header">
+        <view class="address-popup-title">{{ editingAddress ? '编辑地址' : '添加地址' }}</view>
+        <view class="address-popup-close" bindtap="closeEditPopup">×</view>
+      </view>
+      <view class="address-popup-form">
+        <view class="form-item">
+          <view class="form-label">姓名</view>
+          <input 
+            class="form-input" 
+            placeholder="请输入姓名" 
+            value="{{ editingAddress.name || '' }}" 
+            bindinput="onNameChange"
+          />
+        </view>
+        <view class="form-item">
+          <view class="form-label">手机号</view>
+          <input 
+            class="form-input" 
+            placeholder="请输入手机号" 
+            value="{{ editingAddress.phone || '' }}" 
+            bindinput="onPhoneChange"
+            type="number"
+          />
+        </view>
+        <view class="form-item">
+          <view class="form-label">详细地址</view>
+          <view class="form-location-input">
+            <textarea
+              class="form-textarea"
+              placeholder="请输入详细地址"
+              value="{{ editingAddress.detail || '' }}"
+              bindinput="onDetailChange"
+            ></textarea>
+            <view class="form-location-button" bindtap="chooseLocation">
+              <text class="form-location-icon">📍</text>
+              <text class="form-location-text">选择位置</text>
+            </view>
+          </view>
+        </view>
+        <view class="form-item">
+          <view class="form-label">设置为默认地址</view>
+          <switch 
+            class="form-switch" 
+            checked="{{ editingAddress.isDefault || false }}" 
+            bindchange="onDefaultChange"
+          />
+        </view>
+      </view>
+      <view class="address-popup-footer">
+        <button class="address-popup-button address-popup-button-cancel" bindtap="closeEditPopup">取消</button>
+        <button class="address-popup-button address-popup-button-save" bindtap="saveAddress">保存</button>
+      </view>
+    </view>
+  </view>
+</view>

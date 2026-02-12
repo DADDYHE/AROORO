@@ -1,0 +1,253 @@
+/* 创建宠物档案第二步样式 - 巴黎世家风格 */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #fafafa;
+}
+
+/* 头部区域 */
+.page-header {
+  padding: 60rpx 40rpx;
+  background-color: #fafafa;
+  position: relative;
+  border-bottom: 1rpx solid #f0f0f0;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
+}
+
+.header-content {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 品牌标识 */
+.brand-logo {
+  font-size: 52rpx;
+  font-weight: 900;
+  letter-spacing: 14rpx;
+  text-align: left;
+  margin-bottom: 50rpx;
+  color: #000000;
+  text-transform: uppercase;
+  font-family: 'Arial Black', 'Arial Bold', sans-serif;
+  line-height: 1;
+}
+
+/* 页面标题 */
+.page-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  letter-spacing: 6rpx;
+  text-align: left;
+  color: #000000;
+  text-transform: uppercase;
+  font-family: 'Arial Black', 'Arial Bold', sans-serif;
+  line-height: 1.2;
+}
+
+.page-content {
+  flex: 1;
+  padding: 20rpx;
+  padding-bottom: 160rpx;
+}
+
+/* 步骤指示器 */
+.steps-container {
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background-color: #ffffff;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.06);
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #ffffff;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 24rpx;
+  padding: 60rpx 40rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.06);
+  transition: all 0.4s ease;
+}
+
+.card:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 3rpx 15rpx rgba(0, 0, 0, 0.04);
+}
+
+.card-title {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 6rpx;
+  line-height: 1;
+  margin-bottom: 40rpx;
+}
+
+/* 表单样式 */
+.form-group {
+  margin-top: 20rpx;
+}
+
+.form-field {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+/* 底部按钮 */
+.footer {
+  margin-top: auto;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20rpx;
+  width: 100%;
+  padding: 0;
+}
+
+/* 黑色主按钮样式 */
+page .van-button--primary {
+  background-color: #000000 !important;
+  border: none !important;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+}
+
+page .van-button--primary:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+}
+
+/* 引入自定义步骤指示器样式 */
+@import "/components/custom-steps/custom-steps.wxss";
+
+/* 步骤指示器容器样式优化，确保完全显示且美观 */
+page .van-steps--horizontal {
+  padding: 30rpx 0 !important;
+  overflow: visible !important;
+  max-width: 100%;
+}
+
+page .van-steps--horizontal .van-step__wrapper {
+  display: flex;
+  overflow: visible;
+  position: relative;
+  width: 100%;
+}
+
+/* 步骤项布局优化 */
+page .van-steps--horizontal .van-step {
+  color: #969799;
+  flex: 1;
+  font-size: 28rpx;
+  position: relative;
+}
+
+/* 统一所有步骤文字对齐优化，确保与步骤点居中对齐 */
+page .van-steps--horizontal .van-step .van-step__title {
+  transform: translate3d(-50%, 0, 0);
+  text-align: center;
+  white-space: nowrap;
+  font-size: 28rpx;
+  color: #999;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+}
+
+/* 移除第一个和最后一个步骤的特殊样式 */
+page .van-steps--horizontal:first-child .van-step__title {
+  transform: translate3d(-50%, 0, 0);
+}
+
+page .van-steps--horizontal:first-child .van-step__circle-container {
+  padding: 0 20rpx !important;
+  transform: translate3d(-50%, 50%, 0) !important;
+  left: 50% !important;
+  right: auto !important;
+}
+
+page .van-steps--horizontal .van-step:last-child {
+  position: relative;
+  width: auto;
+  right: auto;
+  left: auto;
+}
+
+page .van-steps--horizontal .van-step:last-child .van-step__title {
+  text-align: center;
+  transform: translate3d(-50%, 0, 0);
+}
+
+page .van-steps--horizontal .van-step:last-child .van-step__circle-container {
+  padding: 0 20rpx !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translate3d(-50%, 50%, 0) !important;
+}
+
+/* 步骤状态颜色优化 */
+page .van-steps--horizontal .van-step--process {
+  color: #333;
+}
+
+page .van-steps--horizontal .van-step--finish {
+  color: #333;
+}
+
+/* 步骤圆圈样式优化 */
+page .van-steps--horizontal .van-step .van-step__circle-container {
+  background-color: #fff;
+  bottom: 16rpx;
+  padding: 0 20rpx !important;
+  position: absolute;
+  transform: translate3d(-50%, 50%, 0);
+  z-index: 1;
+  left: 50% !important;
+  right: auto !important;
+}
+
+page .van-steps--horizontal .van-step__circle {
+  width: 12rpx !important;
+  height: 12rpx !important;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+page .van-steps--horizontal .van-step--process .van-step__circle {
+  width: 16rpx !important;
+  height: 16rpx !important;
+  background-color: #000 !important;
+  box-shadow: 0 0 0 4rpx rgba(0, 0, 0, 0.1);
+}
+
+page .van-steps--horizontal .van-step--finish .van-step__circle {
+  width: 16rpx !important;
+  height: 16rpx !important;
+  background-color: #000 !important;
+  box-shadow: 0 0 0 4rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 步骤连接线样式优化 */
+page .van-steps--horizontal .van-step__line {
+  background-color: #ebedf0;
+  bottom: 16rpx;
+  height: 2rpx;
+  left: 0;
+  position: absolute;
+  right: 0;
+  transform: translate3d(0, 50%, 0);
+}
+
+page .van-steps--horizontal .van-step--finish .van-step__line {
+  background-color: #000 !important;
+}
+

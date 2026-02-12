@@ -1,0 +1,14 @@
+{
+  "navigationBarTitleText": "选择寄养日期",
+  "usingComponents": {
+    "van-calendar": "@vant/calendar/index",
+    "van-button": "@vant/button/index",
+    "van-cell": "@vant/cell/index",
+    "van-cell-group": "@vant/cell-group/index"
+  },
+  "componentPlaceholder": {
+    "TUIConversation": "view",
+    "TUIChat": "view",
+    "TUIGroup": "view"
+  }
+}

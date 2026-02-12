@@ -1,0 +1,127 @@
+<!-- 创建宠物档案第二步 - 巴黎世家风格 -->
+<view class="page-container">
+  <!-- 头部区域 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      <!-- 页面标题 -->
+      <view class="page-title">创建宠物档案</view>
+    </view>
+  </view>
+
+  <!-- 主要内容 -->
+  <view class="page-content">
+    <!-- 步骤指示器 -->
+    <view class="steps-container">
+      <custom-steps 
+        active="{{ currentActive }}" 
+        steps="{{ stepsData }}"
+      />
+    </view>
+
+    <!-- 表单卡片 -->
+    <view class="card">
+      <view class="card-title">宠物健康状况</view>
+      <van-cell-group class="form-group">
+        <van-field 
+          label="是否绝育" 
+          value="{{ formData.isSterilized === 'true' ? '是' : (formData.isSterilized === 'false' ? '否' : '') }}" 
+          placeholder="请选择是否绝育" 
+          border="{{ false }}"
+          is-link
+          bindtap="selectSterilized"
+          class="form-field"
+          title-width="160rpx"
+          readonly="{{ true }}"
+          clickable="{{ true }}"
+        />
+        
+        <van-field 
+          label="是否接种疫苗" 
+          value="{{ formData.isVaccinated === 'true' ? '是' : (formData.isVaccinated === 'false' ? '否' : '') }}" 
+          placeholder="请选择是否接种疫苗" 
+          border="{{ false }}"
+          is-link
+          bindtap="selectVaccinated"
+          class="form-field"
+          title-width="160rpx"
+          readonly="{{ true }}"
+          clickable="{{ true }}"
+        />
+        
+        <van-field 
+          label="健康状况" 
+          value="{{ formData.healthStatus }}" 
+          placeholder="请输入健康状况" 
+          border="{{ false }}"
+          bind:input="onHealthStatusInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="过敏史" 
+          value="{{ formData.allergies }}" 
+          placeholder="请输入过敏史" 
+          border="{{ false }}"
+          bind:input="onAllergiesInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="特殊需求" 
+          value="{{ formData.specialNeeds }}" 
+          placeholder="请输入特殊需求" 
+          border="{{ false }}"
+          bind:input="onSpecialNeedsInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+      </van-cell-group>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="footer">
+      <view class="button-container">
+        <van-button 
+          type="default" 
+          block
+          bindtap="prevStep"
+        >
+          上一步
+        </van-button>
+        
+        <van-button 
+          type="primary" 
+          block
+          bindtap="nextStep"
+          disabled="{{ !formData.isSterilized || !formData.isVaccinated }}"
+        >
+          下一步
+        </van-button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作菜单 -->
+  <van-action-sheet
+    show="{{ showSterilizedSheet }}"
+    actions="{{ sterilizedOptions }}"
+    cancel-text="取消"
+    bind:select="onSelectSterilized"
+    bind:close="onCloseSterilizedSheet"
+  />
+  
+  <van-action-sheet
+    show="{{ showVaccinatedSheet }}"
+    actions="{{ vaccinatedOptions }}"
+    cancel-text="取消"
+    bind:select="onSelectVaccinated"
+    bind:close="onCloseVaccinatedSheet"
+  />
+</view>

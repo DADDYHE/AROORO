@@ -1,0 +1,550 @@
+/* 相册页面样式 */
+.container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* 功能按钮 */
+.function-tabs {
+  display: flex;
+  background-color: #ffffff;
+  border-bottom: 1rpx solid #e9ecef;
+  position: relative;
+  z-index: 99;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(10rpx);
+}
+
+.tab-button {
+  flex: 1;
+  padding: 30rpx 30rpx;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 400;
+  color: #6c757d;
+  position: relative;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5rpx;
+}
+
+.tab-button.active {
+  color: #FF6B00;
+  font-weight: 600;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 6rpx;
+  background-color: #FF6B00;
+  border-radius: 3rpx;
+  transition: all 0.3s ease;
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.3);
+}
+
+.tab-button:active {
+  background-color: #f8f9fa;
+}
+
+/* 内容区域 */
+.content-area {
+  min-height: calc(100vh - 100rpx); /* 减去切换栏高度 */
+  position: relative;
+  transition: all 0.3s ease;
+  padding-top: 0rpx; /* 恢复默认内边距，使用小程序默认导航栏 */
+  overflow: auto; /* 允许内容滚动 */
+}
+
+.content-area.hidden {
+  display: none;
+}
+
+.scroll-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* 视频功能区 */
+.video-section {
+  padding: 0rpx; /* 移除内边距，让视频播放器占满屏幕 */
+  background-color: #fff;
+  position: relative;
+}
+
+/* 垂直指示器容器 */
+.vertical-indicator-container {
+  position: fixed;
+  right: 65rpx;
+  top: calc(50% + 12rpx);
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 100;
+  gap: 15rpx; /* 数量指示器和垂直指示器之间的间距 */
+}
+
+/* 视频数量指示器 */
+.video-count-indicator {
+  color: #FF6B00;
+  font-size: 28rpx;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  backdrop-filter: blur(5rpx);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+
+.video-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+/* 轮播图切换动画 */
+.video-swiper ::deep .wx-swiper-dot {
+  background-color: rgba(255, 255, 255, 0.3);
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  margin: 0 4rpx;
+}
+
+.video-swiper ::deep .wx-swiper-dot-active {
+  background-color: #FF6B00;
+  width: 12rpx;
+  border-radius: 3rpx;
+}
+
+.video-item {
+  width: 100%; /* 占满整个屏幕宽度 */
+  height: 100%; /* 占满整个屏幕高度 */
+  background-color: #000;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0rpx; /* 去掉圆角，让视频占满整个屏幕 */
+  box-shadow: none; /* 去掉阴影 */
+  margin: 0rpx; /* 移除边距 */
+}
+
+.video-list {
+  min-height: 100%;
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: #000;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 0rpx; /* 去掉圆角，让视频占满整个屏幕 */
+}
+
+
+/* 播放进度条容器 */
+.progress-container {
+  position: absolute;
+  bottom: 120rpx;
+  left: 0;
+  right: 0;
+  padding: 0 30rpx 20rpx;
+  z-index: 90;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+}
+
+/* 进度条 */
+.progress-bar {
+  height: 4rpx;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 2rpx;
+  margin-bottom: 12rpx;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* 进度条滑块 */
+.progress-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(-50%, -50%);
+  width: 16rpx;
+  height: 16rpx;
+  background-color: #FF6B00;
+  border-radius: 50%;
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+/* 进度条填充 */
+.progress-track {
+  height: 100%;
+  background-color: #FF6B00;
+  border-radius: 2rpx;
+  transition: width 0.3s ease;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* 播放时间显示 */
+.progress-time {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24rpx;
+  color: white;
+  text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.8);
+}
+
+.current-time {
+  font-weight: 500;
+}
+
+.total-time {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 寄养家庭信息栏 */
+.host-info {
+  position: absolute;
+  bottom: 160rpx; /* 上移，露出播放时长 */
+  left: 0rpx;
+  right: 0rpx; /* 占满整行 */
+  display: flex;
+  align-items: flex-start;
+  background-color: transparent; /* 透明背景 */
+  padding: 20rpx 30rpx;
+  width: 100%; /* 确保宽度占满 */
+}
+
+.host-avatar {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+}
+
+.host-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.host-name {
+  font-size: 32rpx;
+  color: white;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+  text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.5);
+}
+
+
+.video-description {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.5);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 右下角6个方块按钮 */
+.grid-button {
+  position: fixed;
+  bottom: 160rpx; /* 上移，露出播放时长 */
+  right: 30rpx;
+  width: 80rpx;
+  height: 80rpx;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10rpx);
+}
+
+.grid-button:active {
+  transform: scale(0.95);
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 4rpx;
+  width: 48rpx;
+  height: 32rpx;
+}
+
+.grid-item {
+  width: 100%;
+  height: 100%;
+  background-color: #FF6B00;
+  border-radius: 2rpx;
+}
+
+/* 垂直滚动指示器 */
+.scroll-indicator {
+  position: fixed;
+  right: 20rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 60rpx;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3rpx;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.scroll-indicator.active {
+  opacity: 1;
+}
+
+.indicator-dot {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6rpx;
+  height: 20rpx;
+  background-color: #FF6B00;
+  border-radius: 3rpx;
+  animation: scrollAnimation 1.5s infinite;
+}
+
+@keyframes scrollAnimation {
+  0% {
+    top: 0;
+    opacity: 0.5;
+  }
+  50% {
+    top: 40rpx;
+    opacity: 1;
+  }
+  100% {
+    top: 0;
+    opacity: 0.5;
+  }
+}
+
+/* 相册功能区 */
+.album-section {
+  padding: 24rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.album-content {
+  min-height: calc(100vh - 180rpx); /* 调整高度，确保内容能够完全显示 */
+  padding-bottom: 40rpx; /* 添加底部内边距，防止内容被截断 */
+}
+
+/* 大图 */
+.main-photo {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background-color: white;
+  border-radius: 24rpx;
+  overflow: hidden;
+  margin-bottom: 28rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.main-photo:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: auto;
+}
+
+/* 缩略图网格 */
+.thumbnail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24rpx;
+}
+
+.thumbnail-item {
+  aspect-ratio: 1/1;
+  background-color: white;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.thumbnail-item:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.thumbnail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: auto;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400rpx;
+  color: #999;
+  font-size: 32rpx;
+  background-color: white;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #999;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 750rpx) {
+  .tab-button {
+    padding: 25rpx;
+    font-size: 30rpx;
+  }
+  
+  .video-section,
+  .album-section {
+    padding: 16rpx;
+  }
+  
+  .main-photo {
+    margin-bottom: 20rpx;
+    border-radius: 18rpx;
+    aspect-ratio: 16/9;
+  }
+  
+  .thumbnail-grid {
+    gap: 18rpx;
+  }
+  
+  .thumbnail-item {
+    border-radius: 16rpx;
+  }
+  
+  .video-item {
+    margin-bottom: 20rpx;
+    border-radius: 18rpx;
+  }
+  
+  .video-info {
+    padding: 15rpx 20rpx;
+  }
+  
+  .video-title {
+    font-size: 30rpx;
+  }
+  
+  .video-duration {
+    font-size: 26rpx;
+  }
+  
+  .empty-text {
+    font-size: 30rpx;
+  }
+}
+
+/* 小屏幕设备优化 */
+@media screen and (max-width: 375rpx) {
+  .tab-button {
+    padding: 22rpx;
+    font-size: 28rpx;
+  }
+  
+  .video-section,
+  .album-section {
+    padding: 12rpx;
+  }
+  
+  .main-photo {
+    margin-bottom: 16rpx;
+    border-radius: 16rpx;
+  }
+  
+  .thumbnail-grid {
+    gap: 14rpx;
+  }
+  
+  .thumbnail-item {
+    border-radius: 14rpx;
+  }
+  
+  .video-item {
+    margin-bottom: 16rpx;
+    border-radius: 16rpx;
+  }
+  
+  .video-info {
+    padding: 12rpx 16rpx;
+  }
+  
+  .video-title {
+    font-size: 28rpx;
+  }
+  
+  .video-duration {
+    font-size: 24rpx;
+  }
+  
+  .empty-text {
+    font-size: 28rpx;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-area.active {
+  animation: fadeIn 0.3s ease;
+}

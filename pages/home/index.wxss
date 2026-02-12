@@ -1,0 +1,1201 @@
+/* 首页样式 - 巴黎世家风格 */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #fafafa;
+  position: relative;
+}
+
+/* 模糊背景样式 */
+.blur-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10rpx);
+  -webkit-backdrop-filter: blur(10rpx);
+  z-index: 999;
+  pointer-events: none;
+}
+
+
+
+/* 头部区域 */
+.page-header {
+  padding: 60rpx 40rpx;
+  background-color: #fafafa;
+  position: relative;
+  border-bottom: 1rpx solid #f0f0f0;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
+}
+
+.header-content {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 品牌标识 */
+.brand-logo {
+  font-size: 52rpx;
+  font-weight: 900;
+  letter-spacing: 14rpx;
+  text-align: left;
+  margin-bottom: 50rpx;
+  color: #000000;
+  text-transform: uppercase;
+  font-family: 'Arial Black', 'Arial Bold', sans-serif;
+  line-height: 1;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 140rpx !important;
+  height: 140rpx !important;
+  aspect-ratio: 1 / 1 !important;
+  max-width: 140rpx !important;
+  max-height: 140rpx !important;
+  min-width: 140rpx !important;
+  min-height: 140rpx !important;
+  border-radius: 50% !important;
+  margin-right: 20rpx;
+  border: 2rpx solid #e0e0e0;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+  transform: none !important;
+  overflow: hidden !important;
+  box-sizing: content-box !important;
+}
+
+/* Avatar容器样式 */
+/* 头像容器 - 与个人中心页面保持一致 */
+.avatar-container {
+  width: 140rpx !important;
+  height: 140rpx !important;
+  aspect-ratio: 1 / 1 !important;
+  max-width: 140rpx !important;
+  max-height: 140rpx !important;
+  min-width: 140rpx !important;
+  min-height: 140rpx !important;
+  border-radius: 50% !important;
+  margin-right: 20rpx;
+  border: 2rpx solid #e0e0e0;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-sizing: content-box !important;
+  background-color: #f0f0f0;
+}
+
+.avatar-container:active {
+  background-color: #f5f5f5;
+}
+
+/* 头像图片样式 */
+.avatar-image {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 50% !important;
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  object-fit: cover !important;
+}
+
+/* SVG头像样式 */
+.svg-avatar {
+  width: 80% !important;
+  height: 80% !important;
+  color: #666 !important;
+  display: block !important;
+  fill: #666 !important;
+}
+
+.avatar-button {
+  position: static;
+  margin: 0;
+  margin-right: 20rpx;
+  padding: 0;
+  background: none;
+  border: none;
+  width: 140rpx !important;
+  height: 140rpx !important;
+  aspect-ratio: 1 / 1 !important;
+  max-width: 140rpx !important;
+  max-height: 140rpx !important;
+  min-width: 140rpx !important;
+  min-height: 140rpx !important;
+  border-radius: 50% !important;
+  display: block;
+  overflow: hidden !important;
+  flex-shrink: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  transform: none !important;
+  box-sizing: content-box !important;
+}
+
+.avatar-button::after {
+  display: none;
+}
+
+
+
+.avatar-button .avatar {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  border-radius: 50% !important;
+  border: 2rpx solid #e0e0e0;
+  object-fit: cover;
+  display: block;
+  transform: none !important;
+  overflow: hidden !important;
+  box-sizing: content-box !important;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100px;
+  justify-content: center;
+}
+
+.welcome {
+  font-size: 36rpx;
+  font-weight: 900;
+  margin-bottom: 15rpx;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  line-height: 1.2;
+}
+
+
+
+.role-tag {
+  font-size: 22rpx;
+  background-color: #f5f5f5;
+  color: #666666;
+  padding: 8rpx 20rpx;
+  border-radius: 12rpx;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  font-weight: 500;
+  display: inline-block;
+  width: fit-content;
+  border: 1rpx solid #e0e0e0;
+}
+
+
+
+/* 登录表单样式 - 固定定位，确保可见 */
+.login-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  padding: 20rpx 40rpx 60rpx 40rpx;
+  box-shadow: 0 10rpx 40rpx rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  width: 80%;
+  max-width: 600rpx;
+  border: 1rpx solid #f0f0f0;
+  /* 使用flex布局，让内容垂直分布，按钮固定在底部 */
+  display: flex;
+  flex-direction: column;
+  min-height: 500rpx;
+}
+
+/* 表单项目样式 */
+.form-item {
+  margin-bottom: 40rpx;
+}
+
+/* 登录表单中的表单项样式 */
+.login-form .form-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  border-bottom: none;
+  margin-bottom: 40rpx;
+}
+
+/* 昵称输入框所在的form-item，下移100rpx */
+.login-form .nickname-form-item {
+  margin-top: 100rpx !important;
+}
+
+/* 头像上传容器 - 居中显示，下移20rpx */
+.avatar-upload-container {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 20rpx 0;
+}
+
+/* 头像上传按钮样式 */
+.avatar-upload-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 2rpx dashed #e0e0e0;
+  border-radius: 20rpx;
+  padding: 20rpx 0;
+  width: 100%;
+  max-width: 200rpx;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: content-box;
+}
+
+.avatar-upload-btn::after {
+  display: none;
+}
+
+/* 头像预览样式 - 适当增大尺寸，让头像更加突出 */
+.avatar-preview {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  margin-bottom: 15rpx;
+  object-fit: cover;
+  border: 4rpx solid #ffffff;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 上传文字样式 - 缩小字体 */
+.upload-text {
+  font-size: 24rpx;
+  color: #999999;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+/* 昵称输入框样式 */
+.nickname-input {
+  width: 100%;
+  padding: 12.5rpx 20rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333333;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  border-bottom: 1rpx solid #e0e0e0;
+  margin-bottom: 20rpx;
+  background-color: transparent;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  line-height: 40rpx;
+  height: 65rpx;
+  box-sizing: content-box;
+}
+
+.nickname-input::placeholder {
+  color: #cccccc;
+  font-weight: 900;
+}
+
+.nickname-input:focus {
+  border-bottom-color: #000000;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* 按钮容器 - 用于放置登录和取消按钮在同一行，固定在底部 */
+.buttons-container {
+  display: flex;
+  gap: 20rpx;
+  margin-top: auto;
+  padding: 40rpx 0 0 0;
+}
+
+/* 登录提交按钮样式 - 缩小尺寸，调整宽度 */
+.login-submit-btn {
+  flex: 1;
+  background-color: #000000 !important;
+  border-radius: 15rpx !important;
+  font-size: 26rpx;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  padding: 20rpx 0;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.1);
+  transition: all 0.4s ease;
+  color: white !important;
+  margin: 0;
+  border: none !important;
+  line-height: 1.5;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.login-submit-btn::after {
+  display: none;
+}
+
+.login-submit-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 3rpx 12rpx rgba(0, 0, 0, 0.08);
+  background-color: #333333 !important;
+}
+
+.login-submit-btn:disabled {
+  background-color: #f0f0f0 !important;
+  color: #999999 !important;
+  box-shadow: none;
+  border: 2rpx solid #e0e0e0 !important;
+  opacity: 0.8;
+}
+
+.login-submit-btn:disabled:active {
+  transform: none;
+}
+
+/* 取消按钮样式 - 缩小尺寸，调整宽度 */
+.cancel-btn {
+  flex: 1;
+  background-color: #f5f5f5 !important;
+  border-radius: 15rpx !important;
+  font-size: 26rpx;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  padding: 20rpx 0;
+  box-shadow: 0 3rpx 12rpx rgba(0, 0, 0, 0.08);
+  transition: all 0.4s ease;
+  color: #333333;
+  margin: 0;
+}
+
+/* 全宽按钮样式 */
+.full-width {
+  flex: none !important;
+  width: 100% !important;
+}
+
+/* 身份选择表单样式 - 弹出式，参考登录表单风格 */
+.identity-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-shadow: 0 10rpx 40rpx rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  width: 80%;
+  max-width: 600rpx;
+  border: 1rpx solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* 表单标题样式 */
+.form-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 40rpx;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+}
+
+/* 身份列表样式 */
+.identity-list {
+  margin-bottom: 40rpx;
+}
+
+/* 区块标题样式 */
+.section-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  margin-bottom: 20rpx;
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+/* 身份项样式 */
+.identity-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  background-color: #fafafa;
+  border-radius: 15rpx;
+  margin-bottom: 15rpx;
+  transition: all 0.3s ease;
+  border: 1rpx solid #f0f0f0;
+}
+
+.identity-item:active {
+  background-color: #f0f0f0;
+  transform: translateY(2rpx);
+}
+
+/* 身份图标样式 */
+.identity-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+  width: 60rpx;
+  text-align: center;
+}
+
+/* 身份信息样式 */
+.identity-info {
+  flex: 1;
+}
+
+.identity-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 8rpx;
+}
+
+.identity-desc {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+/* 身份箭头样式 */
+.identity-arrow {
+  font-size: 28rpx;
+  color: #cccccc;
+  font-weight: bold;
+}
+
+/* 创建身份区块样式 */
+.create-identity-section {
+  margin-bottom: 40rpx;
+}
+
+/* 创建选项容器样式 */
+.create-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15rpx;
+}
+
+/* 创建身份项样式 */
+.create-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  background-color: #fafafa;
+  border-radius: 15rpx;
+  transition: all 0.3s ease;
+  border: 1rpx solid #f0f0f0;
+}
+
+.create-item:active {
+  background-color: #f0f0f0;
+  transform: translateY(2rpx);
+}
+
+/* 创建图标样式 */
+.create-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+  width: 60rpx;
+  text-align: center;
+}
+
+/* 创建信息样式 */
+.create-info {
+  flex: 1;
+}
+
+.create-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 8rpx;
+}
+
+.create-desc {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+.cancel-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  background-color: #e0e0e0 !important;
+}
+
+.page-content {
+  flex: 1;
+  padding: 40rpx;
+  padding-bottom: 160rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #ffffff;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 24rpx;
+  padding: 60rpx 40rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.06);
+  transition: all 0.4s ease;
+}
+
+.card:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 3rpx 15rpx rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.card-title {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 6rpx;
+  line-height: 1;
+}
+
+.view-more-container {
+  display: inline-block;
+  padding: 10rpx;
+  z-index: 100; /* 确保按钮在最上层，不被其他元素覆盖 */
+  cursor: pointer; /* 显示指针样式 */
+}
+
+.view-more {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  transition: all 0.3s ease;
+  position: relative;
+  display: inline-block;
+}
+
+.view-more::after {
+  content: '';
+  position: absolute;
+  bottom: -2rpx;
+  left: 0;
+  width: 0;
+  height: 2rpx;
+  background-color: #000000;
+  transition: width 0.3s ease;
+}
+
+.view-more:active {
+  transform: translateX(10rpx);
+  opacity: 0.7;
+}
+
+.view-more:active::after {
+  width: 100%;
+}
+
+/* 快速导航 */
+.nav-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40rpx;
+  margin-top: 40rpx;
+}
+
+/* 导航项 - 增大触控区域并统一过渡动画 */
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64rpx 48rpx;
+  background-color: #ffffff;
+  border: 1rpx solid #f5f5f5;
+  border-radius: 20rpx;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform, background-color, box-shadow;
+  min-height: 180rpx;
+  min-width: 180rpx;
+}
+
+.nav-item:active, .nav-item.active {
+  transform: scale(0.95);
+  background-color: #f5f5f5;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.06);
+  transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-icon {
+  width: 70rpx;
+  height: 70rpx;
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+/* 我的宠物图标 - 简约爪印风格 */
+.icon-paw {
+  width: 48rpx;
+  height: 48rpx;
+  position: relative;
+}
+
+/* 主爪印 */
+.icon-paw::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24rpx;
+  height: 24rpx;
+  border: 3rpx solid #000000;
+  border-radius: 50%;
+  background-color: #ffffff;
+}
+
+/* 左前爪垫 */
+.icon-paw span:nth-child(1)::before {
+  content: '';
+  position: absolute;
+  top: 8rpx;
+  left: 12rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border: 3rpx solid #000000;
+  border-radius: 50%;
+  background-color: #ffffff;
+}
+
+/* 右前爪垫 */
+.icon-paw span:nth-child(2)::before {
+  content: '';
+  position: absolute;
+  top: 8rpx;
+  right: 12rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border: 3rpx solid #000000;
+  border-radius: 50%;
+  background-color: #ffffff;
+}
+
+/* 左后爪垫 */
+.icon-paw span:nth-child(3)::before {
+  content: '';
+  position: absolute;
+  bottom: 10rpx;
+  left: 8rpx;
+  width: 10rpx;
+  height: 10rpx;
+  border: 3rpx solid #000000;
+  border-radius: 50%;
+  background-color: #ffffff;
+}
+
+/* 右后爪垫 */
+.icon-paw span:nth-child(4)::before {
+  content: '';
+  position: absolute;
+  bottom: 10rpx;
+  right: 8rpx;
+  width: 10rpx;
+  height: 10rpx;
+  border: 3rpx solid #000000;
+  border-radius: 50%;
+  background-color: #ffffff;
+}
+
+.icon-paw span {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+/* 列表图标 */
+.icon-list {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8rpx 0;
+}
+
+.icon-list::before,
+.icon-list::after {
+  content: '';
+  height: 4rpx;
+  background-color: #000000;
+  border-radius: 2rpx;
+}
+
+.icon-list::before {
+  width: 100%;
+}
+
+.icon-list::after {
+  width: 70%;
+  align-self: flex-end;
+}
+
+/* 用户图标 */
+.icon-user {
+  width: 48rpx;
+  height: 48rpx;
+  position: relative;
+}
+
+.icon-user::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24rpx;
+  height: 24rpx;
+  border: 3rpx solid #000000;
+  border-radius: 50%;
+}
+
+.icon-user::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32rpx;
+  height: 20rpx;
+  border: 3rpx solid #000000;
+  border-top: none;
+  border-radius: 0 0 20rpx 20rpx;
+}
+
+/* 心形图标 - 我的收藏 */
+.icon-heart {
+  width: 48rpx;
+  height: 48rpx;
+  position: relative;
+  transform: rotate(45deg);
+}
+
+.icon-heart::before,
+.icon-heart::after {
+  content: '';
+  position: absolute;
+  width: 24rpx;
+  height: 38rpx;
+  background-color: #000000;
+  border-radius: 12rpx 12rpx 0 0;
+  transform-origin: bottom center;
+}
+
+.icon-heart::before {
+  left: 0;
+  transform: rotate(-45deg);
+}
+
+.icon-heart::after {
+  right: 0;
+  transform: rotate(45deg);
+}
+
+.icon-heart span::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24rpx;
+  height: 24rpx;
+  background-color: #000000;
+  border-radius: 50%;
+}
+
+.icon-heart span {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.nav-text {
+  font-size: 30rpx;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+}
+
+/* 寄养家庭列表 */
+.host-list {
+  margin-top: 40rpx;
+}
+
+/* 寄养家庭项 - 优化触控区域和反馈效果 */
+.host-item {
+  display: flex;
+  align-items: center;
+  padding: 40rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  min-height: 160rpx;
+  position: relative;
+}
+
+.host-item:last-child {
+  border-bottom: none;
+}
+
+.host-item:active {
+  background-color: rgba(0, 0, 0, 0.03);
+  transform: translateX(10rpx);
+}
+
+.host-item.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 头像 */
+.host-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 30rpx;
+  border: 1rpx solid #e0e0e0;
+  background-color: #f0f0f0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.host-avatar image {
+  width: 100%;
+  height: 100%;
+  background-color: #f0f0f0;
+}
+
+/* 信息区域 */
+.host-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* 姓名 */
+.host-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #323233;
+  margin-bottom: 15rpx;
+  letter-spacing: 2rpx;
+}
+
+.host-details {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+/* 评分 */
+.host-rating {
+  font-size: 26rpx;
+  color: #666666;
+  letter-spacing: 2rpx;
+}
+
+/* 位置 */
+.host-location {
+  font-size: 26rpx;
+  color: #909399;
+  letter-spacing: 2rpx;
+}
+
+/* 暂停接单状态样式 */
+.host-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: #f5f5f5;
+}
+
+.host-item.disabled .host-name,
+.host-item.disabled .host-rating,
+.host-item.disabled .host-location {
+  color: #999;
+}
+
+/* 暂停接单标识 */
+.pause-tag {
+  display: inline-block;
+  background-color: #ff4d4f;
+  color: white;
+  padding: 8rpx 16rpx;
+  border-radius: 6rpx;
+  font-size: 24rpx;
+  font-weight: bold;
+  margin-top: 10rpx;
+}
+
+/* 计数功能 */
+.count-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 0;
+}
+
+.count-text {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #000000;
+  margin-bottom: 40rpx;
+  text-transform: uppercase;
+  letter-spacing: 6rpx;
+}
+
+.count-button {
+  width: 100%;
+  height: 100rpx;
+  line-height: 100rpx;
+  font-size: 32rpx;
+  font-weight: 900;
+  background-color: #000000;
+  color: white;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 6rpx;
+}
+
+.count-button:active {
+  background-color: #333333;
+  transform: scale(0.95);
+}
+
+/* 活动列表 */
+.event-list {
+  margin-top: 40rpx;
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  padding: 40rpx 0;
+  border-bottom: 2rpx solid #000000;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.event-item:last-child {
+  border-bottom: none;
+}
+
+.event-item:active {
+  transform: translateX(20rpx);
+  opacity: 0.8;
+}
+
+.event-image {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  margin-right: 40rpx;
+  border: 1rpx solid #e0e0e0;
+  object-fit: cover;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.event-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-title {
+  font-size: 40rpx;
+  font-weight: 900;
+  margin-bottom: 20rpx;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+}
+
+.event-time {
+  font-size: 26rpx;
+  color: #666666;
+  margin-bottom: 20rpx;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+}
+
+.event-discount {
+  font-size: 36rpx;
+  color: #000000;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+}
+
+/* 计数功能 */
+.count-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 0;
+}
+
+.count-text {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #000000;
+  margin-bottom: 40rpx;
+  text-transform: uppercase;
+  letter-spacing: 6rpx;
+}
+
+.count-button {
+  width: 100%;
+  height: 100rpx;
+  line-height: 100rpx;
+  font-size: 32rpx;
+  font-weight: 900;
+  background-color: #000000;
+  color: white;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 6rpx;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.1);
+}
+
+.count-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition: left 0.4s ease;
+  z-index: -1;
+}
+
+.count-button:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.08);
+}
+
+.count-button:active::before {
+  left: 0;
+}
+
+/* 登录加载动画覆盖层样式 */
+.login-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24rpx;
+  z-index: 10;
+}
+
+/* 加载内容样式 */
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+
+/* 加载动画样式 */
+.loading-spinner {
+  width: 48rpx;
+  height: 48rpx;
+  border: 4rpx solid rgba(0, 0, 0, 0.1);
+  border-top: 4rpx solid #000000;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* 加载文本样式 */
+.loading-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+/* 加载动画关键帧 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 登录提交按钮样式 - 添加flex布局 */
+.login-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

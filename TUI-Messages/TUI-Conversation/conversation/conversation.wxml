@@ -1,0 +1,8 @@
+<!-- TUIKit 会话列表页面 -->
+<view class="conversation-page">
+  <TUIConversation
+    id="tui-conversation"
+    bind:onConversationItemTap="onConversationItemTap"
+    bind:onError="onError"
+  />
+</view>

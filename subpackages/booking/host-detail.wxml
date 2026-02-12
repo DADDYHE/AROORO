@@ -1,0 +1,158 @@
+<view class="container">
+  
+  <!-- 轮播图容器 -->
+  <view class="swiper-container">
+    <!-- 照片显示区域 - 顶部背景图效果 -->
+    <view class="media-section-header">
+      <view class="media-content-header">
+        <view class="photo-content">
+        <!-- 轮播图内容根据当前类型切换 -->
+        <swiper 
+          class="main-photos {{isAnimating ? 'hidden' : ''}}" 
+          indicator-dots="{{true}}" 
+          autoplay="{{false}}" 
+          interval="5000" 
+          duration="300"
+          circular="{{false}}"
+          bindchange="onSwiperChange"
+          snap-to-align="{{true}}"
+          previous-margin="0"
+          next-margin="0"
+        >
+          <!-- 环境照片 -->
+          <swiper-item wx:if="{{currentMediaType === 'photos'}}" wx:for="{{host.photos || []}}" wx:key="index">
+            <view class="photo-wrapper" catchtap="goToPhotosPage">
+              <image class="main-photo" src="{{item}}" mode="scaleToFill"></image>
+              <!-- 第4张及之后的照片添加查看更多提示 -->
+              <view class="more-tip" wx:if="{{index === 3 && host.photos.length > 4}}" catchtap="viewMorePhotos">
+                <text class="more-text">+{{host.photos.length - 4}}张</text>
+                <text class="more-desc">点击查看更多</text>
+              </view>
+            </view>
+          </swiper-item>
+          
+          <!-- 日常视频 -->
+          <swiper-item wx:if="{{currentMediaType === 'videos'}}" wx:for="{{host.videos || []}}" wx:key="index">
+            <view class="video-wrapper" catchtap="goToVideosPage">
+              <video 
+                class="main-video" 
+                src="{{item}}" 
+                controls="{{true}}" 
+                poster="https://picsum.photos/600/400?random={{index+9}}"
+                id="video{{index}}"
+              ></video>
+              <!-- 第4张及之后的视频添加查看更多提示 -->
+              <view class="more-tip" wx:if="{{index === 3 && host.videos.length > 4}}" catchtap="viewMoreVideos">
+                <text class="more-text">+{{host.videos.length - 4}}个</text>
+                <text class="more-desc">点击查看更多</text>
+              </view>
+            </view>
+          </swiper-item>
+        </swiper>
+        
+        <!-- 媒体类型切换按钮 - 放在同一个背景中 -->
+        <view class="media-type-buttons">
+          <view class="media-type-btn {{currentMediaType === 'photos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="photos">
+            环境照片
+          </view>
+          <view class="media-type-btn {{currentMediaType === 'videos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="videos">
+            日常视频
+          </view>
+          <view class="media-type-btn album-btn {{currentMediaType === 'album' ? 'active' : ''}}" catchtap="switchMediaType" data-type="album">
+            <view class="album-separator"></view>
+            <text class="album-text">相册</text>
+            <view class="album-arrow"></view>
+          </view>
+        </view>
+        </view>
+
+      </view>
+    </view>
+  </view>
+
+  <!-- 寄养家庭基本信息 - 往下放 -->
+  <view class="host-info">
+    <view class="avatar-container">
+      <image class="avatar" src="{{host.avatarUrl}}" mode="aspectFill"></image>
+    </view>
+    <view class="host-details">
+      <view class="host-header">
+        <view class="host-name">{{host.name}}</view>
+        <!-- 收藏按钮 -->
+        <favorite-btn is-active="{{isFavorited}}" bind:toggle="toggleFavorite"></favorite-btn>
+      </view>
+      <view class="host-rating">
+        <text class="rating">{{host.rating}}</text>
+        <text class="reviews">{{host.reviews}}条评价</text>
+      </view>
+      <view class="host-location">{{host.location}}</view>
+    </view>
+  </view>
+
+  <!-- 价格信息 -->
+  <view class="price-section {{host.isAcceptingOrders === false ? 'disabled' : ''}}">
+    <view class="price">
+      <text class="price-symbol">¥</text>
+      <text class="price-number">{{host.price}}</text>
+      <text class="price-unit">/天</text>
+    </view>
+    <view class="action-buttons">
+      <view 
+        class="booking-btn {{host.isAcceptingOrders === false ? 'disabled' : ''}}" 
+        catchtap="{{host.isAcceptingOrders === false ? '' : 'contactFamily'}}"
+      >
+        {{host.isAcceptingOrders === false ? '已暂停接待' : '联系家庭'}}
+      </view>
+
+    </view>
+    <!-- 暂停接单标识 -->
+    <text wx:if="{{host.isAcceptingOrders === false}}" class="pause-tag">已暂停接待</text>
+  </view>
+
+  <!-- 标签 -->
+  <view class="tags-section">
+    <view class="tag" wx:for="{{host.tags}}" wx:key="index">{{item}}</view>
+  </view>
+
+  <!-- 寄养家庭简介 -->
+  <view class="section">
+    <view class="section-title">寄养家庭简介</view>
+    <view class="section-content">{{host.description}}</view>
+  </view>
+
+  <!-- 服务内容 -->
+  <view class="section">
+    <view class="section-title">服务内容</view>
+    <view class="service-item" wx:for="{{services}}" wx:key="index">
+      <view class="service-icon">{{item.icon}}</view>
+      <view class="service-text">{{item.text}}</view>
+    </view>
+  </view>
+
+  <!-- 环境设施 -->
+  <view class="section">
+    <view class="section-title">环境设施</view>
+    <view class="facility-item" wx:for="{{facilities}}" wx:key="index">
+      <view class="facility-icon">{{item.icon}}</view>
+      <view class="facility-text">{{item.text}}</view>
+    </view>
+  </view>
+
+  <!-- 评价 -->
+  <view class="section">
+    <view class="section-title">用户评价</view>
+    <view class="review-item" wx:for="{{reviews}}" wx:key="index">
+      <view class="reviewer-info">
+        <image class="reviewer-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+        <view class="reviewer-details">
+          <view class="reviewer-name">{{item.name}}</view>
+          <view class="review-date">{{item.date}}</view>
+        </view>
+      </view>
+      <view class="review-content">{{item.content}}</view>
+      <view class="review-images" wx:if="{{item.images.length > 0}}">
+        <image class="review-image" src="{{image}}" mode="aspectFill" wx:for="{{item.images}}" wx:key="index"></image>
+      </view>
+    </view>
+  </view>
+</view>

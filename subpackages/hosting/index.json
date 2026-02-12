@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "我的寄养服务",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "light",
+  "usingComponents": {
+    "van-button": "@vant/button/index",
+    "van-icon": "@vant/icon/index",
+    "van-tag": "@vant/tag/index"
+  }
+}

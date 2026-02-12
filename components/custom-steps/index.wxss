@@ -1,0 +1,139 @@
+/* 自定义步骤指示器样式 */
+.custom-steps {
+  position: relative;
+  width: 100%;
+  height: 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: visible !important;
+  box-sizing: border-box;
+}
+
+/* 步骤连接线 */
+.steps-line {
+  position: absolute;
+  top: 30rpx;
+  left: 0;
+  width: 100%;
+  height: 2rpx;
+  background-color: #ebedf0;
+  z-index: 1;
+  overflow: visible;
+}
+
+/* 步骤进度线 */
+.steps-line-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #000000;
+  transition: width 0.4s ease;
+}
+
+/* 步骤项容器 */
+.step-items {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  overflow: visible !important;
+}
+
+/* 步骤项 */
+.step-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  transition: all 0.3s ease;
+  overflow: visible !important;
+}
+
+/* 步骤圆圈 */
+.step-circle {
+  background-color: #fff;
+  padding: 0 20rpx;
+  margin-bottom: 16rpx;
+  position: relative;
+  z-index: 3;
+}
+
+/* 步骤编号 */
+.step-number {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background-color: #ebedf0;
+  color: transparent;
+  font-size: 14rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 3;
+}
+
+/* 步骤文字 */
+.step-text {
+  font-size: 28rpx;
+  color: #969799;
+  text-align: center;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+  line-height: 1.2;
+  overflow: visible !important;
+}
+
+/* 激活状态的步骤项 */
+.step-item--active {
+  color: #333;
+}
+
+.step-item--active .step-number {
+  background-color: #000000;
+  color: #ffffff;
+  width: 16rpx;
+  height: 16rpx;
+  font-size: 16rpx;
+  box-shadow: 0 0 0 4rpx rgba(0, 0, 0, 0.1);
+}
+
+.step-item--active .step-text {
+  color: #333;
+  font-weight: 500;
+}
+
+/* 已完成状态的步骤项 */
+.step-item--completed .step-number {
+  background-color: #000000;
+  color: #ffffff;
+  width: 16rpx;
+  height: 16rpx;
+  font-size: 16rpx;
+  box-shadow: 0 0 0 4rpx rgba(0, 0, 0, 0.1);
+}
+
+.step-item--completed .step-text {
+  color: #333;
+  font-weight: 500;
+}
+
+/* 确保组件在所有页面的样式一致性 */
+:host {
+  display: block;
+  width: 100%;
+  overflow: visible !important;
+}

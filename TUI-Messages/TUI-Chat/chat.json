@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "聊天",
+  "usingComponents": {
+    "TUIChat": "../TUIChat/index"
+  }
+}

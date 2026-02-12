@@ -1,0 +1,102 @@
+<!-- 创建宠物档案第四步 - 巴黎世家风格 -->
+<view class="page-container">
+  <!-- 头部区域 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      <!-- 页面标题 -->
+      <view class="page-title">创建宠物档案</view>
+    </view>
+  </view>
+
+  <!-- 主要内容 -->
+  <view class="page-content">
+    <!-- 步骤指示器 -->
+    <view class="steps-container">
+      <custom-steps 
+        active="{{ currentActive }}" 
+        steps="{{ stepsData }}"
+      />
+    </view>
+
+    <!-- 表单卡片 -->
+    <view class="card">
+      <view class="card-title">紧急联系人信息</view>
+      <van-cell-group class="form-group">
+        <van-field 
+          label="联系人姓名" 
+          value="{{ formData.emergencyContactName }}" 
+          placeholder="请输入联系人姓名" 
+          border="{{ false }}"
+          type="text"
+          bind:input="onContactNameInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="联系人电话" 
+          value="{{ formData.emergencyContactPhone }}" 
+          placeholder="请输入联系人电话" 
+          border="{{ false }}"
+          type="number"
+          bind:input="onContactPhoneInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+          error-message="{{ phoneError }}"
+          required="{{ true }}"
+        />
+        
+        <van-field 
+          label="与宠物关系" 
+          value="{{ formData.emergencyContactRelation }}" 
+          placeholder="请输入与宠物关系" 
+          border="{{ false }}"
+          type="text"
+          bind:input="onContactRelationInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="紧急联系说明" 
+          value="{{ formData.emergencyContactNote }}" 
+          placeholder="请输入紧急联系说明" 
+          border="{{ false }}"
+          type="textarea"
+          autosize="{{ {maxHeight: 120, minHeight: 60} }}"
+          bind:input="onContactNoteInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+      </van-cell-group>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="footer">
+      <view class="button-container">
+        <van-button 
+          type="default" 
+          bindtap="prevStep"
+          block="{{ true }}"
+        >
+          上一步
+        </van-button>
+        
+        <van-button 
+          type="primary" 
+          bindtap="completeCreate"
+          disabled="{{ !formData.emergencyContactName || !formData.emergencyContactPhone || phoneError }}"
+          block="{{ true }}"
+        >
+          完成创建
+        </van-button>
+      </view>
+    </view>
+  </view>
+</view>

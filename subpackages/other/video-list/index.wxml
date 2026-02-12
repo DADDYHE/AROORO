@@ -1,0 +1,61 @@
+<view class="container">
+  <!-- 视频内容区域 -->
+  <view class="content-area">
+    <!-- 视频列表 -->
+    <view class="video-list">
+      <!-- 大图 -->
+      <view wx:if="{{videos.length > 0}}" class="main-video">
+        <video 
+          class="main-video-player"
+          src="{{videos[0].url}}"
+          poster="{{videos[0].poster}}"
+          controls="{{true}}"
+          show-fullscreen-btn="{{true}}"
+          show-play-btn="{{true}}"
+          show-center-play-btn="{{true}}"
+          enable-play-gesture="{{true}}"
+          object-fit="cover"
+          loop="{{true}}"
+          bindplay="onVideoPlay"
+          data-index="0"
+        ></video>
+      </view>
+      
+      <!-- 缩略图网格 -->
+      <view wx:if="{{videos.length > 1}}" class="thumbnail-grid">
+        <view 
+          class="thumbnail-item" 
+          wx:for="{{videos}}" 
+          wx:key="id"
+          wx:if="{{index > 0 && index <= 2}}"
+          catchtap="previewVideo"
+          data-index="{{index}}"
+        >
+          <video 
+            class="thumbnail-video"
+            src="{{item.url}}"
+            poster="{{item.poster}}"
+            controls="{{false}}"
+            show-fullscreen-btn="{{false}}"
+            show-play-btn="{{true}}"
+            show-center-play-btn="{{true}}"
+            enable-play-gesture="{{true}}"
+            object-fit="cover"
+            loop="{{true}}"
+            data-index="{{index}}"
+            catchtap="previewVideo"
+          ></video>
+          <!-- 播放按钮覆盖层 -->
+          <view class="play-overlay" catchtap="previewVideo" data-index="{{index}}">
+            <text class="play-icon">▶</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 空状态 -->
+      <view wx:if="{{videos.length === 0}}" class="empty-state">
+        <text class="empty-text">暂无视频内容</text>
+      </view>
+    </view>
+  </view>
+</view>

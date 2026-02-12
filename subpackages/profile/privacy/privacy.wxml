@@ -1,0 +1,61 @@
+<view class="page-container">
+  <view class="page-content">
+    <view class="section">
+      <text class="section-title">隐私政策</text>
+      <text class="section-content">
+        我们非常重视您的隐私保护，致力于为您提供安全、可靠的服务。本隐私政策说明了我们如何收集、使用、存储和保护您的个人信息。
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">1. 信息收集</text>
+      <text class="section-content">
+        我们会收集您在使用我们服务过程中提供的个人信息，包括但不限于：
+        - 您的昵称、头像等基本信息
+        - 您的联系方式
+        - 您的宠物信息
+        - 您的使用行为数据
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">2. 信息使用</text>
+      <text class="section-content">
+        我们收集的信息将用于：
+        - 为您提供个性化的服务
+        - 改善我们的产品和服务
+        - 与您沟通和联系
+        - 确保服务的安全性
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">3. 信息保护</text>
+      <text class="section-content">
+        我们采取多种安全措施保护您的个人信息：
+        - 数据加密存储
+        - 访问权限控制
+        - 定期安全审计
+        - 严格的内部保密制度
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">4. 信息共享</text>
+      <text class="section-content">
+        我们不会向第三方共享您的个人信息，除非：
+        - 获得您的明确授权
+        - 法律法规要求
+        - 保护我们的合法权益
+        - 与我们的关联公司共享
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">5. 政策更新</text>
+      <text class="section-content">
+        我们可能会不时更新本隐私政策，更新后的政策将在平台上公布。继续使用我们的服务即表示您同意修订后的隐私政策。
+      </text>
+    </view>
+  </view>
+</view>

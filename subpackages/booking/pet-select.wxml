@@ -1,0 +1,94 @@
+<!-- 选择宠物页面 - 与我的宠物页面风格一致 -->
+<view class="page-container">
+  <!-- 头部区域 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      <view class="page-title-container">
+        <van-icon name="/images/paw-print.png" size="18" />
+        <text class="page-title">选择宠物</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 主要内容 -->
+  <view class="page-content">
+    <!-- 宠物列表 -->
+    <view class="pet-list-section" wx:if="{{pets.length > 0}}">
+      <view class="section-header">
+        <view class="title-group">
+          <text class="section-title">已创建的宠物档案</text>
+          <text class="pet-count">{{pets.length}} 个</text>
+        </view>
+      </view>
+      
+      <view class="pet-list">
+        <view class="pet-item" wx:for="{{pets}}" wx:key="id" data-id="{{item.id}}" data-index="{{index}}">
+          <!-- 详情入口区域：包含头像、信息和详情按钮 -->
+          <view class="detail-area" catchtap="viewPetDetail" data-id="{{item.id}}">
+            <image class="pet-avatar" src="{{item.avatarUrl || '/images/default-pet-avatar.png'}}" mode="aspectFill" binderror="onPetAvatarLoadError" data-index="{{index}}" />
+            <view class="pet-info">
+              <text class="pet-name">{{item.name}}</text>
+              <view class="pet-details">
+                <text class="pet-type">{{item.breed || item.type}}</text>
+                <text class="pet-age">{{item.age}} 岁</text>
+              </view>
+            </view>
+            <!-- 详情入口按钮 -->
+            <view class="detail-button">
+              <van-icon name="arrow" size="18" color="#c8c9cc" />
+            </view>
+          </view>
+          <!-- 选择按钮，点击选择/取消选择 -->
+          <view class="pet-selector" catchtap="selectPet" data-id="{{item.id}}">
+            <view class="selector-circle {{ item.checked ? 'selected' : '' }}">
+              <van-icon wx:if="{{ item.checked }}" name="success" size="16" color="#ffffff" />
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 创建新宠物档案按钮 -->
+    <view class="update-profile-section" wx:if="{{pets.length > 0}}">
+      <van-button 
+        type="primary" 
+        block 
+        bindtap="addNewPet"
+      >
+        创建新的宠物档案
+      </van-button>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:else>
+      <van-empty description="还没有添加宠物" image="default" />
+      <text class="empty-desc">点击下方按钮添加您的第一个宠物吧</text>
+      <van-button 
+        type="primary" 
+        block 
+        bindtap="addNewPet"
+        style="margin-top: 32rpx;"
+      >
+        创建新的宠物档案
+      </van-button>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-action-bar" wx:if="{{pets.length > 0}}">
+    <view class="selected-info">
+      <view class="selected-label">已选 {{ selectedPets.length }} 只宠物</view>
+    </view>
+    <van-button 
+      type="primary" 
+      block 
+      bindtap="nextStep"
+      disabled="{{ selectedPets.length === 0 }}"
+      class="confirm-btn"
+    >
+      确定选择
+    </van-button>
+  </view>
+</view>

@@ -1,0 +1,476 @@
+/* 预订页面样式 - 酒店预订风格 */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #fafafa !important;
+}
+
+/* 头部区域 */
+.page-header {
+  padding: 60rpx 40rpx !important;
+  background-color: #fafafa !important;
+  position: relative;
+  border-bottom: 1rpx solid #f0f0f0 !important;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03) !important;
+  margin-bottom: 0 !important;
+}
+
+.header-content {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 品牌标识 */
+.brand-logo {
+  font-size: 52rpx;
+  font-weight: 900;
+  letter-spacing: 14rpx;
+  text-align: left;
+  margin-bottom: 50rpx;
+  color: #000000;
+  text-transform: uppercase;
+  font-family: 'Arial Black', 'Arial Bold', sans-serif;
+  line-height: 1;
+}
+
+/* 宠物主人角色内容 */
+.search-main {
+  flex: 1;
+  padding: 40rpx;
+  background-color: #fafafa;
+}
+
+/* 搜索卡片 */
+.search-card {
+  background-color: #ffffff !important;
+  border: 1rpx solid #f0f0f0 !important;
+  border-radius: 24rpx !important;
+  margin-bottom: 20rpx !important;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.4s ease !important;
+  padding: 40rpx !important;
+}
+
+.search-card:active {
+  transform: translateY(3rpx) !important;
+  box-shadow: 0 3rpx 15rpx rgba(0, 0, 0, 0.04) !important;
+}
+
+/* 日期选择卡片 */
+.date-select-card, .location-select-card, .pet-select-preview {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 40rpx 0 !important;
+  border-bottom: 1rpx solid #f0f0f0 !important;
+}
+
+.date-select-card:last-child, .location-select-card:last-child, .pet-select-preview:last-child {
+  border-bottom: none !important;
+}
+
+.date-content, .location-content, .pet-content {
+  flex: 1 !important;
+}
+
+.date-value-container {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* 日期范围 */
+.date-range {
+  font-size: 28rpx !important;
+  font-weight: 900 !important;
+  color: #000000 !important;
+  margin-bottom: 10rpx !important;
+  text-transform: uppercase !important;
+  letter-spacing: 3rpx !important;
+  line-height: 1 !important;
+}
+
+.date-text {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 4rpx !important;
+  flex-wrap: nowrap !important;
+}
+
+.date-main {
+  font-size: 28rpx !important;
+  font-weight: 900 !important;
+  color: #000000 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 3rpx !important;
+}
+
+.week-day {
+  font-size: 22rpx !important;
+  font-weight: 500 !important;
+  color: #666666 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  margin-left: 2rpx !important;
+}
+
+.date-separator {
+  font-size: 28rpx !important;
+  color: #000000 !important;
+  margin: 0 8rpx !important;
+  font-weight: 400 !important;
+}
+
+.days-count {
+  font-size: 22rpx !important;
+  color: #666666 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2rpx !important;
+}
+
+.location-value, .pet-value {
+  font-size: 28rpx !important;
+  font-weight: 900 !important;
+  color: #000000 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 3rpx !important;
+  line-height: 1 !important;
+}
+
+/* 找寄养按钮容器 */
+.find-host-button-container {
+  text-align: center;
+  margin-top: 60rpx;
+}
+
+/* 自定义按钮样式 */
+.custom-button {
+  display: inline-block !important;
+  padding: 30rpx 160rpx !important;
+  border-radius: 20rpx !important;
+  font-size: 36rpx !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  transition: all 0.4s ease !important;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.1) !important;
+  cursor: pointer !important;
+  border: none !important;
+}
+
+.custom-button--primary {
+  background-color: #000000 !important;
+  color: white !important;
+  text-transform: uppercase !important;
+  letter-spacing: 4rpx !important;
+}
+
+.custom-button--disabled {
+  background-color: #f0f0f0 !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+.custom-button--primary:active {
+  transform: translateY(3rpx) !important;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 日历组件样式 */
+.calendar-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background-color: white;
+}
+
+.calendar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 998;
+}
+
+/* 寄养家庭角色内容 */
+.host-main {
+  flex: 1;
+  padding: 40rpx;
+  background-color: #fafafa;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #ffffff !important;
+  border: 1rpx solid #f0f0f0 !important;
+  border-radius: 24rpx !important;
+  margin-bottom: 20rpx !important;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.4s ease !important;
+  padding: 40rpx !important;
+}
+
+.card:active {
+  transform: translateY(3rpx) !important;
+  box-shadow: 0 3rpx 15rpx rgba(0, 0, 0, 0.04) !important;
+}
+
+.card-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 30rpx !important;
+}
+
+.card-title {
+  font-size: 36rpx !important;
+  font-weight: 900 !important;
+  color: #000000 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 4rpx !important;
+}
+
+.view-more {
+  font-size: 28rpx !important;
+  color: #666 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2rpx !important;
+}
+
+/* 订单列表 */
+.order-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20rpx !important;
+}
+
+.order-item {
+  padding: 30rpx !important;
+  background-color: #fafafa !important;
+  border-radius: 24rpx !important;
+  border: 1rpx solid #f0f0f0 !important;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.3s ease !important;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.order-info {
+  flex: 1;
+}
+
+.pet-name {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #000000;
+  display: block;
+  margin-bottom: 10rpx;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+.owner-name {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.order-status {
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.order-status.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.order-status.confirmed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.order-status.completed {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.order-details {
+  margin-bottom: 20rpx;
+}
+
+.date-info, .price-info {
+  display: flex;
+  margin-bottom: 15rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.date-label, .price-label {
+  margin-right: 20rpx;
+  font-weight: 500;
+}
+
+.price-value {
+  color: #ff6b00;
+  font-weight: 600;
+}
+
+.order-actions {
+  display: flex !important;
+  gap: 20rpx !important;
+  justify-content: flex-end !important;
+}
+
+.action-button {
+  padding: 10rpx 30rpx !important;
+  border-radius: 12rpx !important;
+  font-size: 22rpx !important;
+  border: 1rpx solid #e0e0e0 !important;
+  cursor: pointer !important;
+  transition: all 0.4s ease !important;
+  text-transform: uppercase !important;
+  letter-spacing: 3rpx !important;
+  font-weight: 500 !important;
+}
+
+.confirm-button {
+  background-color: #d4edda !important;
+  color: #155724 !important;
+}
+
+.reject-button {
+  background-color: #f8d7da !important;
+  color: #721c24 !important;
+}
+
+.complete-button {
+  background-color: #d1ecf1 !important;
+  color: #0c5460 !important;
+}
+
+.confirm-button:active, .reject-button:active, .complete-button:active {
+  transform: translateY(3rpx) !important;
+  opacity: 0.9 !important;
+  box-shadow: 0 3rpx 10rpx rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 快速操作 */
+.quick-actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 30rpx !important;
+  margin-top: 20rpx !important;
+}
+
+.quick-action-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 30rpx !important;
+  background: white !important;
+  border: 1rpx solid #f0f0f0 !important;
+  border-radius: 24rpx !important;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.4s ease !important;
+}
+
+.quick-action-item:active {
+  transform: translateY(3rpx) !important;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.04) !important;
+}
+
+.action-icon {
+  width: 80rpx !important;
+  height: 80rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  background: #f5f5f5 !important;
+  margin-bottom: 10rpx !important;
+  border: 1rpx solid #e0e0e0 !important;
+}
+
+.icon-calendar::before {
+  content: "📅" !important;
+  font-size: 40rpx !important;
+}
+
+.icon-service::before {
+  content: "🏠" !important;
+  font-size: 40rpx !important;
+}
+
+.icon-settings::before {
+  content: "⚙️" !important;
+  font-size: 40rpx !important;
+}
+
+.action-text {
+  font-size: 28rpx !important;
+  color: #666 !important;
+  margin-top: 10rpx !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2rpx !important;
+  font-weight: 500 !important;
+}
+
+/* 登录提示样式 - 保留顶部品牌标识 */
+.login-prompt {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: absolute !important;
+  top: 250rpx !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  background-color: #fafafa !important;
+  z-index: 100 !important;
+}
+
+.prompt-icon {
+  width: 140rpx !important;
+  height: 140rpx !important;
+  margin-bottom: 50rpx !important;
+  opacity: 0.5 !important;
+  border-radius: 50% !important;
+  border: 2rpx solid #e0e0e0 !important;
+  background-color: #f0f0f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05) !important;
+}
+
+.prompt-icon image {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.prompt-text {
+  font-size: 36rpx !important;
+  color: #000000 !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  letter-spacing: 4rpx !important;
+  font-weight: 900 !important;
+  font-family: 'Arial Black', 'Arial Bold', sans-serif !important;
+}

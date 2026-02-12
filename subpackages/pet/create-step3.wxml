@@ -1,0 +1,102 @@
+<!-- 创建宠物档案第三步 - 巴黎世家风格 -->
+<view class="page-container">
+  <!-- 头部区域 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      <!-- 页面标题 -->
+      <view class="page-title">创建宠物档案</view>
+    </view>
+  </view>
+
+  <!-- 主要内容 -->
+  <view class="page-content">
+    <!-- 步骤指示器 -->
+    <view class="steps-container">
+      <custom-steps 
+        active="{{ currentActive }}" 
+        steps="{{ stepsData }}"
+      />
+    </view>
+
+    <!-- 表单卡片 -->
+    <view class="card">
+      <view class="card-title">宠物生活习惯</view>
+      <van-cell-group class="form-group">
+        <van-field 
+          label="饮食习惯" 
+          value="{{ formData.dietaryHabit }}" 
+          placeholder="请输入饮食习惯" 
+          border="{{ false }}"
+          type="textarea"
+          autosize="{{ {maxHeight: 120, minHeight: 60} }}"
+          bind:input="onDietaryHabitInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="运动需求" 
+          value="{{ formData.exerciseNeed }}" 
+          placeholder="请输入运动需求" 
+          border="{{ false }}"
+          type="textarea"
+          autosize="{{ {maxHeight: 120, minHeight: 60} }}"
+          bind:input="onExerciseNeedInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="睡眠习惯" 
+          value="{{ formData.sleepingHabit }}" 
+          placeholder="请输入睡眠习惯" 
+          border="{{ false }}"
+          type="textarea"
+          autosize="{{ {maxHeight: 120, minHeight: 60} }}"
+          bind:input="onSleepingHabitInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="社交情况" 
+          value="{{ formData.socialBehavior }}" 
+          placeholder="请输入社交情况" 
+          border="{{ false }}"
+          type="textarea"
+          autosize="{{ {maxHeight: 120, minHeight: 60} }}"
+          bind:input="onSocialBehaviorInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+      </van-cell-group>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="footer">
+      <view class="button-container">
+        <van-button 
+          type="default" 
+          bindtap="prevStep"
+          block="{{ true }}"
+        >
+          上一步
+        </van-button>
+        
+        <van-button 
+          type="primary" 
+          bindtap="nextStep"
+          block="{{ true }}"
+        >
+          下一步
+        </van-button>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,32 @@
+<view class="page-container">
+  <view class="page-content">
+    <view class="logo-container">
+      <image src="/images/paw-print.png" class="logo" mode="aspectFit"></image>
+      <text class="app-name">宠物寄养平台</text>
+    </view>
+    
+    <view class="info-section">
+      <view class="info-item">
+        <text class="info-label">版本号</text>
+        <text class="info-value">{{ version }}</text>
+      </view>
+      
+      <view class="info-item">
+        <text class="info-label">开发者</text>
+        <text class="info-value">宠物寄养团队</text>
+      </view>
+      
+      <view class="info-item">
+        <text class="info-label">联系方式</text>
+        <text class="info-value">contact@petsitting.com</text>
+      </view>
+    </view>
+    
+    <view class="description">
+      <text class="description-text">
+        本平台致力于为宠物主人和寄养家庭提供安全、便捷的宠物寄养服务。
+        我们希望通过科技手段，让宠物寄养变得更加简单和可靠。
+      </text>
+    </view>
+  </view>
+</view>

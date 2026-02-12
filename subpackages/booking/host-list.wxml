@@ -1,0 +1,62 @@
+<!-- 寄养家庭列表页面 - 巴黎世家风格 -->
+<view class="page-container">
+  <!-- 头部区域 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      <!-- 页面标题 -->
+      <view class="page-title-section">
+        <text class="page-title">可选寄养家庭</text>
+        <text class="page-subtitle">共 {{hosts.length}} 个家庭</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 主要内容 -->
+  <view class="page-content">
+    <!-- 寄养家庭列表 -->
+    <view class="host-list-section card">
+      <view class="host-list">
+        <view 
+          wx:for="{{hosts}}" 
+          wx:key="id" 
+          class="host-item {{item.isAcceptingOrders === false ? 'disabled' : ''}}"
+          bindtap="{{item.isAcceptingOrders === false ? '' : 'selectHost'}}"
+          data-id="{{item.id}}"
+        >
+          <view class="host-avatar-wrapper">
+            <image class="host-avatar" src="{{item.avatarUrl}}" mode="aspectFill" />
+          </view>
+          
+          <view class="host-info">
+            <view class="host-name">{{item.name}}</view>
+            <view class="host-rating">
+              <text class="star">★</text>
+              <text class="rating">{{item.rating}}</text>
+              <text class="reviews">({{item.reviews}}条评价)</text>
+            </view>
+            <view class="host-tags">
+              <text 
+                wx:for="{{item.tags}}" 
+                wx:key="index" 
+                class="tag"
+              >{{item}}</text>
+            </view>
+            <view class="host-location">
+              <text class="location-icon">📍</text>
+              <text>{{item.location}}</text>
+            </view>
+            <!-- 暂停接单标识 -->
+            <text wx:if="{{item.isAcceptingOrders === false}}" class="pause-tag">已暂停接待</text>
+          </view>
+
+          <view class="host-price">
+            <text class="price">¥{{item.price}}</text>
+            <text class="price-unit">/天</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

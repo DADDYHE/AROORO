@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "TUIChat": "/TUI-Messages/TUIChat/index"
+  },
+  "componentPlaceholder": {
+    "TUIChat": "view"
+  }
+}

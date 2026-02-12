@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "全部寄养家庭",
+  "enablePullDownRefresh": true,
+  "componentPlaceholder": {
+    "TUIConversation": "view",
+    "TUIChat": "view",
+    "TUIGroup": "view"
+  }
+}

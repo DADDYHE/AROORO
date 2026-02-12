@@ -1,0 +1,13 @@
+{
+  "usingComponents": {
+    "van-icon": "@vant/icon/index"
+  },
+  "navigationBarTitleText": "宠物寄养平台",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "light",
+  "componentPlaceholder": {
+    "TUIConversation": "view",
+    "TUIChat": "view",
+    "TUIGroup": "view"
+  }
+}

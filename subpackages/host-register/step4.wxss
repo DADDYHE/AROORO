@@ -1,0 +1,117 @@
+/* 通用样式 */
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* 步骤指示器样式 */
+.steps-container {
+  padding: 40rpx 30rpx;
+  background-color: white;
+}
+
+/* 表单容器 */
+.form-container {
+  padding: 40rpx 30rpx;
+  background-color: white;
+  margin: 20rpx auto 0;
+}
+
+/* 表单字段样式 */
+.van-field {
+  margin-bottom: 30rpx;
+}
+
+/* 底部按钮 */
+.bottom-button {
+  padding: 40rpx 30rpx;
+  background-color: white;
+  margin-top: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+/* 上一步按钮 */
+.prev-button {
+  flex: 1;
+  background-color: #f5f5f5;
+  color: #333;
+  border-radius: 10rpx;
+  font-size: 32rpx;
+  padding: 20rpx;
+}
+
+/* 下一步按钮 */
+.next-button {
+  flex: 1;
+  background-color: #000;
+  color: #fff;
+  border-radius: 10rpx;
+  font-size: 32rpx;
+  padding: 20rpx;
+}
+
+/* 选项按钮组 */
+.option-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.option-button {
+  padding: 15rpx 25rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 10rpx;
+  background-color: white;
+  color: #333;
+  font-size: 28rpx;
+}
+
+.option-button.active {
+  border-color: #ff6b00;
+  background-color: #fff5eb;
+  color: #ff6b00;
+}
+
+/* 图片上传区域 */
+.upload-area {
+  border: 2rpx dashed #e0e0e0;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  text-align: center;
+  margin-top: 20rpx;
+  width: 90%;
+  height: 280rpx;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-icon {
+  width: 80rpx;
+  height: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.upload-text {
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 预览图片 */
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10rpx;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}

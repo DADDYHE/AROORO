@@ -1,0 +1,69 @@
+<view class="page-container">
+  <view class="page-content">
+    <view class="section">
+      <text class="section-title">用户协议</text>
+      <text class="section-content">
+        欢迎使用我们的宠物寄养平台。本协议是您与我们之间关于使用平台服务的法律协议，请您仔细阅读。
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">1. 协议接受</text>
+      <text class="section-content">
+        注册或使用我们的服务即表示您同意接受本协议的全部条款和条件。如果您不同意本协议，您应立即停止使用我们的服务。
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">2. 用户注册</text>
+      <text class="section-content">
+        您需要提供真实、准确、完整的个人信息进行注册。您应及时更新您的个人信息，确保其真实性和准确性。
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">3. 用户义务</text>
+      <text class="section-content">
+        作为平台用户，您应：
+        - 遵守法律法规和公序良俗
+        - 不发布违法或有害信息
+        - 尊重其他用户的权益
+        - 保护您的账号安全
+        - 提供真实准确的信息
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">4. 服务内容</text>
+      <text class="section-content">
+        我们提供以下服务：
+        - 宠物寄养信息发布和查询
+        - 寄养服务预订和管理
+        - 宠物信息管理
+        - 用户之间的沟通
+        - 评价和反馈系统
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">5. 服务费用</text>
+      <text class="section-content">
+        平台服务可能收取一定的费用，具体费用标准将在服务页面明确说明。您应按照约定支付相关费用。
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">6. 协议变更</text>
+      <text class="section-content">
+        我们有权随时修改本协议，修改后的协议将在平台上公布。继续使用我们的服务即表示您同意修订后的协议。
+      </text>
+    </view>
+    
+    <view class="section">
+      <text class="section-subtitle">7. 违约责任</text>
+      <text class="section-content">
+        违反本协议的用户应承担相应的法律责任。我们有权根据情节轻重采取警告、暂停服务、终止账号等措施。
+      </text>
+    </view>
+  </view>
+</view>

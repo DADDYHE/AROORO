@@ -1,0 +1,160 @@
+/* 引入全局交互优化样式 */
+@import './styles/interaction.wxss';
+
+/* 全局样式 */
+page {
+  background-color: #f7f7f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+}
+
+/* 通用样式类 */
+.container {
+  padding: 20rpx;
+}
+
+/* 强调色 - 爱马仕橙 */
+.text-emphasis {
+  color: #FF6B00;
+}
+.bg-emphasis {
+  background-color: #FF6B00;
+}
+.border-emphasis {
+  border-color: #FF6B00;
+}
+
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header {
+  padding: 30rpx;
+  background-color: #ffffff;
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.05);
+  margin-bottom: 20rpx;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #000000;
+}
+
+.page-content {
+  flex: 1;
+  padding: 0 20rpx;
+}
+
+.page-footer {
+  padding: 30rpx;
+  background-color: #ffffff;
+  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.05);
+  margin-top: 20rpx;
+}
+
+/* 卡片式布局 */
+.card {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  transform: translateY(-2rpx);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #000000;
+}
+
+/* 交互动效 */
+.btn-primary {
+  background: #000000;
+  color: #FFFFFF;
+  height: 92rpx;
+  border-radius: 46rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  transition: transform 0.4s ease;
+}
+
+.btn-primary:active::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.text-primary {
+  color: #000000;
+}
+
+.text-success {
+  color: #00B42A;
+}
+
+.text-danger {
+  color: #F53F3F;
+}
+
+.text-warning {
+  color: #FF7D00;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-bold {
+  font-weight: 600;
+}
+
+/* 禁用 Vant 图标字体加载，避免 CDN 加载失败错误 */
+.van-icon {
+  font-family: inherit !important;
+}

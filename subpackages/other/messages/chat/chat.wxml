@@ -1,0 +1,18 @@
+<!--pages/messages/chat/chat.wxml-->
+<view class="chat-container">
+  <!-- 条件渲染，确保conversationID不为空时才渲染TUIChat组件 -->
+  <block wx:if="{{isConversationIDValid}}">
+    <TUIChat
+      id="tui-chat"
+      currentConversationID="{{conversationID}}"
+      recipientAvatar="{{recipientAvatar}}"
+      bind:onError="onError"
+    />
+  </block>
+  <!-- 加载状态 -->
+  <block wx:else>
+    <view class="loading-container">
+      <text>加载中...</text>
+    </view>
+  </block>
+</view>

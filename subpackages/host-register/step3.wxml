@@ -1,0 +1,49 @@
+<view class="container">
+  <!-- 步骤指示器 -->
+  <custom-steps 
+    currentActive="{{currentActive}}" 
+    stepsData="{{stepsData}}"
+    height="80rpx"
+  />
+
+  <!-- 表单内容 -->
+  <view class="form-container">
+    <!-- 服务类型 -->
+    <van-field
+      label="服务类型"
+      value="全天寄养"
+      readonly
+    />
+
+    <!-- 每日价格 -->
+    <van-field
+      label="每日价格"
+      value="{{formData.pricePerDay}}"
+      placeholder="请输入每日价格"
+      type="digit"
+      bind:input="onPricePerDayInput"
+      suffix="元"
+      extra-event-params="{{ true }}"
+    />
+
+    <!-- 服务描述 -->
+    <van-field
+      label="服务描述"
+      value="{{formData.description}}"
+      placeholder="请输入服务描述"
+      type="textarea"
+      autosize="{{true}}"
+      maxlength="200"
+      bind:input="onDescriptionInput"
+      extra-event-params="{{ true }}"
+    />
+
+
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="bottom-button">
+    <button class="prev-button" bindtap="prevStep">上一步</button>
+    <button class="next-button" bindtap="nextStep" loading="{{isLoading}}">下一步</button>
+  </view>
+</view>

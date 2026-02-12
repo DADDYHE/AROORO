@@ -1,0 +1,17 @@
+<view class="TUI-LocationMessage" bindtap="openLocation">
+  <view class="location-map">
+    <view class="map-background"></view>
+    <view class="map-grid"></view>
+    <view class="location-marker">
+      <image class="marker-icon" src="/images/icon-location.svg" />
+    </view>
+    <view class="map-hint">点击查看位置</view>
+  </view>
+  <view class="location-info">
+    <view class="location-title">{{locationName || '位置信息'}}</view>
+    <view class="location-address">{{locationAddress}}</view>
+  </view>
+  <view class="location-arrow">
+    <image class="arrow-icon" src="/TUI-Messages/assets/arrow-right.svg" mode="aspectFit" />
+  </view>
+</view>

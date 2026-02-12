@@ -1,0 +1,159 @@
+<view class="page-container">
+  <!-- 头部区域 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+    </view>
+  </view>
+
+  <!-- 未登录提示 -->
+  <view wx:if="{{!isLoggedIn}}" class="login-prompt">
+    <image class="prompt-icon" src="/images/default-avatar.svg" mode="aspectFit"></image>
+    <text class="prompt-text">请先登录</text>
+  </view>
+  
+  <!-- 已登录用户内容 -->
+  <view wx:else>
+  <!-- 宠物主人角色内容 -->
+  <view wx:if="{{ userRole === 'owner' }}" class="search-main">
+    <view class="search-card">
+      <!-- 日期选择卡片 -->
+      <view class="date-select-card" bindtap="openDateSelector">
+        <view class="date-content">
+          <view class="date-value-container">
+            <view class="date-range">
+              <rich-text wx:if="{{ selectedStartDate && selectedEndDate }}" nodes="{{ selectedStartDate + ' - ' + selectedEndDate }}"></rich-text>
+              <text wx:else>入住 离店</text>
+            </view>
+            <text class="days-count">{{ selectedStartDate && selectedEndDate ? '共' + days + '天' : '' }}</text>
+          </view>
+        </view>
+        <van-icon name="arrow" size="16" />
+      </view>
+
+      <!-- 位置选择 -->
+      <view class="location-select-card" bindtap="openLocationSelector">
+        <view class="location-content">
+          <view class="location-value">{{ selectedLocation ? selectedLocation : '请选择位置' }}</view>
+        </view>
+        <van-icon name="arrow" size="16" />
+      </view>
+
+      <!-- 宠物选择预览 -->
+      <view class="pet-select-preview" bindtap="jumpToPetSelect">
+        <view class="pet-content">
+          <view class="pet-value">{{ selectedPetsCount > 0 ? selectedPetsCount + '只宠物' : '请选择宠物' }}</view>
+        </view>
+        <van-icon name="arrow" size="16" />
+      </view>
+    </view>
+
+    <!-- 找寄养按钮 -->
+    <view class="find-host-button-container">
+      <view 
+        class="custom-button {{ (!selectedStartDate || !selectedEndDate || !selectedLocation || selectedPetsCount === 0) ? 'custom-button--disabled' : 'custom-button--primary' }}"
+        bindtap="{{ (!selectedStartDate || !selectedEndDate || !selectedLocation || selectedPetsCount === 0) ? '' : 'findHost' }}"
+      >
+        找寄养
+      </view>
+    </view>
+
+    <!-- 日历组件 - 弹窗式 -->
+    <view class="calendar-popup" wx:if="{{ showCalendar }}">
+      <van-calendar 
+        show="{{ showCalendar }}" 
+        bind:confirm="onConfirm" 
+        bind:cancel="onCancel"
+        type="range"
+        min-date="{{ minDate }}"
+        max-date="{{ maxDate }}"
+        default-date="{{ defaultDate }}"
+        color="#000000"
+        poppable="{{ false }}"
+        position="top"
+        safe-area-inset-bottom="{{ false }}"
+        style="height: 100%;"
+        show-confirm="{{ true }}"
+      />
+    </view>
+
+    <!-- 日历选择器遮罩 -->
+    <view class="calendar-overlay" wx:if="{{ showCalendar }}" bindtap="onCancel"></view>
+  </view>
+
+  <!-- 寄养家庭角色内容 -->
+  <view wx:if="{{ userRole === 'host' }}" class="host-main">
+    <!-- 订单管理标题 -->
+    <view class="card">
+      <view class="card-header">
+        <text class="card-title">订单管理</text>
+        <text class="view-more">全部订单 ></text>
+      </view>
+      
+      <!-- 订单列表 -->
+      <view class="order-list">
+        <view wx:for="{{ hostOrders }}" wx:key="id" class="order-item">
+          <view class="order-header">
+            <view class="order-info">
+              <text class="pet-name">{{ item.petName }}</text>
+              <text class="owner-name">主人：{{ item.ownerName }}</text>
+            </view>
+            <view class="order-status {{ item.status }}">
+              {{ item.status === 'pending' ? '待确认' : item.status === 'confirmed' ? '已确认' : '已完成' }}
+            </view>
+          </view>
+          <view class="order-details">
+            <view class="date-info">
+              <text class="date-label">寄养日期：</text>
+              <text class="date-value">{{ item.startDate }} - {{ item.endDate }}</text>
+            </view>
+            <view class="price-info">
+              <text class="price-label">价格：</text>
+              <text class="price-value">¥{{ item.price }}</text>
+            </view>
+          </view>
+          <view class="order-actions">
+            <button wx:if="{{ item.status === 'pending' }}" class="action-button confirm-button" size="mini">
+              确认订单
+            </button>
+            <button wx:if="{{ item.status === 'pending' }}" class="action-button reject-button" size="mini">
+              拒绝订单
+            </button>
+            <button wx:if="{{ item.status === 'confirmed' }}" class="action-button complete-button" size="mini">
+              完成订单
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 快速操作 -->
+    <view class="card">
+      <view class="card-header">
+        <text class="card-title">快速操作</text>
+      </view>
+      <view class="quick-actions">
+        <view class="quick-action-item">
+          <view class="action-icon">
+            <view class="icon-calendar"></view>
+          </view>
+          <text class="action-text">查看日历</text>
+        </view>
+        <view class="quick-action-item">
+          <view class="action-icon">
+            <view class="icon-service"></view>
+          </view>
+          <text class="action-text">我的服务</text>
+        </view>
+        <view class="quick-action-item">
+          <view class="action-icon">
+            <view class="icon-settings"></view>
+          </view>
+          <text class="action-text">服务设置</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  </view>
+</view>

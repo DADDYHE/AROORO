@@ -1,0 +1,65 @@
+.favorite-btn {
+  width: 80rpx !important;
+  height: 80rpx !important;
+  min-width: 80rpx !important;
+  min-height: 80rpx !important;
+  border-radius: 16rpx;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999999;
+  transition: all 0.3s ease;
+  box-shadow: none;
+  border: none;
+  position: relative;
+  z-index: 9999;
+  flex-shrink: 0;
+}
+
+.favorite-btn.active {
+  background-color: transparent !important;
+  color: #000000 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.favorite-btn .heart-icon.active {
+  color: #000000 !important;
+}
+
+.favorite-btn:active {
+  transform: scale(0.95);
+}
+
+.favorite-btn .heart-icon {
+  font-size: 60rpx;
+  line-height: 1;
+  display: block;
+  color: inherit;
+}
+
+.unfavorited-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60rpx;
+  height: 60rpx;
+}
+
+.plus-icon {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  background-color: white;
+  border-radius: 50%;
+  width: 28rpx;
+  height: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 24rpx;
+  color: #999999;
+}

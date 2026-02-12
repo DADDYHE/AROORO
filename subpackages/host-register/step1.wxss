@@ -1,0 +1,638 @@
+/* 通用样式 */
+.container {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+}
+
+/* 步骤指示器样式 */
+.steps-container {
+  padding: 30rpx;
+  background-color: white;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  margin: 20rpx 30rpx 0 30rpx;
+}
+
+/* 表单容器 */
+.form-container {
+  padding: 40rpx 30rpx;
+  background-color: transparent;
+  margin-top: 20rpx;
+}
+
+/* 头像上传样式 - 美化版本 */
+.avatar-section {
+  margin-bottom: 30rpx;
+  background-color: white;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-label {
+  font-size: 28rpx;
+  color: #333333;
+  margin-bottom: 24rpx;
+  font-weight: 500;
+  text-align: center;
+}
+
+.avatar-uploader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.avatar-preview {
+  width: 180rpx;
+  height: 180rpx;
+  border: 2rpx dashed #e0e0e0;
+  border-radius: 50%; /* 圆形头像 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.avatar-preview:active {
+  transform: scale(0.95);
+}
+
+.avatar-preview:hover {
+  border-color: #ff6b00;
+  background-color: #fff9f5;
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.1);
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%; /* 圆形头像 */
+  object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.avatar-hint {
+  font-size: 24rpx;
+  color: #666666;
+  font-weight: 400;
+  transition: all 0.3s ease;
+}
+
+.avatar-preview:hover .avatar-hint {
+  color: #ff6b00;
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+}
+
+.avatar-preview:hover .avatar-overlay {
+  opacity: 1;
+}
+
+
+
+/* 下一步按钮 */
+.next-button {
+  flex: 1;
+  background-color: #000;
+  color: #fff;
+  border-radius: 16rpx;
+  font-size: 34rpx;
+  padding: 24rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+}
+
+.next-button:active {
+  transform: scale(0.98);
+  background-color: #333;
+}
+
+/* 上一步按钮 */
+.prev-button {
+  flex: 1;
+  background-color: #f5f5f5;
+  color: #333;
+  border-radius: 16rpx;
+  font-size: 34rpx;
+  padding: 24rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.prev-button:active {
+  transform: scale(0.98);
+  background-color: #e8e8e8;
+}
+
+/* 选项按钮组 */
+.option-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.option-button {
+  padding: 15rpx 25rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 10rpx;
+  background-color: white;
+  color: #333;
+  font-size: 28rpx;
+}
+
+.option-button.active {
+  border-color: #ff6b00;
+  background-color: #fff5eb;
+  color: #ff6b00;
+}
+
+/* 图片上传区域 */
+.upload-area {
+  border: 2rpx dashed #e0e0e0;
+  border-radius: 10rpx;
+  padding: 40rpx;
+  text-align: center;
+  margin-top: 20rpx;
+}
+
+.upload-icon {
+  width: 80rpx;
+  height: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.upload-text {
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 预览图片 */
+.preview-image {
+  width: 100%;
+  height: 200rpx;
+  object-fit: cover;
+  margin-top: 20rpx;
+  border-radius: 10rpx;
+}
+
+/* 地址部分样式 */
+.address-section {
+  margin-bottom: 16rpx;
+}
+
+.address-label {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 16rpx;
+  padding-left: 4rpx;
+}
+
+/* 城市选择器 */
+.city-selector {
+  margin-bottom: 16rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+  padding: 20rpx;
+  background-color: white;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.city-label {
+  width: 160rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333333;
+  margin-right: 40rpx;
+  white-space: nowrap;
+  letter-spacing: 2rpx;
+  flex-shrink: 0;
+}
+
+.city-picker {
+  flex: 1;
+  font-size: 28rpx;
+  position: relative;
+  min-width: 0;
+}
+
+.city-picker-display {
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: #999999;
+  padding: 8rpx 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  padding-right: 40rpx;
+  letter-spacing: 2rpx;
+}
+
+.city-picker-display::after {
+  content: '▼';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20rpx;
+  color: #999999;
+}
+
+.city-picker-text {
+  color: #666666;
+}
+
+/* 位置服务选择器 */
+.location-selector {
+  margin-bottom: 16rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+  padding: 20rpx;
+  background-color: white;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.location-label {
+  width: 160rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333333;
+  margin-right: 40rpx;
+  white-space: nowrap;
+  letter-spacing: 2rpx;
+  flex-shrink: 0;
+}
+
+.location-picker {
+  flex: 1;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.location-picker-content {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.location-picker-display {
+  width: 100%;
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: #666666;
+  padding: 8rpx 0;
+  padding-right: 40rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 2rpx;
+}
+
+.location-picker-text {
+  color: #666666;
+}
+
+.location-picker-placeholder {
+  color: #999999;
+  font-size: 28rpx;
+}
+
+.location-picker-icon {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-shrink: 0;
+}
+
+/* 统一van-field样式 */
+.van-field {
+  margin-bottom: 16rpx !important;
+  border-bottom: 2rpx solid #f5f5f5 !important;
+  padding: 20rpx !important;
+  background-color: white !important;
+  border-radius: 12rpx !important;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05) !important;
+}
+
+.van-field__label {
+  font-weight: 500 !important;
+  color: #333333 !important;
+  font-size: 28rpx !important;
+  width: 120rpx !important;
+  letter-spacing: 10rpx !important;
+}
+
+.van-field__control {
+  color: #666666 !important;
+  font-size: 28rpx !important;
+  letter-spacing: 2rpx !important;
+}
+
+.van-field__placeholder {
+  color: #999999 !important;
+  font-size: 28rpx !important;
+}
+
+/* 隐私授权弹窗样式 */
+.privacy-auth-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.privacy-auth-content {
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  width: 80%;
+  max-width: 600rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+}
+
+.privacy-auth-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30rpx;
+  color: #333;
+}
+
+.privacy-auth-desc {
+  margin-bottom: 30rpx;
+}
+
+.privacy-auth-item {
+  margin-bottom: 20rpx;
+}
+
+.privacy-auth-item-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 10rpx;
+  display: block;
+}
+
+.privacy-auth-item-content {
+  font-size: 26rpx;
+  color: #999;
+  line-height: 1.5;
+}
+
+.privacy-auth-agree {
+  margin-bottom: 40rpx;
+}
+
+.privacy-auth-agree-text {
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.5;
+}
+
+.privacy-policy-link {
+  color: #1890ff;
+  text-decoration: underline;
+}
+
+.privacy-auth-buttons {
+  display: flex;
+  gap: 20rpx;
+}
+
+.privacy-auth-cancel {
+  flex: 1;
+  height: 70rpx;
+  background-color: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.privacy-auth-cancel:active {
+  background-color: #e8e8e8;
+}
+
+.privacy-auth-confirm {
+  flex: 1;
+  height: 70rpx;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.privacy-auth-confirm:active {
+  background-color: #333;
+}
+
+/* 手机号码输入区域样式 */
+.phone-section {
+  margin-bottom: 16rpx;
+}
+
+.phone-section .van-field {
+  margin-bottom: 10rpx !important;
+}
+
+.wechat-phone-button {
+  width: 100%;
+  height: 60rpx;
+  background-color: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.wechat-phone-button:active {
+  background-color: #e8e8e8;
+  transform: scale(0.98);
+}
+
+/* 底部按钮样式 */
+.bottom-button {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30rpx;
+  background-color: #fff;
+  border-top: 1rpx solid #e0e0e0;
+  z-index: 100;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 自定义头像预览弹窗样式 */
+.avatar-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.avatar-preview-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.avatar-preview-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10rpx;
+  overflow: hidden;
+}
+
+.avatar-preview-image {
+  width: 100%;
+  max-height: 95vh;
+  border-radius: 8rpx;
+  object-fit: contain;
+}
+
+.avatar-preview-actions {
+  display: flex;
+  justify-content: space-around;
+  padding: 40rpx;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-top: 1rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.avatar-preview-cancel,
+.avatar-preview-confirm {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  margin: 0 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-preview-cancel {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2rpx solid #ffffff;
+}
+
+.avatar-preview-confirm {
+  background-color: #ff6b00;
+  color: #ffffff;
+  border: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .privacy-auth-content {
+    width: 90%;
+    padding: 30rpx;
+  }
+  
+  .privacy-auth-title {
+    font-size: 28rpx;
+  }
+  
+  .privacy-auth-item-title {
+    font-size: 26rpx;
+  }
+  
+  .privacy-auth-item-content {
+    font-size: 24rpx;
+  }
+  
+  .privacy-auth-agree-text {
+    font-size: 22rpx;
+  }
+  
+  .privacy-auth-cancel,
+  .privacy-auth-confirm {
+    height: 60rpx;
+    font-size: 26rpx;
+  }
+  
+  .wechat-phone-button {
+    height: 50rpx;
+    font-size: 22rpx;
+  }
+}

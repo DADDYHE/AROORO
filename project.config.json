@@ -1,0 +1,164 @@
+{
+  "description": "家庭式宠物寄养平台小程序",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "packOptions": {
+    "ignore": [
+      {
+        "value": ".eslintrc.js",
+        "type": "file"
+      },
+      {
+        "value": "node_modules",
+        "type": "folder"
+      },
+      {
+        "value": "cloudfunctions/**/node_modules",
+        "type": "folder"
+      },
+      {
+        "value": "test-*.js",
+        "type": "file"
+      },
+      {
+        "value": "verify-*.js",
+        "type": "file"
+      },
+      {
+        "value": "update-*.js",
+        "type": "file"
+      },
+      {
+        "value": "deploy-*.js",
+        "type": "file"
+      },
+      {
+        "value": "invoke-*.js",
+        "type": "file"
+      },
+      {
+        "value": "oneclick-*.js",
+        "type": "file"
+      },
+      {
+        "value": ".env.local",
+        "type": "file"
+      },
+      {
+        "value": "temp-avatar.svg",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_npm/core-js-pure",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/node-sdk",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/qqmap-wx-jssdk",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/bson",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/jsonwebtoken",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/xmlbuilder",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/mime-types",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/signature-nodejs",
+        "type": "folder"
+      },
+      {
+        "value": "temp-*.*",
+        "type": "file"
+      },
+      {
+        "value": "temp_icons",
+        "type": "folder"
+      },
+      {
+        "value": "*.md",
+        "type": "file"
+      }
+    ],
+    "include": []
+  },
+  "setting": {
+    "ignoreDevUnusedFiles": true,
+    "ignoreUploadUnusedFiles": true,
+    "bundle": false,
+    "userConfirmedBundleSwitch": false,
+    "urlCheck": true,
+    "scopeDataCheck": false,
+    "coverView": true,
+    "es6": true,
+    "postcss": true,
+    "compileHotReLoad": false,
+    "lazyloadPlaceholderEnable": false,
+    "preloadBackgroundData": false,
+    "minified": true,
+    "autoAudits": false,
+    "newFeature": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": false,
+    "useIsolateContext": true,
+    "nodeModules": true,
+    "enhance": true,
+    "useMultiFrameRuntime": false,
+    "useApiHook": true,
+    "useApiHostProcess": false,
+    "showShadowRootInWxmlPanel": true,
+    "scopeDataMerge": false,
+    "uglifyWXSS": true,
+    "checkInvalidKey": true,
+    "checkSiteMap": true,
+    "uploadWithSourceMapForDev": false,
+    "compileHotReLoadPort": 22333,
+    "disableUseStrict": true,
+    "minifyWXSS": true,
+    "showES6CompileOption": false,
+    "minifyWXML": true,
+    "compileWorklet": false,
+    "packNpmManually": true,
+    "packNpmRelationList": [
+      {
+        "packageJsonPath": "./package.json",
+        "miniprogramNpmDistDir": "./miniprogram_npm/"
+      }
+    ],
+    "localPlugins": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "ignoreApiDeprecatedError": true
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.13.1",
+  "appid": "wxc5b705cab9ba29e7",
+  "projectname": "wechat-pet-hosting-app",
+  "isGameTourist": false,
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  },
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
+  "simulatorPluginLibVersion": {}
+}

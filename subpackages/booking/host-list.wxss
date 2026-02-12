@@ -1,0 +1,298 @@
+/* 寄养家庭列表页面样式 - 巴黎世家风格 */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f7f8fa;
+}
+
+/* 头部区域 */
+.page-header {
+  padding: 60rpx 40rpx;
+  background-color: #f7f8fa;
+  position: relative;
+  border-bottom: 1rpx solid #f0f0f0;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
+}
+
+.header-content {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 品牌标识 */
+.brand-logo {
+  font-size: 52rpx;
+  font-weight: bold;
+  letter-spacing: 14rpx;
+  text-align: left;
+  margin-bottom: 50rpx;
+  color: #000000;
+  text-transform: uppercase;
+  font-family: 'Arial Black', 'Arial Bold', sans-serif;
+  line-height: 1;
+}
+
+/* 页面标题 */
+.page-title-section {
+  margin-bottom: 40rpx;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #323233;
+  text-transform: uppercase;
+  letter-spacing: 6rpx;
+  line-height: 1;
+  display: block;
+  margin-bottom: 15rpx;
+}
+
+.page-subtitle {
+  font-size: 26rpx;
+  color: #666666;
+  letter-spacing: 3rpx;
+  text-transform: uppercase;
+}
+
+.page-content {
+  flex: 1;
+  padding: 40rpx;
+  overflow-y: auto;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #ffffff;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 24rpx;
+  padding: 60rpx 40rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  transition: all 0.4s ease;
+}
+
+.card:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 3rpx 15rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 寄养家庭列表区域 */
+.host-list-section {
+  margin-bottom: 40rpx;
+}
+
+.host-list {
+  overflow: hidden;
+}
+
+/* 寄养家庭项 */
+.host-item {
+  display: flex;
+  align-items: center;
+  padding: 40rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.host-item:last-child {
+  border-bottom: none;
+}
+
+.host-item:active {
+  transform: translateX(20rpx);
+  opacity: 0.8;
+}
+
+/* 暂停接单状态样式 */
+.host-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: #f5f5f5;
+}
+
+.host-item.disabled .host-name,
+.host-item.disabled .rating,
+.host-item.disabled .reviews,
+.host-item.disabled .price {
+  color: #999;
+}
+
+/* 暂停接单标识 */
+.pause-tag {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 20rpx 40rpx;
+  border-radius: 10rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  z-index: 10;
+  backdrop-filter: blur(5rpx);
+}
+
+/* 头像 */
+.host-avatar-wrapper {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 30rpx;
+  flex-shrink: 0;
+  border: 1rpx solid #e0e0e0;
+  background-color: #f0f0f0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  display: block;
+  overflow: hidden;
+  min-width: 120rpx;
+  min-height: 120rpx;
+  vertical-align: middle;
+  position: relative;
+}
+
+.host-avatar {
+  width: 100%;
+  height: 100%;
+  background-color: #f0f0f0;
+}
+
+/* 信息区域 */
+.host-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+/* 姓名 */
+.host-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #323233;
+  margin-bottom: 15rpx;
+  letter-spacing: 2rpx;
+}
+
+/* 评分 */
+.host-rating {
+  display: flex;
+  align-items: center;
+  gap: 5rpx;
+}
+
+.star {
+  color: #ffd700;
+  font-size: 24rpx;
+}
+
+.rating {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #000;
+}
+
+.reviews {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 标签 */
+.host-tags {
+  display: flex;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 5rpx 15rpx;
+  background-color: #f0f0f0;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  color: #666;
+}
+
+/* 位置 */
+.host-location {
+  display: flex;
+  align-items: center;
+  gap: 5rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.location-icon {
+  font-size: 24rpx;
+}
+
+/* 价格 */
+.host-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.price {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #000;
+}
+
+.price-unit {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .page-header {
+    padding: 50rpx 30rpx;
+  }
+  
+  .brand-logo {
+    font-size: 48rpx;
+    letter-spacing: 12rpx;
+    margin-bottom: 40rpx;
+  }
+  
+  .page-title {
+    font-size: 36rpx;
+    letter-spacing: 4rpx;
+  }
+  
+  .page-content {
+    padding: 30rpx;
+    overflow-y: auto;
+  }
+  
+  .card {
+    padding: 40rpx 30rpx;
+    margin-bottom: 20rpx;
+  }
+  
+  .host-item {
+    padding: 30rpx 0;
+  }
+  
+  .host-avatar-wrapper {
+    width: 100rpx;
+    height: 100rpx;
+    margin-right: 25rpx;
+    display: block;
+    overflow: hidden;
+    min-width: 100rpx;
+    min-height: 100rpx;
+  }
+  
+  .host-name {
+    font-size: 32rpx;
+    margin-bottom: 12rpx;
+    letter-spacing: 2rpx;
+  }
+}

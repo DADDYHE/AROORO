@@ -1,0 +1,90 @@
+<view class="page-container">
+  <!-- 头部区域 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      <!-- 页面标题 -->
+      <view class="nav-header">
+        <view class="nav-title">填写需求</view>
+        <view class="nav-subtitle">请填写您的特殊需求，以便我们提供更好的服务</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 需求填写表单 -->
+  <view class="requirements-form">
+    <view class="form-card">
+      <view class="form-title">喂食要求</view>
+      <van-field 
+        value="{{ requirements.feeding }}" 
+        placeholder="请描述宠物的喂食要求" 
+        border="{{ false }}"
+        type="textarea"
+        autosize
+        maxlength="200"
+        bind:input="onFeedingInput"
+        class="form-field"
+      />
+    </view>
+
+    <view class="form-card">
+      <view class="form-title">运动需求</view>
+      <van-field 
+        value="{{ requirements.exercise }}" 
+        placeholder="请描述宠物的运动需求" 
+        border="{{ false }}"
+        type="textarea"
+        autosize
+        maxlength="200"
+        bind:input="onExerciseInput"
+        class="form-field"
+      />
+    </view>
+
+    <view class="form-card">
+      <view class="form-title">医疗需求</view>
+      <van-field 
+        value="{{ requirements.medical }}" 
+        placeholder="请描述宠物的医疗需求" 
+        border="{{ false }}"
+        type="textarea"
+        autosize
+        maxlength="200"
+        bind:input="onMedicalInput"
+        class="form-field"
+      />
+    </view>
+
+    <view class="form-card">
+      <view class="form-title">其他需求</view>
+      <van-field 
+        value="{{ requirements.other }}" 
+        placeholder="请描述其他特殊需求" 
+        border="{{ false }}"
+        type="textarea"
+        autosize
+        maxlength="200"
+        bind:input="onOtherInput"
+        class="form-field"
+      />
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-action-bar">
+    <view class="price-info">
+      <view class="price-label">预估总费用</view>
+      <view class="price-value">¥{{ estimatedTotal }}</view>
+    </view>
+    <van-button 
+      type="primary" 
+      block 
+      size="large" 
+      bindtap="nextStep"
+      class="confirm-btn"
+    >
+      下一步：确认订单
+    </van-button>
+  </view>
+</view>

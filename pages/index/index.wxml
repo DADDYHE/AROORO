@@ -1,0 +1,18 @@
+<view class="container">
+  <view class="page-header">
+    <text class="title">待办事项列表</text>
+  </view>
+  
+  <view class="todo-list">
+    <block wx:for="{{todos}}" wx:key="id">
+      <view class="todo-item">
+        <text class="todo-title">{{item.title}}</text>
+        <text class="todo-date">{{item.created_at}}</text>
+      </view>
+    </block>
+  </view>
+  
+  <view wx:if="{{todos.length === 0}}" class="empty-state">
+    <text>暂无待办事项</text>
+  </view>
+</view>

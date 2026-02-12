@@ -1,0 +1,862 @@
+/* 个人中心页面样式 - 巴黎世家风格，与首页保持一致 */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #fafafa;
+  position: relative;
+}
+
+/* 模糊背景样式 */
+.blur-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10rpx);
+  -webkit-backdrop-filter: blur(10rpx);
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* 身份切换加载遮罩层 */
+.role-switch-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8rpx);
+  -webkit-backdrop-filter: blur(8rpx);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+/* 遮罩层内容 */
+.overlay-content {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 32rpx;
+  padding: 60rpx 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.25);
+  min-width: 320rpx;
+  max-width: 80%;
+  animation: slideUp 0.4s ease;
+}
+
+/* 大尺寸加载旋转器 */
+.loading-spinner-large {
+  width: 80rpx;
+  height: 80rpx;
+  border: 6rpx solid #f0f0f0;
+  border-top-color: #000000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 30rpx;
+}
+
+/* 遮罩层主文字 */
+.overlay-text {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 12rpx;
+  text-align: center;
+  letter-spacing: 2rpx;
+}
+
+/* 遮罩层副文字 */
+.overlay-subtext {
+  font-size: 24rpx;
+  color: #666666;
+  text-align: center;
+  letter-spacing: 1rpx;
+}
+
+/* 淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 上滑动画 */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 头部区域 */
+.page-header {
+  padding: 60rpx 40rpx;
+  background-color: #fafafa;
+  position: relative;
+  border-bottom: 1rpx solid #f0f0f0;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
+}
+
+.header-content {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 品牌标识 */
+.brand-logo {
+  font-size: 52rpx;
+  font-weight: 900;
+  letter-spacing: 14rpx;
+  text-align: left;
+  margin-bottom: 50rpx;
+  color: #000000;
+  text-transform: uppercase;
+  font-family: 'Arial Black', 'Arial Bold', sans-serif;
+  line-height: 1;
+}
+
+/* 用户信息展示 */
+.user-info {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-info:active {
+  background-color: #f5f5f5;
+}
+
+/* 头像样式 */
+.avatar {
+  width: 140rpx !important;
+  height: 140rpx !important;
+  aspect-ratio: 1 / 1 !important;
+  max-width: 140rpx !important;
+  max-height: 140rpx !important;
+  min-width: 140rpx !important;
+  min-height: 140rpx !important;
+  border-radius: 50% !important;
+  margin-right: 20rpx;
+  border: 2rpx solid #e0e0e0;
+  object-fit: cover;
+  display: block;
+  transform: none !important;
+  overflow: hidden !important;
+  box-sizing: content-box !important;
+}
+
+/* Avatar容器样式 */
+.avatar-container {
+  width: 140rpx !important;
+  height: 140rpx !important;
+  aspect-ratio: 1 / 1 !important;
+  max-width: 140rpx !important;
+  max-height: 140rpx !important;
+  min-width: 140rpx !important;
+  min-height: 140rpx !important;
+  border-radius: 50% !important;
+  margin-right: 20rpx;
+  border: 2rpx solid #e0e0e0;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-sizing: content-box !important;
+  background-color: #f0f0f0;
+}
+
+/* 头像图片样式 */
+.avatar-image {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  object-fit: cover !important;
+}
+
+/* SVG头像样式 */
+.svg-avatar {
+  width: 80% !important;
+  height: 80% !important;
+  color: #666 !important;
+  display: block !important;
+}
+
+
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140rpx;
+  height: 140rpx;
+  margin-right: 20rpx;
+}
+
+.loading-spinner {
+  width: 48rpx;
+  height: 48rpx;
+  border: 4rpx solid #f0f0f0;
+  border-top: 4rpx solid #000000;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: #666666;
+  margin-left: 10rpx;
+}
+
+/* 旋转动画 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 用户详情 */
+.user-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100px;
+  justify-content: center;
+}
+
+.welcome {
+  font-size: 36rpx;
+  font-weight: 900;
+  margin-bottom: 15rpx;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  line-height: 1.2;
+}
+
+
+
+/* 角色和切换按钮 */
+.role-container {
+  display: flex;
+  align-items: center;
+}
+
+.role-tag {
+  font-size: 22rpx;
+  background-color: #f5f5f5;
+  color: #666666;
+  padding: 8rpx 0rpx;
+  min-width: 120rpx;
+  border-radius: 12rpx;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  font-weight: 500;
+  display: inline-block;
+  width: fit-content;
+  border: 1rpx solid #e0e0e0;
+  margin-right: 16rpx;
+  text-align: center;
+}
+
+.switch-role-btn {
+  font-size: 22rpx;
+  background-color: #f5f5f5;
+  color: #666666;
+  padding: 8rpx 0rpx;
+  min-width: 120rpx;
+  border-radius: 12rpx;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  font-weight: 500;
+  display: inline-block;
+  width: fit-content;
+  border: 1rpx solid #e0e0e0;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.switch-role-btn:active {
+  background-color: #e0e0e0;
+  color: #333333;
+}
+
+/* 页面内容区域 */
+.page-content {
+  padding: 40rpx;
+  flex: 1;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #ffffff;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.06);
+  transition: all 0.4s ease;
+}
+
+.card:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 3rpx 15rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 表单项样式 */
+.form-item {
+  display: flex;
+  align-items: center;
+  padding: 40rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+/* 登录表单中的表单项样式 */
+.login-form .form-item {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  border-bottom: none;
+  margin-bottom: 40rpx;
+}
+
+/* 昵称输入框所在的form-item，下移100rpx */
+.login-form .nickname-form-item {
+  margin-top: 100rpx !important;
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+/* 表单标签 */
+.form-label {
+  width: 180rpx;
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  line-height: 1;
+}
+
+/* 表单值区域 */
+.form-value {
+  flex: 1;
+  text-align: right;
+}
+
+/* 表单值文本 */
+.form-value-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333333;
+  letter-spacing: 1rpx;
+}
+
+/* 选择器触发器 */
+.picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* 选择器值 */
+.picker-value {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #666666;
+  margin-right: 20rpx;
+  letter-spacing: 1rpx;
+}
+
+/* 选择器箭头 */
+.picker-arrow {
+  font-size: 24rpx;
+  color: #000000;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+/* 快速操作区域 */
+.quick-actions {
+  margin-top: 40rpx;
+}
+
+/* 退出登录按钮 */
+.logout-button {
+  width: 100%;
+  height: 88rpx;
+  background-color: #000000;
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 900;
+  border-radius: 20rpx;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  transition: all 0.4s ease;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.1);
+}
+
+.logout-button:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 登录表单样式 - 固定定位，确保可见 */
+.login-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  padding: 20rpx 40rpx 60rpx 40rpx;
+  box-shadow: 0 10rpx 40rpx rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  width: 80%;
+  max-width: 600rpx;
+  border: 1rpx solid #f0f0f0;
+  /* 使用flex布局，让内容垂直分布，按钮固定在底部 */
+  display: flex;
+  flex-direction: column;
+  min-height: 500rpx;
+}
+
+/* 表单项目样式 */
+.form-item {
+  margin-bottom: 40rpx;
+}
+
+/* 登录表单中的表单项样式 */
+.login-form .form-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  border-bottom: none;
+  margin-bottom: 40rpx;
+}
+
+/* 昵称输入框所在的form-item，下移100rpx */
+.login-form .nickname-form-item {
+  margin-top: 100rpx !important;
+}
+
+/* 头像上传容器 - 居中显示，下移20rpx */
+.avatar-upload-container {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 20rpx 0;
+}
+
+/* 头像上传按钮样式 */
+.avatar-upload-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 2rpx dashed #e0e0e0;
+  border-radius: 20rpx;
+  padding: 20rpx 0;
+  width: 100%;
+  max-width: 200rpx;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: content-box;
+}
+
+.avatar-upload-btn::after {
+  display: none;
+}
+
+/* 头像预览样式 - 适当增大尺寸，让头像更加突出 */
+.avatar-preview {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  margin-bottom: 15rpx;
+  object-fit: cover;
+  border: 4rpx solid #ffffff;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 上传文字样式 - 缩小字体 */
+.upload-text {
+  font-size: 24rpx;
+  color: #999999;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+/* 昵称输入框样式 */
+.nickname-input {
+  width: 100%;
+  padding: 12.5rpx 20rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333333;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  border-bottom: 1rpx solid #e0e0e0;
+  margin-bottom: 20rpx;
+  background-color: transparent;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  line-height: 40rpx;
+  height: 65rpx;
+  box-sizing: content-box;
+}
+
+.nickname-input::placeholder {
+  color: #cccccc;
+  font-weight: 900;
+}
+
+.nickname-input:focus {
+  border-bottom-color: #000000;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* 按钮容器 - 用于放置登录和取消按钮在同一行，固定在底部 */
+.buttons-container {
+  display: flex;
+  gap: 20rpx;
+  margin-top: auto;
+  padding: 40rpx 0 0 0;
+}
+
+/* 登录提交按钮样式 - 缩小尺寸，调整宽度 */
+.login-submit-btn {
+  flex: 1;
+  background-color: #000000 !important;
+  border-radius: 15rpx !important;
+  font-size: 26rpx;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  padding: 20rpx 0;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.1);
+  transition: all 0.4s ease;
+  color: white !important;
+  margin: 0;
+  border: none !important;
+  line-height: 1.5;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.login-submit-btn::after {
+  display: none;
+}
+
+.login-submit-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 3rpx 12rpx rgba(0, 0, 0, 0.08);
+  background-color: #333333 !important;
+}
+
+.login-submit-btn:disabled {
+  background-color: #f0f0f0 !important;
+  color: #999999 !important;
+  box-shadow: none;
+  border: 2rpx solid #e0e0e0 !important;
+  opacity: 0.8;
+}
+
+.login-submit-btn:disabled:active {
+  transform: none;
+}
+
+/* 取消登录按钮样式 */
+.cancel-btn {
+  flex: 1;
+  background-color: #f5f5f5 !important;
+  border-radius: 15rpx !important;
+  font-size: 26rpx;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  padding: 20rpx 0;
+  box-shadow: 0 3rpx 12rpx rgba(0, 0, 0, 0.08);
+  transition: all 0.4s ease;
+  color: #333333;
+  margin: 0;
+}
+
+.cancel-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  background-color: #e0e0e0 !important;
+}
+
+/* 完善信息提示 */
+.complete-info-section {
+  margin-bottom: 20rpx;
+}
+
+/* 菜单区域 */
+.menu {
+  margin-bottom: 20rpx;
+}
+
+/* 统计信息 */
+.stats {
+  margin-bottom: 20rpx;
+}
+
+/* 身份选择弹窗 */
+.role-selection-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+/* 弹窗遮罩 */
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8rpx);
+  -webkit-backdrop-filter: blur(8rpx);
+}
+
+/* 弹窗容器 */
+.modal-container {
+  position: relative;
+  width: 90%;
+  max-width: 600rpx;
+  background-color: #ffffff;
+  border-radius: 32rpx;
+  overflow: hidden;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+}
+
+/* 弹窗头部 */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40rpx 40rpx 20rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.modal-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #000000;
+  letter-spacing: 2rpx;
+}
+
+.modal-close {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-close:active {
+  transform: scale(0.9);
+}
+
+.close-icon {
+  font-size: 48rpx;
+  font-weight: 300;
+  color: #999999;
+}
+
+/* 弹窗主体 */
+.modal-body {
+  padding: 30rpx 40rpx;
+}
+
+.modal-description {
+  font-size: 28rpx;
+  color: #666666;
+  text-align: center;
+  display: block;
+  margin-bottom: 40rpx;
+}
+
+/* 身份选项 */
+.role-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  background-color: #fafafa;
+  border: 3rpx solid #f0f0f0;
+  border-radius: 24rpx;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.role-option.selected {
+  background-color: rgba(0, 0, 0, 0.03);
+  border-color: #000000;
+}
+
+.role-option:active {
+  transform: scale(0.98);
+}
+
+.role-icon {
+  width: 80rpx;
+  height: 80rpx;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  padding: 16rpx;
+}
+
+.role-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.role-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #000000;
+}
+
+.role-desc {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.role-check {
+  width: 48rpx;
+  height: 48rpx;
+  background-color: #000000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-icon {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* 弹窗底部 */
+.modal-footer {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 40rpx 40rpx;
+  border-top: 2rpx solid #f5f5f5;
+}
+
+.modal-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 20rpx;
+  font-size: 30rpx;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  border: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancel-btn {
+  background-color: #f5f5f5;
+  color: #666666;
+}
+
+.cancel-btn:active {
+  background-color: #e0e0e0;
+  transform: translateY(2rpx);
+}
+
+.confirm-btn {
+  background-color: #000000;
+  color: #ffffff;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.15);
+}
+
+.confirm-btn:active {
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.1);
+  transform: translateY(2rpx);
+}
+
+.confirm-btn[disabled] {
+  background-color: #cccccc;
+  color: #999999;
+  box-shadow: none;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100rpx);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

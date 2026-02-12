@@ -1,0 +1,298 @@
+/* 寄养家庭列表页面样式 - 巴黎世家风格 */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f7f8fa;
+}
+
+/* 头部区域 */
+.page-header {
+  padding: 60rpx 40rpx;
+  background-color: #f7f8fa;
+  position: relative;
+  border-bottom: 1rpx solid #f0f0f0;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
+}
+
+.header-content {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 品牌标识 */
+.brand-logo {
+  font-size: 52rpx;
+  font-weight: bold;
+  letter-spacing: 14rpx;
+  text-align: left;
+  margin-bottom: 50rpx;
+  color: #000000;
+  text-transform: uppercase;
+}
+
+/* 页面标题 */
+.page-title-section {
+  text-align: left;
+}
+
+.page-title {
+  font-size: 52rpx;
+  font-weight: 900;
+  letter-spacing: 14rpx;
+  color: #000000;
+  text-transform: uppercase;
+  margin-bottom: 10rpx;
+  display: block;
+}
+
+.page-subtitle {
+  font-size: 28rpx;
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  opacity: 0.8;
+}
+
+/* 主要内容 */
+.page-content {
+  flex: 1;
+  padding: 40rpx;
+  overflow-y: auto;
+}
+
+/* 寄养家庭列表 */
+.host-list-section {
+  margin-bottom: 40rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: white;
+  border-radius: 30rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.06);
+  padding: 40rpx;
+  overflow: hidden;
+  border: 1rpx solid #f0f0f0;
+}
+
+/* 寄养家庭列表 */
+.host-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+/* 寄养家庭项 */
+.host-item {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.host-item:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 已暂停接待的寄养家庭 */
+.host-item.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.host-item.disabled:active {
+  transform: none;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 寄养家庭头像 */
+.host-avatar-wrapper {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 30rpx;
+  border: 2rpx solid #f0f0f0;
+  background-color: #f5f5f5;
+}
+
+.host-avatar {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 寄养家庭信息 */
+.host-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.host-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #323233;
+  letter-spacing: 2rpx;
+}
+
+.host-rating {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.star {
+  color: #fcd34d;
+  font-size: 24rpx;
+}
+
+.rating {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #323233;
+}
+
+.reviews {
+  font-size: 24rpx;
+  color: #909399;
+}
+
+.host-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.tag {
+  background-color: #f5f7fa;
+  color: #606266;
+  border-radius: 16rpx;
+  padding: 6rpx 16rpx;
+  font-size: 22rpx;
+  letter-spacing: 1rpx;
+  text-transform: uppercase;
+}
+
+.host-location {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 24rpx;
+  color: #909399;
+  letter-spacing: 1rpx;
+}
+
+.location-icon {
+  font-size: 24rpx;
+}
+
+/* 暂停接待标签 */
+.pause-tag {
+  background-color: #ffebee;
+  color: #ef5350;
+  border-radius: 16rpx;
+  padding: 6rpx 16rpx;
+  font-size: 22rpx;
+  letter-spacing: 1rpx;
+  text-transform: uppercase;
+  font-weight: bold;
+  align-self: flex-start;
+}
+
+/* 寄养家庭价格 */
+.host-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.price {
+  font-size: 40rpx;
+  color: #000000;
+  letter-spacing: 2rpx;
+}
+
+.price-unit {
+  font-size: 24rpx;
+  color: #606266;
+  letter-spacing: 1rpx;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 750rpx) {
+  .page-header {
+    padding: 50rpx 30rpx;
+  }
+  
+  .brand-logo {
+    font-size: 48rpx;
+    letter-spacing: 12rpx;
+    margin-bottom: 40rpx;
+  }
+  
+  .page-title {
+    font-size: 48rpx;
+    letter-spacing: 12rpx;
+  }
+  
+  .page-subtitle {
+    font-size: 26rpx;
+    letter-spacing: 2rpx;
+  }
+  
+  .page-content {
+    padding: 30rpx;
+  }
+  
+  .card {
+    padding: 30rpx;
+  }
+  
+  .host-item {
+    padding: 25rpx;
+  }
+  
+  .host-avatar-wrapper {
+    width: 100rpx;
+    height: 100rpx;
+    margin-right: 20rpx;
+  }
+  
+  .host-name {
+    font-size: 32rpx;
+  }
+  
+  .rating {
+    font-size: 26rpx;
+  }
+  
+  .reviews,
+  .host-location {
+    font-size: 22rpx;
+  }
+  
+  .tag,
+  .pause-tag {
+    font-size: 20rpx;
+    padding: 4rpx 14rpx;
+  }
+  
+  .price {
+    font-size: 36rpx;
+  }
+  
+  .price-unit {
+    font-size: 22rpx;
+  }
+}

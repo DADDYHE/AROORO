@@ -1,0 +1,57 @@
+<view class="container">
+  <!-- 垂直滚动轮播图 -->
+  <swiper 
+    class="photo-swiper" 
+    vertical="{{true}}" 
+    circular="{{false}}" 
+    autoplay="{{false}}" 
+    current="{{currentIndex}}"
+    bindchange="onSwiperChange"
+    indicator-dots="{{false}}"
+  >
+    <!-- 照片列表 -->
+    <swiper-item 
+      wx:for="{{photos}}" 
+      wx:key="id"
+      data-index="{{index}}"
+    >
+      <view class="photo-item">
+        <image 
+          class="photo-image" 
+          src="{{item.url}}" 
+          mode="aspectFit"
+          bindload="onImageLoad"
+          data-index="{{index}}"
+        ></image>
+      </view>
+    </swiper-item>
+    
+    <!-- 空状态 -->
+    <swiper-item wx:if="{{photos.length === 0}}">
+      <view class="empty-state">
+        <text class="empty-text">暂无照片内容</text>
+      </view>
+    </swiper-item>
+  </swiper>
+  
+  <!-- 垂直指示器 -->
+  <view class="vertical-indicator-container" wx:if="{{photos.length > 0}}">
+    <!-- 照片数量指示器 -->
+    <view class="photo-count-indicator">
+      {{currentIndex + 1}} / {{photos.length}}
+    </view>
+    
+    <!-- 垂直滚动指示器 -->
+    <view class="vertical-indicator">
+      <view 
+        class="indicator-dot {{index === currentIndex ? 'active' : ''}}" 
+        wx:for="{{photos}}" 
+        wx:key="id"
+        catchtap="switchPhoto"
+        data-index="{{index}}"
+      ></view>
+    </view>
+  </view>
+  
+
+</view>

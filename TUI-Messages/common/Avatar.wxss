@@ -1,0 +1,31 @@
+.avatar-container {
+  display: inline-block;
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.image_radius {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ccc;
+}
+
+.text_radius {
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  border-radius: 50%;
+  background-color: #1989fa;
+  color: #fff;
+  font-size: 16px;
+  overflow: hidden;
+}
+
+.svg-avatar {
+  width: 40px;
+  height: 40px;
+  fill: #666;
+}

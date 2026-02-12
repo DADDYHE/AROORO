@@ -1,0 +1,21 @@
+<!-- 自定义步骤指示器组件 -->
+<view class="custom-steps">
+  <view class="steps-line">
+    <view class="steps-line-progress" style="width: {{ progress }}%"></view>
+  </view>
+  
+  <view class="step-items">
+    <view 
+      wx:for="{{ steps }}" 
+      wx:key="index" 
+      class="step-item {{ index <= active ? 'step-item--active' : '' }} {{ index < active ? 'step-item--completed' : '' }}"
+    >
+      <view class="step-circle">
+        <view class="step-number">
+          {{ index < active ? '✓' : index + 1 }}
+        </view>
+      </view>
+      <view class="step-text">{{ item.text }}</view>
+    </view>
+  </view>
+</view>

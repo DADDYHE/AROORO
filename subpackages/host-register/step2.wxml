@@ -1,0 +1,175 @@
+<view class="container">
+  <!-- 步骤指示器 -->
+  <custom-steps 
+    currentActive="{{currentActive}}" 
+    stepsData="{{stepsData}}"
+    height="80rpx"
+  />
+
+  <!-- 表单内容 -->
+  <view class="form-container">
+    <!-- 房屋类型 -->
+    <van-field
+      label="房屋类型"
+      value="{{formData.housingType}}"
+      placeholder="请选择房屋类型"
+      bind:tap="selectHousingType"
+      is-link
+    />
+
+    <!-- 是否有庭院 -->
+    <van-field
+      label="是否有庭院"
+      value="{{formData.hasYard}}"
+      placeholder="请选择是否有庭院"
+      bind:tap="selectHasYard"
+      is-link
+    />
+
+    <!-- 最大可寄养数 -->
+    <van-field
+      label="最大可寄养数"
+      value="{{formData.maxPets}}"
+      placeholder="请选择最大可寄养数"
+      bind:tap="selectMaxPets"
+      is-link
+    />
+
+    <!-- 是否有原住民 -->
+    <van-field
+      label="是否有原住民"
+      value="{{formData.hasOtherPets}}"
+      placeholder="请选择是否有原住民"
+      bind:tap="selectHasOtherPets"
+      is-link
+    />
+
+    <!-- 原住民品种和数量 -->
+    <van-field
+      wx:if="{{formData.hasOtherPets === '有'}}"
+      label="原住民品种和数量"
+      value="{{formData.nativePetInfo}}"
+      placeholder="请输入原住民品种和数量（如：金毛1只）"
+      bind:input="onNativePetInfoInput"
+    />
+
+    <!-- 可寄养宠物类型 -->
+    <van-field
+      label="可寄养宠物类型"
+      value="{{formData.petTypes}}"
+      placeholder="请选择可寄养宠物类型"
+      bind:tap="selectPetType"
+      is-link
+    />
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="bottom-button">
+    <button class="prev-button" bindtap="prevStep">上一步</button>
+    <button class="next-button" bindtap="nextStep" loading="{{isLoading}}">下一步</button>
+  </view>
+
+  <!-- 房屋类型选择面板 -->
+  <van-action-sheet
+    show="{{showHousingTypeSheet}}"
+    title="选择房屋类型"
+    cancel-text="取消"
+    bind:cancel="onCloseHousingTypeSheet"
+  >
+    <van-cell-group>
+      <van-cell
+        wx:for="{{housingTypes}}"
+        wx:key="value"
+        title="{{item.name}}"
+        bind:tap="onSelectHousingType"
+        data-value="{{item.value}}"
+      />
+    </van-cell-group>
+  </van-action-sheet>
+
+  <!-- 是否有庭院选择面板 -->
+  <van-action-sheet
+    show="{{showHasYardSheet}}"
+    title="是否有庭院"
+    cancel-text="取消"
+    bind:cancel="onCloseHasYardSheet"
+  >
+    <van-cell-group>
+      <van-cell
+        title="有"
+        bind:tap="onSelectHasYard"
+        data-value="有"
+      />
+      <van-cell
+        title="无"
+        bind:tap="onSelectHasYard"
+        data-value="无"
+      />
+    </van-cell-group>
+  </van-action-sheet>
+
+  <!-- 最大可寄养数选择面板 -->
+  <van-action-sheet
+    show="{{showMaxPetsSheet}}"
+    title="选择最大可寄养数"
+    cancel-text="取消"
+    bind:cancel="onCloseMaxPetsSheet"
+  >
+    <van-cell-group>
+      <van-cell
+        wx:for="{{['3-5只', '6-8只', '10+只']}}"
+        wx:key="*this"
+        title="{{item}}"
+        bind:tap="onSelectMaxPets"
+        data-value="{{item}}"
+      />
+    </van-cell-group>
+  </van-action-sheet>
+
+  <!-- 是否有原住民选择面板 -->
+  <van-action-sheet
+    show="{{showHasOtherPetsSheet}}"
+    title="是否有原住民"
+    cancel-text="取消"
+    bind:cancel="onCloseHasOtherPetsSheet"
+  >
+    <van-cell-group>
+      <van-cell
+        title="有"
+        bind:tap="onSelectHasOtherPets"
+        data-value="有"
+      />
+      <van-cell
+        title="无"
+        bind:tap="onSelectHasOtherPets"
+        data-value="无"
+      />
+    </van-cell-group>
+  </van-action-sheet>
+
+  <!-- 可寄养宠物类型选择面板 -->
+  <van-action-sheet
+    show="{{showPetTypeSheet}}"
+    title="选择可寄养宠物类型"
+    cancel-text="取消"
+    bind:cancel="onClosePetTypeSheet"
+  >
+    <van-cell-group>
+      <van-cell
+        title="狗狗"
+        bind:tap="onSelectPetType"
+        data-value="狗狗"
+      />
+      <van-cell
+        title="猫咪"
+        bind:tap="onSelectPetType"
+        data-value="猫咪"
+      />
+      <van-cell
+        title="其他"
+        bind:tap="onSelectPetType"
+        data-value="其他"
+      />
+    </van-cell-group>
+  </van-action-sheet>
+</view>

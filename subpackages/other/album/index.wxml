@@ -1,0 +1,161 @@
+<view class="container">
+
+  <!-- 功能按钮 -->
+  <view class="function-tabs">
+    <view 
+      class="tab-button {{currentTab === 'video' ? 'active' : ''}}" 
+      catchtap="switchTab" 
+      data-tab="video"
+    >
+      视频
+    </view>
+    <view 
+      class="tab-button {{currentTab === 'album' ? 'active' : ''}}" 
+      catchtap="switchTab" 
+      data-tab="album"
+    >
+      相册
+    </view>
+  </view>
+
+  <!-- 视频功能区 -->
+  <view class="content-area video-section {{currentTab === 'video' ? 'active' : 'hidden'}}">
+    <!-- 垂直指示器和视频数量指示器 -->
+    <view class="vertical-indicator-container" wx:if="{{videos.length > 0}}">
+      <!-- 视频数量指示器 -->
+      <view class="video-count-indicator">
+        {{currentVideoIndex + 1}} / {{videos.length}}
+      </view>
+    </view>
+    
+    <swiper 
+      class="video-swiper" 
+      vertical="{{true}}" 
+      circular="{{false}}" 
+      autoplay="{{false}}" 
+      interval="{{4000}}" 
+      duration="{{500}}"
+      current="{{currentVideoIndex}}"
+      bindchange="onVideoSwiperChange"
+      style="height: {{videoHeight}}px;"
+      indicator-dots="{{true}}"
+      indicator-active-color="#FF6B00"
+      indicator-color="rgba(255, 255, 255, 0.3)"
+    >
+      <!-- 视频列表 -->
+      <swiper-item 
+        wx:for="{{videos}}" 
+        wx:key="id"
+        data-index="{{index}}"
+      >
+        <view class="video-item">
+          <video 
+            id="video-{{index}}"
+            class="video-player"
+            src="{{item.url}}"
+            poster="{{item.poster}}"
+            controls="{{true}}"
+            show-fullscreen-btn="{{false}}"
+            show-play-btn="{{true}}"
+            show-center-play-btn="{{true}}"
+            enable-play-gesture="{{true}}"
+            object-fit="cover"
+            loop="{{true}}"
+            autoplay="{{currentVideoIndex === index}}"
+            bindplay="onVideoPlay"
+            bindpause="onVideoPause"
+            bindended="onVideoEnded"
+            bindtimeupdate="onVideoTimeUpdate"
+            data-index="{{index}}"
+          ></video>
+
+          <!-- 播放进度条 -->
+          <view class="progress-container">
+            <view 
+              class="progress-bar"
+              bindtouchstart="onProgressTouchStart"
+              bindtouchmove="onProgressTouchMove"
+              bindtouchend="onProgressTouchEnd"
+              data-index="{{index}}"
+            >
+              <view class="progress-track" style="width: {{item.playProgress || 0}}%"></view>
+              <view class="progress-thumb" wx:if="{{item.isDragging}}" style="left: {{item.playProgress || 0}}%"></view>
+            </view>
+            <view class="progress-time">
+              <text class="current-time">{{formatTime(item.currentTime || 0)}}</text>
+              <text class="total-time">{{formatTime(item.duration || 0)}}</text>
+            </view>
+          </view>
+
+          <!-- 寄养家庭信息栏 -->
+          <view class="host-info">
+            <image class="host-avatar" src="{{item.hostInfo.avatarUrl}}" mode="aspectFill"></image>
+            <view class="host-details">
+              <text class="host-name">{{item.hostInfo.name}}</text>
+              <text class="video-description">{{item.description}}</text>
+            </view>
+          </view>
+        </view>
+      </swiper-item>
+      
+      <!-- 空状态 -->
+      <swiper-item wx:if="{{videos.length === 0}}">
+        <view class="empty-state">
+          <text class="empty-text">暂无视频内容</text>
+        </view>
+      </swiper-item>
+    </swiper>
+    
+    <!-- 右下角6个方块按钮 -->
+    <view class="grid-button" catchtap="goToVideoList">
+      <view class="grid-container">
+        <view class="grid-item"></view>
+        <view class="grid-item"></view>
+        <view class="grid-item"></view>
+        <view class="grid-item"></view>
+        <view class="grid-item"></view>
+        <view class="grid-item"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 相册功能区 -->
+  <view class="content-area album-section {{currentTab === 'album' ? 'active' : 'hidden'}}">
+    <!-- 相册内容 -->
+    <view class="album-content">
+      <!-- 大图 -->
+      <view wx:if="{{photos.length > 0}}" class="main-photo">
+        <image 
+          class="main-image" 
+          src="{{photos[0].url}}" 
+          mode="aspectFill"
+          bindtap="previewPhoto"
+          data-index="0"
+        ></image>
+      </view>
+      
+      <!-- 缩略图网格 -->
+      <view wx:if="{{photos.length > 1}}" class="thumbnail-grid">
+        <view 
+          class="thumbnail-item" 
+          wx:for="{{photos}}" 
+          wx:key="id"
+          wx:if="{{index > 0}}"
+          bindtap="previewPhoto"
+          data-index="{{index}}"
+        >
+          <image 
+            class="thumbnail-image" 
+            src="{{item.url}}" 
+            mode="aspectFill"
+          ></image>
+        </view>
+      </view>
+      
+      <!-- 空状态 -->
+      <view wx:if="{{photos.length === 0}}" class="empty-state">
+        <text class="empty-text">暂无照片内容</text>
+      </view>
+    </view>
+  </view>
+</view>

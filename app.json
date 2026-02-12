@@ -1,0 +1,161 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/booking/calendar",
+    "pages/messages/index",
+    "pages/pet/list",
+    "pages/pet/detail",
+    "pages/pet/update-profile",
+    "pages/profile/index",
+    "pages/chooseIdentity/chooseIdentity"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "宠物寄养平台",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#666666",
+    "selectedColor": "#FF6B00",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "images/tabBar/home_normal.png",
+        "selectedIconPath": "images/tabBar/home_white.png"
+      },
+      {
+        "pagePath": "pages/booking/calendar",
+        "text": "预订",
+        "iconPath": "images/tabBar/booking_normal.png",
+        "selectedIconPath": "images/tabBar/booking_white.png"
+      },
+      {
+        "pagePath": "pages/messages/index",
+        "text": "消息",
+        "iconPath": "images/tabBar/messages_normal.png",
+        "selectedIconPath": "images/tabBar/messages_white.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "images/tabBar/profile_normal.png",
+        "selectedIconPath": "images/tabBar/profile_white.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "renderer": "webview",
+  "sitemapLocation": "sitemap.json",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "您的位置信息将用于推荐附近的寄养家庭"
+    }
+  },
+  "requiredPrivateInfos": [
+    "chooseLocation",
+    "getLocation"
+  ],
+  "networkTimeout": {
+    "request": 10000,
+    "downloadFile": 10000
+  },
+  "lazyCodeLoading": "requiredComponents",
+
+  "usingComponents": {
+    "van-icon": "@vant/icon/index",
+    "van-button": "@vant/button/index",
+    "van-field": "@vant/field/index"
+  },
+  "subPackages": [
+    {
+      "root": "subpackages/booking",
+      "name": "booking",
+      "pages": [
+        "pet-select",
+        "requirements",
+        "confirm",
+        "host-list",
+        "host-list-all",
+        "host-detail"
+      ]
+    },
+    {
+      "root": "subpackages/pet",
+      "name": "pet",
+      "pages": [
+        "create-step1",
+        "create-step2",
+        "create-step3",
+        "create-step4"
+      ]
+    },
+    {
+      "root": "subpackages/profile",
+      "name": "profile",
+      "pages": [
+        "settings/index",
+        "edit/index",
+        "about/about",
+        "privacy/privacy",
+        "agreement/agreement"
+      ]
+    },
+    {
+      "root": "subpackages/hosting",
+      "name": "hosting",
+      "pages": [
+        "index",
+        "edit-basic-info",
+        "edit"
+      ]
+    },
+    {
+      "root": "subpackages/host-register",
+      "name": "host-register",
+      "pages": [
+        "step1",
+        "step2",
+        "step3",
+        "step4"
+      ]
+    },
+    {
+      "root": "subpackages/other",
+      "name": "other",
+      "pages": [
+        "favorites/index",
+        "album/index",
+        "video-list/index",
+        "photo-viewer/index",
+        "init-messages/index",
+        "address/index",
+        "messages/chat/chat"
+      ]
+    },
+    {
+      "root": "TUI-Messages",
+      "name": "TUI-Messages",
+      "pages": [
+        "TUI-Chat/chat",
+        "TUI-Conversation/conversation/conversation"
+      ],
+      "independent": false
+    },
+    {
+      "root": "subpackages/im-deps",
+      "name": "im-deps",
+      "pages": []
+    }
+  ],
+  "preloadRule": {
+    "pages/messages/index": {
+      "network": "all",
+      "packages": ["TUI-Messages"]
+    }
+  }
+}

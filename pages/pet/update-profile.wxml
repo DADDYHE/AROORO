@@ -1,0 +1,202 @@
+<view class="container">
+  <!-- 头像区域 -->
+  <view class="avatar-container" bindtap="chooseAvatar">
+    <image wx:if="{{ editingData.avatarUrl }}" class="pet-avatar" src="{{ editingData.avatarUrl }}" mode="aspectFill" />
+    <view wx:else class="avatar-placeholder">
+      <view class="plus-icon">+</view>
+      <text class="avatar-placeholder-text">点击上传头像照片</text>
+    </view>
+  </view>
+
+  <!-- 基本信息区域 -->
+  <view class="basic-info-section">
+    <van-cell-group>
+      <van-field
+        label="宠物名字"
+        value="{{ editingData.name }}"
+        placeholder="请输入宠物名字"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="name"
+      />
+      <van-field
+        label="宠物年龄"
+        type="number"
+        value="{{ editingData.age }}"
+        placeholder="请输入宠物年龄"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="age"
+      />
+      <van-field
+        label="品种"
+        value="{{ editingData.breed }}"
+        placeholder="请输入宠物品种"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="breed"
+      />
+      <van-field
+        label="体重"
+        type="number"
+        value="{{ editingData.weight }}"
+        placeholder="请输入体重(kg)"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="weight"
+        suffix="kg"
+      />
+    </van-cell-group>
+  </view>
+
+  <!-- 健康信息区域 -->
+  <view class="health-info-section">
+    <view class="section-title">健康信息</view>
+    <van-cell-group>
+      <van-cell title="是否绝育">
+        <van-radio-group value="{{ editingData.isSterilized ? 'true' : 'false' }}" bind:change="onSelectChange" data-field="isSterilized">
+          <van-radio name="true">是</van-radio>
+          <van-radio name="false">否</van-radio>
+        </van-radio-group>
+      </van-cell>
+      <van-cell title="是否接种疫苗">
+        <van-radio-group value="{{ editingData.isVaccinated ? 'true' : 'false' }}" bind:change="onSelectChange" data-field="isVaccinated">
+          <van-radio name="true">是</van-radio>
+          <van-radio name="false">否</van-radio>
+        </van-radio-group>
+      </van-cell>
+      <van-field
+        label="健康状况"
+        value="{{ editingData.healthStatus }}"
+        placeholder="请输入健康状况"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="healthStatus"
+      />
+      <van-field
+        label="过敏史"
+        value="{{ editingData.allergies }}"
+        placeholder="请输入过敏史"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="allergies"
+      />
+      <van-field
+        label="特殊需求"
+        value="{{ editingData.specialNeeds }}"
+        placeholder="请输入特殊需求"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="specialNeeds"
+        type="textarea"
+        rows="2"
+        autosize
+      />
+    </van-cell-group>
+  </view>
+
+  <!-- 生活习惯区域 -->
+  <view class="life-info-section">
+    <view class="section-title">生活习惯</view>
+    <van-cell-group>
+      <van-field
+        label="饮食习惯"
+        value="{{ editingData.dietaryHabit }}"
+        placeholder="请输入饮食习惯"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="dietaryHabit"
+        type="textarea"
+        rows="3"
+        autosize
+      />
+      <van-field
+        label="运动需求"
+        value="{{ editingData.exerciseNeed }}"
+        placeholder="请输入运动需求"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="exerciseNeed"
+        type="textarea"
+        rows="3"
+        autosize
+      />
+      <van-field
+        label="睡眠习惯"
+        value="{{ editingData.sleepingHabit }}"
+        placeholder="请输入睡眠习惯"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="sleepingHabit"
+        type="textarea"
+        rows="3"
+        autosize
+      />
+      <van-field
+        label="社交行为"
+        value="{{ editingData.socialBehavior }}"
+        placeholder="请输入社交行为"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="socialBehavior"
+        type="textarea"
+        rows="3"
+        autosize
+      />
+    </van-cell-group>
+  </view>
+
+  <!-- 紧急联系人区域 -->
+  <view class="emergency-info-section">
+    <view class="section-title">紧急联系人</view>
+    <van-cell-group>
+      <van-field
+        label="联系人姓名"
+        value="{{ editingData.emergencyContactName }}"
+        placeholder="请输入联系人姓名"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="emergencyContactName"
+      />
+      <van-field
+        label="联系电话"
+        value="{{ editingData.emergencyContactPhone }}"
+        placeholder="请输入联系电话"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="emergencyContactPhone"
+      />
+      <van-field
+        label="与宠物关系"
+        value="{{ editingData.emergencyContactRelation }}"
+        placeholder="请输入与宠物的关系"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="emergencyContactRelation"
+      />
+      <van-field
+        label="备注信息"
+        value="{{ editingData.emergencyContactNote }}"
+        placeholder="请输入备注信息"
+        border="{{ false }}"
+        bind:input="onInputChange"
+        data-field="emergencyContactNote"
+        type="textarea"
+        rows="2"
+        autosize
+      />
+    </van-cell-group>
+  </view>
+
+  <!-- 保存按钮 -->
+  <view class="save-section">
+    <van-button
+      type="primary"
+      block
+      bindtap="savePetInfo"
+      loading="{{ saving }}"
+    >
+      保存修改
+    </van-button>
+  </view>
+</view>

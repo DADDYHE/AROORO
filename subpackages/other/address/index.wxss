@@ -1,0 +1,414 @@
+/* 地址管理页面样式 - 巴黎世家风格 */
+.page-container {
+  min-height: 100vh;
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 导航栏 */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100rpx;
+  padding: 0 30rpx;
+  background-color: #ffffff;
+  border-bottom: 1rpx solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-back {
+  width: 80rpx;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.nav-back-icon {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #000000;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+}
+
+.nav-right {
+  width: 80rpx;
+}
+
+/* 地址列表 */
+.address-list {
+  flex: 1;
+  padding: 20rpx 30rpx;
+}
+
+/* 地址项 */
+.address-item {
+  background-color: #ffffff;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.address-item:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
+}
+
+/* 默认地址 */
+.address-item-default {
+  border-color: #000000;
+}
+
+/* 选中的地址 */
+.address-item-selected {
+  border-color: #000000;
+  background-color: #f5f5f5;
+}
+
+/* 地址头部 */
+.address-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.address-name {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #000000;
+  margin-right: 20rpx;
+  letter-spacing: 2rpx;
+}
+
+.address-phone {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #666666;
+  margin-right: 20rpx;
+}
+
+.address-default {
+  font-size: 24rpx;
+  font-weight: 900;
+  color: #ffffff;
+  background-color: #000000;
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+/* 地址详情 */
+.address-detail {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333333;
+  line-height: 1.5;
+  margin-bottom: 20rpx;
+  letter-spacing: 1rpx;
+}
+
+/* 地址操作 */
+.address-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 16rpx;
+}
+
+.address-action-edit {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #666666;
+  margin-right: 30rpx;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  transition: color 0.3s ease;
+}
+
+.address-action-edit:active {
+  color: #000000;
+}
+
+.address-action-delete {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #ff4d4f;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  transition: color 0.3s ease;
+}
+
+.address-action-delete:active {
+  color: #cf1322;
+}
+
+/* 空地址提示 */
+.address-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300rpx;
+  background-color: #ffffff;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 20rpx;
+}
+
+.address-empty-text {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #999999;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+}
+
+/* 添加新地址按钮 */
+.add-address-button-container {
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+}
+
+.add-address-button {
+  width: 100%;
+  height: 100rpx;
+  background-color: #000000;
+  color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 900;
+  border-radius: 20rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  transition: all 0.3s ease;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.1);
+}
+
+.add-address-button:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.08);
+}
+
+.add-address-icon {
+  font-size: 40rpx;
+  margin-right: 16rpx;
+  font-weight: 900;
+}
+
+/* 地址编辑弹窗 */
+.address-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.address-popup-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.address-popup-content {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 30rpx 30rpx 0 0;
+  padding: 30rpx;
+  box-sizing: border-box;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 210;
+}
+
+.address-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.address-popup-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+}
+
+.address-popup-close {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #666666;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.address-popup-close:active {
+  background-color: #f0f0f0;
+  color: #000000;
+}
+
+/* 弹窗表单 */
+.address-popup-form {
+  margin-bottom: 30rpx;
+}
+
+.form-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 40rpx;
+}
+
+.form-label {
+  width: 180rpx;
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  padding-top: 20rpx;
+}
+
+.form-input {
+  flex: 1;
+  height: 80rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #000000;
+  border: 2rpx solid #f0f0f0;
+  border-radius: 15rpx;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+  letter-spacing: 1rpx;
+}
+
+.form-location-input {
+  flex: 1;
+  position: relative;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 160rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #000000;
+  border: 2rpx solid #f0f0f0;
+  border-radius: 15rpx;
+  padding: 20rpx;
+  padding-right: 180rpx;
+  box-sizing: border-box;
+  letter-spacing: 1rpx;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.form-location-button {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  display: flex;
+  align-items: center;
+  padding: 12rpx 24rpx;
+  background-color: #f0f0f0;
+  border-radius: 30rpx;
+  transition: all 0.3s ease;
+}
+
+.form-location-button:active {
+  background-color: #e0e0e0;
+  transform: scale(0.95);
+}
+
+.form-location-icon {
+  font-size: 28rpx;
+  margin-right: 8rpx;
+}
+
+.form-location-text {
+  font-size: 24rpx;
+  font-weight: 900;
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 1rpx;
+}
+
+.form-switch {
+  margin-top: 20rpx;
+  transform: scale(1.2);
+}
+
+/* 弹窗底部按钮 */
+.address-popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding-top: 30rpx;
+  border-top: 2rpx solid #f0f0f0;
+}
+
+.address-popup-button {
+  flex: 1;
+  height: 90rpx;
+  font-size: 34rpx;
+  font-weight: 900;
+  border-radius: 20rpx;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  transition: all 0.3s ease;
+}
+
+.address-popup-button-cancel {
+  background-color: #f0f0f0;
+  color: #666666;
+  border: none;
+}
+
+.address-popup-button-cancel:active {
+  background-color: #e0e0e0;
+}
+
+.address-popup-button-save {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+}
+
+.address-popup-button-save:active {
+  background-color: #333333;
+}

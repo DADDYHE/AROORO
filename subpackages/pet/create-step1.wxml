@@ -1,0 +1,111 @@
+<!-- 创建宠物档案第一步 - 巴黎世家风格 -->
+<view class="page-container">
+  <!-- 头部区域 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      <!-- 页面标题 -->
+      <view class="page-title">创建宠物档案</view>
+    </view>
+  </view>
+
+  <!-- 主要内容 -->
+  <view class="page-content">
+    <!-- 步骤指示器 -->
+    <view class="steps-container">
+      <custom-steps 
+        active="{{ currentActive }}" 
+        steps="{{ stepsData }}"
+      />
+    </view>
+
+    <!-- 表单卡片 -->
+    <view class="card">
+      <view class="card-title">宠物基本信息</view>
+      <van-cell-group class="form-group">
+        <van-field 
+          label="宠物昵称" 
+          value="{{ formData.name }}" 
+          placeholder="请输入宠物昵称" 
+          border="{{ false }}"
+          bind:input="onNameInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="宠物类型" 
+          value="{{ formData.type === 'dog' ? '狗狗' : (formData.type === 'cat' ? '猫咪' : '') }}" 
+          placeholder="请选择宠物类型" 
+          border="{{ false }}"
+          is-link
+          bindtap="selectPetType"
+          class="form-field"
+          title-width="160rpx"
+          readonly="{{ true }}"
+          clickable="{{ true }}"
+        />
+        
+        <van-field 
+          label="宠物年龄" 
+          value="{{ formData.age }}" 
+          placeholder="请输入宠物年龄" 
+          border="{{ false }}"
+          type="number"
+          bind:input="onAgeInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="体重" 
+          value="{{ formData.weight }}" 
+          placeholder="请输入体重（kg）" 
+          border="{{ false }}"
+          type="digit"
+          bind:input="onWeightInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+        
+        <van-field 
+          label="品种" 
+          value="{{ formData.breed }}" 
+          placeholder="请输入品种" 
+          border="{{ false }}"
+          bind:input="onBreedInput"
+          extra-event-params="{{ true }}"
+          class="form-field"
+          title-width="160rpx"
+        />
+      </van-cell-group>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="footer">
+      <view class="button-container">
+        <van-button 
+          type="primary" 
+          block
+          bindtap="nextStep"
+          disabled="{{ !formData.name || !formData.type || !formData.age || !formData.weight || !formData.breed }}"
+        >
+          下一步
+        </van-button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作菜单 -->
+  <van-action-sheet
+    show="{{ showTypeSheet }}"
+    actions="{{ petTypes }}"
+    cancel-text="取消"
+    bind:select="onSelectType"
+    bind:close="onCloseTypeSheet"
+  />
+</view>

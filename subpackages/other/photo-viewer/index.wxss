@@ -1,0 +1,94 @@
+/* 图片查看页面样式 */
+.container {
+  width: 100%;
+  height: 100vh;
+  background-color: #000;
+  position: relative;
+}
+
+/* 照片轮播图 */
+.photo-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+/* 照片项 */
+.photo-item {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 照片图片 */
+.photo-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* 垂直指示器容器 */
+.vertical-indicator-container {
+  position: fixed;
+  right: 65rpx;
+  top: calc(50% + 12rpx);
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 100;
+  gap: 15rpx; /* 数量指示器和垂直指示器之间的间距 */
+}
+
+/* 照片数量指示器 */
+.photo-count-indicator {
+  color: white;
+  font-size: 28rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.8); /* 增加文字阴影，提高可读性 */
+}
+
+/* 垂直滚动指示器 */
+.vertical-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+/* 指示器圆点 */
+.indicator-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* 激活状态的指示器圆点 */
+.indicator-dot.active {
+  width: 10rpx;
+  height: 20rpx;
+  border-radius: 5rpx;
+  background-color: #FF6B00;
+}
+
+/* 空状态 */
+.empty-state {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+}
+
+/* 空状态文字 */
+.empty-text {
+  color: #999;
+  font-size: 32rpx;
+}
+
+

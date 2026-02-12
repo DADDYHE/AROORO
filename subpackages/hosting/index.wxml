@@ -1,0 +1,225 @@
+<view class="container">
+  <view class="header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      <!-- 页面标题和按钮 -->
+      <view class="page-header-section">
+        <text class="title">我的寄养服务</text>
+        <button 
+          class="{{isAcceptingOrders ? 'pause-button' : 'resume-button'}}" 
+          bindtap="toggleAcceptingOrders"
+        >
+          <van-icon name="{{isAcceptingOrders ? 'pause-circle-o' : 'play-circle-o'}}" /> {{isAcceptingOrders ? '暂停接单' : '恢复接单'}}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 页面内容 -->
+  <view class="page-content">
+    <!-- 基本信息板块 -->
+    <view class="profile-section" wx:if="{{ hostingProfile }}">
+      <!-- 家庭介绍卡片 -->
+      <view class="service-item status-card">
+        <view class="round-edit-button" bindtap="toggleEditMode">
+          <van-icon name="{{ isEditingDescription ? 'check' : 'edit' }}" size="16" />
+        </view>
+        <view class="service-header">
+          <text class="service-name">{{ hostingProfile.name }}</text>
+          <view class="header-actions">
+            <van-tag type="{{ hostingProfile.status === 'active' ? 'success' : 'default' }}">
+              {{ hostingProfile.status === 'active' ? '营业中' : '已暂停' }}
+            </van-tag>
+          </view>
+        </view>
+        <!-- 头像显示 -->
+        <view class="avatar-container">
+          <image class="avatar" src="{{ (isEditingDescription && editAvatar) || hostingProfile.avatarUrl ? (isEditingDescription && editAvatar ? editAvatar : hostingProfile.avatarUrl) : '/images/default-avatar.svg' }}" mode="aspectFill" binderror="onAvatarLoadError"></image>
+          <view class="avatar-edit" bindtap="chooseAvatar" wx:if="{{ isEditingDescription }}">
+            <text class="avatar-edit-text">更换头像</text>
+          </view>
+        </view>
+        <!-- 非编辑状态 -->
+        <text class="description" wx:if="{{ !isEditingDescription }}">{{ hostingProfile.description }}</text>
+        <!-- 编辑状态 -->
+        <view class="edit-description-container" wx:if="{{ isEditingDescription }}">
+          <textarea 
+            class="description-input" 
+            placeholder="请输入您的家庭介绍（最多500字）"
+            value="{{editDescription}}"
+            bindinput="onInput"
+            maxlength="500"
+            auto-height
+            placeholder-class="placeholder"
+          ></textarea>
+          <view class="description-actions">
+            <view class="char-count">{{charCount}}/500</view>
+            <view class="action-buttons">
+              <button class="cancel-btn" bindtap="cancelEdit">取消</button>
+              <button class="save-btn" bindtap="saveDescription" disabled="{{isSaving}}">
+                {{isSaving ? '保存中...' : '保存'}}
+              </button>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 基本信息卡片 -->
+      <view class="service-item info-card">
+        <view class="round-edit-button" bindtap="editBasicInfo">
+          <van-icon name="edit" size="16" />
+        </view>
+        <view class="card-header">
+          <text class="section-title">基本信息</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-card-item">
+            <text class="info-card-label">寄养家庭名称</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.hostName }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">真实姓名</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.realName }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">电话</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.phone }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">身份证号</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.idCard }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">地址</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.address }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">房屋类型</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.housingType }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">是否有庭院</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.hasYard }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">最大可寄养数量</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.maxPets }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">是否有原住民</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.hasOtherPets }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">原住民信息</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.nativePetInfo }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">可寄养宠物类型</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.petTypes }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">每日价格</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.pricePerDay }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">紧急联系人姓名</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.emergencyContactName }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">紧急联系人电话</text>
+            <text class="info-card-value">{{ hostingProfile.basicInfo.emergencyContactPhone }}</text>
+          </view>
+        </view>
+      </view>
+
+
+
+      <!-- 服务状态卡片 -->
+      <view class="service-item info-card">
+        <view class="card-header">
+          <text class="section-title">服务状态</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-card-item">
+            <text class="info-card-label">服务状态</text>
+            <text class="info-card-value">{{ hostingProfile.status }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">是否接受接单</text>
+            <text class="info-card-value">{{ hostingProfile.isAcceptingOrders ? '是' : '否' }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">评分</text>
+            <text class="info-card-value">{{ hostingProfile.rating }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">评价数量</text>
+            <text class="info-card-value">{{ hostingProfile.reviewCount }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">创建时间</text>
+            <text class="info-card-value">{{ hostingProfile.createdAt }}</text>
+          </view>
+          <view class="info-card-item">
+            <text class="info-card-label">更新时间</text>
+            <text class="info-card-value">{{ hostingProfile.updatedAt }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 环境照片卡片 -->
+      <view class="service-item photo-card">
+        <view class="round-edit-button" bindtap="editPhotos">
+          <van-icon name="edit" size="16" />
+        </view>
+        <view class="card-header">
+          <text class="section-title">环境照片</text>
+        </view>
+        <view class="photo-grid">
+          <view class="photo-item-container" wx:for="{{ hostingProfile.photos }}" wx:key="index">
+            <image 
+              class="photo-item" 
+              src="{{ item }}" 
+              mode="aspectFill"
+              bindtap="previewImage"
+              data-url="{{ item }}"
+            ></image>
+            <view class="delete-button" bindtap="deletePhoto" data-index="{{ index }}">
+              <van-icon name="cross" size="18" color="#fff" />
+            </view>
+          </view>
+          <view class="add-photo" bindtap="choosePhotos">
+            <van-icon name="photo-o" size="24" color="#999" />
+          </view>
+        </view>
+      </view>
+
+      <!-- 日常视频卡片 -->
+      <view class="service-item video-card">
+        <view class="round-edit-button" bindtap="editVideos">
+          <van-icon name="edit" size="16" />
+        </view>
+        <view class="card-header">
+          <text class="section-title">日常视频</text>
+        </view>
+        <view class="video-list">
+          <view class="video-item-container" wx:for="{{ hostingProfile.videos }}" wx:key="index">
+            <video 
+              class="video-item" 
+              src="{{ item }}"
+              controls
+            ></video>
+            <view class="delete-button" bindtap="deleteVideo" data-index="{{ index }}">
+              <van-icon name="cross" size="18" color="#fff" />
+            </view>
+          </view>
+          <view class="add-video" bindtap="chooseVideos">
+            <van-icon name="play-circle-o" size="24" color="#999" />
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+</view>

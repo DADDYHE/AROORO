@@ -1,0 +1,160 @@
+<!--pages/messages/chat/chat.wxml-->
+<view class="page-container">
+  <!-- 聊天容器 -->
+  <view class="chat-container" bindtap="onContainerTap">
+    <!-- 消息列表区域 -->
+    <view class="message-list" scroll-y="true" bindscrolltolower="loadMoreMessages" catchtap="onMessageListTap">
+      <!-- 加载更多提示 -->
+      <view wx:if="{{loadingMore}}" class="loading-more">
+        <text class="loading-text">加载中...</text>
+      </view>
+      
+      <!-- 消息列表 -->
+      <view wx:for="{{messageList}}" wx:key="messageID" class="message-item {{item.isSelf ? 'self-message' : 'other-message'}}">
+        <!-- 头像 -->
+        <view class="message-avatar">
+          <image wx:if="{{item.isSelf}}" class="avatar" src="{{selfAvatar}}" mode="aspectFit"></image>
+          <image wx:else class="avatar" src="{{otherAvatar}}" mode="aspectFit"></image>
+        </view>
+        
+        <!-- 消息内容 -->
+        <view class="message-content" wx:if="{{!item.isRevoked}}">
+          <!-- 消息气泡 -->
+            <view wx:if="{{!item.type || item.type !== 'location'}}" class="message-bubble {{item.isSelf ? 'self-bubble' : 'other-bubble'}}" catchlongpress="onMessageLongPress" data-message-id="{{item.messageID}}">
+              <!-- 文本消息 -->
+              <text wx:if="{{!item.type || item.type === 'text'}}" class="message-text">{{item.content}}</text>
+              
+              <!-- 语音消息 -->
+              <view wx:elif="{{item.type === 'voice'}}" class="voice-message">
+                <image class="voice-icon" src="/images/audio.svg" mode="aspectFit"></image>
+                <text class="voice-text">[语音消息]</text>
+              </view>
+              
+              <!-- 图片消息 -->
+              <view wx:elif="{{item.type === 'image'}}" class="image-message">
+                <image class="message-image" src="{{item.imagePath || '/images/default-avatar.svg'}}" mode="aspectFit"></image>
+              </view>
+              
+              <!-- 视频消息 -->
+              <view wx:elif="{{item.type === 'video'}}" class="video-message">
+                <image class="message-video-cover" src="/images/default-avatar.svg" mode="aspectFit"></image>
+                <text class="video-text">[视频消息]</text>
+              </view>
+            </view>
+            
+            <!-- 位置消息 -->
+            <view wx:elif="{{item.type === 'location'}}" class="location-message {{item.isSelf ? 'self-message' : 'other-message'}}" bindtap="onLocationTap" data-location="{{item.location}}" catchlongpress="onMessageLongPress" data-message-id="{{item.messageID}}">
+              <view class="location-card">
+                <view class="location-header">
+                  <text class="location-name">{{item.content || '未知位置'}}</text>
+                  <image class="location-icon" src="/images/icon-location.svg" mode="aspectFit"></image>
+                </view>
+                <text class="location-address">{{item.location && item.location.address ? item.location.address : '未知地址'}}</text>
+                <view class="location-map">
+                  <image class="map-thumbnail" src="https://apis.map.qq.com/ws/staticmap/v2/?center={{item.location && item.location.latitude ? item.location.latitude : 0}},{{item.location && item.location.longitude ? item.location.longitude : 0}}&zoom=15&size=300x200&maptype=roadmap&markers=size:small|color:red|{{item.location && item.location.latitude ? item.location.latitude : 0}},{{item.location && item.location.longitude ? item.location.longitude : 0}}&key=OB4BZ-D4W3U-B7VVO-4PJWW-6TKDJ-WPB77" mode="aspectFill"></image>
+                </view>
+              </view>
+            </view>
+          
+          <!-- 消息时间 -->
+          <view class="message-time">
+            <text class="time-text">{{formatTime(item.timestamp)}}</text>
+          </view>
+        </view>
+        
+        <!-- 撤回消息提示 -->
+        <view wx:else class="message-content">
+          <view class="message-bubble {{item.isSelf ? 'self-bubble' : 'other-bubble'}}">
+            <text class="message-text revoked-message">{{item.isSelf ? '你撤回了一条消息' : '对方撤回了一条消息'}}</text>
+          </view>
+          <view class="message-time">
+            <text class="time-text">{{formatTime(item.timestamp)}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 空消息提示 -->
+      <view wx:if="{{messageList.length === 0 && !loadingMore}}" class="empty-messages">
+        <text class="empty-text">暂无消息</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部区域（独立于chat-container） -->
+  <view class="bottom-area">
+    <!-- 消息输入区域 -->
+    <view class="input-container">
+      <!-- 语音按钮 -->
+      <view class="voice-button" catchtap="toggleVoiceInput">
+        <image class="voice-icon" src="/images/audio.svg" mode="aspectFit"></image>
+      </view>
+      
+      <!-- 输入框 -->
+      <view class="input-wrapper" wx:if="{{!isVoiceInput}}" catchtap="onInputAreaTap">
+        <input class="message-input" 
+               placeholder="输入消息..." 
+               placeholder-class="input-placeholder" 
+               value="{{inputValue}}" 
+               bindinput="onInputChange"
+               bindconfirm="onSendMessage"
+        ></input>
+      </view>
+      
+      <!-- 语音输入区域 -->
+      <view class="voice-input-wrapper" wx:else catchtap="onInputAreaTap">
+        <view class="voice-input" 
+              bindtouchstart="startVoiceRecord"
+              bindtouchend="stopVoiceRecord"
+              bindtouchcancel="cancelVoiceRecord">
+          <text class="voice-text">{{voiceRecordStatus}}</text>
+          <!-- 录音状态指示器 -->
+          <view wx:if="{{isRecording}}" class="recording-indicator">
+            <view class="recording-dot"></view>
+            <view class="recording-dot"></view>
+            <view class="recording-dot"></view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 多媒体按钮 -->
+      <view class="media-button" catchtap="showMediaOptions">
+        <image class="media-icon" src="/images/more.svg" mode="aspectFit"></image>
+      </view>
+      
+      <!-- 发送按钮 -->
+      <view class="send-button" catchtap="onSendMessage" wx:if="{{!isVoiceInput && inputValue.trim()}}">
+        <text class="send-text">发送</text>
+      </view>
+    </view>
+    
+    <!-- 多媒体选项面板 -->
+    <view class="media-options-container" wx:if="{{showMediaPanel || isClosingPanel}}" catchtap="onMediaPanelTap" style="{{isClosingPanel ? 'animation: slideDown 0.3s ease-out forwards;' : 'animation: slideUp 0.3s ease-out forwards;'}}">
+      <view class="media-options">
+        <view class="media-option" bindtap="chooseImage">
+          <view class="media-option-icon">
+            <image src="/images/icon-image.svg" mode="aspectFit"></image>
+          </view>
+          <text class="media-option-text">图片</text>
+        </view>
+        <view class="media-option" bindtap="chooseVideo">
+          <view class="media-option-icon">
+            <image src="/images/icon-video.svg" mode="aspectFit"></image>
+          </view>
+          <text class="media-option-text">视频</text>
+        </view>
+        <view class="media-option" bindtap="takePhoto">
+          <view class="media-option-icon">
+            <image src="/images/icon-camera.svg" mode="aspectFit"></image>
+          </view>
+          <text class="media-option-text">拍摄</text>
+        </view>
+        <view class="media-option" bindtap="chooseLocation">
+          <view class="media-option-icon">
+            <image src="/images/icon-location.svg" mode="aspectFit"></image>
+          </view>
+          <text class="media-option-text">位置</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

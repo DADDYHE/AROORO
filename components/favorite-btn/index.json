@@ -1,0 +1,9 @@
+{
+  "component": true,
+  "usingComponents": {},
+  "componentPlaceholder": {
+    "TUIConversation": "view",
+    "TUIChat": "view",
+    "TUIGroup": "view"
+  }
+}

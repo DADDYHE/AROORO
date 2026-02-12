@@ -1,0 +1,149 @@
+/* 会话页面样式 - 巴黎世家风格 */
+.chat-container {
+  width: 100%;
+  height: 100vh;
+  background-color: #fafafa;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 确保TUIChat组件能占满整个容器 */
+#tui-chat {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #fafafa;
+}
+
+/* 覆盖TUIChat组件的默认样式 */
+.container {
+  background-color: #fafafa !important;
+}
+
+/* 导航栏样式覆盖 */
+.tui-navigatorbar {
+  background-color: #fafafa !important;
+  border-bottom: 1rpx solid #f0f0f0 !important;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03) !important;
+}
+
+.conversation-title {
+  font-size: 36rpx !important;
+  font-weight: 900 !important;
+  color: #000000 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 4rpx !important;
+  line-height: 1.2 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+/* 消息列表样式优化 */
+.message-list {
+  background-color: #fafafa !important;
+}
+
+/* 列表容器样式 */
+.list-box {
+  background-color: #fafafa !important;
+}
+
+/* 输入区域样式优化 */
+.message-input {
+  background-color: #ffffff !important;
+  border-top: 1rpx solid #f0f0f0 !important;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.03) !important;
+  padding: 20rpx 30rpx !important;
+  transition: all 0.4s ease !important;
+}
+
+/* 输入区域容器样式 */
+.input-area {
+  background-color: #fafafa !important;
+}
+
+/* 消息时间样式优化 */
+.message-time {
+  font-size: 22rpx !important;
+  color: #999999 !important;
+  letter-spacing: 2rpx !important;
+  margin: 10rpx 0 !important;
+}
+
+/* 响应式设计优化 */
+@media (max-width: 375px) {
+  .conversation-title {
+    font-size: 32rpx !important;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* 确保页面内容不被导航栏和底部输入框遮挡 */
+.safe-area {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 特殊样式覆盖 */
+.list-box-group {
+  background-color: #fafafa !important;
+}
+
+.tui-chatroom-navigatorbar {
+  background-color: #fafafa !important;
+  border-bottom: 1rpx solid #f0f0f0 !important;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03) !important;
+}
+
+/* 确保所有元素使用正确的盒模型 */
+.container,
+.tui-navigatorbar,
+.list-box,
+.message-list,
+.input-area,
+.message-input {
+  box-sizing: border-box !important;
+}
+
+/* 加载状态样式 */
+.loading-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fafafa;
+}
+
+.loading-container text {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 4rpx;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
