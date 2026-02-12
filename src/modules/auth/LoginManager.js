@@ -358,27 +358,12 @@ class LoginManager {
 
           // 处理身份信息和IM登录
           const roles = this._extractRolesFromResult(cloudRes.result);
-          
-          // 更新集中式身份管理器
+
+          // 更新集中式身份管理器的角色列表
           centralIdentityManager.setRoles(roles);
 
-          // 保存用户信息和token到本地存储
-          const identityInfo = {
-            ...userInfoResult,
-            role: userRole
-          };
-          centralIdentityManager.setIdentity(userRole, identityInfo);
-
-          // 保存token
-          if (cloudRes.result.token) {
-            const currentIdentity = centralIdentityManager.getCurrentIdentity();
-            if (currentIdentity) {
-              centralIdentityManager.setIdentity(userRole, {
-                ...currentIdentity,
-                token: cloudRes.result.token
-              });
-            }
-          }
+          // 注意：不设置 currentRole，用户需要选择身份
+          // guest 只是页面显示的临时状态，不是 CentralIdentityManager 中的实际角色
 
           // 保存UserSig
           const userSig = cloudRes.result.userSig || (cloudRes.result.data && cloudRes.result.data.userSig) || '';
@@ -394,7 +379,7 @@ class LoginManager {
 
           // 根据身份数量决定下一步操作
           if (!hasRoles || roleCount > 1) {
-            // 为每个身份初始化上下文
+            // 为每个身份初始化上下文和身份信息（如果有身份）
             if (hasRoles) {
               this._initIdentityContexts(roles, userInfoResult, userSig, cloudRes.result);
             }
@@ -411,26 +396,27 @@ class LoginManager {
                 }, 500);
               }
             });
-            
+
             // 重要：跳转到首页并显示身份选择表单后，直接返回
             return cloudRes.result;
           } else if (roleCount === 1) {
             // 如果用户只有单一身份，直接登录并跳转到首页
             console.log('[LoginManager] 用户只有单一身份，直接登录并跳转到首页');
+
+            // 为身份初始化上下文
+            this._initIdentityContexts(roles, userInfoResult, userSig, cloudRes.result);
+
             // 切换到唯一的身份
             const singleRoleType = roles[0].roleType;
             await centralIdentityManager.switchRole(singleRoleType);
             console.log('单一身份登录成功:', singleRoleType);
-            
-            // 为每个身份初始化上下文
-            this._initIdentityContexts(roles, userInfoResult, userSig, cloudRes.result);
 
             // 登录成功后返回到首页
             wx.switchTab({
               url: PAGE_PATHS.HOME
             });
           } else {
-            // 为每个身份初始化上下文
+            // 为身份初始化上下文
             this._initIdentityContexts(roles, userInfoResult, userSig, cloudRes.result);
 
             // 切换到默认身份
