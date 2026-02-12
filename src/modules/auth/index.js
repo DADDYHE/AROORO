@@ -289,7 +289,13 @@ export const AuthModule = {
    * @returns {boolean} 是否移除成功
    */
   removeFromStorage(key) {
-    return centralIdentityManager.remove(key);
+    try {
+      wx.removeStorageSync(key);
+      return true;
+    } catch (error) {
+      console.error('移除本地存储失败:', error);
+      return false;
+    }
   },
 
   /**
@@ -297,7 +303,13 @@ export const AuthModule = {
    * @returns {boolean} 是否清除成功
    */
   clearStorage() {
-    return centralIdentityManager.clear();
+    try {
+      wx.clearStorageSync();
+      return true;
+    } catch (error) {
+      console.error('清除本地存储失败:', error);
+      return false;
+    }
   },
 
   /**

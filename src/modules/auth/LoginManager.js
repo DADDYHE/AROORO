@@ -633,48 +633,28 @@ class LoginManager {
   checkLoginStatusValid() {
     try {
       console.log('[LoginManager] 开始检查登录状态...');
-      
-      // 检查退出状态
-      const isLogout = centralIdentityManager.getLogoutStatus();
-      if (isLogout) {
-        console.log('[LoginManager] 登录状态检查：用户已退出登录');
+
+      // 检查集中式身份管理器的登录状态
+      if (!centralIdentityManager.isLoggedIn()) {
+        console.log('[LoginManager] 登录状态检查：身份管理器登录状态无效');
         return false;
       }
-      
+
+      // 检查登录是否过期
+      if (centralIdentityManager.isLoginExpired()) {
+        console.log('[LoginManager] 登录状态检查：登录已过期');
+        return false;
+      }
+
       // 检查用户信息
       const currentIdentity = centralIdentityManager.getCurrentIdentity();
       const userInfo = currentIdentity ? { ...currentIdentity, ...currentIdentity.commonData } : null;
       console.log('[LoginManager] 登录状态检查：用户信息存在:', !!userInfo);
       console.log('[LoginManager] 登录状态检查：用户信息包含_id:', userInfo && (userInfo._id || userInfo.userId));
       console.log('[LoginManager] 登录状态检查：用户信息包含openid:', userInfo && userInfo.openid);
-      
+
       if (!userInfo || (!userInfo._id && !userInfo.userId && !userInfo.openid)) {
         console.log('[LoginManager] 登录状态检查：用户信息不完整');
-        return false;
-      }
-
-      // 检查登录过期时间
-      const loginExpiry = centralIdentityManager.getLoginExpiry();
-      console.log('[LoginManager] 登录状态检查：登录过期时间:', loginExpiry);
-      console.log('[LoginManager] 登录状态检查：当前时间:', Date.now());
-      
-      if (loginExpiry) {
-        // 检查是否已过期
-        const now = Date.now();
-        const isExpired = now > loginExpiry;
-        console.log('[LoginManager] 登录状态检查：是否过期:', isExpired);
-        
-        if (isExpired) {
-          console.log('[LoginManager] 登录状态检查：登录已过期');
-          return false;
-        }
-      } else {
-        console.log('[LoginManager] 登录状态检查：未设置过期时间，使用默认有效状态');
-      }
-
-      // 检查集中式身份管理器的登录状态
-      if (!centralIdentityManager.isLoggedIn()) {
-        console.log('[LoginManager] 登录状态检查：身份管理器登录状态无效');
         return false;
       }
 
@@ -947,10 +927,16 @@ class LoginManager {
   async handleLoginExpiry() {
     try {
       const currentIdentity = centralIdentityManager.getCurrentIdentity();
-      const loginExpiry = centralIdentityManager.getLoginExpiry();
+      // 从 commonData 获取过期时间
+      const loginExpiry = currentIdentity && currentIdentity.commonData ? currentIdentity.commonData.expiryTime : null;
 
       if (!currentIdentity || !currentIdentity._id) {
         return false;
+      }
+
+      // 如果没有过期时间，认为没有过期
+      if (!loginExpiry) {
+        return true;
       }
 
       // 检查登录是否即将过期（剩余时间小于1小时）
