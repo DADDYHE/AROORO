@@ -3,13 +3,60 @@
  * 用于实现严格的数据访问权限控制，确保用户只能访问当前登录身份对应的数据
  */
 
-const IdentityManager = require('./identityManager')
-const { permissionManager } = require('./permissionManager')
-
 class DataAccessController {
   constructor() {
     this.accessLog = []
     this.maxLogSize = 1000
+  }
+
+  /**
+   * 获取全局应用实例
+   * @returns {Object} 应用实例
+   */
+  _getApp() {
+    try {
+      return getApp()
+    } catch (error) {
+      console.error('获取应用实例失败:', error)
+      return null
+    }
+  }
+
+  /**
+   * 获取登录状态管理器（返回 centralIdentityManager）
+   * @returns {Object} 登录状态管理器实例
+   */
+  _getLoginStateManager() {
+    const app = this._getApp()
+    return app?.globalData?.loginStateManager || app?.globalData?.centralIdentityManager
+  }
+
+  /**
+   * 获取当前角色
+   * @returns {string} 当前角色
+   */
+  _getCurrentRole() {
+    const loginStateManager = this._getLoginStateManager()
+    return loginStateManager ? loginStateManager.getCurrentRole() : 'owner'
+  }
+
+  /**
+   * 检查是否已登录
+   * @returns {boolean} 是否已登录
+   */
+  _isLoggedIn() {
+    const loginStateManager = this._getLoginStateManager()
+    return loginStateManager ? loginStateManager.isLoggedIn() : false
+  }
+
+  /**
+   * 获取当前用户信息
+   * @returns {Object} 当前用户信息
+   */
+  _getCurrentUserInfo() {
+    const loginStateManager = this._getLoginStateManager()
+    const userInfo = loginStateManager ? loginStateManager.getUserInfo() : null
+    return userInfo || {}
   }
 
   /**
@@ -21,11 +68,11 @@ class DataAccessController {
    */
   checkAccess(dataType, action, data = null) {
     // 获取当前角色
-    const currentRole = IdentityManager.getCurrentRole()
+    const currentRole = this._getCurrentRole()
     console.log(`[DataAccess] 检查数据访问权限: ${dataType}.${action}, 角色: ${currentRole}`)
 
     // 检查登录状态
-    if (!IdentityManager.isLoggedIn()) {
+    if (!this._isLoggedIn()) {
       this._logAccess('DENIED', dataType, action, currentRole, '用户未登录')
       return {
         allowed: false,
@@ -84,7 +131,7 @@ class DataAccessController {
 
       // 如果是查看、编辑或删除特定宠物，验证所有权
       if (data && ['view', 'edit', 'delete'].includes(action)) {
-        const userInfo = IdentityManager.getCurrentUserInfo()
+        const userInfo = this._getCurrentUserInfo()
         if (data.ownerId && data.ownerId !== userInfo._id) {
           this._logAccess('DENIED', 'pet', action, role, '宠物不属于当前用户')
           return {
@@ -140,7 +187,7 @@ class DataAccessController {
 
       // 如果是查看、取消特定订单，验证所有权
       if (data && ['view', 'cancel'].includes(action)) {
-        const userInfo = IdentityManager.getCurrentUserInfo()
+        const userInfo = this._getCurrentUserInfo()
         if (data.ownerId && data.ownerId !== userInfo._id) {
           this._logAccess('DENIED', 'order', action, role, '订单不属于当前用户')
           return {
@@ -168,7 +215,7 @@ class DataAccessController {
 
       // 如果是查看、接受、拒绝、完成特定订单，验证所有权
       if (data && ['view', 'accept', 'reject', 'complete'].includes(action)) {
-        const userInfo = IdentityManager.getCurrentUserInfo()
+        const userInfo = this._getCurrentUserInfo()
         if (data.hostId && data.hostId !== userInfo._id) {
           this._logAccess('DENIED', 'order', action, role, '订单不属于当前寄养家庭')
           return {
@@ -205,7 +252,7 @@ class DataAccessController {
 
     // 验证消息参与者身份
     if (data && action === 'view') {
-      const userInfo = IdentityManager.getCurrentUserInfo()
+      const userInfo = this._getCurrentUserInfo()
       const isParticipant = data.from === userInfo._id || data.to === userInfo._id
 
       if (!isParticipant) {
@@ -238,7 +285,7 @@ class DataAccessController {
 
     // 验证个人资料所有权
     if (data && action === 'edit') {
-      const userInfo = IdentityManager.getCurrentUserInfo()
+      const userInfo = this._getCurrentUserInfo()
       if (data.userId && data.userId !== userInfo._id) {
         this._logAccess('DENIED', 'profile', action, role, '个人资料不属于当前用户')
         return {
@@ -278,7 +325,7 @@ class DataAccessController {
 
     // 验证寄养家庭数据所有权
     if (data && action !== 'list') {
-      const userInfo = IdentityManager.getCurrentUserInfo()
+      const userInfo = this._getCurrentUserInfo()
       if (data.userId && data.userId !== userInfo._id) {
         this._logAccess('DENIED', 'host', action, role, '寄养家庭数据不属于当前用户')
         return {
@@ -308,7 +355,7 @@ class DataAccessController {
 
     // 验证宠物主人数据所有权
     if (data && action !== 'list') {
-      const userInfo = IdentityManager.getCurrentUserInfo()
+      const userInfo = this._getCurrentUserInfo()
       if (data.userId && data.userId !== userInfo._id) {
         this._logAccess('DENIED', 'owner', action, role, '宠物主人数据不属于当前用户')
         return {
@@ -358,7 +405,7 @@ class DataAccessController {
       return []
     }
 
-    const currentRole = IdentityManager.getCurrentRole()
+    const currentRole = this._getCurrentRole()
     console.log(`[DataAccess] 过滤数据: ${dataType}.${action}, 角色: ${currentRole}, 原始数据量: ${dataList.length}`)
 
     const filteredData = dataList.filter(data => {

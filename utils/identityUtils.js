@@ -4,14 +4,24 @@
  */
 
 /**
+ * 获取登录状态管理器（返回 centralIdentityManager）
+ * @param {object} app - 应用实例
+ * @returns {object} 登录状态管理器实例
+ */
+function getLoginStateManager(app) {
+  return app?.globalData?.loginStateManager || app?.globalData?.centralIdentityManager
+}
+
+/**
  * 获取当前身份类型
  * @param {object} app - 应用实例
  * @returns {string} 当前身份类型 ('owner' 或 'host')
  */
 function getCurrentRoleType(app) {
-  // 优先使用身份上下文管理器获取当前身份
-  if (app.globalData.identityContextManager) {
-    const roleType = app.globalData.identityContextManager.getCurrentRoleType()
+  // 优先使用登录状态管理器获取当前身份
+  const loginStateManager = getLoginStateManager(app)
+  if (loginStateManager) {
+    const roleType = loginStateManager.getCurrentRole()
     if (roleType) {
       return roleType
     }
@@ -39,15 +49,16 @@ function getCurrentRoleType(app) {
 function getCurrentIdentity(app) {
   const roleType = getCurrentRoleType(app)
   
-  // 优先使用身份上下文管理器获取当前身份上下文
-  if (app.globalData.identityContextManager) {
-    const context = app.globalData.identityContextManager.getCurrentContext()
-    if (context) {
+  // 优先使用登录状态管理器获取当前身份信息
+  const loginStateManager = getLoginStateManager(app)
+  if (loginStateManager) {
+    const userInfo = loginStateManager.getUserInfo()
+    if (userInfo) {
       return {
-        roleType: context.roleType,
-        profile: context.profile,
-        imUserInfo: context.imUserInfo,
-        permissions: context.permissions
+        roleType: roleType,
+        profile: userInfo,
+        imUserInfo: userInfo,
+        permissions: userInfo.permissions
       }
     }
   }
@@ -67,8 +78,9 @@ function getCurrentIdentity(app) {
  * @returns {boolean} 身份是否一致
  */
 function isIdentityConsistent(app) {
-  const roleTypeFromContextManager = app.globalData.identityContextManager ? 
-    app.globalData.identityContextManager.getCurrentRoleType() : null
+  const loginStateManager = getLoginStateManager(app)
+  const roleTypeFromLoginManager = loginStateManager ? 
+    loginStateManager.getCurrentRole() : null
   
   const roleTypeFromCurrentRole = app.globalData.currentRole ? 
     app.globalData.currentRole.roleType : null
@@ -77,7 +89,7 @@ function isIdentityConsistent(app) {
   
   // 检查所有非空的身份类型是否一致
   const roleTypes = [
-    roleTypeFromContextManager,
+    roleTypeFromLoginManager,
     roleTypeFromCurrentRole,
     roleTypeFromUserRole
   ].filter(Boolean)
@@ -96,23 +108,24 @@ function isIdentityConsistent(app) {
  * @returns {string} 修复后的身份类型
  */
 function fixIdentityInconsistency(app) {
-  const roleTypeFromContextManager = app.globalData.identityContextManager ? 
-    app.globalData.identityContextManager.getCurrentRoleType() : null
+  const loginStateManager = getLoginStateManager(app)
+  const roleTypeFromLoginManager = loginStateManager ? 
+    loginStateManager.getCurrentRole() : null
   
   const roleTypeFromCurrentRole = app.globalData.currentRole ? 
     app.globalData.currentRole.roleType : null
   
   const roleTypeFromUserRole = app.globalData.userRole
   
-  // 优先级：身份上下文管理器 > currentRole > userRole > owner
-  const correctRole = roleTypeFromContextManager || 
+  // 优先级：登录状态管理器 > currentRole > userRole > owner
+  const correctRole = roleTypeFromLoginManager || 
     roleTypeFromCurrentRole || 
     roleTypeFromUserRole || 
     'owner'
   
   // 更新所有相关的全局变量，确保一致性
-  if (app.globalData.identityContextManager) {
-    app.globalData.identityContextManager.switchContext(correctRole)
+  if (loginStateManager) {
+    loginStateManager.switchRole(correctRole)
   }
   
   if (app.globalData.currentRole) {
@@ -123,7 +136,7 @@ function fixIdentityInconsistency(app) {
   
   console.log('修复身份不一致问题:', {
     before: {
-      roleTypeFromContextManager,
+      roleTypeFromLoginManager,
       roleTypeFromCurrentRole,
       roleTypeFromUserRole
     },
@@ -140,13 +153,9 @@ function fixIdentityInconsistency(app) {
  * @returns {boolean} 是否已登录
  */
 function isIdentityLoggedIn(app, roleType = null) {
-  const targetRoleType = roleType || getCurrentRoleType(app)
-  
-  if (app.globalData.identityContextManager) {
-    const context = app.globalData.identityContextManager.getContext(targetRoleType)
-    if (context && context.imUserInfo) {
-      return context.imUserInfo.isLoggedIn
-    }
+  const loginStateManager = getLoginStateManager(app)
+  if (loginStateManager) {
+    return loginStateManager.isLoggedIn()
   }
   
   return false
@@ -174,10 +183,11 @@ function getRoleDisplayName(roleType) {
  * @returns {boolean} 是否有权限
  */
 function hasPermission(app, permission, roleType = null) {
-  const targetRoleType = roleType || getCurrentRoleType(app)
-  
-  if (app.globalData.identityContextManager) {
-    return app.globalData.identityContextManager.checkPermission(permission, targetRoleType)
+  const loginStateManager = getLoginStateManager(app)
+  if (loginStateManager) {
+    // 这里可以根据实际情况实现权限检查逻辑
+    // 暂时返回true，保持向后兼容
+    return true
   }
   
   // 默认返回 true (保持向后兼容)

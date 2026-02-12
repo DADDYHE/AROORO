@@ -305,21 +305,21 @@ class OptimizationTest {
 
     try {
       const appInstance = getApp()
-      const performanceMonitor = appInstance.globalData.performanceMonitor
+      const monitoringManager = appInstance.globalData.monitoringManager
       
       // 测试性能标记
-      performanceMonitor.mark('test_start')
+      monitoringManager.mark('test_start')
       
       // 模拟一些操作
       for (let i = 0; i < 100000; i++) {
         Math.sqrt(i)
       }
       
-      performanceMonitor.mark('test_end')
-      const operationDuration = performanceMonitor.measure('test_start', 'test_end')
+      monitoringManager.mark('test_end')
+      const operationDuration = monitoringManager.measure('test_start', 'test_end')
 
       // 测试性能报告导出
-      const report = performanceMonitor.exportReport()
+      const report = monitoringManager.exportReport()
 
       this.endTest('性能监控测试', {
         operationDuration,

@@ -4,11 +4,11 @@
  */
 
 import { getLoginManager } from './LoginManager';
-import { getUserManager } from './UserManager';
-import { getRoleManager } from './RoleManager';
 import { getUserSigManager } from './UserSigManager';
-import { getStorageManager } from './StorageManager';
-import { getErrorHandler } from './ErrorHandler';
+
+// 导入集中式身份管理器
+const { centralIdentityManager } = require('../../../utils/CentralIdentityManager');
+const { errorHandler } = require('../../../utils/errorHandler');
 
 // 全局应用实例
 let appInstance = null;
@@ -130,8 +130,8 @@ export const AuthModule = {
    * @returns {Object|null} 用户信息
    */
   getUserInfo() {
-    const userManager = getUserManager();
-    return userManager.getUserInfo();
+    const currentIdentity = centralIdentityManager.getCurrentIdentity();
+    return currentIdentity ? { ...currentIdentity, ...currentIdentity.commonData } : null;
   },
 
   /**
@@ -140,8 +140,23 @@ export const AuthModule = {
    * @returns {boolean} 是否更新成功
    */
   updateUserInfo(userInfo) {
-    const userManager = getUserManager();
-    return userManager.updateUserInfo(userInfo);
+    if (!userInfo) {
+      return false;
+    }
+    
+    const currentRole = centralIdentityManager.getCurrentRole();
+    if (!currentRole) {
+      return false;
+    }
+    
+    const currentIdentity = centralIdentityManager.getCurrentIdentity();
+    const updatedIdentity = {
+      ...currentIdentity,
+      ...userInfo,
+      updatedAt: Date.now()
+    };
+    
+    return centralIdentityManager.setIdentity(currentRole, updatedIdentity);
   },
 
   /**
@@ -149,8 +164,7 @@ export const AuthModule = {
    * @returns {string} 用户角色
    */
   getUserRole() {
-    const userManager = getUserManager();
-    return userManager.getUserRole();
+    return centralIdentityManager.getCurrentRole();
   },
 
   /**
@@ -158,8 +172,7 @@ export const AuthModule = {
    * @returns {Array} 角色列表
    */
   getRoles() {
-    const roleManager = getRoleManager();
-    return roleManager.getRoles();
+    return centralIdentityManager.getRoles();
   },
 
   /**
@@ -167,8 +180,7 @@ export const AuthModule = {
    * @param {Array} roles - 角色列表
    */
   setRoles(roles) {
-    const roleManager = getRoleManager();
-    roleManager.setRoles(roles);
+    centralIdentityManager.setRoles(roles);
   },
 
   /**
@@ -177,8 +189,7 @@ export const AuthModule = {
    * @returns {Promise<boolean>} 是否切换成功
    */
   async switchRole(roleType) {
-    const roleManager = getRoleManager();
-    return roleManager.switchRole(roleType);
+    return centralIdentityManager.switchRole(roleType);
   },
 
   /**
@@ -188,8 +199,7 @@ export const AuthModule = {
    * @returns {Promise<boolean>} 是否创建成功
    */
   async createRole(roleType, roleInfo) {
-    const roleManager = getRoleManager();
-    return roleManager.createRole(roleType, roleInfo);
+    return centralIdentityManager.createRole(roleType, roleInfo);
   },
 
   /**
@@ -198,8 +208,7 @@ export const AuthModule = {
    * @returns {Promise<boolean>} 是否删除成功
    */
   async deleteRole(roleType) {
-    const roleManager = getRoleManager();
-    return roleManager.deleteRole(roleType);
+    return centralIdentityManager.deleteRole(roleType);
   },
 
   /**
@@ -209,8 +218,7 @@ export const AuthModule = {
    * @returns {Promise<boolean>} 是否更新成功
    */
   async updateRole(roleType, roleInfo) {
-    const roleManager = getRoleManager();
-    return roleManager.updateRole(roleType, roleInfo);
+    return centralIdentityManager.updateRole(roleType, roleInfo);
   },
 
   /**
@@ -262,8 +270,7 @@ export const AuthModule = {
    * @returns {boolean} 是否保存成功
    */
   saveToStorage(key, value) {
-    const storageManager = getStorageManager();
-    return storageManager.set(key, value);
+    return centralIdentityManager.set(key, value);
   },
 
   /**
@@ -273,8 +280,7 @@ export const AuthModule = {
    * @returns {any} 获取的数据或默认值
    */
   getFromStorage(key, defaultValue = null) {
-    const storageManager = getStorageManager();
-    return storageManager.get(key, defaultValue);
+    return centralIdentityManager.get(key, defaultValue);
   },
 
   /**
@@ -283,8 +289,7 @@ export const AuthModule = {
    * @returns {boolean} 是否移除成功
    */
   removeFromStorage(key) {
-    const storageManager = getStorageManager();
-    return storageManager.remove(key);
+    return centralIdentityManager.remove(key);
   },
 
   /**
@@ -292,8 +297,7 @@ export const AuthModule = {
    * @returns {boolean} 是否清除成功
    */
   clearStorage() {
-    const storageManager = getStorageManager();
-    return storageManager.clear();
+    return centralIdentityManager.clear();
   },
 
   /**
@@ -302,7 +306,6 @@ export const AuthModule = {
    * @param {Object} options - 提示选项
    */
   showError(error, options = {}) {
-    const errorHandler = getErrorHandler();
     errorHandler.showError(error, options);
   },
 
@@ -312,7 +315,6 @@ export const AuthModule = {
    * @param {Object} options - 提示选项
    */
   showSuccess(message = '操作成功', options = {}) {
-    const errorHandler = getErrorHandler();
     errorHandler.showSuccess(message, options);
   },
 
@@ -322,7 +324,6 @@ export const AuthModule = {
    * @param {Object} options - 提示选项
    */
   showLoading(message = '加载中...', options = {}) {
-    const errorHandler = getErrorHandler();
     errorHandler.showLoading(message, options);
   },
 
@@ -330,7 +331,6 @@ export const AuthModule = {
    * 隐藏加载提示
    */
   hideLoading() {
-    const errorHandler = getErrorHandler();
     errorHandler.hideLoading();
   },
 
@@ -343,7 +343,6 @@ export const AuthModule = {
    * @param {Object} options - 对话框选项
    */
   showConfirm(title, content, confirmCallback, cancelCallback, options = {}) {
-    const errorHandler = getErrorHandler();
     errorHandler.showConfirm(title, content, confirmCallback, cancelCallback, options);
   },
 
@@ -357,18 +356,18 @@ export const AuthModule = {
 
   /**
    * 获取用户管理器
-   * @returns {UserManager} 用户管理器实例
+   * @returns {CentralIdentityManager} 集中式身份管理器实例（替代UserManager）
    */
   getUserManager() {
-    return getUserManager();
+    return centralIdentityManager;
   },
 
   /**
-   * 获取角色管理器
-   * @returns {RoleManager} 角色管理器实例
+   * 获取集中式身份管理器
+   * @returns {CentralIdentityManager} 集中式身份管理器实例
    */
   getRoleManager() {
-    return getRoleManager();
+    return centralIdentityManager;
   },
 
   /**
@@ -381,10 +380,10 @@ export const AuthModule = {
 
   /**
    * 获取存储管理器
-   * @returns {StorageManager} 存储管理器实例
+   * @returns {CentralIdentityManager} 存储管理器实例（使用集中式身份管理器）
    */
   getStorageManager() {
-    return getStorageManager();
+    return centralIdentityManager;
   },
 
   /**
@@ -392,7 +391,7 @@ export const AuthModule = {
    * @returns {ErrorHandler} 错误处理器实例
    */
   getErrorHandler() {
-    return getErrorHandler();
+    return errorHandler;
   },
 };
 

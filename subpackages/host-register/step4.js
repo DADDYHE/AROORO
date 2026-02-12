@@ -240,28 +240,39 @@ Page({
         })
 
         // 更新用户角色为寄养家庭
-        wx.setStorageSync('userRole', 'host')
-        app.globalData.userRole = 'host'
-
-        // 使用 formData 中的原始数据（包含原始 cloud:// fileID）存储到全局变量
-        // 而不是使用云函数返回的数据
-        app.globalData.hostInfo = { ...this.data.formData }
-
-
-
-        // 更新userInfo对象，确保头像和名称正确显示
-        if (app.globalData.userInfo) {
-          app.globalData.userInfo = {
-            ...app.globalData.userInfo,
-            role: 'host',
-            avatarUrl: app.globalData.hostInfo.avatarUrl || app.globalData.userInfo.avatarUrl,
-            nickName: app.globalData.hostInfo.hostName || app.globalData.userInfo.nickName
+        if (app.globalData.loginStateManager) {
+          app.globalData.loginStateManager.switchRole('host')
+          app.globalData.loginStateManager.set('hostInfo', { ...this.data.formData })
+          
+          // 更新userInfo对象，确保头像和名称正确显示
+          if (app.globalData.userInfo) {
+            const updatedUserInfo = {
+              ...app.globalData.userInfo,
+              role: 'host',
+              avatarUrl: this.data.formData.avatarUrl || app.globalData.userInfo.avatarUrl,
+              nickName: this.data.formData.hostName || app.globalData.userInfo.nickName
+            }
+            app.globalData.userInfo = updatedUserInfo
+            app.globalData.loginStateManager.updateUserInfo(updatedUserInfo)
           }
-          // 同时更新本地存储
-          try {
-            wx.setStorageSync('userInfo', app.globalData.userInfo)
-          } catch (error) {
-            console.error('保存userInfo到本地存储失败:', error)
+        } else {
+          // 回退方案：如果LoginStateManager不存在，使用本地存储
+          wx.setStorageSync('userRole', 'host')
+          app.globalData.userRole = 'host'
+          app.globalData.hostInfo = { ...this.data.formData }
+          
+          if (app.globalData.userInfo) {
+            app.globalData.userInfo = {
+              ...app.globalData.userInfo,
+              role: 'host',
+              avatarUrl: app.globalData.hostInfo.avatarUrl || app.globalData.userInfo.avatarUrl,
+              nickName: app.globalData.hostInfo.hostName || app.globalData.userInfo.nickName
+            }
+            try {
+              wx.setStorageSync('userInfo', app.globalData.userInfo)
+            } catch (error) {
+              console.error('保存userInfo到本地存储失败:', error)
+            }
           }
         }
 

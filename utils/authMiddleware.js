@@ -4,20 +4,30 @@
  * 身份验证中间件
  * 用于验证用户的身份和权限
  */
+
 class AuthMiddleware {
+  /**
+   * 获取登录状态管理器（返回 centralIdentityManager）
+   * @returns {object} 登录状态管理器实例
+   */
+  static getLoginStateManager() {
+    const app = getApp()
+    return app?.globalData?.loginStateManager || app?.globalData?.centralIdentityManager
+  }
+
   /**
    * 检查用户是否已登录
    * @returns {boolean} 是否已登录
    */
   static isLoggedIn() {
     // 检查是否是用户主动退出登录
-    const isLogout = wx.getStorageSync('isLogout')
+    const loginStateManager = this.getLoginStateManager()
+    const isLogout = loginStateManager ? loginStateManager.get('isLogout') : false
     if (isLogout) {
       return false
     }
     
-    const userInfo = wx.getStorageSync('userInfo')
-    return !!userInfo && (!!userInfo._id || !!userInfo.openid)
+    return loginStateManager ? loginStateManager.isLoggedIn() : false
   }
 
   /**
@@ -25,7 +35,8 @@ class AuthMiddleware {
    * @returns {object|null} 用户信息
    */
   static getUserInfo() {
-    return wx.getStorageSync('userInfo')
+    const loginStateManager = this.getLoginStateManager()
+    return loginStateManager ? loginStateManager.getUserInfo() : null
   }
 
   /**
@@ -33,7 +44,8 @@ class AuthMiddleware {
    * @returns {string} 用户角色
    */
   static getUserRole() {
-    return wx.getStorageSync('userRole') || 'owner'
+    const loginStateManager = this.getLoginStateManager()
+    return loginStateManager ? loginStateManager.getCurrentRole() : 'owner'
   }
 
   /**

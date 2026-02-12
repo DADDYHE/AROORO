@@ -4,12 +4,10 @@
  *
  * 功能：
  * 1. 拦截直接访问本地存储、globalData 等行为
- * 2. 强制使用 CentralIdentityManager 获取身份数据
+ * 2. 强制使用 centralIdentityManager 获取身份数据
  * 3. 提供访问日志和权限验证
  * 4. 在开发环境发出警告
  */
-
-const { centralIdentityManager, ROLE_TYPES } = require('./CentralIdentityManager')
 
 // 违规访问模式
 const PROHIBITED_PATTERNS = [
@@ -26,12 +24,12 @@ const PROHIBITED_PATTERNS = [
   {
     pattern: /wx\.getStorageSync\s*\(\s*['"]hostInfo['"]\s*\)/g,
     description: '直接从本地存储获取 hostInfo',
-    correctUsage: 'centralIdentityManager.getIdentity(ROLE_TYPES.HOST)'
+    correctUsage: 'centralIdentityManager.getIdentity("host")'
   },
   {
     pattern: /wx\.getStorageSync\s*\(\s*['"]ownerInfo['"]\s*\)/g,
     description: '直接从本地存储获取 ownerInfo',
-    correctUsage: 'centralIdentityManager.getIdentity(ROLE_TYPES.OWNER)'
+    correctUsage: 'centralIdentityManager.getIdentity("owner")'
   },
   {
     pattern: /app\.globalData\.userRole\s*=/g,
@@ -41,7 +39,7 @@ const PROHIBITED_PATTERNS = [
   {
     pattern: /app\.globalData\.userInfo\s*=/g,
     description: '直接设置 app.globalData.userInfo',
-    correctUsage: 'centralIdentityManager.login({ role, userInfo })'
+    correctUsage: 'centralIdentityManager.setIdentity(role, userInfo)'
   },
   {
     pattern: /app\.globalData\.userRole\b/g,
@@ -232,8 +230,8 @@ function createGlobalDataProxy(globalData) {
         console.warn(`  正确用法：使用 centralIdentityManager 的对应方法`)
         console.warn(`  - userRole -> centralIdentityManager.getCurrentRole()`)
         console.warn(`  - userInfo -> centralIdentityManager.getCurrentIdentity()`)
-        console.warn(`  - hostInfo -> centralIdentityManager.getIdentity(ROLE_TYPES.HOST)`)
-        console.warn(`  - ownerInfo -> centralIdentityManager.getIdentity(ROLE_TYPES.OWNER)`)
+        console.warn(`  - hostInfo -> centralIdentityManager.getIdentity("host")`)
+        console.warn(`  - ownerInfo -> centralIdentityManager.getIdentity("owner")`)
       }
 
       return target[prop]
@@ -245,7 +243,7 @@ function createGlobalDataProxy(globalData) {
         console.warn(`[IdentityAccessInterceptor] 检测到直接设置 app.globalData.${prop}`)
         console.warn(`  正确用法：使用 centralIdentityManager 的对应方法`)
         console.warn(`  - userRole -> centralIdentityManager.switchRole(role)`)
-        console.warn(`  - userInfo -> centralIdentityManager.login({ role, userInfo })`)
+        console.warn(`  - userInfo -> centralIdentityManager.setIdentity(role, userInfo)`)
       }
 
       target[prop] = value
@@ -269,8 +267,8 @@ function interceptGetStorageSync(originalGetStorageSync) {
       console.warn(`  正确用法：使用 centralIdentityManager 的对应方法`)
       console.warn(`  - userRole -> centralIdentityManager.getCurrentRole()`)
       console.warn(`  - userInfo -> centralIdentityManager.getCurrentIdentity()`)
-      console.warn(`  - hostInfo -> centralIdentityManager.getIdentity(ROLE_TYPES.HOST)`)
-      console.warn(`  - ownerInfo -> centralIdentityManager.getIdentity(ROLE_TYPES.OWNER)`)
+      console.warn(`  - hostInfo -> centralIdentityManager.getIdentity("host")`)
+      console.warn(`  - ownerInfo -> centralIdentityManager.getIdentity("owner")`)
     }
 
     return originalGetStorageSync.call(this, key)
@@ -289,7 +287,7 @@ function interceptSetStorageSync(originalSetStorageSync) {
       console.warn(`[IdentityAccessInterceptor] 检测到直接设置本地存储: ${key}`)
       console.warn(`  正确用法：使用 centralIdentityManager 的对应方法`)
       console.warn(`  - userRole -> centralIdentityManager.switchRole(role)`)
-      console.warn(`  - userInfo -> centralIdentityManager.login({ role, userInfo })`)
+      console.warn(`  - userInfo -> centralIdentityManager.setIdentity(role, userInfo)`)
     }
 
     return originalSetStorageSync.call(this, key, data)

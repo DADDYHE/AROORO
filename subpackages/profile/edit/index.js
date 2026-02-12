@@ -1,5 +1,5 @@
 const app = getApp()
-const IdentityManager = require('../../../utils/identityManager.js')
+const { centralIdentityManager } = require('../../../utils/CentralIdentityManager')
 
 Page({
   data: {
@@ -63,7 +63,8 @@ Page({
 
       // 检查登录过期
       try {
-        const loginExpiry = wx.getStorageSync('loginExpiry')
+        const loginStateManager = app.globalData.loginStateManager
+        const loginExpiry = loginStateManager ? loginStateManager.get('loginExpiry') : null
         if (loginExpiry && Date.now() > loginExpiry) {
           console.log('checkLoginStatus - 登录已过期，需要重新登录')
           this.setData({
@@ -78,7 +79,8 @@ Page({
       }
 
       // 检查用户信息是否存在
-      const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo')
+      const loginStateManager = app.globalData.loginStateManager
+      const userInfo = app.globalData.userInfo || (loginStateManager ? loginStateManager.getUserInfo() : null)
       if (userInfo && userInfo._id) {
         console.log('checkLoginStatus - 已登录')
         this.setData({
@@ -294,14 +296,17 @@ Page({
     try {
       console.log('Personal Edit page loadUserInfo - 开始加载用户信息')
       
-      // 使用身份管理器获取角色特定的用户信息
-      const roleSpecificInfo = IdentityManager.getRoleSpecificUserInfo()
-      const userRole = IdentityManager.getCurrentRole()
+      // 使用 CentralIdentityManager 获取当前身份信息
+      const currentIdentity = centralIdentityManager.getCurrentIdentity()
+      const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+      
+      // 提取角色特定信息
+      let roleSpecificInfo = currentIdentity || {}
       
       console.log('Personal Edit page loadUserInfo - 角色特定信息:', {
-        hasRoleSpecificInfo: !!Object.keys(roleSpecificInfo).length,
+        hasRoleSpecificInfo: !!currentIdentity,
         userRole: userRole,
-        infoKeys: Object.keys(roleSpecificInfo)
+        infoKeys: currentIdentity ? Object.keys(currentIdentity) : []
       })
       
       // 处理头像URL
@@ -350,9 +355,10 @@ Page({
               hasLoadedFromDatabase: true
             })
             
-            // 同步到本地存储和全局数据
-            wx.setStorageSync('userInfo', updatedUserInfo)
-            app.globalData.userInfo = updatedUserInfo
+            // 使用 CentralIdentityManager 更新身份信息
+            if (userRole) {
+              centralIdentityManager.setIdentity(userRole, updatedUserInfo)
+            }
             
             console.log('Personal Edit page - 从数据库更新用户信息成功:', updatedUserInfo)
           }
@@ -492,8 +498,8 @@ Page({
     const that = this
     this.setData({ isLoading: true })
 
-    // 根据当前角色确定存储目录
-    const userRole = IdentityManager.getCurrentRole()
+    // 使用 CentralIdentityManager 获取当前角色
+    const userRole = centralIdentityManager.getCurrentRole() || 'owner'
     const directory = userRole === 'host' ? 'hostAvatars' : 'user-avatars'
     
     // 生成唯一文件名
@@ -521,6 +527,18 @@ Page({
           avatarUrl: fileID,
           isLoading: false 
         })
+        
+        // 使用 CentralIdentityManager 更新身份信息
+        if (userRole) {
+          const currentIdentity = centralIdentityManager.getCurrentIdentity()
+          if (currentIdentity) {
+            const updatedIdentity = {
+              ...currentIdentity,
+              avatarUrl: fileID
+            }
+            centralIdentityManager.setIdentity(userRole, updatedIdentity)
+          }
+        }
         
         wx.showToast({
           title: '头像上传成功',
@@ -640,8 +658,9 @@ Page({
       // 使用当前页面的userInfo作为基础，保留未保存的修改
       const pageUserInfo = this.data.userInfo
       
-      // 获取本地存储的用户信息（包含 _id 和 openid）
-      const localUserInfo = wx.getStorageSync('userInfo') || {}
+      // 获取LoginStateManager中的用户信息（包含 _id 和 openid）
+      const loginStateManager = app.globalData.loginStateManager
+      const localUserInfo = loginStateManager ? loginStateManager.getUserInfo() : {}
       
       // 更新所有字段，确保保留原来的 _id 和 openid，同时保留页面上的其他修改
       const updatedUserInfo = {
@@ -653,13 +672,15 @@ Page({
         openid: localUserInfo.openid || pageUserInfo.openid
       }
       
-      // 保存到本地存储
-      wx.setStorageSync('userInfo', updatedUserInfo)
+      // 保存到LoginStateManager
+      if (loginStateManager) {
+        loginStateManager.updateUserInfo(updatedUserInfo)
+      }
       
       // 更新全局数据
       app.globalData.userInfo = updatedUserInfo
       
-      console.log('地址已保存到本地和全局数据:', updatedUserInfo.address)
+      console.log('地址已保存到LoginStateManager和全局数据:', updatedUserInfo.address)
       
       // 上传到数据库
       this.uploadToDatabase(updatedUserInfo).then(() => {
@@ -736,11 +757,12 @@ Page({
         return
       }
       
-      // 获取当前角色
-      const userRole = IdentityManager.getCurrentRole()
+      // 使用 CentralIdentityManager 获取当前角色
+      const userRole = centralIdentityManager.getCurrentRole() || 'owner'
       
-      // 获取当前用户信息（包含 _id 和 openid）
-      const userInfo = wx.getStorageSync('userInfo') || {}
+      // 获取当前身份信息（包含 _id 和 openid）
+      const currentIdentity = centralIdentityManager.getCurrentIdentity()
+      const userInfo = currentIdentity || {}
       
       // 更新所有字段，确保保留原来的 _id 和 openid
       const updatedUserInfo = {
@@ -752,33 +774,10 @@ Page({
         role: userRole
       }
       
-      // 保存到本地存储和全局数据
-      wx.setStorageSync('userInfo', updatedUserInfo)
-      app.globalData.userInfo = updatedUserInfo
-      
-      // 根据角色保存到对应的角色特定存储
-      if (userRole === 'host') {
-        wx.setStorageSync('hostInfo', {
-          ...(wx.getStorageSync('hostInfo') || {}),
-          ...updatedUserInfo,
-          hostName: updatedUserInfo.nickName
-        })
-        app.globalData.hostInfo = {
-          ...app.globalData.hostInfo,
-          ...updatedUserInfo,
-          hostName: updatedUserInfo.nickName
-        }
-        console.log('Personal Edit page saveAll - 保存到hostInfo:', app.globalData.hostInfo)
-      } else {
-        wx.setStorageSync('ownerInfo', {
-          ...(wx.getStorageSync('ownerInfo') || {}),
-          ...updatedUserInfo
-        })
-        app.globalData.ownerInfo = {
-          ...app.globalData.ownerInfo,
-          ...updatedUserInfo
-        }
-        console.log('Personal Edit page saveAll - 保存到ownerInfo:', app.globalData.ownerInfo)
+      // 使用 CentralIdentityManager 更新身份信息
+      if (userRole) {
+        centralIdentityManager.setIdentity(userRole, updatedUserInfo)
+        console.log('Personal Edit page saveAll - 使用 CentralIdentityManager 保存身份信息:', userRole)
       }
       
       // 更新页面数据

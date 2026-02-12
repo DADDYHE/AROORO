@@ -90,44 +90,43 @@ function enhancePage(pageConfig) {
         console.log('base-page.js 检查登录状态:', isLoggedIn)
 
         if (isLoggedIn) {
-          // 从身份上下文管理器中获取最新的身份信息
-          if (app.globalData.identityContextManager) {
-            const currentRoleType = app.globalData.identityContextManager.getCurrentRoleType()
-            const currentContext = app.globalData.identityContextManager.getCurrentContext()
+          // 从登录状态管理器中获取最新的身份信息
+          if (app.globalData.loginStateManager) {
+            const currentRole = app.globalData.loginStateManager.getCurrentRole()
+            const userInfo = app.globalData.loginStateManager.getUserInfo()
 
-            console.log('base-page.js 从 identityContextManager 获取:', {
-              currentRoleType,
-              hasCurrentContext: !!currentContext
+            console.log('base-page.js 从 loginStateManager 获取:', {
+              currentRole,
+              hasUserInfo: !!userInfo
             })
 
-            if (currentContext) {
-              // 增强globalData，添加从身份上下文管理器获取的信息
+            if (userInfo) {
+              // 增强globalData，添加从登录状态管理器获取的信息
               const enhancedGlobalData = {
                 ...app.globalData,
-                currentRoleType: currentRoleType,
-                currentContext: currentContext,
+                currentRoleType: currentRole,
                 identityInfo: {
-                  roleType: currentRoleType,
-                  profile: currentContext.profile,
-                  permissions: currentContext.permissions,
-                  imUserInfo: currentContext.imUserInfo
+                  roleType: currentRole,
+                  profile: userInfo,
+                  permissions: userInfo.permissions || {},
+                  imUserInfo: userInfo
                 }
               }
               console.log('base-page.js 已设置登录状态:', {
-                userRole: enhancedGlobalData.userRole,
-                currentRoleType: currentRoleType,
+                userRole: currentRole,
+                currentRoleType: currentRole,
                 hasIdentityInfo: !!enhancedGlobalData.identityInfo,
-                hasCurrentContext: !!currentContext
+                hasUserInfo: !!userInfo
               })
               this._setLoggedInState(enhancedGlobalData)
               return
             } else {
-              console.warn('base-page.js currentContext 为 null，无法同步身份状态')
+              console.warn('base-page.js userInfo 为 null，无法同步身份状态')
             }
           } else {
-            console.warn('base-page.js identityContextManager 未初始化')
+            console.warn('base-page.js loginStateManager 未初始化')
           }
-          // 如果身份上下文管理器不可用，使用原始的globalData
+          // 如果登录状态管理器不可用，使用原始的globalData
           console.log('base-page.js 使用原始 globalData 同步状态')
           this._setLoggedInState(app.globalData)
         } else {
@@ -205,20 +204,18 @@ function enhancePage(pageConfig) {
       const hostProfile = globalData.hostInfo || null
       const ownerProfile = globalData.ownerInfo || null
 
-      // 优先从 identityContextManager 获取角色
+      // 优先从 loginStateManager 获取角色
       let currentRoleType = null
-      let currentContext = null
 
-      if (globalData.identityContextManager) {
-        currentRoleType = globalData.identityContextManager.getCurrentRoleType()
-        currentContext = globalData.identityContextManager.getCurrentContext()
+      if (globalData.loginStateManager) {
+        currentRoleType = globalData.loginStateManager.getCurrentRole()
       }
 
-      // 如果 identityContextManager 没有角色，使用 globalData 中的角色
+      // 如果 loginStateManager 没有角色，使用 globalData 中的角色
       const userRole = currentRoleType || globalData.userRole || globalData.currentRoleType || 'owner'
 
-      // 优先使用从身份上下文管理器获取的身份信息
-      const identityInfo = globalData.identityInfo || globalData.loginManager?.getIdentityInfo() || {}
+      // 优先使用从登录状态管理器获取的身份信息
+      const identityInfo = globalData.identityInfo || {}
 
       this.setData({
         isLoggedIn: true,
@@ -227,26 +224,24 @@ function enhancePage(pageConfig) {
         hostProfile: hostProfile,
         ownerProfile: ownerProfile,
         identityInfo: identityInfo,
-        currentRoleType: currentRoleType || userRole,
-        currentContext: currentContext || globalData.currentContext || null
+        currentRoleType: currentRoleType || userRole
       })
 
       console.log('已设置登录状态:', {
         userRole,
         currentRoleType: currentRoleType || userRole,
         hasIdentityInfo: !!globalData.identityInfo,
-        hasCurrentContext: !!currentContext
+        hasUserInfo: !!userInfo
       })
     },
 
     // 检查登录是否过期
     _isLoginExpired() {
       try {
-        // 导入标准登录模块的StorageManager
-        const { getStorageManager } = require('../src/modules/auth/StorageManager')
-        const storageManager = getStorageManager()
+        // 导入集中式身份管理器
+        const { centralIdentityManager } = require('./CentralIdentityManager')
         
-        const loginExpiry = storageManager.getLoginExpiry()
+        const loginExpiry = centralIdentityManager.getLoginExpiry()
         console.log('[BasePage] 检查登录过期：过期时间:', loginExpiry)
         console.log('[BasePage] 检查登录过期：当前时间:', Date.now())
         

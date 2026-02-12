@@ -175,7 +175,23 @@ function generateAndValidateId(prefix) {
       return ''
     }
   }
-  const openid = wx.getStorageSync('openid') || ''
+  
+  // 优先从LoginStateManager获取openid
+  let openid = ''
+  try {
+    const app = getApp()
+    if (app && app.globalData && app.globalData.loginStateManager) {
+      openid = app.globalData.loginStateManager.get('openid') || ''
+    }
+  } catch (error) {
+    console.error('从LoginStateManager获取openid失败:', error)
+  }
+  
+  // 回退到使用wx.getStorageSync获取openid
+  if (!openid) {
+    openid = wx.getStorageSync('openid') || ''
+  }
+  
   const generatedId = generateFormat1Id(prefix, openid)
   const validation = validateUserID(generatedId)
   
@@ -221,8 +237,24 @@ function processFrontendId(imUserID, fallbackID) {
       return ''
     }
   }
+  
+  // 优先从LoginStateManager获取openid
+  let openid = ''
+  try {
+    const app = getApp()
+    if (app && app.globalData && app.globalData.loginStateManager) {
+      openid = app.globalData.loginStateManager.get('openid') || ''
+    }
+  } catch (error) {
+    console.error('从LoginStateManager获取openid失败:', error)
+  }
+  
+  // 回退到使用wx.getStorageSync获取openid
+  if (!openid) {
+    openid = wx.getStorageSync('openid') || ''
+  }
+  
   // 如果都无效，生成新ID
-  const openid = wx.getStorageSync('openid') || ''
   const generatedId = generateFormat1Id('user', openid)
   
   return {

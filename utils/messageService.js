@@ -155,7 +155,7 @@ class MessageService {
         }
       }
       
-      const currentRole = app.globalData.userRole || 'owner'
+      const currentRole = app.globalData.loginStateManager ? app.globalData.loginStateManager.getCurrentRole() : 'owner'
       const senderId = app.globalData.userInfo.userID || app.globalData.userInfo._id
       this.log('debug', '使用的发送者信息', {
         senderId: senderId,
@@ -350,8 +350,8 @@ class MessageService {
         }
       }
       
-      const currentRole = app.globalData.userRole || 'owner'
-      const openid = (app.globalData.userInfo && app.globalData.userInfo.openid) || wx.getStorageSync('openid')
+      const currentRole = app.globalData.loginStateManager ? app.globalData.loginStateManager.getCurrentRole() : 'owner'
+      const openid = (app.globalData.userInfo && app.globalData.userInfo.openid) || (app.globalData.loginStateManager ? app.globalData.loginStateManager.get('openid') : '')
 
       this.log('debug', '获取会话列表参数:', {
         currentRole,
@@ -492,7 +492,7 @@ class MessageService {
    * @returns {Array} - 过滤后的消息列表
    */
   filterMessagesByRole(messages) {
-    const currentRole = app.globalData.userRole || 'owner'
+    const currentRole = app.globalData.loginStateManager ? app.globalData.loginStateManager.getCurrentRole() : 'owner'
     
     return messages.filter(message => {
       // 检查消息是否属于当前角色的会话类型

@@ -1,11 +1,10 @@
 const app = getApp()
 import loginModule from '../../src/modules/auth/index'
-const ErrorHandler = require('../../utils/error-handler')
+const ErrorHandler = require('../../utils/errorHandler')
 const ImageOptimizer = require('../../utils/image-optimizer')
 const { enhancePage } = require('../../utils/base-page')
 const TouchHandler = require('../../utils/touch-handler')
 const { stateManager } = require('../../utils/stateManager')
-const { centralIdentityManager } = require('../../utils/CentralIdentityManager')
 
 Page(enhancePage({
   // 页面初始化数据，不使用本地存储，每次从云函数获取最新数据
@@ -114,8 +113,8 @@ Page(enhancePage({
   async updateUserInfoAfterIdentityInitialized() {
     try {
       // 检查全局用户信息是否存在
-      if (app.globalData.userInfo) {
-        const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+      if (app.globalData.userInfo && app.globalData.loginStateManager) {
+        const userRole = app.globalData.loginStateManager.getCurrentRole() || 'owner'
 
         // 先设置基本数据，让用户立即看到登录状态
         const userInfo = {
@@ -306,7 +305,7 @@ Page(enhancePage({
       if (cachedData) {
         console.log('使用缓存的用户角色和数据')
         const userInfo = cachedData.userInfo
-        const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+        const userRole = app.globalData.loginStateManager ? app.globalData.loginStateManager.getCurrentRole() : 'owner'
         
         // 使用状态管理器更新状态，利用防抖功能减少重复更新
         stateManager.debounceUpdate('home', {
@@ -336,7 +335,7 @@ Page(enhancePage({
       if (result.result.code === 0) {
         const userInfo = result.result.userInfo
         // 强制使用全局变量中的角色，确保状态一致性
-        const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+        const userRole = app.globalData.loginStateManager ? app.globalData.loginStateManager.getCurrentRole() : 'owner'
 
         // 处理头像URL：如果云函数返回的头像URL为空，使用全局变量中的头像URL
         if (!userInfo.avatarUrl || userInfo.avatarUrl === '') {
@@ -890,7 +889,11 @@ Page(enhancePage({
     const app = getApp()
     if (app && app.globalData) {
       // 保持用户信息不变，但清除用户角色
-      centralIdentityManager.getCurrentRole() = null
+      // 使用 CentralIdentityManager 的 setRole 方法而不是赋值
+      const { centralIdentityManager } = require('../../utils/CentralIdentityManager')
+      // 清除当前角色（通过 setRole 方法）
+      console.log('清除当前角色状态')
+      // 注意：CentralIdentityManager 不支持清除角色，这里只设置页面数据
     }
   },
 
@@ -1034,19 +1037,26 @@ Page(enhancePage({
   // 保存用户信息到本地存储
   saveUserInfo(userInfo, token, userSig) {
     try {
-      wx.setStorageSync('userInfo', userInfo)
-      wx.setStorageSync('userRole', userInfo.role)
-      // 保存登录时间，用于后续检查登录状态是否过期
-      wx.setStorageSync('lastLoginTime', Date.now())
-      // 保存 token 和 userSig（如果有）
-      if (token) {
-        wx.setStorageSync('token', token)
+      const app = getApp()
+      if (app.globalData.loginStateManager) {
+        // 使用 LoginStateManager 更新用户信息
+        app.globalData.loginStateManager.updateUserInfo(userInfo)
+        app.globalData.loginStateManager.switchRole(userInfo.role)
+        
+        // 保存 token 和 userSig（如果有）
+        if (token) {
+          app.globalData.loginStateManager.set('token', token)
+        }
+        if (userSig) {
+          app.globalData.loginStateManager.set('userSig', userSig)
+        }
+        
+        // 保存登录时间
+        app.globalData.loginStateManager.set('lastLoginTime', Date.now())
+        
+        // 登录成功后，清除本地存储中的退出标志
+        app.globalData.loginStateManager.clear('isLogout')
       }
-      if (userSig) {
-        wx.setStorageSync('userSig', userSig)
-      }
-      // 登录成功后，清除本地存储中的退出标志，确保其他页面能正确检测到登录状态
-      wx.removeStorageSync('isLogout')
       return true
     } catch (error) {
       console.error('保存用户信息失败:', error)
@@ -1074,7 +1084,11 @@ Page(enhancePage({
     // 更新全局数据
     const app = getApp()
     app.globalData.userInfo = userInfo
-    centralIdentityManager.getCurrentRole() = userInfo.role
+    // 使用 LoginStateManager 设置身份信息
+    if (app.globalData.loginStateManager) {
+      app.globalData.loginStateManager.updateUserInfo(userInfo)
+      app.globalData.loginStateManager.switchRole(userInfo.role)
+    }
     // 清除全局退出标志和手动登录标志
     app.globalData.isLogout = false
     app.globalData.needManualLogin = false

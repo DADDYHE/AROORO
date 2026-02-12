@@ -9,6 +9,12 @@
  * 4. 提供完整的访问日志和权限控制机制
  */
 
+// 导入统一ID生成模块
+const { generateIMUserId } = require('./idGenerator')
+
+// 导入权限管理器
+const { permissionManager } = require('./permissionManager')
+
 let app
 try {
   app = getApp()
@@ -16,13 +22,32 @@ try {
   app = global.app || { globalData: {} }
 }
 
-// 身份事件类型
-const IDENTITY_EVENTS = {
-  ROLE_CHANGED: 'central:roleChanged',
-  IDENTITY_UPDATED: 'central:identityUpdated',
-  LOGIN_STATE_CHANGED: 'central:loginStateChanged',
-  PERMISSION_UPDATED: 'central:permissionUpdated'
+// 统一事件系统
+const AUTH_EVENTS = {
+  // 登录相关事件
+  LOGIN_SUCCESS: 'auth:loginSuccess',
+  LOGIN_FAILURE: 'auth:loginFailure',
+  LOGOUT_SUCCESS: 'auth:logoutSuccess',
+  LOGOUT_FAILURE: 'auth:logoutFailure',
+  LOGIN_STATE_CHANGED: 'auth:loginStateChanged',
+  
+  // 身份相关事件
+  ROLE_CHANGED: 'auth:roleChanged',
+  IDENTITY_UPDATED: 'auth:identityUpdated',
+  USER_INFO_UPDATED: 'auth:userInfoUpdated',
+  
+  // 权限相关事件
+  PERMISSION_UPDATED: 'auth:permissionUpdated',
+  
+  // 连接状态相关事件
+  CONNECTION_STATUS_CHANGED: 'auth:connectionStatusChanged',
+  
+  // 状态变更事件
+  STATE_CHANGED: 'auth:stateChanged'
 }
+
+// 兼容旧的事件名称
+const IDENTITY_EVENTS = AUTH_EVENTS
 
 // 角色类型定义
 const ROLE_TYPES = {
@@ -162,91 +187,14 @@ class AccessLogger {
   }
 }
 
-// 权限管理器
-class PermissionManager {
-  /**
-   * 获取角色的默认权限
-   * @param {string} role - 角色类型
-   * @returns {object} 权限对象
-   */
-  getDefaultPermissions(role) {
-    const basePermissions = {
-      [PERMISSIONS.VIEW_OWN_PROFILE]: true,
-      [PERMISSIONS.EDIT_OWN_PROFILE]: true,
-      [PERMISSIONS.VIEW_MESSAGES]: true,
-      [PERMISSIONS.SEND_MESSAGES]: true
-    }
-
-    if (role === ROLE_TYPES.OWNER) {
-      return {
-        ...basePermissions,
-        [PERMISSIONS.BOOK_SERVICES]: true,
-        [PERMISSIONS.VIEW_HOST_PROFILES]: true,
-        [PERMISSIONS.CREATE_PET_PROFILES]: true,
-        [PERMISSIONS.VIEW_PET_PROFILES]: true,
-        [PERMISSIONS.EDIT_PET_PROFILES]: true
-      }
-    } else if (role === ROLE_TYPES.HOST) {
-      return {
-        ...basePermissions,
-        [PERMISSIONS.MANAGE_HOST_PROFILE]: true,
-        [PERMISSIONS.ACCEPT_BOOKINGS]: true,
-        [PERMISSIONS.VIEW_BOOKINGS]: true,
-        [PERMISSIONS.MANAGE_BOOKINGS]: true
-      }
-    }
-
-    return basePermissions
-  }
-
-  /**
-   * 检查权限
-   * @param {string} permission - 权限名称
-   * @param {string} role - 角色类型（可选，默认为当前角色）
-   * @returns {boolean} 是否有权限
-   */
-  hasPermission(permission, role = null) {
-    const targetRole = role || app.globalData.centralIdentityManager?.getCurrentRole()
-
-    if (!targetRole) {
-      console.warn('[PermissionManager] 检查权限失败：未设置当前角色')
-      return false
-    }
-
-    const permissions = this.getDefaultPermissions(targetRole)
-    const hasPermission = permissions[permission] || false
-
-    // 记录权限检查日志
-    app.globalData.centralIdentityManager?.accessLogger?.log('checkPermission', {
-      permission,
-      hasPermission,
-      role: targetRole
-    })
-
-    return hasPermission
-  }
-
-  /**
-   * 批量检查权限
-   * @param {array} permissionList - 权限列表
-   * @param {string} role - 角色类型（可选）
-   * @returns {object} 权限检查结果
-   */
-  checkPermissions(permissionList, role = null) {
-    const results = {}
-    permissionList.forEach(permission => {
-      results[permission] = this.hasPermission(permission, role)
-    })
-
-    return results
-  }
-}
+// 使用外部权限管理器
+const PermissionManager = require('./permissionManager').PermissionManager
 
 // 集中式身份管理器
 class CentralIdentityManager {
   constructor() {
     this.accessLogger = new AccessLogger()
-    this.permissionManager = new PermissionManager()
+    this.permissionManager = permissionManager
     this.eventListeners = {}
     this.isInitialized = false
 
@@ -268,6 +216,878 @@ class CentralIdentityManager {
         expiryTime: null
       }
     }
+
+    // 身份上下文存储（用于IM相关功能）
+    this.contextStore = {
+      contexts: {}, // 存储所有身份的上下文
+      currentRoleType: null, // 当前身份类型
+      defaultRoleType: null // 默认身份类型
+    }
+  }
+
+  /**
+   * 设置角色列表
+   * @param {Array} roles - 角色列表
+   */
+  setRoles(roles) {
+    roles = roles || []
+    
+    // 清空现有的身份
+    this.identityStore.identities = {
+      [ROLE_TYPES.OWNER]: null,
+      [ROLE_TYPES.HOST]: null,
+      [ROLE_TYPES.GUEST]: null
+    }
+    
+    // 逐个添加角色
+    roles.forEach(role => {
+      if (role.roleType && role.profile) {
+        this.setIdentity(role.roleType, role.profile)
+      }
+    })
+    
+    this.accessLogger.log('setRoles', { roleCount: roles.length })
+  }
+
+  /**
+   * 获取角色列表
+   * @returns {Array} 角色列表
+   */
+  getRoles() {
+    const roles = []
+    Object.keys(this.identityStore.identities).forEach(roleType => {
+      const identity = this.identityStore.identities[roleType]
+      if (identity) {
+        roles.push({
+          roleType,
+          profile: identity,
+          isActive: roleType === this.identityStore.currentRole
+        })
+      }
+    })
+    
+    this.accessLogger.log('getRoles', { roleCount: roles.length })
+    return roles
+  }
+
+  /**
+   * 获取角色数量
+   * @returns {number} 角色数量
+   */
+  getRoleCount() {
+    const roles = this.getRoles()
+    return roles.length
+  }
+
+  /**
+   * 获取指定类型的角色
+   * @param {string} roleType - 角色类型
+   * @returns {Object|null} 角色信息
+   */
+  getRoleByType(roleType) {
+    const identity = this.getIdentity(roleType)
+    if (!identity) {
+      return null
+    }
+    
+    return {
+      roleType,
+      profile: identity,
+      isActive: roleType === this.identityStore.currentRole
+    }
+  }
+
+  /**
+   * 检查是否有指定类型的角色
+   * @param {string} roleType - 角色类型
+   * @returns {boolean} 是否有指定类型的角色
+   */
+  hasRole(roleType) {
+    return this.getIdentity(roleType) !== null
+  }
+
+  /**
+   * 获取当前活跃角色
+   * @returns {Object|null} 当前活跃角色
+   */
+  getActiveRole() {
+    const currentRole = this.identityStore.currentRole
+    if (!currentRole) {
+      return null
+    }
+    
+    return this.getRoleByType(currentRole)
+  }
+
+  /**
+   * 获取当前活跃角色类型
+   * @returns {string} 当前活跃角色类型
+   */
+  getActiveRoleType() {
+    return this.getCurrentRole()
+  }
+
+  /**
+   * 创建角色
+   * @param {string} roleType - 角色类型
+   * @param {Object} roleInfo - 角色信息
+   * @returns {Promise<boolean>} 是否创建成功
+   */
+  async createRole(roleType, roleInfo) {
+    try {
+      console.log('创建角色:', roleType, roleInfo)
+      
+      // 检查角色类型是否有效
+      if (!Object.values(ROLE_TYPES).includes(roleType)) {
+        console.error('创建角色失败: 无效的角色类型')
+        return false
+      }
+      
+      // 检查角色是否已存在
+      if (this.hasRole(roleType)) {
+        console.error('创建角色失败: 角色已存在')
+        return false
+      }
+      
+      // 调用云函数创建角色
+      const result = await wx.cloud.callFunction({
+        name: 'login',
+        data: {
+          createRole: true,
+          roleType,
+          roleInfo
+        }
+      })
+      
+      if (result.result.code === 0) {
+        // 更新角色列表
+        this.setRoles(result.result.data.roles || [])
+        
+        // 设置为当前角色
+        this.switchRole(roleType)
+        
+        console.log('角色创建成功:', roleType)
+        return true
+      } else {
+        console.error('创建角色失败:', result.result.message)
+        return false
+      }
+    } catch (error) {
+      console.error('创建角色失败:', error)
+      return false
+    }
+  }
+
+  /**
+   * 删除角色
+   * @param {string} roleType - 角色类型
+   * @returns {Promise<boolean>} 是否删除成功
+   */
+  async deleteRole(roleType) {
+    try {
+      console.log('删除角色:', roleType)
+      
+      // 检查角色是否存在
+      if (!this.hasRole(roleType)) {
+        console.error('删除角色失败: 角色不存在')
+        return false
+      }
+      
+      // 检查是否是最后一个角色
+      if (this.getRoleCount() === 1) {
+        console.error('删除角色失败: 不能删除最后一个角色')
+        return false
+      }
+      
+      // 调用云函数删除角色
+      const result = await wx.cloud.callFunction({
+        name: 'login',
+        data: {
+          deleteRole: true,
+          roleType
+        }
+      })
+      
+      if (result.result.code === 0) {
+        // 更新角色列表
+        this.setRoles(result.result.data.roles || [])
+        console.log('角色删除成功:', roleType)
+        return true
+      } else {
+        console.error('删除角色失败:', result.result.message)
+        return false
+      }
+    } catch (error) {
+      console.error('删除角色失败:', error)
+      return false
+    }
+  }
+
+  /**
+   * 更新角色信息
+   * @param {string} roleType - 角色类型
+   * @param {Object} roleInfo - 角色信息
+   * @returns {Promise<boolean>} 是否更新成功
+   */
+  async updateRole(roleType, roleInfo) {
+    try {
+      console.log('更新角色:', roleType, roleInfo)
+      
+      // 检查角色是否存在
+      if (!this.hasRole(roleType)) {
+        console.error('更新角色失败: 角色不存在')
+        return false
+      }
+      
+      // 调用云函数更新角色
+      const result = await wx.cloud.callFunction({
+        name: 'login',
+        data: {
+          updateRole: true,
+          roleType,
+          roleInfo
+        }
+      })
+      
+      if (result.result.code === 0) {
+        // 更新角色列表
+        this.setRoles(result.result.data.roles || [])
+        console.log('角色更新成功:', roleType)
+        return true
+      } else {
+        console.error('更新角色失败:', result.result.message)
+        return false
+      }
+    } catch (error) {
+      console.error('更新角色失败:', error)
+      return false
+    }
+  }
+
+  /**
+   * 检查是否需要显示身份选择表单
+   * @returns {boolean} 是否需要显示身份选择表单
+   */
+  needShowIdentitySelection() {
+    return this.getRoleCount() > 1
+  }
+
+  /**
+   * 添加身份上下文
+   * @param {string} roleType - 身份类型 ('owner' 或 'host')
+   * @param {object} context - 身份上下文
+   */
+  addContext(roleType, context) {
+    if (!roleType || !context) {
+      console.error('添加身份上下文失败：参数无效')
+      return false
+    }
+
+    // 验证身份类型
+    if (!Object.values(ROLE_TYPES).includes(roleType)) {
+      console.error('添加身份上下文失败：无效的身份类型')
+      return false
+    }
+
+    // 构建完整的IM用户信息，使用角色+openid的格式
+    const openid = (context.profile && context.profile.openid) || context.openid || ''
+    let imUserID = (context.imUserInfo && context.imUserInfo.userID) || ''
+    
+    if (!imUserID && openid) {
+      imUserID = generateIMUserId(roleType, openid)
+    }
+
+    // 构建默认权限
+    const defaultPermissions = this.permissionManager.getRolePermissions(roleType) || {}
+
+    // 构建完整的身份上下文
+    const fullContext = {
+      roleType,
+      roleId: context.roleId || `role_${Date.now()}`,
+      profile: context.profile || {},
+      openid: openid,
+      imUserInfo: {
+        userID: imUserID,
+        userSig: (context.imUserInfo && context.imUserInfo.userSig) || '',
+        isLoggedIn: (context.imUserInfo && context.imUserInfo.isLoggedIn) || false,
+        lastLoginTime: null,
+        loginCount: 0,
+        lastError: null,
+        connectionStatus: 'disconnected', // connected, disconnected, connecting, reconnecting
+        userSigExpiry: null, // UserSig过期时间
+      },
+      permissions: {
+        ...defaultPermissions,
+        ...(context.permissions || {}),
+      },
+      storageInfo: {
+        prefix: (context.storageInfo && context.storageInfo.prefix) || `${roleType}_`,
+        keys: (context.storageInfo && context.storageInfo.keys) || {},
+      },
+      metadata: context.metadata || {},
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }
+
+    // 存储身份上下文
+    this.contextStore.contexts[roleType] = fullContext
+
+    // 如果是第一个添加的身份，设置为默认身份
+    if (!this.contextStore.defaultRoleType) {
+      this.contextStore.defaultRoleType = roleType
+    }
+
+    return true
+  }
+
+  /**
+   * 批量添加身份上下文
+   * @param {array} contexts - 身份上下文数组
+   */
+  addContexts(contexts) {
+    if (!Array.isArray(contexts)) {
+      console.error('批量添加身份上下文失败：参数无效')
+      return false
+    }
+
+    let successCount = 0
+    contexts.forEach(context => {
+      if (context.roleType) {
+        if (this.addContext(context.roleType, context)) {
+          successCount++
+        }
+      }
+    })
+
+    return successCount > 0
+  }
+
+  /**
+   * 获取当前身份上下文
+   * @returns {object|null} 当前身份上下文
+   */
+  getCurrentContext() {
+    const currentRoleType = this.contextStore.currentRoleType || this.identityStore.currentRole
+    if (!currentRoleType) {
+      console.warn('获取当前身份上下文失败：未设置当前身份')
+      return null
+    }
+
+    const context = this.getContext(currentRoleType)
+    if (!context) {
+      console.error(`获取当前身份上下文失败：身份 ${currentRoleType} 不存在`)
+      return null
+    }
+
+    return context
+  }
+
+  /**
+   * 获取特定身份上下文
+   * @param {string} roleType - 身份类型
+   * @returns {object|null} 身份上下文
+   */
+  getContext(roleType) {
+    if (!roleType) {
+      console.error('获取身份上下文失败：参数无效')
+      return null
+    }
+
+    const context = this.contextStore.contexts[roleType]
+    if (!context) {
+      console.log(`获取身份上下文：身份 ${roleType} 不存在，创建默认身份上下文`)
+      // 使用默认值创建身份上下文
+      this.addContext(roleType, {
+        profile: {
+          openid: '',
+          userId: `temp_${roleType}_${Date.now()}`
+        }
+      })
+      // 返回新创建的身份上下文
+      return this.contextStore.contexts[roleType]
+    }
+
+    return context
+  }
+
+  /**
+   * 获取所有身份上下文
+   * @returns {object} 所有身份上下文
+   */
+  getAllContexts() {
+    return this.contextStore.contexts
+  }
+
+  /**
+   * 更新身份的连接状态
+   * @param {string} roleType - 身份类型
+   * @param {string} status - 连接状态：connected, disconnected, connecting, reconnecting
+   * @returns {boolean} 更新结果
+   */
+  updateConnectionStatus(roleType, status) {
+    if (!roleType) {
+      console.error('更新连接状态失败：参数无效')
+      return false
+    }
+
+    const validStatuses = ['connected', 'disconnected', 'connecting', 'reconnecting']
+    if (!validStatuses.includes(status)) {
+      console.error(`更新连接状态失败：无效的状态 ${status}`)
+      return false
+    }
+
+    // 如果身份不存在，创建一个默认的身份上下文
+    if (!this.contextStore.contexts[roleType]) {
+      console.warn(`更新连接状态：身份 ${roleType} 不存在，创建默认身份上下文`)
+      // 使用默认值创建身份上下文
+      this.addContext(roleType, {
+        profile: {
+          openid: '',
+          userId: `temp_${roleType}_${Date.now()}`
+        }
+      })
+    }
+
+    const context = this.contextStore.contexts[roleType]
+    const previousStatus = context.imUserInfo.connectionStatus
+    context.imUserInfo.connectionStatus = status
+    context.updatedAt = Date.now()
+
+    // 触发连接状态变更事件
+    this._emitEvent(AUTH_EVENTS.CONNECTION_STATUS_CHANGED, {
+      roleType,
+      previousStatus,
+      currentStatus: status,
+      timestamp: Date.now()
+    })
+
+    // 触发统一的状态变更事件
+    this._emitEvent(AUTH_EVENTS.STATE_CHANGED, {
+      type: 'connectionStatusChanged',
+      data: {
+        roleType,
+        previousStatus,
+        currentStatus: status
+      },
+      timestamp: Date.now()
+    })
+
+    return true
+  }
+
+  /**
+   * 设置身份的登录状态
+   * @param {string} roleType - 身份类型
+   * @param {boolean} isLoggedIn - 是否登录成功
+   * @param {string} userSig - UserSig
+   * @param {number} expiry - UserSig过期时间（毫秒）
+   * @returns {boolean} 设置结果
+   */
+  setLoginStatus(roleType, isLoggedIn, userSig = null, expiry = null) {
+    if (!roleType) {
+      console.error('设置登录状态失败：参数无效')
+      return false
+    }
+
+    // 如果身份不存在，创建一个默认的身份上下文
+    if (!this.contextStore.contexts[roleType]) {
+      console.warn(`设置登录状态：身份 ${roleType} 不存在，创建默认身份上下文`)
+      // 使用默认值创建身份上下文
+      this.addContext(roleType, {
+        profile: {
+          openid: '',
+          userId: `temp_${roleType}_${Date.now()}`
+        }
+      })
+    }
+
+    const context = this.contextStore.contexts[roleType]
+    const imUserInfo = context.imUserInfo
+
+    imUserInfo.isLoggedIn = isLoggedIn
+    imUserInfo.lastLoginTime = isLoggedIn ? Date.now() : null
+    imUserInfo.loginCount = isLoggedIn ? imUserInfo.loginCount + 1 : imUserInfo.loginCount
+
+    if (userSig) {
+      imUserInfo.userSig = userSig
+    }
+
+    if (expiry) {
+      imUserInfo.userSigExpiry = expiry
+    }
+
+    imUserInfo.lastError = isLoggedIn ? null : imUserInfo.lastError
+    context.updatedAt = Date.now()
+
+    return true
+  }
+
+  /**
+   * 检查UserSig是否过期
+   * @param {string} roleType - 身份类型
+   * @returns {boolean} 是否过期
+   */
+  isUserSigExpired(roleType) {
+    try {
+      const context = this.getContext(roleType)
+      if (!context) {
+        return true
+      }
+
+      const { userSigExpiry } = context.imUserInfo
+      if (!userSigExpiry) {
+        // 没有设置过期时间，默认不过期
+        return false
+      }
+
+      // 检查是否已过期（使用当前时间对比）
+      const isExpired = userSigExpiry < Date.now()
+      
+      if (isExpired) {
+        console.warn(`[IdentityContext] 身份 ${roleType} 的UserSig已过期，过期时间：${new Date(userSigExpiry).toLocaleString('zh-CN')}`)
+      }
+
+      return isExpired
+    } catch (error) {
+      console.error('[IdentityContext] 检查UserSig过期状态失败:', error)
+      return true // 出错时默认认为已过期
+    }
+  }
+
+  /**
+   * 获取身份的IM凭证
+   * @param {string} roleType - 身份类型
+   * @returns {object|null} IM凭证：{ userID, userSig }
+   */
+  getIMCredentials(roleType) {
+    const context = this.getContext(roleType)
+    if (!context) {
+      return null
+    }
+
+    const { userID, userSig } = context.imUserInfo
+    if (!userID) {
+      console.error(`获取IM凭证失败：身份 ${roleType} 的IM用户ID不完整`)
+      return null
+    }
+
+    // 检查UserSig是否过期
+    if (this.isUserSigExpired(roleType)) {
+      console.warn(`身份 ${roleType} 的UserSig已过期或即将过期`)
+    }
+
+    return { userID, userSig }
+  }
+
+  /**
+   * 切换身份上下文
+   * @param {string} roleType - 目标身份类型
+   * @param {object} [options] - 切换选项
+   * @returns {boolean} 是否切换成功
+   */
+  switchContext(roleType, options = {}) {
+    if (!roleType) {
+      console.error('切换身份失败：参数无效')
+      return false
+    }
+
+    if (!this.contextStore.contexts[roleType]) {
+      console.error(`切换身份失败：身份 ${roleType} 不存在`)
+      return false
+    }
+
+    // 验证回调（如果提供）
+    if (options.verifyCallback && typeof options.verifyCallback === 'function') {
+      const verifyResult = options.verifyCallback(roleType)
+      if (!verifyResult) {
+        console.error('切换身份失败：验证回调返回false')
+        return false
+      }
+    }
+
+    // 切换身份
+    const previousRoleType = this.contextStore.currentRoleType
+    this.contextStore.currentRoleType = roleType
+
+    // 更新上下文的最后使用时间
+    this.contextStore.contexts[roleType].updatedAt = Date.now()
+
+    // 同时切换当前角色
+    this.switchRole(roleType)
+
+    return true
+  }
+
+  /**
+   * 切换到默认身份
+   * @returns {boolean} 是否切换成功
+   */
+  switchToDefaultContext() {
+    if (!this.contextStore.defaultRoleType) {
+      console.error('切换到默认身份失败：未设置默认身份')
+      return false
+    }
+
+    return this.switchContext(this.contextStore.defaultRoleType)
+  }
+
+  /**
+   * 设置默认身份
+   * @param {string} roleType - 身份类型
+   * @returns {boolean} 是否设置成功
+   */
+  setDefaultContext(roleType) {
+    if (!roleType || !this.contextStore.contexts[roleType]) {
+      console.error(`设置默认身份失败：身份 ${roleType} 不存在`)
+      return false
+    }
+
+    this.contextStore.defaultRoleType = roleType
+    return true
+  }
+
+  /**
+   * 更新身份上下文
+   * @param {string} roleType - 身份类型
+   * @param {object} updates - 更新内容
+   * @returns {boolean} 是否更新成功
+   */
+  updateContext(roleType, updates) {
+    if (!roleType || !updates) {
+      console.error('更新身份上下文失败：参数无效')
+      return false
+    }
+
+    const context = this.contextStore.contexts[roleType]
+    if (!context) {
+      console.error(`更新身份上下文失败：身份 ${roleType} 不存在`)
+      return false
+    }
+
+    // 递归更新上下文
+    this._deepUpdate(context, updates)
+    context.updatedAt = Date.now()
+
+    return true
+  }
+
+  /**
+   * 更新当前身份上下文
+   * @param {object} updates - 更新内容
+   * @returns {boolean} 是否更新成功
+   */
+  updateCurrentContext(updates) {
+    const currentRoleType = this.contextStore.currentRoleType || this.identityStore.currentRole
+    if (!currentRoleType) {
+      console.error('更新当前身份上下文失败：未设置当前身份')
+      return false
+    }
+
+    return this.updateContext(currentRoleType, updates)
+  }
+
+  /**
+   * 更新身份的IM用户信息
+   * @param {string} roleType - 身份类型
+   * @param {object} imUserInfo - IM用户信息
+   * @returns {boolean} 是否更新成功
+   */
+  updateIMUserInfo(roleType, imUserInfo) {
+    if (!roleType || !imUserInfo) {
+      console.error('更新IM用户信息失败：参数无效')
+      return false
+    }
+
+    const context = this.contextStore.contexts[roleType]
+    if (!context) {
+      console.error(`更新IM用户信息失败：身份 ${roleType} 不存在`)
+      return false
+    }
+
+    // 更新IM用户信息
+    context.imUserInfo = {
+      ...context.imUserInfo,
+      ...imUserInfo,
+      updatedAt: Date.now(),
+    }
+
+    // 如果是登录状态，记录登录时间
+    if (imUserInfo.isLoggedIn) {
+      context.imUserInfo.lastLoginTime = Date.now()
+    }
+
+    context.updatedAt = Date.now()
+    return true
+  }
+
+  /**
+   * 更新当前身份的IM用户信息
+   * @param {object} imUserInfo - IM用户信息
+   * @returns {boolean} 是否更新成功
+   */
+  updateCurrentIMUserInfo(imUserInfo) {
+    const currentRoleType = this.contextStore.currentRoleType || this.identityStore.currentRole
+    if (!currentRoleType) {
+      console.error('更新当前身份IM用户信息失败：未设置当前身份')
+      return false
+    }
+
+    return this.updateIMUserInfo(currentRoleType, imUserInfo)
+  }
+
+  /**
+   * 清除身份上下文
+   * @param {string} roleType - 身份类型
+   * @returns {boolean} 是否清除成功
+   */
+  removeContext(roleType) {
+    if (!roleType) {
+      console.error('清除身份上下文失败：参数无效')
+      return false
+    }
+
+    if (!this.contextStore.contexts[roleType]) {
+      console.error(`清除身份上下文失败：身份 ${roleType} 不存在`)
+      return false
+    }
+
+    // 删除身份上下文
+    delete this.contextStore.contexts[roleType]
+
+    // 如果删除的是当前身份，切换到默认身份
+    if (this.contextStore.currentRoleType === roleType) {
+      this.switchToDefaultContext()
+    }
+
+    // 如果删除的是默认身份，重新设置默认身份
+    if (this.contextStore.defaultRoleType === roleType && Object.keys(this.contextStore.contexts).length > 0) {
+      this.contextStore.defaultRoleType = Object.keys(this.contextStore.contexts)[0]
+    }
+
+    return true
+  }
+
+  /**
+   * 清除所有身份上下文
+   */
+  clearAllContexts() {
+    this.contextStore.contexts = {}
+    this.contextStore.currentRoleType = null
+    this.contextStore.defaultRoleType = null
+  }
+
+  /**
+   * 检查身份是否存在
+   * @param {string} roleType - 身份类型
+   * @returns {boolean} 是否存在
+   */
+  hasContext(roleType) {
+    return !!this.contextStore.contexts[roleType]
+  }
+
+  /**
+   * 获取当前身份类型
+   * @returns {string|null} 当前身份类型
+   */
+  getCurrentRoleType() {
+    return this.contextStore.currentRoleType || this.identityStore.currentRole
+  }
+
+  /**
+   * 设置当前身份类型
+   * @param {string} roleType - 身份类型 ('owner' 或 'host')
+   * @returns {boolean} 是否设置成功
+   */
+  setCurrentRoleType(roleType) {
+    if (!roleType) {
+      console.error('设置当前身份失败：参数无效')
+      return false
+    }
+
+    // 验证身份类型
+    if (!Object.values(ROLE_TYPES).includes(roleType)) {
+      console.error('设置当前身份失败：无效的身份类型')
+      return false
+    }
+
+    console.log(`CentralIdentityManager.setCurrentRoleType - 切换当前身份: ${this.contextStore.currentRoleType} -> ${roleType}`)
+
+    this.contextStore.currentRoleType = roleType
+    this.identityStore.currentRole = roleType
+
+    return true
+  }
+
+  /**
+   * 获取默认身份类型
+   * @returns {string|null} 默认身份类型
+   */
+  getDefaultRoleType() {
+    return this.contextStore.defaultRoleType || this.identityStore.defaultRole
+  }
+
+  /**
+   * 获取身份数量
+   * @returns {number} 身份数量
+   */
+  getContextCount() {
+    return Object.keys(this.contextStore.contexts).length
+  }
+
+  /**
+   * 导出身份上下文
+   * @returns {object} 导出的身份上下文
+   */
+  exportContexts() {
+    return JSON.parse(JSON.stringify(this.contextStore.contexts))
+  }
+
+  /**
+   * 导入身份上下文
+   * @param {object} contexts - 要导入的身份上下文
+   * @returns {boolean} 是否导入成功
+   */
+  importContexts(contexts) {
+    if (!contexts || typeof contexts !== 'object') {
+      console.error('导入身份上下文失败：参数无效')
+      return false
+    }
+
+    // 清除现有的身份上下文
+    this.clearAllContexts()
+
+    // 导入身份上下文
+    let successCount = 0
+    Object.keys(contexts).forEach(roleType => {
+      if (this.addContext(roleType, contexts[roleType])) {
+        successCount++
+      }
+    })
+
+    return successCount > 0
+  }
+
+  /**
+   * 深度更新对象
+   * @private
+   * @param {object} target - 目标对象
+   * @param {object} source - 源对象
+   */
+  _deepUpdate(target, source) {
+    if (!source || typeof source !== 'object') {
+      return
+    }
+
+    Object.keys(source).forEach(key => {
+      if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+        if (!target[key]) {
+          target[key] = {}
+        }
+        this._deepUpdate(target[key], source[key])
+      } else {
+        target[key] = source[key]
+      }
+    })
   }
 
   /**
@@ -492,9 +1312,25 @@ class CentralIdentityManager {
     this._saveToStorage()
 
     // 触发事件
-    this._emitEvent(IDENTITY_EVENTS.IDENTITY_UPDATED, {
+    this._emitEvent(AUTH_EVENTS.IDENTITY_UPDATED, {
       role,
       identity,
+      timestamp: Date.now()
+    })
+
+    // 触发用户信息更新事件
+    this._emitEvent(AUTH_EVENTS.USER_INFO_UPDATED, {
+      userInfo: identity,
+      timestamp: Date.now()
+    })
+
+    // 触发统一的状态变更事件
+    this._emitEvent(AUTH_EVENTS.STATE_CHANGED, {
+      type: 'identityUpdated',
+      data: {
+        role,
+        identity
+      },
       timestamp: Date.now()
     })
 
@@ -534,15 +1370,25 @@ class CentralIdentityManager {
     this._saveToStorage()
 
     // 触发事件
-    this._emitEvent(IDENTITY_EVENTS.ROLE_CHANGED, {
+    this._emitEvent(AUTH_EVENTS.ROLE_CHANGED, {
       previousRole,
       currentRole: role,
       timestamp: Date.now()
     })
 
-    this._emitEvent(IDENTITY_EVENTS.IDENTITY_UPDATED, {
+    this._emitEvent(AUTH_EVENTS.IDENTITY_UPDATED, {
       role,
       identity: this.identityStore.identities[role],
+      timestamp: Date.now()
+    })
+
+    // 触发统一的状态变更事件
+    this._emitEvent(AUTH_EVENTS.STATE_CHANGED, {
+      type: 'roleChanged',
+      data: {
+        previousRole,
+        currentRole: role
+      },
       timestamp: Date.now()
     })
 
@@ -630,15 +1476,25 @@ class CentralIdentityManager {
     this._saveToStorage()
 
     // 触发事件
-    this._emitEvent(IDENTITY_EVENTS.LOGIN_STATE_CHANGED, {
+    this._emitEvent(AUTH_EVENTS.LOGIN_STATE_CHANGED, {
       isLoggedIn: true,
       role,
       timestamp: Date.now()
     })
 
-    this._emitEvent(IDENTITY_EVENTS.IDENTITY_UPDATED, {
+    this._emitEvent(AUTH_EVENTS.IDENTITY_UPDATED, {
       role,
       identity: this.identityStore.identities[role],
+      timestamp: Date.now()
+    })
+
+    // 触发统一的状态变更事件
+    this._emitEvent(AUTH_EVENTS.STATE_CHANGED, {
+      type: 'login',
+      data: {
+        isLoggedIn: true,
+        role
+      },
       timestamp: Date.now()
     })
 
@@ -683,9 +1539,19 @@ class CentralIdentityManager {
     }
 
     // 触发事件
-    this._emitEvent(IDENTITY_EVENTS.LOGIN_STATE_CHANGED, {
+    this._emitEvent(AUTH_EVENTS.LOGIN_STATE_CHANGED, {
       isLoggedIn: false,
       previousRole,
+      timestamp: Date.now()
+    })
+
+    // 触发统一的状态变更事件
+    this._emitEvent(AUTH_EVENTS.STATE_CHANGED, {
+      type: 'logout',
+      data: {
+        isLoggedIn: false,
+        previousRole
+      },
       timestamp: Date.now()
     })
 
@@ -840,6 +1706,143 @@ class CentralIdentityManager {
 
     return true
   }
+
+  /**
+   * 批量更新身份信息
+   * @param {object} identities - 身份信息对象，键为角色类型，值为身份信息
+   * @returns {boolean} 是否更新成功
+   */
+  batchUpdateIdentities(identities) {
+    if (!identities || typeof identities !== 'object') {
+      console.error('[CentralIdentityManager] 批量更新身份信息失败：参数无效')
+      return false
+    }
+
+    let success = true
+
+    Object.keys(identities).forEach(roleType => {
+      if (Object.values(ROLE_TYPES).includes(roleType)) {
+        const identity = identities[roleType]
+        if (identity && identity._id && identity.openid) {
+          if (!this.setIdentity(roleType, identity)) {
+            success = false
+          }
+        }
+      }
+    })
+
+    return success
+  }
+
+  /**
+   * 获取身份摘要信息
+   * @returns {object} 身份摘要信息
+   */
+  getIdentitySummary() {
+    return {
+      isLoggedIn: this.isLoggedIn(),
+      currentRole: this.getCurrentRole(),
+      roleCount: this.getRoleCount(),
+      roles: this.getRoles(),
+      hasMultipleRoles: this.getRoleCount() > 1,
+      needsIdentitySelection: this.needShowIdentitySelection(),
+      isLoginExpired: this.isLoginExpired(),
+      timestamp: Date.now()
+    }
+  }
+
+  /**
+   * 验证身份数据完整性
+   * @returns {object} 验证结果
+   */
+  validateIdentityData() {
+    const issues = []
+
+    // 检查当前角色
+    if (!this.identityStore.currentRole) {
+      issues.push({ type: 'missingCurrentRole', message: '缺少当前角色' })
+    } else {
+      // 检查当前角色的身份信息
+      const currentIdentity = this.identityStore.identities[this.identityStore.currentRole]
+      if (!currentIdentity) {
+        issues.push({ type: 'missingCurrentIdentity', message: `缺少当前角色 ${this.identityStore.currentRole} 的身份信息` })
+      } else {
+        // 检查必需字段
+        if (!currentIdentity._id) {
+          issues.push({ type: 'missingId', message: '身份信息缺少 _id 字段' })
+        }
+        if (!currentIdentity.openid) {
+          issues.push({ type: 'missingOpenid', message: '身份信息缺少 openid 字段' })
+        }
+      }
+    }
+
+    // 检查公共数据
+    if (!this.identityStore.commonData.openid) {
+      issues.push({ type: 'missingCommonOpenid', message: '公共数据缺少 openid 字段' })
+    }
+
+    return {
+      isValid: issues.length === 0,
+      issues: issues,
+      timestamp: Date.now()
+    }
+  }
+
+  /**
+   * 修复身份数据完整性问题
+   * @returns {object} 修复结果
+   */
+  fixIdentityData() {
+    const validation = this.validateIdentityData()
+    const fixedIssues = []
+
+    if (!validation.isValid) {
+      validation.issues.forEach(issue => {
+        switch (issue.type) {
+          case 'missingCurrentRole':
+            // 设置默认角色
+            const roles = this.getRoles()
+            if (roles.length > 0) {
+              this.identityStore.currentRole = roles[0].roleType
+              fixedIssues.push(issue)
+            }
+            break
+          case 'missingCommonOpenid':
+            // 尝试从身份信息中获取 openid
+            const currentRole = this.identityStore.currentRole
+            if (currentRole) {
+              const identity = this.identityStore.identities[currentRole]
+              if (identity && identity.openid) {
+                this.identityStore.commonData.openid = identity.openid
+                fixedIssues.push(issue)
+              }
+            }
+            break
+        }
+      })
+
+      if (fixedIssues.length > 0) {
+        // 保存修复后的数据
+        this._saveToStorage()
+        
+        // 触发事件
+        this._emitEvent(IDENTITY_EVENTS.IDENTITY_UPDATED, {
+          role: this.identityStore.currentRole,
+          identity: this.identityStore.identities[this.identityStore.currentRole],
+          fixedIssues: fixedIssues.length,
+          timestamp: Date.now()
+        })
+      }
+    }
+
+    return {
+      success: fixedIssues.length > 0,
+      fixedIssues: fixedIssues,
+      remainingIssues: validation.issues.filter(issue => !fixedIssues.includes(issue)),
+      timestamp: Date.now()
+    }
+  }
 }
 
 // 创建单例实例
@@ -850,5 +1853,6 @@ module.exports = {
   centralIdentityManager,
   ROLE_TYPES,
   PERMISSIONS,
-  IDENTITY_EVENTS
+  IDENTITY_EVENTS,
+  AUTH_EVENTS
 }

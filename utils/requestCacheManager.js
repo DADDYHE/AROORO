@@ -158,8 +158,16 @@ class RequestCacheManager {
    * @returns {Promise<any>} 请求结果
    */
   async _performHttpRequest(url, options = {}) {
-    // 获取本地存储的token
-    const token = wx.getStorageSync('token')
+    // 获取LoginStateManager中的token
+    let token = ''
+    try {
+      const app = getApp()
+      if (app.globalData.loginStateManager) {
+        token = app.globalData.loginStateManager.get('token')
+      }
+    } catch (error) {
+      console.error('获取token失败:', error)
+    }
     
     // 创建请求头
     const header = {

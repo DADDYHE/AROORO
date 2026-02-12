@@ -41,12 +41,17 @@ class MonitoringManager {
     this.logs = []
     this.events = []
     this.performanceData = []
+    this.networkRequests = [] // 网络请求记录
+    this.pageLoadTimes = {} // 页面加载时间
+    this.markers = {} // 性能标记
     this.MAX_LOGS = 1000
     this.MAX_EVENTS = 500
     this.MAX_PERFORMANCE_DATA = 200
+    this.MAX_REQUEST_RECORDS = 100 // 最大请求记录数
     this.lastReportTime = 0
     this.reportInterval = 120000 // 2分钟
     this.startTime = Date.now()
+    this.isMonitoring = false // 是否正在监控
   }
 
   /**

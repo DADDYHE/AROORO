@@ -10,7 +10,20 @@
  * }))
  */
 
-const { centralIdentityManager, IDENTITY_EVENTS, ROLE_TYPES } = require('./CentralIdentityManager')
+// ROLE_TYPES 常量定义
+const ROLE_TYPES = {
+  OWNER: 'owner',
+  HOST: 'host'
+}
+
+/**
+ * 获取登录状态管理器（返回 centralIdentityManager）
+ * @returns {object} 登录状态管理器实例
+ */
+function getLoginStateManager() {
+  const app = getApp()
+  return app?.globalData?.loginStateManager || app?.globalData?.centralIdentityManager
+}
 
 /**
  * 身份增强函数
@@ -31,11 +44,6 @@ function enhanceWithIdentity(pageConfig) {
      */
     onLoad(options) {
       console.log('[IdentityEnhance] 页面加载，初始化身份管理')
-
-      // 初始化身份管理器
-      if (!centralIdentityManager.isInitialized) {
-        centralIdentityManager.init()
-      }
 
       // 设置身份事件监听器
       this._setupIdentityEventListeners()
@@ -84,16 +92,19 @@ function enhanceWithIdentity(pageConfig) {
      * @private
      */
     _setupIdentityEventListeners() {
+      const loginStateManager = getLoginStateManager()
+      if (!loginStateManager) return
+
       // 保存事件回调引用
       this._identityEventCallbacks = {
-        [IDENTITY_EVENTS.ROLE_CHANGED]: (data) => this._onRoleChanged(data),
-        [IDENTITY_EVENTS.IDENTITY_UPDATED]: (data) => this._onIdentityUpdated(data),
-        [IDENTITY_EVENTS.LOGIN_STATE_CHANGED]: (data) => this._onLoginStateChanged(data)
+        roleChanged: (data) => this._onRoleChanged(data),
+        userInfoUpdated: (data) => this._onIdentityUpdated(data),
+        loginStatusChanged: (data) => this._onLoginStateChanged(data)
       }
 
       // 注册事件监听器
       Object.keys(this._identityEventCallbacks).forEach(eventName => {
-        centralIdentityManager.on(eventName, this._identityEventCallbacks[eventName])
+        loginStateManager.on(eventName, this._identityEventCallbacks[eventName])
       })
 
       console.log('[IdentityEnhance] 身份事件监听器已设置')
@@ -106,8 +117,11 @@ function enhanceWithIdentity(pageConfig) {
     _cleanupIdentityEventListeners() {
       if (!this._identityEventCallbacks) return
 
+      const loginStateManager = getLoginStateManager()
+      if (!loginStateManager) return
+
       Object.keys(this._identityEventCallbacks).forEach(eventName => {
-        centralIdentityManager.off(eventName, this._identityEventCallbacks[eventName])
+        loginStateManager.off(eventName, this._identityEventCallbacks[eventName])
       })
 
       this._identityEventCallbacks = null
@@ -119,9 +133,12 @@ function enhanceWithIdentity(pageConfig) {
      * @private
      */
     _syncIdentityToPage() {
-      const identity = centralIdentityManager.getCurrentIdentity()
-      const isLoggedIn = centralIdentityManager.isLoggedIn()
-      const currentRole = centralIdentityManager.getCurrentRole()
+      const loginStateManager = getLoginStateManager()
+      if (!loginStateManager) return
+
+      const identity = loginStateManager.getUserInfo()
+      const isLoggedIn = loginStateManager.isLoggedIn()
+      const currentRole = loginStateManager.getCurrentRole()
 
       console.log('[IdentityEnhance] 同步身份状态到页面:', {
         isLoggedIn,
@@ -223,29 +240,12 @@ function enhanceWithIdentity(pageConfig) {
     },
 
     /**
-     * 检查权限
-     * @param {string} permission - 权限名称
-     * @returns {boolean} 是否有权限
-     */
-    hasPermission(permission) {
-      return centralIdentityManager.hasPermission(permission)
-    },
-
-    /**
-     * 批量检查权限
-     * @param {array} permissionList - 权限列表
-     * @returns {object} 权限检查结果
-     */
-    checkPermissions(permissionList) {
-      return centralIdentityManager.checkPermissions(permissionList)
-    },
-
-    /**
      * 获取当前角色
      * @returns {string|null} 当前角色
      */
     getCurrentRole() {
-      return centralIdentityManager.getCurrentRole()
+      const loginStateManager = getLoginStateManager()
+      return loginStateManager ? loginStateManager.getCurrentRole() : null
     },
 
     /**
@@ -253,7 +253,8 @@ function enhanceWithIdentity(pageConfig) {
      * @returns {object|null} 当前身份信息
      */
     getCurrentIdentity() {
-      return centralIdentityManager.getCurrentIdentity()
+      const loginStateManager = getLoginStateManager()
+      return loginStateManager ? loginStateManager.getUserInfo() : null
     },
 
     /**
@@ -262,7 +263,8 @@ function enhanceWithIdentity(pageConfig) {
      * @returns {boolean} 是否切换成功
      */
     switchRole(role) {
-      return centralIdentityManager.switchRole(role)
+      const loginStateManager = getLoginStateManager()
+      return loginStateManager ? loginStateManager.switchRole(role) : false
     },
 
     /**
@@ -270,7 +272,8 @@ function enhanceWithIdentity(pageConfig) {
      * @returns {boolean} 是否退出成功
      */
     logout() {
-      return centralIdentityManager.logout()
+      const loginStateManager = getLoginStateManager()
+      return loginStateManager ? loginStateManager.logout() : false
     }
   }
 }

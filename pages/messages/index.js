@@ -147,7 +147,8 @@ Page({
       }
       
       // 获取当前登录用户的ID
-      const currentUserID = app.globalData.userInfo?.userID || wx.getStorageSync('userID');
+      const loginStateManager = app.globalData.loginStateManager
+      const currentUserID = app.globalData.userInfo?.userID || (loginStateManager ? loginStateManager.get('userID') : '');
       console.log('当前登录用户ID:', currentUserID);
       
       // 构建分页参数
@@ -731,7 +732,8 @@ Page({
     console.log('开始尝试登录IM');
     
     // 根据微信小程序官方文档，正确的用户信息获取方式
-    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo');
+    const loginStateManager = app.globalData.loginStateManager
+    const userInfo = app.globalData.userInfo || (loginStateManager ? loginStateManager.getUserInfo() : null);
     
     // 检查是否有有效的用户信息
     if (!userInfo || !userInfo._id) {
@@ -1173,16 +1175,18 @@ Page({
    */
   getUserInfo(userID) {
     return new Promise((resolve, reject) => {
-      // 尝试从本地存储获取用户信息
-      const userInfo = wx.getStorageSync('userInfo');
+      // 尝试从LoginStateManager获取用户信息
+      const app = getApp()
+      const loginStateManager = app.globalData.loginStateManager
+      const userInfo = loginStateManager ? loginStateManager.getUserInfo() : null;
       if (userInfo) {
-        console.log('从本地存储获取用户信息成功');
+        console.log('从LoginStateManager获取用户信息成功');
         resolve(userInfo);
         return;
       }
       
       // 本地存储没有用户信息，使用默认信息
-      console.warn('本地存储没有用户信息，使用默认信息');
+      console.warn('LoginStateManager没有用户信息，使用默认信息');
       resolve({
         nickName: '', // 不设置默认昵称，保留空值
         avatarUrl: '',

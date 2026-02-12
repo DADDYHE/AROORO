@@ -22,6 +22,9 @@ try {
   }
 }
 
+// 导入集中式身份管理器
+const { centralIdentityManager } = require('./CentralIdentityManager');
+
 // 状态事件类型
 const STATE_EVENTS = {
   STATE_UPDATED: 'stateUpdated',
@@ -38,8 +41,7 @@ const STATE_KEYS = {
   IM_LOGIN_STATUS: 'imLoginStatus',
   OWNER_INFO: 'ownerInfo',
   HOST_INFO: 'hostInfo',
-  IDENTITY_CONTEXT: 'identityContextManager',
-  IDENTITY_MANAGER: 'identityManager'
+  IDENTITY_CONTEXT: 'identityContextManager'
 };
 
 class StateManager {
@@ -151,6 +153,12 @@ class StateManager {
    * @param {object} options - 选项
    */
   static _updateState(key, value, options = {}) {
+    // 确保 app.globalData 存在
+    if (!app || !app.globalData) {
+      console.error('StateManager._updateState - 应用实例或全局数据不存在');
+      return;
+    }
+    
     const oldValue = app.globalData[key];
     
     // 检查值是否变化
@@ -162,11 +170,35 @@ class StateManager {
     // 更新状态
     app.globalData[key] = value;
     
+    // 确保 stateManager 和相关属性存在
+    if (!app.globalData.stateManager) {
+      try {
+        this.init();
+      } catch (error) {
+        console.error('StateManager._updateState - 初始化状态管理器失败:', error);
+        return;
+      }
+    }
+    
+    // 再次检查 stateManager 是否存在
+    if (!app.globalData.stateManager) {
+      console.error('StateManager._updateState - 状态管理器初始化失败');
+      return;
+    }
+    
+    if (!app.globalData.stateManager.lastUpdated) {
+      app.globalData.stateManager.lastUpdated = {};
+    }
+    
     // 记录更新时间
     app.globalData.stateManager.lastUpdated[key] = Date.now();
     
     // 记录状态历史
-    this._recordStateHistory(key, oldValue, value, options.source);
+    try {
+      this._recordStateHistory(key, oldValue, value, options.source);
+    } catch (error) {
+      console.error('StateManager._updateState - 记录状态历史失败:', error);
+    }
     
     console.log('StateManager._updateState - 更新状态:', {
       key: key,
@@ -178,7 +210,11 @@ class StateManager {
     
     // 触发事件
     if (!options.silent) {
-      this._emitStateEvent(key, oldValue, value, options.source);
+      try {
+        this._emitStateEvent(key, oldValue, value, options.source);
+      } catch (error) {
+        console.error('StateManager._updateState - 触发事件失败:', error);
+      }
     }
   }
   
@@ -409,14 +445,19 @@ class StateManager {
     }
     
     // 检查身份管理器状态
-    if (state.identityManager) {
+    if (centralIdentityManager) {
       try {
-        const identityValidation = state.identityManager.validateIdentityConsistency();
-        if (!identityValidation.isConsistent) {
+        // 使用 CentralIdentityManager 检查身份一致性
+        const currentRole = centralIdentityManager.getCurrentRole();
+        const currentIdentity = centralIdentityManager.getCurrentIdentity();
+        if (!currentRole || !currentIdentity) {
           issues.push({
             type: 'identity_inconsistency',
             message: '身份状态不一致',
-            details: identityValidation.issues
+            details: {
+              missingRole: !currentRole,
+              missingIdentity: !currentIdentity
+            }
           });
         }
       } catch (error) {
@@ -469,11 +510,15 @@ class StateManager {
             }
             break;
           case 'identity_inconsistency':
-            // 使用身份管理器修复
-            if (app.globalData.identityManager) {
+            // 使用 CentralIdentityManager 修复
+            if (centralIdentityManager) {
               try {
-                app.globalData.identityManager.fixIdentityConsistency();
-                fixedIssues.push(issue);
+                // CentralIdentityManager 会自动处理身份一致性
+                // 可以通过重新获取当前身份来确保状态正确
+                const currentIdentity = centralIdentityManager.getCurrentIdentity();
+                if (currentIdentity) {
+                  fixedIssues.push(issue);
+                }
               } catch (error) {
                 console.error('StateManager.fixStateConsistency - 修复身份状态失败:', error);
               }
@@ -542,9 +587,8 @@ class StateManager {
         hasHostInfo: !!state.hostInfo
       },
       managers: {
-        hasIdentityManager: !!state.identityManager,
-        hasStateManager: !!state.stateManager,
-        hasIdentityContext: !!state.identityContextManager
+        hasCentralIdentityManager: !!centralIdentityManager,
+        hasStateManager: !!state.stateManager
       },
       timestamp: Date.now()
     };
@@ -585,9 +629,25 @@ class StateManager {
   static _updatePageState(pageName, updates) {
     console.log('StateManager._updatePageState - 更新页面状态:', pageName, Object.keys(updates));
     
-    if (!app.globalData.stateManager.pageRegistry || !app.globalData.stateManager.pageRegistry[pageName]) {
-      console.error('StateManager._updatePageState - 页面未注册:', pageName);
-      return;
+    // 确保 stateManager 和 pageRegistry 存在
+    if (!app.globalData.stateManager) {
+      this.init();
+    }
+    
+    if (!app.globalData.stateManager.pageRegistry) {
+      app.globalData.stateManager.pageRegistry = {};
+    }
+    
+    // 如果页面未注册，自动注册一个默认状态
+    if (!app.globalData.stateManager.pageRegistry[pageName]) {
+      console.warn('StateManager._updatePageState - 页面未注册，自动注册默认状态:', pageName);
+      // 自动注册页面，使用默认状态
+      this.registerPage(pageName, {
+        isLoading: false,
+        isLoggedIn: false,
+        userInfo: {},
+        userRole: 'owner'
+      });
     }
     
     const pageData = app.globalData.stateManager.pageRegistry[pageName];

@@ -34,7 +34,8 @@ Page({
    * 检查用户角色
    */
   checkUserRole: function() {
-    const userRole = app.globalData.userRole || 'owner'
+    const loginStateManager = app.globalData.loginStateManager
+    const userRole = loginStateManager ? loginStateManager.getCurrentRole() : 'owner'
     this.setData({
       userRole: userRole
     })

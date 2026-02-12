@@ -198,10 +198,8 @@ if (!wx.getSystemInfoSync.__patched__) {
 const { errorHandler } = require('./utils/errorHandler')
 // 导入模块管理器
 const { moduleManager } = require('./utils/moduleManager')
-// 导入身份上下文管理模块
-const { identityContextManager } = require('./utils/identityContextManager')
-// 导入存储管理模块
-const StorageManager = require('./utils/storageManager')
+// 导入集中式身份管理器（替代 LoginStateManager）
+const { centralIdentityManager } = require('./utils/CentralIdentityManager')
 // 导入权限管理模块
 const { permissionManager } = require('./utils/permissionManager')
 // 导入动画管理模块
@@ -212,8 +210,7 @@ const { stateManager } = require('./utils/stateManager')
 import AuthModule from './src/modules/auth/index.js'
 // 导入请求缓存管理器
 const { requestCacheManager } = require('./utils/requestCacheManager')
-// 导入性能监控工具
-const { performanceMonitor } = require('./utils/performanceMonitor')
+// 性能监控工具已整合到 monitoringManager.js 中
 // 导入安全管理器
 const { securityManager } = require('./utils/securityManager')
 // 导入监控管理器
@@ -243,14 +240,14 @@ App({
     imManager: null,
     client: null,
     models: null,
-    identityContextManager: null,
+    loginStateManager: null,
     storageManager: null,
     permissionManager: null,
     animationManager: null,
     stateManager: null,
     loginManager: null,
     requestCacheManager: null,
-    performanceMonitor: null,
+    // performanceMonitor 已整合到 monitoringManager 中
     securityManager: null,
     errorHandler: null,
     moduleManager: null,
@@ -338,8 +335,8 @@ App({
       console.error('请使用 2.2.3 或以上的基础库以使用云能力')
     }
 
-    // 初始化身份管理器
-    this.initIdentityContextManager()
+    // 初始化登录状态管理模块
+    this.initLoginStateManager()
 
     // 初始化存储管理器
     this.initStorageManager()
@@ -379,26 +376,26 @@ App({
 
     // 从本地存储获取用户信息和退出状态
     try {
-      const logoutStatus = wx.getStorageSync('isLogout')
+      // 直接从本地存储获取退出状态
+      const logoutStatus = wx.getStorageSync('central:isLogout')
       if (logoutStatus) {
         this.globalData.isLogout = true
       } else {
-        // 使用统一存储管理器获取用户信息，确保使用正确的键前缀
-        const { getStorageManager } = require('./src/modules/auth/StorageManager')
-        const storageManager = getStorageManager()
+        // 使用 CentralIdentityManager 获取当前身份信息
+        const currentIdentity = this.globalData.loginStateManager.getCurrentIdentity()
+        const storedUserRole = this.globalData.loginStateManager.getCurrentRole()
         
-        const storedUserInfo = storageManager.getUserInfo()
-        const storedUserRole = storageManager.getUserRole()
-        const storedOwnerInfo = storageManager.getOwnerInfo()
-        const storedHostInfo = storageManager.getHostInfo()
-        const storedUserSig = storageManager.get('userSig', '')
-        const loginExpiry = storageManager.getLoginExpiry()
+        // 直接从本地存储获取其他信息
+        const storedOwnerInfo = wx.getStorageSync('central:ownerInfo')
+        const storedHostInfo = wx.getStorageSync('central:hostInfo')
+        const storedUserSig = wx.getStorageSync('central:userSig') || ''
+        const loginExpiry = wx.getStorageSync('central:loginExpiry')
 
-        if (storedUserInfo && (storedUserInfo._id || storedUserInfo.openid)) {
+        if (currentIdentity && (currentIdentity._id || currentIdentity.openid)) {
           // 本地存储有有效的用户信息，直接使用
-          this.globalData.userInfo = storedUserInfo
+          this.globalData.userInfo = currentIdentity
           this.globalData.userRole = storedUserRole || 'owner'
-          console.log('从StorageManager恢复用户信息:', storedUserInfo)
+          console.log('从CentralIdentityManager恢复用户信息:', currentIdentity)
           console.log('登录过期时间:', loginExpiry ? new Date(loginExpiry).toLocaleString('zh-CN') : '未设置')
         }
 
@@ -406,77 +403,50 @@ App({
         if (storedOwnerInfo && (storedOwnerInfo._id || storedOwnerInfo.openid)) {
           this.globalData.ownerInfo = storedOwnerInfo
 
-          // 将恢复的身份信息添加到身份上下文管理器
           // 生成正确格式的IM用户ID
-          const ownerOpenid = storedOwnerInfo.openid || storedUserInfo.openid || ''
+          const ownerOpenid = storedOwnerInfo.openid || currentIdentity.openid || ''
           const ownerImUserId = generateFormat1UserID(ownerOpenid, 'owner')
           
-          this.globalData.identityContextManager.addContext('owner', {
-            roleId: generateIMUserId('owner', ownerOpenid),
-            profile: storedOwnerInfo,
-            storageInfo: {
-              prefix: 'owner_',
-            },
-            imUserInfo: {
-              userID: ownerImUserId,
-              userSig: storedUserSig || '',
-              isLoggedIn: false,
-              lastLoginTime: null,
-            },
+          // 使用 setIdentity 方法更新身份信息
+          this.globalData.loginStateManager.setIdentity('owner', {
+            ...storedOwnerInfo,
+            openid: ownerOpenid,
+            userID: ownerImUserId
           })
         }
 
         if (storedHostInfo && (storedHostInfo._id || storedHostInfo.openid)) {
           this.globalData.hostInfo = storedHostInfo
 
-          // 将恢复的身份信息添加到身份上下文管理器
           // 生成正确格式的IM用户ID
-          const hostOpenid = storedHostInfo.openid || storedUserInfo.openid || ''
+          const hostOpenid = storedHostInfo.openid || currentIdentity.openid || ''
           const hostImUserId = generateFormat1UserID(hostOpenid, 'host')
-          
-          this.globalData.identityContextManager.addContext('host', {
-            roleId: generateIMUserId('host', hostOpenid),
-            profile: storedHostInfo,
-            storageInfo: {
-              prefix: 'host_',
-            },
-            imUserInfo: {
-              userID: hostImUserId,
-              userSig: storedUserSig || '',
-              isLoggedIn: false,
-              lastLoginTime: null,
-            },
+        
+          // 使用 setIdentity 方法更新身份信息
+          this.globalData.loginStateManager.setIdentity('host', {
+            ...storedHostInfo,
+            openid: hostOpenid,
+            userID: hostImUserId
           })
         }
         
         // 如果没有恢复到完整的身份信息，但有用户信息，创建默认的身份上下文
-        if (storedUserInfo && (storedUserInfo._id || storedUserInfo.openid)) {
+        if (currentIdentity && (currentIdentity._id || currentIdentity.openid)) {
           // 检查是否已经添加了身份信息
-          const identityManager = this.globalData.identityContextManager
-          if (!identityManager.hasContext('owner')) {
+          const loginManager = this.globalData.loginStateManager
+          if (loginManager) {
             // 生成正确格式的IM用户ID
-            const ownerOpenid = storedUserInfo.openid || ''
+            const ownerOpenid = currentIdentity.openid || ''
             const ownerImUserId = generateFormat1UserID(ownerOpenid, 'owner')
             
-            // 创建默认的owner身份上下文
-            identityManager.addContext('owner', {
-              roleId: generateIMUserId('owner', ownerOpenid),
-              profile: {
-                ...storedUserInfo,
-                ...(this.globalData.ownerInfo || {}),
-                openid: storedUserInfo.openid,
-                userId: storedUserInfo._id,
-                ownerName: storedUserInfo.nickName || '宠物主人',
-              },
-              storageInfo: {
-                prefix: 'owner_',
-              },
-              imUserInfo: {
-                userID: ownerImUserId,
-                userSig: storedUserSig || '',
-                isLoggedIn: false,
-                lastLoginTime: null,
-              },
+            // 使用 setIdentity 方法更新身份信息
+            loginManager.setIdentity('owner', {
+              ...currentIdentity,
+              ...(this.globalData.ownerInfo || {}),
+              openid: currentIdentity.openid,
+              userId: currentIdentity._id,
+              userID: ownerImUserId,
+              ownerName: currentIdentity.nickName || '宠物主人',
             })
           }
         }
@@ -496,17 +466,21 @@ App({
   },
 
   /**
-   * 初始化身份上下文管理器
+   * 初始化登录状态管理模块
    */
-  initIdentityContextManager() {
-    this.globalData.identityContextManager = identityContextManager
+  initLoginStateManager() {
+    // 初始化集中式身份管理器
+    centralIdentityManager.init()
+    // 将centralIdentityManager作为loginStateManager使用，保持向后兼容
+    this.globalData.loginStateManager = centralIdentityManager
   },
 
   /**
    * 初始化存储管理器
    */
   initStorageManager() {
-    this.globalData.storageManager = new StorageManager(this.globalData.identityContextManager)
+    // 存储管理已集成到CentralIdentityManager中
+    this.globalData.storageManager = centralIdentityManager
   },
 
   /**
@@ -551,12 +525,11 @@ App({
   },
 
   /**
-   * 初始化性能监控工具
+   * 初始化性能监控工具（已整合到 monitoringManager 中）
    */
   initPerformanceMonitor() {
-    this.globalData.performanceMonitor = performanceMonitor
-    // 启动性能监控
-    performanceMonitor.startMonitoring()
+    // 性能监控已整合到 monitoringManager 中
+    console.log('性能监控已整合到 monitoringManager 中')
   },
 
   /**
@@ -594,10 +567,9 @@ App({
     moduleManager.registerModule('stateManager', stateManager, ['errorHandler'])
     moduleManager.registerModule('securityManager', securityManager, ['errorHandler'])
     moduleManager.registerModule('requestCacheManager', requestCacheManager, ['errorHandler'])
-    moduleManager.registerModule('performanceMonitor', performanceMonitor, ['errorHandler'])
     moduleManager.registerModule('monitoringManager', monitoringManager, ['errorHandler'])
     moduleManager.registerModule('loginManager', this.globalData.loginManager, ['errorHandler', 'securityManager'])
-    moduleManager.registerModule('identityContextManager', identityContextManager, ['errorHandler'])
+    moduleManager.registerModule('loginStateManager', centralIdentityManager, ['errorHandler'])
 
     // 初始化所有模块
     moduleManager.initAllModules()
@@ -749,7 +721,7 @@ App({
         // 更新globalData.userInfo，确保包含avatarUrl
         if (user) {
           // 优先使用云函数返回的用户信息，特别是avatarUrl字段
-          this.globalData.userInfo = {
+          const updatedUserInfo = {
             ...this.globalData.userInfo,
             _id: user._id,
             openid: user.openid,
@@ -757,6 +729,10 @@ App({
             nickName: user.nickName || '',
             role: currentRole.roleType
           }
+          this.globalData.userInfo = updatedUserInfo
+          
+          // 更新到登录状态管理器
+          this.globalData.loginStateManager.updateUserInfo(updatedUserInfo)
         }
 
         // 保存当前角色的完整profile
@@ -902,15 +878,10 @@ App({
                 }
               }
 
-              // 添加到身份上下文管理器
-              this.globalData.identityContextManager.addContext('owner', {
-                roleId: role._id || generateIMUserId('owner', role.openid || Date.now()),
-                profile: profile,
-                storageInfo: {
-                  prefix: 'owner_',
-                },
-                imUserInfo: imUserInfo,
-              })
+              // 添加到登录状态管理器
+              this.globalData.loginStateManager.updateUserInfo(profile)
+              this.globalData.loginStateManager.switchRole('owner')
+              console.log('APP initIdentitySystem - 已更新owner身份到登录状态管理器')
             } else if (role.roleType === 'host') {
               // 总是使用云函数返回的最新数据更新hostInfo
               // 确保hostInfo使用云开发标准路径格式的头像
@@ -928,23 +899,17 @@ App({
               console.log('APP initIdentitySystem - 更新hostInfo:', profile)
               this.globalData.hostInfo = profile
 
-              // 添加到身份上下文管理器
-              this.globalData.identityContextManager.addContext('host', {
-                roleId: role._id || `host_${Date.now()}`,
-                profile: profile,
-                storageInfo: {
-                  prefix: 'host_',
-                },
-                imUserInfo: imUserInfo,
-              })
-              console.log('APP initIdentitySystem - 已添加host身份到身份上下文管理器')
+              // 添加到登录状态管理器
+              this.globalData.loginStateManager.updateUserInfo(profile)
+              this.globalData.loginStateManager.switchRole('host')
+              console.log('APP initIdentitySystem - 已更新host身份到登录状态管理器')
             }
           })
         }
 
         // 切换到当前身份
         if (currentRole && currentRole.roleType) {
-          this.globalData.identityContextManager.switchContext(currentRole.roleType)
+          this.globalData.loginStateManager.switchRole(currentRole.roleType)
         }
 
         // 设置初始化完成标志
@@ -998,25 +963,14 @@ App({
         this.globalData.currentProfile = tempRole.profile
         this.globalData.userRole = tempRole.roleType
         this.globalData.ownerInfo = tempRole.profile
+        this.globalData.userInfo = tempRole.profile
+        
+        // 更新到登录状态管理器
+        this.globalData.loginStateManager.updateUserInfo(tempRole.profile)
+        this.globalData.loginStateManager.switchRole(tempRole.roleType)
 
-        // 添加到身份上下文管理器
-        const tempImUserID = generateFormat1UserID(tempUser.openid, 'owner');
-        this.globalData.identityContextManager.addContext('owner', {
-          roleId: tempRole._id,
-          profile: tempRole.profile,
-          storageInfo: {
-            prefix: 'owner_',
-          },
-          imUserInfo: {
-            userID: tempImUserID,
-            userSig: '',
-            isLoggedIn: false,
-            lastLoginTime: null,
-          },
-        })
-
-        // 切换到临时身份
-        this.globalData.identityContextManager.switchContext('owner')
+        // 临时身份已通过loginStateManager更新，无需再添加到centralIdentityManager
+        console.log('APP initIdentitySystem - 临时身份已通过loginStateManager设置')
         // 设置初始化完成标志
         this.globalData.identitySystemInitialized = true
         // 触发身份系统初始化完成事件
@@ -1070,25 +1024,14 @@ App({
       this.globalData.currentProfile = tempRole.profile
       this.globalData.userRole = tempRole.roleType
       this.globalData.ownerInfo = tempRole.profile
+      this.globalData.userInfo = tempRole.profile
+      
+      // 更新到登录状态管理器
+      this.globalData.loginStateManager.updateUserInfo(tempRole.profile)
+      this.globalData.loginStateManager.switchRole(tempRole.roleType)
 
-      // 添加到身份上下文管理器
-      const tempImUserID = generateFormat1UserID(tempUser.openid, 'owner');
-      this.globalData.identityContextManager.addContext('owner', {
-        roleId: tempRole._id,
-        profile: tempRole.profile,
-        storageInfo: {
-          prefix: 'owner_',
-        },
-        imUserInfo: {
-          userID: tempImUserID,
-          userSig: '',
-          isLoggedIn: false,
-          lastLoginTime: null,
-        },
-      })
-
-      // 切换到临时身份
-      this.globalData.identityContextManager.switchContext('owner')
+      // 临时身份已通过loginStateManager更新，无需再添加到centralIdentityManager
+      console.log('APP initIdentitySystem - 临时身份已通过loginStateManager设置')
 
       // 设置初始化完成标志
       this.globalData.identitySystemInitialized = true
@@ -1177,40 +1120,26 @@ App({
         }
 
         // 更新全局状态
-        console.log('APP switchRole - 更新全局状态:', targetRoleType)
-        this.globalData.currentRole = res.result.data.currentRole
-        this.globalData.currentProfile = currentProfile
-        this.globalData.userRole = targetRoleType // 保持向后兼容
+    console.log('APP switchRole - 更新全局状态:', targetRoleType)
+    this.globalData.currentRole = res.result.data.currentRole
+    this.globalData.currentProfile = currentProfile
+    this.globalData.userRole = targetRoleType // 保持向后兼容
 
-        // 根据目标身份类型更新对应的身份信息
-        if (targetRoleType === 'owner') {
-          this.globalData.ownerInfo = currentProfile
-          console.log('APP switchRole - 已更新ownerInfo:', currentProfile)
-        } else if (targetRoleType === 'host') {
-          this.globalData.hostInfo = currentProfile
-          console.log('APP switchRole - 已更新hostInfo:', currentProfile)
-        }
+    // 根据目标身份类型更新对应的身份信息
+    if (targetRoleType === 'owner') {
+      this.globalData.ownerInfo = currentProfile
+      console.log('APP switchRole - 已更新ownerInfo:', currentProfile)
+    } else if (targetRoleType === 'host') {
+      this.globalData.hostInfo = currentProfile
+      console.log('APP switchRole - 已更新hostInfo:', currentProfile)
+    }
 
-        // 更新身份上下文管理器中的信息
-        console.log('APP switchRole - 更新身份上下文管理器:', targetRoleType)
-        this.globalData.identityContextManager.updateContext(targetRoleType, {
-          profile: currentProfile,
-          updatedAt: Date.now(),
-        })
+    // 使用登录状态管理器切换角色
+    console.log('APP switchRole - 使用登录状态管理器切换角色:', targetRoleType)
+    const switchResult = this.globalData.loginStateManager.switchRole(targetRoleType)
 
-        // 切换到目标身份的上下文
-        console.log('APP switchRole - 切换到目标身份的上下文:', targetRoleType)
-        const switchResult = this.globalData.identityContextManager.switchContext(targetRoleType, {
-          // 添加验证回调函数
-          verifyCallback: roleType => {
-            // 这里可以添加自定义验证逻辑
-            // 例如：检查用户是否有权限切换到该身份
-            console.log('APP switchRole - 验证身份切换权限:', roleType)
-            return true
-          },
-          // 可以添加令牌验证（如果有）
-          // token: 'your-auth-token'
-        })
+    // 更新用户信息
+    this.globalData.loginStateManager.updateUserInfo(currentProfile)
 
         if (!switchResult) {
           console.error('切换身份上下文失败:', targetRoleType)

@@ -1,5 +1,5 @@
 const app = getApp()
-const IdentityManager = require('../../../utils/identityManager.js')
+const { centralIdentityManager } = require('../../../utils/CentralIdentityManager')
 
 Page({
   data: {
@@ -24,14 +24,17 @@ Page({
     try {
       console.log('Settings page loadUserInfo - 开始加载用户信息')
       
-      // 使用身份管理器获取角色特定的用户信息
-      const roleSpecificInfo = IdentityManager.getRoleSpecificUserInfo()
-      const userRole = IdentityManager.getCurrentRole()
+      // 使用 CentralIdentityManager 获取当前身份信息
+      const currentIdentity = centralIdentityManager.getCurrentIdentity()
+      const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+      
+      // 提取角色特定信息
+      let roleSpecificInfo = currentIdentity || {}
       
       console.log('Settings page loadUserInfo - 角色特定信息:', {
-        hasRoleSpecificInfo: !!Object.keys(roleSpecificInfo).length,
+        hasRoleSpecificInfo: !!currentIdentity,
         userRole: userRole,
-        infoKeys: Object.keys(roleSpecificInfo)
+        infoKeys: currentIdentity ? Object.keys(currentIdentity) : []
       })
       
       this.setData({

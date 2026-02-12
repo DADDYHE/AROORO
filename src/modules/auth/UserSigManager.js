@@ -3,16 +3,16 @@
  * 负责生成和管理UserSig，处理UserSig缓存和过期
  */
 
-import { TIME, ERROR_CODES } from './constants';
-import { getErrorHandler } from './ErrorHandler';
-import { getStorageManager } from './StorageManager';
+const { TIME, ERROR_CODES } = require('./constants');
+const { centralIdentityManager } = require('../../../utils/CentralIdentityManager');
+const { errorHandler } = require('../../../utils/errorHandler');
 
 class UserSigManager {
   constructor() {
     this.userSigCache = {};
     this.userSigExpiry = TIME.USER_SIG_EXPIRY;
-    this.errorHandler = getErrorHandler();
-    this.storageManager = getStorageManager();
+    this.errorHandler = errorHandler;
+    this.centralIdentityManager = centralIdentityManager;
   }
 
   /**
@@ -46,7 +46,11 @@ class UserSigManager {
     console.log('缓存userSig:', cacheKey);
     
     // 同时保存到本地存储
-    this.storageManager.saveUserSig(userSig);
+    try {
+      wx.setStorageSync('central:userSig', userSig);
+    } catch (error) {
+      console.warn('保存UserSig到本地存储失败:', error);
+    }
   }
 
   /**
@@ -61,16 +65,20 @@ class UserSigManager {
     
     if (!cached) {
       // 尝试从本地存储获取
-      const storedUserSig = this.storageManager.getUserSig();
-      if (storedUserSig) {
-        console.log('从本地存储获取userSig');
-        // 验证本地存储的UserSig格式
-        if (!this.isValidUserSigFormat(storedUserSig)) {
-          console.warn('本地存储的UserSig格式无效，清除缓存');
-          this.storageManager.remove('userSig');
-          return null;
+      try {
+        const storedUserSig = wx.getStorageSync('central:userSig');
+        if (storedUserSig) {
+          console.log('从本地存储获取userSig');
+          // 验证本地存储的UserSig格式
+          if (!this.isValidUserSigFormat(storedUserSig)) {
+            console.warn('本地存储中的UserSig格式无效，清除缓存');
+            wx.setStorageSync('central:userSig', '');
+            return null;
+          }
+          return storedUserSig;
         }
-        return storedUserSig;
+      } catch (error) {
+        console.warn('从本地存储获取UserSig失败:', error);
       }
       return null;
     }
@@ -302,8 +310,12 @@ class UserSigManager {
       // 清除所有缓存
       this.userSigCache = {};
       console.log('清除所有userSig缓存');
-      // 同时清除本地存储
-      this.storageManager.remove('userSig');
+      // 同时清除本地存储中的UserSig
+      try {
+        wx.setStorageSync('central:userSig', '');
+      } catch (error) {
+        console.warn('清除本地存储中的UserSig失败:', error);
+      }
     }
   }
 
@@ -319,7 +331,12 @@ class UserSigManager {
       return userSig;
     }
     // 尝试从本地存储获取
-    return this.storageManager.getUserSig();
+    try {
+      return wx.getStorageSync('central:userSig');
+    } catch (error) {
+      console.warn('从本地存储获取UserSig失败:', error);
+      return null;
+    }
   }
 
   /**
@@ -361,11 +378,14 @@ class UserSigManager {
 // 导出单例
 let userSigManagerInstance = null;
 
-export function getUserSigManager() {
+function getUserSigManager() {
   if (!userSigManagerInstance) {
     userSigManagerInstance = new UserSigManager();
   }
   return userSigManagerInstance;
 }
 
-export default UserSigManager;
+module.exports = {
+  UserSigManager,
+  getUserSigManager
+};
