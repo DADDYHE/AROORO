@@ -146,6 +146,131 @@ exports.main = async (event, context) => {
     console.log('event:', JSON.stringify(event, null, 2))
     console.log('context:', JSON.stringify(context, null, 2))
 
+    // 新增：检查是否是身份选择请求（集成 CentralIdentityManager）
+    if (event.selectRole) {
+      console.log('=== 身份选择模式 ===')
+      const { openid, roleType, userId } = event
+      console.log('[selectRole] 接收到的参数:', { openid, roleType, userId })
+
+      if (!openid || !roleType) {
+        console.error('[selectRole] 缺少必要参数')
+        return {
+          code: 9999,
+          message: '身份选择缺少必要参数',
+          error: 'openid和roleType不能为空'
+        }
+      }
+
+      // 验证角色类型
+      if (!['owner', 'host'].includes(roleType)) {
+        console.error('[selectRole] 无效的角色类型:', roleType)
+        return {
+          code: 9999,
+          message: '无效的角色类型',
+          error: `角色类型必须是 owner 或 host，收到: ${roleType}`
+        }
+      }
+
+      try {
+        // 1. 获取用户
+        let user = null
+        const usersRes = await db.collection('users').where({ openid }).limit(1).get()
+        if (usersRes.data.length === 0) {
+          console.error('[selectRole] 用户不存在')
+          return {
+            code: 9999,
+            message: '用户不存在',
+            error: '请先完成基础登录'
+          }
+        }
+        user = usersRes.data[0]
+        console.log('[selectRole] 找到用户:', user._id)
+
+        // 2. 检查目标角色是否存在
+        let targetRole = null
+        const rolesRes = await db.collection('user_roles').where({
+          userId: user._id,
+          roleType: roleType
+        }).get()
+
+        if (rolesRes.data.length === 0) {
+          console.error('[selectRole] 用户没有该角色:', roleType)
+          return {
+            code: 9999,
+            message: `您尚未创建${roleType === 'owner' ? '宠物主人' : '寄养家庭'}身份`,
+            error: '角色不存在'
+          }
+        }
+        targetRole = rolesRes.data[0]
+        console.log('[selectRole] 找到目标角色:', targetRole._id)
+
+        // 3. 获取对应的详细档案
+        let profile = null
+        const profileCollection = roleType === 'owner' ? 'ownerProfiles' : 'hostProfiles'
+        try {
+          const profileRes = await db.collection(profileCollection).doc(targetRole.profileId).get()
+          profile = profileRes.data
+          console.log('[selectRole] 找到档案:', profile._id)
+        } catch (profileError) {
+          console.error('[selectRole] 获取档案失败:', profileError)
+          return {
+            code: 9999,
+            message: '获取档案失败',
+            error: profileError.message
+          }
+        }
+
+        // 4. 更新当前活跃状态
+        // 先将所有角色的 isActive 设为 false
+        await db.collection('user_roles').where({ userId: user._id }).update({
+          data: { isActive: false }
+        })
+        // 将目标角色的 isActive 设为 true
+        await db.collection('user_roles').doc(targetRole._id).update({
+          data: { isActive: true, updatedAt: new Date() }
+        })
+        console.log('[selectRole] 已更新活跃状态')
+
+        // 5. 生成对应的 UserSig
+        const imUserID = event.imUserID || generateId(roleType, openid)
+        console.log('[selectRole] 生成IM用户ID:', imUserID)
+        const userSig = await generateUserSig(imUserID)
+
+        if (!userSig) {
+          console.error('[selectRole] 生成UserSig失败')
+          return {
+            code: 9999,
+            message: '生成UserSig失败',
+            error: 'IM服务错误'
+          }
+        }
+
+        console.log('[selectRole] UserSig生成成功，长度:', userSig.length)
+
+        // 6. 返回完整的身份信息
+        return {
+          code: 0,
+          message: '身份选择成功',
+          data: {
+            user: user,
+            roles: [targetRole],
+            currentRole: targetRole,
+            currentProfile: profile,
+            userSig: userSig,
+            imUserID: imUserID,
+            timestamp: Date.now()
+          }
+        }
+      } catch (error) {
+        console.error('[selectRole] 处理失败:', error)
+        return {
+          code: 9999,
+          message: '身份选择失败',
+          error: error.message
+        }
+      }
+    }
+
     // 检查是否只是刷新UserSig
     if (event.refreshUserSig) {
       console.log('=== 刷新UserSig模式 ===')

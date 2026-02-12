@@ -1,9 +1,10 @@
 // pages/messages/index.js
 const app = getApp()
 const MessageService = require('../../utils/messageService')
+const RoleManager = require('../../utils/roleManager')
 const ImUserIdValidator = require('../../utils/imUserIdValidator')
 const imManager = require('../../utils/im-manager')
-const { enhanceWithIdentity } = require('../../utils/identityPageEnhancer')
+const IdentityManager = require('../../utils/identityManager')
 
 Page({
   /**
@@ -14,6 +15,7 @@ Page({
     isIMInitialized: false,
     isIMLogin: false,
     filteredConversations: [],
+    isLoggedIn: false,
     // 分页相关状态
     hasMoreConversations: true,
     loadingConversations: false,
@@ -35,9 +37,9 @@ Page({
   onLoad(options) {
     // 设置导航栏标题
     wx.setNavigationBarTitle({ title: '消息' });
-
-    // 监听角色变更事件（由 CentralIdentityManager 触发）
-    app.on('central:roleChanged', this.handleRoleChange.bind(this));
+    
+    // 注册角色变化回调
+    this.roleChangeCallbackId = RoleManager.registerRoleChangeCallback(this.handleRoleChange.bind(this))
   },
 
   /**
@@ -53,16 +55,15 @@ Page({
    */
   async onShow() {
     console.log('消息页面onShow触发');
-
-    // 使用 CentralIdentityManager 检查登录状态
-    const { centralIdentityManager } = require('../../utils/CentralIdentityManager');
-    const isLoggedIn = centralIdentityManager.isLoggedIn();
+    
+    // 使用标准登录模块检查登录状态
+    const isLoggedIn = app.globalData.loginManager.checkLoginStatusValid();
     this.setData({
       isLoggedIn: isLoggedIn
     });
-
+    
     // 只有已登录用户才初始化IM服务和加载会话列表
-    if (isLoggedIn) {
+    if (this.data.isLoggedIn) {
       console.log('用户已登录，开始初始化IM服务和等待IM ready');
       await this.initIMIfNeeded();
       // 等待IM SDK ready后再加载会话列表
@@ -739,9 +740,8 @@ Page({
       return;
     }
     
-    // 使用 CentralIdentityManager 获取当前角色
-    const { centralIdentityManager } = require('../../utils/CentralIdentityManager');
-    const currentRoleType = centralIdentityManager.getCurrentRole();
+    // 使用统一身份管理工具获取当前角色
+    const currentRoleType = IdentityManager.getCurrentRole();
     const openid = userInfo.openid || userInfo._openid || '';
     
     console.log('[DEBUG] 角色类型获取信息:');

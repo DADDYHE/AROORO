@@ -1,67 +1,58 @@
 const app = getApp()
-const IdentityManager = require('../../utils/identityManager')
+const { enhanceWithIdentity } = require('../../utils/identityPageEnhancer')
 const messageService = require('../../utils/messageService').default
 
-Page({
+Page(enhanceWithIdentity({
   data: {
-    userInfo: null,
-    userRole: 'owner',
-    isLoggedIn: false
+    // identityEnhancer 会自动添加以下字段：
+    // - userRole: 当前角色
+    // - userProfile: 当前用户资料
+    // - isLoggedIn: 登录状态
+    // - userInfo: 用户信息
   },
+
   onLoad() {
     console.log('首页加载')
-    this.checkLoginStatus()
     this.initEventListeners()
+    this.loadConversationsIfLoggedIn()
   },
-  
+
   onShow() {
     console.log('首页onShow触发')
-    this.checkLoginStatus()
+    // 身份状态已由 enhanceWithIdentity 自动管理
+    this.loadConversationsIfLoggedIn()
   },
-  
+
   onUnload() {
     // 移除事件监听
     app.off('imLoginSuccess', this.handleIMLoginSuccess)
   },
-  
+
   initEventListeners() {
     console.log('首页初始化事件监听器')
     // 监听IM登录成功事件
     app.on('imLoginSuccess', this.handleIMLoginSuccess.bind(this))
   },
-  
+
   handleIMLoginSuccess(event) {
     console.log('首页收到IM登录成功事件:', event)
     // 登录成功后重新加载会话列表
     this.loadConversations()
   },
-  
-  checkLoginStatus() {
-    console.log('首页checkLoginStatus - 检查登录状态')
-    
-    // 使用统一身份管理工具获取身份信息
-    const identity = IdentityManager.getCurrentIdentity()
-    
-    console.log('首页checkLoginStatus - 身份信息:', identity)
-    
-    this.setData({
-      userInfo: identity.userInfo,
-      userRole: identity.role,
-      isLoggedIn: identity.isLoggedIn
+
+  loadConversationsIfLoggedIn() {
+    console.log('首页checkLoginStatus - 检查登录状态:', {
+      isLoggedIn: this.data.isLoggedIn,
+      userRole: this.data.userRole
     })
-    
-    console.log('首页checkLoginStatus - 更新页面数据:', {
-      userRole: this.data.userRole,
-      isLoggedIn: this.data.isLoggedIn
-    })
-    
+
     // 如果用户已登录，尝试加载会话列表
-    if (identity.isLoggedIn) {
-      console.log('首页checkLoginStatus - 用户已登录，尝试加载会话列表')
+    if (this.data.isLoggedIn) {
+      console.log('首页 - 用户已登录，尝试加载会话列表')
       this.loadConversations()
     }
   },
-  
+
   async loadConversations() {
     console.log('开始加载会话列表 - 使用IM SDK')
     try {
@@ -76,4 +67,4 @@ Page({
       console.error('会话列表加载失败:', error)
     }
   }
-})
+}))

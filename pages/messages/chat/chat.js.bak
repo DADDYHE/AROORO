@@ -68,7 +68,7 @@ Page({
    */
   getUserAvatarInfo() {
     const app = getApp()
-    const currentRole = centralIdentityManager.getCurrentRole() || 'owner'
+    const currentRole = app.globalData.userRole || 'owner'
     
     console.log('=== 开始获取用户头像信息 ===')
     console.log('当前角色:', currentRole)
@@ -500,7 +500,7 @@ Page({
    */
   _getReceiverRole() {
     const app = getApp()
-    const currentRole = centralIdentityManager.getCurrentRole() || 'owner'
+    const currentRole = app.globalData.userRole || 'owner'
     // 简单的逻辑：当前角色是owner，对方就是host，反之亦然
     return currentRole === 'owner' ? 'host' : 'owner'
   },

@@ -1098,7 +1098,7 @@ App({
   },
 
   /**
-   * 切换身份
+   * 切换身份（使用 CentralIdentityManager）
    */
   async switchRole(targetRoleType) {
     const startTime = Date.now()
@@ -1107,7 +1107,7 @@ App({
       currentRole: this.globalData.currentRole,
       currentTime: new Date().toISOString()
     })
-    
+
     try {
       // 验证身份类型
       if (!['owner', 'host'].includes(targetRoleType)) {
@@ -1121,16 +1121,20 @@ App({
         return { success: false, message: '寄养家庭身份不存在' }
       }
 
-      // 调用云函数切换身份
-      console.log('APP switchRole - 调用云函数切换身份:', targetRoleType)
+      // 使用新的身份选择云函数（集成 CentralIdentityManager）
+      console.log('APP switchRole - 调用登录云函数选择身份:', targetRoleType)
       const res = await wx.cloud.callFunction({
-        name: 'switchRole',
-        data: { targetRoleType },
+        name: 'login',
+        data: {
+          selectRole: true,
+          openid: this.globalData.userInfo.openid,
+          roleType: targetRoleType
+        },
       })
 
       console.log('APP switchRole - 云函数返回结果:', res)
 
-      if (res.result.code === 1) {
+      if (res.result.code === 0) {
         // 触发身份切换开始事件
         this.triggerEvent('identitySwitchStart', { targetRoleType })
 

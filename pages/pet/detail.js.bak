@@ -618,7 +618,7 @@ Page({
       
       // 保存到全局变量
       const app = getApp()
-      const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+      const userRole = app.globalData.userRole || 'owner'
       if (userRole === 'owner') {
         app.globalData.ownerData.selectedPets = selectedPets
       } else {

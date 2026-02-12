@@ -291,7 +291,7 @@ Page(enhancePage({
   // 检查已选择的宠物数量
   checkSelectedPets() {
     // 获取当前用户角色和对应的选中宠物数据
-    const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+    const userRole = app.globalData.userRole || 'owner'
     const selectedPets = userRole === 'owner' ? app.globalData.ownerData.selectedPets : app.globalData.hostData.selectedPets
     
     if (selectedPets && selectedPets.length > 0) {
@@ -481,7 +481,7 @@ Page(enhancePage({
     const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
 
     // 获取当前用户角色和对应的选中宠物数据
-    const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+    const userRole = app.globalData.userRole || 'owner'
     const selectedPets = userRole === 'owner' ? app.globalData.ownerData.selectedPets : app.globalData.hostData.selectedPets
 
     // 计算预估总费用，考虑宠物数量折扣

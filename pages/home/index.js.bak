@@ -5,7 +5,6 @@ const ImageOptimizer = require('../../utils/image-optimizer')
 const { enhancePage } = require('../../utils/base-page')
 const TouchHandler = require('../../utils/touch-handler')
 const { stateManager } = require('../../utils/stateManager')
-const { centralIdentityManager } = require('../../utils/CentralIdentityManager')
 
 Page(enhancePage({
   // 页面初始化数据，不使用本地存储，每次从云函数获取最新数据
@@ -115,7 +114,7 @@ Page(enhancePage({
     try {
       // 检查全局用户信息是否存在
       if (app.globalData.userInfo) {
-        const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+        const userRole = app.globalData.userRole || 'owner'
 
         // 先设置基本数据，让用户立即看到登录状态
         const userInfo = {
@@ -306,7 +305,7 @@ Page(enhancePage({
       if (cachedData) {
         console.log('使用缓存的用户角色和数据')
         const userInfo = cachedData.userInfo
-        const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+        const userRole = app.globalData.userRole || 'owner'
         
         // 使用状态管理器更新状态，利用防抖功能减少重复更新
         stateManager.debounceUpdate('home', {
@@ -336,7 +335,7 @@ Page(enhancePage({
       if (result.result.code === 0) {
         const userInfo = result.result.userInfo
         // 强制使用全局变量中的角色，确保状态一致性
-        const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+        const userRole = app.globalData.userRole || 'owner'
 
         // 处理头像URL：如果云函数返回的头像URL为空，使用全局变量中的头像URL
         if (!userInfo.avatarUrl || userInfo.avatarUrl === '') {
@@ -890,7 +889,7 @@ Page(enhancePage({
     const app = getApp()
     if (app && app.globalData) {
       // 保持用户信息不变，但清除用户角色
-      centralIdentityManager.getCurrentRole() = null
+      app.globalData.userRole = null
     }
   },
 
@@ -1074,7 +1073,7 @@ Page(enhancePage({
     // 更新全局数据
     const app = getApp()
     app.globalData.userInfo = userInfo
-    centralIdentityManager.getCurrentRole() = userInfo.role
+    app.globalData.userRole = userInfo.role
     // 清除全局退出标志和手动登录标志
     app.globalData.isLogout = false
     app.globalData.needManualLogin = false
@@ -1619,7 +1618,7 @@ Page(enhancePage({
           avatarUrl: app.globalData.userInfo.avatarUrl || '',
         }
 
-        const userRole = centralIdentityManager.getCurrentRole() || 'owner'
+        const userRole = app.globalData.userRole || 'owner'
         const hostProfile = app.globalData.hostInfo ? { ...app.globalData.hostInfo } : null
         const ownerProfile = app.globalData.ownerInfo ? { ...app.globalData.ownerInfo } : null
 
@@ -1650,14 +1649,14 @@ Page(enhancePage({
         const userInfo = {
           ...app.globalData.userInfo,
           avatarUrl: app.globalData.userInfo.avatarUrl || '',
-          role: centralIdentityManager.getCurrentRole() || 'owner'
+          role: app.globalData.userRole || 'owner'
         }
         
         // 使用状态管理器更新状态
         stateManager.setState('home', {
           isLoggedIn: true,
           userInfo: userInfo,
-          userRole: centralIdentityManager.getCurrentRole() || 'owner'
+          userRole: app.globalData.userRole || 'owner'
         })
         
         // 异步处理头像URL
@@ -1673,12 +1672,12 @@ Page(enhancePage({
         const globalUserInfo = {
           ...app.globalData.userInfo,
           avatarUrl: app.globalData.userInfo.avatarUrl || '',
-          role: centralIdentityManager.getCurrentRole() || 'owner'
+          role: app.globalData.userRole || 'owner'
         }
 
         // 如果一致，不更新页面数据
         if (JSON.stringify(this.data.userInfo) === JSON.stringify(globalUserInfo) &&
-            this.data.userRole === (centralIdentityManager.getCurrentRole() || 'owner')) {
+            this.data.userRole === (app.globalData.userRole || 'owner')) {
           // 确保 tabBar 选中状态正确
           this.setTabBarSelected()
           return
