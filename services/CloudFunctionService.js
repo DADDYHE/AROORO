@@ -1,0 +1,623 @@
+const ERROR_TYPE_TO_MESSAGE = {
+  AUTH: '登录已过期，请重新登录',
+  VALIDATION: '请求参数不正确',
+  NETWORK: '网络连接失败，请检查网络',
+  NOT_FOUND: '请求的资源不存在',
+  PERMISSION: '没有权限执行此操作',
+  BUSINESS: '操作失败，请稍后重试',
+  DATA: '数据处理失败',
+  SYSTEM: '服务器内部错误，请稍后重试',
+  UNKNOWN: '未知错误',
+}
+
+const ERROR_CODE_MAP = {
+  0: null,
+  1001: 'VALIDATION',
+  1002: 'DATA',
+  1003: 'AUTH',
+  1004: 'NOT_FOUND',
+  1005: 'PERMISSION',
+  1006: 'BUSINESS',
+  5001: 'SYSTEM',
+  9999: 'UNKNOWN',
+}
+
+const DEFAULT_CACHE_TIME = 5 * 60 * 1000
+
+function _resolveErrorMessage(result) {
+  if (!result) return null
+  const severity = ERROR_CODE_MAP[result.code]
+  if (severity && ERROR_TYPE_TO_MESSAGE[severity]) {
+    return ERROR_TYPE_TO_MESSAGE[severity]
+  }
+  if (result.error && result.error.type && ERROR_TYPE_TO_MESSAGE[result.error.type]) {
+    return ERROR_TYPE_TO_MESSAGE[result.error.type]
+  }
+  return null
+}
+const DEFAULT_RETRY_COUNT = 2
+const DEFAULT_RETRY_DELAY = 1000
+const RETRYABLE_CODES = [1002, 9999]
+const MAX_CACHE_SIZE = 100
+const CACHE_CLEANUP_INTERVAL = 5 * 60 * 1000
+const REQUEST_CACHE_KEY_PREFIX = 'cloud_request_cache_'
+
+function _stableStringify(obj) {
+  if (obj === null || obj === undefined || typeof obj !== 'object') return String(obj)
+  if (Array.isArray(obj)) return JSON.stringify(obj)
+  return JSON.stringify(
+    Object.keys(obj).sort().reduce((sorted, key) => {
+      sorted[key] = obj[key]
+      return sorted
+    }, {})
+  )
+}
+
+class CloudFunctionService {
+  constructor() {
+    this.cache = new Map()
+    this.pendingRequests = new Map()
+    this._cacheCleanupTimer = setInterval(() => {
+      this._cleanupExpiredCache()
+    }, CACHE_CLEANUP_INTERVAL)
+  }
+
+  _cleanupExpiredCache() {
+    const now = Date.now()
+    for (const [key, entry] of this.cache.entries()) {
+      if (now - entry.timestamp > entry.cacheTime) {
+        this.cache.delete(key)
+      }
+    }
+  }
+
+  invalidateCache(name) {
+    const prefix = `${REQUEST_CACHE_KEY_PREFIX}${name}_`
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key)
+      }
+    }
+  }
+
+  _evictLRU() {
+    if (this.cache.size < MAX_CACHE_SIZE) return
+    const oldestKey = this.cache.keys().next().value
+    this.cache.delete(oldestKey)
+  }
+
+  /**
+   * 统一云函数调用入口
+   * 提供请求去重、可选缓存、自动重试、错误上报、loading管理等能力
+   *
+   * @param {string} name - 云函数名称
+   * @param {Object} data - 请求参数
+   * @param {Object} options - 选项
+   * @param {boolean} [options.useCache=false] - 是否启用缓存
+   * @param {number} [options.cacheTime=300000] - 缓存有效期(ms)
+   * @param {number} [options.retryCount=2] - 重试次数
+   * @param {number} [options.retryDelay=1000] - 重试基础延迟(ms)，指数退避
+   * @param {boolean} [options.showLoading=false] - 是否显示loading
+   * @param {string} [options.loadingText='加载中...'] - loading文案
+   * @returns {Promise<Object>} 云函数返回的 result 对象 { code, data, message }
+   */
+  async call(name, data = {}, options = {}) {
+    const {
+      useCache = false,
+      cacheTime = DEFAULT_CACHE_TIME,
+      retryCount = DEFAULT_RETRY_COUNT,
+      retryDelay = DEFAULT_RETRY_DELAY,
+      showLoading = false,
+      loadingText = '加载中...'
+    } = options
+
+    const dataStr = _stableStringify(data)
+    if (useCache) {
+      const cacheKey = `${REQUEST_CACHE_KEY_PREFIX}${name}_${dataStr}`
+      const cachedData = this.getCache(cacheKey)
+      if (cachedData) {
+        return cachedData
+      }
+    }
+
+    const requestKey = `${name}_${dataStr}`
+    if (this.pendingRequests.has(requestKey)) {
+      return this.pendingRequests.get(requestKey)
+    }
+
+    if (showLoading) {
+      wx.showLoading({ title: loadingText, mask: true })
+    }
+
+    const requestPromise = this._executeWithRetry(name, data, retryCount, retryDelay)
+      .then(result => {
+        if (useCache) {
+          const cacheKey = `${REQUEST_CACHE_KEY_PREFIX}${name}_${dataStr}`
+          this.setCache(cacheKey, result, cacheTime)
+        }
+        return result
+      })
+      .catch(error => {
+        this._reportToErrorManager(name, data, error)
+        throw error
+      })
+      .finally(() => {
+        this.pendingRequests.delete(requestKey)
+        if (showLoading) {
+          wx.hideLoading()
+        }
+      })
+
+    this.pendingRequests.set(requestKey, requestPromise)
+    return requestPromise
+  }
+
+  async _executeWithRetry(name, data, retryCount, retryDelay) {
+    let lastError = new Error('云函数调用未执行')
+
+    let safeMode
+    try {
+      safeMode = require('../utils/safeMode')
+    } catch (e) {}
+
+    if (safeMode) {
+      const check = safeMode.checkCall(name, data.action)
+      if (check.blocked) {
+        throw new Error(`[SafeMode] ${name}.${data.action} 已被拦截`)
+      }
+    }
+
+    for (let i = 0; i <= retryCount; i++) {
+      try {
+        const result = await wx.cloud.callFunction({ name, data, timeout: 20000 })
+        if (result.result) {
+          if (result.result.code !== 0) {
+            // Sprint 16：优先使用 i18n 翻译 error.type
+            const localizedMsg = _resolveErrorMessage(result.result)
+            const fallbackMsg = result.result.message || result.result.error || '云函数执行失败'
+            const error = new Error(localizedMsg || fallbackMsg)
+            error.code = result.result.code
+            error.type = result.result.error && result.result.error.type
+            error.details = result.result.error && result.result.error.details
+            error.raw = result.result
+            if (!RETRYABLE_CODES.includes(error.code)) {
+              throw error
+            }
+            lastError = error
+          } else {
+            return result.result
+          }
+        } else {
+          return result.result
+        }
+      } catch (error) {
+        lastError = error
+        if (this._isTimeoutError(error)) {
+          break
+        }
+        if (i < retryCount && (!error.code || RETRYABLE_CODES.includes(error.code))) {
+          await this._delay(retryDelay * (i + 1))
+        } else {
+          break
+        }
+      }
+    }
+
+    throw lastError
+  }
+
+  _isTimeoutError(error) {
+    return error && (
+      (error.errMsg && error.errMsg.toLowerCase().includes('timeout')) ||
+      (error.message && error.message.toLowerCase().includes('timeout'))
+    )
+  }
+
+  async get(name, data = {}, cacheTime = DEFAULT_CACHE_TIME) {
+    return this.call(name, data, { useCache: true, cacheTime })
+  }
+
+  async post(name, data = {}, options = {}) {
+    return this.call(name, data, { ...options, useCache: false })
+  }
+
+  setCache(key, data, cacheTime) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key)
+    } else {
+      this._evictLRU()
+    }
+    this.cache.set(key, { data, timestamp: Date.now(), cacheTime })
+  }
+
+  getCache(key) {
+    const cached = this.cache.get(key)
+    if (!cached) return null
+    const now = Date.now()
+    if (now - cached.timestamp > cached.cacheTime) {
+      this.cache.delete(key)
+      return null
+    }
+    return cached.data
+  }
+
+  _delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  _reportToErrorManager(name, data, error) {
+    try {
+      const { globalErrorManager, ERROR_TYPES, ERROR_LEVELS } = require('../utils/globalErrorManager')
+      if (!globalErrorManager || !globalErrorManager.handleError) return
+
+      const code = error.code || 9999
+      const errorTypeKey = ERROR_CODE_MAP[code] || 'BUSINESS'
+      const errorType = ERROR_TYPES[errorTypeKey] || ERROR_TYPES.BUSINESS
+      const level = [1003, 1005].includes(code) ? ERROR_LEVELS.WARNING : ERROR_LEVELS.ERROR
+
+      globalErrorManager.handleError(error, {
+        level,
+        context: { functionName: name, action: data.action, code },
+      })
+    } catch (e) {
+    }
+  }
+}
+
+/**
+ * 寄养家庭服务
+ * 封装 hostService 云函数调用，提供寄养家庭列表和详情查询
+ */
+class HostService {
+  constructor(cloudService) {
+    this.cloud = cloudService
+  }
+
+  /** 获取寄养家庭列表，支持筛选条件 */
+  async getHostList(data = {}) {
+    return this.cloud.get('hostService', { action: 'getHostList', ...data })
+  }
+
+  /** 获取指定寄养家庭详情 */
+  async getHostInfo(hostId) {
+    return this.cloud.call('hostService', { action: 'getHostDetail', hostId }, { useCache: false })
+  }
+}
+
+/**
+ * 订单服务
+ * 封装 orderService 云函数调用，处理订单创建、支付、状态更新等全生命周期
+ */
+class OrderService {
+  constructor(cloudService) {
+    this.cloud = cloudService
+  }
+
+  /** 创建新订单 */
+  async createOrder(data) {
+    return this.cloud.post('orderService', { action: 'createOrder', ...data })
+  }
+
+  /** 更新订单状态（如 paid/cancelled/completed） */
+  async updateBookingStatus(orderId, status) {
+    return this.cloud.post('orderService', { action: 'updateOrderStatus', orderId, status })
+  }
+
+  /** 查询订单列表 */
+  async getOrders(data = {}) {
+    return this.cloud.get('orderService', { action: 'getOrders', ...data })
+  }
+
+  /** 查询单个订单详情（支持 orderId 或 outTradeNo） */
+  async getOrderDetail({ orderId, outTradeNo } = {}) {
+    return this.cloud.call('orderService', {
+      action: 'getOrderDetail',
+      ...(orderId ? { orderId } : {}),
+      ...(outTradeNo ? { outTradeNo } : {}),
+    }, { useCache: false })
+  }
+
+  /** 取消订单 */
+  async cancelOrder(data) {
+    return this.cloud.post('orderService', { action: 'cancelOrder', ...data })
+  }
+
+  /** 发起微信支付，amount 单位为元 */
+  async wechatPay(orderId, amount) {
+    return this.cloud.post('orderService', { action: 'wechatPay', orderId, amount: amount * 100 })
+  }
+
+  /** 查询活动报名订单列表 */
+  async getActivityOrders(data = {}) {
+    return this.cloud.call('orderService', { action: 'getActivityOrders', ...data }, { useCache: false })
+  }
+
+  /** 查询活动报名订单详情 */
+  async getActivityOrderDetail(orderId) {
+    return this.cloud.call('orderService', { action: 'getActivityOrderDetail', orderId }, { useCache: false })
+  }
+
+  async getMallOrders(data = {}) {
+    return this.cloud.call('mallService', { action: 'getMyOrders', ...data }, { useCache: false })
+  }
+
+  async cancelMallOrder(orderId) {
+    return this.cloud.call('mallService', { action: 'cancelOrder', orderId }, { useCache: false })
+  }
+
+  async getMallOrderDetail(orderId) {
+    return this.cloud.call('mallService', { action: 'getOrderDetail', orderId }, { useCache: false })
+  }
+
+  async confirmMallReceive(orderId) {
+    return this.cloud.call('mallService', { action: 'confirmReceive', orderId }, { useCache: false })
+  }
+
+  async deleteMallOrder(orderId) {
+    return this.cloud.call('mallService', { action: 'deleteOrder', orderId }, { useCache: false })
+  }
+
+  async getGroupBuyOrders(data = {}) {
+    return this.cloud.call('mallService', { action: 'getGroupBuyOrders', ...data }, { useCache: false })
+  }
+
+  async getFeedingOrders(data = {}) {
+    return this.cloud.call('feedingService', { action: 'getFeedingOrders', ...data }, { useCache: false })
+  }
+}
+
+class FavoriteService {
+  constructor(cloudService) {
+    this.cloud = cloudService
+  }
+
+  async getFavorites() {
+    return this.cloud.get('favoriteService', { action: 'list' })
+  }
+
+  async addFavorite(data) {
+    const hostProfileId = typeof data === 'string' ? data : data.hostProfileId
+    return this.cloud.post('favoriteService', { action: 'add', hostProfileId })
+  }
+
+  async removeFavorite(data) {
+    const hostProfileId = typeof data === 'string' ? data : data.hostProfileId
+    return this.cloud.post('favoriteService', { action: 'remove', hostProfileId })
+  }
+}
+
+class UserService {
+  constructor(cloudService) {
+    this.cloud = cloudService
+  }
+
+  async getUserInfo() {
+    return this.cloud.get('userService', { action: 'check' })
+  }
+
+  async updateUserInfo(userInfo) {
+    return this.cloud.post('userService', { action: 'update', userInfo })
+  }
+}
+
+class PetService {
+  constructor(cloudService) {
+    this.cloud = cloudService
+  }
+
+  async createPet(data) {
+    const result = await this.cloud.post('petService', { action: 'createPet', ...data })
+    this.cloud.invalidateCache('petService')
+    return result
+  }
+
+  async updatePet(petId, updateData) {
+    const result = await this.cloud.post('petService', { action: 'updatePet', petId, updateData })
+    this.cloud.invalidateCache('petService')
+    return result
+  }
+
+  async deletePet(petId) {
+    const result = await this.cloud.post('petService', { action: 'deletePet', petId })
+    this.cloud.invalidateCache('petService')
+    return result
+  }
+
+  async getPets() {
+    return this.cloud.get('petService', { action: 'getPetList' })
+  }
+
+  async getPetList(data = {}) {
+    return this.cloud.get('petService', { action: 'getPetList', ...data })
+  }
+
+  async getPetDetail(petId) {
+    return this.cloud.get('petService', { action: 'getPetDetail', petId })
+  }
+}
+
+class UtilityService {
+  constructor(cloudService) {
+    this.cloud = cloudService
+  }
+
+  async getBanners() {
+    return this.cloud.get('utilityService', { action: 'getBanners' })
+  }
+}
+
+class ActivityService {
+  constructor(cloudService) {
+    this.cloud = cloudService
+  }
+
+  async getActivityList(data = {}) {
+    return this.cloud.get('activityService', { action: 'getActivityList', ...data })
+  }
+
+  async getMyRegisteredActivities(data = {}) {
+    return this.cloud.get('activityService', { action: 'getRegistrationList', ...data })
+  }
+}
+
+class AdminService {
+  constructor(cloudService) {
+    this.cloud = cloudService
+  }
+
+  async getActivityList(data = {}) {
+    return this.cloud.call('adminService', { action: 'getActivityList', ...data }, { useCache: false })
+  }
+
+  async getActivityDetail(activityId) {
+    return this.cloud.call('adminService', { action: 'getActivityDetail', activityId }, { useCache: false })
+  }
+
+  async getActivityRegistrations(data = {}) {
+    return this.cloud.call('adminService', { action: 'getActivityRegistrations', ...data }, { useCache: false })
+  }
+
+  async createActivity(data) {
+    return this.cloud.post('adminService', { action: 'createActivity', ...data })
+  }
+
+  async updateActivity(data) {
+    return this.cloud.post('adminService', { action: 'updateActivity', ...data })
+  }
+
+  async getHostProfile() {
+    return this.cloud.call('adminService', { action: 'getHostProfile' }, { useCache: false })
+  }
+
+  async updateHostProfile(data) {
+    return this.cloud.post('adminService', { action: 'updateHostProfile', ...data })
+  }
+
+  async createHostProfile(data) {
+    return this.cloud.post('adminService', { action: 'createHostProfile', ...data })
+  }
+
+  async getBoardingOrders(data = {}) {
+    return this.cloud.call('adminService', { action: 'getBoardingOrders', ...data }, { useCache: false })
+  }
+
+  async handleBoardingOrder(orderId, operation) {
+    return this.cloud.post('adminService', { action: 'handleBoardingOrder', orderId, operation })
+  }
+
+  async getCurrentFeeder(data = {}) {
+    return this.cloud.call('adminService', { action: 'getCurrentFeeder', ...data }, { useCache: false })
+  }
+
+  async createFeederProfile(data) {
+    return this.cloud.post('adminService', { action: 'createFeederProfile', ...data })
+  }
+
+  async updateFeederProfile(data) {
+    return this.cloud.post('adminService', { action: 'updateFeederProfile', ...data })
+  }
+
+  async getFeederOrders(data = {}) {
+    return this.cloud.call('adminService', { action: 'getFeederOrders', ...data }, { useCache: false })
+  }
+
+  async handleFeedingOrder(orderId, operation) {
+    return this.cloud.post('adminService', { action: 'handleFeedingOrder', orderId, operation })
+  }
+
+  async getMyIncomeOverview() {
+    return this.cloud.call('adminService', { action: 'getMyIncomeOverview' }, { useCache: false })
+  }
+
+  async getMyIncomeDetails(data = {}) {
+    return this.cloud.call('adminService', { action: 'getMyIncomeDetails', ...data }, { useCache: false })
+  }
+
+  async getMyWallet() {
+    return this.cloud.call('adminService', { action: 'getMyWallet' }, { useCache: false })
+  }
+
+  async requestWithdrawal(amount) {
+    return this.cloud.post('adminService', { action: 'requestWithdrawal', amount })
+  }
+
+  async getMyWithdrawals(data = {}) {
+    return this.cloud.call('adminService', { action: 'getMyWithdrawals', ...data }, { useCache: false })
+  }
+
+  async getApplicationStatus() {
+    return this.cloud.call('adminService', { action: 'getApplicationStatus' }, { useCache: false })
+  }
+
+  async submitApplication(data) {
+    return this.cloud.post('adminService', { action: 'submitApplication', ...data })
+  }
+
+  async getMyPermissions() {
+    return this.cloud.call('adminService', { action: 'getMyPermissions' }, { useCache: false })
+  }
+
+  async getMyInvitedUsers(data = {}) {
+    return this.cloud.call('adminService', { action: 'getMyInvitedUsers', ...data }, { useCache: false })
+  }
+
+  async getReferralOrders(data = {}) {
+    return this.cloud.call('adminService', { action: 'getReferralOrders', ...data }, { useCache: false })
+  }
+
+  async getReferralOrderStats(data = {}) {
+    return this.cloud.call('adminService', { action: 'getReferralOrderStats', ...data }, { useCache: false })
+  }
+
+  // ===== i18n override (Sprint 23) =====
+
+  async listI18nOverrides(data = {}) {
+    return this.cloud.call('adminService', { action: 'listI18nOverrides', ...data }, { useCache: false })
+  }
+
+  async getI18nOverride(key) {
+    return this.cloud.call('adminService', { action: 'getI18nOverride', key }, { useCache: false })
+  }
+
+  async upsertI18nOverride(data) {
+    return this.cloud.post('adminService', { action: 'upsertI18nOverride', ...data })
+  }
+
+  async batchUpsertI18nOverrides(items) {
+    return this.cloud.post('adminService', { action: 'batchUpsertI18nOverrides', items })
+  }
+
+  async deleteI18nOverride(overrideId) {
+    return this.cloud.post('adminService', { action: 'deleteI18nOverride', overrideId })
+  }
+
+  async toggleI18nOverrideStatus(overrideId, status) {
+    return this.cloud.post('adminService', { action: 'toggleI18nOverrideStatus', overrideId, status })
+  }
+
+  async fetchActiveI18nOverrides(locale) {
+    return this.cloud.call('i18nOverride', { action: 'fetchActive', locale }, { useCache: false })
+  }
+
+  async getMyBoardingOrders(data = {}) {
+    return this.cloud.call('adminService', { action: 'getBoardingOrders', ...data }, { useCache: false })
+  }
+
+  async getMyCommissionRates() {
+    return this.cloud.call('adminService', { action: 'getMyCommissionRates' }, { useCache: false })
+  }
+}
+
+const cloudFunctionService = new CloudFunctionService()
+
+module.exports = {
+  CloudFunctionService: cloudFunctionService,
+  HostService: new HostService(cloudFunctionService),
+  OrderService: new OrderService(cloudFunctionService),
+  UserService: new UserService(cloudFunctionService),
+  FavoriteService: new FavoriteService(cloudFunctionService),
+  UtilityService: new UtilityService(cloudFunctionService),
+  PetService: new PetService(cloudFunctionService),
+  ActivityService: new ActivityService(cloudFunctionService),
+  AdminService: new AdminService(cloudFunctionService),
+}

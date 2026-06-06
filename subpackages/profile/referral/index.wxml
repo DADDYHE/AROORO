@@ -1,0 +1,65 @@
+<view class="page-container">
+  <view class="stats-card">
+    <view class="stat-item">
+      <text class="stat-value">{{stats.totalInvited}}</text>
+      <text class="stat-label">累计邀请</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-value">{{stats.consumingCount}}</text>
+      <text class="stat-label">产生消费</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-value">¥{{stats.totalSpent}}</text>
+      <text class="stat-label">消费总额</text>
+    </view>
+  </view>
+
+  <view class="share-section">
+    <view class="section-title">邀请方式</view>
+    <view class="share-card">
+      <button class="share-row-btn" open-type="share">
+        <view class="share-info">
+          <text class="share-icon">📤</text>
+          <view class="share-text">
+            <text class="share-label">分享小程序给好友</text>
+            <text class="share-desc">好友通过你的分享注册后自动绑定</text>
+          </view>
+        </view>
+        <text class="share-arrow">›</text>
+      </button>
+    </view>
+  </view>
+
+  <view class="user-list-section">
+    <view class="section-title">推荐用户列表</view>
+    <view class="user-list" wx:if="{{invitedUsers && invitedUsers.length > 0}}">
+      <view wx:for="{{invitedUsers}}" wx:key="_id" class="user-card">
+        <image lazy-load class="user-avatar" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="invitedUsers[{{index}}].avatarUrl" />
+        <view class="user-info">
+          <text class="user-name">{{item.nickName || '未知用户'}}</text>
+          <text class="user-date">注册时间: {{item.createdAt}}</text>
+        </view>
+        <view class="user-stats">
+          <text class="user-orders">订单 {{item.orderCount}}</text>
+          <text class="user-spent">¥{{item.totalSpent}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:elif="{{!isLoading}}">
+      <text class="empty-icon">👥</text>
+      <text class="empty-text">还没有推荐用户</text>
+      <text class="empty-desc">分享小程序给你的朋友，他们注册后就会出现在这里</text>
+    </view>
+  </view>
+
+  <view class="loading" wx:if="{{isLoading}}"><text>加载中...</text></view>
+  <view class="no-more" wx:if="{{!hasMore && invitedUsers && invitedUsers.length > 0}}"><text>— 没有更多了 —</text></view>
+
+  <view class="share-bottom-bar">
+    <button class="share-btn" open-type="share">
+      <text>📤 分享小程序给好友</text>
+    </button>
+  </view>
+</view>

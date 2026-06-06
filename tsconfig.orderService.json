@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "checkJs": false,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "./cloudfunctions",
+    "rootDir": "./cloudfunctions",
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": ["cloudfunctions/common/*"]
+    }
+  },
+  "include": [
+    "cloudfunctions/orderService/orders.ts",
+    "cloudfunctions/orderService/payment.ts",
+    "cloudfunctions/orderService/stats.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "cloudfunctions/**/node_modules"
+  ]
+}

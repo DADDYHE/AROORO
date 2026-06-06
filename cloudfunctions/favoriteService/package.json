@@ -1,0 +1,20 @@
+{
+  "name": "favoriteService",
+  "version": "1.0.0",
+  "description": "Favorite service cloud function for managing favorites",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "favorite",
+    "service",
+    "cloud",
+    "function"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,87 @@
+<view class="gallery-container">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-spinner">
+      <view class="spinner-outer"></view>
+      <view class="spinner-inner"></view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="gallery-header">
+      <view class="brand-block">
+        <view class="brand-accent-bar"></view>
+        <view class="brand-main">
+          <text class="brand-text">上门服务</text>
+        </view>
+        <view class="brand-meta">
+          <view class="brand-meta-line"></view>
+          <text class="brand-subtitle" wx:if="{{hasFeeder}}">{{feeder.realName || feeder.nickname}}</text>
+          <text class="brand-subtitle" wx:else>服务管理</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-hall">
+      <view wx:if="{{!hasFeeder}}" class="gallery-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <text class="pending-title">暂无服务档案</text>
+          <text class="pending-desc">请联系客服申请成为服务人员</text>
+        </view>
+      </view>
+
+      <block wx:else>
+        <view class="gallery-card profile-card">
+          <view class="card-accent"></view>
+          <view class="card-body">
+            <view class="info-row">
+              <view class="info-key">状态</view>
+              <view class="info-val">
+                <text class="status-tag {{feeder.status === 'active' ? 'tag-active' : 'tag-inactive'}}">{{feeder.status === 'active' ? '营业中' : (feeder.status === 'pending' ? '审核中' : '已停用')}}</text>
+              </view>
+            </view>
+            <view class="info-divider"></view>
+            <view class="info-row">
+              <view class="info-key">服务类型</view>
+              <view class="info-val">{{serviceTypesText}}</view>
+            </view>
+            <view class="info-divider"></view>
+            <view class="info-row">
+              <view class="info-key">单次价格</view>
+              <view class="info-val">¥{{feeder.pricePerVisit || 0}}/次</view>
+            </view>
+            <view class="info-divider"></view>
+            <view class="info-row" wx:if="{{feeder.address}}">
+              <view class="info-key">服务区域</view>
+              <view class="info-val">{{feeder.address}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="gallery-entrance">
+          <view class="entrance-line"></view>
+          <text class="entrance-label">服务订单 ({{orderTotal}})</text>
+        </view>
+
+        <view wx:if="{{orders.length === 0}}" class="gallery-empty">
+          <view class="empty-line"></view>
+          <text class="empty-text">暂无订单</text>
+        </view>
+
+        <view wx:for="{{orders}}" wx:key="_id" class="gallery-card order-card">
+          <view class="card-accent"></view>
+          <view class="card-body">
+            <view class="card-header">
+              <text class="card-title">{{item.userName || '服务订单'}}</text>
+              <text class="card-status status-{{item.status}}">{{item.status === 'pending' ? '待确认' : (item.status === 'confirmed' ? '已确认' : (item.status === 'in_progress' ? '服务中' : (item.status === 'completed' ? '已完成' : '已取消')))}}</text>
+            </view>
+            <view class="card-info">
+              <text class="card-info-item" wx:if="{{item.serviceDate}}">服务日期：{{item.serviceDate}}</text>
+              <text class="card-info-item">金额：¥{{item.totalPrice || 0}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </block>
+</view>

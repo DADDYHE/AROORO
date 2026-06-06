@@ -1,0 +1,88 @@
+<view class="gallery-container">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-spinner">
+      <view class="spinner-outer"></view>
+      <view class="spinner-inner"></view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="gallery-header">
+      <view class="brand-block">
+        <view class="brand-accent-bar"></view>
+        <view class="brand-main">
+          <text class="brand-text">我的宠物</text>
+        </view>
+        <view class="brand-meta">
+          <view class="brand-meta-line"></view>
+          <text class="brand-subtitle">{{petProfiles.length > 0 ? petProfiles.length + ' 个档案' : '尚未添加'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-hall">
+      <block wx:if="{{petProfiles.length > 0}}">
+        <view class="gallery-entrance">
+          <view class="entrance-line"></view>
+          <text class="entrance-label">档案列表</text>
+          <view wx:if="{{!isManaging}}" class="entrance-action" bindtap="toggleManageMode">管理</view>
+          <view wx:else class="entrance-actions">
+            <text class="entrance-action entrance-action--cancel" bindtap="toggleManageMode">取消</text>
+            <text class="entrance-action entrance-action--delete {{!hasSelectedPets ? 'entrance-action--disabled' : ''}}" bindtap="deleteSelectedPets">删除</text>
+          </view>
+        </view>
+
+        <view class="gallery-collection">
+          <view class="gallery-card">
+            <view class="card-accent"></view>
+            <view class="card-body">
+              <view class="pet-item {{isManaging ? 'pet-item--manage' : ''}}" wx:for="{{petProfiles}}" wx:key="id" bindtap="{{isManaging ? 'selectPet' : 'viewPetDetail'}}" data-id="{{item.id}}" data-index="{{index}}">
+                <view class="pet-portrait">
+                  <image lazy-load class="pet-portrait-image" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="petProfiles[{{index}}].avatarUrl" />
+                </view>
+                <view class="pet-info">
+                  <text class="pet-name">{{item.name}}</text>
+                  <view class="pet-meta">
+                    <text class="pet-meta-tag">{{item.breed || (item.type === 'dog' ? '狗狗' : (item.type === 'cat' ? '猫咪' : '异宠'))}}</text>
+                    <text class="pet-meta-tag" wx:if="{{item.genderDisplay}}">{{item.genderDisplay}}</text>
+                    <text class="pet-meta-tag pet-meta-tag--light" wx:if="{{item.birthday}}">{{item.birthday}}</text>
+                  </view>
+                </view>
+                <view wx:if="{{isManaging}}" class="pet-selector">
+                  <view class="selector-circle {{item.checked ? 'selector-circle--active' : ''}}">
+                    <view wx:if="{{item.checked}}" class="selector-check"></view>
+                  </view>
+                </view>
+                <view wx:if="{{!isManaging}}" class="pet-arrow">
+                  <view class="arrow-line"></view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <view wx:else class="gallery-empty">
+        <view class="empty-frame">
+          <view class="empty-crosshair-h"></view>
+          <view class="empty-crosshair-v"></view>
+          <view class="empty-corner empty-tl"></view>
+          <view class="empty-corner empty-tr"></view>
+          <view class="empty-corner empty-bl"></view>
+          <view class="empty-corner empty-br"></view>
+        </view>
+        <view class="empty-label">
+          <view class="label-line"></view>
+          <text class="label-text">还没有添加宠物</text>
+        </view>
+        <text class="empty-hint">点击下方按钮添加您的第一个宠物吧</text>
+      </view>
+
+      <view class="gallery-footer" wx:if="{{!isManaging}}">
+        <view bindtap="createNewPet" class="footer-action action-active">
+          创建新的宠物档案
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

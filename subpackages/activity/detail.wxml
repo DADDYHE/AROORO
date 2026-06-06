@@ -1,0 +1,176 @@
+<view class="page-container" wx:if="{{activity}}">
+  <scroll-view scroll-y class="scroll-container" bindscroll="onScroll">
+    <view class="page-content">
+      <view class="hero-section">
+        <image 
+          lazy-load 
+          class="hero-cover" 
+          src="{{activity.coverUrl || '/images/default-activity.svg'}}" 
+          mode="aspectFill"
+          binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl"
+        />
+        <view class="hero-overlay"></view>
+        <view class="hero-content">
+          <view class="hero-badge-row">
+            <view class="status-badge {{activityStatus}}">
+              <text class="status-text">{{statusText}}</text>
+            </view>
+            <view class="category-badge" wx:if="{{activity.category}}">
+              <text class="category-text">{{categoryText}}</text>
+            </view>
+          </view>
+          <text class="hero-title">{{activity.title}}</text>
+          <view class="hero-meta">
+            <view class="hero-meta-item">
+              <text class="hero-meta-icon">📅</text>
+              <text class="hero-meta-text">{{displayDate}}</text>
+            </view>
+            <view class="hero-meta-item">
+              <text class="hero-meta-icon">📍</text>
+              <text class="hero-meta-text">{{activity.location || '待定'}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="hero-accent-line"></view>
+      </view>
+
+      <view class="info-card animate-item" style="animation-delay: 0.1s;">
+        <view class="info-grid">
+          <view class="info-cell {{isMultiDay ? 'multi-day' : ''}}">
+            <text class="info-label">活动时间</text>
+            <view wx:if="{{isMultiDay}}" class="info-value-multi">
+              <view class="time-row">
+                <text class="time-prefix">开始</text>
+                <text class="time-main">{{startTimeDisplay}}</text>
+              </view>
+              <view class="time-row">
+                <text class="time-prefix">结束</text>
+                <text class="time-main">{{endTimeDisplay}}</text>
+              </view>
+            </view>
+            <text wx:else class="info-value">{{displayTime}}</text>
+          </view>
+          <view class="info-cell">
+            <text class="info-label">活动费用</text>
+            <text class="info-value price-value">{{priceDisplayText}}</text>
+          </view>
+        </view>
+        <view class="info-grid">
+          <view class="info-cell">
+            <text class="info-label">活动地点</text>
+            <text class="info-value info-value-ellipsis location-link" bindtap="onLocationTap">{{activity.location || '待定'}}</text>
+          </view>
+          <view class="info-cell">
+            <text class="info-label">报名人数</text>
+            <text class="info-value">{{activity.currentParticipants > 0 ? activity.currentParticipants : 0}}/{{activity.maxParticipants || '不限'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="highlight-section animate-item" style="animation-delay: 0.2s;" wx:if="{{highlightTags.length > 0}}">
+        <scroll-view scroll-x class="highlight-scroll">
+          <view class="highlight-tags">
+            <view class="highlight-tag" wx:for="{{highlightTags}}" wx:key="index">
+              <text class="highlight-tag-text">{{item}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <view class="section-card animate-item" style="animation-delay: 0.3s;">
+        <view class="section-header">
+          <view class="section-title-wrapper">
+            <view class="section-title-accent"></view>
+            <text class="section-title">活动详情</text>
+          </view>
+        </view>
+        <text class="description">{{activity.description || '暂无详细描述'}}</text>
+      </view>
+
+      <view class="section-card animate-item" style="animation-delay: 0.4s;" wx:if="{{activity.images && activity.images.length > 0}}">
+        <view class="section-header">
+          <view class="section-title-wrapper">
+            <view class="section-title-accent"></view>
+            <text class="section-title">活动图片</text>
+          </view>
+          <text class="section-count">{{activity.images.length}}张</text>
+        </view>
+        <view class="image-gallery-large">
+          <view 
+            class="gallery-item-large" 
+            wx:for="{{activity.images}}" 
+            wx:key="index"
+            bindtap="previewImage"
+            data-index="{{index}}"
+          >
+            <image class="gallery-image-large" src="{{item}}" mode="widthFix" lazy-load binderror="onCloudImageError" data-src="{{item}}" data-path="activity.images[{{index}}]" />
+          </view>
+        </view>
+      </view>
+
+      <view class="organizer-card animate-item" style="animation-delay: 0.5s;">
+        <view class="section-header">
+          <view class="section-title-wrapper">
+            <view class="section-title-accent"></view>
+            <text class="section-title">主办方</text>
+          </view>
+        </view>
+        <view class="organizer-content">
+          <view class="organizer-avatar-wrap {{activity.organizer.hasValidAvatar ? 'has-avatar' : ''}}">
+            <image wx:if="{{activity.organizer.hasValidAvatar}}" class="organizer-avatar-img" src="{{activity.organizer.avatar}}" mode="aspectFill" binderror="onOrganizerAvatarError" />
+            <view wx:else class="organizer-avatar-fallback">
+              <text class="organizer-avatar-letter">{{activity.organizer.name}}</text>
+            </view>
+          </view>
+          <view class="organizer-info">
+            <text class="organizer-name">{{activity.organizer.name}}</text>
+            <text class="organizer-desc">已举办 {{activity.organizer.activityCount || 0}} 场活动</text>
+          </view>
+          <view class="organizer-action" bindtap="onContact">
+            <text class="organizer-action-icon">💬</text>
+            <text class="organizer-action-text">联系</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <view class="action-bar">
+    <view class="action-icons">
+      <view class="action-btn" bindtap="onShare">
+        <text class="action-btn-icon">🔗</text>
+        <text class="action-btn-text">分享</text>
+      </view>
+      <view class="action-btn" bindtap="onContact">
+        <text class="action-btn-icon">💬</text>
+        <text class="action-btn-text">联系团长</text>
+      </view>
+    </view>
+    <view class="action-primary">
+      <view class="primary-btn {{btnStatus}}" bindtap="onRegister">
+        <text class="primary-btn-text">{{btnText}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<view class="loading-container" wx:if="{{isLoading}}">
+  <view class="loading-content">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+</view>
+
+
+<view class="error-container" wx:if="{{!isLoading && !activity}}" style="height: 1399rpx; display: flex; box-sizing: border-box; left: 0rpx; top: 0rpx">
+  <view class="error-content">
+    <text class="error-icon">😢</text>
+    <text class="error-title">活动不存在</text>
+    <text class="error-desc">该活动可能已被删除或下架</text>
+    <view class="error-btn" bindtap="goBack">
+      <text class="error-btn-text">返回上一页</text>
+    </view>
+  </view>
+</view>

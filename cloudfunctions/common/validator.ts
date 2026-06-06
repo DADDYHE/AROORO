@@ -1,0 +1,150 @@
+/**
+ * 参数校验中间件（TypeScript 源文件 - Sprint 14 迁移）
+ *
+ * 用于云函数中统一参数校验，替代重复的手动检查
+ *
+ * 编译方式：
+ *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.common.json
+ */
+
+import { err, BusinessError } from './errors'
+
+/**
+ * 单字段校验规则
+ */
+export interface FieldRule {
+  required?: boolean
+  type?: 'string' | 'number' | 'boolean' | 'object' | 'array'
+  enum?: ReadonlyArray<string | number | boolean>
+  min?: number
+  max?: number
+  message?: string
+}
+
+/**
+ * 校验 schema：{ fieldName: FieldRule }
+ */
+export type ValidationSchema = Record<string, FieldRule>
+
+/**
+ * 校验错误项
+ */
+export interface ValidationErrorItem {
+  field: string
+  message: string
+}
+
+/**
+ * 校验错误异常
+ */
+export class ValidationError extends Error {
+  public readonly name: 'ValidationError' = 'ValidationError'
+  public readonly field: string
+  public readonly items: ValidationErrorItem[]
+
+  constructor(message: string, field: string, items: ValidationErrorItem[] = []) {
+    super(message)
+    this.field = field
+    this.items = items
+  }
+}
+
+/**
+ * 校验数据是否符合 schema
+ * - required 失败：抛 BusinessError(MISSING_REQUIRED)
+ * - 其他规则失败：抛 ValidationError
+ */
+export function validate(schema: ValidationSchema, data: Record<string, unknown> | null | undefined): void {
+  if (!data || typeof data !== 'object') {
+    throw err('INVALID_PARAMS', '待校验数据必须为对象')
+  }
+  const errors: ValidationErrorItem[] = []
+
+  for (const [field, rules] of Object.entries(schema)) {
+    const value = data[field]
+
+    if (rules.required && (value === undefined || value === null || value === '')) {
+      errors.push({ field, message: rules.message || `${field} 不能为空` })
+      continue
+    }
+
+    if (value !== undefined && value !== null) {
+      if (rules.type && typeof value !== rules.type) {
+        errors.push({ field, message: rules.message || `${field} 类型错误，期望 ${rules.type}` })
+      }
+      if (rules.enum && !rules.enum.includes(value as string | number | boolean)) {
+        errors.push({ field, message: rules.message || `${field} 值不在允许范围内` })
+      }
+      if (rules.min !== undefined) {
+        if (typeof value === 'number' && value < rules.min) {
+          errors.push({ field, message: rules.message || `${field} 不能小于 ${rules.min}` })
+        }
+        if (typeof value === 'string' && value.length < rules.min) {
+          errors.push({ field, message: rules.message || `${field} 长度不能少于 ${rules.min}` })
+        }
+      }
+      if (rules.max !== undefined) {
+        if (typeof value === 'number' && value > rules.max) {
+          errors.push({ field, message: rules.message || `${field} 不能大于 ${rules.max}` })
+        }
+        if (typeof value === 'string' && value.length > rules.max) {
+          errors.push({ field, message: rules.message || `${field} 长度不能超过 ${rules.max}` })
+        }
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    const first = errors[0]
+    if (first.message.includes('不能为空')) {
+      const e = err('MISSING_REQUIRED', first.message, { field: first.field })
+      // attach field for upstream
+      ;(e as BusinessError & { field: string }).field = first.field
+      throw e
+    }
+    throw new ValidationError(errors.map(e => e.message).join('；'), errors[0].field, errors)
+  }
+}
+
+/**
+ * 按白名单过滤对象字段（防止注入多余字段）
+ */
+export function filterFields<T = Record<string, unknown>>(whitelist: string[], data: Record<string, unknown>): T {
+  const filtered: Record<string, unknown> = {}
+  whitelist.forEach(field => {
+    if (data[field] !== undefined) {filtered[field] = data[field]}
+  })
+  return filtered as T
+}
+
+/**
+ * 内置字段白名单（按业务域分组）
+ */
+export const FIELD_WHITELISTS: Record<string, string[]> = {
+  user: ['nickName', 'avatarUrl', 'gender', 'phone', 'birthday', 'email', 'address', 'ownerName', 'city', 'province', 'country', 'language', 'bio'],
+  pet: [
+    'name', 'type', 'breed', 'gender', 'birthday', 'weight', 'avatarUrl', 'note',
+  ],
+  hostBasic: [
+    'avatarUrl', 'hostName', 'realName', 'phone', 'idCard', 'address',
+    'pricePerDay', 'emergencyContactName', 'emergencyContactPhone',
+    'housingType', 'hasYard', 'maxPets', 'hasOtherPets',
+    'nativePetInfo', 'petTypes', 'idCardFront', 'idCardBack', 'healthCertificate',
+  ],
+  hostDefault: [
+    'hostName', 'realName', 'phone', 'address', 'housingType',
+    'hasYard', 'maxPets', 'petTypes', 'serviceTypes', 'pricePerDay', 'description',
+    'isAcceptingOrders', 'avatar',
+  ],
+  activity: ['title', 'description', 'coverUrl', 'images', 'startTime', 'endTime', 'location', 'latitude', 'longitude', 'maxParticipants', 'category', 'price', 'pricePerPerson', 'pricePerPet', 'contactName', 'contactPhone', 'wechatId', 'status'],
+  product: [
+    'name', 'subTitle', 'description', 'price', 'originalPrice',
+    'coverUrl', 'coverImage', 'images', 'detailImages',
+    'category', 'categoryId', 'categoryName',
+    'stock', 'totalStock', 'soldCount',
+    'status', 'isFeatured', 'tags', 'sortOrder',
+    'skuType', 'specGroups', 'skus', 'specs',
+    'minPrice', 'maxPrice',
+  ],
+  feeder: ['name', 'area', 'description', 'pricePerVisit', 'services', 'isAcceptingOrders', 'avatar'],
+}

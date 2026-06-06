@@ -1,0 +1,352 @@
+const { err } = require('../common/errors')
+const { handleSuccess, handleError, ERROR_CODES } = require('../common/utils')
+const { initCloud } = require('../common/utils')
+const { createLogger } = require('../common/logger')
+const crypto = require('crypto')
+
+const { db } = initCloud()
+const logger = createLogger('adminService.auth')
+
+// 管理员权限数据库实例（绕过安全规则，用于 Web 端登录等场景）
+let _adminDb = null
+function getAdminDb() {
+  if (!_adminDb) {
+    const cloudbase = require('@cloudbase/node-sdk')
+    const app = cloudbase.init()
+    _adminDb = app.database()
+  }
+  return _adminDb
+}
+
+function generateSessionToken() {
+  return crypto.randomBytes(32).toString('hex')
+}
+
+async function checkAuth(event, context, auth) {
+  const { openid } = auth
+
+  let admin = null
+  try {
+    const adminRes = await db.collection('admins').doc(openid).get()
+    admin = adminRes.data
+  } catch (e) {
+    logger.warn('checkAuth.admins.fetch', { openid, code: e.errCode, msg: e.message })
+  }
+
+  if (!admin || admin.status !== 'active') {
+    return handleSuccess({
+      isPartner: false,
+      isNewUser: true,
+    })
+  }
+
+  const isPartner = Boolean(admin.isPartner)
+
+  const sessionToken = generateSessionToken()
+  const updateData = { sessionToken, updatedAt: db.serverDate() }
+  await db.collection('admins').doc(openid).update({ data: updateData })
+
+  return handleSuccess({
+    isPartner,
+    isNewUser: false,
+    sessionToken,
+    adminInfo: {
+      _id: openid,
+      isPartner,
+      nickName: admin.nickName || '',
+      avatarUrl: admin.avatarUrl || '',
+      realName: admin.realName || '',
+      phone: admin.phone || '',
+    },
+  })
+}
+
+async function login(event, context, auth) {
+  const { openid } = auth
+  const { userInfo } = event
+
+  const sessionToken = generateSessionToken()
+
+  let admin = null
+  let isNewUser = false
+
+  try {
+    const adminRes = await db.collection('admins').doc(openid).get()
+    admin = adminRes.data
+  } catch (e) {
+    logger.warn('login.admins.fetch', { openid, code: e.errCode, msg: e.message })
+  }
+
+  if (!admin) {
+    const newAdmin = {
+      openid,
+      nickName: userInfo?.nickName || '',
+      avatarUrl: userInfo?.avatarUrl || '',
+      realName: '',
+      phone: '',
+      isPartner: false,
+      status: 'active',
+      sessionToken,
+      createdAt: db.serverDate(),
+      updatedAt: db.serverDate(),
+    }
+
+    await db.collection('admins').doc(openid).set({ data: newAdmin })
+    admin = newAdmin
+    isNewUser = true
+
+    return handleSuccess({
+      isPartner: false,
+      isNewUser,
+      sessionToken,
+      adminInfo: {
+        _id: openid,
+        isPartner: false,
+        nickName: admin.nickName || '',
+        avatarUrl: admin.avatarUrl || '',
+        realName: '',
+        phone: '',
+      },
+    })
+  }
+
+  const updateData = { sessionToken, updatedAt: db.serverDate() }
+  if (userInfo?.nickName && !admin.nickName) {updateData.nickName = userInfo.nickName}
+  if (userInfo?.avatarUrl && !admin.avatarUrl) {updateData.avatarUrl = userInfo.avatarUrl}
+  await db.collection('admins').doc(openid).update({ data: updateData })
+
+  const isPartner = Boolean(admin.isPartner)
+
+  return handleSuccess({
+    isPartner,
+    isNewUser: false,
+    sessionToken,
+    adminInfo: {
+      _id: openid,
+      isPartner,
+      nickName: admin.nickName || '',
+      avatarUrl: admin.avatarUrl || '',
+      realName: admin.realName || '',
+      phone: admin.phone || '',
+    },
+  })
+}
+
+async function logout(event, context, auth) {
+  const { openid } = auth
+
+  await db.collection('admins').doc(openid).update({
+    data: { sessionToken: '', updatedAt: db.serverDate() },
+  })
+
+  return handleSuccess({ success: true })
+}
+
+async function getAvailableRoles(event, context, auth) {
+  return handleSuccess([])
+}
+
+async function updateProfile(event, context, auth) {
+  const { openid } = auth
+  const { nickName, avatarUrl, realName, phone } = event
+
+  const updateData = { updatedAt: db.serverDate() }
+
+  if (nickName !== undefined) {updateData.nickName = nickName}
+  if (avatarUrl !== undefined) {updateData.avatarUrl = avatarUrl}
+  if (realName !== undefined) {updateData.realName = realName}
+  if (phone !== undefined) {updateData.phone = phone}
+
+  await db.collection('admins').doc(openid).update({ data: updateData })
+
+  return handleSuccess({
+    nickName: updateData.nickName !== undefined ? updateData.nickName : undefined,
+    avatarUrl: updateData.avatarUrl !== undefined ? updateData.avatarUrl : undefined,
+    realName: updateData.realName !== undefined ? updateData.realName : undefined,
+    phone: updateData.phone !== undefined ? updateData.phone : undefined,
+  })
+}
+
+async function getConfig() {
+  return handleSuccess({}, '获取配置成功')
+}
+
+async function webLogin(event, context, auth) {
+  const { username, password } = event
+  if (!username || !password) {
+    throw err('INVALID_PARAMS', '参数错误')
+  }
+
+  const adminDb = getAdminDb()
+  const adminRes = await adminDb.collection('admins')
+    .where({ username, status: 'active' })
+    .limit(1)
+    .get()
+
+  if (!adminRes.data || adminRes.data.length === 0) {
+    throw err('AUTH_REQUIRED', '登录失败')
+  }
+
+  const admin = adminRes.data[0]
+  if (!admin.passwordHash) {
+    throw err('AUTH_REQUIRED', '登录失败')
+  }
+
+  const bcrypt = require('bcryptjs')
+  const valid = await bcrypt.compare(password, admin.passwordHash)
+  if (!valid) {
+    throw err('AUTH_REQUIRED', '登录失败')
+  }
+
+  const { generateToken } = require('../common/token-utils')
+  const { isSuperAdmin } = require('../common/permissions')
+
+  const token = generateToken({
+    openid: admin.openid,
+    adminId: admin._id,
+    isPartner: admin.isPartner || false,
+    isSuperAdmin: isSuperAdmin(admin),
+  })
+
+  return handleSuccess({
+    token,
+    admin: {
+      _id: admin._id,
+      openid: admin.openid,
+      nickName: admin.nickName || admin.username,
+      avatarUrl: admin.avatarUrl || '',
+      isPartner: admin.isPartner || false,
+    },
+  })
+}
+
+async function createScanLogin(event, context, auth) {
+  const loginToken = crypto.randomBytes(16).toString('hex')
+  const expiresAt = Date.now() + 5 * 60 * 1000
+
+  const adminDb = getAdminDb()
+  await adminDb.collection('scanLoginTokens').add({
+    data: {
+      loginToken,
+      status: 'pending',
+      expiresAt,
+      createdAt: adminDb.serverDate(),
+    },
+  })
+
+  const urlScheme = `arooro://scan-login?token=${loginToken}`
+
+  return handleSuccess({
+    loginToken,
+    urlScheme,
+    expiresAt,
+  })
+}
+
+async function pollScanLogin(event, context, auth) {
+  const { loginToken } = event
+  if (!loginToken) {
+    throw err('INVALID_PARAMS', '参数错误')
+  }
+
+  const adminDb = getAdminDb()
+  const tokenRes = await adminDb.collection('scanLoginTokens')
+    .where({ loginToken })
+    .limit(1)
+    .get()
+
+  if (!tokenRes.data || tokenRes.data.length === 0) {
+    return handleSuccess({ status: 'invalid' })
+  }
+
+  const tokenDoc = tokenRes.data[0]
+
+  if (tokenDoc.status === 'expired' || Date.now() > tokenDoc.expiresAt) {
+    return handleSuccess({ status: 'expired' })
+  }
+
+  if (tokenDoc.status === 'denied') {
+    return handleSuccess({ status: 'denied' })
+  }
+
+  if (tokenDoc.status === 'confirmed' && tokenDoc.openid) {
+    let admin = null
+    try {
+      const adminRes = await adminDb.collection('admins').doc(tokenDoc.openid).get()
+      admin = adminRes.data
+    } catch (e) {
+      logger.warn('confirmScanLogin.admins.fetch', { openid: tokenDoc.openid, code: e.errCode, msg: e.message })
+    }
+
+    if (!admin || admin.status !== 'active') {
+      return handleSuccess({ status: 'denied' })
+    }
+
+    const { generateToken } = require('../common/token-utils')
+    const isPartner = Boolean(admin.isPartner)
+
+    const token = generateToken({
+      openid: admin.openid,
+      adminId: admin._id,
+      isPartner,
+    })
+
+    await adminDb.collection('scanLoginTokens').doc(tokenDoc._id).update({
+      data: { status: 'completed', updatedAt: adminDb.serverDate() },
+    })
+
+    return handleSuccess({
+      status: 'confirmed',
+      token,
+      admin: {
+        _id: admin._id,
+        openid: admin.openid,
+        nickName: admin.nickName || '',
+        avatarUrl: admin.avatarUrl || '',
+        isPartner,
+      },
+    })
+  }
+
+  return handleSuccess({ status: 'pending' })
+}
+
+async function confirmScanLogin(event, context, auth) {
+  const { loginToken, confirmed } = event
+  const { openid } = auth
+  if (!loginToken) {
+    throw err('INVALID_PARAMS', '参数错误')
+  }
+
+  const adminDb = getAdminDb()
+  const tokenRes = await adminDb.collection('scanLoginTokens')
+    .where({ loginToken, status: 'pending' })
+    .limit(1)
+    .get()
+
+  if (!tokenRes.data || tokenRes.data.length === 0) {
+    throw err('BUSINESS_ERROR', '扫码登录失败')
+  }
+
+  const tokenDoc = tokenRes.data[0]
+  if (Date.now() > tokenDoc.expiresAt) {
+    await adminDb.collection('scanLoginTokens').doc(tokenDoc._id).update({
+      data: { status: 'expired', updatedAt: adminDb.serverDate() },
+    })
+    throw err('BUSINESS_ERROR', '请重新扫码')
+  }
+
+  if (confirmed) {
+    await adminDb.collection('scanLoginTokens').doc(tokenDoc._id).update({
+      data: { status: 'confirmed', openid, updatedAt: adminDb.serverDate() },
+    })
+  } else {
+    await adminDb.collection('scanLoginTokens').doc(tokenDoc._id).update({
+      data: { status: 'denied', updatedAt: adminDb.serverDate() },
+    })
+  }
+
+  return handleSuccess({ confirmed: Boolean(confirmed) })
+}
+
+module.exports = { checkAuth, login, webLogin, logout, getAvailableRoles, updateProfile, getConfig, createScanLogin, pollScanLogin, confirmScanLogin }

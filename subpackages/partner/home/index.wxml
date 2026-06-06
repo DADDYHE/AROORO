@@ -1,0 +1,83 @@
+<view class="gallery-container">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-spinner">
+      <view class="spinner-outer"></view>
+      <view class="spinner-inner"></view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="gallery-header">
+      <view class="brand-block">
+        <view class="brand-accent-bar"></view>
+        <view class="brand-main">
+          <text class="brand-text">管理中心</text>
+        </view>
+        <view class="brand-meta">
+          <view class="brand-meta-line"></view>
+          <text class="brand-subtitle" wx:if="{{isPartner}}">{{permissionLabels.join(' · ')}}</text>
+          <text class="brand-subtitle" wx:else>合作伙伴专属</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-hall">
+      <view wx:if="{{hasPendingApplication && !isPartner}}" class="gallery-card pending-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <text class="pending-title">申请审核中</text>
+          <text class="pending-desc">您的合作伙伴申请正在审核中，请耐心等待</text>
+          <view class="pending-btn" bindtap="onApplyTap">
+            <text class="pending-btn-text">查看详情</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{!isPartner && !hasPendingApplication}}" class="gallery-card apply-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <text class="pending-title">成为合作伙伴</text>
+          <text class="pending-desc">带货赚取收益，共建宠物生态</text>
+          <view class="pending-btn" bindtap="onApplyTap">
+            <text class="pending-btn-text">立即申请</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{incomeSummary && isPartner}}" class="gallery-card income-card">
+        <view class="card-accent income-accent"></view>
+        <view class="card-body">
+          <view class="income-row">
+            <view class="income-stat">
+              <text class="income-value">¥{{incomeSummary.total}}</text>
+              <text class="income-label">累计收入</text>
+            </view>
+            <view class="income-divider"></view>
+            <view class="income-stat">
+              <text class="income-value">¥{{incomeSummary.monthly}}</text>
+              <text class="income-label">本月收入</text>
+            </view>
+            <view class="income-divider"></view>
+            <view class="income-stat">
+              <text class="income-value">¥{{incomeSummary.walletBalance}}</text>
+              <text class="income-label">可提现</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="gallery-entrance">
+        <view class="entrance-line"></view>
+        <text class="entrance-label">功能模块</text>
+      </view>
+
+      <view class="module-grid">
+        <view class="module-card" wx:for="{{modules}}" wx:key="id" bindtap="onModuleTap" data-id="{{item.id}}">
+          <view class="module-icon module-icon-{{item.icon}}"></view>
+          <text class="module-title">{{item.title}}</text>
+          <text class="module-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

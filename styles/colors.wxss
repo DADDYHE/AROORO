@@ -1,0 +1,88 @@
+/* AROORO 设计系统 - 色彩变量 */
+
+/* C端小程序色彩 */
+:root {
+  /* 主色调 */
+  --color-primary: #FF6B00; /* 珊瑚橙 */
+  --color-primary-light: #FF8E40; /* 浅珊瑚橙 */
+  --color-primary-dark: #E55A00; /* 深珊瑚橙 */
+  
+  /* 辅助色 */
+  --color-white: #FFFFFF; /* 白色 */
+  --color-gray-light: #F5F5F5; /* 浅灰色 */
+  --color-gray: #E0E0E0; /* 中灰色 */
+  --color-gray-dark: #9E9E9E; /* 深灰色 */
+  --color-black: #333333; /* 深灰色（文本） */
+  
+  /* 强调色 */
+  --color-success: #4CAF50; /* 薄荷绿 */
+  --color-warning: #FFC107; /* 黄色 */
+  --color-danger: #F44336; /* 红色 */
+  --color-info: #2196F3; /* 蓝色 */
+  
+  /* 背景色 */
+  --color-bg-primary: #FFFFFF; /* 主背景 */
+  --color-bg-secondary: #F5F5F5; /* 次要背景 */
+  --color-bg-tertiary: #FAFAFA; /* 三级背景 */
+  
+  /* 文本色 */
+  --color-text-primary: #333333; /* 主文本 */
+  --color-text-secondary: #666666; /* 次要文本 */
+  --color-text-tertiary: #999999; /* 三级文本 */
+  --color-text-white: #FFFFFF; /* 白色文本 */
+  
+  /* 边框色 */
+  --color-border: #E0E0E0; /* 边框 */
+  --color-border-light: #F0F0F0; /* 浅边框 */
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  /* 渐变色 */
+  --gradient-primary: linear-gradient(135deg, #FF6B00 0%, #FF8E40 100%);
+  --gradient-success: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  --gradient-info: linear-gradient(135deg, #2196F3 0%, #42A5F5 100%);
+}
+
+/* 管理端小程序色彩 */
+.admin {
+  /* 主色调 */
+  --color-primary: #1A73E8; /* 深邃蓝 */
+  --color-primary-light: #4285F4; /* 浅蓝 */
+  --color-primary-dark: #0D47A1; /* 深蓝 */
+  
+  /* 辅助色 */
+  --color-white: #FFFFFF; /* 白色 */
+  --color-gray-light: #F8F9FA; /* 浅灰色 */
+  --color-gray: #E8EAED; /* 中灰色 */
+  --color-gray-dark: #5F6368; /* 深灰色 */
+  --color-black: #202124; /* 深灰色（文本） */
+  
+  /* 强调色 */
+  --color-success: #34A853; /* 绿色 */
+  --color-warning: #FBBC05; /* 黄色 */
+  --color-danger: #EA4335; /* 红色 */
+  --color-info: #4285F4; /* 蓝色 */
+  
+  /* 背景色 */
+  --color-bg-primary: #FFFFFF; /* 主背景 */
+  --color-bg-secondary: #F8F9FA; /* 次要背景 */
+  --color-bg-tertiary: #F1F3F4; /* 三级背景 */
+  
+  /* 文本色 */
+  --color-text-primary: #202124; /* 主文本 */
+  --color-text-secondary: #5F6368; /* 次要文本 */
+  --color-text-tertiary: #9AA0A6; /* 三级文本 */
+  --color-text-white: #FFFFFF; /* 白色文本 */
+  
+  /* 边框色 */
+  --color-border: #E8EAED; /* 边框 */
+  --color-border-light: #F1F3F4; /* 浅边框 */
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}

@@ -1,0 +1,72 @@
+<view class="quick-register-container">
+  <view class="gallery-header">
+    <view class="brand-block">
+      <view class="brand-accent-bar"></view>
+      <view class="brand-main">
+        <text class="brand-text">活动报名</text>
+      </view>
+      <view class="brand-meta">
+        <view class="brand-meta-line"></view>
+        <text class="brand-subtitle">选择活动，一键报名</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{activities.length > 0}}" class="activity-list">
+    <view class="activity-card" wx:for="{{activities}}" wx:key="_id">
+      <view class="activity-main" data-id="{{item._id}}" bindtap="handleActivityDetailTap">
+        <image lazy-load class="activity-cover" src="{{item.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="activities[{{index}}].coverUrl" />
+        <view class="activity-overlay">
+          <view class="activity-badge {{item.isEnded ? 'badge-ended' : item.registrationEnded ? 'badge-stopped' : 'badge-active'}}">
+            <text class="badge-dot" wx:if="{{!item.isEnded}}"></text>
+            <text class="badge-text">{{item.isEnded ? '已结束' : item.registrationEnded ? '报名已截止' : '正在报名'}}</text>
+          </view>
+        </view>
+        <view class="activity-category-badge" wx:if="{{item.category}}">
+          <text class="category-text">{{item.category === 'outdoor' ? '户外' : item.category === 'social' ? '社交' : item.category === 'training' ? '训练' : item.category === 'health' ? '健康' : item.category}}</text>
+        </view>
+      </view>
+
+      <view class="activity-details">
+        <view class="activity-title-row" data-id="{{item._id}}" bindtap="handleActivityDetailTap">
+          <text class="activity-name truncate">{{item.title}}</text>
+          <view class="activity-price {{(item.pricePerPerson > 0 || item.pricePerPet > 0) ? 'price-paid' : 'price-free'}}">
+            <block wx:if="{{item.pricePerPerson > 0 && item.pricePerPet > 0}}">¥{{item.pricePerPerson}}/人 ¥{{item.pricePerPet}}/宠</block>
+            <block wx:elif="{{item.pricePerPerson > 0}}">¥{{item.pricePerPerson}}/人</block>
+            <block wx:elif="{{item.pricePerPet > 0}}">¥{{item.pricePerPet}}/宠</block>
+            <block wx:else>免费</block>
+          </view>
+        </view>
+
+        <view class="activity-time-row" data-id="{{item._id}}" bindtap="handleActivityDetailTap">
+          <view class="info-item time-item">
+            <text class="info-label">时间</text>
+            <text class="info-text">{{item.timeText}}</text>
+          </view>
+          <view class="info-item participants-item">
+            <text class="info-label">人数</text>
+            <text class="info-text participants-text">{{item.currentParticipants > 0 ? item.currentParticipants : 0}}/{{item.maxParticipants || '不限'}}</text>
+          </view>
+        </view>
+
+        <view class="activity-info-row">
+          <view class="info-item">
+            <text class="info-label">地点</text>
+            <text class="info-text">{{item.location || '待定'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="activity-action">
+        <view class="action-btn {{item.isEnded ? 'btn-ended' : item.isRegistered ? 'btn-registered' : item.registrationEnded ? 'btn-disabled' : 'btn-active'}}" data-id="{{item._id}}" data-isended="{{item.isEnded}}" data-isregistered="{{item.isRegistered}}" data-registration-ended="{{item.registrationEnded}}" bindtap="handleActivityTap">
+          <text class="btn-text">{{item.isEnded ? '已结束' : item.isRegistered ? '已报名' : item.registrationEnded ? '已截止' : '立即报名'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <text class="empty-text">暂无可报名的活动</text>
+    <text class="empty-subtitle">请稍后再来查看</text>
+  </view>
+</view>

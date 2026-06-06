@@ -1,0 +1,195 @@
+<view class="page-container">
+  <view class="gallery-header">
+    <view class="brand-block">
+      <view class="brand-accent-bar"></view>
+      <view class="brand-main">
+        <text class="brand-text">订单详情</text>
+      </view>
+      <view class="brand-meta">
+        <view class="brand-meta-line"></view>
+        <text class="brand-subtitle">上门服务</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="page-content">
+    <view class="loading-container" wx:if="{{isLoading}}">
+      <view class="loading-spinner"></view>
+    </view>
+
+    <block wx:elif="{{orderInfo}}">
+      <view class="status-card">
+        <view class="status-icon-wrap">
+          <text class="status-icon">{{statusConfig.icon}}</text>
+        </view>
+        <view class="status-info">
+          <text class="status-title">{{statusConfig.title}}</text>
+          <text class="status-subtitle" wx:if="{{statusConfig.subtitle}}">{{statusConfig.subtitle}}</text>
+        </view>
+      </view>
+
+      <view class="info-card">
+        <view class="card-header">
+          <text class="card-title">服务信息</text>
+        </view>
+
+        <view class="info-item">
+          <text class="label">订单编号</text>
+          <text class="value order-no">{{orderInfo.orderNo || '-'}}</text>
+        </view>
+
+        <view class="info-item service-date-display" wx:if="{{orderInfo.serviceDateText}}">
+          <text class="label">服务日期</text>
+          <text class="value service-date-value">{{orderInfo.serviceDateText}}</text>
+        </view>
+
+        <view class="info-item address-display">
+          <text class="label">服务地址</text>
+          <text class="value address-text">{{orderInfo.address || '-'}}</text>
+        </view>
+
+        <view class="info-item" wx:if="{{orderInfo.keyMethod}}">
+          <text class="label">钥匙交接</text>
+          <text class="value">{{orderInfo.keyMethod}}</text>
+        </view>
+
+        <view class="info-item" wx:if="{{orderInfo.visitTime}}">
+          <text class="label">期望上门时间</text>
+          <text class="value">{{orderInfo.visitTime}}</text>
+        </view>
+
+        <view class="info-item notes-display" wx:if="{{orderInfo.notes}}">
+          <text class="label">宠主叮嘱</text>
+          <text class="value notes-text">{{orderInfo.notes}}</text>
+        </view>
+      </view>
+
+      <view class="info-card">
+        <view class="card-header">
+          <text class="card-title">服务宠物＆更多服务</text>
+        </view>
+
+        <view class="info-item brand-item" wx:if="{{orderInfo.familiarityText}}">
+          <text class="brand-label">提前熟悉</text>
+          <text class="brand-value">{{orderInfo.familiarityText}}</text>
+        </view>
+
+        <view class="info-item brand-item" wx:if="{{orderInfo.multiVisitText}}">
+          <text class="brand-label">一天多次</text>
+          <text class="brand-value">{{orderInfo.multiVisitText}}</text>
+        </view>
+
+        <block wx:for="{{orderInfo.petDetails}}" wx:key="id" wx:for-item="pet">
+          <view class="pet-item">
+            <view class="pet-left">
+              <view class="avatar-container">
+                <image lazy-load class="pet-image" src="{{pet.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-pet-index="{{index}}" data-src="{{pet.avatarUrl}}" data-path="orderInfo.petDetails[{{index}}].avatarUrl" />
+              </view>
+              <view class="pet-info">
+                <text class="pet-name">{{pet.name || '未知'}}</text>
+                <text class="pet-details">
+                  <text wx:if="{{pet.breed}}">{{pet.breed}}</text>
+                  <text wx:else>{{(pet.type === 'dog' || pet.type === '狗狗') ? '狗狗' : (pet.type === 'exotic' || pet.type === '异宠') ? '异宠' : '猫咪'}}</text>
+                </text>
+              </view>
+            </view>
+            <view class="pet-right" wx:if="{{orderInfo.petServices && orderInfo.petServices[pet.id]}}">
+              <view class="pet-service-tags">
+                <text class="service-tag" wx:if="{{orderInfo.petServices[pet.id].feeding}}">喂养</text>
+                <text class="service-tag walk-tag" wx:if="{{orderInfo.petServices[pet.id].walkMinutes > 0}}">遛狗{{orderInfo.petServices[pet.id].walkMinutes}}分钟</text>
+              </view>
+              <text class="pet-service-dates" wx:if="{{orderInfo.petServices[pet.id].serviceDatesText}}">{{orderInfo.petServices[pet.id].serviceDatesText}}</text>
+            </view>
+          </view>
+        </block>
+
+        <view class="empty-tip" wx:if="{{!orderInfo.petDetails || orderInfo.petDetails.length === 0}}">
+          <text>暂无宠物信息</text>
+        </view>
+      </view>
+
+      <view class="info-card">
+        <view class="card-header">
+          <text class="card-title">价格详情</text>
+        </view>
+
+        <block wx:for="{{serviceBreakdown}}" wx:key="name" wx:for-item="item">
+          <view class="price-item price-pet-group">
+            <text class="label">{{item.name}}</text>
+            <text class="value">¥{{item.subtotal}}</text>
+          </view>
+          <view class="price-sub-item">
+            <text class="sub-label">上门服务 {{item.serviceDays}}天</text>
+            <text class="sub-value">¥{{item.baseAmount}}</text>
+          </view>
+          <view class="price-sub-item" wx:if="{{item.walkMinutes > 0}}">
+            <text class="sub-label">遛狗 {{item.walkMinutes}}分钟</text>
+            <text class="sub-value">¥{{item.walkAmount}}</text>
+          </view>
+        </block>
+
+        <view class="price-item" wx:if="{{serviceBreakdown.length === 0}}">
+          <text class="label">服务费用</text>
+          <text class="value">¥{{orderInfo.originalAmount || orderInfo.totalAmount || 0}}</text>
+        </view>
+
+        <view class="price-sub-item" wx:if="{{orderInfo.familiarityPrice > 0}}">
+          <text class="sub-label">提前熟悉</text>
+          <text class="sub-value">¥{{orderInfo.familiarityPrice}}</text>
+        </view>
+
+        <view class="price-sub-item" wx:if="{{orderInfo.multiVisitPrice > 0}}">
+          <text class="sub-label">一天多次</text>
+          <text class="sub-value">¥{{orderInfo.multiVisitPrice}}</text>
+        </view>
+
+        <view class="price-sub-item" wx:if="{{orderInfo.couponDiscount > 0}}">
+          <text class="sub-label">优惠券</text>
+          <text class="sub-value discount">-¥{{orderInfo.couponDiscount}}</text>
+        </view>
+
+        <view class="price-item total">
+          <text class="label">实付金额</text>
+          <text class="value">¥{{orderInfo.totalPrice || orderInfo.totalAmount || 0}}</text>
+        </view>
+      </view>
+
+      <view class="info-card">
+        <view class="card-header">
+          <text class="card-title">支付信息</text>
+        </view>
+        <view class="info-item">
+          <text class="label">支付方式</text>
+          <text class="value">微信支付</text>
+        </view>
+        <view class="info-item">
+          <text class="label">支付状态</text>
+          <text class="value {{orderInfo.paymentStatus === 'paid' ? 'paid-status' : 'unpaid-status'}}">{{orderInfo.paymentStatus === 'paid' ? '已支付' : orderInfo.paymentStatus === 'paying' ? '支付中' : '待支付'}}</text>
+        </view>
+        <view class="info-item" wx:if="{{orderInfo.createdAt}}">
+          <text class="label">下单时间</text>
+          <text class="value">{{orderInfo.createdAt}}</text>
+        </view>
+      </view>
+
+      <view class="action-area" wx:if="{{orderInfo.status === 'pending_payment'}}">
+        <view class="action-btn cancel-btn" bindtap="onCancelOrder">取消订单</view>
+        <view class="action-btn pay-btn {{isPaying ? 'pay-btn-disabled' : ''}}" bindtap="onGoPay">{{isPaying ? '支付中...' : '去支付'}}</view>
+      </view>
+
+      <view class="action-area" wx:if="{{orderInfo.status === 'confirmed'}}">
+        <view class="action-btn cancel-btn" bindtap="onCancelOrder">取消订单</view>
+      </view>
+
+      <view class="content-bottom-space"></view>
+    </block>
+
+    <block wx:elif="{{!isLoading}}">
+      <view class="empty-state">
+        <text class="empty-icon">📋</text>
+        <text class="empty-text">订单信息加载失败</text>
+        <view class="retry-btn" bindtap="_fetchOrderStatus">重新加载</view>
+      </view>
+    </block>
+  </view>
+</view>

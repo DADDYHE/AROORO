@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "服务详情",
+  "navigationBarTextStyle": "black",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "backgroundColor": "#F5F5F7",
+  "enablePullDownRefresh": false
+}

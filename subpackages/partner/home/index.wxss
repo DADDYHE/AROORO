@@ -1,0 +1,354 @@
+.gallery-container {
+  min-height: 100vh;
+  background-color: #F5F5F7;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.gallery-header {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  background: #FFFFFF;
+  animation: fadeUp 0.6s ease-out;
+  padding-bottom: 20rpx;
+}
+
+.brand-block {
+  padding: 80rpx 48rpx 64rpx;
+  position: relative;
+}
+
+.brand-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300rpx;
+  height: 300rpx;
+  background: radial-gradient(circle, rgba(78, 205, 196, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.brand-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 48rpx;
+  width: 48rpx;
+  height: 6rpx;
+  background: linear-gradient(90deg, #4ECDC4 0%, #2AB7A9 100%);
+  border-radius: 0 0 4rpx 4rpx;
+  animation: slideDown 0.5s ease-out;
+}
+
+.brand-main {
+  position: relative;
+  margin-bottom: 24rpx;
+}
+
+.brand-text {
+  font-size: 64rpx;
+  font-weight: 300;
+  color: #1D1D1F;
+  letter-spacing: 12rpx;
+  display: block;
+  line-height: 1;
+}
+
+.brand-meta {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.brand-meta-line {
+  width: 40rpx;
+  height: 2rpx;
+  background: #E5E5EA;
+  position: relative;
+}
+
+.brand-meta-line::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -4rpx;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  background: #4ECDC4;
+}
+
+.brand-subtitle {
+  font-size: 22rpx;
+  color: #8E8E93;
+  letter-spacing: 8rpx;
+  font-weight: 400;
+}
+
+.gallery-hall {
+  padding: 32rpx;
+  animation: fadeUp 0.6s ease-out 0.2s both;
+}
+
+.gallery-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  overflow: hidden;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.card-accent {
+  width: 3rpx;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: linear-gradient(180deg, #4ECDC4 0%, #2AB7A9 100%);
+}
+
+.income-accent {
+  background: linear-gradient(180deg, #4ECDC4 0%, #34C759 100%);
+}
+
+.card-body {
+  position: relative;
+  padding: 36rpx;
+}
+
+.pending-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #1D1D1F;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.pending-desc {
+  font-size: 24rpx;
+  color: #8E8E93;
+  display: block;
+  margin-bottom: 28rpx;
+}
+
+.pending-btn {
+  display: inline-flex;
+  padding: 16rpx 40rpx;
+  background: linear-gradient(135deg, #4ECDC4 0%, #2AB7A9 100%);
+  border-radius: 16rpx;
+}
+
+.pending-btn-text {
+  font-size: 24rpx;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+
+.income-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.income-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.income-value {
+  font-size: 40rpx;
+  font-weight: 300;
+  color: #1D1D1F;
+  letter-spacing: 2rpx;
+}
+
+.income-label {
+  font-size: 20rpx;
+  color: #8E8E93;
+  letter-spacing: 4rpx;
+}
+
+.income-divider {
+  width: 1rpx;
+  height: 60rpx;
+  background: #E5E5EA;
+}
+
+.gallery-entrance {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin: 32rpx 0 24rpx;
+}
+
+.entrance-line {
+  width: 40rpx;
+  height: 2rpx;
+  background: #C7C7CC;
+}
+
+.entrance-label {
+  font-size: 22rpx;
+  color: #8E8E93;
+  letter-spacing: 8rpx;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+}
+
+.module-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx 28rpx;
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.module-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3rpx;
+  background: linear-gradient(90deg, #4ECDC4 0%, #2AB7A9 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.module-card:active::before {
+  opacity: 1;
+}
+
+.module-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8rpx;
+}
+
+.module-icon-activity {
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(78, 205, 196, 0.05) 100%);
+}
+
+.module-icon-hosting {
+  background: linear-gradient(135deg, rgba(255, 149, 0, 0.15) 0%, rgba(255, 149, 0, 0.05) 100%);
+}
+
+.module-icon-feeding {
+  background: linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(52, 199, 89, 0.05) 100%);
+}
+
+.module-icon-income {
+  background: linear-gradient(135deg, rgba(175, 82, 222, 0.15) 0%, rgba(175, 82, 222, 0.05) 100%);
+}
+
+.module-icon-referral {
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.15) 0%, rgba(0, 122, 255, 0.05) 100%);
+}
+
+.module-icon-application {
+  background: linear-gradient(135deg, rgba(255, 59, 48, 0.15) 0%, rgba(255, 59, 48, 0.05) 100%);
+}
+
+.module-icon::after {
+  font-size: 28rpx;
+}
+
+.module-icon-activity::after {
+  content: '\1F3AA';
+}
+
+.module-icon-hosting::after {
+  content: '\1F3E0';
+}
+
+.module-icon-feeding::after {
+  content: '\1F43E';
+}
+
+.module-icon-income::after {
+  content: '\1F4B0';
+}
+
+.module-icon-referral::after {
+  content: '\1F465';
+}
+
+.module-icon-application::after {
+  content: '\1F4CB';
+}
+
+.module-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #1D1D1F;
+}
+
+.module-desc {
+  font-size: 20rpx;
+  color: #8E8E93;
+}
+
+.loading-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F5F5F7;
+}
+
+.loading-spinner {
+  width: 80rpx;
+  height: 80rpx;
+  position: relative;
+}
+
+.spinner-outer {
+  width: 80rpx;
+  height: 80rpx;
+  border: 3rpx solid #E5E5EA;
+  border-top-color: #4ECDC4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.spinner-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8rpx;
+  height: 8rpx;
+  background: #4ECDC4;
+  border-radius: 50%;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

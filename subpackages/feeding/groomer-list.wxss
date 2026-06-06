@@ -1,0 +1,94 @@
+.page-container {
+  min-height: 100vh;
+  background: #f5f5f7;
+  padding: 24rpx;
+  padding-bottom: 120rpx;
+}
+
+.groomer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.groomer-card {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.groomer-card:active {
+  transform: scale(0.98);
+}
+
+.groomer-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #f0f0f0;
+}
+
+.groomer-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.groomer-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.groomer-price {
+  font-size: 24rpx;
+  color: #1d1d1f;
+  font-weight: 600;
+}
+
+.groomer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-top: 4rpx;
+}
+
+.tag {
+  font-size: 20rpx;
+  padding: 2rpx 12rpx;
+  background: #f0faf9;
+  color: #4ECDC4;
+  border-radius: 6rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 160rpx 0;
+  gap: 16rpx;
+}
+
+.empty-icon {
+  font-size: 64rpx;
+}
+
+.empty-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.loading-more {
+  text-align: center;
+  padding: 40rpx 0;
+  color: #999;
+  font-size: 24rpx;
+}

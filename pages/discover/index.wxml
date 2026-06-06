@@ -1,0 +1,94 @@
+<view class="tuan-page">
+  <view class="tuan-header">
+    <view class="brand-accent-bar"></view>
+    <view class="brand-block">
+      <view class="brand-main">
+        <text class="tuan-title">宠团团</text>
+      </view>
+      <view class="brand-meta">
+        <view class="brand-meta-line"></view>
+        <text class="tuan-subtitle">超值宠物好物，限时团购</text>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view class="tuan-list" scroll-y="true" bindscrolltolower="onReachBottom" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" bindrefresherrefresh="onPullDownRefresh">
+    <view class="tuan-list-inner">
+      <view class="deal-card" wx:for="{{dealList}}" wx:key="_id">
+        <view class="deal-top" data-id="{{item._id}}" bindtap="onDealTap">
+          <view class="deal-title-row">
+            <text class="deal-name">{{item.title}}</text>
+          </view>
+          <view class="deal-price-info" wx:if="{{item.products.length > 0}}">
+            <text class="deal-price-symbol">¥</text>
+            <text class="deal-price">{{item.minPrice || 0}}</text>
+            <text class="deal-price-from">起</text>
+            <text class="deal-price-original" wx:if="{{item.products[0].originalPrice}}">¥{{item.products[0].originalPrice}}</text>
+            <text class="deal-tag tag-hot" wx:if="{{item.totalOrders >= 10}}">热卖{{item.totalOrders}}单</text>
+          </view>
+        </view>
+
+        <view class="deal-images" data-id="{{item._id}}" bindtap="onDealTap">
+          <image class="deal-thumb" wx:if="{{item.coverUrl}}" src="{{item.coverUrl}}" mode="aspectFill" lazy-load="{{true}}" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="dealList[{{index}}].coverUrl" />
+          <image class="deal-thumb" wx:if="{{item.images.length >= 1}}" src="{{item.images[0]}}" mode="aspectFill" lazy-load="{{true}}" binderror="onCloudImageError" data-src="{{item.images[0]}}" data-path="dealList[{{index}}].images[0]" />
+          <image class="deal-thumb" wx:if="{{item.images.length >= 2}}" src="{{item.images[1]}}" mode="aspectFill" lazy-load="{{true}}" binderror="onCloudImageError" data-src="{{item.images[1]}}" data-path="dealList[{{index}}].images[1]" />
+          <view class="deal-thumb deal-thumb-more" wx:if="{{item.products.length > 3}}">
+            <text class="thumb-more-text">+{{item.products.length - 3}}</text>
+          </view>
+        </view>
+
+        <view class="deal-actions">
+          <button class="deal-action-btn btn-share" open-type="share" data-id="{{item._id}}" data-title="{{item.title}}">
+            <text class="action-icon">🔗</text>
+            <text class="action-text">分享</text>
+          </button>
+          <view class="deal-action-btn btn-join" data-id="{{item._id}}" bindtap="onDealTap">
+            <text class="action-text-join">去跟团</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="tuan-loading" wx:if="{{loading}}">加载中...</view>
+      <view class="tuan-no-more" wx:if="{{!hasMore && dealList.length > 0}}">没有更多了</view>
+      <view class="tuan-empty" wx:if="{{!loading && dealList.length === 0}}">
+        <text class="empty-icon">🎁</text>
+        <text class="empty-text">暂无团购活动</text>
+        <text class="empty-hint">敬请期待更多超值好物</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 优惠券弹窗 -->
+  <view class="coupon-popup-mask" wx:if="{{popupCoupon}}" bindtap="onClosePopupCoupon">
+    <view class="coupon-popup" catchtap="">
+      <view class="popup-close" bindtap="onClosePopupCoupon">✕</view>
+      <view class="popup-header">
+        <text class="popup-title">专属优惠</text>
+        <text class="popup-subtitle">限时福利，立即领取</text>
+      </view>
+      <view class="popup-coupon-card" style="--accent: {{popupCoupon.accentColor}}">
+        <view class="popup-coupon-ribbon"></view>
+        <view class="popup-coupon-body">
+          <view class="popup-coupon-main">
+            <view class="popup-coupon-value">
+              <block wx:if="{{popupCoupon.type === 'discount'}}">
+                <text class="popup-coupon-num">{{popupCoupon.rules.discountRate * 100}}</text>
+                <text class="popup-coupon-unit">折</text>
+              </block>
+              <block wx:else>
+                <text class="popup-coupon-unit">¥</text>
+                <text class="popup-coupon-num">{{popupCoupon.rules.reduceAmount || 0}}</text>
+              </block>
+            </view>
+            <view class="popup-coupon-threshold" wx:if="{{popupCoupon.rules.threshold > 0}}">满{{popupCoupon.rules.threshold}}元可用</view>
+            <view class="popup-coupon-threshold" wx:else>无门槛</view>
+          </view>
+          <view class="popup-coupon-info">
+            <text class="popup-coupon-name">{{popupCoupon.name}}</text>
+          </view>
+        </view>
+      </view>
+      <button class="popup-claim-btn" loading="{{popupClaiming}}" bindtap="onClaimPopupCoupon">立即领取</button>
+    </view>
+  </view>
+</view>

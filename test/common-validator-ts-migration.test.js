@@ -1,0 +1,133 @@
+/**
+ * Sprint 14 - validator.js → .ts 迁移验证测试
+ */
+
+const fs = require('fs')
+const path = require('path')
+
+const COMMON = path.resolve(__dirname, '..', 'cloudfunctions', 'common')
+
+describe('Sprint 14: validator.js → .ts 迁移', () => {
+  test('validator.ts 源文件应存在', () => {
+    expect(fs.existsSync(path.join(COMMON, 'validator.ts'))).toBe(true)
+  })
+
+  test('编译产物 validator.js 应存在', () => {
+    expect(fs.existsSync(path.join(COMMON, 'validator.js'))).toBe(true)
+  })
+
+  test('类型声明 validator.d.ts 应存在', () => {
+    expect(fs.existsSync(path.join(COMMON, 'validator.d.ts'))).toBe(true)
+  })
+
+  test('validator.js 顶部应有 eslint-disable 标记（tsc 产物）', () => {
+    const js = fs.readFileSync(path.join(COMMON, 'validator.js'), 'utf8')
+    expect(js.startsWith('/* eslint-disable')).toBe(true)
+  })
+
+  test('编译后的 .js 仍能正确导出所有公共 API', () => {
+    const api = require(path.join(COMMON, 'validator.js'))
+    expect(typeof api.validate).toBe('function')
+    expect(typeof api.ValidationError).toBe('function')
+    expect(typeof api.filterFields).toBe('function')
+    expect(typeof api.FIELD_WHITELISTS).toBe('object')
+  })
+
+  test('.d.ts 应包含核心导出', () => {
+    const dts = fs.readFileSync(path.join(COMMON, 'validator.d.ts'), 'utf8')
+    expect(dts).toContain('validate')
+    expect(dts).toContain('ValidationError')
+    expect(dts).toContain('filterFields')
+    expect(dts).toContain('FIELD_WHITELISTS')
+    expect(dts).toContain('FieldRule')
+    expect(dts).toContain('ValidationSchema')
+  })
+
+  test('tsconfig.common.json 应包含 validator.ts', () => {
+    const cfg = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '..', 'tsconfig.common.json'), 'utf8')
+    )
+    expect(cfg.include).toContain('cloudfunctions/common/validator.ts')
+  })
+
+  test('build:common 应处理 validator.js', () => {
+    const buildScript = fs.readFileSync(
+      path.resolve(__dirname, '..', 'scripts', 'build-common.js'),
+      'utf8'
+    )
+    expect(buildScript).toContain("'validator.js'")
+  })
+
+  test('FIELD_WHITELISTS 应包含 7 个业务域', () => {
+    const { FIELD_WHITELISTS } = require(path.join(COMMON, 'validator.js'))
+    expect(Object.keys(FIELD_WHITELISTS).sort()).toEqual(
+      ['activity', 'feeder', 'hostBasic', 'hostDefault', 'pet', 'product', 'user']
+    )
+    expect(FIELD_WHITELISTS.user).toContain('nickName')
+    expect(FIELD_WHITELISTS.activity).toContain('title')
+  })
+
+  test('validate 缺必填抛 BusinessError(MISSING_REQUIRED)', () => {
+    const { validate } = require(path.join(COMMON, 'validator.js'))
+    const { isBusinessError } = require(path.join(COMMON, 'errors.js'))
+    try {
+      validate({ name: { required: true, type: 'string' } }, {})
+    } catch (e) {
+      expect(isBusinessError(e)).toBe(true)
+      expect(e.code).toBe('MISSING_REQUIRED')
+    }
+  })
+
+  test('validate 类型错误抛 ValidationError', () => {
+    const { validate, ValidationError } = require(path.join(COMMON, 'validator.js'))
+    try {
+      validate({ age: { type: 'number' } }, { age: 'abc' })
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError)
+      expect(e.name).toBe('ValidationError')
+    }
+  })
+
+  test('validate 数字 min/max', () => {
+    const { validate } = require(path.join(COMMON, 'validator.js'))
+    expect(() => validate({ age: { type: 'number', min: 0, max: 120 } }, { age: 30 })).not.toThrow()
+    expect(() => validate({ age: { type: 'number', min: 0, max: 120 } }, { age: 200 })).toThrow()
+    expect(() => validate({ age: { type: 'number', min: 0, max: 120 } }, { age: -1 })).toThrow()
+  })
+
+  test('validate 字符串 min/max（长度）', () => {
+    const { validate } = require(path.join(COMMON, 'validator.js'))
+    expect(() => validate({ name: { type: 'string', min: 2, max: 10 } }, { name: 'foo' })).not.toThrow()
+    expect(() => validate({ name: { type: 'string', min: 2, max: 10 } }, { name: 'a' })).toThrow()
+    expect(() => validate({ name: { type: 'string', min: 2, max: 10 } }, { name: 'abcdefghijk' })).toThrow()
+  })
+
+  test('validate enum', () => {
+    const { validate } = require(path.join(COMMON, 'validator.js'))
+    expect(() => validate({ role: { type: 'string', enum: ['admin', 'user'] } }, { role: 'admin' })).not.toThrow()
+    expect(() => validate({ role: { type: 'string', enum: ['admin', 'user'] } }, { role: 'guest' })).toThrow()
+  })
+
+  test('validate data 非对象应抛 INVALID_PARAMS', () => {
+    const { validate } = require(path.join(COMMON, 'validator.js'))
+    const { isBusinessError } = require(path.join(COMMON, 'errors.js'))
+    try {
+      validate({}, null)
+    } catch (e) {
+      expect(isBusinessError(e)).toBe(true)
+      expect(e.code).toBe('INVALID_PARAMS')
+    }
+  })
+
+  test('filterFields 白名单过滤', () => {
+    const { filterFields } = require(path.join(COMMON, 'validator.js'))
+    const filtered = filterFields(['name', 'age'], { name: 'foo', age: 30, extra: 'x' })
+    expect(filtered).toEqual({ name: 'foo', age: 30 })
+  })
+
+  test('filterFields 缺字段不报错', () => {
+    const { filterFields } = require(path.join(COMMON, 'validator.js'))
+    const filtered = filterFields(['name', 'age'], { name: 'foo' })
+    expect(filtered).toEqual({ name: 'foo' })
+  })
+})

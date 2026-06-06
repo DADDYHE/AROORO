@@ -1,0 +1,127 @@
+<view class="page-container" wx:if="{{product}}">
+  <!-- 商品图片画廊 -->
+  <view class="image-gallery">
+    <swiper class="gallery-swiper" current="{{currentImageIndex}}" bindchange="onImageChange">
+      <swiper-item wx:for="{{product.images || [product.coverUrl || product.coverImage]}}" wx:key="index">
+        <image class="gallery-image" src="{{item}}" mode="aspectFill" lazy-load data-url="{{item}}" bindtap="onPreviewGalleryImage" binderror="onCloudImageError" data-src="{{item}}" data-path="product.images[{{index}}]" />
+      </swiper-item>
+    </swiper>
+    <view class="gallery-indicator" wx:if="{{product.images.length > 1}}">
+      <view wx:for="{{product.images}}" wx:key="index"
+        class="indicator-dot {{currentImageIndex === index ? 'active' : ''}}"></view>
+    </view>
+    <view class="gallery-badge">
+      <text class="badge-tag on_sale">在售</text>
+      <text class="badge-tag featured" wx:if="{{product.isFeatured}}">推荐</text>
+    </view>
+    <view class="gallery-actions">
+      <view class="gallery-action-btn" bindtap="onShare">
+        <image class="gallery-action-icon" src="{{iconShare}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconShare}}" data-path="iconShare" />
+      </view>
+    </view>
+  </view>
+
+  <view class="page-content">
+    <!-- 商品信息卡片 -->
+    <view class="info-card card-animate card-animate-1">
+      <text class="product-name">{{product.name}}</text>
+      <text class="product-subtitle" wx:if="{{product.subTitle}}">{{product.subTitle}}</text>
+      <view class="price-section">
+        <text class="current-price">{{displayPrice}}</text>
+        <text class="original-price" wx:if="{{displayOriginalPrice}}">{{displayOriginalPrice}}</text>
+        <text class="discount-tag" wx:if="{{discount > 0}}">{{discount}}% OFF</text>
+      </view>
+      <view class="meta-row">
+        <text class="meta-item">已售 <text class="value">{{product.soldCount || 0}}</text></text>
+        <text class="meta-item">库存 <text class="value">{{product.totalStock || product.stock || 0}}</text></text>
+      </view>
+    </view>
+
+    <!-- 商品详情卡片 -->
+    <view class="info-card card-animate card-animate-2">
+      <text class="section-label">商品详情</text>
+      <text class="description-text" wx:if="{{product.description}}">{{product.description}}</text>
+      <text class="description-text" wx:else>暂无详细描述</text>
+      <view class="detail-images" wx:if="{{product.detailImages && product.detailImages.length > 0}}">
+        <image wx:for="{{product.detailImages}}" wx:key="index"
+          class="detail-image" src="{{item}}" mode="widthFix" lazy-load data-url="{{item}}" bindtap="onPreviewDetailImage" binderror="onCloudImageError" data-src="{{item}}" data-path="product.detailImages[{{index}}]" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="bar-actions">
+      <view class="bar-action-item" bindtap="onCustomerService">
+        <image class="bar-action-icon-img" src="{{iconService}}" mode="aspectFit" />
+        <text class="bar-action-text">客服</text>
+      </view>
+      <view class="bar-action-item" bindtap="onOpenCart">
+        <image class="bar-action-icon-img" src="{{iconShoppingCart}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconShoppingCart}}" data-path="iconShoppingCart" />
+        <text class="bar-action-text">购物车</text>
+        <view class="cart-badge" wx:if="{{cartCount > 0}}">{{cartCount > 99 ? '99+' : cartCount}}</view>
+      </view>
+    </view>
+    <view class="buy-buttons">
+      <view class="cart-btn" bindtap="onAddToCart">加入购物车</view>
+      <view class="buy-btn" bindtap="onBuyNow">立即购买</view>
+    </view>
+  </view>
+</view>
+
+<!-- 规格选择弹窗 -->
+<view class="sku-popup-mask {{skuPopupVisible ? 'show' : ''}}" bindtap="onCloseSkuPopup"></view>
+<view class="sku-popup {{skuPopupVisible ? 'show' : ''}}">
+  <view class="sku-popup-header">
+    <image class="sku-popup-thumb" src="{{skuPopupImage || product.coverUrl || product.coverImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage || product.coverUrl || product.coverImage}}" data-path="product.coverUrl" />
+    <view class="sku-popup-info">
+      <text class="sku-popup-price">{{skuPopupPrice}}</text>
+      <text class="sku-popup-stock">库存: {{skuPopupStock}}件</text>
+      <text class="sku-popup-selected" wx:if="{{selectedSkuText}}">已选: {{selectedSkuText}}</text>
+    </view>
+    <view class="sku-popup-close" bindtap="onCloseSkuPopup">✕</view>
+  </view>
+
+  <view class="sku-popup-body">
+    <view class="sku-popup-body-inner">
+      <view class="sku-group" wx:for="{{popupSpecGroups}}" wx:key="specId">
+        <text class="sku-group-label">{{item.name}}</text>
+        <view class="sku-options">
+          <view wx:for="{{item.values}}" wx:for-item="val" wx:key="*this"
+            class="sku-option {{item.selectedValue === val ? 'selected' : ''}} {{item.disabledValues && item.disabledValues[val] ? 'disabled' : ''}}"
+            data-spec-id="{{item.specId}}" data-value="{{val}}" bindtap="onPopupSelectSpec">
+            <text class="sku-option-name">{{val}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="sku-quantity">
+        <text class="sku-group-label">数量</text>
+        <view class="quantity-control">
+          <view class="quantity-btn {{quantity <= 1 ? 'disabled' : ''}}" bindtap="onChangeQuantity" data-type="minus">−</view>
+          <text class="quantity-value">{{quantity}}</text>
+          <view class="quantity-btn" bindtap="onChangeQuantity" data-type="plus">+</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="sku-popup-footer">
+    <view class="sku-confirm-btn {{!allSpecsSelected ? 'disabled' : ''}}" bindtap="onSkuConfirm">
+      {{!allSpecsSelected ? '请选择完整规格' : (skuPopupMode === 'cart' ? '加入购物车' : '立即购买')}}
+    </view>
+  </view>
+</view>
+
+<!-- 加载状态 -->
+<view class="loading-container" wx:if="{{isLoading}}">
+  <view class="loading-spinner"></view>
+  <text>LOADING</text>
+</view>
+
+<!-- 错误状态 -->
+<view class="error-container" wx:if="{{error}}">
+  <text class="error-icon">◇</text>
+  <text class="error-text">{{error}}</text>
+  <view class="retry-btn" bindtap="onRetry">RETRY</view>
+</view>

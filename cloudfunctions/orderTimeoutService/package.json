@@ -1,0 +1,9 @@
+{
+  "name": "orderTimeoutService",
+  "version": "1.0.0",
+  "description": "订单超时自动取消服务",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

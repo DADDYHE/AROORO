@@ -1,0 +1,9 @@
+{
+  "name": "couponExpiryCheck",
+  "version": "1.0.0",
+  "description": "优惠券过期检查定时任务",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

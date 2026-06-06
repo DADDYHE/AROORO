@@ -1,0 +1,70 @@
+module.exports = [
+  { key: 'mainfood', label: '主粮', subcats: [
+    { key: 'dogfood', label: '犬主粮' },
+    { key: 'catfood', label: '猫主粮' },
+  ]},
+  { key: 'snack', label: '零食', subcats: [
+    { key: 'dogsnack', label: '犬零食' },
+    { key: 'catsnack', label: '猫零食' },
+  ]},
+  { key: 'health', label: '保健', subcats: [
+    { key: 'digestion', label: '肠胃调理' },
+    { key: 'bone', label: '健骨补钙' },
+    { key: 'tearstain', label: '泪痕调理' },
+    { key: 'coat', label: '美毛护肤' },
+    { key: 'stress', label: '应激舒缓' },
+    { key: 'heart', label: '心脏泌尿' },
+    { key: 'nutrition', label: '营养补充' },
+    { key: 'growth', label: '成长发育' },
+  ]},
+  { key: 'toy', label: '玩具', subcats: [
+    { key: 'dogtoy', label: '犬玩具' },
+    { key: 'cattoy', label: '猫玩具' },
+  ]},
+  { key: 'leash', label: '牵引', subcats: [
+    { key: 'leashset', label: '牵引套装' },
+    { key: 'collar', label: '项圈' },
+    { key: 'harness', label: '胸背' },
+    { key: 'leashrope', label: '牵引绳' },
+  ]},
+  { key: 'clean', label: '清洁', subcats: [
+    { key: 'deodorize', label: '环境除臭' },
+    { key: 'wipes', label: '浴巾湿巾' },
+    { key: 'tools', label: '剪刀梳子' },
+    { key: 'pads', label: '宠物尿垫' },
+    { key: 'shampoo', label: '香波护毛' },
+    { key: 'ear', label: '耳道清洁' },
+    { key: 'oral', label: '口腔护理' },
+    { key: 'eye', label: '眼部清洁' },
+    { key: 'mite', label: '抑菌除螨' },
+  ]},
+  { key: 'bed', label: '窝具', subcats: [
+    { key: 'cage', label: '笼子围栏' },
+    { key: 'winter', label: '秋冬窝垫' },
+    { key: 'cooling', label: '冰垫冰窝' },
+    { key: 'allseason', label: '四季通用' },
+  ]},
+  { key: 'outdoor', label: '户外', subcats: [
+    { key: 'carrier', label: '航空箱' },
+    { key: 'travel', label: '外出包' },
+    { key: 'poopbag', label: '拾便器' },
+    { key: 'muzzle', label: '嘴套' },
+    { key: 'waterbowl', label: '便携水碗' },
+    { key: 'stroller', label: '宠物推车' },
+  ]},
+  { key: 'tableware', label: '食具', subcats: [
+    { key: 'ceramic', label: '陶瓷' },
+    { key: 'stainless', label: '不锈钢' },
+    { key: 'smart', label: '智能产品' },
+    { key: 'other', label: '其他' },
+  ]},
+  { key: 'clothing', label: '服饰', subcats: [
+    { key: 'apparel', label: '服装' },
+    { key: 'accessories', label: '饰品' },
+    { key: 'shoes', label: '鞋子' },
+  ]},
+  { key: 'merch', label: '周边', subcats: [
+    { key: 'memorial', label: '寄思物品' },
+    { key: 'merchandise', label: '萌宠周边' },
+  ]},
+]

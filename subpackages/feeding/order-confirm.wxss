@@ -1,0 +1,2 @@
+.page-container { min-height: 100vh; background: #f5f5f7; padding: 32rpx; }
+.picker-val.placeholder { color: #999; }

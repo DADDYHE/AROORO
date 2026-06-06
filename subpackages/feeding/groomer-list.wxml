@@ -1,0 +1,24 @@
+<view class="page-container">
+  <view class="groomer-list" wx:if="{{groomers.length > 0}}">
+    <view wx:for="{{groomers}}" wx:key="_id" class="groomer-card" data-id="{{item._id}}" bindtap="onGroomerTap">
+      <image lazy-load class="groomer-avatar" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="groomers[{{index}}].avatarUrl" />
+      <view class="groomer-info">
+        <text class="groomer-name">{{item.displayName}}</text>
+        <text class="groomer-price">{{item.priceText}}</text>
+        <view class="groomer-tags" wx:if="{{item.address}}">
+          <text class="tag">{{item.address}}</text>
+        </view>
+        <view class="groomer-tags" wx:if="{{item.serviceTags && item.serviceTags.length > 0}}">
+          <text wx:for="{{item.serviceTags}}" wx:for-item="tag" wx:key="*this" class="tag">{{tag}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{groomers.length === 0 && !isLoading}}">
+    <text class="empty-icon">🛁</text>
+    <text class="empty-text">暂无洗护服务师</text>
+  </view>
+
+  <view class="loading-more" wx:if="{{isLoading}}"><text>加载中...</text></view>
+</view>

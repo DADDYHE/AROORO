@@ -1,0 +1,89 @@
+<view class="gallery-container">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-spinner">
+      <view class="spinner-outer"></view>
+      <view class="spinner-inner"></view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="gallery-header">
+      <view class="brand-block">
+        <view class="brand-accent-bar"></view>
+        <view class="brand-main">
+          <text class="brand-text">申请状态</text>
+        </view>
+        <view class="brand-meta">
+          <view class="brand-meta-line"></view>
+          <text class="brand-subtitle">合作伙伴审核</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-hall">
+      <view wx:if="{{isPartner}}" class="gallery-card approved-card">
+        <view class="card-accent approved-accent"></view>
+        <view class="card-body">
+          <text class="status-title">已认证合作伙伴</text>
+          <text class="status-desc">您已拥有合作伙伴权限</text>
+        </view>
+      </view>
+
+      <view wx:elif="{{hasPendingApplication}}" class="gallery-card pending-card">
+        <view class="card-accent pending-accent"></view>
+        <view class="card-body">
+          <text class="status-title">审核中</text>
+          <text class="status-desc">您的申请正在审核中，请耐心等待</text>
+          <view wx:if="{{application}}" class="app-info">
+            <view class="info-row">
+              <view class="info-key">提交时间</view>
+              <view class="info-val">{{application.createdAt || '—'}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="gallery-card apply-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <text class="status-title">成为合作伙伴</text>
+          <text class="status-desc">带货赚取收益，共建宠物生态</text>
+          <view class="apply-btn" bindtap="onApplyTap">
+            <text class="apply-btn-text">立即申请</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 弹窗放在 wx:if/wx:else 外面，避免 isLoading 变化时被销毁 -->
+  <view class="modal-mask" wx:if="{{showApplyForm}}" bindtap="onCloseForm">
+    <view class="modal-content" catchtap="noop">
+      <view class="modal-header">
+        <text class="modal-title">申请合作伙伴</text>
+      </view>
+      <view class="modal-body">
+        <view class="form-field">
+          <text class="form-label">真实姓名</text>
+          <input class="form-input" placeholder="请输入真实姓名" value="{{formData.realName}}" bindinput="onInputRealName" />
+        </view>
+        <view class="form-field">
+          <text class="form-label">手机号</text>
+          <input class="form-input" placeholder="请输入手机号" type="number" maxlength="11" value="{{formData.phone}}" bindinput="onInputPhone" />
+        </view>
+        <view class="form-field">
+          <text class="form-label">申请理由</text>
+          <textarea class="form-textarea" placeholder="请简述申请理由" value="{{formData.reason}}" bindinput="onInputReason" maxlength="200" />
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="modal-btn btn-cancel" bindtap="onCloseForm">
+          <text class="modal-btn-text">取消</text>
+        </view>
+        <view class="modal-btn btn-confirm" bindtap="onSubmitApply">
+          <text class="modal-btn-text">提交申请</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,310 @@
+/* AROORO 主样式文件 */
+
+/* 导入设计系统样式 */
+@import './colors.wxss';
+@import './spacing.wxss';
+@import './typography.wxss';
+@import './boarding.wxss';
+@import './activity.wxss';
+@import './mall.wxss';
+@import './feeding.wxss';
+
+/* 全局样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+page {
+  font-family: var(--font-family-text);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  line-height: var(--line-height-relaxed);
+}
+
+/* 通用样式类 */
+
+/* 容器 */
+.container {
+  padding: var(--padding-lg);
+}
+
+.section {
+  margin-bottom: var(--margin-xl);
+}
+
+/* 标题 */
+.heading-1 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xxxl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--margin-md);
+  color: var(--color-text-primary);
+}
+
+.heading-2 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--margin-md);
+  color: var(--color-text-primary);
+}
+
+.heading-3 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  margin-bottom: var(--margin-sm);
+  color: var(--color-text-primary);
+}
+
+.heading-4 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  margin-bottom: var(--margin-xs);
+  color: var(--color-text-primary);
+}
+
+/* 文本 */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+  color: var(--color-text-tertiary);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+/* 按钮 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--padding-md) var(--padding-xl);
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  text-align: center;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: var(--color-text-white);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: var(--color-white);
+  color: var(--color-primary);
+  border: var(--border-width) solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--color-primary-light);
+  color: var(--color-text-white);
+}
+
+.btn-text {
+  background: transparent;
+  color: var(--color-primary);
+  padding: var(--padding-sm) var(--padding-md);
+}
+
+.btn-text:hover {
+  background: var(--color-bg-secondary);
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+/* 卡片 */
+.card {
+  background: var(--color-bg-primary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--padding-lg);
+  margin-bottom: var(--margin-md);
+  transition: all var(--transition-fast);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 输入框 */
+.input {
+  width: 100%;
+  padding: var(--padding-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-family-text);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  transition: all var(--transition-fast);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.1);
+}
+
+.input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* 标签 */
+.tag {
+  display: inline-block;
+  padding: var(--padding-xs) var(--padding-sm);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.tag-primary {
+  background: var(--color-primary-light);
+  color: var(--color-text-white);
+}
+
+.tag-success {
+  background: var(--color-success);
+  color: var(--color-text-white);
+}
+
+.tag-warning {
+  background: var(--color-warning);
+  color: var(--color-text-primary);
+}
+
+.tag-danger {
+  background: var(--color-danger);
+  color: var(--color-text-white);
+}
+
+/* 列表 */
+.list {
+  list-style: none;
+}
+
+.list-item {
+  padding: var(--padding-md) 0;
+  border-bottom: var(--border-width) solid var(--color-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+/* 分隔线 */
+.divider {
+  height: var(--border-width);
+  background: var(--color-border-light);
+  margin: var(--margin-lg) 0;
+}
+
+/* 加载动画 */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--padding-xl);
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 轮播图 */
+.swiper {
+  width: 100%;
+  height: 300rpx;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+.swiper-item {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-secondary);
+}
+
+/* 网格布局 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap-md);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

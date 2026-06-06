@@ -1,0 +1,107 @@
+<view class="page-container">
+  <!-- 顶部品牌栏 -->
+  <view class="page-header">
+    <text class="page-title">宠物活动</text>
+    <text class="page-subtitle">与爱宠一起创造美好回忆</text>
+  </view>
+
+  <!-- 分类标签栏 -->
+  <view class="category-tabs">
+    <view
+      wx:for="{{categories}}"
+      wx:key="key"
+      class="category-tab {{currentCategory === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onCategoryTap"
+    >
+      <text class="category-tab-text">{{item.label}}</text>
+    </view>
+  </view>
+
+  <!-- 活动列表 -->
+  <view class="activity-list" wx:if="{{activities.length > 0}}">
+    <view
+      wx:for="{{activities}}"
+      wx:key="_id"
+      class="activity-card"
+      data-id="{{item._id}}"
+      bindtap="onActivityTap"
+    >
+      <view class="activity-card-background"></view>
+      <view class="activity-card-content">
+        <view class="activity-cover-wrapper">
+          <image lazy-load class="activity-cover" src="{{item.coverUrl || '/images/default-activity.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="activities[{{index}}].coverUrl" />
+        </view>
+        <view class="activity-info">
+          <view class="activity-header-row">
+            <text class="activity-title truncate">{{item.title}}</text>
+            <text class="activity-price {{(item.pricePerPerson > 0 || item.pricePerPet > 0) ? '' : 'free'}}">{{item.priceText}}</text>
+          </view>
+          <view class="activity-meta">
+            <view class="meta-item">
+              <image lazy-load class="meta-icon" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
+              <text class="meta-text">{{item.timeText}}</text>
+            </view>
+            <view class="meta-item meta-item-right">
+              <image lazy-load class="meta-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+              <text class="meta-text">{{item.location}}</text>
+              <view class="activity-participants">
+                <text class="participants-text">{{item.currentParticipants > 0 ? item.currentParticipants : 0}}/{{item.maxParticipants || '不限'}}</text>
+                <view class="participants-progress">
+                  <view class="progress-bar" style="width: {{(item.currentParticipants / item.maxParticipants) * 100}}%"></view>
+                </view>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 群主信息和报名按钮 -->
+          <view class="activity-organizer">
+            <view class="organizer-info">
+            <view class="organizer-avatar-wrap {{item.organizer.hasValidAvatar ? 'has-avatar' : ''}}">
+              <image wx:if="{{item.organizer.hasValidAvatar}}" class="organizer-avatar" src="{{item.organizer.avatar}}" mode="aspectFill" binderror="onAvatarImageError" data-index="{{index}}" />
+              <view wx:else class="organizer-avatar-fallback">
+                <text class="organizer-avatar-letter">{{item.organizer.name}}</text>
+              </view>
+            </view>
+            <text class="organizer-name truncate">{{item.organizer.name}}</text>
+          </view>
+            <view wx:if="{{!item.joined && item.activityStatus === 'upcoming'}}" class="join-button" catchtap="onJoinActivity" data-id="{{item._id}}">
+              <text class="join-button-text">立即报名</text>
+            </view>
+            <view wx:elif="{{!item.joined && item.activityStatus === 'registration_stopped'}}" class="joined-badge stopped-badge">
+              <text class="joined-badge-text">已停止报名</text>
+            </view>
+            <view wx:elif="{{!item.joined && item.activityStatus === 'ended'}}" class="joined-badge ended-badge">
+              <text class="joined-badge-text">已结束</text>
+            </view>
+            <view wx:elif="{{item.joined && item.activityStatus === 'ended'}}" class="joined-badge ended-badge">
+              <text class="joined-badge-text">已结束</text>
+            </view>
+            <view wx:else class="joined-badge">
+              <text class="joined-badge-text">已报名</text>
+            </view>
+          </view>
+        </view>
+        <view class="activity-accent"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{activities.length === 0 && !isLoading}}">
+    <view class="empty-icon">🎉</view>
+    <text class="empty-title">暂无活动</text>
+    <text class="empty-text">精彩活动即将上线，敬请期待</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-more" wx:if="{{isLoading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 我报名的活动提示 -->
+  <view class="joined-hint" wx:if="{{currentCategory === 'joined' && activities.length > 0}}">
+    <text class="hint-text">仅能显示最近6个月我报名的活动</text>
+  </view>
+</view>

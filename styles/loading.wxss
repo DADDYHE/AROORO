@@ -1,0 +1,287 @@
+/**
+ * 加载动画系统样式
+ * 统一风格的加载提示动画样式
+ */
+
+/* ==================== 加载容器 ==================== */
+.loading-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.loading-container.hidden {
+  animation: fadeOut 0.15s ease-out;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+  min-width: 240rpx;
+  min-height: 240rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.2);
+}
+
+/* ==================== 旋转加载器 ==================== */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 80rpx;
+  height: 80rpx;
+  border: 6rpx solid rgba(255, 107, 0, 0.15);
+  border-top-color: #FF6B00;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 24rpx;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== 进度条加载器 ==================== */
+.loading-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8rpx;
+  background-color: rgba(255, 107, 0, 0.2);
+  border-radius: 4rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B00, #FF8C00);
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ==================== 点状加载器 ==================== */
+.loading-dots {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20rpx;
+}
+
+.dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background-color: #FF6B00;
+  margin: 0 8rpx;
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==================== 文字加载器 ==================== */
+.loading-text-only {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ==================== 加载文字 ==================== */
+.loading-content .loading-text {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.5;
+  margin-top: 8rpx;
+}
+
+/* ==================== 动画 ==================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ==================== 变体样式 ==================== */
+
+/* 大号加载器 */
+.loading-spinner.large .spinner {
+  width: 120rpx;
+  height: 120rpx;
+  border-width: 8rpx;
+}
+
+/* 小号加载器 */
+.loading-spinner.small .spinner {
+  width: 48rpx;
+  height: 48rpx;
+  border-width: 4rpx;
+}
+
+/* 彩色加载器 */
+.loading-spinner.colorful .spinner {
+  border-top-color: #FF6B00;
+  border-right-color: #FF8C00;
+  border-bottom-color: #FFA500;
+  border-left-color: #FFC000;
+}
+
+/* 双环加载器 */
+.loading-spinner.double-ring .spinner {
+  border: 6rpx solid rgba(255, 107, 0, 0.15);
+  border-top-color: #FF6B00;
+  border-bottom-color: #FF6B00;
+}
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 375px) {
+  .loading-content {
+    min-width: 200rpx;
+    min-height: 200rpx;
+    padding: 32rpx;
+  }
+  
+  .spinner {
+    width: 64rpx;
+    height: 64rpx;
+  }
+  
+  .loading-text {
+    font-size: 26rpx;
+  }
+}
+
+/* ==================== 深色模式 ==================== */
+.loading-container.dark {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+.loading-container.dark .loading-content {
+  background-color: #1A1A1A;
+  color: #FFFFFF;
+}
+
+.loading-container.dark .loading-text {
+  color: #FFFFFF;
+}
+
+.loading-container.dark .spinner {
+  border-color: rgba(255, 107, 0, 0.3);
+  border-top-color: #FF6B00;
+}
+
+/* ==================== 无障碍 ==================== */
+.loading-container[aria-hidden="true"] {
+  display: none;
+}
+
+/* 减少动画 */
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .dot,
+  .progress-fill::after {
+    animation: none;
+  }
+  
+  .loading-container {
+    animation: none;
+  }
+}

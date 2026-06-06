@@ -1,0 +1,7 @@
+var BASE = 'cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870'
+
+function icon(name) {
+  return BASE + '/icons/' + name + '.svg'
+}
+
+module.exports = { icon: icon }

@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "checkJs": false,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "./cloudfunctions/common",
+    "rootDir": "./cloudfunctions/common",
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": ["cloudfunctions/common/*"]
+    }
+  },
+  "include": [
+    "cloudfunctions/common/errors.ts",
+    "cloudfunctions/common/errors-i18n.ts",
+    "cloudfunctions/common/logger.ts",
+    "cloudfunctions/common/cache.ts",
+    "cloudfunctions/common/state-machine.ts",
+    "cloudfunctions/common/idempotency.ts",
+    "cloudfunctions/common/date-holidays.ts",
+    "cloudfunctions/common/date-range.ts",
+    "cloudfunctions/common/validator.ts",
+    "cloudfunctions/common/risk-control.ts",
+    "cloudfunctions/common/risk-rate-limit.ts",
+    "cloudfunctions/common/rate-limit-store.ts",
+    "cloudfunctions/common/utils.ts",
+    "cloudfunctions/common/auth-middleware.ts",
+    "cloudfunctions/common/permissions.ts",
+    "cloudfunctions/common/normalize.ts",
+    "cloudfunctions/common/query-builders.ts",
+    "cloudfunctions/common/types.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "cloudfunctions/**/node_modules"
+  ]
+}

@@ -1,0 +1,58 @@
+<view class="page-container">
+  <view class="cart-list" wx:if="{{cartItems.length > 0}}">
+    <view class="cart-item {{item._invalid ? 'invalid' : ''}}" wx:for="{{cartItems}}" wx:key="cartItemId">
+      <view class="item-check" bindtap="onToggleCheck" data-id="{{item.cartItemId}}">
+        <view class="check-circle {{item.checked ? 'checked' : ''}} {{item._invalid ? 'disabled' : ''}}">
+          <text wx:if="{{item.checked && !item._invalid}}">✓</text>
+        </view>
+      </view>
+      <image class="item-image" src="{{item.productImage}}" mode="aspectFill" data-id="{{item.productId}}" bindtap="onGoDetail" binderror="onCartImageError" data-index="{{index}}" />
+      <view class="item-info">
+        <text class="item-name">{{item.productName}}</text>
+        <text class="item-sku" wx:if="{{item.skuText}}">{{item.skuText}}</text>
+        <view class="item-bottom">
+          <text class="item-price">¥{{item.price}}</text>
+          <view class="quantity-control" wx:if="{{!item._invalid}}">
+            <view class="qty-btn" data-id="{{item.cartItemId}}" data-action="minus" bindtap="onChangeQuantity">−</view>
+            <text class="qty-value">{{item.quantity}}</text>
+            <view class="qty-btn" data-id="{{item.cartItemId}}" data-action="plus" bindtap="onChangeQuantity">+</view>
+          </view>
+        </view>
+      </view>
+      <view class="item-delete" data-id="{{item.cartItemId}}" bindtap="onDeleteItem">
+        <text>×</text>
+      </view>
+      <view class="invalid-tag" wx:if="{{item._invalid}}">{{item._invalidReason || '已失效'}}</view>
+    </view>
+  </view>
+
+  <view class="clear-invalid" wx:if="{{invalidCount > 0}}" bindtap="onClearInvalid">
+    <text>清除 {{invalidCount}} 件失效商品</text>
+  </view>
+
+  <view class="empty-state" wx:if="{{cartItems.length === 0}}">
+    <text class="empty-icon">🛒</text>
+    <text class="empty-text">购物车是空的</text>
+    <view class="empty-btn" bindtap="onGoShopping">去逛逛</view>
+  </view>
+
+  <view class="bottom-bar" wx:if="{{cartItems.length > 0}}">
+    <view class="bar-left">
+      <view class="check-all" bindtap="onToggleCheckAll">
+        <view class="check-circle {{isAllChecked ? 'checked' : ''}}">
+          <text wx:if="{{isAllChecked}}">✓</text>
+        </view>
+        <text class="check-all-text">全选</text>
+      </view>
+    </view>
+    <view class="bar-right">
+      <view class="total-section">
+        <text class="total-label">合计：</text>
+        <text class="total-price">¥{{totalPrice}}</text>
+      </view>
+      <view class="checkout-btn {{checkedCount === 0 ? 'disabled' : ''}}" bindtap="onCheckout">
+        结算{{checkedCount > 0 ? '(' + checkedCount + ')' : ''}}
+      </view>
+    </view>
+  </view>
+</view>

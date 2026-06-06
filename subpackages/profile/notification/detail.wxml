@@ -1,0 +1,9 @@
+<view class="page-container" wx:if="{{notification}}">
+  <view class="detail-card">
+    <text class="notification-title">{{notification.title}}</text>
+    <text class="notification-date">{{notification.createdAt}}</text>
+  </view>
+  <view class="detail-card">
+    <text class="notification-body">{{notification.body}}</text>
+  </view>
+</view>

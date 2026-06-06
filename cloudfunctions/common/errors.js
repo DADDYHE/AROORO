@@ -1,0 +1,281 @@
+"use strict";
+/**
+ * 业务异常类与错误码字典（TypeScript 源文件 - Sprint 11 迁移）
+ *
+ * 本文件为 source-of-truth，编译产物 cloudfunctions/common/errors.js 仍由 runtime 加载
+ * - 类型声明：errors.d.ts
+ * - 运行代码：errors.js
+ *
+ * 目标：
+ *   1. 替代散落各处的 `error.code = ERROR_CODES.X` 直接赋值
+ *   2. 统一异常类型供 catch 块判定（instanceof BusinessError）
+ *   3. 错误码字典单一来源（与 utils.js 的 ERROR_CODES 保持一致）
+ *   4. 提供完整静态类型守卫，避免下游误用
+ *
+ * 编译方式：
+ *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.common.json
+ *
+ * 与 .d.ts 类型联合方式：
+ *   import type { BusinessErrorCode, ErrorSeverity, BusinessErrorSpec } from './types'
+ *   （types.d.ts 与本文件同目录）
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.withErrorHandling = exports.toResponse = exports.wrapUnknown = exports.isBusinessError = exports.err = exports.BusinessErrors = exports.BusinessError = void 0;
+const utils_1 = require("./utils");
+// =====================================================================
+// BusinessError 类
+// =====================================================================
+/**
+ * 业务异常类
+ * 继承自 Error，携带 code、details、httpStatus、severity 四个扩展字段
+ */
+class BusinessError extends Error {
+    constructor(code, message, details = null, httpStatus = 200) {
+        super(message);
+        this.name = 'BusinessError';
+        this.code = code;
+        this.details = details;
+        this.httpStatus = httpStatus;
+        // 保留正确的 stack
+        if (typeof Error.captureStackTrace === 'function') {
+            Error.captureStackTrace(this, BusinessError);
+        }
+    }
+    /**
+     * 从 code 推断严重级别
+     */
+    get severity() {
+        if (this.code.startsWith('VALIDATION_') || this.code === 'INVALID_PARAMS' || this.code === 'PAYMENT_AMOUNT_MISMATCH') {
+            return 'VALIDATION';
+        }
+        if (this.code.startsWith('AUTH_') || this.code === 'TOKEN_EXPIRED' || this.code === 'TOKEN_INVALID' || this.code === 'WX_LOGIN_FAILED') {
+            return 'AUTH';
+        }
+        if (this.code.startsWith('PERMISSION_') || this.code === 'PARTNER_REQUIRED' || this.code === 'ADMIN_REQUIRED' || this.code === 'SUPER_ADMIN_REQUIRED') {
+            return 'PERMISSION';
+        }
+        if (this.code.endsWith('_NOT_FOUND')) {
+            return 'NOT_FOUND';
+        }
+        if (this.code.startsWith('DATA_') || this.code === 'DB_ERROR' || this.code === 'DUPLICATE_KEY' || this.code === 'DATA_ERROR') {
+            return 'DATA';
+        }
+        if (this.code.startsWith('INTERNAL_')) {
+            return 'SERVER';
+        }
+        return 'BUSINESS';
+    }
+    /**
+     * 序列化为标准 API 响应
+     */
+    toResponse() {
+        return {
+            code: utils_1.ERROR_CODES[this.severity] || utils_1.ERROR_CODES.BUSINESS,
+            message: this.message,
+            data: null,
+            error: {
+                type: this.code,
+                details: this.details,
+            },
+        };
+    }
+}
+exports.BusinessError = BusinessError;
+// =====================================================================
+// 错误码注册表
+// =====================================================================
+/**
+ * 错误码注册表
+ * 每个错误码包含：code（语义名）、message（默认消息）、httpStatus、severity
+ *
+ * 命名规范：<领域>_<动作>_<结果>，如 ORDER_CREATE_FAILED / ORDER_NOT_FOUND
+ */
+exports.BusinessErrors = {
+    // ========== 通用 ==========
+    INVALID_PARAMS: { code: 'INVALID_PARAMS', message: '参数错误', httpStatus: 400, severity: 'VALIDATION' },
+    MISSING_REQUIRED: { code: 'MISSING_REQUIRED', message: '缺少必填参数', httpStatus: 400, severity: 'VALIDATION' },
+    // ========== 鉴权 ==========
+    AUTH_REQUIRED: { code: 'AUTH_REQUIRED', message: '请先登录', httpStatus: 401, severity: 'AUTH' },
+    TOKEN_EXPIRED: { code: 'TOKEN_EXPIRED', message: '登录已过期', httpStatus: 401, severity: 'AUTH' },
+    TOKEN_INVALID: { code: 'TOKEN_INVALID', message: '无效的令牌', httpStatus: 401, severity: 'AUTH' },
+    WX_LOGIN_FAILED: { code: 'WX_LOGIN_FAILED', message: '微信登录失败', httpStatus: 401, severity: 'AUTH' },
+    // ========== 权限 ==========
+    PERMISSION_DENIED: { code: 'PERMISSION_DENIED', message: '无权限操作', httpStatus: 403, severity: 'PERMISSION' },
+    PARTNER_REQUIRED: { code: 'PARTNER_REQUIRED', message: '需要合作伙伴身份', httpStatus: 403, severity: 'PERMISSION' },
+    ADMIN_REQUIRED: { code: 'ADMIN_REQUIRED', message: '需要管理员身份', httpStatus: 403, severity: 'PERMISSION' },
+    SUPER_ADMIN_REQUIRED: { code: 'SUPER_ADMIN_REQUIRED', message: '需要超级管理员权限', httpStatus: 403, severity: 'PERMISSION' },
+    // ========== 数据 / 资源 ==========
+    NOT_FOUND: { code: 'NOT_FOUND', message: '数据不存在', httpStatus: 404, severity: 'NOT_FOUND' },
+    ORDER_NOT_FOUND: { code: 'ORDER_NOT_FOUND', message: '订单不存在', httpStatus: 404, severity: 'NOT_FOUND' },
+    USER_NOT_FOUND: { code: 'USER_NOT_FOUND', message: '用户不存在', httpStatus: 404, severity: 'NOT_FOUND' },
+    HOST_NOT_FOUND: { code: 'HOST_NOT_FOUND', message: '寄养家庭不存在', httpStatus: 404, severity: 'NOT_FOUND' },
+    PET_NOT_FOUND: { code: 'PET_NOT_FOUND', message: '宠物不存在', httpStatus: 404, severity: 'NOT_FOUND' },
+    PRODUCT_NOT_FOUND: { code: 'PRODUCT_NOT_FOUND', message: '商品不存在', httpStatus: 404, severity: 'NOT_FOUND' },
+    COUPON_NOT_FOUND: { code: 'COUPON_NOT_FOUND', message: '优惠券不存在', httpStatus: 404, severity: 'NOT_FOUND' },
+    ACTIVITY_NOT_FOUND: { code: 'ACTIVITY_NOT_FOUND', message: '活动不存在', httpStatus: 404, severity: 'NOT_FOUND' },
+    BANNER_NOT_FOUND: { code: 'BANNER_NOT_FOUND', message: 'Banner 不存在', httpStatus: 404, severity: 'NOT_FOUND' },
+    DUPLICATE_KEY: { code: 'DUPLICATE_KEY', message: '记录已存在', httpStatus: 409, severity: 'DATA' },
+    DB_ERROR: { code: 'DB_ERROR', message: '数据库操作失败', httpStatus: 500, severity: 'DATA' },
+    DATA_ERROR: { code: 'DATA_ERROR', message: '数据处理失败', httpStatus: 500, severity: 'DATA' },
+    // ========== 订单业务 ==========
+    ORDER_CREATE_FAILED: { code: 'ORDER_CREATE_FAILED', message: '创建订单失败', httpStatus: 400, severity: 'BUSINESS' },
+    ORDER_STATUS_INVALID: { code: 'ORDER_STATUS_INVALID', message: '订单状态不允许此操作', httpStatus: 409, severity: 'BUSINESS' },
+    ORDER_ALREADY_PAID: { code: 'ORDER_ALREADY_PAID', message: '订单已支付', httpStatus: 409, severity: 'BUSINESS' },
+    ORDER_ALREADY_REFUNDED: { code: 'ORDER_ALREADY_REFUNDED', message: '订单已退款', httpStatus: 409, severity: 'BUSINESS' },
+    ORDER_TIMEOUT: { code: 'ORDER_TIMEOUT', message: '订单已超时', httpStatus: 410, severity: 'BUSINESS' },
+    REFUND_FAILED: { code: 'REFUND_FAILED', message: '退款失败', httpStatus: 500, severity: 'BUSINESS' },
+    // ========== 支付 ==========
+    PAYMENT_CREATE_FAILED: { code: 'PAYMENT_CREATE_FAILED', message: '创建支付单失败', httpStatus: 500, severity: 'BUSINESS' },
+    PAYMENT_NOTIFY_INVALID: { code: 'PAYMENT_NOTIFY_INVALID', message: '支付回调签名无效', httpStatus: 400, severity: 'BUSINESS' },
+    PAYMENT_AMOUNT_MISMATCH: { code: 'PAYMENT_AMOUNT_MISMATCH', message: '支付金额异常', httpStatus: 400, severity: 'VALIDATION' },
+    WECHAT_API_ERROR: { code: 'WECHAT_API_ERROR', message: '微信接口错误', httpStatus: 502, severity: 'BUSINESS' },
+    // ========== 加密 / 安全 ==========
+    ENCRYPT_FAILED: { code: 'ENCRYPT_FAILED', message: '加密失败', httpStatus: 500, severity: 'DATA' },
+    DECRYPT_FAILED: { code: 'DECRYPT_FAILED', message: '解密失败', httpStatus: 500, severity: 'DATA' },
+    INVALID_PAYLOAD: { code: 'INVALID_PAYLOAD', message: '载荷数据无效', httpStatus: 400, severity: 'VALIDATION' },
+    // ========== 系统 ==========
+    INTERNAL_ERROR: { code: 'INTERNAL_ERROR', message: '服务内部错误', httpStatus: 500, severity: 'SERVER' },
+    SERVICE_UNAVAILABLE: { code: 'SERVICE_UNAVAILABLE', message: '服务暂不可用', httpStatus: 503, severity: 'SERVER' },
+    RATE_LIMITED: { code: 'RATE_LIMITED', message: '请求过于频繁', httpStatus: 429, severity: 'BUSINESS' },
+    IDEMPOTENT_REPLAY: { code: 'IDEMPOTENT_REPLAY', message: '重复请求已合并', httpStatus: 200, severity: 'BUSINESS' },
+    UNKNOWN_ACTION: { code: 'UNKNOWN_ACTION', message: '未知的操作', httpStatus: 400, severity: 'VALIDATION' },
+    // ========== 业务扩展（按需补充） ==========
+    STATE_INVALID: { code: 'STATE_INVALID', message: '状态机非法转移', httpStatus: 409, severity: 'BUSINESS' },
+    CATEGORY_HAS_PRODUCTS: { code: 'CATEGORY_HAS_PRODUCTS', message: '该分类下存在商品，无法删除', httpStatus: 409, severity: 'BUSINESS' },
+    COUPON_LIMIT_REACHED: { code: 'COUPON_LIMIT_REACHED', message: '已达到领取上限', httpStatus: 409, severity: 'BUSINESS' },
+    COUPON_STATUS_INVALID: { code: 'COUPON_STATUS_INVALID', message: '优惠券状态不允许此操作', httpStatus: 409, severity: 'BUSINESS' },
+    STOCK_INSUFFICIENT: { code: 'STOCK_INSUFFICIENT', message: '库存不足', httpStatus: 409, severity: 'BUSINESS' },
+    ACTIVITY_HAS_REGISTRATIONS: { code: 'ACTIVITY_HAS_REGISTRATIONS', message: '活动已有报名，无法删除', httpStatus: 409, severity: 'BUSINESS' },
+    BUSINESS_ERROR: { code: 'BUSINESS_ERROR', message: '业务校验失败', httpStatus: 400, severity: 'BUSINESS' },
+    // ========== 风控（Sprint 14） ==========
+    // 语义：评价 / 退款 / 提交表单等场景触发的风控决策
+    //  HTTP 状态统一 200（业务已受理），由 code 类型区分
+    //  - RISK_REJECT：拒绝写入，立即返回错误
+    //  - RISK_PENDING：标记为待人工审核，数据已写入但前端需要展示"审核中"
+    //  - RISK_PASS：放行通过（与 BUSINESS_ERROR 等价的"安全通过"）
+    RISK_REJECT: { code: 'RISK_REJECT', message: '请求被风控拒绝', httpStatus: 200, severity: 'BUSINESS' },
+    RISK_PENDING: { code: 'RISK_PENDING', message: '请求已受理，待人工审核', httpStatus: 200, severity: 'BUSINESS' },
+    RISK_PASS: { code: 'RISK_PASS', message: '风控检查通过', httpStatus: 200, severity: 'BUSINESS' },
+};
+// =====================================================================
+// 工厂函数
+// =====================================================================
+/**
+ * 通过语义码快速构造 BusinessError
+ *
+ * @example
+ *   throw err('ORDER_NOT_FOUND', null, { orderId: 'ord_123' })
+ *   throw err('INVALID_PARAMS', '手机号格式错误', { field: 'phone' })
+ */
+function err(codeName, message = null, details = null) {
+    const spec = exports.BusinessErrors[codeName];
+    if (!spec) {
+        // 未知错误码——降级为内部错误，但不抛错避免递归
+        return new BusinessError(codeName, message || codeName, details, 500);
+    }
+    return new BusinessError(spec.code, message || spec.message, details, spec.httpStatus);
+}
+exports.err = err;
+/**
+ * 判定一个 Error 是否为已知业务错误（类型守卫）
+ */
+function isBusinessError(error) {
+    return error instanceof BusinessError;
+}
+exports.isBusinessError = isBusinessError;
+/**
+ * 未知错误兜底：转换为标准 BusinessError
+ */
+function wrapUnknown(error) {
+    if (error instanceof BusinessError) {
+        return error;
+    }
+    if (error instanceof Error) {
+        return new BusinessError('INTERNAL_ERROR', '服务内部错误', { originalMessage: error.message, originalName: error.name }, 500);
+    }
+    // 非 Error 对象（字符串、对象、null 等）
+    return new BusinessError('INTERNAL_ERROR', '服务内部错误', { originalMessage: String(error), originalName: typeof error }, 500);
+}
+exports.wrapUnknown = wrapUnknown;
+/**
+ * 将任意 Error / BusinessError 序列化为标准 API 响应
+ *
+ * 约定返回结构（与 utils.js#handleError 对齐，便于上层 index.js 统一处理）：
+ *   {
+ *     code: <number>,        // ERROR_CODES 中的一项
+ *     message: <string>,     // 给用户/前端展示的中文消息
+ *     data: null,            // 错误时 data 始终为 null
+ *     error: {               // 错误详情
+ *       type: <string>,      // 语义化错误码（BusinessError.code）
+ *       details: <object>,   // 上下文（BusinessError.details）
+ *       originalMessage?: <string>, // 仅未知错误时填充
+ *     }
+ *   }
+ */
+function toResponse(error) {
+    if (error instanceof BusinessError) {
+        return {
+            code: utils_1.ERROR_CODES[error.severity] || utils_1.ERROR_CODES.BUSINESS,
+            message: error.message,
+            data: null,
+            error: {
+                type: error.code,
+                details: error.details,
+            },
+        };
+    }
+    // 兜底：未识别的 Error 走 handleError 老格式
+    if (error instanceof Error) {
+        return (0, utils_1.handleError)(error, error.message, null);
+    }
+    // 极端兜底：非 Error 对象
+    return {
+        code: utils_1.ERROR_CODES.SERVER,
+        message: String(error),
+        data: null,
+        error: { type: 'INTERNAL_ERROR', details: { value: String(error) } },
+    };
+}
+exports.toResponse = toResponse;
+/**
+ * 业务异常装饰器 / 包装器
+ *
+ * 用法（推荐）：
+ *   const { withErrorHandling } = require('./common/errors')
+ *
+ *   const handlers = {
+ *     createOrder: withErrorHandling(async (event, context, auth) => {
+ *       if (!auth.openid) throw err('AUTH_REQUIRED')
+ *       ...
+ *       return handleSuccess({ orderId })
+ *     }),
+ *   }
+ *
+ *   exports.main = async (event, context) => {
+ *     try {
+ *       const auth = await verifyAuth(event)
+ *       return await handlers[event.action](event, context, auth)
+ *     } catch (e) {
+ *       return toResponse(e)
+ *     }
+ *   }
+ *
+ * 行为：
+ *   1. handler 抛出 BusinessError → 序列化为标准响应
+ *   2. handler 抛出普通 Error → wrapUnknown 后再序列化
+ *   3. handler 正常返回 → 原样透传（不强制转换为 handleSuccess）
+ */
+function withErrorHandling(handler) {
+    return async function wrappedHandler(event, context, auth) {
+        try {
+            return await handler(event, context, auth);
+        }
+        catch (rawError) {
+            const businessError = rawError instanceof BusinessError
+                ? rawError
+                : wrapUnknown(rawError);
+            return toResponse(businessError);
+        }
+    };
+}
+exports.withErrorHandling = withErrorHandling;

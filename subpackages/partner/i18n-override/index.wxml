@@ -1,0 +1,177 @@
+<view class="page">
+  <!-- 顶部工具栏 -->
+  <view class="toolbar">
+    <view class="toolbar-row">
+      <view class="search-box">
+        <input
+          class="search-input"
+          placeholder="按 key 前缀过滤"
+          value="{{searchPrefix}}"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+          confirm-type="search"
+        />
+        <view wx:if="{{searchPrefix}}" class="search-clear" bindtap="onClearSearch">×</view>
+      </view>
+      <view class="btn btn-primary" bindtap="onCreateNew">新建</view>
+    </view>
+
+    <view class="filter-row">
+      <view
+        class="filter-pill {{statusFilter === 'all' ? 'active' : ''}}"
+        data-status="all"
+        bindtap="onStatusFilterChange"
+      >全部 ({{list.length}})</view>
+      <view
+        class="filter-pill {{statusFilter === 'active' ? 'active' : ''}}"
+        data-status="active"
+        bindtap="onStatusFilterChange"
+      >已启用</view>
+      <view
+        class="filter-pill {{statusFilter === 'disabled' ? 'active' : ''}}"
+        data-status="disabled"
+        bindtap="onStatusFilterChange"
+      >已禁用</view>
+    </view>
+  </view>
+
+  <!-- 列表 -->
+  <view wx:if="{{isLoading && list.length === 0}}" class="empty-state">加载中...</view>
+  <view wx:elif="{{list.length === 0}}" class="empty-state">
+    <view class="empty-title">暂无覆盖</view>
+    <view class="empty-desc">点击右上角"新建"添加第一条 i18n 覆盖</view>
+  </view>
+
+  <view wx:else class="list">
+    <view wx:for="{{list}}" wx:key="_id" class="card">
+      <view class="card-header">
+        <view class="card-key">{{item.key}}</view>
+        <view class="card-locale {{item.status === 'active' ? 'active' : 'disabled'}}">
+          {{item.locale}}
+        </view>
+      </view>
+      <view class="card-value">{{item.value}}</view>
+      <view class="card-meta">
+        <text>状态: {{item.status === 'active' ? '已启用' : '已禁用'}}</text>
+        <text wx:if="{{item.note}}" class="card-note">备注: {{item.note}}</text>
+      </view>
+      <view class="card-actions">
+        <view class="action" data-item="{{item}}" bindtap="onEditItem">编辑</view>
+        <view class="action" data-key="{{item.key}}" bindtap="onPreviewItem">预览</view>
+        <view
+          class="action"
+          data-id="{{item._id}}"
+          data-status="{{item.status}}"
+          bindtap="onToggleStatus"
+        >{{item.status === 'active' ? '禁用' : '启用'}}</view>
+        <view
+          class="action danger"
+          data-id="{{item._id}}"
+          data-key="{{item.key}}"
+          data-locale="{{item.locale}}"
+          bindtap="onDeleteItem"
+        >删除</view>
+      </view>
+    </view>
+    <view wx:if="{{isLoading && list.length > 0}}" class="load-more">加载中...</view>
+    <view wx:elif="{{!hasMore && list.length > 0}}" class="load-more">— 已加载全部 ({{total}}) —</view>
+  </view>
+
+  <!-- 编辑器弹层 -->
+  <view wx:if="{{editorVisible}}" class="modal-mask" bindtap="onCloseEditor">
+    <view class="modal" catchtap="">
+      <view class="modal-title">{{editorMode === 'create' ? '新建 i18n 覆盖' : '编辑 i18n 覆盖'}}</view>
+
+      <view class="form-row">
+        <text class="form-label">Key</text>
+        <input
+          class="form-input"
+          placeholder="例：HOME_TITLE"
+          value="{{editorForm.key}}"
+          data-field="key"
+          bindinput="onEditorFieldChange"
+          disabled="{{editorMode === 'edit'}}"
+        />
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">Locale</text>
+        <view class="seg">
+          <view
+            wx:for="{{supportedLocales}}"
+            wx:key="*this"
+            class="seg-item {{editorForm.locale === item ? 'active' : ''}}"
+            data-locale="{{item}}"
+            bindtap="onEditorLocaleChange"
+          >{{item}}</view>
+        </view>
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">文案</text>
+        <textarea
+          class="form-textarea"
+          placeholder="覆盖后的文案"
+          value="{{editorForm.value}}"
+          data-field="value"
+          bindinput="onEditorFieldChange"
+          maxlength="2000"
+          auto-height
+        />
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">状态</text>
+        <view class="seg">
+          <view
+            class="seg-item {{editorForm.status === 'active' ? 'active' : ''}}"
+            data-status="active"
+            bindtap="onEditorStatusChange"
+          >启用</view>
+          <view
+            class="seg-item {{editorForm.status === 'disabled' ? 'active' : ''}}"
+            data-status="disabled"
+            bindtap="onEditorStatusChange"
+          >禁用</view>
+        </view>
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">备注</text>
+        <input
+          class="form-input"
+          placeholder="可选"
+          value="{{editorForm.note}}"
+          data-field="note"
+          bindinput="onEditorFieldChange"
+          maxlength="500"
+        />
+      </view>
+
+      <view class="modal-actions">
+        <view class="btn" bindtap="onCloseEditor">取消</view>
+        <view class="btn btn-primary {{isSaving ? 'disabled' : ''}}" bindtap="onSaveEditor">
+          {{isSaving ? '保存中...' : '保存'}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预览弹层 -->
+  <view wx:if="{{previewVisible}}" class="modal-mask" bindtap="onClosePreview">
+    <view class="modal" catchtap="">
+      <view class="modal-title">{{previewData.key}}</view>
+      <view wx:for="{{supportedLocales}}" wx:key="*this" wx:for-item="loc" class="preview-row">
+        <view class="preview-locale">{{loc}}</view>
+        <view wx:if="{{previewData.locales[loc]}}" class="preview-value">
+          <text>{{previewData.locales[loc].value}}</text>
+          <text class="preview-status">{{previewData.locales[loc].status === 'active' ? '已启用' : '已禁用'}}</text>
+        </view>
+        <view wx:else class="preview-value empty">未配置</view>
+      </view>
+      <view class="modal-actions">
+        <view class="btn btn-primary" bindtap="onClosePreview">关闭</view>
+      </view>
+    </view>
+  </view>
+</view>

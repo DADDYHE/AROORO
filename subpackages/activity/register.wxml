@@ -1,0 +1,321 @@
+<!--subpackages/activity/register.wxml-->
+<view class="container">
+  <!-- 艺术风格的活动信息头部 -->
+  <view class="activity-header">
+    <view class="header-bg"></view>
+    <view class="header-content">
+      <text class="activity-title">{{activity ? activity.title : '加载中...'}}</text>
+      <view class="activity-meta">
+        <view class="meta-item">
+          <text class="meta-icon">🕒</text>
+          <text class="meta-text">{{activity ? activity.time : ''}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-icon">📍</text>
+          <text class="meta-text">{{activity ? activity.location : ''}}</text>
+        </view>
+      </view>
+      <view class="price-tag" wx:if="{{activity.pricePerPerson > 0 || activity.pricePerPet > 0}}">
+        <text class="price-symbol">¥</text>
+        <text class="price-value">{{totalAmount}}</text>
+        <text class="price-unit">元</text>
+      </view>
+      <view class="price-tag free-tag" wx:else>
+        <text class="price-value">免费</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 已报名状态 -->
+  <view wx:if="{{isRegistered}}" class="registered-status">
+    <view class="registered-icon">✓</view>
+    <text class="registered-text">您已报名此活动</text>
+    <text class="registered-hint">请勿重复报名</text>
+  </view>
+
+  <!-- 艺术风格的表单区域 -->
+  <view wx:else class="form-section">
+    <view class="section-decoration"></view>
+    <text class="section-title">报名信息</text>
+    
+    <!-- 宠物信息列表 -->
+    <view wx:for="{{pets}}" wx:key="index" class="pet-section">
+      <view class="pet-header">
+        <text class="pet-title">第{{index + 1}}只宠物</text>
+        <view wx:if="{{index > 0}}" class="remove-pet-btn" bindtap="onRemovePet" data-index="{{index}}">
+          <text class="remove-icon">×</text>
+          <text>移除</text>
+        </view>
+      </view>
+      
+      <view class="form-item">
+        <text class="label">宠物姓名 *</text>
+        <view class="input-container">
+          <input 
+            class="input" 
+            placeholder="请输入宠物姓名" 
+            value="{{item.petName}}"
+            data-field="petName"
+            data-index="{{index}}"
+            bindinput="onInput"
+          />
+          <view class="input-decoration"></view>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <text class="label">宠物性别 *</text>
+        <view class="gender-options">
+          <view 
+            class="gender-option {{item.petGender === 'male' ? 'active' : ''}}"
+            data-gender="male"
+            data-field="petGender"
+            data-index="{{index}}"
+            bindtap="onSelectGender"
+          >
+            <text>弟弟</text>
+            <view class="gender-decoration"></view>
+          </view>
+          <view 
+            class="gender-option {{item.petGender === 'female' ? 'active' : ''}}"
+            data-gender="female"
+            data-field="petGender"
+            data-index="{{index}}"
+            bindtap="onSelectGender"
+          >
+            <text>妹妹</text>
+            <view class="gender-decoration"></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <text class="label">宠物品种 *</text>
+        <view class="input-container">
+          <input 
+            class="input" 
+            placeholder="请输入宠物品种" 
+            value="{{item.petBreed}}"
+            data-field="petBreed"
+            data-index="{{index}}"
+            bindinput="onInput"
+          />
+          <view class="input-decoration"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 我的宠物档案选择按钮 -->
+    <view class="quick-select-container">
+      <button class="quick-select-btn my-pets-btn" bindtap="onShowPetPicker">
+        <text>我的宠物档案</text>
+      </button>
+    </view>
+
+    <!-- 添加更多宠物按钮 -->
+    <view class="add-more-pet-container">
+      <button class="add-more-pet-btn" bindtap="onAddMorePet" wx:if="{{pets.length < 5}}">
+        <text class="add-icon">+</text>
+        <text>添加更多宠物</text>
+      </button>
+    </view>
+
+    <!-- 宠物档案选择弹窗 -->
+    <view class="pet-picker-mask" wx:if="{{showPetPicker}}" bindtap="onHidePetPicker">
+      <view class="pet-picker-panel" catchtap="">
+        <view class="pet-picker-header">
+          <text class="pet-picker-title">选择宠物档案</text>
+          <text class="pet-picker-close" bindtap="onHidePetPicker">×</text>
+        </view>
+        <scroll-view class="pet-picker-body" scroll-y enhanced>
+          <view wx:if="{{myPets.length === 0}}" class="pet-picker-empty">
+            <text class="empty-text">还没有添加宠物档案</text>
+            <text class="empty-hint">添加您的第一只宠物档案</text>
+            <button class="add-pet-btn" bindtap="goToAddPet">
+              <text>添加我的宠物档案</text>
+            </button>
+          </view>
+          <view wx:else class="pet-picker-list">
+            <view class="pet-picker-item" wx:for="{{myPets}}" wx:key="_id" bindtap="onSelectMyPet" data-index="{{index}}">
+              <image lazy-load class="pet-picker-avatar" src="{{item.avatarUrl || ''}}" mode="aspectFill" wx:if="{{item.avatarUrl}}" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="myPets[{{index}}].avatarUrl" />
+              <view class="pet-picker-avatar-placeholder" wx:else>
+                <text class="pet-picker-avatar-text">{{item.name.charAt(0)}}</text>
+              </view>
+              <view class="pet-picker-info">
+                <text class="pet-picker-name">{{item.name}}</text>
+                <text class="pet-picker-detail">{{item.gender === 'male' ? '弟弟' : item.gender === 'female' ? '妹妹' : item.gender}} · {{item.breed || item.species || '未知品种'}}</text>
+              </view>
+              <text class="pet-picker-arrow">›</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <!-- 参加人数 -->
+    <view class="form-item">
+      <text class="label">参加人数 *</text>
+      <view class="input-container">
+        <input
+          class="input"
+          type="number"
+          placeholder="请输入参加人数"
+          value="{{participantCount}}"
+          bindinput="onParticipantCountInput"
+        />
+        <view class="input-decoration"></view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">联系电话 *</text>
+      <view class="input-container">
+        <input 
+          class="input" 
+          placeholder="请输入联系电话" 
+          value="{{phone}}"
+          data-field="phone"
+          bindinput="onInput"
+        />
+        <view class="input-decoration"></view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">备注信息（选填）</text>
+      <view class="textarea-container">
+        <textarea 
+          class="textarea" 
+          placeholder="请输入备注信息" 
+          value="{{notes}}"
+          data-field="notes"
+          bindinput="onInput"
+        />
+        <view class="input-decoration"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 好友信息区域 -->
+  <view class="form-section friends-section">
+    <view class="section-decoration"></view>
+    <text class="section-title">添加好友信息（代报名）</text>
+
+    <view class="friends-list">
+      <view 
+        wx:for="{{friends}}" 
+        wx:key="index" 
+        class="friend-item"
+      >
+        <view class="friend-bg"></view>
+        <view class="friend-info">
+          <view class="friend-header">
+            <text class="friend-name">{{item.petName}}</text>
+            <text class="friend-gender">{{item.petGender === 'male' ? '弟弟' : '妹妹'}}</text>
+          </view>
+          <view class="friend-details">
+            <text class="friend-breed">品种：{{item.petBreed}}</text>
+            <text class="friend-phone">电话：{{item.phone}}</text>
+          </view>
+          <view wx:if="{{item.notes}}" class="friend-notes">
+            <text class="notes-label">备注：</text>
+            <text class="notes-content">{{item.notes}}</text>
+          </view>
+        </view>
+        <view class="friend-actions">
+          <button 
+            class="action-btn edit-btn" 
+            bindtap="onEditFriend"
+            data-index="{{index}}"
+          >
+            编辑
+          </button>
+          <button 
+            class="action-btn delete-btn" 
+            bindtap="onDeleteFriend"
+            data-index="{{index}}"
+          >
+            删除
+          </button>
+        </view>
+      </view>
+      <view wx:if="{{friends.length === 0}}" class="empty-friends">
+        <text class="empty-icon">👥</text>
+        <text>暂无好友信息</text>
+        <text class="empty-hint">点击下方按钮添加好友信息</text>
+      </view>
+    </view>
+    
+    <view class="add-friend-container">
+      <button 
+        class="add-friend-btn" 
+        bindtap="goToAddFriend"
+      >
+        <text class="add-icon">+</text>
+        <text>添加好友</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 优惠券选择 -->
+  <view class="form-section coupon-section">
+    <view class="section-decoration"></view>
+    <view class="section-title-row" bindtap="onToggleCouponSelector">
+      <text class="section-title">优惠券</text>
+      <text class="coupon-hint" wx:if="{{availableCoupons.length > 0 && !selectedCoupon}}">{{availableCoupons.length}}张可用</text>
+    </view>
+
+    <view class="selected-coupon" wx:if="{{selectedCoupon}}">
+      <view class="coupon-info">
+        <text class="coupon-name">{{selectedCoupon.templateName}}</text>
+        <text class="coupon-discount">-¥{{couponDiscount}}</text>
+      </view>
+      <text class="remove-coupon" bindtap="onRemoveCoupon">✕</text>
+    </view>
+    <view class="no-coupon selected-coupon" wx:elif="{{availableCoupons.length > 0}}" bindtap="onToggleCouponSelector">
+      <text class="coupon-name">{{availableCoupons.length}}张可用优惠券，点击选择</text>
+    </view>
+
+    <view class="coupon-list" wx:if="{{showCouponSelector}}">
+      <view class="coupon-item" wx:for="{{availableCoupons}}" wx:key="_id" bindtap="onSelectCoupon" data-id="{{item._id}}" data-amount="{{item.discountAmount}}">
+        <view class="coupon-item-left">
+          <text>¥<text class="big">{{item.discountAmount}}</text></text>
+        </view>
+        <view class="coupon-item-right">
+          <text class="coupon-item-name">{{item.templateName}}</text>
+          <text class="coupon-item-rule" wx:if="{{item.rules.threshold > 0}}">满{{item.rules.threshold}}元可用</text>
+        </view>
+      </view>
+      <view wx:if="{{availableCoupons.length === 0}}" class="empty-friends"><text>暂无可用优惠券</text></view>
+    </view>
+  </view>
+
+  <!-- 费用明细 -->
+  <view wx:if="{{isPaid}}" class="form-section fee-section">
+    <view class="section-decoration"></view>
+    <text class="section-title">费用明细</text>
+    <view wx:if="{{activity.pricePerPerson > 0}}" class="fee-detail-item">
+      <text class="fee-detail-label">每人费用</text>
+      <text class="fee-detail-value">¥{{activity.pricePerPerson}} × {{participantCount}}人 = ¥{{activity.pricePerPerson * participantCount}}</text>
+    </view>
+    <view wx:if="{{activity.pricePerPet > 0}}" class="fee-detail-item">
+      <text class="fee-detail-label">每只宠物费用</text>
+      <text class="fee-detail-value">¥{{activity.pricePerPet}} × {{validPetCount}}只 = ¥{{activity.pricePerPet * validPetCount}}</text>
+    </view>
+    <view class="fee-detail-total">
+      <text class="fee-detail-label">合计</text>
+      <text class="fee-detail-value total">¥{{totalAmount}}</text>
+    </view>
+  </view>
+
+  <!-- 提交按钮区域 -->
+  <view class="submit-section" wx:if="{{!isRegistered}}">
+    <button
+      class="submit-btn"
+      bindtap="onSubmit"
+    >
+      <text class="submit-text">{{isPaid ? '支付并报名' : '立即报名'}}</text>
+      <view class="submit-decoration"></view>
+    </button>
+  </view>
+</view>

@@ -1,0 +1,97 @@
+<view class="tuan-detail" wx:if="{{!loading && deal}}">
+  <view class="detail-title-area">
+    <text class="detail-title">{{deal.title}}</text>
+  </view>
+
+  <view class="detail-section">
+    <text class="section-title">团购商品 ({{totalSkuCount}}款)</text>
+  </view>
+
+  <view class="product-list">
+    <view class="product-card" wx:for="{{products}}" wx:key="index" data-index="{{index}}" bindtap="onProductTap">
+      <image class="product-img" src="{{item.image || '/images/default-product.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.image}}" data-path="products[{{index}}].image" />
+      <view class="product-info">
+        <text class="product-name">{{item.name}}</text>
+        <view class="product-price-row">
+          <view class="product-price-wrap">
+            <text class="product-price-symbol">¥</text>
+            <text class="product-price">{{item.displayPrice}}</text>
+          </view>
+          <view class="product-buy-btn" catchtap="onBuyTap" data-index="{{index}}">
+            <text>立即参团</text>
+          </view>
+        </view>
+        <text class="product-stock">库存 {{item.stock || item.tuanStock || 0}} 件</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="detail-desc-area" wx:if="{{deal.description}}">
+    <text class="detail-desc">{{deal.description}}</text>
+  </view>
+
+  <view class="detail-images" wx:if="{{deal.images && deal.images.length > 0}}">
+    <image class="detail-img" wx:for="{{deal.images}}" wx:key="*this" src="{{item}}" mode="widthFix"
+      data-urls="{{deal.images}}" data-index="{{index}}" bindtap="onImagePreview"
+      binderror="onCloudImageError" data-src="{{item}}" data-path="deal.images[{{index}}]" />
+  </view>
+
+  <view class="detail-footer" wx:if="{{products.length > 0}}">
+    <view class="footer-cart-btn" bindtap="onOpenCart">
+      <image class="footer-cart-icon" src="{{iconShoppingCart}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconShoppingCart}}" data-path="iconShoppingCart" />
+      <view class="footer-cart-badge" wx:if="{{cartCount > 0}}">{{cartCount > 99 ? '99+' : cartCount}}</view>
+    </view>
+    <view class="footer-btn" bindtap="onBuyTap" data-index="0">立即参团</view>
+  </view>
+</view>
+
+<view class="loading-page" wx:if="{{loading}}">
+  <text>加载中...</text>
+</view>
+
+<view class="empty-page" wx:if="{{!loading && !deal}}">
+  <text>团购不存在或已结束</text>
+</view>
+
+<view class="sku-popup-mask {{showBuyModal ? 'show' : ''}}" bindtap="onCloseBuyModal"></view>
+<view class="sku-popup {{showBuyModal ? 'show' : ''}}">
+  <view class="sku-popup-header">
+    <image class="sku-popup-thumb" src="{{skuPopupImage || (products[selectedProductIndex].image || '/images/default-product.svg')}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage}}" data-path="skuPopupImage" />
+    <view class="sku-popup-info">
+      <text class="sku-popup-price">¥{{skuPopupPrice}}</text>
+      <text class="sku-popup-stock">库存: {{skuPopupStock}}件</text>
+      <text class="sku-popup-selected" wx:if="{{selectedSkuText}}">{{selectedSkuText}}</text>
+    </view>
+    <view class="sku-popup-close" bindtap="onCloseBuyModal">✕</view>
+  </view>
+
+  <view class="sku-popup-body">
+    <view class="sku-popup-body-inner">
+      <view class="sku-group" wx:for="{{popupSpecGroups}}" wx:key="specId">
+        <text class="sku-group-label">{{item.name}}</text>
+        <view class="sku-options">
+          <view wx:for="{{item.values}}" wx:for-item="val" wx:key="*this"
+            class="sku-option {{item.selectedValue === val ? 'selected' : ''}} {{item.disabledValues && item.disabledValues[val] ? 'disabled' : ''}}"
+            data-spec-id="{{item.specId}}" data-value="{{val}}" bindtap="onPopupSelectSpec">
+            <text class="sku-option-name">{{val}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="sku-quantity">
+        <text class="sku-group-label">数量</text>
+        <view class="quantity-control">
+          <view class="quantity-btn {{quantity <= 1 ? 'disabled' : ''}}" bindtap="onQuantityMinus">−</view>
+          <text class="quantity-value">{{quantity}}</text>
+          <view class="quantity-btn" bindtap="onQuantityPlus">+</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="sku-popup-footer">
+    <view class="sku-confirm-btn {{!allSpecsSelected ? 'disabled' : ''}}" bindtap="onSubmitOrder">
+      {{!allSpecsSelected ? '请选择完整规格' : '立即参团'}}
+    </view>
+  </view>
+</view>

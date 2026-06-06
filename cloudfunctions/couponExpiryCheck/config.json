@@ -1,0 +1,10 @@
+{
+  "timeout": 30,
+  "triggers": [
+    {
+      "name": "couponExpiryCheckTrigger",
+      "type": "timer",
+      "config": "0 0 2 * * * *"
+    }
+  ]
+}

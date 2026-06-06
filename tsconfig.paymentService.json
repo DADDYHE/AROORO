@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "checkJs": false,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "./cloudfunctions",
+    "rootDir": "./cloudfunctions",
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": ["cloudfunctions/common/*"]
+    }
+  },
+  "include": [
+    "cloudfunctions/paymentService/services/refund.ts",
+    "cloudfunctions/paymentService/services/pay.ts",
+    "cloudfunctions/paymentService/services/notify.ts",
+    "cloudfunctions/paymentService/services/commission.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "cloudfunctions/**/node_modules"
+  ]
+}

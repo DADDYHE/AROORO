@@ -1,0 +1,38 @@
+{
+  "envId": "cloudbase-d7getcjqy33b13475",
+  "version": "2.0",
+  "framework": {
+    "name": "web-admin",
+    "plugins": {
+      "server": {
+        "use": "@cloudbase/framework-plugin-container",
+        "inputs": {
+          "serviceName": "web-admin",
+          "servicePath": "/",
+          "localPath": "./",
+          "uploadType": "package",
+          "dockerfilePath": "./Dockerfile",
+          "buildDir": ".",
+          "containerPort": 80,
+          "cpu": 0.25,
+          "mem": 0.5,
+          "minNum": 0,
+          "maxNum": 5,
+          "mode": "low-cost",
+          "policyType": "cpu",
+          "policyThreshold": 60,
+          "isPublic": true,
+          "flowRatio": 100,
+          "envVariables": {
+            "NODE_ENV": "production",
+            "PORT": "80",
+            "CLOUDBASE_ENV": "cloudbase-d7getcjqy33b13475"
+          }
+        }
+      }
+    }
+  },
+  "cloudrun": {
+    "name": "web-admin"
+  }
+}

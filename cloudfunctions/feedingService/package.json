@@ -1,0 +1,9 @@
+{
+  "name": "feedingService",
+  "version": "1.0.0",
+  "description": "上门喂养服务",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

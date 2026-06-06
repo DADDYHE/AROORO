@@ -1,0 +1,202 @@
+/**
+ * 通用状态机（数据驱动，TypeScript 源文件 - Sprint 13 迁移）
+ *
+ * 解决：
+ *   - 散落在 orderService/orders.js#allowedTransitions、adminService/services/stateMachine.js 等处的重复 if-else
+ *   - 状态转移合法性校验不统一
+ *
+ * 用法：
+ *   const { createStateMachine, IllegalTransitionError } = require('./common/state-machine')
+ *
+ *   const orderSM = createStateMachine({
+ *     initial: 'pending',
+ *     states: ['pending', 'paid', 'shipped', 'completed', 'cancelled'],
+ *     transitions: {
+ *       pending: ['paid', 'cancelled'],
+ *       paid: ['shipped', 'cancelled'],
+ *       shipped: ['completed'],
+ *       completed: [],
+ *       cancelled: [],
+ *     },
+ *   })
+ *
+ *   orderSM.canTransition('pending', 'paid')      // true
+ *   orderSM.assertTransition('pending', 'paid')   // OK
+ *   orderSM.assertTransition('pending', 'completed') // throws IllegalTransitionError
+ *   orderSM.nextStates('pending')                  // ['paid', 'cancelled']
+ *   orderSM.isTerminal('cancelled')                // true
+ *
+ * 兼容：
+ *   - adminService/services/stateMachine.js 中的 4 张表可平滑迁移到本模块
+ *
+ * 编译方式：
+ *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.common.json
+ *   （运行时仍消费 .js 编译产物）
+ */
+
+import { err } from './errors'
+import type { StateMachine, StateMachineNode } from './types'
+
+/**
+ * 非法状态转移异常
+ */
+export class IllegalTransitionError extends Error {
+  public readonly name: 'IllegalTransitionError' = 'IllegalTransitionError'
+  public readonly from: string
+  public readonly to: string
+  public readonly allowed: string[]
+
+  constructor(from: string, to: string, allowed: string[], message: string | null = null) {
+    super(message || `非法状态转移：${from} → ${to}（允许：${allowed.join(', ') || '无'}）`)
+    this.from = from
+    this.to = to
+    this.allowed = allowed
+  }
+}
+
+/**
+ * 状态机配置
+ */
+export interface StateMachineConfig<S extends string = string> {
+  initial: S
+  states: S[]
+  transitions: Record<S, S[]>
+  metadata?: Partial<Record<S, Record<string, unknown>>>
+}
+
+/**
+ * 校验 transitions 配置合法性
+ * @param config
+ * @throws {BusinessError} 配置错误
+ */
+export function validateConfig<S extends string = string>(config: StateMachineConfig<S>): void {
+  if (!config || typeof config !== 'object') {
+    throw err('INVALID_PARAMS', 'state-machine config 必须为对象')
+  }
+  if (!config.initial) {
+    throw err('INVALID_PARAMS', 'state-machine config 必须指定 initial 状态')
+  }
+  if (!Array.isArray(config.states) || config.states.length === 0) {
+    throw err('INVALID_PARAMS', 'state-machine config.states 必须为非空数组')
+  }
+  if (typeof config.transitions !== 'object') {
+    throw err('INVALID_PARAMS', 'state-machine config.transitions 必须为对象')
+  }
+  const states = new Set<string>(config.states)
+  if (!states.has(config.initial)) {
+    throw err('INVALID_PARAMS', `initial 状态 "${config.initial}" 不在 states 中`)
+  }
+  for (const [from, targets] of Object.entries(config.transitions)) {
+    if (!states.has(from)) {
+      throw err('INVALID_PARAMS', `transitions 中的源状态 "${from}" 未在 states 中声明`)
+    }
+    if (!Array.isArray(targets)) {
+      throw err('INVALID_PARAMS', `transitions[${from}] 必须为数组`)
+    }
+    for (const to of targets) {
+      if (!states.has(to)) {
+        throw err('INVALID_PARAMS', `transitions[${from}] 中的目标 "${to}" 未在 states 中声明`)
+      }
+    }
+  }
+}
+
+/**
+ * 创建状态机实例
+ * @param config
+ * @returns 状态机实例
+ */
+export function createStateMachine<S extends string = string>(
+  config: StateMachineConfig<S>
+): StateMachine<S> & {
+  initial: S
+  states: S[]
+  transitions: Record<S, S[]>
+  isValidState: (s: string) => s is S
+  nextStates: (from: S) => S[]
+  isTerminal: (state: S) => boolean
+  getMetadata: (state: S) => Record<string, unknown> | null
+} {
+  validateConfig(config)
+  const { initial, states, transitions, metadata = {} } = config
+  const stateSet = new Set<string>(states)
+  const transMap = new Map<string, string[]>(Object.entries(transitions))
+
+  function isValidState(s: string): s is S {
+    return stateSet.has(s)
+  }
+
+  function canTransition(from: S, to: S): boolean {
+    if (!isValidState(from) || !isValidState(to)) {return false}
+    const allowed = transMap.get(from) || []
+    return allowed.includes(to)
+  }
+
+  function assertTransition(from: S, to: S): void {
+    if (!isValidState(from)) {
+      throw new IllegalTransitionError(from, to, [], `未知源状态："${from}"`)
+    }
+    if (!isValidState(to)) {
+      throw new IllegalTransitionError(from, to, transMap.get(from) || [], `未知目标状态："${to}"`)
+    }
+    const allowed = transMap.get(from) || []
+    if (!allowed.includes(to)) {
+      throw new IllegalTransitionError(from, to, allowed)
+    }
+  }
+
+  function nextStates(from: S): S[] {
+    if (!isValidState(from)) {return []}
+    return [...(transMap.get(from) || [])] as S[]
+  }
+
+  function isTerminal(state: S): boolean {
+    if (!isValidState(state)) {return false}
+    return (transMap.get(state) || []).length === 0
+  }
+
+  function getMetadata(state: S): Record<string, unknown> | null {
+    return (metadata as Record<string, Record<string, unknown>>)[state] || null
+  }
+
+  return {
+    initial,
+    states: [...states],
+    transitions: { ...transitions },
+    isValidState,
+    canTransition,
+    assertTransition,
+    nextStates,
+    isTerminal,
+    getMetadata,
+    getAllowedTransitions: (from: S) => nextStates(from),
+  }
+}
+
+/**
+ * 高阶：根据状态 + 事件 + 守卫函数生成下一个状态
+ *
+ * @param sm - 状态机实例
+ * @param from - 当前状态
+ * @param event - 事件名（对应 transitions 表中的一项）
+ * @param context - 守卫函数上下文
+ * @returns 下一个状态，若不匹配返回 null
+ *
+ * @example
+ *   const sm = createStateMachine({...})
+ *   const next = applyEvent(sm, 'pending', 'confirm', { isAdmin: true })
+ *   // 'confirmed' 或 'cancelled'（根据 context）
+ */
+export function applyEvent<S extends string = string>(
+  sm: ReturnType<typeof createStateMachine<S>>,
+  from: S,
+  event: S,
+  context: Record<string, unknown> = {}
+): S | null {
+  if (!sm) {return null}
+  const allowed = sm.nextStates(from)
+  return allowed.includes(event) ? event : null
+}
+
+// 重新导出 StateMachineNode 类型，保持兼容
+export type { StateMachineNode }

@@ -1,0 +1,500 @@
+const { MallService } = require('./MallService')
+const { CouponService } = require('../../services/CouponService')
+const { AddressService } = require('../../utils/AddressService')
+const { TuanService } = require('../../services/TuanService')
+const PaymentService = require('../../services/PaymentService')
+const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+
+const pageI18n = require('../../utils/page-i18n.js')
+
+Page({
+  ...pageI18n.mixin(),
+  behaviors: [cloudImageBehavior],
+  data: {
+    isLoading: true,
+    error: null,
+
+    fromCart: false,
+    fromTuan: false,
+    tuanData: null,
+    product: null,
+    skuId: '',
+    skuText: '',
+    unitPrice: 0,
+    quantity: 1,
+    cartItems: [],
+
+    totalAmount: 0,
+    remark: '',
+    submitting: false,
+
+    address: null,
+
+    selectedCouponId: '',
+    selectedCoupon: null,
+    availableCoupons: [],
+    couponDiscount: 0,
+    finalAmount: 0,
+    showCouponSelector: false,
+    loadingCoupons: false,
+  },
+
+  onLoad(options) {
+    if (options.fromTuan === '1' && options.tuanData) {
+      try {
+        const tuanData = JSON.parse(decodeURIComponent(options.tuanData))
+        this.setData({ fromTuan: true, tuanData })
+        this._applyTuanData(tuanData)
+      } catch (e) {
+        this.setData({ isLoading: false, error: '团购数据异常' })
+      }
+    } else if (options.fromCart === '1' && options.cartData) {
+      this.setData({ fromCart: true })
+      try {
+        const cartItems = JSON.parse(decodeURIComponent(options.cartData))
+        this._applyCartData(cartItems)
+      } catch (e) {
+        this.setData({ isLoading: false, error: '购物车数据异常' })
+      }
+    } else if (options.productId) {
+      const quantity = parseInt(options.quantity) || 1
+      const skuId = options.skuId || ''
+      this.setData({ quantity, skuId })
+      this._loadProduct(options.productId, skuId, quantity)
+    } else {
+      this.setData({ isLoading: false, error: '参数错误' })
+    }
+
+    this._loadDefaultAddress()
+  },
+
+  onShow() {
+    const app = getApp()
+    const globalAddress = app.globalData.selectedAddress
+    if (globalAddress) {
+      this.setData({ address: globalAddress })
+      app.globalData.selectedAddress = null
+    }
+  },
+
+  _applyTuanData(tuanData) {
+    const unitPrice = Number(tuanData.tuanPrice) || 0
+    const quantity = Number(tuanData.quantity) || 1
+    const totalAmount = Math.round(unitPrice * quantity * 100) / 100
+    this.setData({
+      skuId: tuanData.skuId || '',
+      skuText: tuanData.specText || '',
+      unitPrice,
+      quantity,
+      totalAmount,
+      finalAmount: totalAmount,
+      isLoading: false,
+    })
+    this._loadAvailableCoupons()
+  },
+
+  async _loadProduct(productId, skuId, quantity) {
+    this.setData({ isLoading: true, error: null })
+    try {
+      const result = await MallService.getProductDetail(productId)
+      if (result && result.code === 0) {
+        const product = result.data
+        let skuText = ''
+        let unitPrice = product.price
+
+        if (product.skuType === 'multi' && skuId && product.skus) {
+          const sku = product.skus.find(s => s.skuId === skuId)
+          if (sku) {
+            skuText = sku.specText || ''
+            unitPrice = sku.price
+          }
+        }
+
+        const totalAmount = Math.round(unitPrice * quantity * 100) / 100
+        this.setData({
+          product,
+          skuText,
+          unitPrice,
+          totalAmount,
+          finalAmount: totalAmount,
+          isLoading: false,
+        })
+        this._loadAvailableCoupons()
+      } else {
+        this.setData({ isLoading: false, error: '商品不存在' })
+      }
+    } catch (e) {
+      this.setData({ isLoading: false, error: '加载失败' })
+    }
+  },
+
+  _applyCartData(cartItems) {
+    if (!cartItems || cartItems.length === 0) {
+      this.setData({ isLoading: false, error: '购物车为空' })
+      return
+    }
+    const totalAmount = cartItems.reduce((sum, item) => {
+      return sum + Math.round((item.price || 0) * (item.quantity || 1) * 100) / 100
+    }, 0)
+    this.setData({
+      cartItems,
+      totalAmount: Math.round(totalAmount * 100) / 100,
+      finalAmount: Math.round(totalAmount * 100) / 100,
+      isLoading: false,
+    })
+    this._loadAvailableCoupons()
+  },
+
+  async _loadDefaultAddress() {
+    try {
+      const addr = await AddressService.getDefault()
+      if (addr) this.setData({ address: addr })
+    } catch (e) {}
+  },
+
+  onGoAddressEdit() {
+    wx.navigateTo({
+      url: '/subpackages/other/address/index',
+    })
+  },
+
+  onAddressSelected(address) {
+    if (address) {
+      this.setData({ address })
+    }
+  },
+
+  onDecreaseQuantity() {
+    if (this.data.fromTuan) return
+    if (this.data.quantity <= 1) return
+    const q = this.data.quantity - 1
+    this._updateQuantity(q)
+  },
+
+  onIncreaseQuantity() {
+    if (this.data.fromTuan) return
+    const q = this.data.quantity + 1
+    this._updateQuantity(q)
+  },
+
+  onQuantityInput(e) {
+    if (this.data.fromTuan) return
+    const q = parseInt(e.detail.value) || 1
+    this._updateQuantity(q < 1 ? 1 : q)
+  },
+
+  _updateQuantity(q) {
+    const product = this.data.product
+    const unitPrice = product ? this._getUnitPrice(product) : 0
+    const totalAmount = Math.round(unitPrice * q * 100) / 100
+    const updateData = { quantity: q, totalAmount }
+    if (!this.data.selectedCouponId) {
+      updateData.finalAmount = totalAmount
+    }
+    this.setData(updateData)
+    this._loadAvailableCoupons()
+  },
+
+  _getUnitPrice(product) {
+    if (this.data.skuId && product.skuType === 'multi' && product.skus) {
+      const sku = product.skus.find(s => s.skuId === this.data.skuId)
+      if (sku) return sku.price
+    }
+    return product.price || 0
+  },
+
+  onRemarkInput(e) {
+    this.setData({ remark: e.detail.value })
+  },
+
+  async _loadAvailableCoupons() {
+    const { totalAmount } = this.data
+    if (!totalAmount) return
+
+    this.setData({ loadingCoupons: true })
+    try {
+      const business = this.data.fromTuan ? 'tuan' : 'mall'
+      const productIds = this.data.fromCart
+        ? this.data.cartItems.map(i => i.productId)
+        : (this.data.product ? [this.data.product._id] : [])
+      const result = await CouponService.getAvailableCoupons({
+        business,
+        items: productIds,
+        amount: totalAmount,
+      })
+      if (result && result.code === 0) {
+        this.setData({ availableCoupons: result.data || [] })
+      }
+    } catch (e) {} finally {
+      this.setData({ loadingCoupons: false })
+    }
+  },
+
+  onToggleCouponSelector() {
+    this.setData({ showCouponSelector: !this.data.showCouponSelector })
+  },
+
+  onSelectCoupon(e) {
+    const { id, amount } = e.currentTarget.dataset
+    const coupon = this.data.availableCoupons.find(c => c._id === id)
+    if (!coupon) return
+
+    const discountAmount = parseFloat(amount)
+    const finalAmount = Math.max(0, Math.round((this.data.totalAmount - discountAmount) * 100) / 100)
+
+    this.setData({
+      selectedCouponId: id,
+      selectedCoupon: coupon,
+      couponDiscount: discountAmount,
+      finalAmount,
+      showCouponSelector: false,
+    })
+  },
+
+  onRemoveCoupon() {
+    this.setData({
+      selectedCouponId: '',
+      selectedCoupon: null,
+      couponDiscount: 0,
+      finalAmount: this.data.totalAmount,
+    })
+  },
+
+  async onSubmit() {
+    if (this.data.submitting) return
+
+    const { address, fromTuan, tuanData } = this.data
+
+    if (!address) {
+      this.error('PAYMENT_REQUIRED_ADDRESS')
+      return
+    }
+
+    this.setData({ submitting: true })
+
+    if (fromTuan) {
+      await this._submitTuanOrder(address)
+      return
+    }
+
+    const { product, cartItems, fromCart, quantity, skuId, remark, totalAmount, selectedCouponId, couponDiscount, finalAmount } = this.data
+
+    let lockedCouponId = null
+    const orderId = `mall_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`
+
+    try {
+      if (selectedCouponId) {
+        const lockRes = await CouponService.lockCoupon(selectedCouponId, orderId, 'mall_order', 'mall')
+        if (lockRes && lockRes.code !== 0) {
+          this.errorDynamic(lockRes.message, 'COUPON_LOCK_FAILED')
+          this.setData({ submitting: false })
+          return
+        }
+        lockedCouponId = selectedCouponId
+      }
+
+      let lastOrderId = null
+      let lastOrderNo = null
+
+      if (fromCart) {
+        for (const item of cartItems) {
+          const result = await wx.cloud.callFunction({
+            name: 'mallService',
+            data: {
+              action: 'createOrder',
+              productId: item.productId,
+              skuId: item.skuId || '',
+              quantity: item.quantity,
+              receiverName: address.name,
+              receiverPhone: address.phone,
+              receiverAddress: address.fullAddress,
+            },
+            timeout: 20000
+          })
+          if (!result.result || result.result.code !== 0) {
+            this.errorDynamic(result.result?.message, 'ORDER_PLACE_FAILED')
+            if (lockedCouponId) {
+              try { await CouponService.unlockCoupon(lockedCouponId) } catch (e) {}
+            }
+            this.setData({ submitting: false })
+            return
+          }
+          lastOrderId = result.result.data?.orderId
+          lastOrderNo = result.result.data?.orderNo
+        }
+      } else {
+        if (!product) {
+          this.error('PRODUCT_INFO_INVALID')
+          this.setData({ submitting: false })
+          return
+        }
+        const result = await wx.cloud.callFunction({
+          name: 'mallService',
+          data: {
+            action: 'createOrder',
+            productId: product._id,
+            skuId: skuId || '',
+            quantity,
+            receiverName: address.name,
+            receiverPhone: address.phone,
+            receiverAddress: address.fullAddress,
+          },
+          timeout: 20000
+        })
+
+        if (!result.result || result.result.code !== 0) {
+          if (lockedCouponId) {
+            try { await CouponService.unlockCoupon(lockedCouponId) } catch (e) {}
+          }
+          this.errorDynamic(result.result?.message, 'ORDER_PLACE_FAILED')
+          this.setData({ submitting: false })
+          return
+        }
+        lastOrderId = result.result.data?.orderId
+        lastOrderNo = result.result.data?.orderNo
+      }
+
+      if (lockedCouponId) {
+        await CouponService.useCoupon(
+          lockedCouponId, lastOrderId || orderId, 'mall', totalAmount, couponDiscount, finalAmount
+        )
+      }
+
+      if (lastOrderId && finalAmount > 0) {
+        try {
+          await PaymentService.pay({
+            type: 'mall',
+            orderId: lastOrderId,
+            amount: Math.round(finalAmount * 100),
+            description: '商城订单',
+          })
+          this.toast('PAYMENT_SUCCESS')
+        } catch (payErr) {
+          if (payErr.isCancel) {
+            this.error('PAYMENT_CANCELLED')
+          } else if (payErr.isPending) {
+            this.error(() => payErr.message, { duration: 3000 })
+          } else {
+            this.errorDynamic(payErr.message, 'PAYMENT_FAILED')
+          }
+          setTimeout(() => wx.navigateBack(), 1500)
+          return
+        }
+      } else {
+        this.toast('ORDER_PLACE_SUCCESS')
+      }
+      setTimeout(() => wx.navigateBack(), 1500)
+    } catch (e) {
+      if (lockedCouponId) {
+        try { await CouponService.unlockCoupon(lockedCouponId) } catch (e2) {}
+      }
+      this.error('NETWORK_ERROR_RETRY')
+    } finally {
+      this.setData({ submitting: false })
+    }
+  },
+
+  async _submitTuanOrder(address) {
+    const { tuanData, quantity, remark, totalAmount, selectedCouponId, couponDiscount, finalAmount } = this.data
+    if (!tuanData) {
+      this.error('GROUP_BUY_INVALID')
+      this.setData({ submitting: false })
+      return
+    }
+
+    let lockedCouponId = null
+    const tempOrderId = `tuan_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`
+
+    try {
+      // 锁定优惠券
+      if (selectedCouponId) {
+        const lockRes = await CouponService.lockCoupon(selectedCouponId, tempOrderId, 'tuan_order', 'tuan')
+        if (lockRes && lockRes.code !== 0) {
+          this.errorDynamic(lockRes.message, 'COUPON_LOCK_FAILED')
+          this.setData({ submitting: false })
+          return
+        }
+        lockedCouponId = selectedCouponId
+      }
+
+      const orderData = {
+        dealId: tuanData.dealId,
+        productId: tuanData.productId || '',
+        quantity,
+        tuanPrice: tuanData.tuanPrice,
+        totalAmount: finalAmount || totalAmount,
+        originalAmount: totalAmount,
+        couponId: selectedCouponId || undefined,
+        couponDiscount: couponDiscount || 0,
+        receiverName: address.name,
+        receiverPhone: address.phone,
+        receiverAddress: address.fullAddress,
+        remark: remark || '',
+      }
+      if (tuanData.skuId) {
+        orderData.skuId = tuanData.skuId
+        orderData.specText = tuanData.specText || ''
+      }
+
+      const res = await TuanService.createTuanOrder(orderData)
+      if (res && res.code === 0) {
+        const unifiedOrderId = res.data?.unifiedOrderId
+
+        // 核销优惠券
+        if (lockedCouponId) {
+          await CouponService.useCoupon(
+            lockedCouponId, unifiedOrderId || tempOrderId, 'tuan', totalAmount, couponDiscount, finalAmount || totalAmount
+          )
+        }
+
+        const payAmount = finalAmount || totalAmount
+        if (unifiedOrderId && payAmount > 0) {
+          try {
+            await PaymentService.pay({
+              type: 'tuan',
+              orderId: unifiedOrderId,
+              amount: Math.round(payAmount * 100),
+              description: '团购订单',
+            })
+            this.toast('PAYMENT_SUCCESS')
+          } catch (payErr) {
+            if (payErr.isCancel) {
+              this.error('PAYMENT_CANCELLED')
+            } else if (payErr.isPending) {
+              this.error(() => payErr.message, { duration: 3000 })
+            } else {
+              this.errorDynamic(payErr.message, 'PAYMENT_FAILED')
+            }
+            setTimeout(() => wx.navigateBack(), 1500)
+            return
+          }
+        } else {
+          this.toast('ORDER_PLACE_SUCCESS')
+        }
+        setTimeout(() => wx.navigateBack(), 1500)
+      } else {
+        // 下单失败，退回优惠券
+        if (lockedCouponId) {
+          try { await CouponService.unlockCoupon(lockedCouponId) } catch (e) {}
+        }
+        this.errorDynamic((res && res.message), 'ORDER_PLACE_FAILED')
+      }
+    } catch (e) {
+      // 异常退回优惠券
+      if (lockedCouponId) {
+        try { await CouponService.unlockCoupon(lockedCouponId) } catch (e2) {}
+      }
+      this.error('ORDER_PLACE_RETRY')
+    } finally {
+      this.setData({ submitting: false })
+    }
+  },
+
+  onRetry() {
+    const pages = getCurrentPages()
+    const page = pages[pages.length - 1]
+    if (page && page.options) {
+      this.onLoad(page.options)
+    }
+  },
+})

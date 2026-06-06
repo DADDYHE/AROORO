@@ -1,0 +1,257 @@
+{
+  "generatedAt": "2026-06-06T05:37:24.922Z",
+  "total": 50,
+  "usedCount": 37,
+  "codes": {
+    "ACTIVITY_HAS_REGISTRATIONS": {
+      "registered": true,
+      "used": true,
+      "usageCount": 2
+    },
+    "ACTIVITY_NOT_FOUND": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "ADMIN_REQUIRED": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "AUTH_REQUIRED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 70
+    },
+    "BANNER_NOT_FOUND": {
+      "registered": true,
+      "used": true,
+      "usageCount": 2
+    },
+    "BUSINESS_ERROR": {
+      "registered": true,
+      "used": true,
+      "usageCount": 62
+    },
+    "CATEGORY_HAS_PRODUCTS": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "COUPON_LIMIT_REACHED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "COUPON_NOT_FOUND": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "COUPON_STATUS_INVALID": {
+      "registered": true,
+      "used": true,
+      "usageCount": 3
+    },
+    "DATA_ERROR": {
+      "registered": true,
+      "used": true,
+      "usageCount": 2
+    },
+    "DB_ERROR": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "DECRYPT_FAILED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 15
+    },
+    "DUPLICATE_KEY": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "ENCRYPT_FAILED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 15
+    },
+    "HOST_NOT_FOUND": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "IDEMPOTENT_REPLAY": {
+      "registered": true,
+      "used": true,
+      "usageCount": 15
+    },
+    "INTERNAL_ERROR": {
+      "registered": true,
+      "used": true,
+      "usageCount": 15
+    },
+    "INVALID_PARAMS": {
+      "registered": true,
+      "used": true,
+      "usageCount": 299
+    },
+    "INVALID_PAYLOAD": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "MISSING_REQUIRED": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "NOT_FOUND": {
+      "registered": true,
+      "used": true,
+      "usageCount": 57
+    },
+    "ORDER_ALREADY_PAID": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "ORDER_ALREADY_REFUNDED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "ORDER_CREATE_FAILED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "ORDER_NOT_FOUND": {
+      "registered": true,
+      "used": true,
+      "usageCount": 4
+    },
+    "ORDER_STATUS_INVALID": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "ORDER_TIMEOUT": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "PARTNER_REQUIRED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 4
+    },
+    "PAYMENT_AMOUNT_MISMATCH": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "PAYMENT_CREATE_FAILED": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "PAYMENT_NOTIFY_INVALID": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "PERMISSION_DENIED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 35
+    },
+    "PET_NOT_FOUND": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "PRODUCT_NOT_FOUND": {
+      "registered": true,
+      "used": true,
+      "usageCount": 2
+    },
+    "RATE_LIMITED": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "REFUND_FAILED": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "RISK_PASS": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "RISK_PENDING": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "RISK_REJECT": {
+      "registered": true,
+      "used": true,
+      "usageCount": 3
+    },
+    "SERVICE_UNAVAILABLE": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "STATE_INVALID": {
+      "registered": true,
+      "used": true,
+      "usageCount": 2
+    },
+    "STOCK_INSUFFICIENT": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "SUPER_ADMIN_REQUIRED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "TOKEN_EXPIRED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 15
+    },
+    "TOKEN_INVALID": {
+      "registered": true,
+      "used": true,
+      "usageCount": 30
+    },
+    "UNKNOWN_ACTION": {
+      "registered": true,
+      "used": true,
+      "usageCount": 18
+    },
+    "USER_NOT_FOUND": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    },
+    "WECHAT_API_ERROR": {
+      "registered": true,
+      "used": false,
+      "usageCount": 0
+    },
+    "WX_LOGIN_FAILED": {
+      "registered": true,
+      "used": true,
+      "usageCount": 1
+    }
+  }
+}

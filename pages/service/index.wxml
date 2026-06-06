@@ -1,0 +1,64 @@
+<view class="page">
+  <view class="gallery-header">
+    <view class="brand-block">
+      <view class="brand-accent-bar"></view>
+      <view class="brand-main">
+        <text class="brand-text">宠物服务</text>
+      </view>
+      <view class="brand-meta">
+        <view class="brand-meta-line"></view>
+        <text class="brand-subtitle">上门洗护·喂养·寄养</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="selector-card">
+    <view class="selector-row location-row">
+      <view class="city-selector-inline" bindtap="handleCityTap">
+        <text class="city-name {{city ? '' : 'placeholder'}}">{{city || '定位中'}}</text>
+        <view class="city-arrow"></view>
+      </view>
+      <view class="location-divider"></view>
+      <view class="selector-left" bindtap="handleLocationTap">
+        <text class="selector-label">服务位置</text>
+        <text class="selector-value {{locationText ? '' : 'secondary'}}">{{locationText || '请选择服务位置'}}</text>
+      </view>
+      <view class="selector-right" bindtap="handleRelocate">
+        <view class="location-icon-wrap">
+          <view class="location-icon"></view>
+        </view>
+        <text class="location-text">选择</text>
+        <view class="selector-arrow"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="book-btn-section">
+    <button class="book-btn" bindtap="handleBookTap">
+      <text class="book-text">立刻预约</text>
+    </button>
+  </view>
+
+  <view class="quick-actions">
+    <view class="action-item" bindtap="handlePricingTap">
+      <view class="action-icon-wrap pricing-wrap">
+        <view class="action-icon pricing-icon"></view>
+      </view>
+      <text class="action-text">服务收费</text>
+    </view>
+    <view class="action-item" bindtap="handleGuideTap">
+      <view class="action-icon-wrap guide-wrap">
+        <view class="action-icon guide-icon"></view>
+      </view>
+      <text class="action-text">预约指引</text>
+    </view>
+    <view class="action-item" bindtap="handleFaqTap">
+      <view class="action-icon-wrap faq-wrap">
+        <view class="action-icon faq-icon"></view>
+      </view>
+      <text class="action-text">常见问题</text>
+    </view>
+  </view>
+
+  <view class="bottom-spacer"></view>
+</view>
