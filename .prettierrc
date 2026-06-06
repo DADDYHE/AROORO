@@ -6,6 +6,13 @@
   "tabWidth": 2,
   "useTabs": false,
   "bracketSpacing": true,
-  "jsxBracketSameLine": false,
-  "arrowParens": "avoid"
+  "bracketSameLine": false,
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
+  "proseWrap": "preserve",
+  "htmlWhitespaceSensitivity": "css",
+  "vueIndentScriptAndStyle": false,
+  "insertPragma": false,
+  "requirePragma": false,
+  "singleAttributePerLine": false
 }

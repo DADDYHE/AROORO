@@ -15,6 +15,70 @@
   color: white;
 }
 
+/* 加载中状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 30rpx;
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.06);
+  margin: 40rpx;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+}
+
+.spinner-circle {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background-color: #007AFF;
+  margin: 0 8rpx;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.spinner-circle:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.spinner-circle:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #999999;
+  font-weight: 500;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .nav-left, .nav-right {
   width: 80rpx;
   height: 100rpx;
@@ -297,24 +361,6 @@
   margin-bottom: 15rpx;
 }
 
-.host-rating {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15rpx;
-}
-
-.rating {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #ff6b35;
-  margin-right: 10rpx;
-}
-
-.reviews {
-  font-size: 28rpx;
-  color: #999;
-}
-
 .host-location {
   font-size: 28rpx;
   color: #666;
@@ -527,68 +573,4 @@
   fill: currentColor;
 }
 
-/* 用户评价 */
-.review-item {
-  margin-bottom: 40rpx;
-  padding-bottom: 40rpx;
-  border-bottom: 2rpx solid #f0f0f0;
-}
 
-.review-item:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.reviewer-info {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.reviewer-avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  margin-right: 20rpx;
-}
-
-.reviewer-details {
-  flex: 1;
-}
-
-.reviewer-name {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10rpx;
-}
-
-.review-date {
-  font-size: 26rpx;
-  color: #999;
-}
-
-.review-content {
-  font-size: 30rpx;
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 20rpx;
-}
-
-.review-images {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.review-image {
-  width: 160rpx;
-  height: 160rpx;
-  margin-right: 20rpx;
-  margin-bottom: 20rpx;
-  border-radius: 12rpx;
-}
-
-.review-image:nth-child(3n) {
-  margin-right: 0;
-}

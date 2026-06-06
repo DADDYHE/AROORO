@@ -1,24 +1,23 @@
 {
   "pages": [
     "pages/home/index",
-    "pages/booking/calendar",
+    "pages/discover/index",
+    "pages/service/index",
+    "pages/quick-register/index",
     "pages/messages/index",
-    "pages/pet/list",
-    "pages/pet/detail",
-    "pages/pet/update-profile",
     "pages/profile/index",
-    "pages/chooseIdentity/chooseIdentity"
+    "pages/group-detail/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "宠物寄养平台",
+    "navigationBarTitleText": "AROORO",
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
     "custom": true,
     "color": "#666666",
-    "selectedColor": "#FF6B00",
+    "selectedColor": "#4ECDC4",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
@@ -29,14 +28,20 @@
         "selectedIconPath": "images/tabBar/home_white.png"
       },
       {
-        "pagePath": "pages/booking/calendar",
-        "text": "预订",
+        "pagePath": "pages/quick-register/index",
+        "text": "一键报名",
         "iconPath": "images/tabBar/booking_normal.png",
         "selectedIconPath": "images/tabBar/booking_white.png"
       },
       {
-        "pagePath": "pages/messages/index",
-        "text": "消息",
+        "pagePath": "pages/discover/index",
+        "text": "宠团团",
+        "iconPath": "images/tabBar/booking_normal.png",
+        "selectedIconPath": "images/tabBar/booking_white.png"
+      },
+      {
+        "pagePath": "pages/service/index",
+        "text": "宠物服务",
         "iconPath": "images/tabBar/messages_normal.png",
         "selectedIconPath": "images/tabBar/messages_white.png"
       },
@@ -50,26 +55,23 @@
   },
   "style": "v2",
   "renderer": "webview",
+  "lazyCodeLoading": "requiredComponents",
+  "usingComponents": {},
   "sitemapLocation": "sitemap.json",
   "permission": {
-    "scope.userLocation": {
+    "scope.userFuzzyLocation": {
       "desc": "您的位置信息将用于推荐附近的寄养家庭"
     }
   },
   "requiredPrivateInfos": [
     "chooseLocation",
-    "getLocation"
+    "getFuzzyLocation"
   ],
   "networkTimeout": {
-    "request": 10000,
-    "downloadFile": 10000
-  },
-  "lazyCodeLoading": "requiredComponents",
-
-  "usingComponents": {
-    "van-icon": "@vant/icon/index",
-    "van-button": "@vant/button/index",
-    "van-field": "@vant/field/index"
+    "request": 30000,
+    "connectSocket": 30000,
+    "uploadFile": 60000,
+    "downloadFile": 60000
   },
   "subPackages": [
     {
@@ -77,7 +79,6 @@
       "name": "booking",
       "pages": [
         "pet-select",
-        "requirements",
         "confirm",
         "host-list",
         "host-list-all",
@@ -89,39 +90,62 @@
       "name": "pet",
       "pages": [
         "create-step1",
-        "create-step2",
-        "create-step3",
-        "create-step4"
+        "list",
+        "detail",
+        "update-profile"
       ]
     },
     {
       "root": "subpackages/profile",
       "name": "profile",
       "pages": [
-        "settings/index",
+        "login/index",
         "edit/index",
         "about/about",
         "privacy/privacy",
-        "agreement/agreement"
+        "agreement/agreement",
+        "notification/list",
+        "notification/detail",
+        "referral/index",
+        "order-stats/index",
+        "mall-order-detail/index",
+        "order-detail/index"
       ]
     },
     {
-      "root": "subpackages/hosting",
-      "name": "hosting",
+      "root": "subpackages/activity",
+      "name": "activity",
       "pages": [
-        "index",
-        "edit-basic-info",
-        "edit"
+        "list",
+        "detail",
+        "register",
+        "friend",
+        "my-registered",
+        "map-view",
+        "payment"
       ]
     },
     {
-      "root": "subpackages/host-register",
-      "name": "host-register",
+      "root": "subpackages/mall",
+      "name": "mall",
       "pages": [
-        "step1",
-        "step2",
-        "step3",
-        "step4"
+        "product-list",
+        "product-detail",
+        "order-confirm",
+        "cart"
+      ]
+    },
+    {
+      "root": "subpackages/feeding",
+      "name": "feeding",
+      "pages": [
+        "feeder-detail",
+        "service-detail",
+        "groomer-list",
+        "groomer-detail",
+        "order-confirm",
+        "confirm-service",
+        "order-status"
       ]
     },
     {
@@ -131,31 +155,31 @@
         "favorites/index",
         "album/index",
         "video-list/index",
-        "photo-viewer/index",
-        "init-messages/index",
-        "address/index",
-        "messages/chat/chat"
+        "address/index"
       ]
     },
     {
-      "root": "TUI-Messages",
-      "name": "TUI-Messages",
+      "root": "subpackages/coupon",
+      "name": "coupon",
       "pages": [
-        "TUI-Chat/chat",
-        "TUI-Conversation/conversation/conversation"
-      ],
-      "independent": false
+        "my-coupons"
+      ]
     },
     {
-      "root": "subpackages/im-deps",
-      "name": "im-deps",
-      "pages": []
+      "root": "subpackages/partner",
+      "name": "partner",
+      "pages": [
+        "home/index",
+        "activity-list/index",
+        "activity-create/index",
+        "activity-detail/index",
+        "hosting-profile/index",
+        "feeding/index",
+        "income/index",
+        "application/index",
+        "referral/index",
+        "i18n-override/index"
+      ]
     }
-  ],
-  "preloadRule": {
-    "pages/messages/index": {
-      "network": "all",
-      "packages": ["TUI-Messages"]
-    }
-  }
+  ]
 }

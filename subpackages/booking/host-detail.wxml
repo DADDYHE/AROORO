@@ -1,4 +1,15 @@
 <view class="container">
+  <!-- 加载中状态 -->
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-spinner">
+      <view class="spinner-circle"></view>
+      <view class="spinner-circle"></view>
+      <view class="spinner-circle"></view>
+    </view>
+    <text class="loading-text">正在加载寄养家庭详情...</text>
+  </view>
+  
+  <view wx:else>
   
   <!-- 轮播图容器 -->
   <view class="swiper-container">
@@ -22,7 +33,7 @@
           <!-- 环境照片 -->
           <swiper-item wx:if="{{currentMediaType === 'photos'}}" wx:for="{{host.photos || []}}" wx:key="index">
             <view class="photo-wrapper" catchtap="goToPhotosPage">
-              <image class="main-photo" src="{{item}}" mode="scaleToFill"></image>
+              <image lazy-load class="main-photo" src="{{item}}" mode="scaleToFill" binderror="onCloudImageError" data-src="{{item}}" data-path="host.photos[{{index}}]"></image>
               <!-- 第4张及之后的照片添加查看更多提示 -->
               <view class="more-tip" wx:if="{{index === 3 && host.photos.length > 4}}" catchtap="viewMorePhotos">
                 <text class="more-text">+{{host.photos.length - 4}}张</text>
@@ -38,7 +49,7 @@
                 class="main-video" 
                 src="{{item}}" 
                 controls="{{true}}" 
-                poster="https://picsum.photos/600/400?random={{index+9}}"
+                poster="/images/default-photo.png"
                 id="video{{index}}"
               ></video>
               <!-- 第4张及之后的视频添加查看更多提示 -->
@@ -52,13 +63,13 @@
         
         <!-- 媒体类型切换按钮 - 放在同一个背景中 -->
         <view class="media-type-buttons">
-          <view class="media-type-btn {{currentMediaType === 'photos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="photos">
+          <view class="media-type-btn interaction-btn {{currentMediaType === 'photos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="photos">
             环境照片
           </view>
-          <view class="media-type-btn {{currentMediaType === 'videos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="videos">
+          <view class="media-type-btn interaction-btn {{currentMediaType === 'videos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="videos">
             日常视频
           </view>
-          <view class="media-type-btn album-btn {{currentMediaType === 'album' ? 'active' : ''}}" catchtap="switchMediaType" data-type="album">
+          <view class="media-type-btn interaction-btn album-btn {{currentMediaType === 'album' ? 'active' : ''}}" catchtap="switchMediaType" data-type="album">
             <view class="album-separator"></view>
             <text class="album-text">相册</text>
             <view class="album-arrow"></view>
@@ -73,17 +84,13 @@
   <!-- 寄养家庭基本信息 - 往下放 -->
   <view class="host-info">
     <view class="avatar-container">
-      <image class="avatar" src="{{host.avatarUrl}}" mode="aspectFill"></image>
+      <image lazy-load class="avatar" src="{{host.avatarUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{host.avatarUrl}}" data-path="host.avatarUrl"></image>
     </view>
     <view class="host-details">
       <view class="host-header">
         <view class="host-name">{{host.name}}</view>
         <!-- 收藏按钮 -->
-        <favorite-btn is-active="{{isFavorited}}" bind:toggle="toggleFavorite"></favorite-btn>
-      </view>
-      <view class="host-rating">
-        <text class="rating">{{host.rating}}</text>
-        <text class="reviews">{{host.reviews}}条评价</text>
+        <favorite-btn is-active="{{isFavorited}}" loading="{{isFavoriteLoading}}" bind:toggle="toggleFavorite"></favorite-btn>
       </view>
       <view class="host-location">{{host.location}}</view>
     </view>
@@ -98,7 +105,7 @@
     </view>
     <view class="action-buttons">
       <view 
-        class="booking-btn {{host.isAcceptingOrders === false ? 'disabled' : ''}}" 
+        class="booking-btn interaction-btn {{host.isAcceptingOrders === false ? 'disabled' : ''}}" 
         catchtap="{{host.isAcceptingOrders === false ? '' : 'contactFamily'}}"
       >
         {{host.isAcceptingOrders === false ? '已暂停接待' : '联系家庭'}}
@@ -138,21 +145,6 @@
     </view>
   </view>
 
-  <!-- 评价 -->
-  <view class="section">
-    <view class="section-title">用户评价</view>
-    <view class="review-item" wx:for="{{reviews}}" wx:key="index">
-      <view class="reviewer-info">
-        <image class="reviewer-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
-        <view class="reviewer-details">
-          <view class="reviewer-name">{{item.name}}</view>
-          <view class="review-date">{{item.date}}</view>
-        </view>
-      </view>
-      <view class="review-content">{{item.content}}</view>
-      <view class="review-images" wx:if="{{item.images.length > 0}}">
-        <image class="review-image" src="{{image}}" mode="aspectFill" wx:for="{{item.images}}" wx:key="index"></image>
-      </view>
-    </view>
-  </view>
+  
+  </view>  <!-- 结束 isLoading 的 wx:else -->
 </view>

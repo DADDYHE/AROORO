@@ -1,214 +1,226 @@
-const app = getApp()
-import loginModule from '../../src/modules/auth/index'
+const { authService } = require('../../services/AuthService')
+const { petService } = require('./index')
+const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+
+const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
+  ...pageI18n.mixin(),
+  behaviors: [cloudImageBehavior],
   data: {
     formData: {
+      avatarUrl: '',
       name: '',
       type: '',
-      age: '',
+      gender: '',
+      breed: '',
+      birthday: '',
       weight: '',
-      breed: ''
+      note: ''
     },
     petTypes: [
+      { name: '猫咪', value: 'cat' },
       { name: '狗狗', value: 'dog' },
-      { name: '猫咪', value: 'cat' }
+      { name: '异宠', value: 'exotic' }
+    ],
+    petGenders: [
+      { name: '弟弟', value: 'male' },
+      { name: '妹妹', value: 'female' },
+      { name: '不确定', value: 'unknown' }
     ],
     showTypeSheet: false,
-    isLoggedIn: false,
-    // 步骤指示器数据
-    currentActive: 0,
-    stepsData: [
-      { text: '基本信息' },
-      { text: '健康状况' },
-      { text: '生活习惯' },
-      { text: '紧急联系人' }
-    ]
+    showGenderSheet: false,
+    showBirthdayPicker: false,
+    currentDate: new Date().getTime(),
+    minDate: new Date(2000, 0, 1).getTime(),
+    maxDate: new Date().getTime(),
+    isLoggedIn: false
   },
 
-  async onLoad() {
-    console.log('create-step1: 页面加载')
-    // 立即强制渲染步骤指示器
-    this.setData({
-      currentActive: 0,
-      stepsData: [
-        { text: '基本信息' },
-        { text: '健康状况' },
-        { text: '生活习惯' },
-        { text: '紧急联系人' }
-      ]
-    })
-    // 延迟再更新一次
-    setTimeout(() => {
-      this.setData({
-        currentActive: 0,
-        stepsData: [
-          { text: '基本信息' },
-          { text: '健康状况' },
-          { text: '生活习惯' },
-          { text: '紧急联系人' }
-        ]
-      })
-      console.log('create-step1: 强制更新步骤指示器数据')
-    }, 100)
-    
-    // 检查用户是否已登录
-    await this.checkLoginStatus()
-    
-    // 检查权限
-    try {
-      const userRole = loginModule.getUserRole() || 'owner'
-      const canCreate = userRole === 'owner'
-      if (!canCreate) {
-        wx.showToast({
-          title: '只有宠物主人可以创建宠物档案',
-          icon: 'none'
-        })
-        setTimeout(() => {
-          wx.navigateBack()
-        }, 1500)
+  onLoad() {
+    const isLoggedIn = authService.isLoggedIn()
+    this.setData({ isLoggedIn })
+  },
+
+  loginWithWechat() {
+    authService.startLogin()
+  },
+
+  chooseAvatar() {
+    wx.showActionSheet({
+      itemList: ['从相册选择', '拍照'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          this.chooseImageFromAlbum()
+        } else if (res.tapIndex === 1) {
+          this.takePhoto()
+        }
+      },
+      fail: (error) => {
+        console.error('[APP] 选择操作失败:', error)
       }
-    } catch (error) {
-      console.error('检查创建权限失败:', error)
-      // 发生错误时，默认允许创建，避免影响用户体验
-    }
-  },
-
-  // 检查用户登录状态
-  async checkLoginStatus() {
-    try {
-      const isLoggedIn = await loginModule.checkLoginStatusValid()
-      this.setData({
-        isLoggedIn: isLoggedIn
-      })
-    } catch (error) {
-      console.error('检查登录状态失败:', error)
-      this.setData({
-        isLoggedIn: false
-      })
-    }
-  },
-
-  // 微信快捷登录
-  async loginWithWechat() {
-    wx.showLoading({
-      title: '登录中...'
     })
-    
-    try {
-      // 使用标准登录模块登录
-      const loginResult = await loginModule.login()
-      
-      if (loginResult.success) {
-        console.log('登录成功:', loginResult)
-        
-        // 更新页面数据
-        this.setData({
-          isLoggedIn: true
-        })
-        
-        wx.hideLoading()
-        wx.showToast({
-          title: '登录成功',
-          icon: 'success'
-        })
-      } else {
-        console.error('登录失败：', loginResult.message)
-        wx.hideLoading()
-        wx.showToast({
-          title: '登录失败',
-          icon: 'none'
-        })
+  },
+
+  chooseImageFromAlbum() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album'],
+      success: (res) => {
+        this.uploadAvatar(res.tempFiles[0].tempFilePath)
+      },
+      fail: (error) => {
+        console.error('[APP] 选择图片失败:', error)
+        this.error('CHOOSE_IMAGE_FAILED')
       }
-    } catch (error) {
-      console.error('登录失败：', error)
+    })
+  },
+
+  takePhoto() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['camera'],
+      success: (res) => {
+        this.uploadAvatar(res.tempFiles[0].tempFilePath)
+      },
+      fail: (error) => {
+        console.error('[APP] 拍照失败:', error)
+        this.error('PHOTO_FAILED')
+      }
+    })
+  },
+
+  async uploadAvatar(tempFilePath) {
+    try {
+      wx.showLoading({ title: '上传中...', mask: true })
+      const fileName = `pet-avatarUrls/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
+      const uploadResult = await wx.cloud.uploadFile({
+        cloudPath: fileName,
+        filePath: tempFilePath
+      })
+      this.setData({ 'formData.avatarUrl': uploadResult.fileID })
       wx.hideLoading()
-      wx.showToast({
-        title: '登录失败',
-        icon: 'none'
-      })
+      this.toast('AVATAR_UPLOAD_SUCCESS')
+    } catch (error) {
+      console.error('[APP] 头像上传失败:', error)
+      wx.hideLoading()
+      this.error('AVATAR_UPLOAD_FAILED')
     }
   },
 
-  // 输入处理
   onNameInput(e) {
-    const formData = { ...this.data.formData }
-    formData.name = e.detail.value ? String(e.detail.value) : ''
-    this.setData({ formData })
-  },
-
-  onAgeInput(e) {
-    const formData = { ...this.data.formData }
-    formData.age = e.detail.value ? String(e.detail.value) : ''
-    this.setData({ formData })
-  },
-
-  onWeightInput(e) {
-    const formData = { ...this.data.formData }
-    formData.weight = e.detail.value ? String(e.detail.value) : ''
-    this.setData({ formData })
+    this.setData({ 'formData.name': e.detail.value ? String(e.detail.value) : '' })
   },
 
   onBreedInput(e) {
-    const formData = { ...this.data.formData }
-    formData.breed = e.detail.value ? String(e.detail.value) : ''
-    this.setData({ formData })
+    this.setData({ 'formData.breed': e.detail.value ? String(e.detail.value) : '' })
   },
 
-  // 选择宠物类型
+  onWeightInput(e) {
+    this.setData({ 'formData.weight': e.detail.value ? String(e.detail.value) : '' })
+  },
+
+  onNoteInput(e) {
+    this.setData({ 'formData.note': e.detail.value ? String(e.detail.value) : '' })
+  },
+
   selectPetType() {
     this.setData({ showTypeSheet: true })
   },
 
   onSelectType(event) {
-    const formData = { ...this.data.formData }
-    formData.type = event.detail.value
-    this.setData({ 
-      formData,
-      showTypeSheet: false
-    })
+    const selected = this.data.petTypes.find(item => item.name === event.detail.name)
+    this.setData({ 'formData.type': selected ? selected.value : '', showTypeSheet: false })
   },
 
   onCloseTypeSheet() {
     this.setData({ showTypeSheet: false })
   },
 
-  // 下一步
-  nextStep() {
+  selectGender() {
+    this.setData({ showGenderSheet: true })
+  },
+
+  onSelectGender(event) {
+    const selected = this.data.petGenders.find(item => item.name === event.detail.name)
+    this.setData({ 'formData.gender': selected ? selected.value : '', showGenderSheet: false })
+  },
+
+  onCloseGenderSheet() {
+    this.setData({ showGenderSheet: false })
+  },
+
+  selectBirthday() {
+    this.setData({ showBirthdayPicker: true })
+  },
+
+  onConfirmBirthday(e) {
+    const date = new Date(e.detail)
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    this.setData({ 'formData.birthday': `${y}-${m}-${d}`, showBirthdayPicker: false })
+  },
+
+  onCloseBirthday() {
+    this.setData({ showBirthdayPicker: false })
+  },
+
+  async completeCreate() {
     if (!this.data.isLoggedIn) {
-      wx.showModal({
-        title: '请登录',
-        content: '您需要先登录才能创建宠物档案',
-        confirmText: '去登录',
-        success: (res) => {
-          if (res.confirm) {
-            this.loginWithWechat()
-          }
+      this.showModal({ titleKey: 'BIZ_L2PGX', contentKey: 'BIZ_414LG6', confirmText: '去登录' })
+      return
+    }
+
+    const { name, type, breed, gender } = this.data.formData
+    if (!name || !type || !breed || !gender) {
+      this.error('FILL_ALL_REQUIRED')
+      return
+    }
+
+    wx.showLoading({ title: '创建中...', mask: true })
+
+    try {
+      const submitData = {
+        name: this.data.formData.name,
+        type: this.data.formData.type,
+        gender: this.data.formData.gender,
+        breed: this.data.formData.breed,
+        birthday: this.data.formData.birthday || '',
+        weight: this.data.formData.weight || '',
+        note: this.data.formData.note || '',
+        avatarUrl: this.data.formData.avatarUrl || '',
+      }
+
+      console.log('[APP] createPet submitData:', JSON.stringify(submitData))
+      const result = await petService.createPet(submitData)
+      wx.hideLoading()
+
+      if (result && (result.id || result.pet)) {
+        this.toast('PET_CREATE_SUCCESS')
+
+        try {
+          const { petStore } = require('./store/petStore')
+          await petStore.fetchPetList(true)
+        } catch (e) {
+          console.warn('[APP] 刷新宠物列表缓存失败:', e)
         }
-      })
-      return
+
+        setTimeout(() => {
+          wx.switchTab({ url: '/pages/home/index' })
+        }, 1500)
+      } else {
+        console.error('[APP] 创建宠物档案失败:', result)
+        this.errorDynamic(result.message, 'CREATE_FAILED')
+      }
+    } catch (error) {
+      wx.hideLoading()
+      console.error('[APP] 创建宠物档案失败:', error)
+      this.error('CREATE_RETRY_LATER')
     }
+  },
 
-    const { name, type, age, weight, breed } = this.data.formData
-
-    if (!name || !type || !age || !weight || !breed) {
-      wx.showToast({
-        title: '请填写完整的信息',
-        icon: 'none'
-      })
-      return
-    }
-
-    // 保存到全局变量，根据用户角色保存到对应的身份数据中
-    const userRole = app.globalData.userRole || 'owner'
-    if (userRole === 'owner') {
-      app.globalData.ownerData.petFormData = { ...this.data.formData }
-    } else {
-      app.globalData.hostData.petFormData = { ...this.data.formData }
-    }
-
-    wx.navigateTo({
-      url: '/subpackages/pet/create-step2'
-    })
-  }
+  onUnload() {}
 })

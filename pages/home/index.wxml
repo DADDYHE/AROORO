@@ -1,341 +1,215 @@
-<!-- 首页 - 巴黎世家风格 -->
-<view class="page-container">
-  <!-- 模糊背景层 - 当登录表单或身份选择表单显示时显示 -->
-  <view class="blur-background" wx:if="{{showLoginForm || showIdentityForm}}"></view>
-  <!-- 头部区域 -->
-  <view class="page-header">
-    <view class="header-content">
-      <!-- 品牌标识 -->
-      <view class="brand-logo">Arooro</view>
-      <!-- 用户信息区域 -->
-      <view class="user-info {{isLoggedIn ? 'logged-in' : ''}}">
-        <view class="avatar-container" wx:if="{{isLoggedIn}}">
-          <!-- Host角色头像 -->
-          <block wx:if="{{userRole === 'host'}}">
-            <image
-              class="avatar-image"
-              wx:if="{{hostProfile && hostProfile.avatarUrl}}"
-              src="{{hostProfile.avatarUrl}}"
-              binderror="onAvatarLoadError"
-              mode="aspectFill"
-            />
-            <image class="svg-avatar" wx:else src="/images/default-avatar.svg" mode="aspectFit"></image>
-          </block>
-          <!-- Owner角色头像 -->
-          <block wx:else>
-            <image
-              class="avatar-image"
-              wx:if="{{userInfo && userInfo.avatarUrl}}"
-              src="{{userInfo.avatarUrl}}"
-              binderror="onAvatarLoadError"
-              mode="aspectFill"
-            />
-            <image class="svg-avatar" wx:else src="/images/default-avatar.svg" mode="aspectFit"></image>
-          </block>
-        </view>
-        <!-- 未登录状态 - 与登录状态使用相同的头像容器结构 -->
-        <view 
-          class="avatar-container" 
-          wx:if="{{!isLoggedIn && !isLoading && !showLoginForm}}"
-          bindtap="onLoginButtonTap"
-          style="cursor: pointer;"
-        >
-          <image class="svg-avatar" src="/images/default-avatar.svg" mode="aspectFit"></image>
-        </view>
-        <!-- 未登录状态下的文字提示，与登录状态下的文字位置一致 -->
-        <view class="user-details" wx:if="{{!isLoggedIn && !isLoading && !showLoginForm}}">
-          <text class="welcome">点击头像登录</text>
-        </view>
-        
-        <!-- 登录表单 - 获取用户头像和昵称，必须完成的流程 -->
-        <view class="login-form" wx:if="{{showLoginForm}}">
-          <!-- 头像选择 - 直接放在最顶部 -->
-          <view class="form-item">
-            <view class="avatar-upload-container">
-              <button 
-                class="avatar-upload-btn" 
-                open-type="chooseAvatar" 
-                bindchooseavatar="onChooseAvatar"
-                disabled="{{isLoggingIn}}"
-              >
-                <image class="avatar-preview" src="{{avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill"></image>
-                <view class="upload-text">点击选择头像</view>
-              </button>
-            </view>
-          </view>
-          
-          <!-- 昵称输入 -->
-          <view class="form-item nickname-form-item">
-            <input 
-              class="nickname-input" 
-              type="nickname" 
-              placeholder="点击输入昵称" 
-              value="{{nickName}}" 
-              bindinput="onNicknameInput"
-              bindtap="onNicknameInputTap"
-              disabled="{{isLoggingIn}}"
-            />
-          </view>
-          
-          <!-- 登录和取消按钮 - 同一行显示 -->
-          <view class="buttons-container">
-            <button 
-              class="cancel-btn" 
-              bindtap="onCancelLogin"
-              disabled="{{isLoggingIn}}"
-            >
-              取消
-            </button>
-            <button 
-              class="login-submit-btn" 
-              bindtap="onSubmitLogin" 
-              disabled="{{!avatarUrl || !nickName || isLoggingIn}}"
-            >
-              完成登录
-            </button>
-          </view>
-          
-          <!-- 登录加载动画 - 居中显示 -->
-          <view class="login-loading-overlay" wx:if="{{isLoggingIn}}">
-            <view class="loading-content">
-              <view class="loading-spinner"></view>
-              <text class="loading-text">登录中...</text>
-            </view>
+<view class="home-container">
+  <!-- 轮播 Banner -->
+  <swiper class="home-banner" style="height: {{bannerHeight}}px;" autoplay circular interval="5000" indicator-dots indicator-color="rgba(255,255,255,0.3)" indicator-active-color="#ffffff">
+    <swiper-item wx:for="{{bannerList}}" wx:key="id">
+      <view class="banner-item" data-action="{{item.action}}" data-target="{{item.actionTarget}}" bindtap="handleBannerTap">
+        <image lazy-load class="banner-image" src="{{item.image}}" mode="widthFix" binderror="onCloudImageError" data-src="{{item.image}}" data-path="bannerList[{{index}}].image" />
+        <view class="banner-overlay"></view>
+        <view class="banner-content">
+          <view class="banner-tag">{{item.tag || 'AROORO'}}</view>
+          <text class="banner-title">{{item.title}}</text>
+          <text class="banner-subtitle">{{item.subtitle}}</text>
+          <view class="banner-cta">
+            <text class="banner-cta-text">{{item.ctaText || '立即体验'}}</text>
+            <view class="banner-cta-arrow">→</view>
           </view>
         </view>
-        
-        <!-- 身份选择表单 - 弹出式，参考登录表单风格 -->
-        <view class="identity-form" wx:if="{{showIdentityForm}}">
-          <!-- 表单标题 -->
-          <view class="form-title">选择身份</view>
-          
-          <!-- 已有身份列表 - 只有当用户有身份时显示 -->
-          <view class="identity-list" wx:if="{{existingRoles && existingRoles.length > 0}}">
-            <view class="section-title">已有身份</view>
-            <view wx:for="{{existingRoles}}" wx:key="roleType" class="identity-item" bindtap="selectExistingRole" data-role-type="{{item.roleType}}">
-              <view class="identity-icon">{{item.roleType === 'owner' ? '🐾' : '🏠'}}</view>
-              <view class="identity-info">
-                <view class="identity-name">{{item.roleType === 'owner' ? '宠物主人' : '寄养家庭'}}</view>
-                <view class="identity-desc">点击登录</view>
-              </view>
-              <view class="identity-arrow">></view>
-            </view>
-          </view>
-          
-          <!-- 创建新身份选项 - 只有当用户没有身份时显示 -->
-          <view class="create-identity-section" wx:if="{{!existingRoles || existingRoles.length === 0}}">
-            <view class="section-title">创建新身份</view>
-            <view class="create-options">
-              <view class="create-item" bindtap="createOwnerIdentity">
-                <view class="create-icon">🐾</view>
-                <view class="create-info">
-                  <view class="create-name">宠物主人</view>
-                  <view class="create-desc">创建宠物主人身份</view>
-                </view>
-              </view>
-              <view class="create-item" bindtap="createHostIdentity">
-                <view class="create-icon">🏠</view>
-                <view class="create-info">
-                  <view class="create-name">寄养家庭</view>
-                  <view class="create-desc">创建寄养家庭身份</view>
-                </view>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 取消按钮 -->
-          <view class="buttons-container">
-            <button 
-              class="cancel-btn full-width" 
-              bindtap="hideIdentityForm"
-            >
-              取消
-            </button>
-          </view>
-        </view>
-        <!-- 加载状态 -->
-        <view class="loading-container" wx:if="{{isLoading}}">
-          <van-loading type="spinner" size="24px">加载中...</van-loading>
-        </view>
-        <view class="user-details" wx:if="{{isLoggedIn}}">
-          <text class="welcome">{{userRole === 'host' ? (hostProfile && hostProfile.hostName ? hostProfile.hostName : (userInfo && userInfo.nickName ? userInfo.nickName : '未设置寄养家庭名称')) : (userInfo && userInfo.nickName ? userInfo.nickName : '未知用户')}}</text>
-          <text class="role-tag">{{userRole === 'owner' ? '宠物主人' : '寄养家庭'}}</text>
+        <view class="banner-decoration">
+          <view class="deco-line deco-line-1"></view>
+          <view class="deco-line deco-line-2"></view>
+          <view class="deco-circle"></view>
         </view>
       </view>
+    </swiper-item>
+  </swiper>
 
-
-    </view>
-  </view>
-
-  <!-- 主要内容 -->
   <view class="page-content">
-    <!-- 快速导航 - 根据用户角色显示不同内容 -->
-    <view class="card">
-      <view class="card-title">{{userRole === 'owner' ? '快速导航' : '管理中心'}}</view>
-      <view class="nav-grid">
-        <!-- 宠物主人角色导航 -->
-        <view wx:if="{{userRole === 'owner'}}" class="nav-item {{activeNavItem === 'navigateToBooking' ? 'active' : ''}}" bindtouchstart="onNavTouchStart" bindtouchend="onNavTouchEnd" bindtouchcancel="onNavTouchCancel" data-action="navigateToBooking">
-          <view class="nav-icon">
-            <van-icon name="/images/icons/calendar-schedule-line.svg" size="32" />
-          </view>
-          <text class="nav-text">立即预订</text>
+
+    <!-- 登录提示（未登录时显示） -->
+    <view wx:if="{{!isLoggedIn}}" class="login-prompt-card card">
+      <view class="login-prompt-content">
+        <view class="login-prompt-text">
+          <text class="login-prompt-title">欢迎加入AROORO</text>
+          <text class="login-prompt-subtitle">安心呼噜，放心托付</text>
         </view>
-        <view wx:if="{{userRole === 'owner'}}" class="nav-item {{activeNavItem === 'navigateToPets' ? 'active' : ''}}" bindtouchstart="onNavTouchStart" bindtouchend="onNavTouchEnd" bindtouchcancel="onNavTouchCancel" data-action="navigateToPets">
-          <view class="nav-icon">
-            <van-icon name="/images/icons/paw-fill.svg" size="32" />
-          </view>
-          <text class="nav-text">我的宠物</text>
-        </view>
-        <view wx:if="{{userRole === 'owner'}}" class="nav-item {{activeNavItem === 'navigateToFavorites' ? 'active' : ''}}" bindtouchstart="onNavTouchStart" bindtouchend="onNavTouchEnd" bindtouchcancel="onNavTouchCancel" data-action="navigateToFavorites">
-          <view class="nav-icon">
-            <van-icon name="/images/icons/heart-fill.svg" size="32" />
-          </view>
-          <text class="nav-text">我的收藏</text>
-        </view>
-        <view wx:if="{{userRole === 'owner'}}" class="nav-item {{activeNavItem === 'navigateToProfile' ? 'active' : ''}}" bindtouchstart="onNavTouchStart" bindtouchend="onNavTouchEnd" bindtouchcancel="onNavTouchCancel" data-action="navigateToProfile">
-          <view class="nav-icon">
-            <van-icon name="/images/icons/profile-line.svg" size="32" />
-          </view>
-          <text class="nav-text">我的</text>
-        </view>
-        
-        <!-- 寄养家庭角色导航 -->
-        <view wx:if="{{userRole === 'host'}}" class="nav-item {{activeNavItem === 'navigateToHostingServices' ? 'active' : ''}}" bindtouchstart="onNavTouchStart" bindtouchend="onNavTouchEnd" bindtouchcancel="onNavTouchCancel" data-action="navigateToHostingServices">
-          <view class="nav-icon">
-            <van-icon name="/images/icons/home-host.svg" size="32" />
-          </view>
-          <text class="nav-text">家庭主页</text>
-        </view>
-        <view wx:if="{{userRole === 'host'}}" class="nav-item {{activeNavItem === 'navigateToOrders' ? 'active' : ''}}" bindtouchstart="onNavTouchStart" bindtouchend="onNavTouchEnd" bindtouchcancel="onNavTouchCancel" data-action="navigateToOrders">
-          <view class="nav-icon">
-            <van-icon name="/images/icons/order-list.svg" size="32" />
-          </view>
-          <text class="nav-text">寄养订单</text>
-        </view>
-        <view wx:if="{{userRole === 'host'}}" class="nav-item {{activeNavItem === 'navigateToCustomers' ? 'active' : ''}}" bindtouchstart="onNavTouchStart" bindtouchend="onNavTouchEnd" bindtouchcancel="onNavTouchCancel" data-action="navigateToCustomers">
-          <view class="nav-icon">
-            <van-icon name="/images/icons/customer-list.svg" size="32" />
-          </view>
-          <text class="nav-text">我的客户</text>
-        </view>
-        <view wx:if="{{userRole === 'host'}}" class="nav-item {{activeNavItem === 'navigateToProfile' ? 'active' : ''}}" bindtouchstart="onNavTouchStart" bindtouchend="onNavTouchEnd" bindtouchcancel="onNavTouchCancel" data-action="navigateToProfile">
-          <view class="nav-icon">
-            <van-icon name="/images/icons/profile-line.svg" size="32" />
-          </view>
-          <text class="nav-text">个人中心</text>
+        <view class="login-prompt-action">
+          <button class="login-prompt-btn" bindtap="handleLogin">立即登录</button>
         </view>
       </view>
     </view>
 
-    <!-- 宠物主人角色内容 -->
-    <view wx:if="{{userRole === 'owner'}}">
-      <!-- 全部寄养家庭 -->
-      <view class="card">
-        <view class="card-header">
-          <text class="card-title">全部寄养家庭</text>
-          <view class="view-more-container" bindtap="viewMoreFamilies">
-            <text class="view-more">查看全部 ></text>
+    <!-- 我的宠物（已登录时显示） -->
+    <view wx:if="{{isLoggedIn}}" class="section-card card">
+      <view class="card-header">
+        <view class="card-title-row">
+          <text class="card-title">我的宠物</text>
+          <view class="add-pet-btn" bindtap="handleAddPet">
+            <text class="add-pet-icon">+</text>
+            <text class="add-pet-text">添加</text>
           </view>
         </view>
-        <view class="host-list" bindtouchstart="onHostListTouchStart" bindtouchmove="onHostListTouchMove" bindtouchend="onHostListTouchEnd">
-          <view
-            wx:for="{{recommendedFamilies}}"
-            wx:key="id"
-            class="host-item {{item.isAcceptingOrders === false ? 'disabled' : ''}}"
-            catchtouchstart="onHostItemTouchStart"
-            catchtouchend="onHostItemTouchEnd"
-            data-id="{{item.id}}"
-            data-is-accepting="{{item.isAcceptingOrders}}"
-          >
-            <view class="host-avatar">
-              <image src="{{item.avatarUrl || ''}}" mode="aspectFit" binderror="onFamilyAvatarLoadError"></image>
-            </view>
+        <view class="view-more-container" bindtap="handleViewAllPets" wx:if="{{hasMorePets}}">
+          <text class="view-more">查看更多</text>
+          <text class="view-more-arrow">›</text>
+        </view>
+      </view>
+      <view class="pets-scroll" wx:if="{{displayPets.length > 0}}">
+        <view class="pet-card pet-card-{{item.genderClass}}" wx:for="{{displayPets}}" wx:key="_id" data-id="{{item._id}}" bindtap="handlePetTap">
+          <image lazy-load class="pet-avatar" src="{{item.avatarUrl}}" mode="aspectFill" wx:if="{{item.avatarUrl}}" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="displayPets[{{index}}].avatarUrl" />
+          <view class="pet-avatar-placeholder" wx:else>
+            <text>{{item.name.charAt(0)}}</text>
+          </view>
+          <view class="pet-info">
+            <text class="pet-name">{{item.name}}</text>
+            <text class="pet-breed">{{item.breed}}</text>
+            <text class="pet-age" wx:if="{{item.birthday}}">{{item.birthday}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-pets" bindtap="handleAddPet">
+        <text class="empty-text">点击添加你的第一只宠物</text>
+      </view>
+    </view>
 
-            <view class="host-info">
-              <text class="host-name">{{item.name}}</text>
-              <view class="host-details">
-                <text class="host-rating">★ {{item.rating}}</text>
-                <text class="host-location">📍 {{item.location}}</text>
+    <!-- 功能入口 -->
+    <view class="feature-card">
+      <view class="feature-grid">
+        <view class="feature-item {{item.id}}-item {{item.comingSoon ? 'coming-soon-item' : ''}}" wx:for="{{featureItems}}" wx:key="id" bindtap="{{item.comingSoon ? '' : 'handleFeatureTap'}}" data-id="{{item.id}}">
+          <view class="feature-background"></view>
+          <view class="feature-content">
+            <view class="feature-icon  feature-icon-{{item.id}}">
+              <image lazy-load class="feature-icon-image" src="{{item.icon}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{item.icon}}" data-path="featureItems[{{index}}].icon" />
+            </view>
+            <text class="feature-text">{{item.name}}</text>
+            <text class="feature-desc">{{item.desc}}</text>
+            <view class="feature-accent"></view>
+          </view>
+          <view wx:if="{{item.comingSoon}}" class="coming-soon-mask">
+            <view class="coming-soon-dots">
+              <view class="coming-soon-dot"></view>
+              <view class="coming-soon-dot"></view>
+              <view class="coming-soon-dot"></view>
+            </view>
+            <text class="coming-soon-text">敬请期待！</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 宠团团 -->
+    <view class="tuan-section" wx:if="{{tuanDeals.length > 0}}">
+      <view class="section-header">
+        <text class="section-title">宠团团</text>
+        <view class="view-more" bindtap="handleViewAllTuan">
+          <text>查看全部</text>
+          <text class="view-more-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="tuan-list">
+        <view class="tuan-card" wx:for="{{tuanDeals}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleTuanTap">
+          <view class="tuan-cover-wrap">
+            <image lazy-load class="tuan-cover" src="{{item.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="tuanDeals[{{index}}].coverUrl" />
+            <view class="tuan-badge">
+              <text class="tuan-badge-text">团购</text>
+            </view>
+          </view>
+          <view class="tuan-info">
+            <text class="tuan-name truncate">{{item.title}}</text>
+            <view class="tuan-meta">
+              <text class="tuan-price">¥{{item.minPrice}}</text>
+              <text class="tuan-orders" wx:if="{{item.totalOrders > 0}}">{{item.totalOrders}}人已团</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 最新活动 -->
+    <view class="activities-section" wx:if="{{latestActivities.length > 0}}">
+      <view class="section-header">
+        <text class="section-title">最新活动</text>
+        <view class="view-more" bindtap="handleViewAllActivities">
+          <text>查看全部</text>
+          <text class="view-more-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="activity-list">
+        <view class="activity-block" wx:for="{{latestActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap">
+          <view class="activity-main">
+            <image lazy-load class="activity-cover" src="{{item.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="latestActivities[{{index}}].coverUrl" />
+            <view class="activity-overlay">
+              <view class="activity-badge {{item.registrationEnded ? 'badge-stopped' : 'badge-active'}}">
+                <text class="badge-dot">{{item.registrationEnded ? '' : '●'}}</text>
+                <text class="badge-text">{{item.registrationEnded ? '已截止' : '报名中'}}</text>
               </view>
-              <!-- 暂停接单标识 -->
-              <text wx:if="{{item.isAcceptingOrders === false}}" class="pause-tag">已暂停接待</text>
             </view>
-
-            <van-icon name="arrow" size="18" color="{{item.isAcceptingOrders === false ? '#e0e0e0' : '#c8c9cc'}}" />
-          </view>
-        </view>
-      </view>
-
-      <!-- 热门活动 -->
-      <view class="card">
-        <view class="card-header">
-          <text class="card-title">热门活动</text>
-          <text class="view-more" bindtap="viewMoreEvents">查看全部 ></text>
-        </view>
-        <view class="event-list">
-          <view class="event-item" wx:for="{{events}}" wx:key="id">
-            <image class="event-image" src="{{item.image || ''}}" binderror="onEventImageLoadError" mode="aspectFit" />
-            <view class="event-info">
-              <text class="event-title">{{item.title}}</text>
-              <text class="event-time">{{item.startDate}} - {{item.endDate}}</text>
-              <text class="event-discount">{{item.discount}}</text>
+            <view class="activity-category-badge" wx:if="{{item.category}}">
+              <text class="category-text">{{item.category === 'outdoor' ? '户外' : item.category === 'social' ? '社交' : item.category === 'training' ? '训练' : item.category === 'health' ? '健康' : item.category}}</text>
             </view>
           </view>
-        </view>
-      </view>
-    </view>
 
-    <!-- 寄养家庭角色内容 -->
-    <view wx:if="{{userRole === 'host'}}">
-      <!-- 统计数据卡片 -->
-      <view class="card">
-        <view class="card-header">
-          <text class="card-title">业务统计</text>
-        </view>
-        <view class="stats-grid">
-          <view class="stat-item">
-            <text class="stat-number">{{hostStats.totalOrders}}</text>
-            <text class="stat-label">总订单数</text>
-          </view>
-          <view class="stat-item">
-            <text class="stat-number">¥{{hostStats.totalIncome}}</text>
-            <text class="stat-label">总收入</text>
-          </view>
-          <view class="stat-item">
-            <text class="stat-number">★{{hostStats.avgRating}}</text>
-            <text class="stat-label">平均评分</text>
-          </view>
-          <view class="stat-item">
-            <text class="stat-number">{{hostStats.pendingOrders}}</text>
-            <text class="stat-label">待处理订单</text>
-          </view>
-        </view>
-      </view>
+          <view class="activity-details">
+            <view class="activity-title-row">
+              <text class="activity-name truncate">{{item.title}}</text>
+              <view class="activity-price {{(item.pricePerPerson > 0 || item.pricePerPet > 0) ? 'price-paid' : 'price-free'}}">
+                <block wx:if="{{item.pricePerPerson > 0 && item.pricePerPet > 0}}">¥{{item.pricePerPerson}}/人 ¥{{item.pricePerPet}}/宠</block>
+                <block wx:elif="{{item.pricePerPerson > 0}}">¥{{item.pricePerPerson}}/人</block>
+                <block wx:elif="{{item.pricePerPet > 0}}">¥{{item.pricePerPet}}/宠</block>
+                <block wx:else>免费</block>
+              </view>
+            </view>
 
-      <!-- 快速操作 -->
-      <view class="card">
-        <view class="card-header">
-          <text class="card-title">快速操作</text>
-        </view>
-        <view class="quick-actions">
-          <view class="quick-action-item" bindtap="navigateToHostingServices">
-            <view class="quick-action-icon">
-              <view class="icon-edit"></view>
+            <view class="activity-time-row">
+              <view class="info-item time-item">
+                <image class="info-icon-img" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
+                <text class="info-text">{{item.timeText}}</text>
+              </view>
+              <view class="info-item participants-item">
+                <text class="info-icon">👥</text>
+                <text class="info-text participants-text">{{item.currentParticipants > 0 ? item.currentParticipants : 0}}/{{item.maxParticipants || '不限'}}</text>
+              </view>
             </view>
-            <text class="quick-action-text">管理寄养服务</text>
+
+            <view class="activity-info-row">
+              <view class="info-item">
+                <image class="info-icon-img" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+                <text class="info-text">{{item.location || '待定'}}</text>
+              </view>
+            </view>
           </view>
-          <view class="quick-action-item" bindtap="navigateToOrders">
-            <view class="quick-action-icon">
-              <view class="icon-order"></view>
+
+          <view class="activity-action">
+            <view class="action-btn {{item.isRegistered ? 'btn-registered' : item.registrationEnded ? 'btn-disabled' : 'btn-active'}}">
+              <text class="btn-text">{{item.isRegistered ? '已报名' : item.registrationEnded ? '报名已截止' : '立即报名'}}</text>
             </view>
-            <text class="quick-action-text">查看订单</text>
           </view>
         </view>
       </view>
     </view>
 
+    <!-- 最近浏览（已登录时显示） -->
+    <view wx:if="{{isLoggedIn && recentViews.length > 0}}" class="section-card card">
+      <view class="card-header">
+        <text class="card-title">👀 最近浏览</text>
+      </view>
+      <view class="recent-list">
+        <view class="recent-card" wx:for="{{recentViews}}" wx:key="_id" data-id="{{item._id}}" data-type="{{item.type}}" bindtap="handleRecentViewTap">
+          <image lazy-load class="recent-cover" src="" mode="aspectFill" />
+          <view class="recent-info">
+            <text class="recent-name truncate">{{item.name}}</text>
+            <text class="recent-price">
+              <block wx:if="{{item.pricePerPerson > 0 && item.pricePerPet > 0}}">¥{{item.pricePerPerson}}/人 ¥{{item.pricePerPet}}/宠</block>
+              <block wx:elif="{{item.pricePerPerson > 0}}">¥{{item.pricePerPerson}}/人起</block>
+              <block wx:elif="{{item.pricePerPet > 0}}">¥{{item.pricePerPet}}/宠起</block>
+              <block wx:else>免费</block>
+            </text>
+          </view>
+        </view>
+      </view>
+    </view>
 
-
-
+    <view class="bottom-spacer"></view>
   </view>
 </view>

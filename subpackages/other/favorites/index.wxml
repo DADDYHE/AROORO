@@ -1,87 +1,147 @@
 <!--pages/favorites/index.wxml-->
-<view class="container">
-  <!-- 页面头部 -->
-  <view class="header">
-    <view class="title">我的收藏 <text class="count">({{favoriteFamilies.length}})</text></view>
-    <view class="subtitle">查看您收藏的寄养家庭</view>
-  </view>
-
-  <!-- 加载状态 -->
-  <view wx:if="{{isLoading}}" class="loading-container">
-    <van-loading type="spinner" size="24px">加载中...</van-loading>
-  </view>
-
-  <!-- 空状态 -->
-  <view wx:elif="{{!isLoading && favoriteFamilies.length === 0 && hostList.length > 0}}" class="empty-state">
-    <view class="empty-icon">
-      <van-icon name="heart-o" size="64px" color="#c0c4cc" />
+<view class="page-container">
+  <!-- 头部区域 -->
+  <view class="page-header">
+    <view class="header-content">
+      <!-- 品牌标识 -->
+      <view class="brand-logo">Arooro</view>
+      <!-- 页面标题 -->
+      <view class="page-title">
+        <span class="title-text">我的收藏</span>
+        <span class="count">({{favoriteFamilies.length}})</span>
+      </view>
     </view>
-    <view class="empty-title">您还没有收藏寄养家庭</view>
-    <view class="empty-subtitle">以下是全部寄养家庭列表，点击即可收藏</view>
   </view>
 
-  <!-- 收藏列表 -->
-  <view wx:if="{{!isLoading && favoriteFamilies.length > 0}}" class="favorites-list" bindtouchstart="onListTouchStart" bindtouchmove="onListTouchMove" bindtouchend="onListTouchEnd">
+  <!-- 主要内容 -->
+  <view class="page-content">
+    <!-- 加载状态 -->
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-spinner">
+      <view class="spinner-outer"></view>
+      <view class="spinner-inner"></view>
+      <view class="spinner-dot"></view>
+    </view>
+  </view>
 
-    <block wx:for="{{favoriteFamilies}}" wx:key="id" wx:for-item="host" wx:for-index="index">
-      <view class="host-item" bindtouchstart="onHostItemTouchStart" bindtouchend="onHostItemTouchEnd" data-id="{{host.id}}">
-        <view class="host-avatar">
-          <image src="{{host.avatarUrl}}" mode="aspectFill" binderror="onAvatarLoadError" data-index="{{index}}"></image>
-        </view>
-        <view class="host-info">
-          <view class="host-name-row">
-            <view class="host-name">{{host.name}}</view>
-            <favorite-btn is-active="true" bind:toggle="handleFavoriteTap" data-id="{{host.id}}"></favorite-btn>
-          </view>
-          <view class="host-location">
-            <van-icon name="location-o" size="12px" />
-            <text>{{host.location}}</text>
-          </view>
-          <view class="host-rating">
-            <van-rate value="{{host.rating}}" disabled size="12px" />
-            <text>{{host.rating}} ({{host.reviews}}条评论)</text>
-          </view>
-          <view class="host-price">¥{{host.price}}/天</view>
-        </view>
+    <!-- 空状态 -->
+    <view wx:elif="{{!isLoading && favoriteFamilies.length === 0 && hostList.length > 0}}" class="empty-state">
+      <view class="empty-icon">
+        <van-icon name="heart-o" size="80px" color="#000000" />
       </view>
-    </block>
-  </view>
+      <view class="empty-title">您还没有收藏寄养家庭</view>
+      <view class="empty-subtitle">以下是全部寄养家庭列表，点击即可收藏</view>
+    </view>
 
-  <!-- 全部寄养家庭列表 -->
-  <view wx:if="{{!isLoading && (favoriteFamilies.length === 0 || showAllHosts)}}" class="host-list" bindtouchstart="onListTouchStart" bindtouchmove="onListTouchMove" bindtouchend="onListTouchEnd">
-    <view class="section-title">{{favoriteFamilies.length === 0 ? '全部寄养家庭' : '全部寄养家庭列表'}}</view>
-    <block wx:for="{{hostList}}" wx:key="id" wx:for-item="host" wx:for-index="index">
-      <view class="host-item" bindtouchstart="onHostItemTouchStart" bindtouchend="onHostItemTouchEnd" data-id="{{host.id}}">
-        <view class="host-avatar">
-          <image src="{{host.avatarUrl}}" mode="aspectFill" binderror="onAvatarLoadError" data-index="{{index}}"></image>
-        </view>
-        <view class="host-info">
-          <view class="host-name-row">
-            <view class="host-name">{{host.name}}</view>
-            <favorite-btn is-active="{{isFavorite(host.id)}}" bind:toggle="handleFavoriteTap" data-id="{{host.id}}"></favorite-btn>
-          </view>
-          <view class="host-location">
-            <van-icon name="location-o" size="12px" />
-            <text>{{host.location}}</text>
-          </view>
-          <view class="host-rating">
-            <van-rate value="{{host.rating}}" disabled size="12px" />
-            <text>{{host.rating}} ({{host.reviews}}条评论)</text>
-          </view>
-          <view class="host-price">¥{{host.price}}/天</view>
-        </view>
+    <!-- 收藏列表 -->
+    <view wx:if="{{!isLoading && favoriteFamilies.length > 0}}" class="favorites-list" bindtouchstart="onListTouchStart" bindtouchmove="onListTouchMove" bindtouchend="onListTouchEnd">
+      <view class="section-header">
+        <view class="section-title">收藏的寄养家庭</view>
       </view>
-    </block>
-  </view>
 
-  <!-- 错误提示 -->
-  <view wx:if="{{!isLoading && errorMessage}}" class="error-message">
-    <van-icon name="warning-o" color="#f56c6c" />
-    <text>{{errorMessage}}</text>
-  </view>
+      <block wx:for="{{favoriteFamilies}}" wx:key="id" wx:for-item="host" wx:for-index="index">
+        <view class="card host-item {{host.isAcceptingOrders === false ? 'disabled' : ''}}" 
+              bindtouchstart="onHostItemTouchStart" 
+              bindtouchend="onHostItemTouchEnd" 
+              data-id="{{host.id}}">
+          <view class="host-main">
+            <view class="host-avatar-wrapper">
+              <image lazy-load class="host-avatar" src="{{host.avatarUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{host.avatarUrl}}" data-path="favoriteFamilies[{{index}}].avatarUrl" data-index="{{index}}" />
+            </view>
+            
+            <view class="host-details">
+              <view class="host-name">{{host.name}}</view>
+              
+              <view class="host-tags">
+                <text wx:for="{{host.tags}}" wx:key="index" class="tag">{{item}}</text>
+              </view>
+              
+              <view class="host-location">
+                <text class="location-icon">📍</text>
+                <text>{{host.location}}</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="host-footer">
+            <view class="host-footer-left">
+              <!-- 暂停接单标识 -->
+              <text wx:if="{{host.isAcceptingOrders === false}}" class="pause-tag">已暂停接待</text>
+              <view class="host-price" wx:if="{{host.isAcceptingOrders !== false}}">
+                <text class="price">¥{{host.pricePerDay || host.price}}</text>
+                <text class="price-unit">/天</text>
+              </view>
+            </view>
+            <view class="host-actions" wx:if="{{host.isAcceptingOrders !== false}}">
+              <view class="book-button" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="true">
+                预约
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
 
-  <!-- 显示全部寄养家庭按钮 -->
-  <view wx:if="{{!isLoading && favoriteFamilies.length > 0 && !showAllHosts}}" class="show-all-container">
-    <van-button type="primary" plain bindtap="showAllHosts">查看全部寄养家庭</van-button>
+    <!-- 全部寄养家庭列表 -->
+    <view wx:if="{{!isLoading && (favoriteFamilies.length === 0 || showAllHosts)}}" class="host-list" bindtouchstart="onListTouchStart" bindtouchmove="onListTouchMove" bindtouchend="onListTouchEnd">
+      <view class="section-header">
+        <view class="section-title">{{favoriteFamilies.length === 0 ? '全部寄养家庭' : '全部寄养家庭列表'}}</view>
+      </view>
+      <block wx:for="{{hostList}}" wx:key="id" wx:for-item="host" wx:for-index="index">
+        <view class="card host-item {{host.isAcceptingOrders === false ? 'disabled' : ''}}" 
+              bindtouchstart="onHostItemTouchStart" 
+              bindtouchend="onHostItemTouchEnd" 
+              data-id="{{host.id}}">
+          <view class="host-main">
+            <view class="host-avatar-wrapper">
+              <image lazy-load class="host-avatar" src="{{host.avatarUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{host.avatarUrl}}" data-path="hostList[{{index}}].avatarUrl" data-index="{{index}}" />
+            </view>
+            
+            <view class="host-details">
+              <view class="host-name">{{host.name}}</view>
+              
+              <view class="host-tags">
+                <text wx:for="{{host.tags}}" wx:key="index" class="tag">{{item}}</text>
+              </view>
+              
+              <view class="host-location">
+                <text class="location-icon">📍</text>
+                <text>{{host.location}}</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="host-footer">
+            <view class="host-footer-left">
+              <!-- 暂停接单标识 -->
+              <text wx:if="{{host.isAcceptingOrders === false}}" class="pause-tag">已暂停接待</text>
+              <view class="host-price" wx:if="{{host.isAcceptingOrders !== false}}">
+                <text class="price">¥{{host.pricePerDay || host.price}}</text>
+                <text class="price-unit">/天</text>
+              </view>
+            </view>
+            <view class="host-actions" wx:if="{{host.isAcceptingOrders !== false}}">
+              <view class="book-button" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="true">
+                预约
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 错误提示 -->
+    <view wx:if="{{!isLoading && errorMessage}}" class="error-message">
+      <van-icon name="warning-o" color="#000000" />
+      <text>{{errorMessage}}</text>
+    </view>
+
+    <!-- 显示全部寄养家庭按钮 -->
+    <view wx:if="{{!isLoading && favoriteFamilies.length > 0 && !showAllHosts}}" class="show-all-container">
+      <view class="show-all-button" bindtap="showAllHosts">
+        <span class="button-text">查看全部寄养家庭</span>
+        <span class="button-arrow">→</span>
+      </view>
+    </view>
   </view>
 </view>

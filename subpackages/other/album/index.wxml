@@ -89,7 +89,7 @@
 
           <!-- 寄养家庭信息栏 -->
           <view class="host-info">
-            <image class="host-avatar" src="{{item.hostInfo.avatarUrl}}" mode="aspectFill"></image>
+            <image lazy-load class="host-avatar" src="{{item.hostInfo.avatarUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.hostInfo.avatarUrl}}" data-path="videos[{{index}}].hostInfo.avatarUrl"></image>
             <view class="host-details">
               <text class="host-name">{{item.hostInfo.name}}</text>
               <text class="video-description">{{item.description}}</text>
@@ -125,12 +125,13 @@
     <view class="album-content">
       <!-- 大图 -->
       <view wx:if="{{photos.length > 0}}" class="main-photo">
-        <image 
+        <image lazy-load 
           class="main-image" 
           src="{{photos[0].url}}" 
           mode="aspectFill"
           bindtap="previewPhoto"
           data-index="0"
+          binderror="onCloudImageError" data-src="{{photos[0].url}}" data-path="photos[0].url"
         ></image>
       </view>
       
@@ -144,10 +145,11 @@
           bindtap="previewPhoto"
           data-index="{{index}}"
         >
-          <image 
+          <image lazy-load 
             class="thumbnail-image" 
             src="{{item.url}}" 
             mode="aspectFill"
+            binderror="onCloudImageError" data-src="{{item.url}}" data-path="photos[{{index}}].url"
           ></image>
         </view>
       </view>

@@ -1,7 +1,7 @@
 <view class="page-container">
   <view class="page-content">
     <view class="logo-container">
-      <image src="/images/paw-print.png" class="logo" mode="aspectFit"></image>
+      <image lazy-load src="../../images/paw-print.png" class="logo" mode="aspectFit"></image>
       <text class="app-name">宠物寄养平台</text>
     </view>
     

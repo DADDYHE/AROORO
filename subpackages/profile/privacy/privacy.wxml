@@ -1,60 +1,104 @@
 <view class="page-container">
+  <view class="page-header">
+    <text class="page-back" bindtap="goBack">← 返回</text>
+    <text class="page-title">隐私政策</text>
+  </view>
   <view class="page-content">
     <view class="section">
-      <text class="section-title">隐私政策</text>
+      <text class="section-update">更新日期：2026年5月11日</text>
+      <text class="section-update">生效日期：2026年5月11日</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">引言</text>
       <text class="section-content">
-        我们非常重视您的隐私保护，致力于为您提供安全、可靠的服务。本隐私政策说明了我们如何收集、使用、存储和保护您的个人信息。
+        AROORO（以下简称"我们"）非常重视您的隐私保护，致力于为您提供安全、可靠的服务。本隐私政策说明了我们如何收集、使用、存储和保护您的个人信息，以及您享有的权利。请您在使用我们的服务前仔细阅读本隐私政策。
       </text>
     </view>
-    
+
     <view class="section">
       <text class="section-subtitle">1. 信息收集</text>
       <text class="section-content">
-        我们会收集您在使用我们服务过程中提供的个人信息，包括但不限于：
-        - 您的昵称、头像等基本信息
-        - 您的联系方式
-        - 您的宠物信息
-        - 您的使用行为数据
+        我们会收集您在使用我们服务过程中提供或产生的以下信息：
+        - 账户信息：您的微信昵称、头像等基本信息（通过选择头像和填写昵称功能获取）
+        - 联系方式：您授权提供的手机号码
+        - 宠物信息：您创建的宠物档案信息（品种、年龄、照片等）
+        - 订单信息：您的寄养预订、活动报名、商品购买记录
+        - 位置信息：用于推荐附近的寄养家庭和服务（仅在您授权后获取）
+        - 设备信息：设备型号、操作系统版本等用于优化服务体验
       </text>
     </view>
-    
+
     <view class="section">
       <text class="section-subtitle">2. 信息使用</text>
       <text class="section-content">
-        我们收集的信息将用于：
-        - 为您提供个性化的服务
-        - 改善我们的产品和服务
-        - 与您沟通和联系
-        - 确保服务的安全性
+        我们收集的信息将用于以下目的：
+        - 为您提供宠物寄养、上门服务、活动报名、商城购物等核心功能
+        - 根据您的位置推荐附近的服务提供者
+        - 改善和优化我们的产品与服务
+        - 与您进行必要的沟通（订单通知、服务提醒等）
+        - 保障您和其他用户的账号与交易安全
+        - 遵守法律法规的要求
       </text>
     </view>
-    
+
     <view class="section">
-      <text class="section-subtitle">3. 信息保护</text>
+      <text class="section-subtitle">3. 信息存储与保护</text>
       <text class="section-content">
         我们采取多种安全措施保护您的个人信息：
-        - 数据加密存储
-        - 访问权限控制
-        - 定期安全审计
-        - 严格的内部保密制度
+        - 数据加密存储：您的个人信息在传输和存储过程中均经过加密处理
+        - 访问权限控制：只有经授权的人员才能访问您的个人信息
+        - 定期安全审计：我们定期检查安全措施的有效性
+        - 数据存储期限：我们仅在为您提供服务所必需的期限内保留您的个人信息，除非法律法规另有要求
       </text>
     </view>
-    
+
     <view class="section">
-      <text class="section-subtitle">4. 信息共享</text>
+      <text class="section-subtitle">4. 信息共享与披露</text>
       <text class="section-content">
-        我们不会向第三方共享您的个人信息，除非：
-        - 获得您的明确授权
-        - 法律法规要求
-        - 保护我们的合法权益
-        - 与我们的关联公司共享
+        我们不会向第三方出售您的个人信息。我们仅在以下情况下共享您的信息：
+        - 获得您的明确授权同意
+        - 与为您提供服务的寄养家庭/服务者共享必要的联系信息（以便完成服务）
+        - 法律法规要求或政府机关依法要求
+        - 为保护我们或用户的合法权益所必需
+        - 与我们的技术服务提供商共享（受保密协议约束）
       </text>
     </view>
-    
+
     <view class="section">
-      <text class="section-subtitle">5. 政策更新</text>
+      <text class="section-subtitle">5. 您的权利</text>
       <text class="section-content">
-        我们可能会不时更新本隐私政策，更新后的政策将在平台上公布。继续使用我们的服务即表示您同意修订后的隐私政策。
+        根据适用法律法规，您享有以下权利：
+        - 访问权：您可以查看我们持有的您的个人信息
+        - 更正权：您可以更新或更正不准确的个人信息
+        - 删除权：您可以要求我们删除您的个人信息（通过注销账号实现）
+        - 撤回同意：您可以随时撤回对信息收集的授权
+        - 注销账号：您可以随时注销账号，注销后我们将删除或匿名化处理您的个人信息
+        您可以通过小程序"我的"页面的相关功能行使上述权利。
+      </text>
+    </view>
+
+    <view class="section">
+      <text class="section-subtitle">6. 未成年人保护</text>
+      <text class="section-content">
+        我们特别重视对未成年人个人信息的保护。如果您是未满18周岁的未成年人，请在法定监护人的陪同下阅读本隐私政策，并在征得监护人同意的前提下使用我们的服务。
+      </text>
+    </view>
+
+    <view class="section">
+      <text class="section-subtitle">7. 政策更新</text>
+      <text class="section-content">
+        我们可能会不时更新本隐私政策。当政策发生重大变更时，我们会通过小程序内通知或公告的方式告知您。继续使用我们的服务即表示您同意修订后的隐私政策。
+      </text>
+    </view>
+
+    <view class="section">
+      <text class="section-subtitle">8. 联系我们</text>
+      <text class="section-content">
+        如果您对本隐私政策或个人信息处理有任何疑问、意见或投诉，请通过以下方式联系我们：
+        - 客服电话：请查看小程序"我的"页面中的客服联系方式
+        - 小程序内反馈：通过"我的"→"帮助中心"提交反馈
+        我们将在收到您的请求后15个工作日内予以回复。
       </text>
     </view>
   </view>

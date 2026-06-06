@@ -1,7 +1,0 @@
-EOF
-module.exports = {
-  isArrayOrObject,
-  isInstanceOfError,
-  TimeUtil,
-  stringifyError,
-};

@@ -11,8 +11,10 @@
   align-items: center;
   box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.05);
   z-index: 1000;
-  padding-bottom: 40rpx;
+  padding-top: 0rpx;
+  padding-bottom: 30rpx;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .tab-bar-item {
@@ -36,15 +38,40 @@
   transform: translateX(-50%);
   width: 80%;
   height: 0;
-  background-color: #FF6B00;
+  background: linear-gradient(135deg, #4ECDC4 0%, #26A69A 100%);
   border-radius: 24rpx;
   transition: height 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
+  overflow: hidden;
 }
 
 .tab-bar-item.active::before {
   height: 90%;
-  box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.3);
+  box-shadow: 0 4rpx 16rpx rgba(78, 205, 196, 0.4), 0 0 20rpx rgba(78, 205, 196, 0.2);
+}
+
+.tab-bar-item.active::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 60%);
+  animation: shimmer 3s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    transform: translate(-30%, -30%);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(30%, 30%);
+    opacity: 1;
+  }
 }
 
 .tab-bar-icon {
@@ -86,3 +113,172 @@
 .tab-bar-item.active {
   /* 强制保持 active 状态的样式 */
 }
+
+/* 未读消息红点样式 */
+.tab-bar-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.unread-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 32rpx;
+  height: 32rpx;
+  background-color: #ff4444;
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: 700;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8rpx;
+  z-index: 10;
+  box-shadow: 0 2rpx 8rpx rgba(255, 68, 68, 0.4);
+  animation: badge-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: translate(50%, -50%);
+}
+
+.badge-large {
+  min-width: 40rpx;
+  height: 40rpx;
+  font-size: 18rpx;
+  padding: 0 10rpx;
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 中间一键报名按钮样式 */
+.tab-bar-item-center {
+  position: relative;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  flex: 0 0 0 !important;
+}
+
+/* 禁用中间按钮的 ::before 和 ::after 伪元素（即绿色背景动画） */
+.tab-bar-item-center::before,
+.tab-bar-item-center::after {
+  display: none !important;
+}
+
+.center-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFD93D 0%, #A8E063 50%, #56AB2F 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  position: relative;
+  overflow: visible;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow:
+    0 8rpx 32rpx rgba(168, 224, 99, 0.4),
+    0 16rpx 48rpx rgba(86, 171, 47, 0.2),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.4);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  margin-top: -56rpx;
+}
+
+/* 外层光晕 */
+.center-button::before {
+  content: '';
+  position: absolute;
+  top: -6rpx;
+  left: -6rpx;
+  right: -6rpx;
+  bottom: -6rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(255, 94, 154, 0.05) 100%);
+  z-index: -1;
+  animation: halo-pulse 3s ease-in-out infinite;
+}
+
+@keyframes halo-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+/* 顶部高光 */
+.center-button::after {
+  content: '';
+  position: absolute;
+  top: 4rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 40rpx;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.center-button:active {
+  transform: scale(0.95);
+  box-shadow:
+    0 4rpx 16rpx rgba(255, 107, 107, 0.25),
+    0 8rpx 24rpx rgba(255, 107, 107, 0.1),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.3);
+}
+
+.center-button-icon {
+  width: 48rpx;
+  height: 48rpx;
+  filter: brightness(0) invert(1) drop-shadow(0 1rpx 1rpx rgba(0, 0, 0, 0.1));
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0;
+}
+
+.center-button-text {
+  font-size: 16rpx;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+  letter-spacing: 1rpx;
+  margin-top: 4rpx;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+}
+
+.tab-bar-item-center.active .center-button {
+  background: linear-gradient(135deg, #4ECDC4 0%, #26A69A 50%, #2196F3 100%);
+  box-shadow:
+    0 8rpx 32rpx rgba(78, 205, 196, 0.4),
+    0 16rpx 48rpx rgba(78, 205, 196, 0.2),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.4);
+}
+
+.tab-bar-item-center.active .center-button::before {
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.35) 0%, rgba(33, 150, 243, 0.05) 100%);
+}
+

@@ -7,7 +7,7 @@
 /* ==================== 触控区域标准 ==================== */
 
 /* 最小触控目标尺寸 - 88rpx (44px) 符合iOS和Android人机工程学标准 */
-:root {
+page {
   --min-touch-size: 88rpx;
   --touch-size-small: 72rpx;
   --touch-size-medium: 96rpx;
@@ -262,7 +262,7 @@
 
 /* 小屏幕适配 */
 @media (max-width: 375px) {
-  :root {
+  page {
     --min-touch-size: 80rpx;
     --touch-size-small: 64rpx;
     --touch-size-medium: 88rpx;
@@ -272,7 +272,7 @@
 
 /* 大屏幕适配 */
 @media (min-width: 768px) {
-  :root {
+  page {
     --min-touch-size: 96rpx;
     --touch-size-small: 80rpx;
     --touch-size-medium: 104rpx;

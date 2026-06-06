@@ -1,7 +1,0 @@
-<view class="favorite-btn {{ isActive ? 'active' : '' }}" bindtap="handleToggle">
-  <text wx:if="{{ isActive }}" class="heart-icon active">♥</text>
-  <view wx:else class="unfavorited-icon">
-    <text class="heart-icon">♡</text>
-    <text class="plus-icon">+</text>
-  </view>
-</view>

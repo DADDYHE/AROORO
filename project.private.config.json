@@ -1,28 +1,12 @@
 {
-  "libVersion": "3.14.0",
-  "projectname": "zuoyou",
-  "condition": {
-    "miniprogram": {
-      "list": [
-        {
-          "name": "pages/messages/chat/chat",
-          "pathName": "pages/messages/chat/chat",
-          "query": "conversationID=c2c_1001",
-          "scene": null,
-          "launchMode": "default",
-          "partialCompile": {
-            "enabled": true,
-            "pages": []
-          }
-        }
-      ]
-    }
-  },
+  "libVersion": "3.14.3",
+  "projectname": "%E6%AF%9B%E9%97%A8",
+  "condition": {},
   "setting": {
     "urlCheck": true,
     "coverView": true,
     "lazyloadPlaceholderEnable": false,
-    "skylineRenderEnable": false,
+    "skylineRenderEnable": true,
     "preloadBackgroundData": false,
     "autoAudits": false,
     "useApiHook": true,
@@ -33,7 +17,7 @@
     "compileHotReLoad": true,
     "checkInvalidKey": true,
     "ignoreDevUnusedFiles": true,
-    "bigPackageSizeSupport": false,
+    "bigPackageSizeSupport": true,
     "useIsolateContext": true
   }
 }

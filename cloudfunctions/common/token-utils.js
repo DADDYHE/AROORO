@@ -1,73 +1,37 @@
 const jwt = require('jsonwebtoken')
+const { JWT_SECRET } = require('./config')
+const { err } = require('./errors')
 
-// JWT密钥配置
-const JWT_SECRET = 'your-secret-key-here' // 与login云函数保持一致
-
-/**
- * 验证token并解析用户信息
- * @param {string} token - JWT token
- * @returns {Object} - 解析后的用户信息，包含openid、userId和role
- */
 function verifyToken(token) {
+  if (!JWT_SECRET) {throw err('INTERNAL_ERROR', 'JWT_SECRET 未配置')}
+  if (!token) {throw err('TOKEN_INVALID', 'token 不能为空')}
   try {
-    if (!token) {
-      throw new Error('token不能为空')
+    return jwt.verify(token, JWT_SECRET)
+  } catch (e) {
+    if (e.name === 'TokenExpiredError') {
+      throw err('TOKEN_EXPIRED', '登录已过期')
     }
-    
-    const decoded = jwt.verify(token, JWT_SECRET)
-    return decoded
-  } catch (error) {
-    console.error('token验证失败:', error)
-    throw error
+    throw err('TOKEN_INVALID', 'token 无效或已损坏')
   }
 }
 
-/**
- * 从请求头或请求体中获取token
- * @param {Object} event - 云函数事件对象
- * @returns {string} - token字符串
- */
 function getTokenFromEvent(event) {
-  // 尝试从请求头获取token
   if (event.headers && event.headers.Authorization) {
     return event.headers.Authorization.replace('Bearer ', '')
   }
-  
-  // 尝试从请求体获取token
-  if (event.data && event.data.token) {
-    return event.data.token
-  }
-  
-  // 尝试直接从事件对象获取token
-  if (event.token) {
-    return event.token
-  }
-  
   return null
 }
 
-/**
- * 生成token
- * @param {Object} userInfo - 用户信息对象，包含openid、userId和role
- * @returns {string} - 生成的JWT token
- */
 function generateToken(userInfo) {
-  try {
-    const token = jwt.sign({
-      openid: userInfo.openid,
-      userId: userInfo.userId || userInfo.id || userInfo._id,
-      role: userInfo.role || 'owner'
-    }, JWT_SECRET, { expiresIn: '7d' })
-    
-    return token
-  } catch (error) {
-    console.error('生成token失败:', error)
-    throw error
+  if (!JWT_SECRET) {throw new Error('JWT_SECRET 未配置')}
+  // users._id = openid，统一使用 openid；超级管理员无 openid，使用 adminId
+  const payload = {
+    openid: userInfo.openid || '',
+    role: userInfo.role || 'owner',
   }
+  if (userInfo.adminId) {payload.adminId = userInfo.adminId}
+  if (userInfo.roles) {payload.roles = userInfo.roles}
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' })
 }
 
-module.exports = {
-  verifyToken,
-  getTokenFromEvent,
-  generateToken
-}
+module.exports = { verifyToken, getTokenFromEvent, generateToken }

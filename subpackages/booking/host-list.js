@@ -1,14 +1,21 @@
+const { HostService } = require('../../services/CloudFunctionService')
+const { extractCityAndDistrict } = require('../../utils/addressUtils')
+const { BookingData } = require('../../utils/BookingDataService')
+const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+
+const pageI18n = require('../../utils/page-i18n.js')
+
 Page({
+  ...pageI18n.mixin(),
+  behaviors: [cloudImageBehavior],
   /**
    * 页面的初始数据
    */
   data: {
-    hosts: []
+    hosts: [],
+    isLoading: true  // 是否正在加载寄养家庭列表
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad(options) {
     this.getHostList()
   },
@@ -16,72 +23,45 @@ Page({
   /**
    * 获取寄养家庭列表
    */
-  getHostList() {
-    wx.showLoading({
-      title: '加载中...'
-    })
+  async getHostList() {
+    // 设置加载状态，显示页面内加载动画
+    this.setData({ isLoading: true })
 
-    wx.cloud.callFunction({
-      name: 'getHostList',
-      success: res => {
-        console.log('获取寄养家庭列表成功', res)
-        if (res.result.code === 0) {
-          // 从完整地址中提取城市和区县信息
-          function extractCityAndDistrict(address) {
-            if (!address) {return '成都市'}
-            
-            // 常见的地址格式："成都市武侯区某某街道"或"成都市锦江区某某路"
-            // 提取前两级行政区划
-            const addressParts = address.split(/[市县区]/).filter(part => part)
-            if (addressParts.length >= 2) {
-              return `${addressParts[0]}市${addressParts[1]}区`
-            } else if (addressParts.length >= 1) {
-              return `${addressParts[0]}市`
-            } else {
-              return '成都市'
-            }
-          }
-          
-          // 处理获取到的数据，确保数据结构符合页面需求
-          // 过滤掉不接受接单的寄养家庭，只显示可选择的寄养家庭
-          const hosts = res.result.data
+    try {
+      const result = await HostService.getHostList()
+      
+      if (result.code === 0) {
+        const hostData = result.data.list || result.data
+          const hosts = (hostData || [])
             .filter(host => host.isAcceptingOrders !== false) // 只保留接受接单的寄养家庭
             .map((host, index) => {
               return {
-                id: host.id,
+                id: host._id || host.id,
                 name: host.hostName || '匿名寄养家庭',
                 avatarUrl: host.avatarUrl || '',
-                rating: host.rating || 4.8,
-                reviews: host.reviewCount || 0,
                 price: host.pricePerDay || 80,
                 location: extractCityAndDistrict(host.address),
-                tags: ['有经验', '爱干净', '可上门'], // 暂时使用默认标签
+                tags: host.tags || ['有经验', '爱干净', '可上门'],
                 isAcceptingOrders: host.isAcceptingOrders !== false // 默认接受接单
               }
             })
 
           this.setData({
-            hosts: hosts
+            hosts: hosts,
+            isLoading: false  // 加载完成，关闭加载动画
           })
         } else {
-          wx.showToast({
-            title: res.result.message || '获取失败',
-            icon: 'none'
-          })
+          this.setData({ isLoading: false })
+          this.errorDynamic(result.message, 'GET_FAILED')
         }
-      },
-      fail: err => {
-        console.error('获取寄养家庭列表失败', err)
-        wx.showToast({
-          title: '获取失败',
-          icon: 'none'
-        })
-      },
-      complete: () => {
-        wx.hideLoading()
+      } catch (error) {
+        console.error('[APP] 获取寄养家庭列表失败', error)
+        this.setData({ isLoading: false })
+        this.error('GET_FAILED')
+      } finally {
+        this.setData({ isLoading: false })
         wx.stopPullDownRefresh()
       }
-    })
   },
 
   /**
@@ -98,17 +78,35 @@ Page({
   },
 
   /**
-   * 页面相关事件处理函数--监听用户下拉动作
+   * 预约寄养家庭
    */
-  onPullDownRefresh() {
-    // 刷新页面数据
-    this.getHostList()
+  bookHost(e) {
+    const hostId = e.currentTarget.dataset.id
+    const selectedHost = this.data.hosts.find(host => host.id === hostId)
+    
+    if (!selectedHost) {
+      this.error('HOST_NOT_EXIST')
+      return
+    }
+
+    if (selectedHost.isAcceptingOrders === false) {
+      this.error('HOST_PAUSED')
+      return
+    }
+
+    // 保存选择的寄养家庭信息
+    BookingData.set('selectedHost', selectedHost)
+
+    // 跳转到确认订单页面
+    wx.navigateTo({
+      url: `/subpackages/booking/confirm?id=${hostId}`
+    })
   },
 
   /**
-   * 页面上拉触底事件的处理函数
+   * 页面相关事件处理函数--监听用户下拉动作
    */
-  onReachBottom() {
-    // 加载更多数据
+  onPullDownRefresh() {
+    this.getHostList()
   }
 })

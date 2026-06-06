@@ -1,10 +1,6 @@
 {
   "usingComponents": {
-    "van-loading": "@vant/loading/index",
-    "van-icon": "@vant/icon/index",
-    "van-button": "@vant/button/index",
-    "van-rate": "@vant/rate/index",
-    "favorite-btn": "/components/favorite-btn/index"
+    "van-icon": "@vant/weapp/icon/index"
   },
   "navigationBarTitleText": "我的收藏"
 }

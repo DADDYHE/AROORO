@@ -1,6 +1,5 @@
 Page({
   onLoad() {
-    console.log('Privacy Policy page onLoad')
   },
   
   // 返回上一页

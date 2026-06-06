@@ -84,12 +84,12 @@
         </view>
       </view>
       
-      <!-- 接送地址 -->
-      <view class="form-item" bindtap="goToAddress">
-        <view class="form-label">接送地址</view>
+      <!-- 收货地址 -->
+      <view class="form-item address-item" bindtap="goToAddress">
+        <view class="form-label">收货地址</view>
         <view class="form-value">
           <view class="picker-trigger">
-            <text class="picker-value">{{ userInfo.address || '请选择接送地址' }}</text>
+            <text class="picker-value address-link">管理收货地址</text>
             <text class="picker-arrow">></text>
           </view>
         </view>

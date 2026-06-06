@@ -9,6 +9,18 @@ miniprogram_npm/
 # Environment variables
 .env.local
 .env.*.local
+.env
+config/env.secrets.js
+config/.secrets.js
+
+# Non-code assets (moved to Wiki/external storage)
+charts/
+docs/*.md
+*.docx
+AROORO_*.md
+LOG_*.md
+CODE_REVIEW_REPORT.md
+.trae/documents/
 
 # Logs
 logs
@@ -30,9 +42,19 @@ lerna-debug.log*
 *.sln
 *.sw?
 
+# WeChat DevTools private config
+project.private.config.json
+
+# AI tool directories
+.codebuddy/
+.trae/specs/
+
 # Cloud functions dependencies
 cloudfunctions/*/node_modules/
 functions/*/node_modules/
+
+# Cloud functions local common copies (source is cloudfunctions/common/)
+cloudfunctions/*/common/
 
 # Testing
 coverage/

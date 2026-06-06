@@ -1,9 +1,7 @@
 {
   "navigationBarTitleText": "选择宠物",
   "usingComponents": {
-    "van-cell": "@vant/cell/index",
-    "van-button": "@vant/button/index",
-    "van-tag": "@vant/tag/index",
-    "van-icon": "@vant/icon/index"
+    "van-popup": "@vant/weapp/popup/index",
+    "van-calendar": "@vant/weapp/calendar/index"
   }
 }

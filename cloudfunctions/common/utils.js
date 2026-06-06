@@ -1,143 +1,301 @@
+"use strict";
 /**
- * 云函数通用工具库
- * 包含错误处理、ID生成、数据验证等通用功能
+ * utils.ts - 通用工具（TypeScript 源 - Sprint 15 迁移）
+ *
+ * 目标：
+ *   - 把 utils.js 迁移到 .ts，让 errors.ts 等其他 .ts 文件可消费
+ *   - 提供 CloudBase 初始化、ID 生成、错误处理、分页、批处理、Cloud URL 转换
+ *
+ * 设计原则：
+ *   - 单例初始化（initCloud 内部用闭包缓存 cloud / db 实例）
+ *   - 类型化导出（避免 utils.d.ts 的手动 shim）
+ *   - 与 errors.ts 双向兼容（handleError 返回的 shape 可与 err() 配对）
  */
-
-// 通用错误码定义
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.revertCloudUrls = exports.convertCloudUrls = exports.batchProcess = exports.paginate = exports.handleSuccess = exports.handleError = exports.generateId = exports.ERROR_MESSAGES = exports.ERROR_CODES = exports.initCloud = void 0;
+const crypto_1 = require("crypto");
+// =====================================================================
+// 单例缓存
+// =====================================================================
+let cloudInstance = null;
+let dbInstance = null;
+// =====================================================================
+// 1. 初始化
+// =====================================================================
+/**
+ * 懒加载 wx-server-sdk 并返回 { cloud, db }
+ * - 第一次调用会 init + database()，后续直接复用
+ * - 必须在云函数入口（已注入环境）后才可调用
+ */
+function initCloud() {
+    if (!cloudInstance) {
+        // 动态 require：避免在 jest 单元测试时强制加载 wx-server-sdk
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const cloud = require('wx-server-sdk');
+        cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
+        cloudInstance = cloud;
+        dbInstance = cloud.database();
+    }
+    return { cloud: cloudInstance, db: dbInstance };
+}
+exports.initCloud = initCloud;
+// =====================================================================
+// 2. 错误码字典
+// =====================================================================
+/** 业务错误码（数字） */
 exports.ERROR_CODES = {
-  SUCCESS: 0,
-  DATABASE_ERROR: 1001,
-  PARAMETER_ERROR: 1002,
-  UNKNOWN_ERROR: 9999
-}
-
-// 通用错误信息定义
+    SUCCESS: 0,
+    VALIDATION: 1001,
+    DATA: 1002,
+    AUTH: 1003,
+    NOT_FOUND: 1004,
+    PERMISSION: 1005,
+    BUSINESS: 1006,
+    SERVER: 5001,
+    UNKNOWN: 9999,
+};
+/** 错误码 → 中文文案 */
 exports.ERROR_MESSAGES = {
-  [exports.ERROR_CODES.SUCCESS]: '操作成功',
-  [exports.ERROR_CODES.DATABASE_ERROR]: '数据库操作失败',
-  [exports.ERROR_CODES.PARAMETER_ERROR]: '参数错误',
-  [exports.ERROR_CODES.UNKNOWN_ERROR]: '未知错误'
-}
-
+    [exports.ERROR_CODES.SUCCESS]: '操作成功',
+    [exports.ERROR_CODES.VALIDATION]: '参数错误',
+    [exports.ERROR_CODES.DATA]: '数据操作失败',
+    [exports.ERROR_CODES.AUTH]: '未登录或登录已过期',
+    [exports.ERROR_CODES.NOT_FOUND]: '数据不存在',
+    [exports.ERROR_CODES.PERMISSION]: '无权限操作',
+    [exports.ERROR_CODES.BUSINESS]: '业务处理失败',
+    [exports.ERROR_CODES.SERVER]: '服务器内部错误',
+    [exports.ERROR_CODES.UNKNOWN]: '未知错误',
+};
+// =====================================================================
+// 3. ID 生成
+// =====================================================================
+const TYPE_MAPPING = {
+    pet: 'pet',
+    order: 'ord',
+    feeding: 'fd',
+    tuan: 'tn',
+    activity: 'act',
+    registration: 'reg',
+    feeder: 'fdr',
+    product: 'prd',
+    banner: 'bnr',
+    address: 'addr',
+    application: 'app',
+    wallet: 'wlt',
+    commission: 'cmm',
+    coupon: 'cpn',
+    category: 'cat',
+    favorite: 'fav',
+};
 /**
- * 生成唯一ID的辅助函数
- * @param {string} prefix - ID前缀
- * @returns {string} 生成的唯一ID
+ * 生成业务主键 ID
+ * 规则：
+ *   - type：映射为 2-3 字母前缀
+ *   - timestamp：Date.now() 8 位 base36
+ *   - identifier：openid 哈希前 8 位（或 4 字节随机）
+ *   - random：4 字节随机
+ *   - 总长不超过 32，去除非字母数字下划线
  */
-exports.generateId = (prefix = '') => {
-  const timestamp = Date.now().toString(36)
-  const random = Math.random().toString(36).substr(2, 8)
-  let userId = prefix ? `${prefix}_${timestamp}${random}` : `${timestamp}${random}`
-  
-  // 确保长度不超过32字节
-  if (userId.length > 32) {
-    userId = userId.substring(0, 32)
-  }
-  
-  // 确保只包含允许的字符（字母、数字、下划线）
-  userId = userId.replace(/[^a-zA-Z0-9_]/g, '')
-  
-  return userId
-}
-
-/**
- * 统一错误处理函数
- * @param {Error} error - 错误对象
- * @param {string} customMessage - 自定义错误信息
- * @returns {object} 统一格式的错误响应
- */
-exports.handleError = (error, customMessage = null) => {
-  console.error('错误信息:', error.message)
-  console.error('错误堆栈:', error.stack)
-  
-  const errorCode = exports.ERROR_CODES.UNKNOWN_ERROR
-  const message = customMessage || exports.ERROR_MESSAGES[errorCode]
-  
-  return {
-    code: errorCode,
-    message: message,
-    error: error.message
-  }
-}
-
-/**
- * 统一成功响应函数
- * @param {object} data - 响应数据
- * @param {string} message - 自定义成功信息
- * @returns {object} 统一格式的成功响应
- */
-exports.handleSuccess = (data = null, message = null) => {
-  return {
-    code: exports.ERROR_CODES.SUCCESS,
-    message: message || exports.ERROR_MESSAGES[exports.ERROR_CODES.SUCCESS],
-    data: data
-  }
-}
-
-/**
- * 分页获取数据的辅助函数
- * @param {Database.Collection} collection - 数据库集合对象
- * @param {object} options - 分页选项
- * @param {number} options.page - 当前页码
- * @param {number} options.pageSize - 每页大小
- * @param {object} options.where - 查询条件
- * @param {object} options.orderBy - 排序条件
- * @returns {Promise<object>} 分页查询结果
- */
-exports.paginate = async (collection, options = {}) => {
-  const { page = 1, pageSize = 100, where = {}, orderBy = { field: '_id', direction: 'asc' } } = options
-  
-  const offset = (page - 1) * pageSize
-  
-  // 构建查询
-  let query = collection.where(where)
-  
-  // 添加排序
-  query = query.orderBy(orderBy.field, orderBy.direction)
-  
-  // 获取总数
-  const countResult = await query.count()
-  const total = countResult.total
-  
-  // 获取数据
-  const dataResult = await query.skip(offset).limit(pageSize).get()
-  
-  return {
-    data: dataResult.data,
-    total: total,
-    page: page,
-    pageSize: pageSize,
-    totalPages: Math.ceil(total / pageSize),
-    hasNext: page * pageSize < total
-  }
-}
-
-/**
- * 批量处理数据的辅助函数
- * @param {Array} data - 要处理的数据数组
- * @param {Function} handler - 单个数据处理函数
- * @param {number} batchSize - 每批处理的数据量
- * @returns {Promise<Array>} 处理结果数组
- */
-exports.batchProcess = async (data, handler, batchSize = 10) => {
-  const results = []
-  
-  // 分批处理数据
-  for (let i = 0; i < data.length; i += batchSize) {
-    const batch = data.slice(i, i + batchSize)
-    const batchResults = await Promise.all(
-      batch.map(async (item) => {
-        try {
-          return await handler(item)
-        } catch (error) {
-          console.error('批量处理错误:', error)
-          return { success: false, error: error.message }
+function generateId(type = '', openid = '') {
+    const shortPrefix = TYPE_MAPPING[type] || type;
+    const timestamp = Date.now().toString(36).padStart(8, '0').slice(0, 8);
+    let identifier = '';
+    if (openid) {
+        let hash = 0;
+        for (let i = 0; i < openid.length; i++) {
+            const char = openid.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
         }
-      })
-    )
-    
-    results.push(...batchResults)
-  }
-  
-  return results
+        identifier = Math.abs(hash).toString(36).padStart(8, '0').slice(0, 8);
+    }
+    else {
+        identifier = (0, crypto_1.randomBytes)(4).toString('hex').slice(0, 8);
+    }
+    const random = (0, crypto_1.randomBytes)(4).toString('hex').slice(0, 8);
+    let id = shortPrefix
+        ? `${shortPrefix}_${timestamp}${identifier}${random}`
+        : `${timestamp}${identifier}${random}`;
+    if (id.length > 32) {
+        id = id.substring(0, 32);
+    }
+    id = id.replace(/[^a-zA-Z0-9_]/g, '');
+    return id;
 }
+exports.generateId = generateId;
+// =====================================================================
+// 4. 错误/成功响应包装
+// =====================================================================
+/**
+ * 统一错误响应包装
+ * 兼容旧业务层 call(old style) 与 new style（BusinessError）
+ */
+function handleError(error, message = null, code = null) {
+    const errorCode = code ?? exports.ERROR_CODES.BUSINESS;
+    const errorMessage = message || error.message || exports.ERROR_MESSAGES[errorCode] || '操作失败';
+    return {
+        code: errorCode,
+        message: errorMessage,
+        data: null,
+        error: error.message || '',
+    };
+}
+exports.handleError = handleError;
+/**
+ * 统一成功响应
+ */
+function handleSuccess(data = null, message = '操作成功') {
+    return {
+        code: exports.ERROR_CODES.SUCCESS,
+        message,
+        data,
+    };
+}
+exports.handleSuccess = handleSuccess;
+// =====================================================================
+// 5. 分页
+// =====================================================================
+const MAX_PAGE_SIZE = 100;
+/**
+ * 通用分页查询
+ * @param db CloudBaseDB 实例
+ * @param collectionName 集合名
+ * @param options 分页参数
+ * @returns 包含 list/total/page/pageSize/totalPages/hasNext
+ */
+async function paginate(db, collectionName, options = {}) {
+    const { page = 1, pageSize = 10, where = {}, orderBy = { field: 'createdAt', direction: 'desc' }, projection = null, } = options;
+    const safePageSize = Math.min(Math.max(1, Number(pageSize) || 10), MAX_PAGE_SIZE);
+    const offset = (page - 1) * safePageSize;
+    const countQuery = db.collection(collectionName).where(where);
+    const countResult = await countQuery.count();
+    const total = countResult.total;
+    let dataQuery = db.collection(collectionName).where(where);
+    if (projection) {
+        dataQuery = dataQuery.field(projection);
+    }
+    dataQuery = dataQuery.orderBy(orderBy.field, orderBy.direction);
+    const dataResult = await dataQuery.skip(offset).limit(safePageSize).get();
+    return {
+        list: (dataResult.data || []),
+        total,
+        page,
+        pageSize: safePageSize,
+        totalPages: Math.ceil(total / safePageSize),
+        hasNext: page * safePageSize < total,
+    };
+}
+exports.paginate = paginate;
+// =====================================================================
+// 6. 批处理
+// =====================================================================
+/**
+ * 简单批处理：分批并发执行 handler，捕获每条错误
+ *   - 默认 batchSize = 10
+ *   - 失败的项返回 { success: false, error }，成功的项返回 handler 返回值
+ */
+async function batchProcess(data, handler, batchSize = 10) {
+    const results = [];
+    for (let i = 0; i < data.length; i += batchSize) {
+        const batch = data.slice(i, i + batchSize);
+        const batchResults = await Promise.all(batch.map(async (item) => {
+            try {
+                return await handler(item);
+            }
+            catch (error) {
+                return { success: false, error: error.message };
+            }
+        }));
+        results.push(...batchResults);
+    }
+    return results;
+}
+exports.batchProcess = batchProcess;
+// =====================================================================
+// 7. Cloud URL 转换
+// =====================================================================
+/**
+ * 把对象/数组中所有 cloud://xxx 字段批量转换为 https:// 临时 URL
+ * 递归遍历所有嵌套对象与数组
+ * @param result 待处理对象
+ * @returns 转换后的对象（深拷，新对象）
+ */
+async function convertCloudUrls(result) {
+    if (!result || typeof result !== 'object') {
+        return result;
+    }
+    const { cloud } = initCloud();
+    const cloudIds = [];
+    function collectCloudIds(obj) {
+        if (!obj || typeof obj !== 'object') {
+            return;
+        }
+        if (Array.isArray(obj)) {
+            obj.forEach(collectCloudIds);
+            return;
+        }
+        for (const key of Object.keys(obj)) {
+            const v = obj[key];
+            if (typeof v === 'string' && v.startsWith('cloud://')) {
+                cloudIds.push(v);
+            }
+            else if (typeof v === 'object' && v !== null) {
+                collectCloudIds(v);
+            }
+        }
+    }
+    collectCloudIds(result);
+    if (cloudIds.length === 0) {
+        return result;
+    }
+    const urlMap = {};
+    try {
+        const uniqueIds = [...new Set(cloudIds)];
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < uniqueIds.length; i += BATCH_SIZE) {
+            const chunk = uniqueIds.slice(i, i + BATCH_SIZE);
+            const urlRes = await cloud.getTempFileURL({ fileList: chunk });
+            for (const f of (urlRes.fileList || [])) {
+                if (f.status === 0 && f.tempFileURL) {
+                    urlMap[f.fileID] = f.tempFileURL;
+                }
+            }
+        }
+    }
+    catch (e) {
+        return result;
+    }
+    function replaceUrls(obj) {
+        if (!obj || typeof obj !== 'object') {
+            return obj;
+        }
+        if (Array.isArray(obj)) {
+            return obj.map(replaceUrls);
+        }
+        const res = {};
+        for (const key of Object.keys(obj)) {
+            const v = obj[key];
+            if (typeof v === 'string' && v.startsWith('cloud://') && urlMap[v]) {
+                res[key] = urlMap[v];
+            }
+            else if (typeof v === 'object' && v !== null) {
+                res[key] = replaceUrls(v);
+            }
+            else {
+                res[key] = v;
+            }
+        }
+        return res;
+    }
+    return replaceUrls(result);
+}
+exports.convertCloudUrls = convertCloudUrls;
+/**
+ * 占位实现：把 https 临时 URL 还原为 cloud:// 形式
+ * 当前业务场景不需要（云函数只向客户端发送 https URL），保留 stub 以兼容旧调用方
+ */
+function revertCloudUrls(event) {
+    return event;
+}
+exports.revertCloudUrls = revertCloudUrls;
+// 注：上面"未使用"的导入仅用于类型导出

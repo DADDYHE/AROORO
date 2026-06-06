@@ -1,309 +1,130 @@
-/* 消息页面样式 - 简洁风格 */
-.message-container {
+page { height: 100vh; background-color: #F5F5F7; }
+
+.service-container {
+  width: 100%;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #f8f8f8;
+  background-color: #F5F5F7;
+}
+
+.page-content {
+  padding: 32rpx;
+  max-width: 1000rpx;
+  margin: 0 auto;
+}
+
+.service-card {
+  padding: 32rpx 24rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(134, 134, 139, 0.1);
   position: relative;
+  overflow: hidden;
 }
 
-/* 头部区域 */
-.page-header {
-  padding: 60rpx 40rpx;
-  background-color: #fafafa;
-  position: relative;
-  border-bottom: 1rpx solid #f0f0f0;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
-}
-
-.header-content {
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 品牌标识 */
-.brand-logo {
-  font-size: 52rpx;
-  font-weight: 900;
-  letter-spacing: 14rpx;
-  text-align: left;
-  margin-bottom: 50rpx;
-  color: #000000;
-  text-transform: uppercase;
-  font-family: 'Arial Black', 'Arial Bold', sans-serif;
-  line-height: 1;
-}
-
-/* 页面标题 */
-.page-title {
-  font-size: 36rpx;
-  font-weight: 600;
-  text-align: left;
-  color: #333333;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1;
-  margin-bottom: 20rpx;
-}
-
-/* 登录提示样式 - 保留顶部品牌标识 */
-.login-prompt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.service-card::before {
+  content: '';
   position: absolute;
-  top: 200rpx;
+  top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  width: 100%;
-  background-color: #f8f8f8;
-  z-index: 100;
+  height: 3rpx;
+  background: linear-gradient(90deg, #4ECDC4 0%, #2AB7A9 50%, transparent 100%);
+  border-radius: 24rpx 24rpx 0 0;
 }
 
-.prompt-icon {
-  width: 120rpx !important;
-  height: 120rpx !important;
-  margin-bottom: 40rpx !important;
-  opacity: 0.6 !important;
-  border-radius: 50% !important;
-  border: 1rpx solid #e8e8e8 !important;
-  background-color: #f0f0f0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-}
-
-.prompt-icon image {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.prompt-text {
-  font-size: 32rpx;
-  color: #666666;
-  text-align: center;
-  font-weight: 500;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* 会话列表容器 */
-.conversation-container {
-  flex: 1;
-  padding: 0;
-  min-height: 600rpx;
-  background-color: #f8f8f8;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 测试会话列表 */
-.test-conversation-list {
-  flex: 1;
-  width: 100%;
-}
-
-/* 虚拟滚动视图 */
-.virtual-scroll-view {
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-  background-color: #f8f8f8;
-}
-
-/* 滚动占位符 */
-.scroll-placeholder {
-  width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-}
-
-/* 虚拟列表内容 */
-.virtual-list-content {
-  width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 2;
-  background-color: transparent;
-}
-
-/* 会话项样式 */
-.conversation-item {
+.service-card-header {
   display: flex;
   align-items: center;
-  padding: 32rpx;
-  background-color: #ffffff;
-  border-bottom: 1rpx solid #e0e0e0;
-  transition: all 0.2s ease;
+  margin-bottom: 24rpx;
+  padding: 0 4rpx;
 }
 
-.conversation-item:active {
-  background-color: #f5f5f5;
-}
-
-/* 有未读消息的会话项 */
-.conversation-item.unread {
-  background-color: #f9f9f9;
-}
-
-/* 头像容器 */
-.avatar-container {
-  position: relative;
-  margin-right: 24rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 8rpx;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-/* 头像样式 */
-.avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* 未读消息角标 */
-.unread-badge {
-  position: absolute;
-  top: 0rpx;
-  right: 0rpx;
-  background-color: #ff4d4f;
-  color: #fff;
-  font-size: 20rpx;
-  min-width: 26rpx;
-  height: 26rpx;
-  line-height: 26rpx;
-  text-align: center;
-  border-radius: 10rpx;
-  padding: 0 5rpx;
-  font-weight: 600;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  z-index: 10;
-  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
-}
-
-/* 会话信息 */
-.conversation-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-/* 会话头部 */
-.conversation-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12rpx;
-}
-
-/* 会话名称 */
-.conversation-name {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #333333;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* 有未读消息的会话名称 */
-.conversation-item.unread .conversation-name {
-  color: #333333;
-  font-weight: 700;
-}
-
-/* 会话时间 */
-.conversation-time {
-  font-size: 20rpx;
-  color: #999999;
-  margin-left: 16rpx;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* 有未读消息的会话时间 */
-.conversation-item.unread .conversation-time {
-  color: #ff4d4f;
-}
-
-/* 最后一条消息 */
-.conversation-last-message {
-  font-size: 24rpx;
-  color: #999999;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* 有未读消息的最后一条消息 */
-.conversation-item.unread .conversation-last-message {
-  color: #666666;
-}
-
-/* 空会话提示样式 */
-.empty-conversations {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 400rpx;
-  background-color: #f8f8f8;
-  padding: 40rpx;
-  margin-top: 40rpx;
-}
-
-.empty-text {
+.service-card-title {
   font-size: 28rpx;
-  color: #999999;
+  font-weight: 600;
+  color: #1D1D1F;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.service-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 16rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FAFAFA 100%);
+  border: 1rpx solid rgba(134, 134, 139, 0.08);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.service-item:active {
+  transform: scale(0.96);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.service-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.service-icon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.service-icon-image {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+}
+
+.service-icon-feeding {
+  background: linear-gradient(135deg, rgba(255, 159, 67, 0.15) 0%, rgba(255, 138, 101, 0.08) 100%);
+}
+
+.service-icon-boarding {
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(69, 183, 170, 0.08) 100%);
+}
+
+.service-text {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+  margin-bottom: 4rpx;
   text-align: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.4;
 }
 
-/* 加载更多提示样式 */
-.loading-more {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40rpx;
-  background-color: #f8f8f8;
-  border-top: 1rpx solid #e0e0e0;
+.service-desc {
+  font-size: 20rpx;
+  color: #AEAEB2;
+  text-align: center;
+  margin-bottom: 8rpx;
 }
 
-.loading-text {
-  font-size: 24rpx;
-  color: #999999;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* 没有更多数据提示样式 */
-.no-more-data {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32rpx;
-  background-color: #f8f8f8;
-  border-top: 1rpx solid #e0e0e0;
-}
-
-.no-more-text {
-  font-size: 22rpx;
-  color: #cccccc;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+.service-accent {
+  width: 32rpx;
+  height: 2rpx;
+  background: linear-gradient(90deg, #4ECDC4 0%, #45B7AA 100%);
+  border-radius: 1rpx;
+  opacity: 0.5;
 }

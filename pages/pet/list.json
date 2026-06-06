@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "我的宠物",
-  "usingComponents": {
-    "van-button": "@vant/button/index",
-    "van-icon": "@vant/icon/index",
-    "van-empty": "@vant/empty/index"
-  }
-}

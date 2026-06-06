@@ -1,5 +1,5 @@
 {
-  "description": "家庭式宠物寄养平台小程序",
+  "description": "家庭式宠物寄养平台小程序 - 2026-03-28 更新",
   "cloudfunctionRoot": "cloudfunctions/",
   "packOptions": {
     "ignore": [
@@ -48,10 +48,6 @@
         "type": "file"
       },
       {
-        "value": "miniprogram_npm/core-js-pure",
-        "type": "folder"
-      },
-      {
         "value": "miniprogram_npm/@cloudbase/node-sdk",
         "type": "folder"
       },
@@ -90,6 +86,94 @@
       {
         "value": "*.md",
         "type": "file"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/lib",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/README.md",
+        "type": "file"
+      },
+      {
+        "value": "docs",
+        "type": "folder"
+      },
+      {
+        "value": "test",
+        "type": "folder"
+      },
+      {
+        "value": "scripts",
+        "type": "folder"
+      },
+      {
+        "value": "README.md",
+        "type": "file"
+      },
+      {
+        "value": "CHANGELOG.md",
+        "type": "file"
+      },
+      {
+        "value": "debug",
+        "type": "folder"
+      },
+      {
+        "value": "*.zip",
+        "type": "file"
+      },
+      {
+        "value": "*.sh",
+        "type": "file"
+      },
+      {
+        "value": "check-*.js",
+        "type": "file"
+      },
+      {
+        "value": "cloudbaserc.json",
+        "type": "file"
+      },
+      {
+        "value": ".eslintrc.json",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/cli",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/manager-node",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/database",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/toolbox",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/framework-core",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/cloud-api",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/@cloudbase/framework-plugin-function",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/miniprogram_npm/core-js-pure",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_npm/miniprogram_npm/@cloudbase",
+        "type": "folder"
       }
     ],
     "include": []
@@ -97,8 +181,8 @@
   "setting": {
     "ignoreDevUnusedFiles": true,
     "ignoreUploadUnusedFiles": true,
-    "bundle": false,
-    "userConfirmedBundleSwitch": false,
+    "bundle": true,
+    "userConfirmedBundleSwitch": true,
     "urlCheck": true,
     "scopeDataCheck": false,
     "coverView": true,
@@ -109,32 +193,28 @@
     "preloadBackgroundData": false,
     "minified": true,
     "autoAudits": false,
-    "newFeature": false,
     "uglifyFileName": false,
     "uploadWithSourceMap": false,
     "useIsolateContext": true,
     "nodeModules": true,
     "enhance": true,
-    "useMultiFrameRuntime": false,
+    "useMultiFrameRuntime": true,
     "useApiHook": true,
-    "useApiHostProcess": false,
+    "useApiHostProcess": true,
     "showShadowRootInWxmlPanel": true,
     "scopeDataMerge": false,
-    "uglifyWXSS": true,
+    "minifyWXSS": true,
     "checkInvalidKey": true,
     "checkSiteMap": true,
-    "uploadWithSourceMapForDev": false,
     "compileHotReLoadPort": 22333,
     "disableUseStrict": true,
-    "minifyWXSS": true,
-    "showES6CompileOption": false,
     "minifyWXML": true,
-    "compileWorklet": false,
     "packNpmManually": true,
+    "nativeMode": "opt-out",
     "packNpmRelationList": [
       {
         "packageJsonPath": "./package.json",
-        "miniprogramNpmDistDir": "./miniprogram_npm/"
+        "miniprogramNpmDistDir": "./"
       }
     ],
     "localPlugins": false,
@@ -142,15 +222,16 @@
     "condition": false,
     "swc": false,
     "disableSWC": true,
+    "ignoreApiDeprecatedError": true,
+    "compileWorklet": false,
     "babelSetting": {
       "ignore": [],
       "disablePlugins": [],
       "outputPath": ""
-    },
-    "ignoreApiDeprecatedError": true
+    }
   },
   "compileType": "miniprogram",
-  "libVersion": "3.13.1",
+  "libVersion": "3.16.0",
   "appid": "wxc5b705cab9ba29e7",
   "projectname": "wechat-pet-hosting-app",
   "isGameTourist": false,

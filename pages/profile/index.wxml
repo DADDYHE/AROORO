@@ -1,284 +1,230 @@
-<view class="page-container">
-  <!-- 身份切换加载遮罩层 -->
-  <view class="role-switch-overlay" wx:if="{{isSwitchingRole}}">
-    <view class="overlay-content">
-      <view class="loading-spinner-large"></view>
-      <text class="overlay-text">切换身份中...</text>
-      <text class="overlay-subtext">{{switchingRoleText}}</text>
-    </view>
-  </view>
-
-  <!-- 模糊背景层 - 当登录表单显示时显示 -->
-  <view class="blur-background" wx:if="{{showLoginForm}}"></view>
-  <!-- 头部区域 - 按照首页样式调整 -->
-  <view class="page-header">
-    <view class="header-content">
-      <!-- 品牌标识 -->
-      <view class="brand-logo">Arooro</view>
-      
-      <!-- 用户信息展示区域 - 无论用户信息是否完整都显示 -->
-      <view class="user-info {{isLoggedIn ? 'logged-in' : ''}}">
-        <view class="avatar-container" wx:if="{{isLoggedIn}}">
-          <image 
-            class="avatar-image" 
-            wx:if="{{ userRole === 'host' ? (hostProfile && hostProfile.avatarUrl) : (userInfo && userInfo.avatarUrl) }}"
-            src="{{ userRole === 'host' ? hostProfile.avatarUrl : userInfo.avatarUrl }}" 
-            binderror="onAvatarLoadError"
-            mode="aspectFill"
-          ></image>
-          <image class="svg-avatar" wx:else src="/images/default-avatar.svg" mode="aspectFit"></image>
-        </view>
-        <!-- 未登录状态 - 与登录状态使用相同的头像容器结构 -->
-        <view 
-          class="avatar-container" 
-          wx:if="{{!isLoggedIn && !isLoading && !showLoginForm}}"
-          bindtap="onLoginButtonTap"
-          style="cursor: pointer;"
-        >
-          <image class="svg-avatar" src="/images/default-avatar.svg" mode="aspectFit"></image>
-        </view>
-        <!-- 未登录状态下的文字提示，与登录状态下的文字位置一致 -->
-        <view class="user-details" wx:if="{{!isLoggedIn && !isLoading && !showLoginForm}}">
-          <text class="welcome">点击头像登录</text>
-        </view>
-        
-        <!-- 登录表单 - 获取用户头像和昵称，必须完成的流程 -->
-        <view class="login-form" wx:if="{{showLoginForm}}">
-          <!-- 头像选择 - 直接放在最顶部 -->
-          <view class="form-item">
-            <view class="avatar-upload-container">
-              <button 
-                class="avatar-upload-btn" 
-                open-type="chooseAvatar" 
-                bindchooseavatar="onChooseAvatar"
-              >
-                <image class="avatar-preview" src="{{avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill"></image>
-                <view class="upload-text">点击选择头像</view>
-              </button>
-            </view>
-          </view>
-          
-          <!-- 昵称输入 -->
-          <view class="form-item nickname-form-item">
-            <input 
-              class="nickname-input" 
-              type="nickname" 
-              placeholder="点击输入昵称" 
-              value="{{nickName}}" 
-              bindinput="onNicknameInput"
-            />
-          </view>
-          
-          <!-- 登录和取消按钮 - 同一行显示 -->
-          <view class="buttons-container">
-            <button 
-              class="cancel-btn" 
-              bindtap="onCancelLogin"
-            >
-              取消
-            </button>
-            <button 
-              class="login-submit-btn" 
-              bindtap="onSubmitLogin" 
-              disabled="{{!avatarUrl || !nickName}}"
-            >
-              完成登录
-            </button>
-          </view>
-        </view>
-        
-        <!-- 加载状态 -->
-        <view class="loading-container" wx:if="{{isLoading}}">
-          <view class="loading-spinner"></view>
-          <text class="loading-text">加载中...</text>
-        </view>
-        <view class="user-details" wx:if="{{isLoggedIn}}">
-          <text class="welcome">{{userRole === 'host' ? (hostProfile && hostProfile.hostName ? hostProfile.hostName : '未设置寄养家庭名称') : (userInfo && userInfo.nickName ? userInfo.nickName : '未设置昵称')}}</text>
-          <view class="role-container">
-            <text class="role-tag">{{ userRole === 'owner' ? '宠物主人' : '寄养家庭' }}</text>
-            <button class="switch-role-btn" bindtap="switchRole">
-              切换角色
-            </button>
-          </view>
-        </view>
+<view class="page">
+  <!-- 顶部画廊区 -->
+  <view class="gallery-header">
+    <view class="brand-block">
+      <view class="brand-accent-bar"></view>
+      <view class="brand-main">
+        <text class="brand-text">AROORO</text>
+      </view>
+      <view class="brand-meta">
+        <view class="brand-meta-line"></view>
+        <text class="brand-subtitle">安心呼噜，放心托付</text>
       </view>
     </view>
   </view>
 
-  <view class="page-content">
-    <!-- 用户信息不完整时，显示补全信息的提示 -->
-    <view class="complete-info-section" wx:if="{{ isLoggedIn && ( !userInfo.avatarUrl || !userInfo.nickName || userInfo.nickName === '未知用户') }}">
-      <view class="card">
-        <view class="form-item" bindtap="onCompleteInfo">
-          <view class="form-label">完善个人信息</view>
-          <view class="form-value">
-            <view class="picker-trigger">
-              <text class="picker-value">点击完善头像和昵称</text>
-              <text class="picker-arrow">></text>
-            </view>
-          </view>
+  <!-- 个人信息 -->
+<view class="order-exhibit-section">
+  <view class="exhibit-list">
+    <view class="exhibit-row">
+      <view class="exhibit-row-index" style="flex:1;text-align:center;">
+        <view class="exhibit-avatar-wrap">
+          <image lazy-load class="exhibit-avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{userInfo.avatarUrl}}" data-path="userInfo.avatarUrl" />
         </view>
+        <text class="exhibit-name">{{userInfo.nickName}}</text>
       </view>
-    </view>
-
-    <view class="menu">
-      <view class="card">
-        <!-- 我的订单 -->
-        <view class="form-item" bindtap="goToOrders">
-          <view class="form-label">我的订单</view>
-          <view class="form-value">
-            <view class="picker-trigger">
-              <text class="picker-arrow">></text>
-            </view>
-          </view>
-        </view>
-        <!-- 我的宠物 -->
-        <view class="form-item" bindtap="goToPets" wx:if="{{ userRole === 'owner' }}">
-          <view class="form-label">我的宠物</view>
-          <view class="form-value">
-            <view class="picker-trigger">
-              <text class="picker-arrow">></text>
-            </view>
-          </view>
-        </view>
-        <!-- 我的寄养服务 -->
-        <view class="form-item" bindtap="goToHostingServices" wx:if="{{ userRole === 'host' }}">
-          <view class="form-label">我的寄养服务</view>
-          <view class="form-value">
-            <view class="picker-trigger">
-              <text class="picker-arrow">></text>
-            </view>
-          </view>
-        </view>
-        <!-- 我的评价 -->
-        <view class="form-item" bindtap="goToReviews">
-          <view class="form-label">我的评价</view>
-          <view class="form-value">
-            <view class="picker-trigger">
-              <text class="picker-arrow">></text>
-            </view>
-          </view>
-        </view>
-        <!-- 用户设置 -->
-        <view class="form-item" bindtap="goToSettings">
-          <view class="form-label">用户设置</view>
-          <view class="form-value">
-            <view class="picker-trigger">
-              <text class="picker-arrow">></text>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <view class="stats" wx:if="{{ userRole === 'owner' }}">
-      <view class="card">
-        <!-- 已寄养次数 -->
-        <view class="form-item">
-          <view class="form-label">已寄养次数</view>
-          <view class="form-value">
-            <text class="form-value-text">{{ stats.bookingCount }}</text>
-          </view>
-        </view>
-        <!-- 累计消费 -->
-        <view class="form-item">
-          <view class="form-label">累计消费</view>
-          <view class="form-value">
-            <text class="form-value-text">¥{{ stats.totalSpent }}</text>
-          </view>
-        </view>
-        <!-- 平均评分 -->
-        <view class="form-item">
-          <view class="form-label">平均评分</view>
-          <view class="form-value">
-            <text class="form-value-text">{{ stats.avgRating }}分</text>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <view class="stats" wx:if="{{ userRole === 'host' }}">
-      <view class="card">
-        <!-- 已接待次数 -->
-        <view class="form-item">
-          <view class="form-label">已接待次数</view>
-          <view class="form-value">
-            <text class="form-value-text">{{ stats.bookingCount }}</text>
-          </view>
-        </view>
-        <!-- 累计收入 -->
-        <view class="form-item">
-          <view class="form-label">累计收入</view>
-          <view class="form-value">
-            <text class="form-value-text">¥{{ stats.totalIncome }}</text>
-          </view>
-        </view>
-        <!-- 平均评分 -->
-        <view class="form-item">
-          <view class="form-label">平均评分</view>
-          <view class="form-value">
-            <text class="form-value-text">{{ stats.avgRating }}分</text>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <view class="quick-actions" wx:if="{{ isLoggedIn }}">
-      <button 
-        class="logout-button" 
-        bindtap="logout"
-      >
-        退出登录
-      </button>
     </view>
   </view>
+</view>
 
-  <!-- 身份选择弹窗 -->
-  <view class="role-selection-modal" wx:if="{{showRoleSelection}}">
-    <view class="modal-mask" bindtap="onCancelRoleSelection"></view>
-    <view class="modal-container">
+  <!-- 数据统计 -->
+<view class="order-exhibit-section">
+  <view class="exhibit-stats">
+    <view class="exhibit-stat" bindtap="onMyPets">
+      <text class="exhibit-stat-num">{{stats.petCount}}</text>
+      <text class="exhibit-stat-label">我的宠物</text>
+    </view>
+    <view class="exhibit-stat" bindtap="onMyActivities">
+      <text class="exhibit-stat-num">{{stats.activityCount}}</text>
+      <text class="exhibit-stat-label">我的活动</text>
+    </view>
+    <view class="exhibit-stat" bindtap="onMyCoupons">
+      <text class="exhibit-stat-num">{{stats.couponCount}}</text>
+      <text class="exhibit-stat-label">我的优惠券</text>
+    </view>
+  </view>
+</view>
+
+  <!-- 我的订单 - 艺术展陈风格 -->
+<view class="order-exhibit-section">
+  <view class="exhibit-header">
+    <view class="exhibit-number">01</view>
+    <view class="exhibit-title-block">
+      <text class="exhibit-title">我的订单</text>
+      <view class="exhibit-line"></view>
+    </view>
+  </view>
+  
+  <view class="exhibit-list">
+    <view class="exhibit-row" bindtap="onGroupOrders">
+      <view class="exhibit-row-index">01</view>
+      <view class="exhibit-row-card group">
+        <view class="exhibit-row-icon">
+          <image class="exhibit-icon-img" src="/images/icons/discover-line.svg" mode="aspectFit" />
+        </view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title">团购订单</text>
+          <text class="exhibit-row-desc">查看团购参与记录</text>
+        </view>
+        <view class="exhibit-row-arrow"></view>
+      </view>
+    </view>
+    
+    <view class="exhibit-row" bindtap="onMallOrders">
+      <view class="exhibit-row-index">02</view>
+      <view class="exhibit-row-card mall">
+        <view class="exhibit-row-icon">
+          <image class="exhibit-icon-img" src="{{iconShoppingCart}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconShoppingCart}}" data-path="iconShoppingCart" />
+        </view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title">商城订单</text>
+          <text class="exhibit-row-desc">查看宠物商城购买记录</text>
+        </view>
+        <view class="exhibit-row-arrow"></view>
+      </view>
+    </view>
+    
+    <view class="exhibit-row" bindtap="onActivityOrders">
+      <view class="exhibit-row-index">03</view>
+      <view class="exhibit-row-card activity">
+        <view class="exhibit-row-icon">
+          <image class="exhibit-icon-img" src="{{iconBell}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconBell}}" data-path="iconBell" />
+        </view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title">活动订单</text>
+          <text class="exhibit-row-desc">查看活动报名记录</text>
+        </view>
+        <view class="exhibit-row-arrow"></view>
+      </view>
+    </view>
+    
+    <view class="exhibit-row" bindtap="onServiceOrders">
+      <view class="exhibit-row-index">04</view>
+      <view class="exhibit-row-card service">
+        <view class="exhibit-row-icon">
+          <image class="exhibit-icon-img" src="{{iconDoorOpen}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconDoorOpen}}" data-path="iconDoorOpen" />
+        </view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title">服务订单</text>
+          <text class="exhibit-row-desc">查看服务预约记录</text>
+        </view>
+        <view class="exhibit-row-arrow"></view>
+      </view>
+    </view>
+    
+    <view class="exhibit-row" bindtap="onHostingOrders">
+      <view class="exhibit-row-index">05</view>
+      <view class="exhibit-row-card hosting">
+        <view class="exhibit-row-icon">
+          <image class="exhibit-icon-img" src="{{iconHomeHeart}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconHomeHeart}}" data-path="iconHomeHeart" />
+        </view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title">寄养订单</text>
+          <text class="exhibit-row-desc">查看寄养服务记录</text>
+        </view>
+        <view class="exhibit-row-arrow"></view>
+      </view>
+    </view>
+  </view>
+</view>
+
+  <!-- 账户设置 -->
+<view class="order-exhibit-section">
+  <view class="exhibit-header">
+    <view class="exhibit-number">02</view>
+    <view class="exhibit-title-block">
+      <text class="exhibit-title">账户设置</text>
+      <view class="exhibit-line"></view>
+    </view>
+  </view>
+  
+  <view class="exhibit-list">
+    <view class="exhibit-row" bindtap="onPersonalInfo">
+      <view class="exhibit-row-index">01</view>
+      <view class="exhibit-row-card neutral">
+        <view class="exhibit-row-icon neutral-icon-user"></view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title">个人信息</text>
+          <text class="exhibit-row-desc">编辑昵称、头像等资料</text>
+        </view>
+        <view class="exhibit-row-arrow"></view>
+      </view>
+    </view>
+    
+    <view class="exhibit-row" bindtap="onPrivacySettings">
+      <view class="exhibit-row-index">02</view>
+      <view class="exhibit-row-card neutral">
+        <view class="exhibit-row-icon neutral-icon-lock"></view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title">隐私设置</text>
+          <text class="exhibit-row-desc">管理隐私与数据权限</text>
+        </view>
+        <view class="exhibit-row-arrow"></view>
+      </view>
+    </view>
+    
+    <view class="exhibit-row" bindtap="onAboutUs">
+      <view class="exhibit-row-index">03</view>
+      <view class="exhibit-row-card neutral">
+        <view class="exhibit-row-icon neutral-icon-info"></view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title">关于我们</text>
+          <text class="exhibit-row-desc">了解团队与联系方式</text>
+        </view>
+        <view class="exhibit-row-arrow"></view>
+      </view>
+    </view>
+
+    <view class="exhibit-row" bindtap="onPartnerTap">
+      <view class="exhibit-row-index">04</view>
+      <view class="exhibit-row-card partner">
+        <view class="exhibit-row-icon partner-icon"></view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title" wx:if="{{userInfo.isPartner}}">管理中心</text>
+          <text class="exhibit-row-title" wx:else>成为合作伙伴</text>
+          <text class="exhibit-row-desc" wx:if="{{userInfo.isPartner}}">管理活动、订单和查看数据</text>
+          <text class="exhibit-row-desc" wx:else>带货赚取收益，共建宠物生态</text>
+        </view>
+        <view class="exhibit-row-arrow"></view>
+      </view>
+    </view>
+  </view>
+</view>
+
+  <!-- 退出登录 -->
+<view class="order-exhibit-section">
+  <view class="exhibit-list">
+    <view class="exhibit-row">
+      <view class="exhibit-row-index" style="flex:1;">
+        <view class="exhibit-logout-btn" bindtap="onLogout">
+          <text class="exhibit-logout-text">退出登录</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+  <!-- 版本信息 -->
+  <view class="version-wrap">
+    <text class="version-text">版本 {{appVersion}}</text>
+  </view>
+
+  <!-- 入驻弹窗 -->
+  <view class="modal-mask" wx:if="{{showHostModal}}" bindtap="onCloseHostModal">
+    <view class="modal-content" catchtap="">
       <view class="modal-header">
-        <text class="modal-title">选择登录身份</text>
-        <view class="modal-close" bindtap="onCancelRoleSelection">
-          <text class="close-icon">×</text>
-        </view>
+        <text class="modal-title">入驻平台请联系客服</text>
       </view>
       <view class="modal-body">
-        <text class="modal-description">请选择您要使用的身份登录</text>
-        <view class="role-options">
-          <view 
-            class="role-option {{selectedRole === 'owner' ? 'selected' : ''}}" 
-            data-role-type="owner"
-            bindtap="onRoleSelect"
-          >
-            <image class="role-icon" src="/images/owner-icon.svg" mode="aspectFit"></image>
-            <view class="role-info">
-              <text class="role-name">宠物主人</text>
-              <text class="role-desc">我的宠物需要寄养</text>
-            </view>
-            <view class="role-check" wx:if="{{selectedRole === 'owner'}}">
-              <text class="check-icon">✓</text>
-            </view>
-          </view>
-          <view 
-            class="role-option {{selectedRole === 'host' ? 'selected' : ''}}" 
-            data-role-type="host"
-            bindtap="onRoleSelect"
-          >
-            <image class="role-icon" src="/images/host-icon.svg" mode="aspectFit"></image>
-            <view class="role-info">
-              <text class="role-name">寄养家庭</text>
-              <text class="role-desc">我可以为宠物提供寄养服务</text>
-            </view>
-            <view class="role-check" wx:if="{{selectedRole === 'host'}}">
-              <text class="check-icon">✓</text>
-            </view>
-          </view>
-        </view>
+        <text class="modal-phone">13778877888</text>
       </view>
       <view class="modal-footer">
-        <button class="modal-btn cancel-btn" bindtap="onCancelRoleSelection">取消</button>
-        <button class="modal-btn confirm-btn" bindtap="onConfirmRoleSelection" disabled="{{!selectedRole}}">确认</button>
+        <view class="modal-btn" bindtap="onMakeCall">
+          <text class="modal-btn-text">去拨号</text>
+        </view>
+      </view>
+      <view class="modal-close" bindtap="onCloseHostModal">
+        <view class="modal-close-icon"></view>
       </view>
     </view>
   </view>

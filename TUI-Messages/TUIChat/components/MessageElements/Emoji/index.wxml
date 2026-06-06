@@ -1,5 +1,0 @@
-<scroll-view scroll-y="true" enable-flex="true" class="TUI-Emoji">
-  <view class="TUI-emoji-text" wx:for="{{emojiList}}" wx:key="index" data-name="{{item.emojiName}}" bindtap="handleEnterEmoji">
-    <view class="TUI-emoji-text-content">{{item.emojiSymbol}}</view>
-  </view>
-</scroll-view>

@@ -1,8 +1,7 @@
 {
-  "navigationBarTitleText": "个人中心",
-  "componentPlaceholder": {
-    "TUIConversation": "view",
-    "TUIChat": "view",
-    "TUIGroup": "view"
-  }
+  "navigationBarTitleText": "我的",
+  "navigationBarTextStyle": "black",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "backgroundColor": "#F5F5F7",
+  "usingComponents": {}
 }

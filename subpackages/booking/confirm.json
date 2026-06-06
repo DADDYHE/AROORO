@@ -1,8 +1,8 @@
 {
   "navigationBarTitleText": "确认订单",
   "usingComponents": {
-    "van-cell-group": "@vant/cell-group/index",
-    "van-cell": "@vant/cell/index",
-    "van-button": "@vant/button/index"
-  }
+    "van-calendar": "@vant/weapp/calendar/index",
+    "van-loading": "@vant/weapp/loading/index"
+  },
+  "pageOrientation": "portrait"
 }

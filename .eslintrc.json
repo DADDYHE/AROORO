@@ -2,11 +2,14 @@
   "root": true,
   "env": {
     "node": true,
-    "es6": true
+    "es2021": true,
+    "browser": true
   },
-  "extends": "eslint:recommended",
+  "extends": [
+    "eslint:recommended"
+  ],
   "parserOptions": {
-    "ecmaVersion": 2018,
+    "ecmaVersion": 2021,
     "sourceType": "module"
   },
   "globals": {
@@ -17,18 +20,248 @@
     "Component": "readonly",
     "Behavior": "readonly",
     "getCurrentPages": "readonly",
-    "globalData": "readonly"
+    "globalData": "readonly",
+    "require": "readonly",
+    "module": "readonly",
+    "exports": "readonly",
+    "console": "readonly",
+    "setTimeout": "readonly",
+    "setInterval": "readonly",
+    "clearTimeout": "readonly",
+    "clearInterval": "readonly",
+    "Promise": "readonly",
+    "Map": "readonly",
+    "Set": "readonly",
+    "JSON": "readonly",
+    "Date": "readonly",
+    "Math": "readonly",
+    "Object": "readonly",
+    "Array": "readonly",
+    "String": "readonly",
+    "Number": "readonly",
+    "Boolean": "readonly",
+    "Function": "readonly",
+    "Symbol": "readonly",
+    "Reflect": "readonly",
+    "Proxy": "readonly",
+    "RegExp": "readonly",
+    "Error": "readonly",
+    "EvalError": "readonly",
+    "RangeError": "readonly",
+    "ReferenceError": "readonly",
+    "SyntaxError": "readonly",
+    "TypeError": "readonly",
+    "URIError": "readonly",
+    "a": "readonly",
+    "TIM": "readonly"
   },
   "rules": {
-    "no-console": "warn",
-    "no-debugger": "error",
     "indent": ["error", 2],
     "linebreak-style": ["error", "unix"],
     "quotes": ["error", "single"],
     "semi": ["error", "never"],
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "comma-dangle": ["error", {
+      "arrays": "always-multiline",
+      "objects": "always-multiline",
+      "imports": "always-multiline",
+      "exports": "always-multiline",
+      "functions": "never"
+    }],
+    "comma-spacing": ["error", {
+      "before": false,
+      "after": true
+    }],
+    "comma-style": ["error", "last"],
+    "space-in-parens": ["error", "never"],
+    "space-infix-ops": "error",
+    "keyword-spacing": ["error", {
+      "before": true,
+      "after": true
+    }],
+    "brace-style": ["error", "1tbs", {
+      "allowSingleLine": true
+    }],
+    "object-curly-spacing": ["error", "always"],
+    "array-bracket-spacing": ["error", "never"],
+    "key-spacing": ["error", {
+      "beforeColon": false,
+      "afterColon": true
+    }],
+    "no-multi-spaces": "error",
+    "no-multiple-empty-lines": ["error", {
+      "max": 2,
+      "maxEOF": 1
+    }],
+    "no-trailing-spaces": "error",
+    "eol-last": ["error", "always"],
+    "camelcase": ["warn", {
+      "properties": "never",
+      "ignoreDestructuring": true,
+      "ignoreImports": true
+    }],
+    "no-unused-vars": ["warn", {
+      "vars": "all",
+      "args": "after-used",
+      "ignoreRestSiblings": true,
+      "argsIgnorePattern": "^_",
+      "caughtErrors": "none"
+    }],
+    "no-console": ["warn", {
+      "allow": ["log", "warn", "error", "info"]
+    }],
+    "no-debugger": "error",
+    "no-unused-expressions": ["error", {
+      "allowShortCircuit": true,
+      "allowTernary": true,
+      "allowTaggedTemplates": true
+    }],
+    "no-useless-escape": "error",
+    "no-empty": ["error", {
+      "allowEmptyCatch": true
+    }],
+    "no-constant-condition": ["error", {
+      "checkLoops": false
+    }],
+    "no-prototype-builtins": "off",
+    "no-shadow-restricted-names": "error",
     "no-undef": "error",
-    "eqeqeq": ["error", "always"],
-    "curly": ["error", "all"]
-  }
+    "no-undef-init": "error",
+    "no-useless-catch": "error",
+    "no-useless-concat": "error",
+    "eqeqeq": ["error", "always", {
+      "null": "ignore"
+    }],
+    "curly": ["error", "all"],
+    "dot-notation": ["error", {
+      "allowKeywords": true
+    }],
+    "guard-for-in": "warn",
+    "no-case-declarations": "error",
+    "no-eval": "error",
+    "no-extend-native": "error",
+    "no-extra-bind": "error",
+    "no-extra-label": "error",
+    "no-floating-decimal": "error",
+    "no-implicit-coercion": ["error", {
+      "boolean": true,
+      "number": true,
+      "string": true
+    }],
+    "no-implied-eval": "error",
+    "no-iterator": "error",
+    "no-labels": "error",
+    "no-lone-blocks": "error",
+    "no-loop-func": "error",
+    "no-multi-str": "error",
+    "no-new": "error",
+    "no-new-func": "error",
+    "no-new-wrappers": "error",
+    "no-octal": "error",
+    "no-octal-escape": "error",
+    "no-param-reassign": ["warn", {
+      "props": false
+    }],
+    "no-proto": "error",
+    "no-redeclare": ["error", {
+      "builtinGlobals": true
+    }],
+    "no-return-assign": ["error", "always"],
+    "no-script-url": "error",
+    "no-self-compare": "error",
+    "no-sequences": "error",
+    "no-throw-literal": "error",
+    "no-useless-call": "error",
+    "no-void": "error",
+    "no-with": "error",
+    "radix": ["error", "always"],
+    "wrap-iife": ["error", "any"],
+    "yoda": ["error", "never"],
+    "no-label-var": "error",
+    "no-shadow": ["error", {
+      "hoist": "functions"
+    }],
+    "no-undefined": "off",
+    "no-use-before-define": ["error", {
+      "functions": false,
+      "classes": false,
+      "variables": false
+    }],
+    "arrow-body-style": ["error", "as-needed"],
+    "arrow-parens": ["error", "as-needed"],
+    "arrow-spacing": ["error", {
+      "before": true,
+      "after": true
+    }],
+    "generator-star-spacing": ["error", {
+      "before": false,
+      "after": true
+    }],
+    "no-confusing-arrow": ["error", {
+      "allowParens": true
+    }],
+    "no-duplicate-imports": "error",
+    "no-var": "error",
+    "object-shorthand": ["error", "always", {
+      "ignoreConstructors": false,
+      "avoidQuotes": true
+    }],
+    "prefer-arrow-callback": ["error", {
+      "allowNamedFunctions": false,
+      "allowUnboundThis": true
+    }],
+    "prefer-const": ["error", {
+      "destructuring": "any",
+      "ignoreReadBeforeAssign": true
+    }],
+    "prefer-numeric-literals": "error",
+    "prefer-template": "error",
+    "rest-spread-spacing": ["error", "never"],
+    "template-curly-spacing": ["error", "never"],
+    "yield-star-spacing": ["error", "after"],
+    "no-restricted-modules": ["error", {
+      "patterns": ["**/miniprogram_npm/**"]
+    }],
+    "no-restricted-syntax": ["error", {
+      "selector": "AssignmentExpression > MemberExpression.left[object.name='error'][property.name='code']",
+      "message": "禁止直接给 error.code 赋值（应使用 throw err('CODE', 'message', { details }) 替代，详见 cloudfunctions/common/errors.js）"
+    }, {
+      "selector": "ThrowStatement > CallExpression[callee.name='handleError']",
+      "message": "handleError 是返回式而非抛错函数（请用 throw err(...) 替代）"
+    }, {
+      "selector": "AssignmentExpression[left.type='MemberExpression'][left.property.name='code'][right.type='MemberExpression'][right.object.name='e']",
+      "message": "禁止 e.code = ... 直赋值（应使用 throw err(...) 替代）"
+    }, {
+      "selector": "AssignmentExpression[left.type='MemberExpression'][left.property.name='code'][right.type='MemberExpression'][right.object.name='err']",
+      "message": "禁止 err.code = ... 直赋值（应使用 throw err(...) 替代）"
+    }, {
+      "selector": "ReturnStatement > CallExpression[callee.name='handleError'][arguments.0.type='NewExpression'][arguments.0.callee.name='Error']",
+      "message": "禁止 return handleError(new Error(...), ...) 旧模式（应使用 throw err('CODE', 'message') 替代）"
+    }, {
+      "selector": "CallExpression[callee.name='console'][arguments.0.value=/^\\[/]",
+      "message": "禁止使用 console.* 打日志（应使用 logger.method('action', data) 替代，详见 cloudfunctions/common/logger.js）"
+    }],
+    "no-restricted-imports": ["error", {
+      "paths": [],
+      "patterns": []
+    }]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.js", "test/**/*", "**/__tests__/**/*", "**/__mocks__/**/*"],
+      "env": {
+        "jest": true,
+        "node": true
+      },
+      "globals": {
+        "jest": "readonly",
+        "describe": "readonly",
+        "test": "readonly",
+        "expect": "readonly",
+        "beforeEach": "readonly",
+        "afterEach": "readonly",
+        "beforeAll": "readonly",
+        "afterAll": "readonly"
+      }
+    }
+  ]
 }

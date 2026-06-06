@@ -1,111 +1,211 @@
-<!-- 创建宠物档案第一步 - 巴黎世家风格 -->
-<view class="page-container">
-  <!-- 头部区域 -->
-  <view class="page-header">
-    <view class="header-content">
-      <!-- 品牌标识 -->
-      <view class="brand-logo">Arooro</view>
-      <!-- 页面标题 -->
-      <view class="page-title">创建宠物档案</view>
-    </view>
-  </view>
-
-  <!-- 主要内容 -->
-  <view class="page-content">
-    <!-- 步骤指示器 -->
-    <view class="steps-container">
-      <custom-steps 
-        active="{{ currentActive }}" 
-        steps="{{ stepsData }}"
-      />
-    </view>
-
-    <!-- 表单卡片 -->
-    <view class="card">
-      <view class="card-title">宠物基本信息</view>
-      <van-cell-group class="form-group">
-        <van-field 
-          label="宠物昵称" 
-          value="{{ formData.name }}" 
-          placeholder="请输入宠物昵称" 
-          border="{{ false }}"
-          bind:input="onNameInput"
-          extra-event-params="{{ true }}"
-          class="form-field"
-          title-width="160rpx"
-        />
-        
-        <van-field 
-          label="宠物类型" 
-          value="{{ formData.type === 'dog' ? '狗狗' : (formData.type === 'cat' ? '猫咪' : '') }}" 
-          placeholder="请选择宠物类型" 
-          border="{{ false }}"
-          is-link
-          bindtap="selectPetType"
-          class="form-field"
-          title-width="160rpx"
-          readonly="{{ true }}"
-          clickable="{{ true }}"
-        />
-        
-        <van-field 
-          label="宠物年龄" 
-          value="{{ formData.age }}" 
-          placeholder="请输入宠物年龄" 
-          border="{{ false }}"
-          type="number"
-          bind:input="onAgeInput"
-          extra-event-params="{{ true }}"
-          class="form-field"
-          title-width="160rpx"
-        />
-        
-        <van-field 
-          label="体重" 
-          value="{{ formData.weight }}" 
-          placeholder="请输入体重（kg）" 
-          border="{{ false }}"
-          type="digit"
-          bind:input="onWeightInput"
-          extra-event-params="{{ true }}"
-          class="form-field"
-          title-width="160rpx"
-        />
-        
-        <van-field 
-          label="品种" 
-          value="{{ formData.breed }}" 
-          placeholder="请输入品种" 
-          border="{{ false }}"
-          bind:input="onBreedInput"
-          extra-event-params="{{ true }}"
-          class="form-field"
-          title-width="160rpx"
-        />
-      </van-cell-group>
-    </view>
-
-    <!-- 底部按钮 -->
-    <view class="footer">
-      <view class="button-container">
-        <van-button 
-          type="primary" 
-          block
-          bindtap="nextStep"
-          disabled="{{ !formData.name || !formData.type || !formData.age || !formData.weight || !formData.breed }}"
-        >
-          下一步
-        </van-button>
+<view class="gallery-container">
+  <view class="gallery-header">
+    <view class="brand-block">
+      <view class="brand-accent-bar"></view>
+      <view class="brand-main">
+        <text class="brand-text">创建宠物档案</text>
+      </view>
+      <view class="brand-meta">
+        <view class="brand-meta-line"></view>
+        <text class="brand-subtitle">填写信息，建立专属档案</text>
       </view>
     </view>
   </view>
 
-  <!-- 底部操作菜单 -->
+  <view class="gallery-hall">
+    <view class="gallery-portrait" bindtap="chooseAvatar">
+      <view class="portrait-frame">
+        <image wx:if="{{formData.avatarUrl}}" lazy-load class="portrait-image" src="{{formData.avatarUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{formData.avatarUrl}}" data-path="formData.avatarUrl" />
+        <view wx:else class="portrait-canvas">
+          <view class="canvas-crosshair-h"></view>
+          <view class="canvas-crosshair-v"></view>
+          <view class="canvas-corner canvas-tl"></view>
+          <view class="canvas-corner canvas-tr"></view>
+          <view class="canvas-corner canvas-bl"></view>
+          <view class="canvas-corner canvas-br"></view>
+        </view>
+      </view>
+      <view class="portrait-label">
+        <view class="label-line"></view>
+        <text class="label-text">{{formData.avatarUrl ? '点击更换头像' : '点击上传宠物头像'}}</text>
+      </view>
+    </view>
+
+    <view class="gallery-entrance">
+      <view class="entrance-line"></view>
+      <text class="entrance-label">基本信息</text>
+    </view>
+
+    <view class="gallery-collection">
+      <view class="gallery-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <van-cell-group class="form-group" border="{{false}}">
+            <van-field
+              value="{{formData.name}}"
+              placeholder="请输入宠物昵称"
+              border="{{false}}"
+              bind:input="onNameInput"
+              extra-event-params="{{true}}"
+              class="form-field"
+              title-width="220rpx"
+              custom-class="field-cell"
+              required="{{false}}"
+            >
+              <view slot="label" class="field-label">宠物昵称<text class="label-required">（必填）</text></view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{formData.type === 'dog' ? '狗狗' : (formData.type === 'cat' ? '猫咪' : (formData.type === 'exotic' ? '异宠' : ''))}}"
+              placeholder="请选择宠物类型"
+              border="{{false}}"
+              bindtap="selectPetType"
+              class="form-field"
+              title-width="220rpx"
+              custom-class="field-cell"
+              readonly="{{true}}"
+              clickable="{{true}}"
+              required="{{false}}"
+            >
+              <view slot="label" class="field-label">宠物类型<text class="label-required">（必填）</text></view>
+              <view slot="right-icon" class="field-arrow">
+                <view class="arrow-line"></view>
+              </view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{formData.breed}}"
+              placeholder="请输入品种"
+              border="{{false}}"
+              bind:input="onBreedInput"
+              extra-event-params="{{true}}"
+              class="form-field"
+              title-width="220rpx"
+              custom-class="field-cell"
+              required="{{false}}"
+            >
+              <view slot="label" class="field-label">品种<text class="label-required">（必填）</text></view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{formData.gender === 'male' ? '弟弟' : (formData.gender === 'female' ? '妹妹' : (formData.gender === 'unknown' ? '不确定' : ''))}}"
+              placeholder="请选择性别"
+              border="{{false}}"
+              bindtap="selectGender"
+              class="form-field"
+              title-width="220rpx"
+              custom-class="field-cell"
+              readonly="{{true}}"
+              clickable="{{true}}"
+              required="{{false}}"
+            >
+              <view slot="label" class="field-label">性别<text class="label-required">（必填）</text></view>
+              <view slot="right-icon" class="field-arrow">
+                <view class="arrow-line"></view>
+              </view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{formData.birthday}}"
+              placeholder="请选择出生日期"
+              border="{{false}}"
+              bindtap="selectBirthday"
+              class="form-field"
+              title-width="220rpx"
+              custom-class="field-cell"
+              readonly="{{true}}"
+              clickable="{{true}}"
+              required="{{false}}"
+            >
+              <view slot="label" class="field-label">出生日期</view>
+              <view slot="right-icon" class="field-arrow">
+                <view class="arrow-line"></view>
+              </view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{formData.weight}}"
+              placeholder="请输入体重（kg）"
+              border="{{false}}"
+              type="digit"
+              bind:input="onWeightInput"
+              extra-event-params="{{true}}"
+              class="form-field"
+              title-width="220rpx"
+              custom-class="field-cell"
+              required="{{false}}"
+            >
+              <view slot="label" class="field-label">体重</view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{formData.note}}"
+              placeholder="性格傲娇还是可爱？还有生活习惯和饮食习惯描述一下吧"
+              border="{{false}}"
+              bind:input="onNoteInput"
+              extra-event-params="{{true}}"
+              class="form-field form-field-textarea"
+              title-width="220rpx"
+              custom-class="field-cell"
+              type="textarea"
+              autosize="{{ { maxHeight: 200, minHeight: 80 } }}"
+              required="{{false}}"
+            >
+              <view slot="label" class="field-label">备注</view>
+            </van-field>
+          </van-cell-group>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-footer">
+      <view bindtap="completeCreate" class="footer-action {{(!formData.name || !formData.type || !formData.breed || !formData.gender) ? 'action-disabled' : 'action-active'}}">
+        完成创建
+      </view>
+    </view>
+  </view>
+
   <van-action-sheet
-    show="{{ showTypeSheet }}"
-    actions="{{ petTypes }}"
+    show="{{showTypeSheet}}"
+    actions="{{petTypes}}"
     cancel-text="取消"
     bind:select="onSelectType"
     bind:close="onCloseTypeSheet"
   />
+
+  <van-action-sheet
+    show="{{showGenderSheet}}"
+    actions="{{petGenders}}"
+    cancel-text="取消"
+    bind:select="onSelectGender"
+    bind:close="onCloseGenderSheet"
+  />
+
+  <van-popup
+    show="{{showBirthdayPicker}}"
+    position="bottom"
+    round
+    bind:close="onCloseBirthday"
+  >
+    <van-datetime-picker
+      type="date"
+      value="{{currentDate}}"
+      min-date="{{minDate}}"
+      max-date="{{maxDate}}"
+      bind:confirm="onConfirmBirthday"
+      bind:cancel="onCloseBirthday"
+    />
+  </van-popup>
 </view>

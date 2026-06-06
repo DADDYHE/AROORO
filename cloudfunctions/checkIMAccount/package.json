@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "tls-sig-api-v2": "^1.0.0",
-    "wx-server-sdk": "latest"
-  }
-}

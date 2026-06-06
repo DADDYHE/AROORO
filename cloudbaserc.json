@@ -1,237 +1,117 @@
 {
   "version": "2.0",
-  "envId": "cloud1-8gvqhsiga3011047",
+  "envId": "cloudbase-d7getcjqy33b13475",
   "functions": [
     {
-      "name": "login",
-      "timeout": 10,
-      "envVariables": {
-        "IM_SERVICE_API": "https://im-api.tencentcloudapi.com",
-        "IM_SERVICE_API_KEY": "1e4ec15902de6aab54e350e3394b116dd9fd18866ffc79eeb1a210029b314523",
-        "SDKAPPID": "1600123494"
-      },
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "checkIMAccount",
-      "timeout": 10,
-      "envVariables": {
-        "IM_SERVICE_API": "https://im-api.tencentcloudapi.com",
-        "IM_SERVICE_API_KEY": "1e4ec15902de6aab54e350e3394b116dd9fd18866ffc79eeb1a210029b314523",
-        "SDKAPPID": "1600123494"
-      },
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "getStats",
+      "name": "userService",
       "timeout": 10,
       "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
+      "runtime": "Nodejs18.15",
+      "memorySize": 256
     },
     {
-      "name": "calculatePrice",
+      "name": "hostService",
       "timeout": 10,
       "envVariables": {},
-      "runtime": "Nodejs16.13",
+      "runtime": "Nodejs18.15",
       "memorySize": 128
     },
     {
-      "name": "initPets",
+      "name": "orderService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 256
+    },
+    {
+      "name": "petService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "favoriteService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "activityService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "mallService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "feedingService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "adminService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 256
+    },
+    {
+      "name": "utilityService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "IMUserService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "cloudbase_auth",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "dbInit",
+      "timeout": 60,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 256
+    },
+    {
+      "name": "orderTimeoutService",
       "timeout": 30,
       "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "initDatabase",
-      "timeout": 60,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "createPetProfile",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "migratePetFields",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "deleteTestPets",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "getPets",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "getHostProfile",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "createHostProfile",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "getHostOrders",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "getHostStats",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "updateHostAcceptingOrders",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "updateHostProfile",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "checkDateAvailability",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "createBooking",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "deletePet",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "getPetDetail",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "updatePet",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "getHostList",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "checkDatabaseTables",
-      "timeout": 60,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
+      "runtime": "Nodejs18.15",
       "memorySize": 256
     },
     {
-      "name": "getTodos",
-      "timeout": 10,
+      "name": "couponExpiryCheck",
+      "timeout": 30,
       "envVariables": {},
-      "runtime": "Nodejs16.13",
+      "runtime": "Nodejs18.15",
       "memorySize": 128
     },
     {
-      "name": "addFavorite",
-      "timeout": 10,
+      "name": "tuanExpiryCheck",
+      "timeout": 30,
       "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "removeFavorite",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "getUserIdentity",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "createNewRole",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "switchRole",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "addIndexToUserRoles",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 128
-    },
-    {
-      "name": "migrateUserData",
-      "timeout": 60,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
-      "memorySize": 256
-    },
-    {
-      "name": "getPhoneNumber",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs16.13",
+      "runtime": "Nodejs18.15",
       "memorySize": 128
     }
   ],
@@ -243,177 +123,89 @@
         "inputs": {
           "functions": [
             {
-              "name": "getTodos",
-              "path": "cloudfunctions/getTodos",
+              "name": "userService",
+              "path": "cloudfunctions/userService",
               "timeout": 10
             },
             {
-              "name": "login",
-              "path": "cloudfunctions/login",
+              "name": "hostService",
+              "path": "cloudfunctions/hostService",
               "timeout": 10
             },
             {
-              "name": "checkIMAccount",
-              "path": "cloudfunctions/checkIMAccount",
+              "name": "orderService",
+              "path": "cloudfunctions/orderService",
               "timeout": 10
             },
             {
-              "name": "getStats",
-              "path": "cloudfunctions/getStats",
+              "name": "petService",
+              "path": "cloudfunctions/petService",
               "timeout": 10
             },
             {
-              "name": "calculatePrice",
-              "path": "cloudfunctions/calculatePrice",
+              "name": "favoriteService",
+              "path": "cloudfunctions/favoriteService",
               "timeout": 10
             },
             {
-              "name": "initPets",
-              "path": "cloudfunctions/initPets",
+              "name": "activityService",
+              "path": "cloudfunctions/activityService",
+              "timeout": 10
+            },
+            {
+              "name": "mallService",
+              "path": "cloudfunctions/mallService",
+              "timeout": 10
+            },
+            {
+              "name": "feedingService",
+              "path": "cloudfunctions/feedingService",
+              "timeout": 10
+            },
+            {
+              "name": "adminService",
+              "path": "cloudfunctions/adminService",
+              "timeout": 10
+            },
+            {
+              "name": "utilityService",
+              "path": "cloudfunctions/utilityService",
+              "timeout": 10
+            },
+            {
+              "name": "IMUserService",
+              "path": "cloudfunctions/IMUserService",
+              "timeout": 10
+            },
+            {
+              "name": "cloudbase_auth",
+              "path": "cloudfunctions/cloudbase_auth",
+              "timeout": 10
+            },
+            {
+              "name": "dbInit",
+              "path": "cloudfunctions/dbInit",
+              "timeout": 60
+            },
+            {
+              "name": "orderTimeoutService",
+              "path": "cloudfunctions/orderTimeoutService",
               "timeout": 30
             },
             {
-              "name": "initDatabase",
-              "path": "cloudfunctions/initDatabase",
-              "timeout": 60
+              "name": "couponExpiryCheck",
+              "path": "cloudfunctions/couponExpiryCheck",
+              "timeout": 30
             },
             {
-              "name": "createPetProfile",
-              "path": "cloudfunctions/createPetProfile",
-              "timeout": 10
-            },
-            {
-              "name": "migratePetFields",
-              "path": "cloudfunctions/migratePetFields",
-              "timeout": 10
-            },
-            {
-              "name": "deleteTestPets",
-              "path": "cloudfunctions/deleteTestPets",
-              "timeout": 10
-            },
-            {
-              "name": "getPets",
-              "path": "cloudfunctions/getPets",
-              "timeout": 10
-            },
-            {
-              "name": "getHostProfile",
-              "path": "cloudfunctions/getHostProfile",
-              "timeout": 10
-            },
-            {
-              "name": "createHostProfile",
-              "path": "cloudfunctions/createHostProfile",
-              "timeout": 10
-            },
-            {
-              "name": "getHostOrders",
-              "path": "cloudfunctions/getHostOrders",
-              "timeout": 10
-            },
-            {
-              "name": "getHostStats",
-              "path": "cloudfunctions/getHostStats",
-              "timeout": 10
-            },
-            {
-              "name": "updateHostAcceptingOrders",
-              "path": "cloudfunctions/updateHostAcceptingOrders",
-              "timeout": 10
-            },
-            {
-              "name": "updateHostProfile",
-              "path": "cloudfunctions/updateHostProfile",
-              "timeout": 10
-            },
-            {
-              "name": "checkDateAvailability",
-              "path": "cloudfunctions/checkDateAvailability",
-              "timeout": 10
-            },
-            {
-              "name": "createBooking",
-              "path": "cloudfunctions/createBooking",
-              "timeout": 10
-            },
-            {
-              "name": "deletePet",
-              "path": "cloudfunctions/deletePet",
-              "timeout": 10
-            },
-            {
-              "name": "getPetDetail",
-              "path": "cloudfunctions/getPetDetail",
-              "timeout": 10
-            },
-            {
-              "name": "updatePet",
-              "path": "cloudfunctions/updatePet",
-              "timeout": 10
-            },
-            {
-              "name": "getHostList",
-              "path": "cloudfunctions/getHostList",
-              "timeout": 10
-            },
-            {
-              "name": "checkDatabaseTables",
-              "path": "cloudfunctions/checkDatabaseTables",
-              "timeout": 60
-            },
-            {
-              "name": "addFavorite",
-              "path": "cloudfunctions/addFavorite",
-              "timeout": 10
-            },
-            {
-              "name": "removeFavorite",
-              "path": "cloudfunctions/removeFavorite",
-              "timeout": 10
-            },
-            {
-              "name": "getUserIdentity",
-              "path": "cloudfunctions/getUserIdentity",
-              "timeout": 10
-            },
-            {
-              "name": "createNewRole",
-              "path": "cloudfunctions/createNewRole",
-              "timeout": 10
-            },
-            {
-              "name": "switchRole",
-              "path": "cloudfunctions/switchRole",
-              "timeout": 10
-            },
-            {
-              "name": "addIndexToUserRoles",
-              "path": "cloudfunctions/addIndexToUserRoles",
-              "timeout": 10
-            },
-            {
-              "name": "migrateUserData",
-              "path": "cloudfunctions/migrateUserData",
-              "timeout": 60
-            },
-            {
-              "name": "getPhoneNumber",
-              "path": "cloudfunctions/getPhoneNumber",
-              "timeout": 10
+              "name": "tuanExpiryCheck",
+              "path": "cloudfunctions/tuanExpiryCheck",
+              "timeout": 30
             }
           ]
         }
       }
     }
   },
-  "functionRoot": "./cloudfunctions",
-  "ai": {
-    "defaultAgent": "{{env.AI_DEFAULT_AGENT}}",
-    "agents": {
-      "cursor": {
-        "type": "none"
-      }
-    }
-  }
+  "functionRoot": "./cloudfunctions"
 }

@@ -1,11 +1,6 @@
 {
   "navigationBarTitleText": "寄养家庭详情",
   "usingComponents": {
-    "favorite-btn": "/components/favorite-btn/index"
-  },
-  "componentPlaceholder": {
-    "TUIConversation": "view",
-    "TUIChat": "view",
-    "TUIGroup": "view"
+    "favorite-btn": "./components/favorite-btn/index"
   }
 }

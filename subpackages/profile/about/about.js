@@ -4,7 +4,6 @@ Page({
   },
   
   onLoad() {
-    console.log('About page onLoad')
   },
   
   // 返回上一页

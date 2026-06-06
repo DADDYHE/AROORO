@@ -1,9 +1,0 @@
-{
-  "navigationBarTitleText": "寄养家庭注册 - 基本信息",
-  "usingComponents": {
-    "van-field": "@vant/field/index",
-    "van-button": "@vant/button/index",
-    "van-icon": "@vant/icon/index",
-    "custom-steps": "/components/custom-steps/index"
-  }
-}

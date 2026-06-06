@@ -4,113 +4,199 @@
     <view class="header-content">
       <!-- 品牌标识 -->
       <view class="brand-logo">Arooro</view>
-      <!-- 顶部导航栏 -->
-      <view class="top-nav">
-        <view class="back-btn" bindtap="goBack">
-          <van-icon name="arrow-left" size="32rpx" color="#333" />
-        </view>
-        <view class="nav-title">确认订单</view>
-        <view class="empty"></view>
+      <view class="page-title">确认订单</view>
+    </view>
+  </view>
+
+  <!-- 主要内容 -->
+  <view class="page-content">
+    <!-- 加载动画 -->
+    <view class="loading-container" wx:if="{{ loading }}">
+      <view class="loading-spinner">
+        <view class="spinner-outer"></view>
+        <view class="spinner-inner"></view>
+        <view class="spinner-dot"></view>
       </view>
     </view>
-  </view>
+    
+    <!-- 订单信息卡片 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">订单信息</text>
+      </view>
 
-  <!-- 订单信息卡片 -->
-  <view class="info-card">
-    <view class="card-header">
-      <van-icon name="info-o" size="28rpx" color="#ff5050" />
-      <text class="card-title">订单信息</text>
-    </view>
-    
-    <view class="info-item">
-      <text class="label">入住日期</text>
-      <text class="value">{{ selectedDates.start }}</text>
-    </view>
-    
-    <view class="info-item">
-      <text class="label">退房日期</text>
-      <text class="value">{{ selectedDates.end }}</text>
-    </view>
-    
-    <view class="info-item">
-      <text class="label">寄养天数</text>
-      <text class="value">{{ selectedDates.days }}天</text>
-    </view>
-  </view>
-
-  <!-- 宠物信息卡片 -->
-  <view class="info-card">
-    <view class="card-header">
-      <van-icon name="friends-o" size="28rpx" color="#ff5050" />
-      <text class="card-title">宠物信息</text>
-    </view>
-    
-    <view class="info-item">
-      <text class="label">宠物数量</text>
-      <text class="value">{{ selectedPets.length }}只</text>
-    </view>
-    
-    <block wx:for="{{ selectedPetsDetails }}" wx:key="_id">
-      <view class="pet-item">
-        <view class="pet-avatar">
-          <image src="{{ item.avatarUrl || 'https://picsum.photos/200/200?random=9' }}" mode="aspectFill" binderror="onPetAvatarLoadError" data-index="{{index}}" />
-        </view>
-        <view class="pet-info">
-          <text class="pet-name">{{ item.name }}</text>
-          <text class="pet-details">{{ item.type === 'dog' ? '狗狗' : '猫咪' }} • {{ item.age }}岁</text>
+      <view class="info-item interaction-item" bindtap="openCalendar" data-type="start">
+        <text class="label">入住日期</text>
+        <view class="value-with-arrow">
+          <text>{{ selectedDates.start.text || '请选择' }}</text>
+          <text class="value-weekday">{{ selectedDates.start.weekDay || '' }}</text>
+          <text class="arrow">›</text>
         </view>
       </view>
-    </block>
-  </view>
 
-  <!-- 价格详情卡片 -->
-  <view class="info-card">
-    <view class="card-header">
-      <van-icon name="rmb" size="28rpx" color="#ff5050" />
-      <text class="card-title">价格详情</text>
-    </view>
-    
-    <view class="price-item">
-      <text class="label">基础费用</text>
-      <text class="value">¥{{ basicPrice }}/天</text>
-    </view>
-    
-    <view class="price-item">
-      <text class="label">宠物数量折扣</text>
-      <text class="value">-¥{{ discount }}</text>
-    </view>
-    
-    <view class="price-item total">
-      <text class="label">总费用</text>
-      <text class="value">¥{{ totalPrice }}</text>
-    </view>
-  </view>
+      <view class="info-item interaction-item" bindtap="openCalendar" data-type="end">
+        <text class="label">退房日期</text>
+        <view class="value-with-arrow">
+          <text>{{ selectedDates.end.text || '请选择' }}</text>
+          <text class="value-weekday">{{ selectedDates.end.weekDay || '' }}</text>
+          <text class="arrow">›</text>
+        </view>
+      </view>
 
-  <!-- 支付方式卡片 -->
-  <view class="info-card">
-    <view class="card-header">
-      <van-icon name="pay-circle-o" size="28rpx" color="#ff5050" />
-      <text class="card-title">支付方式</text>
+      <view class="info-item">
+        <text class="label">寄养天数</text>
+        <text class="value" wx:if="{{selectedDates.days}}">{{ selectedDates.days }}天</text>
+        <text class="value-empty" wx:else>-</text>
+      </view>
     </view>
-    
-    <view class="info-item">
-      <text class="label">支付方式</text>
-      <text class="value">微信支付</text>
-    </view>
-  </view>
 
-  <!-- 底部操作栏 -->
-  <view class="bottom-bar">
-    <view class="price-info">
-      <text class="price-label">实付金额</text>
-      <text class="price-value">¥{{ totalPrice }}</text>
-    </view>
-    <view class="confirm-btn" bindtap="confirmBooking" loading="{{ loading }}">
-      <text wx:if="{{ !loading }}">确认预订</text>
-      <van-loading wx:if="{{ loading }}" type="spinner" size="20rpx" color="#ffffff" />
-    </view>
-  </view>
+    <!-- 宠物信息卡片 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">宠物信息</text>
+      </view>
 
-  <!-- 页面底部预留空间 -->
-  <view class="content-bottom-space"></view>
+      <view class="info-item interaction-item" bindtap="selectPets">
+        <text class="label">宠物数量</text>
+        <view class="value-with-arrow">
+          <text wx:if="{{selectedPets.length}}">{{ selectedPets.length }}只</text>
+          <text wx:else>请选择宠物</text>
+          <text class="arrow">›</text>
+        </view>
+      </view>
+
+      <block wx:for="{{ selectedPetsDetails }}" wx:key="id">
+        <view class="pet-item">
+          <view class="avatar-container">
+            <image lazy-load class="pet-image" src="{{ item.avatarUrl || '/images/default-avatar.svg' }}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="selectedPetsDetails[{{index}}].avatarUrl" data-index="{{index}}" />
+          </view>
+          <view class="pet-info">
+            <text class="pet-name">{{ item.name || '未知' }}</text>
+            <text class="pet-details">
+              <text wx:if="{{item.breed}}">{{ item.breed }}</text>
+              <text wx:else>{{ (item.type === 'dog' || item.type === '狗狗') ? '狗狗' : (item.type === 'exotic' || item.type === '异宠') ? '异宠' : '猫咪' }}</text>
+              <text wx:if="{{item.birthday}}"> • {{ item.birthday }}</text>
+            </text>
+            <view class="pet-service-tags" wx:if="{{petServices[item.id]}}">
+              <text class="service-tag" wx:if="{{petServices[item.id].feeding}}">喂养</text>
+              <text class="service-tag" wx:if="{{petServices[item.id].walkMinutes > 0}}">遛狗{{petServices[item.id].walkMinutes}}分钟</text>
+            </view>
+            <text class="pet-service-dates" wx:if="{{petServices[item.id].serviceDatesText}}">{{petServices[item.id].serviceDatesText}}</text>
+          </view>
+        </view>
+      </block>
+
+      <view class="empty-tip" wx:if="{{!selectedPetsDetails || selectedPetsDetails.length === 0}}">
+        <text>暂无宠物信息</text>
+      </view>
+    </view>
+
+    <!-- 价格详情卡片 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">价格详情</text>
+      </view>
+
+      <block wx:for="{{ serviceBreakdown }}" wx:key="name">
+        <view class="price-item price-pet-group">
+          <text class="label">{{ item.name }}</text>
+          <text class="value">¥{{ item.subtotal }}</text>
+        </view>
+        <view class="price-sub-item">
+          <text class="sub-label">寄养 {{item.serviceDays}}天</text>
+          <text class="sub-value">¥{{ item.baseAmount }}</text>
+        </view>
+        <view class="price-sub-item" wx:if="{{ item.walkMinutes > 0 }}">
+          <text class="sub-label">遛狗 {{item.walkMinutes}}分钟</text>
+          <text class="sub-value">¥{{ item.walkAmount }}</text>
+        </view>
+      </block>
+
+      <view class="price-item" wx:if="{{serviceBreakdown.length === 0}}">
+        <text class="label">基础费用</text>
+        <text class="value">¥{{ basicPrice }}</text>
+      </view>
+
+      <view class="price-item">
+        <text class="label">折扣</text>
+        <text class="value">-¥{{ discount }}</text>
+      </view>
+
+      <view class="price-item total">
+        <text class="label">总费用</text>
+        <text class="value">¥{{ totalPrice }}</text>
+      </view>
+    </view>
+
+    <!-- 支付方式卡片 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">支付方式</text>
+      </view>
+
+      <view class="info-item">
+        <text class="label">支付方式</text>
+        <text class="value">微信支付</text>
+      </view>
+    </view>
+
+    <!-- 优惠券 -->
+    <view class="info-section coupon-section" style="margin-bottom: 20rpx;">
+      <view class="section-header" bindtap="onToggleCouponSelector">
+        <text class="section-header-left">优惠券</text>
+        <view class="section-header-right">
+          <text wx:if="{{selectedCoupon}}">{{selectedCoupon.templateName}} -¥{{couponDiscount}}</text>
+          <text wx:elif="{{availableCoupons.length > 0}}">{{availableCoupons.length}}张可用</text>
+          <text wx:else>暂无可用</text>
+        </view>
+      </view>
+      <view class="coupon-list" wx:if="{{showCouponSelector}}">
+        <view class="coupon-option" wx:for="{{availableCoupons}}" wx:key="_id" bindtap="onSelectCoupon" data-id="{{item._id}}" data-amount="{{item.discountAmount}}">
+          <view class="coupon-option-left">¥<text class="big">{{item.discountAmount}}</text></view>
+          <view class="coupon-option-right">
+            <text>{{item.templateName}}</text>
+            <text class="coupon-rule" wx:if="{{item.rules.threshold > 0}}">满{{item.rules.threshold}}元可用</text>
+          </view>
+        </view>
+      </view>
+      <view class="remove-coupon" wx:if="{{selectedCoupon && !showCouponSelector}}" bindtap="onRemoveCoupon">不使用优惠券</view>
+    </view>
+
+    <!-- 底部操作栏 -->
+    <view class="bottom-bar">
+      <view class="price-info">
+        <text class="price-label">实付金额</text>
+        <text class="price-value">
+          <text class="symbol">¥</text>{{ selectedCouponId ? finalPrice : totalPrice }}
+        </text>
+        <text class="coupon-sub" wx:if="{{couponDiscount > 0}}">已优惠¥{{couponDiscount}}</text>
+      </view>
+      <view class="confirm-btn" bindtap="confirmBooking" loading="{{ loading }}">
+        <text wx:if="{{ !loading }}">确认预订</text>
+        <van-loading wx:if="{{ loading }}" type="circular" size="20rpx" color="#ffffff" />
+      </view>
+    </view>
+
+    <!-- 页面底部预留空间 -->
+    <view class="content-bottom-space"></view>
+  </view>
 </view>
+
+<!-- 日历弹窗 -->
+  <van-calendar
+    show="{{ showCalendar }}"
+    bind:confirm="onConfirmCalendar"
+    bind:close="onCloseCalendar"
+    type="range"
+    min-date="{{ minDate }}"
+    max-date="{{ maxDate }}"
+    default-date="{{ defaultDate }}"
+    color="#ff9a9e"
+    show-confirm="{{ false }}"
+    confirm-text="确认"
+    show-mark="{{ true }}"
+    bind:change="onCalendarChange"
+    poppable="{{ true }}"
+    position="bottom"
+    round
+  />

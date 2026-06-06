@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "寄养家庭注册 - 资质认证",
-  "usingComponents": {
-    "van-field": "@vant/field/index",
-    "van-button": "@vant/button/index",
-    "custom-steps": "/components/custom-steps/index"
-  }
-}

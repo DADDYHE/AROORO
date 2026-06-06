@@ -1,4 +1,5 @@
-// custom-tab-bar/index.js
+const app = getApp()
+
 Component({
   data: {
     selected: 0,
@@ -7,33 +8,41 @@ Component({
     list: [
       {
         pagePath: "/pages/home/index",
-        iconPath: "/images/tabBar/home_normal.png",
-        selectedIconPath: "/images/tabBar/home_white.png",
+        iconPath: "/images/icons/home-line.svg",
+        selectedIconPath: "/images/icons/home-white.svg",
         text: "首页"
       },
       {
-        pagePath: "/pages/booking/calendar",
-        iconPath: "/images/tabBar/booking_normal.png",
-        selectedIconPath: "/images/tabBar/booking_white.png",
-        text: "预订"
+        pagePath: "/pages/quick-register/index",
+        iconPath: "/images/icons/calendar-icon.svg",
+        selectedIconPath: "/images/icons/calendar-icon.svg",
+        text: "一键报名"
       },
       {
-        pagePath: "/pages/messages/index",
-        iconPath: "/images/tabBar/messages_normal.png",
-        selectedIconPath: "/images/tabBar/messages_white.png",
-        text: "消息"
+        pagePath: "/pages/discover/index",
+        iconPath: "/images/icons/discover-line.svg",
+        selectedIconPath: "/images/icons/discover-white.svg",
+        text: "宠团团"
+      },
+      {
+        pagePath: "/pages/service/index",
+        iconPath: "/images/icons/service-line.svg",
+        selectedIconPath: "/images/icons/service-line.svg",
+        text: "上门服务"
       },
       {
         pagePath: "/pages/profile/index",
-        iconPath: "/images/tabBar/profile_normal.png",
-        selectedIconPath: "/images/tabBar/profile_white.png",
+        iconPath: "/images/icons/profile-line.svg",
+        selectedIconPath: "/images/icons/profile-white.svg",
         text: "我的"
       }
     ],
-    routeTimer: null
+    tabBarPadding: 20,
+    _isAttached: false
   },
   attached() {
-    // 立即设置选中状态，避免首次渲染时的延迟
+    this._isAttached = true
+    this.setData({ tabBarPadding: 20 })
     const pages = getCurrentPages();
     if (pages.length > 0) {
       const currentPage = pages[pages.length - 1];
@@ -41,65 +50,40 @@ Component({
         const currentPath = currentPage.route;
         const index = this.data.list.findIndex(item => item.pagePath === `/${currentPath}`);
         if (index !== -1 && index !== this.data.selected) {
-          this.setData({
-            selected: index
-          });
+          this.setData({ selected: index });
         }
       }
     }
-
-    // 监听页面切换事件，确保选中状态与当前页面一致
-    // 添加防抖机制，避免频繁 setData
-    wx.onAppRoute(() => {
-      if (this.data.routeTimer) {
-        clearTimeout(this.data.routeTimer);
-      }
-      this.data.routeTimer = setTimeout(() => {
-        const pages = getCurrentPages();
-        if (pages.length > 0) {
-          const currentPage = pages[pages.length - 1];
-          if (currentPage && currentPage.route) {
-            const currentPath = currentPage.route;
-            const index = this.data.list.findIndex(item => item.pagePath === `/${currentPath}`);
-            if (index !== -1 && index !== this.data.selected) {
-              this.setData({
-                selected: index
-              });
-            }
-          }
-        }
-      }, 100);
-    });
+    this._syncTabBarFromPages()
   },
   detached() {
-    // 组件卸载时清除定时器
-    if (this.data.routeTimer) {
-      clearTimeout(this.data.routeTimer);
-    }
+    this._isAttached = false
   },
   methods: {
     switchTab(e) {
       const data = e.currentTarget.dataset;
       const url = data.path;
       const index = parseInt(data.index);
-
-      // 点击当前 tab 不执行操作
-      if (index === this.data.selected) {
-        return;
-      }
-
-      // 更新选中状态
-      this.setData({
-        selected: index
-      });
-
-      // 执行页面切换
+      if (index === this.data.selected) return;
+      this.setData({ selected: index });
       wx.switchTab({
         url,
         fail: (error) => {
           console.error('页面切换失败:', error);
+          this._syncTabBarFromPages();
         }
       });
-    }
+    },
+    _syncTabBarFromPages() {
+      const pages = getCurrentPages()
+      if (pages.length === 0) return
+      const currentPage = pages[pages.length - 1]
+      if (!currentPage || !currentPage.route) return
+      const currentPath = `/${currentPage.route}`
+      const index = this.data.list.findIndex(item => item.pagePath === currentPath)
+      if (index !== -1 && index !== this.data.selected) {
+        this.setData({ selected: index })
+      }
+    },
   }
 })
