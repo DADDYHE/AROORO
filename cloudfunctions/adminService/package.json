@@ -1,0 +1,12 @@
+{
+  "name": "adminService",
+  "version": "1.0.0",
+  "description": "AROORO管理端服务",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.7.0",
+    "@cloudbase/node-sdk": "^2.9.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "i18nOverride",
+  "version": "1.0.0",
+  "description": "i18n 文案热覆盖（Sprint 23）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.7.0"
+  }
+}
