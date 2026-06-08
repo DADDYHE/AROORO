@@ -1,10 +1,8 @@
-const { appStartupOptimizer } = require('./utils/appStartupOptimizer');
-const { globalErrorManager } = require('./utils/globalErrorManager');
-const { init: initLogger } = require('./utils/logger');
-const eventBus = require('./utils/eventBus');
-const cloudFunctionTracker = require('./utils/cloudFunctionTracker');
-const safeMode = require('./utils/safeMode');
-const i18n = require('./utils/i18n');
+const { appStartupOptimizer } = require('./utils/appStartupOptimizer')
+const { globalErrorManager } = require('./utils/globalErrorManager')
+const { init: initLogger } = require('./utils/logger')
+const safeMode = require('./utils/safeMode')
+const i18n = require('./utils/i18n')
 
 let authService = null
 
@@ -40,20 +38,20 @@ App({
   },
 
   async onLaunch(options) {
-    const appLaunchStartTime = Date.now();
+    const appLaunchStartTime = Date.now()
 
     this._captureInviterId(options)
 
     try {
-      await this._executeCriticalStartup();
+      await this._executeCriticalStartup()
 
       this._executeBackgroundStartup().catch(error => {
         console.error('[APP] 后台初始化异常:', error)
       })
 
-      console.log('[APP] 关键启动完成，耗时:', Date.now() - appLaunchStartTime, 'ms');
+      console.log('[APP] 关键启动完成，耗时:', Date.now() - appLaunchStartTime, 'ms')
     } catch (error) {
-      console.error('[APP] 启动失败:', error);
+      console.error('[APP] 启动失败:', error)
     }
   },
 
@@ -62,10 +60,6 @@ App({
   },
 
   onError(err) {
-    // 临时调试：取消 timeout 过滤，让所有错误都能打印
-    // if (err && ((typeof err === 'string' && err.indexOf('timeout') !== -1) || (err.message && err.message === 'timeout'))) {
-    //   return
-    // }
     console.error('[APP] 未捕获的错误:', err)
   },
 
@@ -82,23 +76,21 @@ App({
     if (appConfig.envId) {
       wx.cloud.init({
         env: appConfig.envId,
-        traceUser: false
-      });
+        traceUser: false,
+      })
     } else {
-      console.warn('[APP] envId 未配置，跳过云开发初始化');
+      console.warn('[APP] envId 未配置，跳过云开发初始化')
     }
 
-    // [诊断] 临时禁用 tracker，确认 timeout 是否由 tracker 引起
-    // cloudFunctionTracker.install();
-    safeMode.loadConfig();
+    safeMode.loadConfig()
 
     initLogger(typeof appConfig.logLevel === 'number' ? appConfig.logLevel : undefined)
 
-    globalErrorManager.init();
-    this.globalData.globalErrorManager = globalErrorManager;
+    globalErrorManager.init()
+    this.globalData.globalErrorManager = globalErrorManager
 
-    await appStartupOptimizer.executeCriticalPhase(this);
-    this._preloadServiceIcon();
+    await appStartupOptimizer.executeCriticalPhase(this)
+    this._preloadServiceIcon()
   },
 
   _preloadServiceIcon() {
@@ -115,7 +107,7 @@ App({
       }
 
       if (authService) {
-        this.globalData.authService = authService;
+        this.globalData.authService = authService
       }
 
       // 尝试恢复会话
@@ -145,7 +137,7 @@ App({
       await appStartupOptimizer.executeDeferredTasks()
       appStartupOptimizer.printPerformanceReport()
     } catch (error) {
-      console.error('[APP] 后台初始化失败:', error);
+      console.error('[APP] 后台初始化失败:', error)
     }
   },
 
@@ -162,48 +154,4 @@ App({
     })
   },
 
-  login(options = {}) {
-    const { authService } = this.globalData;
-    if (!authService) {
-      return Promise.reject(new Error('身份管理服务未初始化'));
-    }
-    return authService.login(options);
-  },
-
-  isLoggedIn() {
-    const { authService } = this.globalData;
-    if (!authService) return false;
-    return authService.isLoggedIn();
-  },
-
-  logout() {
-    const { authService } = this.globalData;
-    if (!authService) {
-      return Promise.reject(new Error('身份管理服务未初始化'));
-    }
-    return authService.logout();
-  },
-
-  initEventListeners() {
-    this.eventListeners = {}
-  },
-
-  triggerEvent(eventName, detail = {}) {
-    eventBus.emit(eventName, detail)
-  },
-
-  on(eventName, callback) {
-    eventBus.on(eventName, callback)
-  },
-
-  off(eventName, callback) {
-    if (callback) {
-      eventBus.off(eventName, callback)
-    }
-  },
-
-  getEventListenerCount(eventName) {
-    return 0
-  },
-
-});
+})
