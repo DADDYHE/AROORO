@@ -13,7 +13,7 @@
   "author": "Your Name",
   "license": "ISC",
   "dependencies": {
-    "wx-server-sdk": "~2.6.3",
+    "wx-server-sdk": "~2.7.0",
     "@cloudbase/node-sdk": "^2.9.0",
     "jsonwebtoken": "^9.0.2"
   }
