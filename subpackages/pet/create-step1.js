@@ -16,17 +16,17 @@ Page({
       breed: '',
       birthday: '',
       weight: '',
-      note: ''
+      note: '',
     },
     petTypes: [
       { name: '猫咪', value: 'cat' },
       { name: '狗狗', value: 'dog' },
-      { name: '异宠', value: 'exotic' }
+      { name: '异宠', value: 'exotic' },
     ],
     petGenders: [
       { name: '弟弟', value: 'male' },
       { name: '妹妹', value: 'female' },
-      { name: '不确定', value: 'unknown' }
+      { name: '不确定', value: 'unknown' },
     ],
     showTypeSheet: false,
     showGenderSheet: false,
@@ -34,7 +34,7 @@ Page({
     currentDate: new Date().getTime(),
     minDate: new Date(2000, 0, 1).getTime(),
     maxDate: new Date().getTime(),
-    isLoggedIn: false
+    isLoggedIn: false,
   },
 
   onLoad() {
@@ -49,16 +49,16 @@ Page({
   chooseAvatar() {
     wx.showActionSheet({
       itemList: ['从相册选择', '拍照'],
-      success: (res) => {
+      success: res => {
         if (res.tapIndex === 0) {
           this.chooseImageFromAlbum()
         } else if (res.tapIndex === 1) {
           this.takePhoto()
         }
       },
-      fail: (error) => {
+      fail: error => {
         console.error('[APP] 选择操作失败:', error)
-      }
+      },
     })
   },
 
@@ -67,13 +67,13 @@ Page({
       count: 1,
       mediaType: ['image'],
       sourceType: ['album'],
-      success: (res) => {
+      success: res => {
         this.uploadAvatar(res.tempFiles[0].tempFilePath)
       },
-      fail: (error) => {
+      fail: error => {
         console.error('[APP] 选择图片失败:', error)
         this.error('CHOOSE_IMAGE_FAILED')
-      }
+      },
     })
   },
 
@@ -82,13 +82,13 @@ Page({
       count: 1,
       mediaType: ['image'],
       sourceType: ['camera'],
-      success: (res) => {
+      success: res => {
         this.uploadAvatar(res.tempFiles[0].tempFilePath)
       },
-      fail: (error) => {
+      fail: error => {
         console.error('[APP] 拍照失败:', error)
         this.error('PHOTO_FAILED')
-      }
+      },
     })
   },
 
@@ -98,7 +98,7 @@ Page({
       const fileName = `pet-avatarUrls/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
       const uploadResult = await wx.cloud.uploadFile({
         cloudPath: fileName,
-        filePath: tempFilePath
+        filePath: tempFilePath,
       })
       this.setData({ 'formData.avatarUrl': uploadResult.fileID })
       wx.hideLoading()
@@ -194,7 +194,6 @@ Page({
         avatarUrl: this.data.formData.avatarUrl || '',
       }
 
-      console.log('[APP] createPet submitData:', JSON.stringify(submitData))
       const result = await petService.createPet(submitData)
       wx.hideLoading()
 
@@ -222,5 +221,5 @@ Page({
     }
   },
 
-  onUnload() {}
+  onUnload() {},
 })

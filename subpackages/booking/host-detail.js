@@ -1,6 +1,6 @@
 const { HostService, FavoriteService } = require('../../services/CloudFunctionService')
 const { extractCityAndDistrict } = require('../../utils/addressUtils')
-const { authService } = require('../../services/AuthService');
+const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const pageI18n = require('../../utils/page-i18n.js')
 
@@ -29,7 +29,7 @@ Page({
       { icon: '🚶', text: '每日遛弯和陪伴' },
       { icon: '📸', text: '每日照片和视频反馈' },
       { icon: '💊', text: '按时喂药服务' },
-      { icon: '🛀', text: '洗澡和美容服务' }
+      { icon: '🛀', text: '洗澡和美容服务' },
     ],
     facilities: [
       { icon: '🏡', text: '独立房间' },
@@ -37,7 +37,7 @@ Page({
       { icon: '🌲', text: '宠物乐园' },
       { icon: '🔒', text: '安全围栏' },
       { icon: '📺', text: '监控摄像头' },
-      { icon: '🚽', text: '宠物厕所' }
+      { icon: '🚽', text: '宠物厕所' },
     ],
   },
 
@@ -51,7 +51,7 @@ Page({
       setTimeout(() => wx.navigateBack(), 1500)
       return
     }
-    
+
     this.getHostDetail(hostId)
     this.checkFavoriteStatus(hostId).then(isFavorited => {
       this.setData({ isFavorited })
@@ -69,12 +69,12 @@ Page({
 
     try {
       const result = await HostService.getHostInfo(hostId)
-      
-      
+
+
       if (result && result.data) {
         const hostData = result.data
-        
-        
+
+
         const host = {
           id: hostData._id || hostData.id,
           openid: hostData.openid,
@@ -87,21 +87,21 @@ Page({
           photos: hostData.photos || [],
           videos: hostData.videos || [],
           isAcceptingOrders: hostData.isAcceptingOrders !== undefined ? hostData.isAcceptingOrders : true,
-          hostName: hostData.hostName || '匿名寄养家庭'
+          hostName: hostData.hostName || '匿名寄养家庭',
         }
-        
-        
+
+
         const photosSnapPoints = []
         if (host.photos && host.photos.length > 0) {
           for (let i = 0; i < host.photos.length; i++) {
             photosSnapPoints.push(i * 750)
           }
         }
-        
+
         this.setData({
-          host: host,
-          photosSnapPoints: photosSnapPoints,
-          isLoading: false
+          host,
+          photosSnapPoints,
+          isLoading: false,
         })
       } else {
         this.setData({ isLoading: false })
@@ -118,23 +118,23 @@ Page({
    * 切换标签页
    */
   switchTab(e) {
-    const index = parseInt(e.currentTarget.dataset.index)
-    
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+
     // 停止当前正在播放的视频
     if (this.data.currentTab === 1) {
       (this.data.host.videos || []).forEach((_, i) => {
-        const videoContext = wx.createVideoContext('video' + i, this)
+        const videoContext = wx.createVideoContext(`video${i}`, this)
         if (videoContext) {
           videoContext.pause()
         }
       })
     }
-    
+
     // 直接更新数据，确保 active 类正确应用
     this.setData({
-      currentTab: index
+      currentTab: index,
     })
-    
+
   },
 
   /**
@@ -142,57 +142,57 @@ Page({
    */
   switchMediaType(e) {
     const mediaType = e.currentTarget.dataset.type
-    
+
     // 停止当前正在播放的视频
     if (this.data.currentMediaType === 'videos') {
       (this.data.host.videos || []).forEach((_, i) => {
-        const videoContext = wx.createVideoContext('video' + i, this)
+        const videoContext = wx.createVideoContext(`video${i}`, this)
         if (videoContext) {
           videoContext.pause()
         }
       })
     }
-    
+
     // 处理相册跳转
     if (mediaType === 'album') {
       this.openAlbum()
       return
     }
-    
+
     // 切换到其他媒体类型
     this.setData({
       currentMediaType: mediaType,
-      currentIndex: 0
+      currentIndex: 0,
     })
   },
-  
+
   /**
    * 打开照片页面
    */
   goToPhotosPage() {
     wx.navigateTo({
-      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host._id || ''}&tab=album`
+      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host._id || ''}&tab=album`,
     })
   },
-  
+
   /**
    * 打开视频页面
    */
   goToVideosPage() {
     wx.navigateTo({
-      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host._id || ''}&tab=video`
+      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host._id || ''}&tab=video`,
     })
   },
-  
+
   /**
    * 打开相册页面
    */
   openAlbum() {
     wx.navigateTo({
-      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host._id || ''}`
+      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host._id || ''}`,
     })
   },
-  
+
   /**
    * 轮播图切换事件
    */
@@ -201,16 +201,16 @@ Page({
     if (this.data.isScrolling) {
       return
     }
-    
+
     this.setData({
       isScrolling: true,
-      currentIndex: e.detail.current
+      currentIndex: e.detail.current,
     })
-    
+
     // 设置滑动锁定定时器
     setTimeout(() => {
       this.setData({
-        isScrolling: false
+        isScrolling: false,
       })
     }, 300) // 与轮播图切换动画时间一致
   },
@@ -221,18 +221,18 @@ Page({
   viewMorePhotos() {
     wx.navigateTo({ url: `/subpackages/other/album/index?hostId=${this.data.host._id}` })
   },
-  
+
   viewMoreVideos() {
     wx.navigateTo({ url: `/subpackages/other/video-list/index?hostId=${this.data.host._id}` })
   },
-  
+
   playVideo(e) {
     const index = e.currentTarget.dataset.index
     const videoUrl = this.data.host.videos[index]
     wx.navigateTo({ url: `/subpackages/other/video-list/index?hostId=${this.data.host._id}&index=${index}` })
   },
 
-  contactFamily: async function() {
+  async contactFamily() {
     const host = this.data.host
     if (!host || !host.openid) {
       this.error('HOST_INFO_LOAD_FAILED')
@@ -256,7 +256,7 @@ Page({
 
     // 设置加载状态
     this.setData({
-      isFavoriteLoading: true
+      isFavoriteLoading: true,
     })
 
     try {
@@ -271,14 +271,14 @@ Page({
       // 更新收藏状态
       this.setData({
         isFavorited: !isFavorited,
-        isFavoriteLoading: false
+        isFavoriteLoading: false,
       })
     } catch (error) {
       console.error('[APP] 处理收藏操作失败:', error)
       this.error('OPERATION_RETRY')
       // 无论成功失败，都要设置加载状态为false
       this.setData({
-        isFavoriteLoading: false
+        isFavoriteLoading: false,
       })
     }
   },
@@ -293,9 +293,9 @@ Page({
       if (!hostProfileId) {
         throw new Error('缺少hostProfileId')
       }
-      
+
       const result = await FavoriteService.addFavorite({ hostProfileId })
-      
+
       if (result.code === 0) {
         this.toast('FAVORITE_SUCCESS')
         return result
@@ -320,9 +320,9 @@ Page({
       if (!hostProfileId) {
         throw new Error('缺少hostProfileId')
       }
-      
+
       const result = await FavoriteService.removeFavorite({ hostProfileId })
-      
+
       if (result.code === 0) {
         this.toast('UNFAVORITE_SUCCESS')
         return result
@@ -343,13 +343,12 @@ Page({
   async checkFavoriteStatus(hostId) {
     try {
       const result = await FavoriteService.getFavorites({})
-      
+
       if (result.code === 0 && result.data) {
-        
+
         const favoriteList = result.data.list || result.data
         const isFavorited = favoriteList.some(favorite => {
           const favoriteHostId = favorite.hostProfileId || favorite.id
-          console.log('[APP] 比较:', String(favoriteHostId), '===', String(hostId), '=', String(favoriteHostId) === String(hostId))
           return String(favoriteHostId) === String(hostId)
         })
         return isFavorited
@@ -361,7 +360,7 @@ Page({
       return false // 失败时返回 false
     }
   },
-  
+
   // 页面卸载时清理资源
   onUnload() {
   },

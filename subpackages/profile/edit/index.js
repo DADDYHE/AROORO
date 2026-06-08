@@ -22,12 +22,12 @@ Page({
       birthday: '',
       email: '',
       address: '',
-      avatarUrl: ''
+      avatarUrl: '',
     },
     genderOptions: [
       { text: '男', value: 'male' },
       { text: '女', value: 'female' },
-      { text: '保密', value: 'secret' }
+      { text: '保密', value: 'secret' },
     ],
     genderIndex: 0,
     isLoggedIn: false,
@@ -39,7 +39,7 @@ Page({
     previewAvatarUrl: '',
     tempAvatarFilePath: '',
     avatarUrl: '',
-    isChoosingAvatar: false
+    isChoosingAvatar: false,
   },
 
   onLoad() {
@@ -50,7 +50,7 @@ Page({
     const globalAddress = app.globalData.selectedAddress
     if (globalAddress) {
       this.setData({
-        'userInfo.address': globalAddress.fullAddress || ''
+        'userInfo.address': globalAddress.fullAddress || '',
       })
       this.saveSelectedAddress(globalAddress)
       app.globalData.selectedAddress = null
@@ -59,7 +59,7 @@ Page({
     if (!this.data.hasLoadedOnce) {
       this.checkLoginAndLoadUserInfo()
       this.setData({
-        hasLoadedOnce: true
+        hasLoadedOnce: true,
       })
     }
   },
@@ -70,7 +70,7 @@ Page({
       if (app.globalData.isLogout) {
         this.setData({
           isLoggedIn: false,
-          userInfo: {}
+          userInfo: {},
         })
         return false
       }
@@ -78,19 +78,19 @@ Page({
       const isLoggedIn = authService.isLoggedIn()
       if (isLoggedIn) {
         this.setData({
-          isLoggedIn: true
+          isLoggedIn: true,
         })
         return true
       } else {
         this.setData({
-          isLoggedIn: false
+          isLoggedIn: false,
         })
         return false
       }
     } catch (error) {
       console.error('[APP] 检查登录状态失败:', error)
       this.setData({
-        isLoggedIn: false
+        isLoggedIn: false,
       })
       return false
     }
@@ -116,7 +116,7 @@ Page({
     try {
       // 使用 UserService 获取用户信息
       const result = await UserService.getUserInfo()
-      
+
       if (result && result.code === 0 && result.data) {
         return result.data
       } else {
@@ -131,21 +131,21 @@ Page({
   // 上传到数据库
   async uploadToDatabase(userInfo) {
     try {
-      let updateData = {
+      const updateData = {
         gender: userInfo.gender,
         phone: userInfo.phone,
         birthday: userInfo.birthday,
         email: userInfo.email,
         address: userInfo.address,
         avatarUrl: userInfo.avatarUrl,
-        ownerName: userInfo.nickName
+        ownerName: userInfo.nickName,
       }
-      
+
       // 使用 UserService 更新用户信息
       const result = await UserService.updateUserInfo({
-        userInfo: updateData
+        userInfo: updateData,
       })
-      
+
       if (result && result.code === 0) {
         return result
       } else {
@@ -161,18 +161,18 @@ Page({
 
   loadUserInfo() {
     wx.showLoading({ title: '加载中...', mask: true })
-    
+
     try {
-      
+
       // 使用 authService 获取当前身份信息
       const roleSpecificInfo = authService.getCurrentIdentity() || {}
-      
+
       // 获取对应的显示名称
-      let displayName = roleSpecificInfo.ownerName || roleSpecificInfo.nickName || ''
-      
+      const displayName = roleSpecificInfo.ownerName || roleSpecificInfo.nickName || ''
+
       // 处理头像 URL
       const avatarUrl = roleSpecificInfo.avatarUrl || ''
-      
+
       // 设置页面数据
       this.setData({
         userInfo: {
@@ -182,12 +182,12 @@ Page({
           birthday: roleSpecificInfo.birthday || '',
           email: roleSpecificInfo.email || '',
           address: roleSpecificInfo.address || '',
-          avatarUrl: avatarUrl
+          avatarUrl,
         },
-        avatarUrl: avatarUrl
+        avatarUrl,
       })
-      
-      
+
+
       wx.hideLoading()
     } catch (error) {
       console.error('[APP] Personal Edit page loadUserInfo - 加载用户信息失败:', error)
@@ -201,9 +201,9 @@ Page({
           birthday: '',
           email: '',
           address: '',
-          avatarUrl: ''
+          avatarUrl: '',
         },
-        avatarUrl: ''
+        avatarUrl: '',
       })
     }
   },
@@ -213,9 +213,9 @@ Page({
     if (this.data.isChoosingAvatar) {
       return
     }
-    
+
     this.setData({ isChoosingAvatar: true })
-    
+
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
@@ -223,49 +223,49 @@ Page({
       maxDuration: 30,
       sizeType: ['compressed'],
       camera: 'back',
-      success: (res) => {
+      success: res => {
         const tempFile = res.tempFiles[0]
-        
+
         if (tempFile.size > 5 * 1024 * 1024) {
           this.error('IMAGE_SIZE_LIMIT')
           this.setData({ isChoosingAvatar: false })
           return
         }
-        
+
         wx.getImageInfo({
           src: tempFile.tempFilePath,
-          success: (imageInfo) => {
+          success: imageInfo => {
             if (imageInfo.width < 200 || imageInfo.height < 200) {
               this.error('IMAGE_SIZE_MIN')
               this.setData({ isChoosingAvatar: false })
               return
             }
-            
+
             this.setData({
               showAvatarPreview: true,
               previewAvatarUrl: tempFile.tempFilePath,
               tempAvatarFilePath: tempFile.tempFilePath,
-              isChoosingAvatar: false
+              isChoosingAvatar: false,
             })
           },
-          fail: (error) => {
+          fail: error => {
             console.error('[APP] 获取图片信息失败:', error)
             this.setData({
               showAvatarPreview: true,
               previewAvatarUrl: tempFile.tempFilePath,
               tempAvatarFilePath: tempFile.tempFilePath,
-              isChoosingAvatar: false
+              isChoosingAvatar: false,
             })
-          }
+          },
         })
       },
-      fail: (err) => {
+      fail: err => {
         console.error('[APP] 选择头像失败:', err)
         if (err.errMsg !== 'chooseMedia:fail cancel') {
           this.error('CHOOSE_AVATAR_FAILED')
         }
         this.setData({ isChoosingAvatar: false })
-      }
+      },
     })
   },
 
@@ -274,7 +274,7 @@ Page({
     this.setData({
       showAvatarPreview: false,
       previewAvatarUrl: '',
-      tempAvatarFilePath: ''
+      tempAvatarFilePath: '',
     })
   },
 
@@ -288,53 +288,48 @@ Page({
     this.setData({
       showAvatarPreview: false,
       previewAvatarUrl: '',
-      tempAvatarFilePath: ''
+      tempAvatarFilePath: '',
     })
   },
-  
+
   // 上传头像到云存储
   uploadAvatar(tempFilePath) {
     this.setData({ isLoading: true })
 
     const directory = 'user-avatars'
-    
-    const fileName = `${directory}/${Date.now()}_${Math.floor(Math.random() * 1000)}.png`
 
-    console.log('[APP] Personal Edit page uploadAvatar - 上传头像:', {
-      directory: directory,
-      fileName: fileName
-    })
+    const fileName = `${directory}/${Date.now()}_${Math.floor(Math.random() * 1000)}.png`
 
     wx.cloud.uploadFile({
       cloudPath: fileName,
       filePath: tempFilePath,
-      success: (res) => {
+      success: res => {
         const fileID = res.fileID
-        
+
         const userInfo = { ...this.data.userInfo }
         userInfo.avatarUrl = fileID
-        
-        this.setData({ 
-          userInfo: userInfo,
+
+        this.setData({
+          userInfo,
           avatarUrl: fileID,
-          isLoading: false 
+          isLoading: false,
         })
-        
+
         this.toast('AVATAR_UPLOAD_SUCCESS')
       },
-      fail: (err) => {
+      fail: err => {
         console.error('[APP] 头像上传失败:', err)
         this.setData({ isLoading: false })
-        
+
         let errorMessage = '头像上传失败'
         if (err.errCode === -502) {
           errorMessage = '网络连接失败，请检查网络'
         } else if (err.errCode === -504) {
           errorMessage = '上传超时，请稍后重试'
         }
-        
+
         this.error(() => errorMessage)
-      }
+      },
     })
   },
 
@@ -346,31 +341,31 @@ Page({
   // 昵称输入变化
   onNickNameChange(e) {
     this.setData({
-      'userInfo.nickName': e.detail.value
+      'userInfo.nickName': e.detail.value,
     })
   },
 
   // 手机号输入变化
   onPhoneChange(e) {
     this.setData({
-      'userInfo.phone': e.detail.value
+      'userInfo.phone': e.detail.value,
     })
   },
 
   // 邮箱输入变化
   onEmailChange(e) {
     this.setData({
-      'userInfo.email': e.detail.value
+      'userInfo.email': e.detail.value,
     })
   },
 
   goToAddress() {
     wx.navigateTo({
       url: '/subpackages/other/address/index',
-      fail: (error) => {
+      fail: error => {
         console.error('[APP] 跳转到地址管理页面失败:', error)
         this.error('NAVIGATE_RETRY')
-      }
+      },
     })
   },
 
@@ -394,10 +389,10 @@ Page({
     try {
       // 使用当前页面的 userInfo 作为基础，保留未保存的修改
       const pageUserInfo = this.data.userInfo
-      
+
       // 从 authService 获取用户信息（包含 _id 和 openid）
       const localUserInfo = authService.getCurrentIdentity() || {}
-      
+
       // 更新所有字段，确保保留原来的 _id 和 openid，同时保留页面上的其他修改
       const updatedUserInfo = {
         ...localUserInfo,
@@ -405,13 +400,13 @@ Page({
         address: address.fullAddress || address.detail,
         // 确保保留原来的 _id 和 openid
         _id: localUserInfo._id || pageUserInfo._id,
-        openid: localUserInfo.openid || pageUserInfo.openid
+        openid: localUserInfo.openid || pageUserInfo.openid,
       }
-      
+
       // 更新 authService
       // 身份信息已自动同步到 globalData
 
-      
+
       // 上传到数据库
       this.uploadToDatabase(updatedUserInfo).then(() => {
       }).catch(() => {
@@ -426,14 +421,14 @@ Page({
     const selectedGender = this.data.genderOptions[e.detail.value].value
     this.setData({
       'userInfo.gender': selectedGender,
-      genderIndex: e.detail.value
+      genderIndex: e.detail.value,
     })
   },
 
   // 生日选择变化
   onBirthdayChange(e) {
     this.setData({
-      'userInfo.birthday': e.detail.value
+      'userInfo.birthday': e.detail.value,
     })
   },
 
@@ -465,11 +460,11 @@ Page({
         ...currentIdentity,
         ...pageUserInfo,
         _id: currentIdentity.openid || this.data.userInfo.openid,
-        openid: currentIdentity.openid || this.data.userInfo.openid
+        openid: currentIdentity.openid || this.data.userInfo.openid,
       }
 
       this.setData({
-        userInfo: updatedUserInfo
+        userInfo: updatedUserInfo,
       })
 
       const uploadResult = await this.uploadToDatabase(updatedUserInfo)
@@ -490,5 +485,5 @@ Page({
       wx.hideLoading()
       this.showModal({ titleKey: 'SAVE_FAILED', contentKey: 'BIZ_MTVQO8', showCancel: false, confirmText: '知道了' })
     }
-  }
+  },
 })

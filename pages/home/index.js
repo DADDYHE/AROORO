@@ -69,12 +69,12 @@ Page({
 
   _refreshUserData() {
     const currentAuthService = app.globalData ? app.globalData.authService : null
-    if (!currentAuthService) return
+    if (!currentAuthService) {return}
 
     const isLoggedIn = currentAuthService.isLoggedIn()
     const userInfo = app.globalData.userInfo
 
-    this.setData({ isLoggedIn: isLoggedIn, userInfo: userInfo })
+    this.setData({ isLoggedIn, userInfo })
 
     if (isLoggedIn) {
       this._loadMyPets()
@@ -174,8 +174,7 @@ Page({
   },
 
   handleLogin() {
-    console.log('[HomePage] handleLogin 触发')
-    if (this.isLogging) return
+    if (this.isLogging) {return}
     this.isLogging = true
 
     const currentApp = getApp()
@@ -202,14 +201,14 @@ Page({
       return
     }
     console.log('[home] 跳转:', url)
-    wx.navigateTo({ url: url })
+    wx.navigateTo({ url })
   },
 
   handleBannerTap(e) {
     const action = e.currentTarget.dataset.action
     const actionTarget = e.currentTarget.dataset.target || ''
 
-    if (action === 'none' || !action) return
+    if (action === 'none' || !action) {return}
 
     const routes = {
       boarding: '/subpackages/booking/host-list-all',
@@ -249,7 +248,7 @@ Page({
 
   handlePetTap(e) {
     const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: '/subpackages/pet/detail?id=' + id })
+    wx.navigateTo({ url: `/subpackages/pet/detail?id=${id}` })
   },
 
   handleAddPet() {
@@ -262,7 +261,7 @@ Page({
 
   handleHostTap(e) {
     const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: '/subpackages/booking/host-detail?id=' + id })
+    wx.navigateTo({ url: `/subpackages/booking/host-detail?id=${id}` })
   },
 
   handleViewAllOrders() {
@@ -279,12 +278,12 @@ Page({
 
   handleTuanTap(e) {
     const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: '/subpackages/tuan/detail?id=' + id })
+    wx.navigateTo({ url: `/subpackages/tuan/detail?id=${id}` })
   },
 
   handleActivityTap(e) {
     const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: '/subpackages/activity/detail?id=' + id })
+    wx.navigateTo({ url: `/subpackages/activity/detail?id=${id}` })
   },
 
   handleViewAllHosts() {
@@ -295,9 +294,9 @@ Page({
     const id = e.currentTarget.dataset.id
     const type = e.currentTarget.dataset.type
     if (type === 'host') {
-      wx.navigateTo({ url: '/subpackages/booking/host-detail?id=' + id })
+      wx.navigateTo({ url: `/subpackages/booking/host-detail?id=${id}` })
     } else if (type === 'activity') {
-      wx.navigateTo({ url: '/subpackages/activity/detail?id=' + id })
+      wx.navigateTo({ url: `/subpackages/activity/detail?id=${id}` })
     }
   },
 
@@ -306,7 +305,7 @@ Page({
     const inviterId = ((userInfo?.isPartner || userInfo?.permissions?.length) && userInfo?.openid) ? userInfo.openid : ''
     return {
       title: 'AROORO - 安心寄养，让爱宠如家',
-      path: inviterId ? `/pages/home/index?inviterId=${inviterId}` : '/pages/home/index'
+      path: inviterId ? `/pages/home/index?inviterId=${inviterId}` : '/pages/home/index',
     }
   },
 })

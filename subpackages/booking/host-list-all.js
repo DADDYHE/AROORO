@@ -1,6 +1,5 @@
 const { HostService } = require('../../services/CloudFunctionService')
 const { extractCityAndDistrict } = require('../../utils/addressUtils')
-const { BookingData } = require('../../utils/BookingDataService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
@@ -67,17 +66,14 @@ Page({
         filters: this.data.filters,
       }
 
-      console.log('[host-list-all] 请求参数:', JSON.stringify(params))
       const result = await HostService.getHostList(params)
-      console.log('[host-list-all] 云函数返回:', JSON.stringify(result))
 
       if (result && result.code === 0) {
         const hostData = (result.data && result.data.list) || []
-        console.log('[host-list-all] 解析后的数据列表长度:', hostData.length)
 
         if (hostData.length === 0) {
           this.setData({ hosts: [], isLoading: false, hasMore: false, showEmptyState: true })
-          if (callback) callback()
+          if (callback) {callback()}
           return
         }
 
@@ -91,12 +87,12 @@ Page({
 
           return {
             id: uniqueId,
-            originalId: originalId,
+            originalId,
             name: host.hostName || host.name || '匿名寄养家庭',
             description: host.description || '专业宠物寄养服务，提供24小时贴心照顾',
             avatarUrl: host.avatarUrl && host.avatarUrl !== '/images/default-avatar.png'
               ? host.avatarUrl : '/images/default-avatar.svg',
-            photos: photos,
+            photos,
             price: host.pricePerDay || host.price || 80,
             priceUnit: '天',
             location: extractCityAndDistrict(host.address),
@@ -124,10 +120,6 @@ Page({
           isLoading: false,
           hasMore,
         })
-
-        console.log('[host-list-all] 更新后数据:', {
-          totalHosts: updatedHosts.length, totalCount, hasMore, newPage,
-        })
       } else {
         this.setData({ isLoading: false, errorMsg: result?.message || '获取失败' })
         this.errorDynamic(result?.message, 'GET_FAILED')
@@ -138,7 +130,7 @@ Page({
       this.error('GET_RETRY')
     } finally {
       this.setData({ isLoading: false })
-      if (callback) callback()
+      if (callback) {callback()}
     }
   },
 
@@ -193,7 +185,7 @@ Page({
   },
 
   bookHost(e) {
-    if (e && typeof e.stopPropagation === 'function') e.stopPropagation()
+    if (e && typeof e.stopPropagation === 'function') {e.stopPropagation()}
     const hostId = e?.currentTarget?.dataset?.id || ''
     const host = this.data.hosts.find(h => h.id === hostId)
     const actualId = host?.originalId || hostId
@@ -201,12 +193,9 @@ Page({
       this.error('HOST_INFO_INVALID')
       return
     }
-    const selectedDates = BookingData.get('selectedDates')
-    const selectedPets = BookingData.get('selectedPets')
-    console.log('[host-list-all] 当前全局数据:', { selectedDates, selectedPets })
     wx.navigateTo({
-      url: '/subpackages/booking/confirm?hostId=' + actualId,
-      fail: (err) => {
+      url: `/subpackages/booking/confirm?hostId=${actualId}`,
+      fail: err => {
         console.error('[host-list-all] 跳转失败:', err)
         this.showModal({ titleKey: 'NAVIGATE_FAILED', contentKey: 'BIZ_1BCURQC', showCancel: false })
       },
