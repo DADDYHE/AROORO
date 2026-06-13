@@ -1,0 +1,100 @@
+<!--subpackages/activity/friend.wxml-->
+<view class="container">
+  <view class="form-section">
+    <text class="section-title">代好友报名信息</text>
+    
+    <view class="form-item">
+      <text class="label">宠物姓名 *</text>
+      <view class="input-container">
+        <input 
+          class="input" 
+          placeholder="请输入宠物姓名" 
+          value="{{petName}}"
+          data-field="petName"
+          bindinput="onInput"
+        />
+        <view class="input-decoration"></view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">宠物性别 *</text>
+      <view class="gender-options">
+        <view 
+          class="gender-option {{petGender === 'male' ? 'active' : ''}}"
+          data-gender="male"
+          bindtap="onSelectGender"
+        >
+          <text>弟弟</text>
+          <view class="gender-decoration"></view>
+        </view>
+        <view 
+          class="gender-option {{petGender === 'female' ? 'active' : ''}}"
+          data-gender="female"
+          bindtap="onSelectGender"
+        >
+          <text>妹妹</text>
+          <view class="gender-decoration"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">宠物品种 *</text>
+      <view class="input-container">
+        <input 
+          class="input" 
+          placeholder="请输入宠物品种" 
+          value="{{petBreed}}"
+          data-field="petBreed"
+          bindinput="onInput"
+        />
+        <view class="input-decoration"></view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">联系电话 *</text>
+      <view class="input-container">
+        <input 
+          class="input" 
+          placeholder="请输入联系电话" 
+          value="{{phone}}"
+          data-field="phone"
+          bindinput="onInput"
+        />
+        <view class="input-decoration"></view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">备注信息（选填）</text>
+      <view class="textarea-container">
+        <textarea 
+          class="textarea" 
+          placeholder="请输入备注信息" 
+          value="{{notes}}"
+          data-field="notes"
+          bindinput="onInput"
+        />
+        <view class="input-decoration"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="button-section">
+    <button 
+      class="cancel-btn" 
+      bindtap="onCancel"
+    >
+      取消
+    </button>
+    <button 
+      class="confirm-btn" 
+      bindtap="onConfirm"
+    >
+      <text class="confirm-text">确定</text>
+      <view class="confirm-decoration"></view>
+    </button>
+  </view>
+</view>

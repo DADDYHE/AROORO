@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "rateLimitCleanupTrigger",
+      "type": "timer",
+      "config": "0 */10 * * * * *"
+    }
+  ],
+  "permissions": {
+    "openapi": []
+  }
+}

@@ -30,16 +30,16 @@ Page({
       this.checkLoginAndLoadData()
     }, 800)
   },
-  
+
   onShow() {
     this.setData({
       favoriteFamilies: [],
       hostList: [],
       showAllHosts: false,
       isLoading: true,
-      animationComplete: false
+      animationComplete: false,
     })
-    
+
     setTimeout(() => {
       this.checkLoginAndLoadData()
     }, 50)
@@ -50,22 +50,22 @@ Page({
     try {
       const isLoggedIn = authService.isLoggedIn()
       this.setData({ isLoggedIn })
-      
+
       if (!isLoggedIn) {
         this.setData({
           isLoading: false,
-          errorMessage: '请先登录'
+          errorMessage: '请先登录',
         })
         return
       }
-      
+
       this.loadData()
     } catch (error) {
       console.error('[APP] 检查登录状态失败:', error)
       this.setData({
         isLoggedIn: false,
         isLoading: false,
-        errorMessage: '登录状态检查失败'
+        errorMessage: '登录状态检查失败',
       })
     }
   },
@@ -76,17 +76,17 @@ Page({
       this.setData({
         isLoading: true,
         errorMessage: '',
-        showAllHosts: false
+        showAllHosts: false,
       })
-      
+
       const favoriteResult = await this.getFavoriteFamilies()
 
       let processedFavorites = []
-      
+
       if (favoriteResult.code === 0 && favoriteResult.data) {
         const favoriteList = favoriteResult.data.list || favoriteResult.data
         const favoriteHostIds = favoriteList.map(item => item.hostProfileId || item._id || item.id).filter(Boolean)
-        
+
         if (favoriteHostIds.length > 0) {
           const hostResult = await HostService.getHostList({ ids: favoriteHostIds, pageSize: favoriteHostIds.length })
           if (hostResult.code === 0 && hostResult.data) {
@@ -98,24 +98,24 @@ Page({
               price: host.pricePerDay || 0,
               location: extractCityAndDistrict(host.address),
               tags: host.tags || ['有经验', '爱干净', '可上门'],
-              isAcceptingOrders: host.isAcceptingOrders !== undefined ? host.isAcceptingOrders : true
+              isAcceptingOrders: host.isAcceptingOrders !== undefined ? host.isAcceptingOrders : true,
             })).filter(host => host.name && host.name !== '未设置名称')
           }
         }
       }
-      
+
       this.setData({
         favoriteFamilies: processedFavorites,
         hostList: [],
         animationComplete: true,
-        isLoading: false
+        isLoading: false,
       })
     } catch (error) {
       console.error('[APP] 加载数据失败:', error)
       this.setData({
         errorMessage: '加载数据失败，请重试',
         animationComplete: true,
-        isLoading: false
+        isLoading: false,
       })
     }
   },
@@ -124,24 +124,11 @@ Page({
   async getFavoriteFamilies() {
     try {
       const result = await FavoriteService.getFavorites({
-        _t: Date.now() // 添加时间戳参数，避免缓存
+        _t: Date.now(), // 添加时间戳参数，避免缓存
       })
       return result
     } catch (error) {
       console.error('[APP] 获取收藏列表失败:', error)
-      throw error
-    }
-  },
-
-  // 获取全部寄养家庭列表
-  async getHostList() {
-    try {
-      const result = await HostService.getHostList({
-        _t: Date.now() // 添加时间戳参数，避免缓存
-      })
-      return result
-    } catch (error) {
-      console.error('[APP] 获取寄养家庭列表失败:', error)
       throw error
     }
   },
@@ -156,7 +143,7 @@ Page({
     const hostId = e.currentTarget.dataset.id
     // 从自定义组件的toggle事件中获取当前的激活状态
     const isFavorited = e.detail?.isActive || this.isFavorite(hostId)
-    
+
     // 找到对应的寄养家庭信息，只从hostList中查找，确保获取完整的寄养家庭对象
     let host = this.data.hostList.find(item => item.id === hostId)
     if (!host) {
@@ -179,45 +166,45 @@ Page({
       // 添加动画效果
       const animation = wx.createAnimation({
         duration: 300,
-        timingFunction: 'ease-in-out'
+        timingFunction: 'ease-in-out',
       })
-      
+
       // 先在本地更新数据，实现实时效果
       if (isFavorited) {
         // 取消收藏：从收藏列表中移除
         const updatedFavorites = this.data.favoriteFamilies.filter(item => item.id !== hostId)
         this.setData({
-          favoriteFamilies: updatedFavorites
+          favoriteFamilies: updatedFavorites,
         })
-        
+
         // 将取消收藏的寄养家庭添加回全部寄养家庭列表
         const updatedHostList = [...this.data.hostList, host]
         this.setData({
-          hostList: updatedHostList
+          hostList: updatedHostList,
         })
-        
+
         // 然后调用云函数取消收藏
         await this.removeFavorite(hostId)
       } else {
         // 添加收藏：将寄养家庭添加到收藏列表
         const updatedFavorites = [...this.data.favoriteFamilies, host]
         this.setData({
-          favoriteFamilies: updatedFavorites
+          favoriteFamilies: updatedFavorites,
         })
-        
+
         // 从全部寄养家庭列表中移除已收藏的寄养家庭
         const updatedHostList = this.data.hostList.filter(item => item.id !== hostId)
         this.setData({
-          hostList: updatedHostList
+          hostList: updatedHostList,
         })
-        
+
         // 然后调用云函数添加收藏
         await this.addFavorite(hostId)
       }
     } catch (error) {
       console.error('[APP] 处理收藏操作失败:', error)
       this.error('OPERATION_RETRY')
-      
+
       // 操作失败时，恢复本地数据
       await this.loadData()
     }
@@ -227,7 +214,7 @@ Page({
   async addFavorite(hostId) {
     try {
       const result = await FavoriteService.addFavorite({ hostProfileId: hostId })
-      
+
       if (result.code === 0) {
         this.toast('FAVORITE_SUCCESS')
         return result
@@ -246,7 +233,7 @@ Page({
   async removeFavorite(hostId) {
     try {
       const result = await FavoriteService.removeFavorite({ hostProfileId: hostId })
-      
+
       if (result.code === 0) {
         this.toast('UNFAVORITE_SUCCESS')
         return result
@@ -288,7 +275,7 @@ Page({
   onHostItemTouchStart(e) {
     const targetDataset = e.target?.dataset || {}
     const isBookButton = targetDataset.isBookButton || targetDataset['is-book-button']
-    this.setData({ touchedBookButton: !!isBookButton })
+    this.setData({ touchedBookButton: Boolean(isBookButton) })
     if (e.touches[0]) {
       this.setData({
         _touchStartX: e.touches[0].clientX,
@@ -313,44 +300,44 @@ Page({
     wx.navigateTo({
       url: `/subpackages/booking/host-detail?id=${hostId}`,
       success: () => {
-      }
+      },
     })
   },
 
   // 预约寄养家庭
   bookHost(e) {
-    
+
     // 从 dataset 中获取 hostId
     const hostId = e.currentTarget?.dataset?.id || e.mark?.id
-    
+
     if (!hostId) {
       console.error('[APP] hostId 为空')
       this.error('HOST_ID_MISSING_TEXT')
       return
     }
-    
+
     // 找到对应的寄养家庭信息
-    const host = this.data.favoriteFamilies.find(item => item.id === hostId) || 
+    const host = this.data.favoriteFamilies.find(item => item.id === hostId) ||
                  this.data.hostList.find(item => item.id === hostId)
-    
-    
+
+
     if (!host) {
       console.error('[APP] 未找到寄养家庭信息:', hostId)
       this.error('HOST_INFO_NOT_FOUND')
       return
     }
-    
+
     const url = `/subpackages/booking/confirm?id=${hostId}`
-    
+
     // 跳转到确认订单页面
     wx.navigateTo({
-      url: url,
+      url,
       success: () => {
       },
-      fail: (err) => {
+      fail: err => {
         console.error('[APP] ❌ 跳转失败:', err)
-        this.error(() => '跳转失败：' + (err.errMsg || '未知错误'))
-      }
+        this.error(() => `跳转失败：${err.errMsg || '未知错误'}`)
+      },
     })
   },
 
@@ -358,7 +345,7 @@ Page({
   showAllHosts() {
     // 添加动画效果
     this.setData({
-      showAllHosts: true
+      showAllHosts: true,
     })
   },
 
@@ -369,7 +356,7 @@ Page({
     const list = [...this.data[listKey]]
     list[index].avatarUrl = '/images/default-avatar.svg'
     this.setData({
-      [listKey]: list
+      [listKey]: list,
     })
   },
 
@@ -378,5 +365,5 @@ Page({
     this.loadData().finally(() => {
       wx.stopPullDownRefresh()
     })
-  }
+  },
 })

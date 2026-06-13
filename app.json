@@ -17,7 +17,7 @@
   "tabBar": {
     "custom": true,
     "color": "#666666",
-    "selectedColor": "#4ECDC4",
+    "selectedColor": "#FF6B00",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
@@ -80,7 +80,6 @@
       "pages": [
         "pet-select",
         "confirm",
-        "host-list",
         "host-list-all",
         "host-detail"
       ]
@@ -162,7 +161,8 @@
       "root": "subpackages/coupon",
       "name": "coupon",
       "pages": [
-        "my-coupons"
+        "my-coupons",
+        "claim-center"
       ]
     },
     {
@@ -178,6 +178,7 @@
         "income/index",
         "application/index",
         "referral/index",
+        "withdrawal/index",
         "i18n-override/index"
       ]
     }

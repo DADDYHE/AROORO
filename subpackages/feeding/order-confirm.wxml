@@ -1,0 +1,64 @@
+<view class="container">
+  <view class="feeder-info" wx:if="{{feeder}}">
+    <view class="feeder-name">{{feeder.nickname || feeder.realName || feeder.name || '喂养师'}}</view>
+    <view class="feeder-price">¥{{feeder.pricePerVisit || feeder.price || 0}}/次</view>
+  </view>
+
+  <view class="form-section">
+    <view class="form-row">
+      <text class="label">服务日期</text>
+      <picker mode="date" value="{{startDate}}" bindchange="onStartDateChange">
+        <view class="picker-val">{{startDate || '选择日期'}}</view>
+      </picker>
+    </view>
+    <view class="form-row" bindtap="onChooseAddress">
+      <text class="label">服务地址</text>
+      <view class="picker-val {{addressText ? '' : 'placeholder'}}">{{addressText || '请选择服务地址'}}</view>
+    </view>
+    <view class="form-row">
+      <text class="label">备注</text>
+      <input class="input" placeholder="选填" value="{{notes}}" bindinput="onNotesInput" />
+    </view>
+  </view>
+
+  <view class="form-section coupon-section" wx:if="{{totalPrice > 0}}">
+    <view class="section-title" bindtap="onToggleCouponSelector">
+      <text>优惠券</text>
+      <text class="arrow" wx:if="{{availableCoupons.length > 0 && !selectedCoupon}}">{{availableCoupons.length}}张可用</text>
+    </view>
+    <view class="selected-coupon" wx:if="{{selectedCoupon}}">
+      <text>{{selectedCoupon.templateName}} -¥{{couponDiscount}}</text>
+      <text class="remove-coupon" bindtap="onRemoveCoupon">✕</text>
+    </view>
+    <view class="coupon-list" wx:if="{{showCouponSelector}}">
+      <view class="coupon-item" wx:for="{{availableCoupons}}" wx:key="_id" bindtap="onSelectCoupon" data-id="{{item._id}}" data-amount="{{item.discountAmount}}">
+        <text class="coupon-name">{{item.templateName}}</text>
+        <text class="coupon-amount">-¥{{item.discountAmount}}</text>
+      </view>
+      <view wx:if="{{availableCoupons.length === 0}}" class="no-data"><text>暂无可用优惠券</text></view>
+    </view>
+  </view>
+
+  <view class="total-row">
+    <text>预估费用</text>
+    <text class="price">¥{{totalPrice}}</text>
+  </view>
+
+  <button class="submit-btn" bindtap="onSubmit">提交订单</button>
+
+  <view class="payment-modal" wx:if="{{showPaymentModal}}">
+    <view class="modal-mask" bindtap="onClosePaymentModal"></view>
+    <view class="modal-content">
+      <view class="modal-title">确认支付</view>
+      <view class="modal-total">
+        <text wx:if="{{couponDiscount > 0}}">原价 ¥{{totalPrice}}，优惠 ¥{{couponDiscount}}</text>
+        <text class="final-price">应付: ¥{{finalPrice}}</text>
+        <text class="min-amount-tip" wx:if="{{selectedCouponId && finalPrice === 0.1}}">优惠券金额已超出应付</text>
+      </view>
+      <button class="pay-btn" bindtap="onConfirmPayment" disabled="{{isSubmitting}}">
+        {{isSubmitting ? '处理中...' : '确认支付'}}
+      </button>
+      <view class="cancel-btn" bindtap="onClosePaymentModal">取消</view>
+    </view>
+  </view>
+</view>

@@ -165,7 +165,14 @@ Page({
       return
     }
 
-    this.showModal({ titleKey: 'BIZ_FRRM3P' })
+    this.showModal({
+      titleKey: 'BIZ_FRRM3P',
+      content: confirmMsg,
+      success: (confirmed) => {
+        if (!confirmed) {return}
+        this._updateStatus(newStatus)
+      },
+    })
   },
 
   async _updateStatus(newStatus) {
@@ -238,12 +245,4 @@ Page({
     })
   },
 
-  onShareAppMessage() {
-    const { activity } = this.data
-    return {
-      title: activity?.title || '宠物活动',
-      path: `/subpackages/activity/detail?id=${activity?._id}`,
-      imageUrl: activity?.coverUrl,
-    }
-  },
 })

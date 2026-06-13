@@ -280,13 +280,13 @@
 /* ====== 登录提示卡片 - 画廊展品样式 ====== */
 .login-prompt-card {
   margin: 0 0 32rpx;
-  padding: 32rpx;
+  padding: 48rpx 32rpx;
   background: #FFFFFF;
   border-radius: 24rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
   border: 1rpx solid rgba(134, 134, 139, 0.1);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   animation: fadeUp 0.5s ease-out 0.1s both;
 }
 
@@ -383,10 +383,10 @@
 .login-prompt-btn {
   display: block;
   width: 100%;
-  padding: 16rpx 0;
+  padding: 24rpx 0;
   background: linear-gradient(135deg, #4ECDC4 0%, #45B7AA 100%);
   color: #FFFFFF;
-  font-size: 24rpx;
+  font-size: 28rpx;
   font-weight: 600;
   border-radius: 48rpx;
   box-shadow: 0 6rpx 16rpx rgba(78, 205, 196, 0.3);
@@ -394,6 +394,9 @@
   position: relative;
   overflow: hidden;
   border: none;
+  line-height: 1.5;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .login-prompt-btn::before {
@@ -405,6 +408,10 @@
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: left 0.6s ease;
+}
+
+.login-prompt-btn::after {
+  border: none;
 }
 
 .login-prompt-btn:active {

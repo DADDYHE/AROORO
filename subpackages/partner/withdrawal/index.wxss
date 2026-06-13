@@ -1,0 +1,82 @@
+@import '../common.wxss';
+.page-container {
+  min-height: 100vh;
+  background-color: #F5F5F7;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.page-header {
+  background: #FFFFFF;
+  padding-bottom: 20rpx;
+  animation: fadeUp 0.6s ease-out;
+  position: relative;
+}
+
+.record-list {
+  padding: 32rpx;
+  animation: fadeUp 0.6s ease-out 0.2s both;
+}
+
+.record-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx 36rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+.record-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.record-amount {
+  font-size: 36rpx;
+  font-weight: 300;
+}
+
+.record-status {
+  font-size: 24rpx;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+}
+
+.record-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.record-time {
+  font-size: 22rpx;
+  color: #8E8E93;
+}
+
+.record-reason {
+  font-size: 22rpx;
+  color: #FF3B30;
+}
+
+.empty-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.empty-text {
+  font-size: 26rpx;
+  color: #8E8E93;
+  letter-spacing: 4rpx;
+}
+.loading-more {
+  text-align: center;
+  padding: 32rpx 0;
+}
+
+.loading-more-text {
+  font-size: 24rpx;
+  color: #8E8E93;
+}

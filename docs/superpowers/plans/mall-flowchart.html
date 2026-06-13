@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商城管理系统 · 架构流程图</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #faf9f6;
+    --card-bg: #ffffff;
+    --text: #2c2c2c;
+    --text-secondary: #6b6b6b;
+    --accent: #1a73e8;
+    --accent-soft: #e8f0fe;
+    --border: #e8e6e1;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+    --radius: 12px;
+    --tab-active: #1a73e8;
+    --tab-bg: #f3f2ef;
+    --success: #0d904f;
+    --warning: #e37400;
+    --danger: #d93025;
+    --purple: #9334e6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Noto Sans SC", "PingFang SC", -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #1a73e8, #9334e6);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+  }
+
+  .logo h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .logo span {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 40px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--tab-bg);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+  }
+
+  .tab:hover { color: var(--text); background: rgba(0,0,0,0.04); }
+  .tab.active { color: white; background: var(--tab-active); box-shadow: 0 1px 3px rgba(26,115,232,0.3); }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .card-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-header h2 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  .card-header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .card-body {
+    padding: 28px;
+  }
+
+  .mermaid {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+    padding: 8px 0;
+  }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 16px 0 0;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  .legend-dot.page { background: #1a73e8; }
+  .legend-dot.function { background: #9334e6; }
+  .legend-dot.db { background: #0d904f; }
+  .legend-dot.action { background: #e37400; }
+  .legend-dot.status { background: #d93025; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 900px) {
+    .two-col { grid-template-columns: 1fr; }
+    .container { padding: 20px 16px; }
+    .header { padding: 16px 20px; }
+  }
+
+  .footer {
+    text-align: center;
+    padding: 40px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .divider {
+    width: 40px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+    margin: 24px 0 8px;
+  }
+
+  .intro {
+    max-width: 640px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+
+  .intro strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🛒</div>
+      <div>
+        <h1>商城管理系统</h1>
+        <span>对标淘宝千牛 · 架构流程参考</span>
+      </div>
+    </div>
+    <div class="badge">v2 方案</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="intro" style="margin-bottom:24px;">
+    <strong>核心理念：</strong>完全对齐淘宝千牛卖家中心的商品管理模式 ——
+    <strong>出售中的宝贝</strong>、<strong>仓库中的宝贝</strong>、<strong>宝贝分类</strong> 三大模块独立运作，
+    配合 <strong>宝贝克隆</strong>、<strong>橱窗推荐</strong>、<strong>批量操作</strong> 等运营工具。
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(0)">总览架构</button>
+    <button class="tab" onclick="switchTab(1)">商品生命周期</button>
+    <button class="tab" onclick="switchTab(2)">页面导航地图</button>
+    <button class="tab" onclick="switchTab(3)">发布宝贝流程</button>
+    <button class="tab" onclick="switchTab(4)">SKU编辑器</button>
+    <button class="tab" onclick="switchTab(5)">订单状态流转</button>
+    <button class="tab" onclick="switchTab(6)">分类管理</button>
+  </div>
+
+  <!-- Tab 0: 总览架构 -->
+  <div id="tab-0" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>系统总览架构</h2>
+          <p>C端小程序、管理端小程序、云函数、数据库的完整交互关系</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="mermaid">
+graph TB
+    subgraph C端["🛍️ C端小程序（纯消费）"]
+        C_LIST["商品浏览"]
+        C_DETAIL["商品详情"]
+        C_ORDER["下单购买"]
+        C_PAY["支付"]
+    end
+
+    subgraph Admin["⚙️ 管理端小程序"]
+        direction TB
+        DASHBOARD["📊 工作台"]
+        SALE["出售中的宝贝<br/>sale-list"]
+        WAREHOUSE["仓库中的宝贝<br/>warehouse-list"]
+        CATEGORY["宝贝分类<br/>category-list"]
+        ORDER_MGR["订单管理<br/>order-list"]
+        PRODUCT_EDIT["发布宝贝<br/>product-edit"]
+    end
+
+    subgraph CloudFunctions["☁️ 云函数"]
+        ADMIN_SVC["adminService"]
+        MALL_SVC["mallService"]
+    end
+
+    subgraph DB["🗄️ 数据库"]
+        PRODUCTS[("products<br/>商品集合")]
+        CATEGORIES[("categories<br/>分类集合")]
+        ORDERS[("orders<br/>订单集合")]
+    end
+
+    DASHBOARD --> SALE
+    DASHBOARD --> WAREHOUSE
+    DASHBOARD --> CATEGORY
+    SALE --> PRODUCT_EDIT
+    WAREHOUSE --> PRODUCT_EDIT
+    PRODUCT_EDIT --> ADMIN_SVC
+
+    SALE --> ADMIN_SVC
+    WAREHOUSE --> ADMIN_SVC
+    CATEGORY --> ADMIN_SVC
+    ORDER_MGR --> ADMIN_SVC
+
+    ADMIN_SVC --> PRODUCTS
+    ADMIN_SVC --> CATEGORIES
+    ADMIN_SVC --> ORDERS
+
+    C_LIST --> MALL_SVC
+    C_DETAIL --> MALL_SVC
+    C_ORDER --> MALL_SVC
+
+    MALL_SVC --> PRODUCTS
+    MALL_SVC --> ORDERS
+
+    style C端 fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+    style Admin fill:#f3e8fd,stroke:#9334e6,color:#9334e6
+    style CloudFunctions fill:#fff3e0,stroke:#e37400,color:#e37400
+    style DB fill:#e6f4ea,stroke:#0d904f,color:#0d904f
+        </div>
+        <div class="divider"></div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot page"></span> 小程序页面</div>
+          <div class="legend-item"><span class="legend-dot function"></span> 云函数</div>
+          <div class="legend-item"><span class="legend-dot db"></span> 数据库集合</div>
+          <div class="legend-item"><span class="legend-dot action"></span> API调用</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>权限模型</h2>
+            <p>RBAC 角色权限控制</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+graph LR
+    ROLE["mall_admin<br/>商城管理员"]
+
+    ROLE --> P1["查看商品列表"]
+    ROLE --> P2["创建/编辑商品"]
+    ROLE --> P3["管理分类"]
+    ROLE --> P4["处理订单"]
+    ROLE --> P5["上下架商品"]
+    ROLE --> P6["批量操作"]
+    ROLE --> P7["查看统计数据"]
+
+    style ROLE fill:#1a73e8,color:white,stroke:#1557b0
+    style P1 fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+    style P2 fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+    style P3 fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+    style P4 fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+    style P5 fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+    style P6 fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+    style P7 fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>数据流向</h2>
+            <p>管理端 ↔ 云函数 ↔ 数据库</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+sequenceDiagram
+    participant A as 管理端页面
+    participant API as AdminApiService
+    participant CF as adminService 云函数
+    participant DB as 数据库
+
+    A->>API: 调用接口方法
+    API->>CF: wx.cloud.callFunction
+    CF->>CF: 权限验证(RBAC)
+    CF->>CF: 参数校验 & 业务逻辑
+    CF->>DB: 数据库操作
+    DB-->>CF: 返回结果
+    CF-->>API: {code, data, message}
+    API-->>A: Promise resolve
+    A->>A: setData 更新视图
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 1: 商品生命周期 -->
+  <div id="tab-1" class="tab-content" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>商品生命周期（对标淘宝）</h2>
+          <p>从创建到下架的完整状态流转，每个状态的可用操作和C端可见性</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="mermaid">
+stateDiagram-v2
+    direction LR
+
+    [*] --> 草稿_draft : 保存草稿
+
+    state 草稿_draft {
+        [*] --> 编辑中
+        编辑中 --> 可提交审核
+    }
+
+    草稿_draft --> 审核中_pending_review : 提交审核
+    草稿_draft --> 在售_on_sale : 直接上架(跳过审核)
+    草稿_draft --> [*] : 删除商品
+
+    审核中_pending_review --> 在售_on_sale : 审核通过
+    审核中_pending_review --> 草稿_draft : 审核驳回/撤回
+
+    在售_on_sale --> 已下架_off_shelf : 手动下架
+    在售_on_sale --> 草稿_draft : 编辑后需重新审核
+
+    已下架_off_shelf --> 在售_on_sale : 重新上架
+    已下架_off_shelf --> 草稿_draft : 编辑
+    已下架_off_shelf --> [*] : 删除商品
+
+    note right of 在售_on_sale : 🟢 C端可见可购买
+    note right of 审核中_pending_review : 🟡 C端不可见
+    note right of 草稿_draft : ⚪ C端不可见
+    note right of 已下架_off_shelf : 🔴 C端不可见
+        </div>
+        <div class="divider"></div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--tab-bg);">
+              <th style="padding:10px 14px;text-align:left;border-radius:8px 0 0 8px;">状态</th>
+              <th style="padding:10px 14px;text-align:left;">管理端展示位置</th>
+              <th style="padding:10px 14px;text-align:left;">可用操作</th>
+              <th style="padding:10px 14px;text-align:left;">C端可见</th>
+              <th style="padding:10px 14px;text-align:left;border-radius:0 8px 8px 0;">颜色标识</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 14px;font-weight:600;">draft 草稿</td>
+              <td style="padding:10px 14px;">仓库中</td>
+              <td style="padding:10px 14px;">编辑 / 上架 / 删除</td>
+              <td style="padding:10px 14px;">❌ 不可见</td>
+              <td style="padding:10px 14px;"><span style="display:inline-block;width:12px;height:12px;background:#6b6b6b;border-radius:3px;"></span> 灰色</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 14px;font-weight:600;">pending_review 审核中</td>
+              <td style="padding:10px 14px;">仓库中</td>
+              <td style="padding:10px 14px;">查看 / 撤回</td>
+              <td style="padding:10px 14px;">❌ 不可见</td>
+              <td style="padding:10px 14px;"><span style="display:inline-block;width:12px;height:12px;background:#e37400;border-radius:3px;"></span> 橙色</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 14px;font-weight:600;">on_sale 在售</td>
+              <td style="padding:10px 14px;">出售中</td>
+              <td style="padding:10px 14px;">编辑 / 下架 / 克隆</td>
+              <td style="padding:10px 14px;">✅ 可见可购买</td>
+              <td style="padding:10px 14px;"><span style="display:inline-block;width:12px;height:12px;background:#0d904f;border-radius:3px;"></span> 绿色</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;font-weight:600;">off_shelf 已下架</td>
+              <td style="padding:10px 14px;">仓库中</td>
+              <td style="padding:10px 14px;">编辑 / 重新上架 / 删除</td>
+              <td style="padding:10px 14px;">❌ 不可见</td>
+              <td style="padding:10px 14px;"><span style="display:inline-block;width:12px;height:12px;background:#d93025;border-radius:3px;"></span> 红色</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: 页面导航地图 -->
+  <div id="tab-2" class="tab-content" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>管理端页面导航地图</h2>
+          <p>从工作台到各个商品管理页面的完整导航关系</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="mermaid">
+graph TD
+    DASHBOARD["📊 工作台 Dashboard"]
+    SUBNAV["🛒 商城管理入口"]
+
+    DASHBOARD -->|"商城管理"按钮| SUBNAV
+
+    SALE["🏪 出售中的宝贝<br/>sale-list<br/><br/>功能：<br/>· 搜索商品名称/编码<br/>· 分类Tab快速筛选<br/>· 排序(综合/价格/销量)<br/>· 筛选(价格/库存/标签)<br/>· 批量选择操作"]
+
+    WAREHOUSE["📦 仓库中的宝贝<br/>warehouse-list<br/><br/>三Tab：<br/>· 草稿 → 编辑/上架/删除<br/>· 审核中 → 查看/撤回<br/>· 已下架 → 编辑/上架/删除"]
+
+    CATEGORY["📁 宝贝分类管理<br/>category-list<br/><br/>功能：<br/>· 树形分类列表<br/>· 新建/编辑/删除<br/>· 排序/启用禁用<br/>· 商品数量展示"]
+
+    ORDER_MGR["📋 订单管理<br/>order-list<br/><br/>六Tab：<br/>全部|待付款|待发货<br/>已发货|已完成|已关闭"]
+
+    PRODUCT_EDIT["✏️ 发布/编辑宝贝<br/>product-edit<br/><br/>三模式：<br/>· 新建 · 编辑 · 克隆"]
+
+    CATEGORY_EDIT["✏️ 分类编辑<br/>category-edit"]
+
+    ORDER_DETAIL["📄 订单详情<br/>order-detail<br/><br/>· 状态时间线<br/>· 收货信息<br/>· 商品信息<br/>· 金额明细<br/>· 操作按钮"]
+
+    SUBNAV -->|"出售中"| SALE
+    SUBNAV -->|"仓库中"| WAREHOUSE
+    SUBNAV -->|"分类管理"| CATEGORY
+    SUBNAV -->|"订单管理"| ORDER_MGR
+
+    SALE -->|"点击商品卡片"| PRODUCT_EDIT
+    SALE -->|"+发布宝贝"| PRODUCT_EDIT
+    WAREHOUSE -->|"编辑"| PRODUCT_EDIT
+    CATEGORY -->|"编辑分类"| CATEGORY_EDIT
+    CATEGORY -->|"新建分类"| CATEGORY_EDIT
+    ORDER_MGR -->|"查看详情"| ORDER_DETAIL
+
+    PRODUCT_EDIT -->|"保存/上架后返回"| SALE
+    PRODUCT_EDIT -->|"保存草稿后返回"| WAREHOUSE
+
+    style DASHBOARD fill:#1a73e8,color:white
+    style SUBNAV fill:#9334e6,color:white
+    style SALE fill:#e6f4ea,stroke:#0d904f,color:#0d904f
+    style WAREHOUSE fill:#fff3e0,stroke:#e37400,color:#e37400
+    style CATEGORY fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+    style ORDER_MGR fill:#f3e8fd,stroke:#9334e6,color:#9334e6
+    style PRODUCT_EDIT fill:#fce8e6,stroke:#d93025,color:#d93025
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 3: 发布宝贝流程 -->
+  <div id="tab-3" class="tab-content" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>发布宝贝 · 完整操作流程（对标淘宝发布页）</h2>
+          <p>product-edit 页面一瓶多能：新建 / 编辑 / 克隆三种模式</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="mermaid">
+graph TD
+    START(["进入发布宝贝页面"])
+    MODE_CHECK{"页面模式判断"}
+
+    START --> MODE_CHECK
+
+    MODE_CHECK -->|"product-edit（无参）"| CREATE["新建宝贝模式"]
+    MODE_CHECK -->|"product-edit?id=xxx"| EDIT["编辑宝贝模式"]
+    MODE_CHECK -->|"product-edit?mode=copy&copyId=xxx"| COPY["克隆宝贝模式"]
+
+    CREATE --> LOAD_CATS["加载分类列表"]
+    EDIT --> LOAD_EXIST["加载已有商品数据"]
+    COPY --> LOAD_SOURCE["加载源商品数据<br/>名称加(副本)<br/>销量清零/清空ID"]
+
+    LOAD_CATS --> STEP1
+    LOAD_EXIST --> STEP1
+    LOAD_SOURCE --> STEP1
+
+    STEP1["第1步：选择分类<br/>━━━━━━━━<br/>一级分类 ▾ → 二级分类 ▾"]
+    STEP1 --> STEP2
+
+    STEP2["第2步：基本信息<br/>━━━━━━━━<br/>商品标题 ≤30字<br/>商品卖点 ≤20字 可选<br/>商品描述 textarea"]
+    STEP2 --> STEP3_CHECK{"是否启用多规格？"}
+
+    STEP3_CHECK -->|"统一规格"| STEP3_SINGLE["第3步：价格库存<br/>━━━━━━━━<br/>售价 原价 库存<br/>（填写3个字段）"]
+    STEP3_CHECK -->|"多规格"| STEP3_MULTI["第3步：规格与SKU<br/>━━━━━━━━<br/>→ 进入SKU编辑器<br/>（见SKU流程图）"]
+
+    STEP3_SINGLE --> STEP4
+    STEP3_MULTI --> STEP4
+
+    STEP4["第4步：商品图片<br/>━━━━━━━━<br/>主图 最多5张<br/>详情图 最多9张 可选"]
+    STEP4 --> STEP5
+
+    STEP5["第5步：其他设置<br/>━━━━━━━━<br/>标签: 新品/热销/限时<br/>橱窗推荐: 是/否<br/>排序权重: 0-9999"]
+    STEP5 --> SUBMIT_DECIDE{"选择提交方式"}
+
+    SUBMIT_DECIDE -->|"保存草稿"| DRAFT["status=draft<br/>进入仓库中"]
+    SUBMIT_DECIDE -->|"提交审核"| REVIEW["status=pending_review<br/>进入仓库中(审核Tab)"]
+    SUBMIT_DECIDE -->|"立即上架"| ONSALE["status=on_sale<br/>进入出售中<br/>C端立即可见"]
+
+    DRAFT --> END(["返回列表页"])
+    REVIEW --> END
+    ONSALE --> END
+
+    style START fill:#9334e6,color:white
+    style MODE_CHECK fill:#e37400,color:white
+    style STEP1 fill:#e8f0fe,stroke:#1a73e8
+    style STEP2 fill:#e8f0fe,stroke:#1a73e8
+    style STEP3_CHECK fill:#e37400,color:white
+    style STEP4 fill:#e8f0fe,stroke:#1a73e8
+    style STEP5 fill:#e8f0fe,stroke:#1a73e8
+    style SUBMIT_DECIDE fill:#e37400,color:white
+    style DRAFT fill:#6b6b6b,color:white
+    style REVIEW fill:#e37400,color:white
+    style ONSALE fill:#0d904f,color:white
+    style END fill:#1a73e8,color:white
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 4: SKU编辑器 -->
+  <div id="tab-4" class="tab-content" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>SKU 编辑器 · 多规格商品创建流程</h2>
+          <p>核心交互：规格组定义 → 自动生成矩阵 → 逐行/批量编辑 → 存储</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="mermaid">
+graph TD
+    START(["开启「多规格」开关"])
+    START --> ADD_GROUP["添加规格组<br/>例：颜色"]
+
+    ADD_GROUP --> ADD_VALUES["添加规格值<br/>例：红色、蓝色、黑色<br/><br/>交互：标签+×删除<br/>末尾+添加按钮"]
+    ADD_VALUES --> MORE_GROUP{"是否添加<br/>更多规格组？"}
+
+    MORE_GROUP -->|"是"| ADD_GROUP2["添加规格组2<br/>例：尺寸"]
+    ADD_GROUP2 --> ADD_VALUES2["添加规格值<br/>例：S、M、L"]
+    ADD_VALUES2 --> MORE_GROUP
+
+    MORE_GROUP -->|"否(最多3组)"| GENERATE["系统自动生成SKU矩阵<br/>━━━━━━━━━━<br/>颜色 × 尺寸 = 3×3 = 9个SKU"]
+
+    GENERATE --> TABLE["SKU编辑表格<br/>━━━━━━━━━━<br/>┌─────────────────────────┐<br/>│颜色│尺寸│价格│库存│图片│<br/>│红  │S   │¥99│100│[图]│<br/>│红  │M   │¥99│ 80│[图]│<br/>│...                     │<br/>└─────────────────────────┘"]
+
+    TABLE --> BATCH{"使用批量填充？"}
+    BATCH -->|"批量填价格"| FILL_PRICE["弹窗输入统一价格<br/>一键应用到所有SKU"]
+    BATCH -->|"批量填库存"| FILL_STOCK["弹窗输入统一库存<br/>一键应用到所有SKU"]
+    BATCH -->|"逐行编辑"| ROW_EDIT["逐行修改价格/库存/<br/>SKU编码/图片"]
+
+    FILL_PRICE --> TABLE
+    FILL_STOCK --> TABLE
+    ROW_EDIT --> TABLE
+
+    TABLE --> CHECK{"SKU表格<br/>编辑完毕？"}
+    CHECK -->|"继续编辑"| TABLE
+    CHECK -->|"完成"| SAVE["数据存储<br/>━━━━━━━━━━<br/>specGroups: [...]<br/>skus: [{skuId, specs,<br/>  price, stock, ...}]<br/>minPrice/maxPrice<br/>totalStock 冗余计算"]
+    SAVE --> END(["返回发布宝贝流程"])
+
+    style START fill:#9334e6,color:white
+    style GENERATE fill:#1a73e8,color:white
+    style TABLE fill:#e8f0fe,stroke:#1a73e8
+    style BATCH fill:#e37400,color:white
+    style SAVE fill:#0d904f,color:white
+    style END fill:#1a73e8,color:white
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">
+          <strong style="color:var(--text);">关键约束：</strong><br/>
+          · 最多 <strong>3个规格组</strong>，每组最多 <strong>20个值</strong>（超过提示用户）<br/>
+          · SKU表格用 <strong>scroll-view 横向滚动</strong>，固定表头<br/>
+          · 删除的SKU行 <strong>置灰</strong>，不可恢复，需重新添加规格值触发生成<br/>
+          · SKU图片<strong>可选</strong>，不填时继承商品封面图<br/>
+          · <strong>minPrice / maxPrice / totalStock</strong> 冗余存储，避免列表页遍历skus
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 5: 订单状态流转 -->
+  <div id="tab-5" class="tab-content" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>订单状态流转（对标淘宝「已卖出的宝贝」）</h2>
+          <p>C端下单 → 管理端处理的完整订单生命周期</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="mermaid">
+graph LR
+    subgraph C端操作
+        A["用户下单<br/>createOrder"]
+    end
+
+    subgraph 自动流转
+        B["pending_payment<br/>待付款"]
+        C["paid<br/>已付款"]
+    end
+
+    subgraph 管理端操作
+        D["shipped<br/>已发货"]
+        E["completed<br/>已完成"]
+    end
+
+    subgraph 异常处理
+        F["cancelled<br/>已取消"]
+    end
+
+    A -->|"事务：扣库存+创建订单"| B
+    B -->|"用户支付成功"| C
+    B -->|"超时未付/用户取消"| F
+    C -->|"管理端：确认订单+发货"| D
+    C -->|"管理端：取消订单"| F
+    D -->|"用户确认收货/自动确认"| E
+    D -->|"管理端：取消(需审核)"| F
+
+    style A fill:#9334e6,color:white
+    style B fill:#e37400,color:white
+    style C fill:#1a73e8,color:white
+    style D fill:#0d904f,color:white
+    style E fill:#0d904f,color:white
+    style F fill:#d93025,color:white
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">
+          <strong style="color:var(--text);">管理端操作说明：</strong><br/><br/>
+          · <strong>确认订单 (paid→shipped)：</strong>弹出物流表单 → 填写快递公司+单号 → 确认后状态变更为已发货<br/>
+          · <strong>完成订单 (shipped→completed)：</strong>确认收货/自动确认 → 订单完结<br/>
+          · <strong>取消订单：</strong>任何非终态都可取消，已发货状态取消需审核确认<br/>
+          · <strong>物流追踪：</strong>order-detail 页展示快递公司+单号，可复制单号到快递App查询
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 6: 分类管理 -->
+  <div id="tab-6" class="tab-content" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>分类管理流程</h2>
+          <p>两级自定义店铺分类的CRUD操作流程</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="mermaid">
+graph TD
+    LIST["category-list 分类列表<br/>━━━━━━━━━━<br/>展示树形结构<br/>每项显示商品数量"]
+
+    LIST --> NEW["新建分类"]
+    LIST --> EDIT_CAT["编辑分类"]
+    LIST --> TOGGLE["启用/禁用"]
+    LIST --> REORDER["排序(上移/下移)"]
+    LIST --> DELETE["删除分类"]
+
+    NEW --> NEW_FORM["category-edit<br/>━━━━━━━━━━<br/>名称 + 父分类选择<br/>(空=一级分类)<br/>图标 可选<br/>排序号"]
+
+    EDIT_CAT --> EDIT_FORM["category-edit<br/>━━━━━━━━━━<br/>加载已有数据<br/>修改后保存"]
+
+    NEW_FORM --> SAVE1["保存"]
+    EDIT_FORM --> SAVE2["保存"]
+
+    TOGGLE -->|"active→inactive"| HIDE["分类在C端和<br/>编辑页隐藏"]
+    TOGGLE -->|"inactive→active"| SHOW["恢复可见"]
+
+    DELETE --> CHK_CHILD{"是否有子分类？"}
+    CHK_CHILD -->|"有"| ERR1["❌ 提示：请先删除子分类"]
+    CHK_CHILD -->|"无"| CHK_PROD{"分类下是否有商品？"}
+    CHK_PROD -->|"有"| ERR2["❌ 提示：该分类下有N件商品<br/>请先移走"]
+    CHK_PROD -->|"无"| DEL_OK["✅ 删除成功"]
+
+    style LIST fill:#e8f0fe,stroke:#1a73e8,color:#1a73e8
+    style NEW fill:#0d904f,color:white
+    style DELETE fill:#d93025,color:white
+    style ERR1 fill:#fce8e6,stroke:#d93025,color:#d93025
+    style ERR2 fill:#fce8e6,stroke:#d93025,color:#d93025
+    style DEL_OK fill:#e6f4ea,stroke:#0d904f,color:#0d904f
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>AROORO · 商城管理系统 · 对标淘宝千牛卖家中心</p>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#e8f0fe',
+      primaryTextColor: '#1a73e8',
+      primaryBorderColor: '#1a73e8',
+      lineColor: '#6b6b6b',
+      secondaryColor: '#f3e8fd',
+      tertiaryColor: '#e6f4ea',
+      fontSize: '13px',
+      fontFamily: '"Noto Sans SC", "PingFang SC", -apple-system, sans-serif',
+    },
+    flowchart: {
+      useMaxWidth: true,
+      htmlLabels: true,
+      curve: 'basis',
+      padding: 20,
+    },
+    sequence: {
+      useMaxWidth: true,
+      mirrorActors: false,
+    },
+    stateDiagram: {
+      useMaxWidth: true,
+    }
+  });
+
+  function switchTab(index) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+
+    document.getElementById('tab-' + index).style.display = 'block';
+    document.querySelectorAll('.tab')[index].classList.add('active');
+  }
+</script>
+
+</body>
+</html>

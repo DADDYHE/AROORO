@@ -3,6 +3,7 @@ const { extractCityAndDistrict } = require('../../utils/addressUtils')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const pageI18n = require('../../utils/page-i18n.js')
+const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
@@ -117,40 +118,33 @@ Page({
   /**
    * 切换标签页
    */
+  _pauseAllVideos() {
+    (this.data.host.videos || []).forEach((_, i) => {
+      const videoContext = wx.createVideoContext(`video${i}`, this)
+      if (videoContext) {
+        videoContext.pause()
+      }
+    })
+  },
+
   switchTab(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
 
-    // 停止当前正在播放的视频
     if (this.data.currentTab === 1) {
-      (this.data.host.videos || []).forEach((_, i) => {
-        const videoContext = wx.createVideoContext(`video${i}`, this)
-        if (videoContext) {
-          videoContext.pause()
-        }
-      })
+      this._pauseAllVideos()
     }
 
-    // 直接更新数据，确保 active 类正确应用
     this.setData({
       currentTab: index,
     })
 
   },
 
-  /**
-   * 切换媒体类型
-   */
   switchMediaType(e) {
     const mediaType = e.currentTarget.dataset.type
 
-    // 停止当前正在播放的视频
     if (this.data.currentMediaType === 'videos') {
-      (this.data.host.videos || []).forEach((_, i) => {
-        const videoContext = wx.createVideoContext(`video${i}`, this)
-        if (videoContext) {
-          videoContext.pause()
-        }
-      })
+      this._pauseAllVideos()
     }
 
     // 处理相册跳转
@@ -362,19 +356,15 @@ Page({
   },
 
   // 页面卸载时清理资源
-  onUnload() {
-  },
+
 
   onShareAppMessage() {
     const { host } = this.data
-    const userInfo = getApp().globalData.userInfo
-    const inviterId = ((userInfo?.isPartner || userInfo?.permissions?.length) && userInfo?.openid) ? userInfo.openid : ''
     const hostId = host?._id || host?.id
     const basePath = hostId ? `/subpackages/booking/host-detail?id=${hostId}` : '/subpackages/booking/host-detail'
     return {
       title: host?.name ? `${host.name} - 寄养家庭` : 'AROORO 寄养家庭',
-      path: inviterId ? `${basePath}&inviterId=${inviterId}` : basePath,
-      imageUrl: host?.photos?.[0],
+      path: buildSharePath(basePath),
     }
   },
 })

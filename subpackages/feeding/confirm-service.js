@@ -5,38 +5,10 @@ const { FeedingService } = require('./services/FeedingService')
 const DEFAULT_AVATAR = '/images/default-avatar.svg'
 const PaymentService = require('../../services/PaymentService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-
-const HOLIDAYS_2025 = [
-  '2025-01-01',
-  '2025-01-28', '2025-01-29', '2025-01-30', '2025-01-31',
-  '2025-02-01', '2025-02-02', '2025-02-03', '2025-02-04',
-  '2025-04-04', '2025-04-05', '2025-04-06',
-  '2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04', '2025-05-05',
-  '2025-05-31', '2025-06-01', '2025-06-02',
-  '2025-10-01', '2025-10-02', '2025-10-03', '2025-10-04',
-  '2025-10-05', '2025-10-06', '2025-10-07', '2025-10-08',
-]
-
-const HOLIDAYS_2026 = [
-  '2026-01-01', '2026-01-02', '2026-01-03',
-  '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20',
-  '2026-02-21', '2026-02-22', '2026-02-23',
-  '2026-04-04', '2026-04-05', '2026-04-06',
-  '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05',
-  '2026-06-19', '2026-06-20', '2026-06-21',
-  '2026-09-25', '2026-09-26', '2026-09-27',
-  '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04',
-  '2026-10-05', '2026-10-06', '2026-10-07',
-]
-
-const _HOLIDAY_SET = new Set([...HOLIDAYS_2025, ...HOLIDAYS_2026])
-
-function _isHoliday(date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return _HOLIDAY_SET.has(`${y}-${m}-${d}`)
-}
+const { computeFinalAmount } = require('../../utils/coupon-amount')
+const { isHoliday } = require('../../utils/holidays')
+const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
+const picker = require('./utils/dateCountPicker')
 
 const KEY_OPTIONS = ['密码锁', '存放快递柜', '家中有人', '其他']
 
@@ -52,7 +24,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, couponSelectorBehavior],
 
   data: {
     loading: true,
@@ -66,6 +38,7 @@ Page({
     totalPrice: 0,
     address: null,
     addressText: '',
+    contactPhone: '',
     notes: '',
     keyMethod: '',
     keyOptions: KEY_OPTIONS,
@@ -78,6 +51,7 @@ Page({
     timeMinuteOptions: TIME_MINUTE_OPTIONS,
     timePickerValue: [9, 0],
     showTimePicker: false,
+    iconService: '/images/icons/客服.svg',
     familiarityValue: '',
     familiarityText: '',
     showFamiliarityPicker: false,
@@ -165,7 +139,7 @@ Page({
         serviceDays = svc.serviceDates.length
         svc.serviceDates.forEach(d => {
           const dateObj = new Date(d.date)
-          const holiday = _isHoliday(dateObj)
+          const holiday = isHoliday(dateObj)
           petBase += holiday ? 60 : 50
         })
         petWalk = svc.walkMinutes || 0
@@ -188,7 +162,7 @@ Page({
       familiarityDates.forEach(d => {
         if (d.count > 0) {
           const dateObj = new Date(d.date)
-          const holiday = _isHoliday(dateObj)
+          const holiday = isHoliday(dateObj)
           const dayPrice = holiday ? 60 : 50
           familiarityTotal += Math.round(dayPrice * 0.7 * d.count * 100) / 100
         }
@@ -199,7 +173,7 @@ Page({
       multiVisitDates.forEach(d => {
         if (d.count > 0) {
           const dateObj = new Date(d.date)
-          const holiday = _isHoliday(dateObj)
+          const holiday = isHoliday(dateObj)
           const dayPrice = holiday ? 60 : 50
           multiVisitTotal += Math.round(dayPrice * 0.8 * d.count * 100) / 100
         }
@@ -207,9 +181,8 @@ Page({
     }
 
     const totalPrice = basePrice + walkTotal + familiarityTotal + multiVisitTotal
-    const finalPrice = this.data.selectedCouponId
-      ? Math.max(0, totalPrice - this.data.couponDiscount)
-      : totalPrice
+    const { finalAmount, couponDiscount: finalCouponDiscount, shouldClear } = computeFinalAmount(totalPrice, this.data.couponDiscount)
+    const finalPrice = finalAmount
 
     this.setData({
       basicPrice: basePrice,
@@ -220,7 +193,16 @@ Page({
       finalPrice,
       serviceBreakdown: breakdown,
     })
-
+    if (shouldClear) {
+      // 免费订单不允许用券
+      this.setData({
+        selectedCouponId: '',
+        selectedCoupon: null,
+        couponDiscount: 0,
+      })
+    } else if (this.data.couponDiscount !== finalCouponDiscount) {
+      this.setData({ couponDiscount: finalCouponDiscount })
+    }
     this._loadAvailableCoupons()
   },
 
@@ -241,35 +223,7 @@ Page({
     }
   },
 
-  onToggleCouponSelector() {
-    this.setData({ showCouponSelector: !this.data.showCouponSelector })
-  },
-
-  onSelectCoupon(e) {
-    const { id, amount } = e.currentTarget.dataset
-    const coupon = this.data.availableCoupons.find(c => c._id === id)
-    if (!coupon) {return}
-
-    const discountAmount = parseFloat(amount)
-    const finalPrice = Math.max(0, Math.round((this.data.totalPrice - discountAmount) * 100) / 100)
-
-    this.setData({
-      selectedCouponId: id,
-      selectedCoupon: coupon,
-      couponDiscount: discountAmount,
-      finalPrice,
-      showCouponSelector: false,
-    })
-  },
-
-  onRemoveCoupon() {
-    this.setData({
-      selectedCouponId: '',
-      selectedCoupon: null,
-      couponDiscount: 0,
-      finalPrice: this.data.totalPrice,
-    })
-  },
+  // onToggleCouponSelector, onSelectCoupon, onRemoveCoupon 已由 couponSelectorBehavior 提供
 
   onChooseAddress() {
     wx.navigateTo({
@@ -294,6 +248,17 @@ Page({
 
   onNotesInput(e) {
     this.setData({ notes: e.detail.value })
+  },
+
+  onPhoneInput(e) {
+    this.setData({ contactPhone: e.detail.value })
+  },
+
+  onPhoneBlur() {
+    const { contactPhone } = this.data
+    if (contactPhone && !/^1[3-9]\d{9}$/.test(contactPhone)) {
+      wx.showToast({ title: '请输入正确的手机号', icon: 'none', duration: 2000 })
+    }
   },
 
   onShowKeyPicker() {
@@ -337,187 +302,41 @@ Page({
   },
 
   onShowFamiliarityPicker() {
-    const { petServices, selectedPetDetails } = this.data
-    const dateMap = {}
-    if (selectedPetDetails && petServices) {
-      selectedPetDetails.forEach(pet => {
-        const svc = petServices[pet.id]
-        if (svc && svc.serviceDates) {
-          svc.serviceDates.forEach(d => {
-            if (!dateMap[d.date]) {
-              dateMap[d.date] = {
-                date: d.date,
-                shortDate: d.shortDate,
-                timestamp: d.timestamp,
-                count: 0,
-              }
-            }
-          })
-        }
-      })
-    }
-    const familiarityDates = Object.values(dateMap).sort((a, b) => a.timestamp - b.timestamp)
+    const dates = picker.buildDateMap(this.data.petServices, this.data.selectedPetDetails)
     const selectedIndex = this.data.familiaritySelectedIndex || 0
-    const count = familiarityDates[selectedIndex]?.count ?? 0
-    const firstDate = familiarityDates[selectedIndex]
-    let unitPrice = 0
-    if (firstDate) {
-      const dateObj = new Date(firstDate.date)
-      const holiday = _isHoliday(dateObj)
-      const dayPrice = holiday ? 60 : 50
-      unitPrice = Math.round(dayPrice * 0.7 * 100) / 100
-    }
-    this.setData({ showFamiliarityPicker: true, familiarityDates, familiarityCount: count, familiaritySelectedIndex: selectedIndex, familiarityUnitPrice: unitPrice })
+    const count = dates[selectedIndex]?.count ?? 0
+    const unitPrice = dates[selectedIndex] ? picker.calcUnitPrice(dates[selectedIndex].date, 0.7) : 0
+    this.setData({ showFamiliarityPicker: true, familiarityDates: dates, familiarityCount: count, familiaritySelectedIndex: selectedIndex, familiarityUnitPrice: unitPrice })
   },
 
-  onHideFamiliarityPicker() {
-    this.setData({ showFamiliarityPicker: false })
-  },
+  onHideFamiliarityPicker() { this.setData({ showFamiliarityPicker: false }) },
 
-  onSelectFamiliarityDate(e) {
-    const index = parseInt(e.currentTarget.dataset.index, 10)
-    const count = this.data.familiarityDates[index]?.count ?? 0
-    const dateItem = this.data.familiarityDates[index]
-    let unitPrice = 0
-    if (dateItem) {
-      const dateObj = new Date(dateItem.date)
-      const holiday = _isHoliday(dateObj)
-      const dayPrice = holiday ? 60 : 50
-      unitPrice = Math.round(dayPrice * 0.7 * 100) / 100
-    }
-    this.setData({ familiaritySelectedIndex: index, familiarityCount: count, familiarityUnitPrice: unitPrice })
-  },
+  onSelectFamiliarityDate(e) { picker.onSelectDate(this, 'familiarity', parseInt(e.currentTarget.dataset.index, 10)) },
 
-  onFamiliarityDecrease() {
-    const { familiarityDates, familiaritySelectedIndex, familiarityCount } = this.data
-    if (familiarityCount <= 0) {return}
-    const newCount = familiarityCount - 1
-    const key = `familiarityDates[${familiaritySelectedIndex}].count`
-    this.setData({ familiarityCount: newCount, [key]: newCount })
-  },
+  onFamiliarityDecrease() { picker.onDecrease(this, 'familiarity') },
 
-  onFamiliarityIncrease() {
-    const { familiarityDates, familiaritySelectedIndex, familiarityCount } = this.data
-    if (familiarityCount >= 10) {return}
-    const newCount = familiarityCount + 1
-    const key = `familiarityDates[${familiaritySelectedIndex}].count`
-    this.setData({ familiarityCount: newCount, [key]: newCount })
-  },
+  onFamiliarityIncrease() { picker.onIncrease(this, 'familiarity') },
 
-  onConfirmFamiliarity() {
-    const { familiarityDates } = this.data
-    const activeCount = familiarityDates.filter(d => d.count > 0).length
-    if (activeCount === 0) {
-      this.setData({
-        familiarityText: '',
-        familiarityCount: 0,
-        showFamiliarityPicker: false,
-      })
-      this._calculatePrice()
-      return
-    }
-    this.setData({
-      familiarityText: `${activeCount}天×多次`,
-      showFamiliarityPicker: false,
-    })
-    this._calculatePrice()
-  },
+  onConfirmFamiliarity() { picker.onConfirm(this, 'familiarity', { onConfirm: () => this._calculatePrice() }) },
 
   onShowMultiVisitPicker() {
-    const { petServices, selectedPetDetails } = this.data
-    const dateMap = {}
-    if (selectedPetDetails && petServices) {
-      selectedPetDetails.forEach(pet => {
-        const svc = petServices[pet.id]
-        if (svc && svc.serviceDates) {
-          svc.serviceDates.forEach(d => {
-            if (!dateMap[d.date]) {
-              dateMap[d.date] = {
-                date: d.date,
-                shortDate: d.shortDate,
-                timestamp: d.timestamp,
-                count: 0,
-              }
-            }
-          })
-        }
-      })
-    }
-    const multiVisitDates = Object.values(dateMap).sort((a, b) => a.timestamp - b.timestamp)
-    const prev = this.data.multiVisitDates || []
-    multiVisitDates.forEach(item => {
-      const prevItem = prev.find(p => p.date === item.date)
-      if (prevItem) {
-        item.count = prevItem.count
-      }
-    })
+    const dates = picker.buildDateMap(this.data.petServices, this.data.selectedPetDetails)
+    picker.mergePrevCounts(dates, this.data.multiVisitDates)
     const selectedIndex = this.data.multiVisitSelectedIndex || 0
-    const count = multiVisitDates[selectedIndex]?.count ?? 0
-    const firstDate = multiVisitDates[selectedIndex]
-    let unitPrice = 0
-    if (firstDate) {
-      const dateObj = new Date(firstDate.date)
-      const holiday = _isHoliday(dateObj)
-      const dayPrice = holiday ? 60 : 50
-      unitPrice = Math.round(dayPrice * 0.8 * 100) / 100
-    }
-    this.setData({ showMultiVisitPicker: true, multiVisitDates, multiVisitCount: count, multiVisitSelectedIndex: selectedIndex, multiVisitUnitPrice: unitPrice })
+    const count = dates[selectedIndex]?.count ?? 0
+    const unitPrice = dates[selectedIndex] ? picker.calcUnitPrice(dates[selectedIndex].date, 0.8) : 0
+    this.setData({ showMultiVisitPicker: true, multiVisitDates: dates, multiVisitCount: count, multiVisitSelectedIndex: selectedIndex, multiVisitUnitPrice: unitPrice })
   },
 
-  onHideMultiVisitPicker() {
-    this.setData({ showMultiVisitPicker: false })
-  },
+  onHideMultiVisitPicker() { this.setData({ showMultiVisitPicker: false }) },
 
-  onSelectMultiVisitDate(e) {
-    const index = parseInt(e.currentTarget.dataset.index, 10)
-    const count = this.data.multiVisitDates[index]?.count ?? 0
-    const dateItem = this.data.multiVisitDates[index]
-    let unitPrice = 0
-    if (dateItem) {
-      const dateObj = new Date(dateItem.date)
-      const holiday = _isHoliday(dateObj)
-      const dayPrice = holiday ? 60 : 50
-      unitPrice = Math.round(dayPrice * 0.8 * 100) / 100
-    }
-    this.setData({ multiVisitSelectedIndex: index, multiVisitCount: count, multiVisitUnitPrice: unitPrice })
-  },
+  onSelectMultiVisitDate(e) { picker.onSelectDate(this, 'multiVisit', parseInt(e.currentTarget.dataset.index, 10)) },
 
-  onDecreaseDateCount() {
-    const { multiVisitDates, multiVisitSelectedIndex, multiVisitCount } = this.data
-    if (multiVisitCount <= 0) {return}
-    const newCount = multiVisitCount - 1
-    const key = `multiVisitDates[${multiVisitSelectedIndex}].count`
-    this.setData({ multiVisitCount: newCount, [key]: newCount })
-  },
+  onDecreaseDateCount() { picker.onDecrease(this, 'multiVisit') },
 
-  onIncreaseDateCount() {
-    const { multiVisitDates, multiVisitSelectedIndex, multiVisitCount } = this.data
-    if (multiVisitCount >= 10) {return}
-    const newCount = multiVisitCount + 1
-    const key = `multiVisitDates[${multiVisitSelectedIndex}].count`
-    this.setData({ multiVisitCount: newCount, [key]: newCount })
-  },
+  onIncreaseDateCount() { picker.onIncrease(this, 'multiVisit') },
 
-  onConfirmMultiVisit() {
-    const { multiVisitDates } = this.data
-    const activeCount = multiVisitDates.filter(d => d.count > 0).length
-    if (activeCount === 0) {
-      this.setData({
-        multiVisitText: '',
-        multiVisitValue: 1,
-        showMultiVisitPicker: false,
-      })
-      this._calculatePrice()
-      return
-    }
-    const totalCount = multiVisitDates.reduce((sum, d) => sum + d.count, 0)
-    this.setData({
-      multiVisitText: `${activeCount}天×多次`,
-      multiVisitValue: totalCount,
-      showMultiVisitPicker: false,
-    })
-    this._calculatePrice()
-  },
+  onConfirmMultiVisit() { picker.onConfirm(this, 'multiVisit', { onConfirm: () => this._calculatePrice() }) },
 
   onPetAvatarLoadError(e) {
     const index = e.target.dataset.index
@@ -538,6 +357,12 @@ Page({
 
     if (!address) {
       this.showModal({ titleKey: 'BIZ_HN56', contentKey: 'BIZ_190P12T', showCancel: false, confirmText: '知道了' })
+      return
+    }
+
+    const { contactPhone } = this.data
+    if (!contactPhone || !/^1[3-9]\d{9}$/.test(contactPhone)) {
+      wx.showToast({ title: '请填写正确的联系电话', icon: 'none', duration: 2000 })
       return
     }
 
@@ -562,10 +387,27 @@ Page({
 
     let lockedCouponId = null
     let orderId = null
+    // 客户端预生成 orderId（用于 lockCoupon 的 orderId 参数，且与 feedingOrders._id 保持一致）
+    // 必须以 fd_ 前缀，与 generateId('feeding', openid) 风格匹配，便于后端 accept
+    const clientOrderId = `fd_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`
 
     try {
+      // Sprint 27: 先锁定优惠券（与其他订单确认页一致）
+      if (selectedCouponId) {
+        const lockRes = await CouponService.lockCoupon(selectedCouponId, clientOrderId, 'feeding_order', 'feeding')
+        if (lockRes && lockRes.code !== 0) {
+          this.setData({ isSubmitting: false })
+          wx.hideLoading()
+          this.errorDynamic(lockRes.message, 'COUPON_LOCK_FAILED')
+          return
+        }
+        lockedCouponId = selectedCouponId
+      }
+
       const result = await FeedingService.createFeedingOrder({
+        orderId: clientOrderId,
         address: address.fullAddress || address,
+        contactPhone: this.data.contactPhone,
         notes: notes.trim(),
         keyMethod: this.data.keyMethod,
         visitTime: this.data.visitTimeText,
@@ -586,6 +428,9 @@ Page({
       })
 
       if (!result || result.code !== 0) {
+        if (lockedCouponId) {
+          await CouponService.unlockCoupon(lockedCouponId).catch(() => {})
+        }
         this.setData({ isSubmitting: false })
         wx.hideLoading()
         this.errorDynamic(result?.message, 'ORDER_PLACE_FAILED')
@@ -594,15 +439,6 @@ Page({
 
       orderId = result.data.id
       const orderNo = result.data.orderNo
-
-      if (selectedCouponId) {
-        const lockRes = await CouponService.lockCoupon(selectedCouponId, orderId, 'feeding_order', 'feeding')
-        if (lockRes && lockRes.code !== 0) {
-          console.warn('[confirm-service] 优惠券锁定失败，继续支付')
-        } else {
-          lockedCouponId = selectedCouponId
-        }
-      }
 
       const payAmount = Math.round(finalPrice * 100)
 
@@ -615,11 +451,8 @@ Page({
           description: '上门喂养服务',
         })
 
-        if (lockedCouponId) {
-          await CouponService.useCoupon(
-            lockedCouponId, orderId, 'feeding', totalPrice, couponDiscount, finalPrice
-          ).catch(() => {})
-        }
+        // 优惠券核销由后端 paymentService 在支付回调/确认支付时自动完成（locked → used）
+        // 此处不再调用 CouponService.useCoupon，避免重复核销
 
         BookingData.set('selectedPetDetails', null)
         BookingData.set('petServices', null)
@@ -647,19 +480,38 @@ Page({
           }, 3000)
         } else {
           this.setData({ isSubmitting: false })
-          this.showModal({ titleKey: 'PAYMENT_FAILED', contentKey: 'BIZ_A0D703', showCancel: true, cancelText: '留在本页', confirmText: '查看订单' })
+          this.showModal({
+            titleKey: 'PAYMENT_FAILED',
+            contentKey: 'BIZ_A0D703',
+            showCancel: true,
+            cancelText: '留在本页',
+            confirmText: '查看订单',
+            success: (confirmed) => {
+              if (!confirmed) {return}
+              wx.redirectTo({ url: `/subpackages/feeding/order-status?orderId=${orderId}` })
+            },
+          })
         }
       }
     } catch (error) {
       console.error('[confirm-service] onConfirmPayment error:', error)
       if (lockedCouponId) {
-        try { await CouponService.unlockCoupon(lockedCouponId) } catch (e) {}
+        await CouponService.unlockCoupon(lockedCouponId).catch(() => {})
       }
       this.setData({ isSubmitting: false })
       wx.hideLoading()
 
       if (orderId) {
-        this.showModal({ titleKey: 'OPERATION_FAILED', showCancel: true, cancelText: '留在本页', confirmText: '查看订单' })
+        this.showModal({
+          titleKey: 'OPERATION_FAILED',
+          showCancel: true,
+          cancelText: '留在本页',
+          confirmText: '查看订单',
+          success: (confirmed) => {
+            if (!confirmed) {return}
+            wx.redirectTo({ url: `/subpackages/feeding/order-status?orderId=${orderId}` })
+          },
+        })
       } else {
         this.errorDynamic(error.message, 'ORDER_PLACE_FAILED')
       }

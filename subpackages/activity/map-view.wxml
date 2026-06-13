@@ -1,0 +1,21 @@
+<view class="map-page">
+  <map
+    id="map"
+    class="map"
+    latitude="{{latitude}}"
+    longitude="{{longitude}}"
+    scale="16"
+    markers="{{markers}}"
+    show-location
+    enable-zoom
+    enable-scroll
+  />
+
+  <view class="location-card">
+    <text class="location-name">{{name}}</text>
+    <text class="location-address" wx:if="{{address}}">{{address}}</text>
+    <button class="nav-btn" bindtap="openNavigation">
+      <text class="nav-btn-text">导航到这里</text>
+    </button>
+  </view>
+</view>

@@ -1,0 +1,47 @@
+<view class="page-container">
+  <view class="page-divider"></view>
+  <view class="main-body">
+    <scroll-view class="category-sidebar" scroll-y="true" show-scrollbar="false">
+      <block wx:for="{{categories}}" wx:key="key">
+        <view class="cat-group">
+          <view class="cat-item {{currentCategory === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="onCategoryTap">
+            <text>{{item.label}}</text>
+            <text class="cat-arrow {{expandedCategory === item.key ? 'expanded' : ''}}">▾</text>
+          </view>
+          <view wx:if="{{expandedCategory === item.key && item.subcats && item.subcats.length > 0}}" class="subcat-list">
+            <view wx:for="{{item.subcats}}" wx:for-item="sub" wx:key="key" class="subcat-item {{currentSubCategory === sub.key ? 'active' : ''}}" data-key="{{sub.key}}" bindtap="onSubCategoryTap">
+              <text>{{sub.label}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </scroll-view>
+    <view class="content-area">
+      <view class="category-header">
+        <text class="category-name">{{currentCategoryLabel}}</text>
+        <text wx:if="{{currentSubCategoryLabel}}" class="subcat-label"> · {{currentSubCategoryLabel}}</text>
+      </view>
+      <view class="content-divider"></view>
+      <view class="product-grid">
+        <view wx:for="{{currentProducts}}" wx:key="_id" class="product-card" data-id="{{item._id}}" bindtap="onProductTap">
+          <image lazy-load class="product-img" src="{{item.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="currentProducts[{{index}}].coverUrl" />
+          <text class="product-label">{{item.name}}</text>
+          <view class="product-price-row">
+            <text class="product-price">¥{{item.minPrice || item.price}}</text>
+            <text wx:if="{{item.originalPrice && item.originalPrice > (item.minPrice || item.price)}}" class="product-original-price">¥{{item.originalPrice}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="view-more" bindtap="onViewMore">
+        <text>查看更多</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="floating-cart" bindtap="onCartTap">
+    <text class="floating-cart-icon">🛒</text>
+    <view wx:if="{{cartCount > 0}}" class="floating-cart-badge">
+      <text class="floating-cart-badge-text">{{cartCount > 99 ? '99+' : cartCount}}</text>
+    </view>
+  </view>
+</view>

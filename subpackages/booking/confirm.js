@@ -5,44 +5,15 @@ const { BookingData } = require('../../utils/BookingDataService')
 const { CouponService } = require('../../services/CouponService')
 const PaymentService = require('../../services/PaymentService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-
-const HOLIDAYS_2025 = [
-  '2025-01-01',
-  '2025-01-28', '2025-01-29', '2025-01-30', '2025-01-31',
-  '2025-02-01', '2025-02-02', '2025-02-03', '2025-02-04',
-  '2025-04-04', '2025-04-05', '2025-04-06',
-  '2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04', '2025-05-05',
-  '2025-05-31', '2025-06-01', '2025-06-02',
-  '2025-10-01', '2025-10-02', '2025-10-03', '2025-10-04',
-  '2025-10-05', '2025-10-06', '2025-10-07', '2025-10-08'
-]
-
-const HOLIDAYS_2026 = [
-  '2026-01-01', '2026-01-02', '2026-01-03',
-  '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20',
-  '2026-02-21', '2026-02-22', '2026-02-23',
-  '2026-04-04', '2026-04-05', '2026-04-06',
-  '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05',
-  '2026-06-19', '2026-06-20', '2026-06-21',
-  '2026-09-25', '2026-09-26', '2026-09-27',
-  '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04',
-  '2026-10-05', '2026-10-06', '2026-10-07'
-]
-
-const _HOLIDAY_SET = new Set([...HOLIDAYS_2025, ...HOLIDAYS_2026])
-
-function _isHoliday(date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return _HOLIDAY_SET.has(`${y}-${m}-${d}`)
-}
+const { computeFinalAmount } = require('../../utils/coupon-amount')
+const { isHoliday } = require('../../utils/holidays')
+const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, couponSelectorBehavior],
   data: {
     hostId: '',
     hostName: '',
@@ -83,7 +54,7 @@ Page({
     const isLoggedIn = authService.isLoggedIn()
     const hostId = options.hostId || options.id
     const updates = { isLoggedIn }
-    if (hostId) updates.hostId = hostId
+    if (hostId) {updates.hostId = hostId}
     this._batchUpdate(updates, () => this.loadOrderInfo())
   },
 
@@ -145,7 +116,7 @@ Page({
           selectedDates = {
             start: { text: bookingReqs.startDate },
             end: { text: bookingReqs.endDate },
-            days: bookingReqs.days || 0
+            days: bookingReqs.days || 0,
           }
         }
       }
@@ -190,44 +161,44 @@ Page({
         await this.loadHostInfo()
       }
     } catch (error) {
-      if (error.message && error.message.includes('DATABASE_COLLECTION_NOT_EXIST')) return
+      if (error.message && error.message.includes('DATABASE_COLLECTION_NOT_EXIST')) {return}
       this.error('ORDER_LOAD_FAILED')
     }
   },
 
   _restoreTimestampFromDisplay(selectedDates) {
     const today = new Date()
-    const parseDateText = (text) => {
-      if (!text || typeof text !== 'string') return null
+    const parseDateText = text => {
+      if (!text || typeof text !== 'string') {return null}
       const monthPart = text.split('月')
-      if (!monthPart || monthPart.length < 2) return null
+      if (!monthPart || monthPart.length < 2) {return null}
       const dayPart = monthPart[1].split('日')
-      if (!dayPart || dayPart.length < 1) return null
-      const month = parseInt(monthPart[0])
-      const day = parseInt(dayPart[0])
-      if (isNaN(month) || isNaN(day)) return null
+      if (!dayPart || dayPart.length < 1) {return null}
+      const month = parseInt(monthPart[0], 10)
+      const day = parseInt(dayPart[0], 10)
+      if (isNaN(month) || isNaN(day)) {return null}
       return { month: month - 1, day }
     }
 
     const startParsed = parseDateText(selectedDates.start.text)
     const endParsed = parseDateText(selectedDates.end.text)
-    if (!startParsed || !endParsed) return
+    if (!startParsed || !endParsed) {return}
 
-    let startDate = new Date(today.getFullYear(), startParsed.month, startParsed.day)
-    let endDate = new Date(today.getFullYear(), endParsed.month, endParsed.day)
-    if (startDate < today) startDate.setFullYear(today.getFullYear() + 1)
-    if (endDate < today) endDate.setFullYear(today.getFullYear() + 1)
+    const startDate = new Date(today.getFullYear(), startParsed.month, startParsed.day)
+    const endDate = new Date(today.getFullYear(), endParsed.month, endParsed.day)
+    if (startDate < today) {startDate.setFullYear(today.getFullYear() + 1)}
+    if (endDate < today) {endDate.setFullYear(today.getFullYear() + 1)}
 
     BookingData.set('selectedDatesTimestamp', {
       start: startDate.getTime(),
       end: endDate.getTime(),
-      days: selectedDates.days || 0
+      days: selectedDates.days || 0,
     })
   },
 
   _formatStringDates(selectedDates) {
-    const formatDateToObject = (dateStr) => {
-      if (!dateStr) return { text: '', weekDay: '' }
+    const formatDateToObject = dateStr => {
+      if (!dateStr) {return { text: '', weekDay: '' }}
       const cleanStr = String(dateStr).replace(/<[^>]*>/g, '').trim()
       const monthDayMatch = cleanStr.match(/(\d{1,2}) 月 (\d{1,2}) 日/)
       const weekDayMatch = cleanStr.match(/([ 周 ][ 日一二三四五六])/)
@@ -240,14 +211,14 @@ Page({
       ...selectedDates,
       start: formatDateToObject(selectedDates.start),
       end: formatDateToObject(selectedDates.end),
-      days: selectedDates.days || 0
+      days: selectedDates.days || 0,
     }
   },
 
   async _loadPetDetails(petIds) {
     try {
       const petsDetails = await Promise.all(
-        petIds.map(async (petId) => {
+        petIds.map(async petId => {
           try {
             const result = await PetService.getPetDetail(petId)
             if (result && result.code === 0) {
@@ -284,7 +255,7 @@ Page({
           this._batchUpdate({
             hostName: host.hostName || '寄养家庭',
             hostPrice: price,
-            priceCalculated: true
+            priceCalculated: true,
           }, () => this.calculatePrice())
         }
       }
@@ -310,7 +281,7 @@ Page({
       return
     }
 
-    if (!selectedPetsDetails || selectedPetsDetails.length === 0) return
+    if (!selectedPetsDetails || selectedPetsDetails.length === 0) {return}
 
     let basePrice = 0
     let walkTotal = 0
@@ -326,7 +297,7 @@ Page({
         serviceDays = svc.serviceDates.length
         svc.serviceDates.forEach(d => {
           const dateObj = new Date(d.date)
-          const holiday = _isHoliday(dateObj)
+          const holiday = isHoliday(dateObj)
           petBase += holiday ? 58 : 48
         })
         petWalk = svc.walkMinutes || 0
@@ -344,28 +315,37 @@ Page({
         baseAmount: petBase,
         walkMinutes: petWalk,
         walkAmount: petWalk,
-        subtotal: petBase + petWalk
+        subtotal: petBase + petWalk,
       })
     })
 
     const totalPrice = basePrice + walkTotal
-    const finalPrice = this.data.selectedCouponId
-      ? Math.max(0, totalPrice - this.data.couponDiscount)
-      : totalPrice
+    const { finalAmount, couponDiscount: finalCouponDiscount, shouldClear } = computeFinalAmount(totalPrice, this.data.couponDiscount)
+    const finalPrice = finalAmount
 
     this._batchUpdate({
       basicPrice: basePrice,
       discount: 0,
       totalPrice,
       finalPrice,
-      serviceBreakdown: breakdown
+      serviceBreakdown: breakdown,
     })
+    if (shouldClear) {
+      // 免费订单不允许用券
+      this._batchUpdate({
+        selectedCouponId: '',
+        selectedCoupon: null,
+        couponDiscount: 0,
+      })
+    } else if (this.data.couponDiscount !== finalCouponDiscount) {
+      this._batchUpdate({ couponDiscount: finalCouponDiscount })
+    }
     this._loadAvailableCoupons()
   },
 
   async _loadAvailableCoupons() {
     const { hostId, totalPrice } = this.data
-    if (!hostId || !totalPrice) return
+    if (!hostId || !totalPrice) {return}
 
     try {
       const result = await CouponService.getAvailableCoupons({
@@ -381,30 +361,7 @@ Page({
     }
   },
 
-  onToggleCouponSelector() {
-    this.setData({ showCouponSelector: !this.data.showCouponSelector })
-  },
-
-  onSelectCoupon(e) {
-    const { id, amount } = e.currentTarget.dataset
-    const coupon = this.data.availableCoupons.find(c => c._id === id)
-    if (!coupon) return
-
-    const discountAmount = parseFloat(amount)
-    const finalPrice = Math.max(0, Math.round((this.data.totalPrice - discountAmount) * 100) / 100)
-
-    this._batchUpdate({
-      selectedCouponId: id, selectedCoupon: coupon, couponDiscount: discountAmount,
-      finalPrice, showCouponSelector: false,
-    })
-  },
-
-  onRemoveCoupon() {
-    this._batchUpdate({
-      selectedCouponId: '', selectedCoupon: null,
-      couponDiscount: 0, finalPrice: this.data.totalPrice,
-    })
-  },
+  // onToggleCouponSelector, onSelectCoupon, onRemoveCoupon 已由 couponSelectorBehavior 提供
 
   onPetAvatarLoadError(e) {
     const index = e.currentTarget.dataset.index
@@ -414,7 +371,7 @@ Page({
   },
 
   updateDates(startDate, endDate) {
-    const formatDate = (date) => {
+    const formatDate = date => {
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
@@ -434,7 +391,7 @@ Page({
   selectPets() {
     wx.navigateTo({
       url: '/subpackages/booking/pet-select?from=confirm',
-      fail: () => { this.error('PET_SELECT_PET_REQUIRED') }
+      fail: () => { this.error('PET_SELECT_PET_REQUIRED') },
     })
   },
 
@@ -456,11 +413,11 @@ Page({
     }
 
     this._batchUpdate(updates, () => {
-      if (updates.selectedPets) this.calculatePrice()
+      if (updates.selectedPets) {this.calculatePrice()}
     })
 
     if (this.data.selectedDates && this.data.selectedDates.start && this.data.selectedDates.end && this.data.hostPrice > 0) {
-      if (this.data.priceCalculated) this.calculatePrice()
+      if (this.data.priceCalculated) {this.calculatePrice()}
     }
   },
 
@@ -469,6 +426,7 @@ Page({
    * 流程：参数校验 → 优惠券锁定 → 获取寄养家庭信息 → 创建订单 → 使用优惠券 → 发起微信支付 → 更新状态
    */
   async confirmBooking() {
+    let lockedCouponId = null
     try {
       // ===== 参数校验 =====
       if (!this.data.selectedDates || !this.data.selectedDates.days) {
@@ -493,7 +451,6 @@ Page({
       this._batchUpdate({ loading: true })
 
       // ===== 优惠券锁定 =====
-      let lockedCouponId = null
       const orderId = `board_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`
 
       if (this.data.selectedCouponId) {
@@ -523,7 +480,7 @@ Page({
       const startDateObj = globalSelectedDates?.start ? new Date(globalSelectedDates.start) : new Date()
       const endDateObj = globalSelectedDates?.end ? new Date(globalSelectedDates.end) : new Date()
 
-      const formatDateToYYYYMMDD = (date) => {
+      const formatDateToYYYYMMDD = date => {
         const year = date.getFullYear()
         const month = String(date.getMonth() + 1).padStart(2, '0')
         const day = String(date.getDate()).padStart(2, '0')
@@ -548,7 +505,7 @@ Page({
         status: 'pending',
         paymentStatus: 'unpaid',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       }
 
       // ===== 创建订单 =====
@@ -581,7 +538,7 @@ Page({
           console.error('[confirm] 优惠券解锁失败（需人工处理）:', e)
         })
       }
-      this.error(() => '操作失败：' + error.message)
+      this.error(() => `操作失败：${error.message}`)
       this._batchUpdate({ loading: false })
     }
   },
@@ -618,7 +575,18 @@ Page({
       } else if (error.isPending) {
         this.error(() => error.message, { duration: 3000 })
       } else {
-        this.showModal({ titleKey: 'PAYMENT_FAILED', contentKey: 'BIZ_24KPRW', cancelText: '稍后再说', confirmText: '重新支付' })
+        // 注意：onGoPay 的 showModal 弹窗也复用同款"重新支付"，但触发场景不同
+        // —— 这里只覆盖"支付失败"分支，并在 success 里调 initiateWechatPayment 重试。
+        this.showModal({
+          titleKey: 'PAYMENT_FAILED',
+          contentKey: 'BIZ_24KPRW',
+          cancelText: '稍后再说',
+          confirmText: '重新支付',
+          success: (confirmed) => {
+            if (!confirmed) {return}
+            this.initiateWechatPayment(orderId, amount)
+          },
+        })
       }
       this._batchUpdate({ loading: false })
     }
@@ -656,5 +624,5 @@ Page({
 
   handleLoginStateChange(state) {
     this._batchUpdate({ isLoggedIn: state.isLoggedIn, userInfo: state.userInfo || {} })
-  }
+  },
 })

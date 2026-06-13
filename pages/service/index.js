@@ -2,6 +2,7 @@ const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const { reverseGeocode } = require('../../utils/reverseGeocoding')
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
@@ -167,11 +168,9 @@ Page({
   },
 
   onShareAppMessage() {
-    const userInfo = getApp().globalData.userInfo
-    const inviterId = ((userInfo?.isPartner || userInfo?.permissions?.length) && userInfo?.openid) ? userInfo.openid : ''
     return {
       title: 'AROORO - 宠物服务一站式体验',
-      path: inviterId ? `/pages/service/index?inviterId=${inviterId}` : '/pages/service/index',
+      path: buildSharePath('/pages/service/index'),
     }
   },
 })

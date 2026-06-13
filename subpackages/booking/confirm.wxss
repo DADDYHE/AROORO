@@ -1,4 +1,8 @@
+@import '../../styles/loading-animation.wxss';
+
+@import '../../styles/components.wxss';
 /* 确认订单页面 - 艺术化设计 */
+
 .page-container {
   min-height: 100vh;
   display: flex;
@@ -452,65 +456,28 @@
 }
 
 /* 加载动画 */
-.loading-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.loading-more {
+  text-align: center;
+  padding: 32rpx 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  z-index: 9999;
+  gap: 12rpx;
 }
 
-.loading-spinner {
-  position: relative;
-  width: 120rpx;
-  height: 120rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.spinner-outer {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 8rpx solid transparent;
-  border-top: 8rpx solid #ff9a9e;
-  border-right: 8rpx solid #fecfef;
-  border-bottom: 8rpx solid #a8edea;
-  border-left: 8rpx solid #fed6e3;
-  border-radius: 50%;
-  animation: spin 1.5s linear infinite;
-  background-color: transparent;
-}
-
-.spinner-inner {
-  position: absolute;
-  width: 70%;
-  height: 70%;
-  border: 6rpx solid transparent;
-  border-top: 6rpx solid #a8edea;
-  border-right: 6rpx solid #fed6e3;
-  border-bottom: 6rpx solid #ff9a9e;
-  border-left: 6rpx solid #fecfef;
-  border-radius: 50%;
-  animation: spin-reverse 1s linear infinite;
-  background-color: transparent;
-}
-
-.spinner-dot {
-  position: absolute;
-  width: 20rpx;
-  height: 20rpx;
-  background: linear-gradient(135deg, #ff9a9e, #fecfef, #a8edea, #fed6e3);
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-  box-shadow: 0 0 20rpx rgba(255, 154, 158, 0.6);
+.loading-more-text {
+  font-size: 24rpx;
+  color: #8E8E93;
+  letter-spacing: 4rpx;
 }
 
 /* 动画效果 */
@@ -544,31 +511,6 @@
   to {
     opacity: 1;
     transform: translateX(0);
-  }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes spin-reverse {
-  0% { transform: rotate(360deg); }
-  100% { transform: rotate(0deg); }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
   }
 }
 

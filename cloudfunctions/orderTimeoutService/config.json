@@ -1,0 +1,10 @@
+{
+  "timeout": 30,
+  "triggers": [
+    {
+      "name": "orderTimeoutTrigger",
+      "type": "timer",
+      "config": "0 */30 * * * * *"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+<view class="page-container">
+  <view class="page-header">
+    <view class="brand-block">
+      <view class="brand-accent-bar"></view>
+      <view class="brand-main">
+        <text class="brand-text">提现记录</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{isLoading && list.length === 0}}" class="loading-container">
+    <view class="loading-content">
+      <view class="loading-brand-mark">
+        <view class="brand-ring"></view>
+        <view class="brand-ring brand-ring--delay"></view>
+        <view class="brand-dot"></view>
+      </view>
+      <view class="loading-dots">
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+      </view>
+      <text class="loading-text">加载中</text>
+    </view>
+  </view>
+
+  <view wx:elif="{{list.length === 0}}" class="empty-container">
+    <text class="empty-text">暂无提现记录</text>
+  </view>
+
+  <view wx:else class="record-list">
+    <view wx:for="{{list}}" wx:key="_id" class="record-card">
+      <view class="record-top">
+        <text class="record-amount" style="color: {{item.status === 'rejected' ? '#FF3B30' : '#34C759'}}">
+          {{item.status === 'rejected' ? '-' : '+'}}¥{{item.amountText}}
+        </text>
+        <text class="record-status" style="color: {{item.statusColor}}">{{item.statusText}}</text>
+      </view>
+      <view class="record-bottom">
+        <text class="record-time">{{item.timeText}}</text>
+        <text wx:if="{{item.status === 'rejected' && item.rejectReason}}" class="record-reason">原因：{{item.rejectReason}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{isLoading}}" class="loading-more">
+      <text class="loading-more-text">加载中...</text>
+    </view>
+    <view wx:elif="{{!hasMore}}" class="loading-more">
+      <text class="loading-more-text">没有更多了</text>
+    </view>
+  </view>
+</view>

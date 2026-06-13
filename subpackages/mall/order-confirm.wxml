@@ -1,0 +1,177 @@
+<view class="page-container" wx:if="{{!isLoading && !error}}">
+
+  <!-- 收货地址 -->
+  <view class="info-card card-animate card-animate-1 address-card" bindtap="onGoAddressEdit">
+    <view wx:if="{{address}}" class="address-info">
+      <view class="address-left">
+        <text class="address-location-icon">📍</text>
+        <view class="address-detail">
+          <view class="address-user">
+            <text class="address-name">{{address.name}}</text>
+            <text class="address-phone">{{address.phone}}</text>
+          </view>
+          <text class="address-text">{{address.fullAddress}}</text>
+        </view>
+      </view>
+      <text class="address-arrow">›</text>
+    </view>
+    <view wx:else class="address-empty">
+      <text class="address-empty-text">请添加收货地址</text>
+      <text class="address-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="page-content">
+    <!-- 商品信息 -->
+    <view class="info-card card-animate card-animate-2">
+      <!-- 团购模式 -->
+      <block wx:if="{{fromTuan && tuanData}}">
+        <view class="product-row">
+          <image class="product-img" src="{{tuanData.productImage || '/images/default-product.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{tuanData.productImage}}" data-path="tuanData.productImage" />
+          <view class="product-info">
+            <text class="product-name">{{tuanData.productName}}</text>
+            <text class="product-sku" wx:if="{{skuText}}">{{skuText}}</text>
+            <view class="product-bottom">
+              <text class="product-price">¥{{unitPrice}}</text>
+              <text class="product-qty">×{{quantity}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 单商品模式 -->
+      <block wx:elif="{{!fromCart && product}}">
+        <view class="product-row">
+          <image class="product-img" src="{{product.coverImage || product.coverUrl || (product.images && product.images[0])}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{product.coverImage || product.coverUrl}}" data-path="product.coverImage" />
+          <view class="product-info">
+            <text class="product-name">{{product.name}}</text>
+            <text class="product-sku" wx:if="{{skuText}}">{{skuText}}</text>
+            <text class="product-price">¥{{unitPrice}}</text>
+          </view>
+        </view>
+        <view class="quantity-row">
+          <text class="quantity-label">数量</text>
+          <view class="quantity-stepper">
+            <view class="stepper-btn {{quantity <= 1 ? 'disabled' : ''}}" bindtap="onDecreaseQuantity">−</view>
+            <input class="stepper-input" type="number" value="{{quantity}}" bindinput="onQuantityInput" />
+            <view class="stepper-btn" bindtap="onIncreaseQuantity">+</view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 购物车模式 -->
+      <block wx:if="{{fromCart && cartItems.length > 0}}">
+        <view class="product-row" wx:for="{{cartItems}}" wx:key="cartItemId">
+          <image class="product-img" src="{{item.productImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.productImage}}" data-path="cartItems[{{index}}].productImage" />
+          <view class="product-info">
+            <text class="product-name">{{item.productName}}</text>
+            <text class="product-sku" wx:if="{{item.skuText}}">{{item.skuText}}</text>
+            <view class="product-bottom">
+              <text class="product-price">¥{{item.price}}</text>
+              <text class="product-qty">×{{item.quantity}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <view class="remark-row">
+        <text class="remark-label">备注</text>
+        <input class="remark-input" placeholder="选填，特殊需求请先联系客服" value="{{remark}}" bindinput="onRemarkInput" />
+      </view>
+    </view>
+
+    <!-- 优惠券 -->
+    <view class="info-card card-animate card-animate-3" wx:if="{{totalAmount > 0}}">
+      <view class="section-header" bindtap="onToggleCouponSelector">
+        <text class="section-label">优惠券</text>
+        <view class="section-right">
+          <text class="coupon-hint" wx:if="{{selectedCoupon}}">-¥{{couponDiscount}}</text>
+          <text class="coupon-hint" wx:elif="{{availableCoupons.length > 0}}">{{availableCoupons.length}}张可用</text>
+          <text class="coupon-hint" wx:else>暂无可用</text>
+          <text class="section-arrow">{{showCouponSelector ? '▴' : '▾'}}</text>
+        </view>
+      </view>
+
+      <view class="selected-coupon" wx:if="{{selectedCoupon && !showCouponSelector}}">
+        <view class="coupon-info">
+          <text class="coupon-name">{{selectedCoupon.templateName}}</text>
+          <text class="coupon-desc">-¥{{couponDiscount}}</text>
+        </view>
+        <text class="remove-coupon" bindtap="onRemoveCoupon">✕</text>
+      </view>
+
+      <view class="coupon-list" wx:if="{{showCouponSelector}}">
+        <view class="coupon-item" wx:for="{{availableCoupons}}" wx:key="_id" bindtap="onSelectCoupon" data-id="{{item._id}}" data-amount="{{item.discountAmount}}">
+          <view class="coupon-item-left">
+            <text class="coupon-item-symbol">¥</text>
+            <text class="coupon-item-value">{{item.discountAmount}}</text>
+          </view>
+          <view class="coupon-item-right">
+            <text class="coupon-item-name">{{item.templateName}}</text>
+            <text class="coupon-item-rule" wx:if="{{item.rules.threshold > 0}}">满{{item.rules.threshold}}元可用</text>
+            <text class="coupon-item-time">{{item.endTime}}</text>
+          </view>
+          <view class="coupon-item-check" wx:if="{{selectedCouponId === item._id}}">✓</view>
+        </view>
+        <view class="no-data" wx:if="{{availableCoupons.length === 0}}">
+          <text>暂无可用优惠券</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 价格明细 -->
+    <view class="info-card card-animate card-animate-4">
+      <text class="section-label">价格明细</text>
+      <view class="price-row">
+        <text class="price-label">{{fromTuan ? '团购价' : '商品总额'}}</text>
+        <text class="price-value">¥{{totalAmount}}</text>
+      </view>
+      <view class="price-row" wx:if="{{couponDiscount > 0}}">
+        <text class="price-label discount">优惠券抵扣</text>
+        <text class="price-value discount">-¥{{couponDiscount}}</text>
+      </view>
+      <view class="price-row final">
+        <text class="price-label final">应付金额</text>
+        <text class="price-value final">¥{{finalAmount}}</text>
+      </view>
+      <view class="price-row" wx:if="{{finalAmount === 0.1 && couponDiscount > 0}}">
+        <text class="min-amount-tip">优惠券金额已超出应付</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部提交栏 -->
+  <view class="bottom-bar">
+    <view class="bottom-left">
+      <text class="bottom-total-label">合计</text>
+      <text class="bottom-total-price">¥{{finalAmount}}</text>
+    </view>
+    <view class="submit-btn {{submitting ? 'disabled' : ''}}" bindtap="onSubmit">
+      {{submitting ? '提交中...' : (fromTuan ? '提交团购订单' : '提交订单')}}
+    </view>
+  </view>
+</view>
+
+<!-- 加载状态 -->
+<view wx:if="{{isLoading}}" class="loading-container">
+  <view class="loading-content">
+    <view class="loading-brand-mark">
+      <view class="brand-ring"></view>
+      <view class="brand-ring brand-ring--delay"></view>
+      <view class="brand-dot"></view>
+    </view>
+    <view class="loading-dots">
+      <view class="loading-dot"></view>
+      <view class="loading-dot"></view>
+      <view class="loading-dot"></view>
+    </view>
+    <text class="loading-text">加载中</text>
+  </view>
+</view>
+
+<!-- 错误状态 -->
+<view class="error-container" wx:if="{{error}}">
+  <text class="error-icon">◇</text>
+  <text class="error-text">{{error}}</text>
+  <view class="retry-btn" bindtap="onRetry">RETRY</view>
+</view>

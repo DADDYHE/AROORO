@@ -1,0 +1,197 @@
+<view class="gallery-container">
+  <view class="gallery-header">
+    <view class="brand-block">
+      <view class="brand-accent-bar"></view>
+      <view class="brand-main">
+        <text class="brand-text">更新档案</text>
+      </view>
+      <view class="brand-meta">
+        <view class="brand-meta-line"></view>
+        <text class="brand-subtitle">修改宠物信息</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="gallery-hall">
+    <view class="gallery-portrait" bindtap="chooseAvatar">
+      <view class="portrait-frame">
+        <image wx:if="{{editingData.avatarUrl}}" lazy-load class="portrait-image" src="{{editingData.avatarUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{editingData.avatarUrl}}" data-path="editingData.avatarUrl" />
+        <view wx:else class="portrait-canvas">
+          <view class="canvas-crosshair-h"></view>
+          <view class="canvas-crosshair-v"></view>
+          <view class="canvas-corner canvas-tl"></view>
+          <view class="canvas-corner canvas-tr"></view>
+          <view class="canvas-corner canvas-bl"></view>
+          <view class="canvas-corner canvas-br"></view>
+        </view>
+      </view>
+      <view class="portrait-label">
+        <view class="label-line"></view>
+        <text class="label-text">{{editingData.avatarUrl ? '点击更换头像' : '点击上传宠物头像'}}</text>
+      </view>
+    </view>
+
+    <view class="gallery-entrance">
+      <view class="entrance-line"></view>
+      <text class="entrance-label">基本信息</text>
+    </view>
+
+    <view class="gallery-collection">
+      <view class="gallery-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <van-cell-group class="form-group" border="{{false}}">
+            <van-field
+              value="{{editingData.name}}"
+              placeholder="请输入宠物昵称"
+              border="{{false}}"
+              bind:input="onNameInput"
+              extra-event-params="{{true}}"
+              class="form-field"
+              title-width="220rpx"
+            >
+              <view slot="label" class="field-label">宠物昵称<text class="label-required">（必填）</text></view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{editingData.type === 'dog' ? '狗狗' : (editingData.type === 'cat' ? '猫咪' : (editingData.type === 'exotic' ? '异宠' : ''))}}"
+              placeholder="请选择宠物类型"
+              border="{{false}}"
+              bindtap="selectPetType"
+              class="form-field"
+              title-width="220rpx"
+              readonly="{{true}}"
+              clickable="{{true}}"
+            >
+              <view slot="label" class="field-label">宠物类型<text class="label-required">（必填）</text></view>
+              <view slot="right-icon" class="field-arrow">
+                <view class="arrow-line"></view>
+              </view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{editingData.gender === 'male' ? '弟弟' : (editingData.gender === 'female' ? '妹妹' : (editingData.gender === 'unknown' ? '不确定' : ''))}}"
+              placeholder="请选择性别"
+              border="{{false}}"
+              bindtap="selectGender"
+              class="form-field"
+              title-width="220rpx"
+              readonly="{{true}}"
+              clickable="{{true}}"
+            >
+              <view slot="label" class="field-label">性别<text class="label-required">（必填）</text></view>
+              <view slot="right-icon" class="field-arrow">
+                <view class="arrow-line"></view>
+              </view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{editingData.breed}}"
+              placeholder="请输入品种"
+              border="{{false}}"
+              bind:input="onBreedInput"
+              extra-event-params="{{true}}"
+              class="form-field"
+              title-width="220rpx"
+            >
+              <view slot="label" class="field-label">品种</view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{editingData.birthday}}"
+              placeholder="请选择出生日期"
+              border="{{false}}"
+              bindtap="selectBirthday"
+              class="form-field"
+              title-width="220rpx"
+              readonly="{{true}}"
+              clickable="{{true}}"
+            >
+              <view slot="label" class="field-label">出生日期</view>
+              <view slot="right-icon" class="field-arrow">
+                <view class="arrow-line"></view>
+              </view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              type="digit"
+              value="{{editingData.weight}}"
+              placeholder="请输入体重（kg）"
+              border="{{false}}"
+              bind:input="onWeightInput"
+              extra-event-params="{{true}}"
+              class="form-field"
+              title-width="220rpx"
+            >
+              <view slot="label" class="field-label">体重</view>
+            </van-field>
+
+            <view class="field-divider"></view>
+
+            <van-field
+              value="{{editingData.note}}"
+              placeholder="性格傲娇还是可爱？还有生活习惯和饮食习惯描述一下吧"
+              border="{{false}}"
+              bind:input="onNoteInput"
+              extra-event-params="{{true}}"
+              class="form-field form-field-textarea"
+              title-width="220rpx"
+              type="textarea"
+              autosize="{{ { maxHeight: 200, minHeight: 80 } }}"
+            >
+              <view slot="label" class="field-label">备注</view>
+            </van-field>
+          </van-cell-group>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-footer">
+      <view bindtap="savePetInfo" class="footer-action {{saving ? 'action-disabled' : 'action-active'}}">
+        保存修改
+      </view>
+    </view>
+  </view>
+
+  <van-action-sheet
+    show="{{showTypeSheet}}"
+    actions="{{petTypes}}"
+    cancel-text="取消"
+    bind:select="onSelectType"
+    bind:close="onCloseTypeSheet"
+  />
+
+  <van-action-sheet
+    show="{{showGenderSheet}}"
+    actions="{{petGenders}}"
+    cancel-text="取消"
+    bind:select="onSelectGender"
+    bind:close="onCloseGenderSheet"
+  />
+
+  <van-popup
+    show="{{showBirthdayPicker}}"
+    position="bottom"
+    round
+    bind:close="onCloseBirthday"
+  >
+    <van-datetime-picker
+      type="date"
+      value="{{currentDate}}"
+      min-date="{{minDate}}"
+      max-date="{{maxDate}}"
+      bind:confirm="onConfirmBirthday"
+      bind:cancel="onCloseBirthday"
+    />
+  </van-popup>
+</view>

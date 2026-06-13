@@ -1,0 +1,143 @@
+<view class="gallery-container">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-content">
+      <view class="loading-brand-mark">
+        <view class="brand-ring"></view>
+        <view class="brand-ring brand-ring--delay"></view>
+        <view class="brand-dot"></view>
+      </view>
+      <view class="loading-dots">
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+      </view>
+      <text class="loading-text">加载中</text>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="gallery-header">
+      <view class="brand-block">
+        <view class="brand-accent-bar"></view>
+        <view class="brand-main">
+          <text class="brand-text">活动管理</text>
+        </view>
+        <view class="brand-meta">
+          <view class="brand-meta-line"></view>
+          <text class="brand-subtitle">共 {{total}} 个活动</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="filter-section">
+      <view class="tab-row">
+        <view
+          wx:for="{{tabs}}"
+          wx:key="key"
+          class="tab-item {{currentTab === item.key ? 'tab-active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onTabTap"
+        >
+          <text class="tab-text">{{item.label}}</text>
+          <view wx:if="{{currentTab === item.key}}" class="tab-indicator"></view>
+        </view>
+      </view>
+
+      <view class="search-bar {{searchFocused ? 'search-focused' : ''}}">
+        <view class="search-input-wrap">
+          <view class="search-icon-wrap">
+            <view class="search-icon-circle"></view>
+            <view class="search-icon-stem"></view>
+          </view>
+          <input
+            class="search-input"
+            placeholder="搜索活动名称"
+            placeholder-class="search-placeholder"
+            value="{{searchKeyword}}"
+            bindinput="onSearchInput"
+            bindconfirm="onSearchConfirm"
+            bindfocus="onSearchFocus"
+            bindblur="onSearchBlur"
+            confirm-type="search"
+          />
+          <view wx:if="{{searchKeyword}}" class="search-clear" catchtap="onSearchClear">
+            <view class="clear-circle">
+              <text class="clear-x">×</text>
+            </view>
+          </view>
+          <view class="search-btn" catchtap="onSearchConfirm">
+            <text class="search-btn-text">搜索</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-hall {{isRefreshing ? 'hall-refreshing' : ''}}">
+      <view wx:if="{{activities.length === 0 && !isRefreshing}}" class="gallery-empty">
+        <view class="empty-illustration">
+          <view class="empty-circle"></view>
+          <view class="empty-line-decor"></view>
+        </view>
+        <text class="empty-text">{{searchKeyword ? '未找到相关活动' : '暂无活动'}}</text>
+        <text class="empty-hint" wx:if="{{!searchKeyword}}">点击右下角按钮创建第一个活动</text>
+        <view wx:if="{{!searchKeyword}}" class="empty-action" bindtap="onEmptyCreate">
+          <text class="empty-action-text">创建活动</text>
+        </view>
+      </view>
+
+      <view wx:for="{{activities}}" wx:key="_id" class="gallery-card {{isRefreshing ? 'card-fading' : ''}}" bindtap="onActivityTap" data-id="{{item._id}}" hover-class="card-hover">
+        <view class="card-accent card-accent-{{item.status}}"></view>
+        <view class="card-body">
+          <view class="card-header">
+            <text class="card-title">{{item.title}}</text>
+            <text class="card-status status-{{item.status}}">{{item.statusText}}</text>
+          </view>
+          <view class="card-info">
+            <view class="card-info-item" wx:if="{{item.startTime}}">
+              <view class="info-dot"></view>
+              <text>{{item.startTime}}</text>
+            </view>
+            <view class="card-info-item" wx:if="{{item.location}}">
+              <view class="info-dot info-dot-location"></view>
+              <text>{{item.location}}</text>
+            </view>
+          </view>
+          <view class="card-footer">
+            <view class="card-participants">
+              <text class="card-stat-label">报名人数</text>
+              <text class="card-stat">{{item.currentParticipants || 0}}/{{item.maxParticipants || '∞'}}</text>
+            </view>
+            <view class="card-prices">
+              <text class="card-price" wx:if="{{item.pricePerPerson}}">¥{{item.pricePerPerson}}/人</text>
+              <text class="card-price card-price-pet" wx:if="{{item.pricePerPet}}">¥{{item.pricePerPet}}/宠</text>
+              <text class="card-price card-free" wx:if="{{!item.pricePerPerson && !item.pricePerPet}}">免费</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{isRefreshing}}" class="refresh-indicator">
+        <view class="refresh-dot"></view>
+        <view class="refresh-dot"></view>
+        <view class="refresh-dot"></view>
+      </view>
+
+      <view wx:if="{{isSearching}}" class="loading-more">
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+      </view>
+
+      <view wx:if="{{!hasMore && activities.length > 0 && !isRefreshing}}" class="list-end">
+        <view class="list-end-line"></view>
+        <text class="list-end-text">已加载全部</text>
+        <view class="list-end-line"></view>
+      </view>
+    </view>
+  </block>
+
+  <view class="fab-btn" bindtap="onCreateTap" hover-class="fab-hover">
+    <view class="fab-icon-line"></view>
+    <view class="fab-icon-line fab-icon-vertical"></view>
+  </view>
+</view>

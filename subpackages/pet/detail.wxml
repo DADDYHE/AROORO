@@ -1,0 +1,103 @@
+<view class="gallery-container">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-content">
+      <view class="loading-brand-mark">
+        <view class="brand-ring"></view>
+        <view class="brand-ring brand-ring--delay"></view>
+        <view class="brand-dot"></view>
+      </view>
+      <view class="loading-dots">
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+      </view>
+      <text class="loading-text">加载中</text>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="gallery-header">
+      <view class="brand-block">
+        <view class="brand-accent-bar"></view>
+        <view class="brand-main">
+          <text class="brand-text">{{pet.name || '未命名'}}</text>
+        </view>
+        <view class="brand-meta">
+          <view class="brand-meta-line"></view>
+          <text class="brand-subtitle">{{pet.breed || (pet.type === 'dog' ? '狗狗' : (pet.type === 'cat' ? '猫咪' : '异宠'))}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-hall">
+      <view class="gallery-portrait" bindtap="chooseAvatar">
+        <view class="portrait-frame">
+          <image wx:if="{{pet.avatarUrl}}" lazy-load class="portrait-image" src="{{pet.avatarUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{pet.avatarUrl}}" data-path="pet.avatarUrl" />
+          <view wx:else class="portrait-canvas">
+            <view class="canvas-crosshair-h"></view>
+            <view class="canvas-crosshair-v"></view>
+            <view class="canvas-corner canvas-tl"></view>
+            <view class="canvas-corner canvas-tr"></view>
+            <view class="canvas-corner canvas-bl"></view>
+            <view class="canvas-corner canvas-br"></view>
+          </view>
+        </view>
+        <view class="portrait-label">
+          <view class="label-line"></view>
+          <text class="label-text">{{pet.avatarUrl ? '点击更换头像' : '点击上传宠物头像'}}</text>
+        </view>
+      </view>
+
+      <view class="gallery-entrance">
+        <view class="entrance-line"></view>
+        <text class="entrance-label">档案信息</text>
+      </view>
+
+      <view class="gallery-collection">
+        <view class="gallery-card">
+          <view class="card-accent"></view>
+          <view class="card-body">
+            <view class="info-row">
+              <view class="info-key">类型</view>
+              <view class="info-val">{{pet.type === 'dog' ? '狗狗' : (pet.type === 'cat' ? '猫咪' : (pet.type === 'exotic' ? '异宠' : '—'))}}</view>
+            </view>
+            <view class="info-divider"></view>
+            <view class="info-row">
+              <view class="info-key">性别</view>
+              <view class="info-val">{{pet.gender === 'male' ? '弟弟' : (pet.gender === 'female' ? '妹妹' : (pet.gender === 'unknown' ? '不确定' : '—'))}}</view>
+            </view>
+            <view class="info-divider"></view>
+            <view class="info-row" wx:if="{{pet.breed}}">
+              <view class="info-key">品种</view>
+              <view class="info-val">{{pet.breed}}</view>
+            </view>
+            <view class="info-divider" wx:if="{{pet.breed}}"></view>
+            <view class="info-row" wx:if="{{pet.birthday}}">
+              <view class="info-key">出生日期</view>
+              <view class="info-val">{{pet.birthday}}</view>
+            </view>
+            <view class="info-divider" wx:if="{{pet.birthday}}"></view>
+            <view class="info-row" wx:if="{{pet.weight}}">
+              <view class="info-key">体重</view>
+              <view class="info-val">{{pet.weight}} kg</view>
+            </view>
+            <view class="info-divider" wx:if="{{pet.weight && pet.note}}"></view>
+            <view class="info-row info-row--note" wx:if="{{pet.note}}">
+              <view class="info-key">备注</view>
+              <view class="info-val">{{pet.note}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="gallery-footer">
+        <view wx:if="{{!fromPetSelect}}" bindtap="goToUpdateProfile" class="footer-action action-active">
+          修改档案
+        </view>
+        <view wx:else bindtap="confirmSelect" class="footer-action action-active">
+          确认选择
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

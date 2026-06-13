@@ -1,4 +1,6 @@
 // 视频列表页面逻辑
+const { buildSharePath } = require('../../../utils/share')
+
 Page({
   /**
    * 页面的初始数据
@@ -10,12 +12,12 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad: function (options) {
+  onLoad (options) {
     try {
       const host = options.hostId ? null : JSON.parse(decodeURIComponent(options.host || '{}'))
-    
+
       const videos = []
-    
+
       if (host && host.videos && host.videos.length > 0) {
         host.videos.forEach((videoUrl, index) => {
           videos.push({
@@ -25,12 +27,12 @@ Page({
             description: `${host.name || '寄养家庭'}的日常记录`,
             hostInfo: {
               avatarUrl: host.avatarUrl || '',
-              name: host.name || '寄养家庭'
-            }
+              name: host.name || '寄养家庭',
+            },
           })
         })
       }
-    
+
       this.setData({ videos })
     } catch (error) {
       console.error('[APP] 解析寄养家庭信息失败：', error)
@@ -41,7 +43,7 @@ Page({
   /**
    * 预览视频
    */
-  previewVideo: function (e) {
+  previewVideo (e) {
     const index = e.currentTarget.dataset.index
     const video = this.data.videos[index]
     if (video && video.url) {
@@ -55,14 +57,14 @@ Page({
   /**
    * 视频播放事件
    */
-  onVideoPlay: function (e) {
+  onVideoPlay (e) {
     const { index } = e.currentTarget.dataset
   },
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作
    */
-  onPullDownRefresh: function () {
+  onPullDownRefresh () {
     setTimeout(() => {
       wx.stopPullDownRefresh()
     }, 1000)
@@ -71,11 +73,13 @@ Page({
   /**
    * 用户点击右上角分享
    */
-  onShareAppMessage: function () {
-    const inviterId = ((getApp().globalData.userInfo?.isPartner || getApp().globalData.userInfo?.permissions?.length) && getApp().globalData.userInfo?.openid) ? getApp().globalData.userInfo.openid : ''
+  onShareAppMessage () {
+    const app = getApp()
+    const userInfo = app?.globalData?.userInfo
+    const inviterId = ((userInfo?.isPartner || userInfo?.permissions?.length) && userInfo?.openid) ? userInfo.openid : ''
     return {
       title: '查看视频列表',
-      path: inviterId ? `/subpackages/other/video-list/index?inviterId=${inviterId}` : '/subpackages/other/video-list/index'
+      path: inviterId ? `/subpackages/other/video-list/index?inviterId=${inviterId}` : '/subpackages/other/video-list/index',
     }
-  }
+  },
 })

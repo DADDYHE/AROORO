@@ -1,0 +1,20 @@
+{
+  "name": "hostService",
+  "version": "1.0.0",
+  "description": "Host service cloud function for foster family management",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "host",
+    "service",
+    "cloud",
+    "function"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "~2.7.0"
+  }
+}

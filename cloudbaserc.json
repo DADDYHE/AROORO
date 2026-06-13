@@ -73,27 +73,6 @@
       "memorySize": 128
     },
     {
-      "name": "IMUserService",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs18.15",
-      "memorySize": 128
-    },
-    {
-      "name": "cloudbase_auth",
-      "timeout": 10,
-      "envVariables": {},
-      "runtime": "Nodejs18.15",
-      "memorySize": 128
-    },
-    {
-      "name": "dbInit",
-      "timeout": 60,
-      "envVariables": {},
-      "runtime": "Nodejs18.15",
-      "memorySize": 256
-    },
-    {
       "name": "orderTimeoutService",
       "timeout": 30,
       "envVariables": {},
@@ -109,6 +88,48 @@
     },
     {
       "name": "tuanExpiryCheck",
+      "timeout": 30,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "couponService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "tuanService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "paymentService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 256
+    },
+    {
+      "name": "partnerService",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 256
+    },
+    {
+      "name": "i18nOverride",
+      "timeout": 10,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 128
+    },
+    {
+      "name": "rateLimitCleanup",
       "timeout": 30,
       "envVariables": {},
       "runtime": "Nodejs18.15",
@@ -173,21 +194,6 @@
               "timeout": 10
             },
             {
-              "name": "IMUserService",
-              "path": "cloudfunctions/IMUserService",
-              "timeout": 10
-            },
-            {
-              "name": "cloudbase_auth",
-              "path": "cloudfunctions/cloudbase_auth",
-              "timeout": 10
-            },
-            {
-              "name": "dbInit",
-              "path": "cloudfunctions/dbInit",
-              "timeout": 60
-            },
-            {
               "name": "orderTimeoutService",
               "path": "cloudfunctions/orderTimeoutService",
               "timeout": 30
@@ -201,11 +207,47 @@
               "name": "tuanExpiryCheck",
               "path": "cloudfunctions/tuanExpiryCheck",
               "timeout": 30
+            },
+            {
+              "name": "couponService",
+              "path": "cloudfunctions/couponService",
+              "timeout": 10
+            },
+            {
+              "name": "tuanService",
+              "path": "cloudfunctions/tuanService",
+              "timeout": 10
+            },
+            {
+              "name": "paymentService",
+              "path": "cloudfunctions/paymentService",
+              "timeout": 10
+            },
+            {
+              "name": "partnerService",
+              "path": "cloudfunctions/partnerService",
+              "timeout": 10
+            },
+            {
+              "name": "i18nOverride",
+              "path": "cloudfunctions/i18nOverride",
+              "timeout": 10
+            },
+            {
+              "name": "rateLimitCleanup",
+              "path": "cloudfunctions/rateLimitCleanup",
+              "timeout": 30
             }
           ]
         }
       }
     }
   },
-  "functionRoot": "./cloudfunctions"
+  "functionRoot": "./cloudfunctions",
+  "hosting": [
+    {
+      "path": "web-admin/dist",
+      "target": "."
+    }
+  ]
 }

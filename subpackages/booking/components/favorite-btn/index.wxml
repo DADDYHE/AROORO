@@ -1,0 +1,13 @@
+<view class="favorite-btn {{ isActive ? 'active' : '' }}" bindtap="handleToggle">
+  <view wx:if="{{ loading }}" class="loading-container">
+    <view class="loading-dots">
+      <view class="loading-dot"></view>
+      <view class="loading-dot"></view>
+      <view class="loading-dot"></view>
+    </view>
+  </view>
+  <view wx:else>
+    <text class="heart-icon" style="color: {{ iconColor }}">{{ isActive ? '♥' : '♡' }}</text>
+    <text wx:if="{{ !isActive }}" class="plus-icon">+</text>
+  </view>
+</view>

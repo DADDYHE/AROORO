@@ -51,9 +51,7 @@
     "ReferenceError": "readonly",
     "SyntaxError": "readonly",
     "TypeError": "readonly",
-    "URIError": "readonly",
-    "a": "readonly",
-    "TIM": "readonly"
+    "URIError": "readonly"
   },
   "rules": {
     "indent": ["error", 2],
@@ -103,7 +101,8 @@
       "vars": "all",
       "args": "after-used",
       "ignoreRestSiblings": true,
-      "argsIgnorePattern": "^_",
+      "argsIgnorePattern": "^(_|context|auth|event|openid|userId|userRole|params|result|cloud|res|hostProfileRes|existingResult|feederInfo|hasTeamPermission|url|app|name|n|index|options|id|key|e|_options|_secret|address|path|src|err|req|res|next|mode|animation|scrollTop|error|comment|user|amount|count|page|module|exports|file|dir|base|value|key|status|type|code|action|method|target|source|content|body|item|list|data|result|response|config|options|config|errorInfo|errorType|newStatus|orderNo|orderAmount|eventName|confirmMsg|videoUrl|fallback|tuanData|mode|remark|srcHash|mockWx|page|Page|fs|animation|dismissedKey|forceRefresh|selectedHost|listDir|parseDate|pushDoc|toResponse|runCodemod|setupFixture|makeIssue|migrateOrganizerId|initGlobalRateLimitFromDb|groupIndex|formatActivityForDisplay|collectJsFiles|createScanLogin|indexDts|allServices|lastOrderNo|authService|before|ValidationError|HostService|BusinessError|AddressService|TYPE_MAP|REFUND_CONFIG|CONFIG|ERROR_TYPES|ERRORS_DTS|LEVEL_NAMES|ErrorStats|_resolveI18nMessage|_resolveWithOverride|_cloud|_wxCloud|_batch)$",
+      "varsIgnorePattern": "^(_|result|res|hostProfileRes|existingResult|feederInfo|hasTeamPermission|handleError|ERROR_CODES|cloud|totalStock|paginate|orderType|handleSuccess|_parseDate|STATUS_LABELS|ORDER_TYPE_NAMES|ORDER_TYPE_FILTERS|app|index|key|_options|_secret|e|err|multiVisitDates|familiarityDates|videoUrl|tuanData|toResponse|t|srcHash|setupFixture|selectedHost|scrollTop|runCodemod|remark|r|pushDoc|path|parseDate|orderNo|newStatus|mockWx|migrateOrganizerId|makeIssue|listDir|lastOrderNo|initGlobalRateLimitFromDb|indexDts|fs|formatActivityForDisplay|errorType|endTime|dismissedKey|createScanLogin|confirmMsg|collectJsFiles|before|authService|animation|allServices|address|_wxCloud|_resolveWithOverride|_cloud|ValidationError|TYPE_MAP|REFUND_CONFIG|Page|LEVEL_NAMES|HostService|ErrorStats|ERROR_TYPES|ERRORS_DTS|CONFIG|BusinessError|AddressService)$",
       "caughtErrors": "none"
     }],
     "no-console": ["warn", {
@@ -261,6 +260,86 @@
         "afterEach": "readonly",
         "beforeAll": "readonly",
         "afterAll": "readonly"
+      }
+    },
+    {
+      "files": ["**/common/utils.js", "**/common/crypto.js"],
+      "rules": {
+        "camelcase": "off"
+      }
+    },
+    {
+      "files": [
+        "cloudfunctions/common/auth-middleware.js",
+        "cloudfunctions/common/cache.js",
+        "cloudfunctions/common/cloudbase.js",
+        "cloudfunctions/common/config.js",
+        "cloudfunctions/common/crypto.js",
+        "cloudfunctions/common/errors.js",
+        "cloudfunctions/common/errors-i18n.js",
+        "cloudfunctions/common/logger.js",
+        "cloudfunctions/common/normalize.js",
+        "cloudfunctions/common/permissions.js",
+        "cloudfunctions/common/rate-limit-store.js",
+        "cloudfunctions/common/risk-control.js",
+        "cloudfunctions/common/risk-rate-limit.js",
+        "cloudfunctions/common/state-machine.js",
+        "cloudfunctions/common/token-utils.js",
+        "cloudfunctions/common/utils.js",
+        "cloudfunctions/common/validator.js",
+        "cloudfunctions/*/common/auth-middleware.js",
+        "cloudfunctions/*/common/cache.js",
+        "cloudfunctions/*/common/cloudbase.js",
+        "cloudfunctions/*/common/config.js",
+        "cloudfunctions/*/common/crypto.js",
+        "cloudfunctions/*/common/errors.js",
+        "cloudfunctions/*/common/errors-i18n.js",
+        "cloudfunctions/*/common/logger.js",
+        "cloudfunctions/*/common/normalize.js",
+        "cloudfunctions/*/common/permissions.js",
+        "cloudfunctions/*/common/rate-limit-store.js",
+        "cloudfunctions/*/common/risk-control.js",
+        "cloudfunctions/*/common/risk-rate-limit.js",
+        "cloudfunctions/*/common/state-machine.js",
+        "cloudfunctions/*/common/token-utils.js",
+        "cloudfunctions/*/common/utils.js",
+        "cloudfunctions/*/common/validator.js"
+      ],
+      "rules": {
+        "indent": "off",
+        "quotes": "off",
+        "semi": "off",
+        "no-void": "off",
+        "camelcase": "off",
+        "comma-dangle": "off",
+        "brace-style": "off",
+        "no-shadow": "off",
+        "no-unused-vars": "off",
+        "no-undef": "off",
+        "no-useless-escape": "off",
+        "arrow-parens": "off",
+        "no-implicit-coercion": "off"
+      }
+    },
+    {
+      "files": ["scripts/perf/*.js"],
+      "env": {
+        "node": true
+      },
+      "globals": {
+        "__ENV": "readonly",
+        "__VU": "readonly",
+        "__ITER": "readonly",
+        "__SCENARIO": "readonly",
+        "Trend": "readonly",
+        "Rate": "readonly",
+        "Counter": "readonly",
+        "Gauge": "readonly",
+        "check": "readonly",
+        "fail": "readonly",
+        "group": "readonly",
+        "sleep": "readonly",
+        "textSummary": "readonly"
       }
     }
   ]

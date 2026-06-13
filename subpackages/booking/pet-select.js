@@ -3,38 +3,8 @@ const { PetService } = require('../../services/CloudFunctionService')
 const { BookingData } = require('../../utils/BookingDataService')
 const DEFAULT_AVATAR = '/images/default-avatar.svg'
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-
-const HOLIDAYS_2025 = [
-  '2025-01-01',
-  '2025-01-28', '2025-01-29', '2025-01-30', '2025-01-31',
-  '2025-02-01', '2025-02-02', '2025-02-03', '2025-02-04',
-  '2025-04-04', '2025-04-05', '2025-04-06',
-  '2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04', '2025-05-05',
-  '2025-05-31', '2025-06-01', '2025-06-02',
-  '2025-10-01', '2025-10-02', '2025-10-03', '2025-10-04',
-  '2025-10-05', '2025-10-06', '2025-10-07', '2025-10-08'
-]
-
-const HOLIDAYS_2026 = [
-  '2026-01-01', '2026-01-02', '2026-01-03',
-  '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20',
-  '2026-02-21', '2026-02-22', '2026-02-23',
-  '2026-04-04', '2026-04-05', '2026-04-06',
-  '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05',
-  '2026-06-19', '2026-06-20', '2026-06-21',
-  '2026-09-25', '2026-09-26', '2026-09-27',
-  '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04',
-  '2026-10-05', '2026-10-06', '2026-10-07'
-]
-
-const HOLIDAY_SET = new Set([...HOLIDAYS_2025, ...HOLIDAYS_2026])
-
-function isHoliday(date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return HOLIDAY_SET.has(`${y}-${m}-${d}`)
-}
+const { buildSharePath } = require('../../utils/share')
+const { isHoliday } = require('../../utils/holidays')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
@@ -56,17 +26,18 @@ Page({
     maxServiceDate: new Date(new Date().getFullYear() + 1, 11, 31).getTime(),
     defaultCalendarDates: [],
     calendarKey: 0,
-    calendarFormatter: null
+    calendarFormatter: null,
+    iconService: '/images/icons/客服.svg',
   },
 
   async onLoad(options) {
     const fromPage = options.from || 'booking'
-    
+
     this.setData({
       fromPage,
-      calendarFormatter: this._buildFormatter(0)
+      calendarFormatter: this._buildFormatter(0),
     })
-    
+
     const isLoggedIn = authService.isLoggedIn()
     this.setData({ isLoggedIn })
 
@@ -87,7 +58,7 @@ Page({
 
   _buildFormatter(walkMinutes) {
     return function(day) {
-      if (!day.date) return day
+      if (!day.date) {return day}
       const holiday = isHoliday(day.date)
       const basePrice = holiday ? 60 : 50
       day.bottomInfo = `¥${basePrice + walkMinutes}`
@@ -97,15 +68,15 @@ Page({
 
   resetSelectionStatus() {
     BookingData.set('selectedPets', [])
-    
+
     const updatedPets = this.data.pets.map(pet => ({
       ...pet,
-      checked: false
+      checked: false,
     }))
-    
+
     this.setData({
       selectedPets: [],
-      pets: updatedPets
+      pets: updatedPets,
     })
   },
 
@@ -120,7 +91,7 @@ Page({
     try {
       // 直接调用云函数获取宠物列表
       const result = await PetService.getPetList()
-      
+
       if (result && result.code === 0) {
         const petsData = result.data || {}
         const pets = petsData.list || petsData.pets || []
@@ -138,7 +109,7 @@ Page({
       this.setData({ pets: [], isLoading: false })
     }
   },
-  
+
   async processPetData(petData) {
     const formattedPets = petData.map(pet => {
       const formattedPet = {
@@ -152,7 +123,7 @@ Page({
         gender: pet.gender || '',
         note: pet.note || '',
         createdAt: pet.createdAt,
-        updatedAt: pet.updatedAt
+        updatedAt: pet.updatedAt,
       }
       formattedPet.checked = false
       return formattedPet
@@ -166,32 +137,32 @@ Page({
 
     this.setPetData(formattedPets)
   },
-  
+
   setPetData(formattedPets) {
     const selectedPets = BookingData.get('selectedPets')
-    
+
     const petsWithChecked = formattedPets.map(pet => ({
       ...pet,
-      checked: selectedPets.some(id => String(id) === String(pet.id))
+      checked: selectedPets.some(id => String(id) === String(pet.id)),
     }))
-    
+
     this.setData({
       pets: petsWithChecked,
       selectedPets,
-      isLoading: false
+      isLoading: false,
     })
   },
 
   viewPetDetail(e) {
     const petId = e.currentTarget.dataset.id
     wx.navigateTo({
-      url: `/subpackages/pet/detail?petId=${petId}&fromPetSelect=true`
+      url: `/subpackages/pet/detail?petId=${petId}&fromPetSelect=true`,
     })
   },
   openSelectPopup(e) {
     const petId = e.currentTarget.dataset.id
     const pet = this.data.pets.find(p => p.id === petId)
-    if (!pet) return
+    if (!pet) {return}
 
     if (pet.checked) {
       this.selectPet(petId)
@@ -204,7 +175,7 @@ Page({
       serviceFeeding: true,
       walkMinutes: 0,
       selectedServiceDates: [],
-      defaultCalendarDates: []
+      defaultCalendarDates: [],
     })
   },
 
@@ -216,7 +187,7 @@ Page({
     const walkMinutes = this.data.walkMinutes + 10
     this.setData({
       walkMinutes,
-      calendarFormatter: this._buildFormatter(walkMinutes)
+      calendarFormatter: this._buildFormatter(walkMinutes),
     })
   },
 
@@ -225,20 +196,20 @@ Page({
       const walkMinutes = this.data.walkMinutes - 10
       this.setData({
         walkMinutes,
-        calendarFormatter: this._buildFormatter(walkMinutes)
+        calendarFormatter: this._buildFormatter(walkMinutes),
       })
     }
   },
 
   closeSelectPopup() {
     this.setData({
-      showSelectPopup: false
+      showSelectPopup: false,
     })
   },
 
   onCalendarSelect(e) {
     const dates = e.detail || []
-    if (!Array.isArray(dates) || dates.length === 0) return
+    if (!Array.isArray(dates) || dates.length === 0) {return}
 
     const weekDays = ['日', '一', '二', '三', '四', '五', '六']
     const formatted = dates.map(ts => {
@@ -249,12 +220,12 @@ Page({
       return {
         date: `${y}-${m}-${day}`,
         shortDate: `${m}/${day} 周${weekDays[d.getDay()]}`,
-        timestamp: ts
+        timestamp: ts,
       }
     }).sort((a, b) => a.timestamp - b.timestamp)
 
     this.setData({
-      selectedServiceDates: formatted
+      selectedServiceDates: formatted,
     })
   },
 
@@ -269,7 +240,7 @@ Page({
     const serviceDatesText = serviceDates.map(d => d.shortDate).join('、')
     const services = {
       feeding: this.data.serviceFeeding,
-      walkMinutes: this.data.walkMinutes
+      walkMinutes: this.data.walkMinutes,
     }
 
     this.setData({ showSelectPopup: false })
@@ -291,14 +262,14 @@ Page({
     petServices[petId] = {
       feeding: services.feeding,
       walkMinutes: services.walkMinutes,
-      serviceDates: serviceDates,
-      serviceDatesText: serviceDatesText
+      serviceDates,
+      serviceDatesText,
     }
     BookingData.set('petServices', petServices)
   },
 
   selectPet(e) {
-    
+
     let petId
     if (typeof e === 'object' && e.currentTarget) {
       if (e.stopPropagation) {
@@ -308,8 +279,8 @@ Page({
     } else {
       petId = e
     }
-    
-    
+
+
     let newSelectedPets = [...this.data.selectedPets]
     const index = newSelectedPets.indexOf(petId)
 
@@ -321,17 +292,17 @@ Page({
 
     const updatedPets = this.data.pets.map(pet => ({
       ...pet,
-      checked: newSelectedPets.includes(pet.id)
+      checked: newSelectedPets.includes(pet.id),
     }))
-    
+
     this.setData({
       selectedPets: newSelectedPets,
-      pets: updatedPets
+      pets: updatedPets,
     })
 
     BookingData.set('selectedPets', newSelectedPets)
     BookingData.set('selectedPetDetails', updatedPets.filter(pet => pet.checked))
-    
+
   },
 
   addNewPet() {
@@ -341,16 +312,16 @@ Page({
     }
 
     wx.navigateTo({
-      url: '/subpackages/pet/create-step1'
+      url: '/subpackages/pet/create-step1',
     })
   },
 
   onPetAvatarLoadError(e) {
     const index = e.target.dataset.index
-    if (index === undefined) return
+    if (index === undefined) {return}
 
     const pet = this.data.pets[index]
-    if (!pet) return
+    if (!pet) {return}
 
     const key = `pets[${index}].avatarUrl`
     this.setData({ [key]: DEFAULT_AVATAR })
@@ -363,25 +334,25 @@ Page({
       return
     }
 
-    const selectedPetDetails = this.data.pets.filter(pet => 
+    const selectedPetDetails = this.data.pets.filter(pet =>
       this.data.selectedPets.includes(pet.id)
     )
-    
+
     BookingData.set('selectedPetDetails', selectedPetDetails)
 
     const app = getApp()
     app.globalData.selectedPets = this.data.selectedPets
     app.globalData.selectedPetDetails = selectedPetDetails
-    
+
     if (this.data.fromPage === 'service') {
       wx.navigateTo({
-        url: '/subpackages/feeding/confirm-service'
+        url: '/subpackages/feeding/confirm-service',
       })
     } else {
       wx.navigateBack({
         delta: 1,
         success: () => {
-        }
+        },
       })
     }
   },
@@ -392,22 +363,11 @@ Page({
     wx.stopPullDownRefresh()
   },
 
-  isPetSelected(petId) {
-    
-    // 检查类型一致性
-    this.data.selectedPets.forEach((id, index) => {
-    })
-    
-    const isSelected = this.data.selectedPets.includes(petId)
-    return isSelected
-  },
-
   // 用户点击右上角分享
   onShareAppMessage() {
-    const inviterId = ((getApp().globalData.userInfo?.isPartner || getApp().globalData.userInfo?.permissions?.length) && getApp().globalData.userInfo?.openid) ? getApp().globalData.userInfo.openid : ''
     return {
       title: '选择宠物',
-      path: inviterId ? `/subpackages/booking/pet-select?inviterId=${inviterId}` : '/subpackages/booking/pet-select'
+      path: buildSharePath('/subpackages/booking/pet-select'),
     }
-  }
+  },
 })

@@ -58,7 +58,7 @@ Page({
               prevPage.onAddressSelected(address)
             }
           }, 100)
-        }
+        },
       })
     }
   },
@@ -204,7 +204,30 @@ Page({
   deleteAddress(e) {
     const addressId = e.currentTarget.dataset.id
     const address = this.data.addresses.find(item => item._id === addressId)
+    if (!addressId) {return}
 
-    this.showModal({ titleKey: 'BIZ_FROTRU', contentKey: 'BIZ_1IBQW7L' })
+    this.showModal({
+      titleKey: 'BIZ_FROTRU',
+      contentKey: 'BIZ_1IBQW7L',
+      success: (confirmed) => {
+        if (!confirmed) {return}
+        this._doDeleteAddress(addressId)
+      },
+    })
+  },
+
+  async _doDeleteAddress(addressId) {
+    try {
+      const result = await AddressService.remove(addressId)
+      if (result && result.code === 0) {
+        this.toast('DELETE_SUCCESS')
+        await this.loadAddresses(true)
+      } else {
+        this.errorDynamic(result?.message, 'DELETE_FAILED')
+      }
+    } catch (error) {
+      console.error('[APP] 删除地址失败:', error)
+      this.error('DELETE_FAILED')
+    }
   },
 })

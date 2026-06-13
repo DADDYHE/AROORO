@@ -1,5 +1,7 @@
 {
-  "usingComponents": {},
+  "usingComponents": {
+    "activity-card": "../../components/activity-card/activity-card"
+  },
   "navigationBarTitleText": "AROORO",
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "light"

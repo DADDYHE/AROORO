@@ -1,0 +1,7 @@
+.min-amount-tip {
+  display: block;
+  font-size: 22rpx;
+  color: #C4843D;
+  margin-top: 4rpx;
+  font-style: italic;
+}

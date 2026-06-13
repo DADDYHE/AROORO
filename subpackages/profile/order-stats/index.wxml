@@ -1,0 +1,107 @@
+<view class="page">
+  <view class="stats-summary">
+    <view class="summary-item">
+      <text class="summary-num">{{stats.count}}</text>
+      <text class="summary-label">总订单</text>
+    </view>
+    <view class="summary-divider"></view>
+    <view class="summary-item">
+      <text class="summary-num">{{stats.completedCount}}</text>
+      <text class="summary-label">已完成</text>
+    </view>
+    <view class="summary-divider"></view>
+    <view class="summary-item">
+      <text class="summary-num">¥{{stats.amount}}</text>
+      <text class="summary-label">总消费</text>
+    </view>
+  </view>
+
+  <view class="status-tabs">
+    <view
+      wx:for="{{statusTabs}}"
+      wx:key="key"
+      class="status-tab {{currentStatus === item.key ? 'active' : ''}}"
+      data-status="{{item.key}}"
+      bindtap="switchStatus"
+    >
+      <text class="status-tab-text">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="orders-list" wx:if="{{orders.length > 0}}">
+    <view
+      wx:for="{{orders}}"
+      wx:key="_id"
+      class="order-card {{item.orderType === 'mall' ? 'mall-card' : ''}} {{item.orderType === 'group_buy' ? 'group-card' : ''}}"
+      data-id="{{item._id}}"
+      bindtap="onOrderTap"
+    >
+      <view class="order-cover-row" wx:if="{{item.activityCoverUrl}}">
+        <image class="order-cover" src="{{item.activityCoverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.activityCoverUrl}}" data-path="orders[{{index}}].activityCoverUrl" />
+      </view>
+      <block wx:if="{{item.orderType === 'mall' || item.orderType === 'group_buy'}}">
+        <view class="mall-product-row">
+          <image class="mall-product-img" wx:if="{{item.productCoverUrl}}" src="{{item.productCoverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.productCoverUrl}}" data-path="orders[{{index}}].productCoverUrl" />
+          <view class="mall-product-info">
+            <text class="mall-product-name">{{item.orderTitle}}</text>
+            <text class="mall-product-sku" wx:if="{{item.skuText}}">{{item.skuText}}</text>
+            <view class="mall-product-bottom">
+              <text class="mall-product-price {{item.orderType === 'group_buy' ? 'group-price' : ''}}">¥{{item.unitPrice}}</text>
+              <text class="mall-product-qty">×{{item.quantity}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="mall-receiver" wx:if="{{item.receiverName}}">
+            <image class="order-info-icon-img" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+            <text class="order-info-text">{{item.receiverName}} {{item.receiverPhone}}</text>
+          </view>
+        <view class="mall-actions" wx:if="{{item.status === 'pending_payment' || item.status === 'pending_shipment'}}">
+          <view class="mall-cancel-btn" data-id="{{item._id}}" catchtap="onCancelMallOrder">取消订单</view>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="order-title">{{item.orderTitle || item._id}}</view>
+        <view class="order-info" wx:if="{{item.activityLocation}}">
+          <image class="order-info-icon-img" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+          <text class="order-info-text">{{item.activityLocation}}</text>
+        </view>
+        <view class="order-info" wx:if="{{item.address && item.orderType === 'feeding'}}">
+          <image class="order-info-icon-img" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+          <text class="order-info-text">{{item.address}}</text>
+        </view>
+        <view class="order-info" wx:if="{{item.dateRange && item.orderType === 'feeding'}}">
+          <image class="order-info-icon-img" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
+          <text class="order-info-text">{{item.dateRange}}</text>
+        </view>
+        <view class="order-info" wx:if="{{item.startDate && item.orderType !== 'feeding'}}">
+          <image class="order-info-icon-img" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
+          <text class="order-info-text">{{item.startDate}}{{item.endDate ? ' 至 ' + item.endDate : ''}}</text>
+        </view>
+        <view class="feeding-tags" wx:if="{{item.orderType === 'feeding'}}">
+          <text class="feeding-tag" wx:if="{{item.familiarityText}}">提前熟悉: {{item.familiarityText}}</text>
+          <text class="feeding-tag" wx:if="{{item.multiVisitText}}">一天多次: {{item.multiVisitText}}</text>
+        </view>
+      </block>
+      <view class="order-header">
+        <text class="order-status {{item.orderType === 'mall' ? 'mall-status' : ''}} {{item.orderType === 'group_buy' ? 'group-status' : ''}}">{{item.isEnded ? '已结束' : item.statusText || item.status}}</text>
+        <text class="order-price">¥{{item.totalPrice || 0}}</text>
+      </view>
+      <view class="order-body">
+        <text class="order-time">{{item.createdAt}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{orders.length === 0 && !isLoading}}">
+    <text class="empty-text">暂无订单</text>
+  </view>
+
+  <view class="loading-more" wx:if="{{isLoading}}">
+    <view class="loading-dots">
+      <view class="loading-dot"></view>
+      <view class="loading-dot"></view>
+      <view class="loading-dot"></view>
+    </view>
+    <text class="loading-more-text">加载中</text>
+  </view>
+</view>

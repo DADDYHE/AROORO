@@ -1,0 +1,6 @@
+{
+  "usingComponents": {},
+  "navigationBarTitleText": "宠团团",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "light"
+}

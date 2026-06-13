@@ -1,0 +1,84 @@
+<view class="container">
+  <view class="tabs">
+    <view class="tab {{activeTab === item.key ? 'tab-active' : ''}}" wx:for="{{tabs}}" wx:key="key" data-key="{{item.key}}" bindtap="onTabChange">
+      {{item.label}}
+    </view>
+  </view>
+
+  <!-- 我的优惠券 -->
+  <view class="list" wx:if="{{activeTab !== 'claim'}}">
+    <view class="coupon-card {{item.status}}" wx:for="{{coupons}}" wx:key="_id" style="--accent: {{item.accentColor}}">
+      <view class="card-ribbon"></view>
+      <view class="card-body">
+        <view class="card-main">
+          <view class="card-value">
+            <block wx:if="{{item.type==='discount'}}">
+              <text class="num">{{item.rules.discountRate * 100}}</text>
+              <text class="unit">折</text>
+            </block>
+            <block wx:else>
+              <text class="unit">¥</text>
+              <text class="num">{{item.rules.reduceAmount || 0}}</text>
+            </block>
+          </view>
+          <view class="card-threshold" wx:if="{{item.rules.threshold > 0}}">满{{item.rules.threshold}}元可用</view>
+          <view class="card-threshold" wx:else>无门槛</view>
+        </view>
+        <view class="card-info">
+          <view class="card-name">{{item.templateName}}</view>
+          <view class="card-scopes">
+            <text class="scope-label">适用</text>
+            <text class="scope-tag" wx:for="{{item.scopeLabels}}" wx:key="*this">{{item}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="card-footer">
+        <text class="card-time">{{utils.formatEndTime(item.endTime, _tick)}}</text>
+        <view class="card-use-btn" wx:if="{{item.status==='unused'}}" catchtap="onUseCoupon" data-scope="{{item.applicableScopes}}">
+          去使用
+        </view>
+      </view>
+      <view class="card-stamp status-{{item.status}}">
+        {{item.status==='unused' ? '可使用' : item.status==='used' ? '已使用' : '已过期'}}
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!isLoading && coupons.length === 0}}">
+      <text>暂无优惠券</text>
+    </view>
+    <view class="load-more" wx:if="{{hasMore && coupons.length > 0 && !isLoading}}" bindtap="onLoadMore">
+      <text>加载更多</text>
+    </view>
+
+    <!-- 底部提示 -->
+    <view class="bottom-tip" wx:if="{{coupons.length > 0}}">
+      <text>仅显示近 6 个月的优惠券，更早的记录已自动隐藏</text>
+    </view>
+  </view>
+
+  <!-- 领券中心入口（固定在页面最底部，仅「全部」tab 显示） -->
+  <view class="claim-entry-fab" wx:if="{{activeTab === 'all'}}" bindtap="onGoClaimCenter">
+    <view class="claim-entry-icon">+</view>
+    <view class="claim-entry-text">
+      <view class="claim-entry-title">领券中心</view>
+      <view class="claim-entry-desc">领取更多优惠券</view>
+    </view>
+    <view class="claim-entry-arrow">›</view>
+  </view>
+</view>
+
+<wxs module="utils">
+  var formatEndTime = function(dateStr, tick) {
+    if (!dateStr) return ''
+    var d = getDate(dateStr)
+    var now = getDate()
+    var diff = d.getTime() - now.getTime()
+    var days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+    if (days <= 0) return '即将过期'
+    if (days <= 3) return days + '天后过期'
+    var m = d.getMonth() + 1
+    var day = d.getDate()
+    return m + '.' + day + '到期'
+  }
+  module.exports = { formatEndTime: formatEndTime }
+</wxs>

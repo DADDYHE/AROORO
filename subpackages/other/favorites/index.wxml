@@ -17,10 +17,18 @@
   <view class="page-content">
     <!-- 加载状态 -->
   <view wx:if="{{isLoading}}" class="loading-container">
-    <view class="loading-spinner">
-      <view class="spinner-outer"></view>
-      <view class="spinner-inner"></view>
-      <view class="spinner-dot"></view>
+    <view class="loading-content">
+      <view class="loading-brand-mark">
+        <view class="brand-ring"></view>
+        <view class="brand-ring brand-ring--delay"></view>
+        <view class="brand-dot"></view>
+      </view>
+      <view class="loading-dots">
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+      </view>
+      <text class="loading-text">加载中</text>
     </view>
   </view>
 

@@ -12,21 +12,15 @@ const _logger = (0, logger_1.createLogger)('cloudbase');
 // 配置1: 使用AppID+Secret初始化方式（推荐用于云函数环境）
 const CLOUDBASE_SECRET = process.env.CLOUDBASE_SECRET;
 const configAppSecret = {
-    appid: process.env.CLOUDBASE_APPID || 'wxc5b705cab9ba29e7',
+    appid: process.env.CLOUDBASE_APPID || 'wx481ebe4d7c924f77',
     secret: CLOUDBASE_SECRET,
-    env: process.env.CLOUDBASE_ENV || 'cloud1-8gvqhsiga3011047',
+    env: process.env.CLOUDBASE_ENV || 'cloudbase-d7getcjqy33b13475',
 };
-if (!CLOUDBASE_SECRET) {
-    throw new Error('CLOUDBASE_SECRET 环境变量未配置，无法初始化云开发 SDK');
-}
 // 配置2: 使用API Key初始化方式（适用于需要自定义baseURL的场景）
 const configApiKey = {
     baseURL: process.env.CLOUDBASE_BASE_URL || 'https://api.tcloudbasegateway.com/v1/',
     apiKey: process.env.CLOUDBASE_API_KEY,
 };
-if (!configApiKey.apiKey) {
-    throw new Error('CLOUDBASE_API_KEY 环境变量未配置，无法以 API Key 模式初始化云开发 SDK');
-}
 // SDK 实例（懒初始化，避免在测试/CI 环境强制初始化）
 let _instance = null;
 /**
@@ -37,13 +31,19 @@ function getCloudbase() {
     if (_instance) {
         return _instance;
     }
-    if (process.env.CLOUDBASE_USE_API_KEY === 'true' || configApiKey.apiKey !== 'your-cloudbase-api-key') {
+    if (process.env.CLOUDBASE_USE_API_KEY === 'true') {
+        if (!configApiKey.apiKey) {
+            throw new Error('CLOUDBASE_API_KEY 环境变量未配置，无法以 API Key 模式初始化云开发 SDK');
+        }
         _instance = new CloudBase(configApiKey);
         if (process.env.NODE_ENV !== 'test') {
             _logger.info('init.apiKey', { mode: 'api_key' });
         }
     }
     else {
+        if (!CLOUDBASE_SECRET) {
+            throw new Error('CLOUDBASE_SECRET 环境变量未配置，无法初始化云开发 SDK');
+        }
         _instance = initialize(configAppSecret);
         if (process.env.NODE_ENV !== 'test') {
             _logger.info('init.appSecret', { mode: 'app_secret' });
@@ -56,6 +56,9 @@ exports.getCloudbase = getCloudbase;
  * 显式使用 AppSecret 方式初始化（特殊场景）
  */
 function initializeAppSecret() {
+    if (!CLOUDBASE_SECRET) {
+        throw new Error('CLOUDBASE_SECRET 环境变量未配置，无法初始化云开发 SDK');
+    }
     return initialize(configAppSecret);
 }
 exports.initializeAppSecret = initializeAppSecret;
@@ -63,15 +66,16 @@ exports.initializeAppSecret = initializeAppSecret;
  * 显式使用 ApiKey 方式初始化（特殊场景）
  */
 function initializeApiKey() {
+    if (!configApiKey.apiKey) {
+        throw new Error('CLOUDBASE_API_KEY 环境变量未配置，无法以 API Key 模式初始化云开发 SDK');
+    }
     return new CloudBase(configApiKey);
 }
 exports.initializeApiKey = initializeApiKey;
-// 默认导出 SDK 实例（懒初始化）
-const cloudbase = getCloudbase();
-// 兼容旧 API：default + 命名属性
+// 默认导出（兼容旧 API：require('./common/cloudbase') 返回模块对象）
+// 注意：不再在模块顶层调用 getCloudbase()，保持真正的懒初始化
 const _mod = module;
-_mod.exports = cloudbase;
+_mod.exports.getCloudbase = getCloudbase;
 _mod.exports.initializeAppSecret = initializeAppSecret;
 _mod.exports.initializeApiKey = initializeApiKey;
-_mod.exports.getCloudbase = getCloudbase;
-exports.default = cloudbase;
+exports.default = null; // 懒初始化，使用前请调用 getCloudbase()

@@ -57,6 +57,31 @@ App({
 
   onShow(options) {
     this._captureInviterId(options)
+    this._handleWxOrderConfirmCallback(options)
+  },
+
+  /**
+   * 处理微信"确认收货"组件的回调。
+   * - 拉起方式：wx.openBusinessView({ businessType: 'weappOrderConfirm' })
+   * - 回调参数：options.referrerInfo.appId === 'wx1183b055aeec94d1'
+   *   options.referrerInfo.extraData = { status, errormsg, req_extradata: { transaction_id } }
+   * - 文档：https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/order-shipping/order-shipping-half.html
+   */
+  _handleWxOrderConfirmCallback(options) {
+    const referrer = options && options.referrerInfo
+    if (!referrer || referrer.appId !== 'wx1183b055aeec94d1') {return}
+    const extra = referrer.extraData || {}
+    if (extra.status !== 'success') {return}
+    const transactionId = (extra.req_extradata && extra.req_extradata.transaction_id) || ''
+    const pages = getCurrentPages()
+    const currentPage = pages[pages.length - 1]
+    if (currentPage && typeof currentPage._onWxConfirmReceiveSuccess === 'function') {
+      try {
+        currentPage._onWxConfirmReceiveSuccess(transactionId)
+      } catch (e) {
+        console.warn('[APP] 转发微信确认收货回调到页面失败:', e)
+      }
+    }
   },
 
   onError(err) {
@@ -89,6 +114,24 @@ App({
     globalErrorManager.init()
     this.globalData.globalErrorManager = globalErrorManager
 
+    // 关键启动阶段恢复会话：确保所有页面 onLoad 时
+    // globalData.userInfo 已是最终态，避免 partner/home 等
+    // 同步判断登录态的页面在冷启动竞态中误判为"未登录"。
+    if (authService) {
+      this.globalData.authService = authService
+      try {
+        const restored = await authService.tryRestoreSession(this)
+        if (!restored && this.globalData.isLoggedIn) {
+          this.globalData.userInfo = null
+          this.globalData.isLoggedIn = false
+        }
+      } catch (sessionError) {
+        console.warn('[APP] 会话恢复失败（不影响应用使用）:', sessionError.message)
+        this.globalData.userInfo = null
+        this.globalData.isLoggedIn = false
+      }
+    }
+
     await appStartupOptimizer.executeCriticalPhase(this)
     this._preloadServiceIcon()
   },
@@ -99,40 +142,7 @@ App({
 
   async _executeBackgroundStartup() {
     try {
-      const appConfig = require('./config')
-
-      if (!appConfig.envId) {
-        console.error('[APP] 云环境ID未配置，无法恢复会话')
-        return
-      }
-
-      if (authService) {
-        this.globalData.authService = authService
-      }
-
-      // 尝试恢复会话
-      if (authService) {
-        try {
-          const restored = await authService.tryRestoreSession()
-          if (restored) {
-            this._notifySessionRestored()
-          } else {
-            const hadCachedLogin = this.globalData.isLoggedIn
-            if (hadCachedLogin) {
-              this.globalData.userInfo = null
-              this.globalData.isLoggedIn = false
-              this._notifySessionRestored()
-            }
-          }
-        } catch (sessionError) {
-          console.warn('[APP] 会话恢复失败（不影响应用使用）:', sessionError.message)
-          if (this.globalData.isLoggedIn) {
-            this.globalData.userInfo = null
-            this.globalData.isLoggedIn = false
-            this._notifySessionRestored()
-          }
-        }
-      }
+      // 会话恢复已提升至 _executeCriticalStartup，此处不再重复执行。
 
       await appStartupOptimizer.executeDeferredTasks()
       appStartupOptimizer.printPerformanceReport()

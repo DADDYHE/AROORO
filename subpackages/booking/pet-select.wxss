@@ -430,6 +430,52 @@
   padding-left: 4rpx;
 }
 
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.bar-action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  position: relative;
+}
+
+.contact-btn {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  position: relative;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  line-height: normal !important;
+  min-width: 0 !important;
+  width: auto !important;
+  font-size: inherit !important;
+  box-sizing: border-box;
+}
+
+.contact-btn::after {
+  border: none !important;
+}
+
+.bar-action-icon-img {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.bar-action-text {
+  font-size: 18rpx;
+  color: #AEAEB2;
+  letter-spacing: 1rpx;
+}
+
 .status-dot {
   width: 8rpx;
   height: 8rpx;
@@ -453,6 +499,8 @@
 }
 
 .footer-action {
+  flex: 1;
+  min-width: 0;
   border-radius: 16rpx;
   font-size: 28rpx;
   font-weight: 600;
@@ -536,21 +584,7 @@
   }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.4);
-    opacity: 0.6;
-  }
-}
 
 @keyframes badgeIn {
   from {

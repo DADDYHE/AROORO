@@ -1,5 +1,8 @@
 const crypto = require('crypto')
 const https = require('https')
+const { createLogger } = require('../common/logger')
+
+const logger = createLogger('wechatPayUtils')
 
 function randomString(length = 32) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -58,10 +61,10 @@ function normalizePrivateKey(key) {
       sign.end()
       sign.sign(trimmed, 'base64')
       _cachedKeyFormat = 'raw'
-      console.log('[wechatPayUtils] privateKey format resolved: raw PEM')
+      logger.info('privateKey format resolved', { format: 'raw PEM' })
       return trimmed
     } catch (e) {
-      console.warn('[wechatPayUtils] raw PEM format test failed:', e?.message)
+      logger.warn('raw PEM format test failed', { error: e?.message })
     }
   }
 
@@ -73,11 +76,11 @@ function normalizePrivateKey(key) {
       sign.end()
       sign.sign(decoded, 'base64')
       _cachedKeyFormat = 'base64-decode'
-      console.log('[wechatPayUtils] privateKey format resolved: base64-decode')
+      logger.info('privateKey format resolved', { format: 'base64-decode' })
       return decoded
     }
   } catch (e) {
-    console.warn('[wechatPayUtils] base64-decode format test failed:', e?.message)
+    logger.warn('base64-decode format test failed', { error: e?.message })
   }
 
   const formats = ['literal-n', 'strip-rebuild-pkcs8', 'strip-rebuild-rsa']
@@ -89,14 +92,14 @@ function normalizePrivateKey(key) {
       sign.end()
       sign.sign(formatted, 'base64')
       _cachedKeyFormat = fmt
-      console.log('[wechatPayUtils] privateKey format resolved:', fmt)
+      logger.info('privateKey format resolved', { format: fmt })
       return formatted
     } catch (e) {
       continue
     }
   }
 
-  console.error('[wechatPayUtils] all key formats failed')
+  logger.error('all key formats failed')
   return String(key).trim()
 }
 

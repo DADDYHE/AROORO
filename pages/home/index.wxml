@@ -26,14 +26,14 @@
   <view class="page-content">
 
     <!-- 登录提示（未登录时显示） -->
-    <view wx:if="{{!isLoggedIn}}" class="login-prompt-card card">
+    <view wx:if="{{!isLoggedIn}}" class="login-prompt-card">
       <view class="login-prompt-content">
         <view class="login-prompt-text">
-          <text class="login-prompt-title">欢迎加入AROORO</text>
-          <text class="login-prompt-subtitle">安心呼噜，放心托付</text>
+          <text class="login-prompt-title">{{t.WELCOME_TITLE}}</text>
+          <text class="login-prompt-subtitle">{{t.WELCOME_SUBTITLE}}</text>
         </view>
         <view class="login-prompt-action">
-          <button class="login-prompt-btn" bindtap="handleLogin">立即登录</button>
+          <view class="login-prompt-btn" bindtap="handleLogin">{{t.LOGIN_NOW}}</view>
         </view>
       </view>
     </view>
@@ -42,14 +42,14 @@
     <view wx:if="{{isLoggedIn}}" class="section-card card">
       <view class="card-header">
         <view class="card-title-row">
-          <text class="card-title">我的宠物</text>
+          <text class="card-title">{{t.MY_PETS}}</text>
           <view class="add-pet-btn" bindtap="handleAddPet">
             <text class="add-pet-icon">+</text>
-            <text class="add-pet-text">添加</text>
+            <text class="add-pet-text">{{t.ADD}}</text>
           </view>
         </view>
         <view class="view-more-container" bindtap="handleViewAllPets" wx:if="{{hasMorePets}}">
-          <text class="view-more">查看更多</text>
+          <text class="view-more">{{t.VIEW_MORE}}</text>
           <text class="view-more-arrow">›</text>
         </view>
       </view>
@@ -67,7 +67,7 @@
         </view>
       </view>
       <view wx:else class="empty-pets" bindtap="handleAddPet">
-        <text class="empty-text">点击添加你的第一只宠物</text>
+        <text class="empty-text">{{t.ADD_FIRST_PET}}</text>
       </view>
     </view>
 
@@ -90,7 +90,7 @@
               <view class="coming-soon-dot"></view>
               <view class="coming-soon-dot"></view>
             </view>
-            <text class="coming-soon-text">敬请期待！</text>
+            <text class="coming-soon-text">{{t.COMING_SOON}}</text>
           </view>
         </view>
       </view>
@@ -99,9 +99,9 @@
     <!-- 宠团团 -->
     <view class="tuan-section" wx:if="{{tuanDeals.length > 0}}">
       <view class="section-header">
-        <text class="section-title">宠团团</text>
+        <text class="section-title">{{t.GROUP_DEALS}}</text>
         <view class="view-more" bindtap="handleViewAllTuan">
-          <text>查看全部</text>
+          <text>{{t.VIEW_ALL_ACTIVITIES}}</text>
           <text class="view-more-arrow">›</text>
         </view>
       </view>
@@ -111,14 +111,14 @@
           <view class="tuan-cover-wrap">
             <image lazy-load class="tuan-cover" src="{{item.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="tuanDeals[{{index}}].coverUrl" />
             <view class="tuan-badge">
-              <text class="tuan-badge-text">团购</text>
+              <text class="tuan-badge-text">{{t.GROUP_DEALS}}</text>
             </view>
           </view>
           <view class="tuan-info">
             <text class="tuan-name truncate">{{item.title}}</text>
             <view class="tuan-meta">
               <text class="tuan-price">¥{{item.minPrice}}</text>
-              <text class="tuan-orders" wx:if="{{item.totalOrders > 0}}">{{item.totalOrders}}人已团</text>
+              <text class="tuan-orders" wx:if="{{item.totalOrders > 0}}">{{item.totalOrders}}{{t.JOINED}}</text>
             </view>
           </view>
         </view>
@@ -128,71 +128,22 @@
     <!-- 最新活动 -->
     <view class="activities-section" wx:if="{{latestActivities.length > 0}}">
       <view class="section-header">
-        <text class="section-title">最新活动</text>
+        <text class="section-title">{{t.LATEST_ACTIVITIES}}</text>
         <view class="view-more" bindtap="handleViewAllActivities">
-          <text>查看全部</text>
+          <text>{{t.VIEW_ALL_ACTIVITIES}}</text>
           <text class="view-more-arrow">›</text>
         </view>
       </view>
 
       <view class="activity-list">
-        <view class="activity-block" wx:for="{{latestActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap">
-          <view class="activity-main">
-            <image lazy-load class="activity-cover" src="{{item.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="latestActivities[{{index}}].coverUrl" />
-            <view class="activity-overlay">
-              <view class="activity-badge {{item.registrationEnded ? 'badge-stopped' : 'badge-active'}}">
-                <text class="badge-dot">{{item.registrationEnded ? '' : '●'}}</text>
-                <text class="badge-text">{{item.registrationEnded ? '已截止' : '报名中'}}</text>
-              </view>
-            </view>
-            <view class="activity-category-badge" wx:if="{{item.category}}">
-              <text class="category-text">{{item.category === 'outdoor' ? '户外' : item.category === 'social' ? '社交' : item.category === 'training' ? '训练' : item.category === 'health' ? '健康' : item.category}}</text>
-            </view>
-          </view>
-
-          <view class="activity-details">
-            <view class="activity-title-row">
-              <text class="activity-name truncate">{{item.title}}</text>
-              <view class="activity-price {{(item.pricePerPerson > 0 || item.pricePerPet > 0) ? 'price-paid' : 'price-free'}}">
-                <block wx:if="{{item.pricePerPerson > 0 && item.pricePerPet > 0}}">¥{{item.pricePerPerson}}/人 ¥{{item.pricePerPet}}/宠</block>
-                <block wx:elif="{{item.pricePerPerson > 0}}">¥{{item.pricePerPerson}}/人</block>
-                <block wx:elif="{{item.pricePerPet > 0}}">¥{{item.pricePerPet}}/宠</block>
-                <block wx:else>免费</block>
-              </view>
-            </view>
-
-            <view class="activity-time-row">
-              <view class="info-item time-item">
-                <image class="info-icon-img" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
-                <text class="info-text">{{item.timeText}}</text>
-              </view>
-              <view class="info-item participants-item">
-                <text class="info-icon">👥</text>
-                <text class="info-text participants-text">{{item.currentParticipants > 0 ? item.currentParticipants : 0}}/{{item.maxParticipants || '不限'}}</text>
-              </view>
-            </view>
-
-            <view class="activity-info-row">
-              <view class="info-item">
-                <image class="info-icon-img" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
-                <text class="info-text">{{item.location || '待定'}}</text>
-              </view>
-            </view>
-          </view>
-
-          <view class="activity-action">
-            <view class="action-btn {{item.isRegistered ? 'btn-registered' : item.registrationEnded ? 'btn-disabled' : 'btn-active'}}">
-              <text class="btn-text">{{item.isRegistered ? '已报名' : item.registrationEnded ? '报名已截止' : '立即报名'}}</text>
-            </view>
-          </view>
-        </view>
+        <activity-card wx:for="{{latestActivities}}" wx:key="_id" item="{{item}}" locale="{{locale}}" bind:tap="handleActivityTap" />
       </view>
     </view>
 
     <!-- 最近浏览（已登录时显示） -->
     <view wx:if="{{isLoggedIn && recentViews.length > 0}}" class="section-card card">
       <view class="card-header">
-        <text class="card-title">👀 最近浏览</text>
+        <text class="card-title">👀 {{t.RECENT_VIEWS}}</text>
       </view>
       <view class="recent-list">
         <view class="recent-card" wx:for="{{recentViews}}" wx:key="_id" data-id="{{item._id}}" data-type="{{item.type}}" bindtap="handleRecentViewTap">
@@ -200,10 +151,10 @@
           <view class="recent-info">
             <text class="recent-name truncate">{{item.name}}</text>
             <text class="recent-price">
-              <block wx:if="{{item.pricePerPerson > 0 && item.pricePerPet > 0}}">¥{{item.pricePerPerson}}/人 ¥{{item.pricePerPet}}/宠</block>
-              <block wx:elif="{{item.pricePerPerson > 0}}">¥{{item.pricePerPerson}}/人起</block>
-              <block wx:elif="{{item.pricePerPet > 0}}">¥{{item.pricePerPet}}/宠起</block>
-              <block wx:else>免费</block>
+              <block wx:if="{{item.pricePerPerson > 0 && item.pricePerPet > 0}}">¥{{item.pricePerPerson}}{{t.PRICE_PERSON}} ¥{{item.pricePerPet}}{{t.PRICE_PET}}</block>
+              <block wx:elif="{{item.pricePerPerson > 0}}">¥{{item.pricePerPerson}}{{t.PRICE_PERSON}}{{t.FROM}}</block>
+              <block wx:elif="{{item.pricePerPet > 0}}">¥{{item.pricePerPet}}{{t.PRICE_PET}}{{t.FROM}}</block>
+              <block wx:else>{{t.FREE}}</block>
             </text>
           </view>
         </view>

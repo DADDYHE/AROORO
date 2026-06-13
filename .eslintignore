@@ -1,0 +1,16 @@
+node_modules
+miniprogram_npm
+dist
+build
+coverage
+*.min.js
+vendor
+public
+temp
+tmp
+.DS_Store
+.npm
+.eslintcache
+# TypeScript 类型声明与源文件（由 tsc 编译，eslint 仅处理 .js）
+*.d.ts
+*.ts

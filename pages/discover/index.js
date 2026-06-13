@@ -1,0 +1,116 @@
+const { TuanService } = require('../../services/TuanService')
+const { CouponService } = require('../../services/CouponService')
+const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
+const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
+
+const pageI18n = require('../../utils/page-i18n.js')
+const { buildSharePath } = require('../../utils/share')
+
+const ACCENT_COLORS = {
+  fixed_amount: '#C4956A',
+  discount: '#8BA4B8',
+  full_reduction: '#D4A853',
+}
+
+Page({
+  ...pageI18n.mixin(),
+  behaviors: [tabBarSyncBehavior, cloudImageBehavior, ListBehavior],
+
+  data: {
+    dealList: [],
+    total: 0,
+    refreshing: false,
+    shareDealId: '',
+    shareDealTitle: '',
+    // 弹窗发券
+    popupCoupon: null,
+    popupClaiming: false,
+  },
+
+  onLoad() {
+    this._initListBehavior(
+      params => this._doFetch(params),
+      { pageSize: 10, listKey: 'dealList' }
+    )
+    this._resetAndLoad()
+  },
+
+  onShow() {
+    this._syncTabBar()
+    this._checkPopupCoupon()
+  },
+
+  onPullDownRefresh() {
+    this.setData({ refreshing: true })
+    this._onPullDownRefresh().finally(() => {
+      this.setData({ refreshing: false })
+    })
+  },
+
+  onReachBottom() {
+    this._onReachBottom()
+  },
+
+  async _doFetch(params) {
+    const res = await TuanService.getTuanDealList({ page: params.page, pageSize: params.pageSize })
+    const data = res?.data || res || {}
+    return data.list || data.data || []
+  },
+
+  async _checkPopupCoupon() {
+    // 防骚扰：本次会话已弹过则不再弹
+    const dismissedKey = 'popup_dismissed_tuan'
+    if (this._popupDismissed) { return }
+
+    try {
+      const result = await CouponService.getPopupCoupon({ page: 'tuan' })
+      if (result && result.code === 0 && result.data) {
+        const coupon = result.data
+        coupon.accentColor = ACCENT_COLORS[coupon.type] || '#C4956A'
+        this.setData({ popupCoupon: coupon })
+      }
+    } catch (e) {
+      // 静默失败，不影响页面
+    }
+  },
+
+  async onClaimPopupCoupon() {
+    const { popupCoupon } = this.data
+    if (!popupCoupon) { return }
+
+    this.setData({ popupClaiming: true })
+    try {
+      const res = await CouponService.claimCoupon(popupCoupon.templateId, 'popup')
+      if (res && res.code === 0) {
+        this.setData({ popupCoupon: null })
+        wx.showToast({ title: '领取成功', icon: 'success' })
+      } else {
+        wx.showToast({ title: res?.message || '领取失败', icon: 'none' })
+      }
+    } catch (e) {
+      wx.showToast({ title: '领取失败', icon: 'none' })
+    } finally {
+      this.setData({ popupClaiming: false })
+      this._popupDismissed = true
+    }
+  },
+
+  onClosePopupCoupon() {
+    this.setData({ popupCoupon: null })
+    this._popupDismissed = true
+  },
+
+  onDealTap(e) {
+    const id = e.currentTarget.dataset.id
+    if (!id) { return }
+    wx.navigateTo({ url: `/pages/group-detail/index?dealId=${id}` })
+  },
+
+  onShareAppMessage() {
+    return {
+      title: 'AROORO 宠团团 - 超值拼团等你来',
+      path: buildSharePath('/pages/discover/index'),
+    }
+  },
+})

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.common.json",
+  "compilerOptions": {
+    "outDir": "./cloudfunctions",
+    "rootDir": "./cloudfunctions",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "declaration": true,
+    "target": "ES2020",
+    "module": "CommonJS"
+  },
+  "include": ["cloudfunctions/tuanService/index.ts"],
+  "exclude": ["node_modules", "cloudfunctions/tuanService/node_modules"]
+}

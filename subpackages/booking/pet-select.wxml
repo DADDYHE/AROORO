@@ -12,10 +12,19 @@
     </view>
   </view>
 
-  <view class="gallery-hall" wx:if="{{isLoading}}">
-    <view class="loading-spinner">
-      <view class="spinner-ring"></view>
-      <view class="spinner-core"></view>
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="loading-content">
+      <view class="loading-brand-mark">
+        <view class="brand-ring"></view>
+        <view class="brand-ring brand-ring--delay"></view>
+        <view class="brand-dot"></view>
+      </view>
+      <view class="loading-dots">
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+      </view>
+      <text class="loading-text">加载中</text>
     </view>
   </view>
 
@@ -89,8 +98,14 @@
       <view class="status-dot {{selectedPets.length > 0 ? 'dot-active' : 'dot-idle'}}"></view>
       <text class="status-text">已选 {{selectedPets.length}} 只宠物</text>
     </view>
-    <view bindtap="nextStep" class="footer-action {{selectedPets.length === 0 ? 'action-disabled' : 'action-active'}}">
-      确定选择
+    <view class="footer-bottom">
+      <button class="bar-action-item contact-btn" open-type="contact">
+        <image class="bar-action-icon-img" src="{{iconService}}" mode="aspectFit" />
+        <text class="bar-action-text">客服</text>
+      </button>
+      <view bindtap="nextStep" class="footer-action {{selectedPets.length === 0 ? 'action-disabled' : 'action-active'}}">
+        确定选择
+      </view>
     </view>
   </view>
 

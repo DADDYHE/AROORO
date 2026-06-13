@@ -1,0 +1,793 @@
+<view class="page">
+  <view class="tab-bar">
+    <view class="tab-item {{activeTab === 0 ? 'active' : ''}}" bindtap="handleTabTap" data-tab="0">
+      <text class="tab-text">服务收费</text>
+      <view class="tab-indicator" wx:if="{{activeTab === 0}}"></view>
+    </view>
+    <view class="tab-item {{activeTab === 1 ? 'active' : ''}}" bindtap="handleTabTap" data-tab="1">
+      <text class="tab-text">预约指引</text>
+      <view class="tab-indicator" wx:if="{{activeTab === 1}}"></view>
+    </view>
+    <view class="tab-item {{activeTab === 2 ? 'active' : ''}}" bindtap="handleTabTap" data-tab="2">
+      <text class="tab-text">常见问题</text>
+      <view class="tab-indicator" wx:if="{{activeTab === 2}}"></view>
+    </view>
+  </view>
+
+  <view class="tab-content" wx:if="{{activeTab === 0}}">
+    <view class="service-tabs">
+      <view class="service-tab {{serviceType === 'feeding' ? 'active' : ''}}" bindtap="switchServiceType" data-type="feeding">
+        <text class="service-tab-text">宠物喂养</text>
+      </view>
+      <view class="service-tab {{serviceType === 'walking' ? 'active' : ''}}" bindtap="switchServiceType" data-type="walking">
+        <text class="service-tab-text">上门遛狗</text>
+      </view>
+    </view>
+
+    <!-- 宠物喂养内容 -->
+    <view wx:if="{{serviceType === 'feeding'}}">
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">宠物喂养基础服务</text>
+        </view>
+        
+        <view class="service-grid">
+          <view class="service-item">
+            <view class="service-icon-wrap blue">
+              <view class="service-icon bowl">
+                <view class="bowl-top"></view>
+                <view class="bowl-base"></view>
+                <view class="water-wave"></view>
+              </view>
+            </view>
+            <text class="service-name">添新粮换水</text>
+          </view>
+          <view class="service-item">
+            <view class="service-icon-wrap purple">
+              <view class="service-icon clean">
+                <view class="trash-bin-new">
+                  <view class="bin-lid-new"></view>
+                  <view class="bin-body-new"></view>
+                </view>
+              </view>
+            </view>
+            <text class="service-name">整理宠物区域</text>
+          </view>
+          <view class="service-item">
+            <view class="service-icon-wrap yellow">
+              <view class="service-icon sand">
+                <view class="litter-box"></view>
+                <view class="paw-print"></view>
+                <view class="litter-grain"></view>
+              </view>
+            </view>
+            <text class="service-name">清洁砂盆尿垫</text>
+          </view>
+          <view class="service-item">
+            <view class="service-icon-wrap orange">
+              <view class="service-icon heart">
+                <view class="heart-main"></view>
+                <view class="heart-accent"></view>
+                <view class="pet-nose"></view>
+              </view>
+            </view>
+            <text class="service-name">反馈宠物状态</text>
+          </view>
+          <view class="service-item">
+            <view class="service-icon-wrap purple-light">
+              <view class="service-icon door">
+                <view class="door-frame"></view>
+                <view class="door-knob"></view>
+                <view class="check-mark"></view>
+              </view>
+            </view>
+            <text class="service-name">检查关闭门窗</text>
+          </view>
+          <view class="service-item">
+            <view class="service-icon-wrap blue-light">
+              <view class="service-icon video">
+                <view class="camera-body"></view>
+                <view class="camera-lens"></view>
+                <view class="play-button"></view>
+              </view>
+            </view>
+            <text class="service-name">服务全程录像</text>
+          </view>
+        </view>
+        
+        <view class="service-note">
+          <text class="note-text">单个宠物基础服务时长约为<text class="highlight">20分钟</text>，每增加一个宠物约增加<text class="highlight">5-10分钟</text></text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">宠物喂养服务费用标准</text>
+        </view>
+        
+        <view class="price-table">
+          <view class="table-header">
+            <text class="table-cell">宠物喂养</text>
+            <text class="table-cell">日常价格</text>
+            <text class="table-cell">法定节假日</text>
+          </view>
+          <view class="table-row">
+            <view class="table-cell">
+              <text class="provider-name">基础服务</text>
+              <text class="provider-note">5公里外每公里+4元</text>
+            </view>
+            <text class="table-cell price">50元</text>
+            <text class="table-cell price">60元</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">宠物喂养更多服务</text>
+        </view>
+        
+        <view class="extra-services">
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">一天多次</text>
+              <text class="extra-desc">喂养员在服务日期当天额外上门一次</text>
+            </view>
+            <text class="extra-price">80%*服务费</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">提前熟悉</text>
+              <text class="extra-desc">喂养员在服务日期前上门熟悉宠物</text>
+            </view>
+            <text class="extra-price">70%*服务费</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">多宠</text>
+              <text class="extra-desc">单次增加一只服务宠物</text>
+            </view>
+            <text class="extra-price">10元</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">陪玩/遛狗</text>
+              <text class="extra-desc">增加10分钟服务服务时长，可陪玩/遛狗</text>
+            </view>
+            <text class="extra-price">10元</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">清洁</text>
+              <text class="extra-desc">清洗猫砂盆或小范围区域卫生</text>
+            </view>
+            <text class="extra-price">40元</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">护理</text>
+              <text class="extra-desc">清洁宠物耳道、眼部、鼻部</text>
+            </view>
+            <text class="extra-price">20元</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">喂药</text>
+              <text class="extra-desc">给宠物喂保健品、医疗药物</text>
+            </view>
+            <text class="extra-price">20元</text>
+          </view>
+        </view>
+        
+        <view class="ps-note">
+          <text class="ps-text">ps：如您需<text class="highlight">多次服务</text>，下单时可多次选择，服务时长和费用根据次数叠加</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">宠物喂养服务流程</text>
+        </view>
+        
+        <view class="flow-list">
+          <view class="flow-item">
+            <view class="flow-number">1</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon order"></view>
+                <text class="flow-title">宠主下单</text>
+              </view>
+              <text class="flow-desc">宠主预约下单后，平台通知喂养员接单；</text>
+              <view class="flow-tip">
+                <text class="flow-tip-text">建议提前预约，临时下单喂养员可能无法安排时间进行上门服务服务哦~</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">2</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon accept"></view>
+                <text class="flow-title">喂养员接单</text>
+              </view>
+              <text class="flow-desc">喂养员会先与宠主<text class="highlight">沟通服务事项</text>（如宠物性格、生活习性等），确认无误后接单；</text>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">3</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon key"></view>
+                <text class="flow-title">钥匙交接</text>
+              </view>
+              <text class="flow-desc">喂养员在服务前根据服务服务信息及宠物主要求交接钥匙；</text>
+              <view class="flow-tip">
+                <text class="flow-tip-text">可根据双方情况选择同城快递、面交、放于指定位置等方式</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">4</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon prepare"></view>
+                <text class="flow-title">上门服务准备</text>
+              </view>
+              <text class="flow-desc">喂养员在服务前沟通预计上门时间，并提前备好录像支架，宠物消毒喷雾，消毒纸巾，手套，鞋套，垃圾袋等物品；</text>
+              <view class="flow-tip">
+                <text class="flow-tip-text">若喂养员在上门前违约取消订单，可视情况赔付您订单金额的10%-100%</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">5</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon checkin"></view>
+                <text class="flow-title">服务打卡</text>
+              </view>
+              <text class="flow-desc">喂养员在预计上门时间前抵达<text class="highlight">服务地点并打卡</text>，需进行<text class="highlight">身份认证及位置定位</text>，均通过后才可打卡成功；</text>
+              <view class="flow-tip">
+                <text class="flow-tip-text">若喂养员迟到15分钟以上，可视情况赔付您订单金额的10%-100%</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">6</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon disinfection"></view>
+                <text class="flow-title">消毒&录像</text>
+              </view>
+              <text class="flow-desc">喂养员在进门前穿戴手套鞋套并消毒，开始以第一视角进行录像；</text>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">7</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon comfort"></view>
+                <text class="flow-title">安抚宠物</text>
+              </view>
+              <text class="flow-desc">喂养员视情况与宠物友好接触，待宠物情绪稳定后开始服务；</text>
+              <view class="flow-tip">
+                <text class="flow-tip-text">若宠物胆小或者铲屎官要求不接触，则不会进行任何接触</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 上门遛狗内容 -->
+    <view wx:if="{{serviceType === 'walking'}}">
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">上门遛狗基础服务</text>
+        </view>
+        
+        <view class="dog-size-list">
+          <view class="dog-size-item">
+            <view class="dog-size-info">
+              <view class="dog-icon small"></view>
+              <view class="dog-details">
+                <text class="dog-type">小型犬</text>
+                <text class="dog-condition">体重＜10kg或身高＜40cm</text>
+              </view>
+            </view>
+            <text class="dog-duration">25分钟</text>
+          </view>
+          
+          <view class="dog-size-item">
+            <view class="dog-size-info">
+              <view class="dog-icon medium"></view>
+              <view class="dog-details">
+                <text class="dog-type">中型犬</text>
+                <text class="dog-condition">体重11~30kg或身高40~60cm</text>
+              </view>
+            </view>
+            <text class="dog-duration">20分钟</text>
+          </view>
+          
+          <view class="dog-size-item">
+            <view class="dog-size-info">
+              <view class="dog-icon large"></view>
+              <view class="dog-details">
+                <text class="dog-type">大型犬</text>
+                <text class="dog-condition">体重＞30kg或身高＞60cm</text>
+              </view>
+            </view>
+            <text class="dog-duration">15分钟</text>
+          </view>
+        </view>
+        
+        <view class="service-note">
+          <text class="note-text">基础服务遛狗时长约为<text class="highlight">15~25分钟</text>，由喂养员视狗狗体型&爆冲程度决定具体时长。</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">上门遛狗服务费用标准</text>
+        </view>
+
+        <view class="price-table">
+          <view class="table-header">
+            <text class="table-cell">上门遛狗</text>
+            <text class="table-cell">日常价格</text>
+            <text class="table-cell">法定节假日</text>
+          </view>
+          <view class="table-row">
+            <view class="table-cell">
+              <text class="provider-name">基础服务</text>
+              <text class="provider-note">5公里外每公里+4元</text>
+            </view>
+            <text class="table-cell price">50元</text>
+            <text class="table-cell price">60元</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">上门遛狗更多服务</text>
+        </view>
+        
+        <view class="extra-services">
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">一天多次</text>
+              <text class="extra-desc">喂养员在服务日期当天额外上门一次</text>
+            </view>
+            <text class="extra-price">80%*服务费</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">提前熟悉</text>
+              <text class="extra-desc">喂养员在服务日期前上门熟悉宠物</text>
+            </view>
+            <text class="extra-price">70%*服务费</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">多宠</text>
+              <text class="extra-desc">单次增加一只服务宠物</text>
+            </view>
+            <text class="extra-price">10元</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">陪玩/遛狗</text>
+              <text class="extra-desc">增加10分钟服务服务时长，可陪玩/狗</text>
+            </view>
+            <text class="extra-price">10元</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">清洁</text>
+              <text class="extra-desc">清洗猫砂盆或小范围区域卫生</text>
+            </view>
+            <text class="extra-price">40元</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">护理</text>
+              <text class="extra-desc">清洁宠物耳道、眼部、鼻部</text>
+            </view>
+            <text class="extra-price">20元</text>
+          </view>
+          
+          <view class="extra-service-item">
+            <view class="extra-info">
+              <text class="extra-name">喂药</text>
+              <text class="extra-desc">给宠物喂保健品、医疗药物</text>
+            </view>
+            <text class="extra-price">20元</text>
+          </view>
+        </view>
+        
+        <view class="ps-note">
+          <text class="ps-text">ps：如您需<text class="highlight">多次服务</text>，下单时可多次选择，服务时长和费用根据次数叠加</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">上门遛狗服务流程</text>
+        </view>
+        
+        <view class="flow-list">
+          <view class="flow-item">
+            <view class="flow-number">1</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon order"></view>
+                <text class="flow-title">宠主下单</text>
+              </view>
+              <text class="flow-desc">宠主预约下单后，平台通知喂养员接单；</text>
+              <view class="flow-tip">
+                <text class="flow-tip-text">建议提前预约，临时下单喂养员可能无法安排时间进行上门服务哦~</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">2</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon accept"></view>
+                <text class="flow-title">喂养员接单</text>
+              </view>
+              <text class="flow-desc">喂养员会先与宠主<text class="highlight">沟通服务事项</text>（如狗狗性格、生活习惯等），确认无误后接单；</text>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">3</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon key"></view>
+                <text class="flow-title">钥匙交接</text>
+              </view>
+              <text class="flow-desc">喂养员在服务前根据服务信息及宠物主要求交接钥匙；</text>
+              <view class="flow-tip">
+                <text class="flow-tip-text">可根据双方情况选择同城快递、面交、放于指定位置等方式</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">4</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon prepare"></view>
+                <text class="flow-title">上门服务准备</text>
+              </view>
+              <text class="flow-desc">喂养员在服务前沟通预计上门时间，并提前备好遛狗绳、拾便袋、零食、消毒纸巾、手套等物品；</text>
+              <view class="flow-tip">
+                <text class="flow-tip-text">若喂养员在上门前违约取消订单，可视情况赔付您订单金额的10%-100%</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">5</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon checkin"></view>
+                <text class="flow-title">服务打卡</text>
+              </view>
+              <text class="flow-desc">喂养员在预计上门时间前抵达<text class="highlight">服务地点并打卡</text>，需进行<text class="highlight">身份认证及位置定位</text>，均通过后才可打卡成功；</text>
+              <view class="flow-tip">
+                <text class="flow-tip-text">若喂养员迟到15分钟以上，可视情况赔付您订单金额的10%-100%</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">6</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon disinfection"></view>
+                <text class="flow-title">消毒</text>
+              </view>
+              <text class="flow-desc">喂养员在进门前穿戴手套鞋套并消毒；</text>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">7</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon comfort"></view>
+                <text class="flow-title">安抚宠物</text>
+              </view>
+              <text class="flow-desc">喂养员视情况与宠物友好接触，待宠物情绪稳定后开始服务；</text>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">8</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon start"></view>
+                <text class="flow-title">开始服务</text>
+              </view>
+              <text class="flow-desc">从宠物主家中接到狗狗，或与宠物主当面交接后，开始在指定区域遛狗</text>
+            </view>
+          </view>
+          
+          <view class="flow-item">
+            <view class="flow-number">9</view>
+            <view class="flow-content">
+              <view class="flow-header">
+                <view class="flow-icon complete"></view>
+                <text class="flow-title">完成服务</text>
+              </view>
+              <text class="flow-desc">服务时长到达后，带狗狗返回家中，交还给宠物主，确认无误后完成服务；</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="tab-content" wx:if="{{activeTab === 1}}">
+    <view class="gallery-entrance">
+      <view class="gallery-entrance-rail"></view>
+      <view class="gallery-entrance-content">
+        <text class="gallery-entrance-title">宠物上门服务指引手册</text>
+        <text class="gallery-entrance-subtitle">服务项目选择，一看就懂</text>
+      </view>
+      <view class="gallery-entrance-floor"></view>
+    </view>
+
+    <view class="gallery-hall">
+      <view class="gallery-hall-title">
+        <view class="gallery-hall-line"></view>
+        <text class="gallery-hall-text">宠物喂养引导</text>
+        <view class="gallery-hall-line"></view>
+      </view>
+      <view class="gallery-hall-divider"></view>
+
+      <view class="gallery-card">
+        <view class="gallery-card-rail gallery-card-rail-blue"></view>
+        <view class="gallery-card-body">
+          <text class="gallery-card-title">预约时间</text>
+          <view class="gallery-card-content">
+            <text class="gallery-card-text">工作日期间建议提前<text class="highlight-orange">3~7天</text>预约上门服务</text>
+            <text class="gallery-card-text">节假日期间建议提前<text class="highlight-orange">7天</text>以上预约上门服务</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="gallery-card">
+        <view class="gallery-card-rail gallery-card-rail-dark-blue"></view>
+        <view class="gallery-card-body">
+          <text class="gallery-card-title">狗狗喂养</text>
+          <view class="gallery-card-note-wrap">
+            <text class="gallery-card-note">建议频率：由于不同狗狗个体之间体型、性格、生活习性等差异较大；故无法给出详细的服务频率建议，宠物主可根据宠物的喂养&狗习惯预约服务，以下为不同服务需求预约指引~</text>
+            <text class="gallery-card-note">下面以单次遛狗时长为20分钟举例</text>
+          </view>
+          <view class="gallery-table">
+            <view class="gallery-table-header">
+              <view class="gallery-table-cell gallery-table-cell-wide">单日服务需求</view>
+              <view class="gallery-table-cell gallery-table-cell-wide">预约项目</view>
+            </view>
+            <view class="gallery-table-subheader">
+              <view class="gallery-table-cell"></view>
+              <view class="gallery-table-cell"></view>
+              <view class="gallery-table-cell">基础服务</view>
+              <view class="gallery-table-cell">增值服务</view>
+            </view>
+            <view class="gallery-table-row">
+              <view class="gallery-table-cell gallery-table-cell-group">
+                <view class="gallery-tag">仅喂养</view>
+              </view>
+              <view class="gallery-table-cell">
+                <text class="highlight-red">1次喂养</text>
+              </view>
+              <view class="gallery-table-cell">
+                宠物喂养<text class="highlight-red">*1</text>
+              </view>
+              <view class="gallery-table-cell">—</view>
+            </view>
+            <view class="gallery-table-row gallery-table-row-alt">
+              <view class="gallery-table-cell"></view>
+              <view class="gallery-table-cell">
+                <text class="highlight-red">n+1次喂养</text>
+              </view>
+              <view class="gallery-table-cell">
+                宠物喂养<text class="highlight-red">*1</text>
+              </view>
+              <view class="gallery-table-cell">
+                一天多次<text class="highlight-red">*n</text>
+              </view>
+            </view>
+            <view class="gallery-table-row">
+              <view class="gallery-table-cell gallery-table-cell-group">
+                <view class="gallery-tag">仅遛狗</view>
+              </view>
+              <view class="gallery-table-cell">
+                <text class="highlight-red">n+1次上门遛狗</text>
+              </view>
+              <view class="gallery-table-cell">
+                上门遛狗<text class="highlight-red">*1</text>
+              </view>
+              <view class="gallery-table-cell">
+                一天多次<text class="highlight-red">*n</text>
+              </view>
+            </view>
+            <view class="gallery-table-row gallery-table-row-alt">
+              <view class="gallery-table-cell gallery-table-cell-group">
+                <view class="gallery-tag gallery-tag-multi">喂养+遛狗</view>
+              </view>
+              <view class="gallery-table-cell">
+                喂养+遛狗<text class="highlight-red">1次</text>
+              </view>
+              <view class="gallery-table-cell">
+                宠物喂养<text class="highlight-red">*1</text>
+              </view>
+              <view class="gallery-table-cell">陪玩/遛狗</view>
+            </view>
+            <view class="gallery-table-row">
+              <view class="gallery-table-cell"></view>
+              <view class="gallery-table-cell">
+                喂养+遛狗<text class="highlight-red">1次</text> 遛狗<text class="highlight-red">n次</text>
+              </view>
+              <view class="gallery-table-cell">
+                宠物喂养<text class="highlight-red">*1</text>
+              </view>
+              <view class="gallery-table-cell">陪玩/遛狗</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="gallery-card">
+        <view class="gallery-card-rail gallery-card-rail-light-blue"></view>
+        <view class="gallery-card-body">
+          <text class="gallery-card-title">猫咪喂养</text>
+          <text class="gallery-card-note">建议频率：以下为平台内专业服务人员提供的建议，可做参考，具体服务情况可根据宠物健康状况，怕生程度自行决定~</text>
+          <view class="gallery-table">
+            <view class="gallery-table-header">
+              <view class="gallery-table-cell">年龄</view>
+              <view class="gallery-table-cell gallery-table-cell-narrow">数量</view>
+              <view class="gallery-table-cell gallery-table-cell-wide-freq">建议服务频率&时长</view>
+            </view>
+            <view class="gallery-table-row">
+              <view class="gallery-table-cell gallery-table-cell-age">
+                <text class="gallery-table-age-text">0~2月</text>
+              </view>
+              <view class="gallery-table-cell gallery-table-cell-narrow">—</view>
+              <view class="gallery-table-cell gallery-table-cell-wide-freq">建议专人全天照料~</view>
+            </view>
+            <view class="gallery-table-row gallery-table-row-alt">
+              <view class="gallery-table-cell gallery-table-cell-age">
+                <text class="gallery-table-age-text">2~6月</text>
+              </view>
+              <view class="gallery-table-cell gallery-table-cell-narrow">—</view>
+              <view class="gallery-table-cell gallery-table-cell-wide-freq">每1天1~2次上门，每次<text class="highlight-red">30~60分钟</text></view>
+            </view>
+            <view class="gallery-table-row">
+              <view class="gallery-table-cell gallery-table-cell-age">
+                <text class="gallery-table-age-text">6月以上</text>
+              </view>
+              <view class="gallery-table-cell gallery-table-cell-narrow gallery-table-cell-stack">
+                <text class="gallery-table-stack-text">1只</text>
+                <text class="gallery-table-stack-text">2~3只</text>
+                <text class="gallery-table-stack-text">3只以上</text>
+              </view>
+              <view class="gallery-table-cell gallery-table-cell-wide-freq gallery-table-cell-stack">
+                <text class="gallery-table-stack-text">每1~3天1次上门，每次<text class="highlight-red">20~40分钟</text></text>
+                <text class="gallery-table-stack-text">每1~2天1次上门，每次<text class="highlight-red">30~60分钟</text></text>
+                <text class="gallery-table-stack-text">每1天1次上门，每次<text class="highlight-red">40分钟以上</text></text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-hall-divider-full"></view>
+
+    <view class="gallery-hall">
+      <view class="gallery-hall-title">
+        <view class="gallery-hall-line"></view>
+        <text class="gallery-hall-text">六大服务保障</text>
+        <view class="gallery-hall-line"></view>
+      </view>
+      <view class="gallery-hall-divider"></view>
+
+      <view class="gallery-guarantee-visual">
+        <view class="gallery-hexagon">
+          <view class="gallery-hexagon-inner"></view>
+        </view>
+        <view class="gallery-guarantee-grid">
+          <view class="gallery-guarantee-badge">全程录像保障</view>
+          <view class="gallery-guarantee-badge">全程位置定位</view>
+          <view class="gallery-guarantee-badge">喂养服务手册</view>
+          <view class="gallery-guarantee-badge">专属管家监管</view>
+          <view class="gallery-guarantee-badge">私密聊天功能</view>
+          <view class="gallery-guarantee-badge">实名身份核验</view>
+        </view>
+      </view>
+
+      <view class="gallery-guarantee-list">
+        <view class="gallery-guarantee-item">
+          <view class="gallery-guarantee-rail"></view>
+          <view class="gallery-guarantee-body">
+            <text class="gallery-guarantee-title">全程录像保障</text>
+            <text class="gallery-guarantee-desc">喂养员从开始服务至服务结束，全程第一视角录像，服务完成后，上传全程录像，做到服务可视化，安全隐私化</text>
+          </view>
+        </view>
+        <view class="gallery-guarantee-item">
+          <view class="gallery-guarantee-rail"></view>
+          <view class="gallery-guarantee-body">
+            <text class="gallery-guarantee-title">喂养服务手册</text>
+            <text class="gallery-guarantee-desc">平台监管人员多次体验上门服务全流程，真人编写一万五千字服务手册，列举服务中所有可能发生的情况</text>
+          </view>
+        </view>
+        <view class="gallery-guarantee-item">
+          <view class="gallery-guarantee-rail"></view>
+          <view class="gallery-guarantee-body">
+            <text class="gallery-guarantee-title">私密聊天系统</text>
+            <text class="gallery-guarantee-desc">平台构建宠物主和喂养员线上聊天系统，对话内容严格保密</text>
+          </view>
+        </view>
+        <view class="gallery-guarantee-item">
+          <view class="gallery-guarantee-rail"></view>
+          <view class="gallery-guarantee-body">
+            <text class="gallery-guarantee-title">人脸识别核验</text>
+            <text class="gallery-guarantee-desc">喂养员在上门服务时，会进行人脸识别，确保是喂养员本人到达服务地点，才可进行服务</text>
+          </view>
+        </view>
+        <view class="gallery-guarantee-item">
+          <view class="gallery-guarantee-rail"></view>
+          <view class="gallery-guarantee-body">
+            <text class="gallery-guarantee-title">专属管家监管</text>
+            <text class="gallery-guarantee-desc">服务从开始至服务结束，如有任务问题可随时联系服务管家，做到服务及时响应和全程监管，让铲屎官真正放心出行！</text>
+          </view>
+        </view>
+        <view class="gallery-guarantee-item">
+          <view class="gallery-guarantee-rail"></view>
+          <view class="gallery-guarantee-body">
+            <text class="gallery-guarantee-title">上门定位打卡</text>
+            <text class="gallery-guarantee-desc">喂养员在服务前会定位打卡，在服务过程中会被平台全程定位</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="tab-content" wx:if="{{activeTab === 2}}">
+    <view class="faq-list">
+      <view class="faq-item" wx:for="{{faqList}}" wx:key="index">
+        <view class="faq-q" bindtap="handleFaqToggle" data-index="{{index}}">
+          <text class="faq-q-text">{{item.q}}</text>
+          <view class="faq-toggle {{item.open ? 'open' : ''}}"></view>
+        </view>
+        <view class="faq-a" wx:if="{{item.open}}">
+          <text class="faq-a-text">{{item.a}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

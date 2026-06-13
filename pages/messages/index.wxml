@@ -2,7 +2,7 @@
   <view class="page-content">
     <view class="service-card">
       <view class="service-card-header">
-        <text class="service-card-title">服务</text>
+        <text class="service-card-title">{{t('service')}}</text>
       </view>
       <view class="service-grid">
         <view class="service-item {{item.id}}-item" wx:for="{{serviceItems}}" wx:key="id" bindtap="handleServiceTap" data-id="{{item.id}}">
@@ -10,8 +10,8 @@
             <view class="service-icon service-icon-{{item.id}}">
               <image lazy-load class="service-icon-image" src="{{item.icon}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{item.icon}}" data-path="serviceItems[{{index}}].icon" />
             </view>
-            <text class="service-text">{{item.name}}</text>
-            <text class="service-desc">{{item.desc}}</text>
+            <text class="service-text">{{t[item.name]}}</text>
+            <text class="service-desc">{{t[item.desc]}}</text>
             <view class="service-accent"></view>
           </view>
         </view>

@@ -19,7 +19,7 @@ Page({
     isLoading: true,
   },
 
-  onLoad: function (options) {
+  onLoad (options) {
     const tab = options.tab || 'album'
     const hostId = options.hostId
 
@@ -80,16 +80,16 @@ Page({
     }
   },
 
-  switchTab: function (e) {
+  switchTab (e) {
     const tab = e.currentTarget.dataset.tab
     this.setData({ currentTab: tab, scrollPosition: 0 })
   },
 
-  goBack: function () {
+  goBack () {
     wx.navigateBack()
   },
 
-  previewPhoto: function (e) {
+  previewPhoto (e) {
     const index = e.currentTarget.dataset.index
     const urls = this.data.photos.map(p => p.url)
     wx.previewImage({
@@ -98,32 +98,32 @@ Page({
     })
   },
 
-  onVideoTimeUpdate: function (e) {
+  onVideoTimeUpdate (e) {
   },
 
-  onVideoPlay: function (e) {
+  onVideoPlay (e) {
     const index = e.currentTarget.dataset.index
     this.setData({ currentVideoIndex: index })
   },
 
-  onVideoSwiperChange: function (e) {
+  onVideoSwiperChange (e) {
     this.setData({ currentVideoIndex: e.detail.current })
   },
 
-  onProgressTouchStart: function (e) {
+  onProgressTouchStart (e) {
     const index = e.currentTarget.dataset.index
     const videos = this.data.videos
     videos[index] = { ...videos[index], isDragging: true }
     this.setData({ videos })
   },
 
-  onProgressTouchMove: function (e) {
+  onProgressTouchMove (e) {
     const index = e.currentTarget.dataset.index
     const touch = e.touches[0]
     const query = wx.createSelectorQuery()
     query.select('.progress-bar').boundingClientRect()
     query.exec(res => {
-      if (!res || !res[0]) return
+      if (!res || !res[0]) {return}
       const rect = res[0]
       const progress = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100))
       const videos = this.data.videos
@@ -132,21 +132,21 @@ Page({
     })
   },
 
-  onProgressTouchEnd: function (e) {
+  onProgressTouchEnd (e) {
     const index = e.currentTarget.dataset.index
     const videos = this.data.videos
     videos[index] = { ...videos[index], isDragging: false }
     this.setData({ videos })
   },
 
-  goToVideoList: function () {
+  goToVideoList () {
     wx.navigateTo({ url: '/subpackages/other/video-list/index' })
   },
 
-  formatTime: function (seconds) {
-    if (!seconds || isNaN(seconds)) return '00:00'
+  formatTime (seconds) {
+    if (!seconds || isNaN(seconds)) {return '00:00'}
     const m = Math.floor(seconds / 60)
     const s = Math.floor(seconds % 60)
-    return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s)
+    return `${m < 10 ? `0${m}` : m}:${s < 10 ? `0${s}` : s}`
   },
 })

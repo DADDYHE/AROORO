@@ -1,0 +1,7 @@
+{
+  "name": "rateLimitCleanup",
+  "version": "1.0.0",
+  "description": "Sprint 21: 全局限流存储 rate_limits 过期清理（每 10 分钟）",
+  "main": "index.js",
+  "dependencies": {}
+}

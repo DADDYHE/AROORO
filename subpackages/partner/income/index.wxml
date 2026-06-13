@@ -1,0 +1,156 @@
+<view class="gallery-container">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-content">
+      <view class="loading-brand-mark">
+        <view class="brand-ring"></view>
+        <view class="brand-ring brand-ring--delay"></view>
+        <view class="brand-dot"></view>
+      </view>
+      <view class="loading-dots">
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+      </view>
+      <text class="loading-text">加载中</text>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="gallery-header">
+      <view class="brand-block">
+        <view class="brand-accent-bar"></view>
+        <view class="brand-main">
+          <text class="brand-text">收入概览</text>
+        </view>
+        <view class="brand-meta">
+          <view class="brand-meta-line"></view>
+          <text class="brand-subtitle">财务数据</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-hall">
+      <view wx:if="{{overview}}" class="gallery-card income-overview-card">
+        <view class="card-accent income-accent"></view>
+        <view class="card-body">
+          <view class="overview-total">
+            <text class="overview-label">累计收入</text>
+            <text class="overview-value">¥{{totalIncomeText}}</text>
+          </view>
+          <view class="overview-divider"></view>
+          <view class="overview-row overview-row-top">
+            <view class="overview-stat">
+              <text class="overview-stat-value">¥{{commissionText}}</text>
+              <text class="overview-stat-label">佣金</text>
+              <text class="overview-stat-sub">（团购+商城）</text>
+            </view>
+            <view class="overview-stat">
+              <text class="overview-stat-value">¥{{activityText}}</text>
+              <text class="overview-stat-label">活动</text>
+            </view>
+          </view>
+          <view class="overview-row overview-row-bottom">
+            <view class="overview-stat">
+              <text class="overview-stat-value">¥{{hostingText}}</text>
+              <text class="overview-stat-label">寄养</text>
+            </view>
+            <view class="overview-stat">
+              <text class="overview-stat-value">¥{{feedingText}}</text>
+              <text class="overview-stat-label">服务</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{wallet}}" class="gallery-card wallet-card">
+        <view class="card-accent wallet-accent"></view>
+        <view class="card-body">
+          <view class="wallet-row">
+            <view class="wallet-stat">
+              <text class="wallet-value">¥{{wallet.balance}}</text>
+              <text class="wallet-label">可提现</text>
+            </view>
+            <view class="wallet-stat">
+              <text class="wallet-value">¥{{wallet.totalIncome}}</text>
+              <text class="wallet-label">总收入</text>
+            </view>
+            <view class="wallet-stat">
+              <text class="wallet-value">¥{{wallet.totalWithdrawn}}</text>
+              <text class="wallet-label">已提现</text>
+            </view>
+          </view>
+          <view class="wallet-actions">
+            <view class="withdraw-btn" bindtap="onWithdrawTap">提现</view>
+            <view class="withdraw-records-link" bindtap="onWithdrawRecordsTap">提现记录</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{commissionRates.length}}" class="gallery-card rates-card">
+        <view class="card-accent rates-accent"></view>
+        <view class="card-body">
+          <view class="rates-title">
+            <text class="rates-title-text">分成比例</text>
+          </view>
+          <view class="rates-grid">
+            <view wx:for="{{commissionRates}}" wx:key="key" class="rates-item">
+              <text class="rates-item-value">{{item.rate}}%</text>
+              <text class="rates-item-label">{{item.name}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="gallery-entrance">
+        <view class="entrance-line"></view>
+        <text class="entrance-label">收入明细</text>
+      </view>
+
+      <view class="tab-bar">
+        <view class="tab-item {{activeTab === 'all' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="all">全部</view>
+        <view class="tab-item {{activeTab === 'commission' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="commission">佣金</view>
+        <view class="tab-item {{activeTab === 'activity' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="activity">活动</view>
+        <view class="tab-item {{activeTab === 'hosting' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="hosting">寄养</view>
+        <view class="tab-item {{activeTab === 'feeding' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="feeding">服务</view>
+      </view>
+
+      <view wx:if="{{details.length === 0}}" class="gallery-empty">
+        <view class="empty-line"></view>
+        <text class="empty-text">暂无记录</text>
+      </view>
+
+      <view wx:for="{{details}}" wx:key="id" class="gallery-card detail-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <view class="detail-row">
+            <view class="detail-left">
+              <text class="detail-type">{{item.type === 'commission' ? '佣金' : (item.type === 'activity' ? '活动' : (item.type === 'hosting' ? '寄养' : '服务'))}}</text>
+              <text class="detail-desc">{{item.description}}</text>
+            </view>
+            <text class="detail-amount">+¥{{item.amount}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 提现弹窗 -->
+  <view wx:if="{{showWithdrawModal}}" class="modal-mask" bindtap="onWithdrawCancel">
+    <view class="modal-content" catchtap="">
+      <view class="modal-title">申请提现</view>
+      <view class="modal-balance">可提现余额：¥{{withdrawBalance}}</view>
+      <view class="modal-input-row">
+        <text class="modal-input-prefix">¥</text>
+        <input class="modal-input" type="digit" placeholder="请输入提现金额" value="{{withdrawAmount}}" bindinput="onWithdrawAmountInput" focus="{{showWithdrawModal}}" />
+      </view>
+      <view class="modal-tips">
+        <text>最低10元，单笔最高500元，每日限提1次</text>
+        <text class="modal-all-btn" bindtap="onWithdrawAll">全部提现</text>
+      </view>
+      <view class="modal-btns">
+        <view class="modal-btn modal-btn-cancel" bindtap="onWithdrawCancel">取消</view>
+        <view class="modal-btn modal-btn-confirm {{isSubmitting ? 'modal-btn-disabled' : ''}}" bindtap="onWithdrawConfirm">{{isSubmitting ? '提交中...' : '确认提现'}}</view>
+      </view>
+    </view>
+  </view>
+</view>

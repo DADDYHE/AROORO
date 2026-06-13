@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f0f0f0"/>
+  <g transform="translate(200,140)" text-anchor="middle">
+    <text font-size="48" y="0">🎉</text>
+    <text font-size="14" fill="#999" y="36">暂无封面</text>
+  </g>
+</svg>

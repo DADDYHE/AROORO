@@ -1,0 +1,67 @@
+<view class="gallery-page">
+  <view class="gallery-space">
+    <view class="brand-exhibit">
+      <text class="brand-cn">AROORO</text>
+      <text class="brand-en">AROORO</text>
+      <view class="brand-line"></view>
+    </view>
+
+    <view class="exhibit-card">
+      <view class="exhibit-label">
+        <text class="label-text">身份</text>
+        <view class="label-dot"></view>
+      </view>
+
+      <view class="form-avatar-row">
+        <view class="avatar-frame">
+          <view class="avatar-glow"></view>
+          <view class="avatar-picker-wrap">
+            <image
+              wx:if="{{avatarUrl}}"
+              class="avatar-preview"
+              src="{{avatarUrl}}"
+              mode="aspectFill"
+            />
+            <view wx:else class="avatar-placeholder">
+              <text class="avatar-placeholder-icon">+</text>
+            </view>
+          </view>
+        </view>
+        <button
+          class="avatar-picker-btn-transparent"
+          open-type="chooseAvatar"
+          bindchooseavatar="onChooseAvatar"
+        />
+        <text class="avatar-caption">选择头像</text>
+      </view>
+
+      <view class="form-nickname-row">
+        <text class="nickname-label">你的名字</text>
+        <view class="nickname-input-wrap">
+          <input
+            class="nickname-input"
+            type="nickname"
+            placeholder="点击获取微信昵称"
+            value="{{nickName}}"
+            bindinput="onNicknameInput"
+            bindblur="onNicknameBlur"
+          />
+          <view class="nickname-line"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="action-exhibit">
+      <button
+        class="confirm-btn {{canSubmit ? '' : 'disabled'}}"
+        bindtap="onConfirm"
+        disabled="{{!canSubmit}}"
+      >
+        开始呼噜
+      </button>
+      <view class="cancel-link" bindtap="onCancel">
+        <text class="cancel-text">稍后再说</text>
+      </view>
+    </view>
+  </view>
+</view>

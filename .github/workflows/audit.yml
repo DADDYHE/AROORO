@@ -1,0 +1,73 @@
+name: Code Quality Audit (weekly)
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # 每周一 06:00 (UTC) 跑一次
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Generate Weekly Audit Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Empty catch audit
+        id: empty-catch
+        run: |
+          COUNT=$(grep -rE "} catch \(.*\) \{\s*\}" cloudfunctions/ services/ subpackages/ utils/ --include="*.js" 2>/dev/null | wc -l | tr -d ' ')
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          echo "Empty catch blocks: $COUNT"
+
+      - name: Snake case audit
+        id: snake-case
+        run: |
+          COUNT=$(grep -rEn "[a-z]+_[a-z]+\s*[:=]" cloudfunctions/common/ cloudfunctions/userService/ cloudfunctions/orderService/ services/ --include="*.js" 2>/dev/null | grep -v "out_trade_no\|transaction_id\|sign_type\|appid\|mchid\|notify_url" | wc -l | tr -d ' ')
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+
+      - name: TODO / FIXME audit
+        id: todos
+        run: |
+          TODO_COUNT=$(grep -rE "// ?TODO|// ?FIXME|// ?XXX" cloudfunctions/ services/ subpackages/ utils/ --include="*.js" 2>/dev/null | wc -l | tr -d ' ')
+          echo "count=$TODO_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Console usage audit
+        id: console
+        run: |
+          COUNT=$(grep -rE "console\.(log|warn|error|info)" cloudfunctions/ services/ subpackages/ utils/ --include="*.js" 2>/dev/null | wc -l | tr -d ' ')
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+
+      - name: Publish report
+        if: always()
+        run: |
+          mkdir -p reports
+          cat > reports/weekly-audit.md <<EOF
+          # Weekly Code Quality Audit
+          _Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)_
+          _Commit: ${{ github.sha }}_
+
+          | Metric | Count | Target | Status |
+          | --- | --- | --- | --- |
+          | Empty catch blocks | ${{ steps.empty-catch.outputs.count }} | 0 | $([ "${{ steps.empty-catch.outputs.count }}" -eq "0" ] && echo "✅" || echo "❌") |
+          | Snake case in business code | ${{ steps.snake-case.outputs.count }} | 0 | $([ "${{ steps.snake-case.outputs.count }}" -eq "0" ] && echo "✅" || echo "❌") |
+          | TODO/FIXME markers | ${{ steps.todos.outputs.count }} | < 20 | $([ "${{ steps.todos.outputs.count }}" -lt "20" ] && echo "✅" || echo "❌") |
+          | console.* usage | ${{ steps.console.outputs.count }} | < 50 | $([ "${{ steps.console.outputs.count }}" -lt "50" ] && echo "✅" || echo "❌") |
+          EOF
+          cat reports/weekly-audit.md
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-audit
+          path: reports/weekly-audit.md

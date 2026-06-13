@@ -1,6 +1,7 @@
 const { authService } = require('../../services/AuthService')
 const { petService } = require('./index')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const { chooseAndUploadAvatar } = require('./utils/avatarUpload')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
@@ -19,8 +20,8 @@ Page({
       note: '',
     },
     petTypes: [
-      { name: '猫咪', value: 'cat' },
       { name: '狗狗', value: 'dog' },
+      { name: '猫咪', value: 'cat' },
       { name: '异宠', value: 'exotic' },
     ],
     petGenders: [
@@ -47,67 +48,10 @@ Page({
   },
 
   chooseAvatar() {
-    wx.showActionSheet({
-      itemList: ['从相册选择', '拍照'],
-      success: res => {
-        if (res.tapIndex === 0) {
-          this.chooseImageFromAlbum()
-        } else if (res.tapIndex === 1) {
-          this.takePhoto()
-        }
-      },
-      fail: error => {
-        console.error('[APP] 选择操作失败:', error)
-      },
+    chooseAndUploadAvatar({
+      onSuccess: fileID => this.setData({ 'formData.avatarUrl': fileID }),
+      onError: key => this.error(key),
     })
-  },
-
-  chooseImageFromAlbum() {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['album'],
-      success: res => {
-        this.uploadAvatar(res.tempFiles[0].tempFilePath)
-      },
-      fail: error => {
-        console.error('[APP] 选择图片失败:', error)
-        this.error('CHOOSE_IMAGE_FAILED')
-      },
-    })
-  },
-
-  takePhoto() {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['camera'],
-      success: res => {
-        this.uploadAvatar(res.tempFiles[0].tempFilePath)
-      },
-      fail: error => {
-        console.error('[APP] 拍照失败:', error)
-        this.error('PHOTO_FAILED')
-      },
-    })
-  },
-
-  async uploadAvatar(tempFilePath) {
-    try {
-      wx.showLoading({ title: '上传中...', mask: true })
-      const fileName = `pet-avatarUrls/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
-      const uploadResult = await wx.cloud.uploadFile({
-        cloudPath: fileName,
-        filePath: tempFilePath,
-      })
-      this.setData({ 'formData.avatarUrl': uploadResult.fileID })
-      wx.hideLoading()
-      this.toast('AVATAR_UPLOAD_SUCCESS')
-    } catch (error) {
-      console.error('[APP] 头像上传失败:', error)
-      wx.hideLoading()
-      this.error('AVATAR_UPLOAD_FAILED')
-    }
   },
 
   onNameInput(e) {
@@ -221,5 +165,4 @@ Page({
     }
   },
 
-  onUnload() {},
 })

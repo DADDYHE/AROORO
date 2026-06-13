@@ -78,11 +78,6 @@ page {
   box-shadow: var(--shadow-sm);
 }
 
-.card-hover {
-  transition: all var(--transition-normal);
-  will-change: transform, box-shadow;
-}
-
 .card-hover:active {
   transform: translateY(2px);
   box-shadow: var(--shadow-sm);
@@ -246,21 +241,6 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
 }
 
-h1 {
-  font-size: var(--font-size-xxl);
-  font-weight: 600;
-}
-
-h2 {
-  font-size: var(--font-size-xl);
-  font-weight: 500;
-}
-
-h3 {
-  font-size: var(--font-size-lg);
-  font-weight: 500;
-}
-
 /* 文本 - 苹果风格美学增强版 */
 .text-primary {
   color: var(--text-primary);
@@ -277,33 +257,6 @@ h3 {
 }
 
 /* 间距 - 苹果风格美学增强版 */
-.mt-1 { margin-top: var(--spacing-xs); }
-.mt-2 { margin-top: var(--spacing-sm); }
-.mt-3 { margin-top: var(--spacing-md); }
-.mt-4 { margin-top: var(--spacing-lg); }
-.mt-5 { margin-top: var(--spacing-xl); }
-.mt-6 { margin-top: var(--spacing-xxl); }
-.mt-7 { margin-top: var(--spacing-xxxl); }
-
-.mb-1 { margin-bottom: var(--spacing-xs); }
-.mb-2 { margin-bottom: var(--spacing-sm); }
-.mb-3 { margin-bottom: var(--spacing-md); }
-.mb-4 { margin-bottom: var(--spacing-lg); }
-.mb-5 { margin-bottom: var(--spacing-xl); }
-.mb-6 { margin-bottom: var(--spacing-xxl); }
-.mb-7 { margin-bottom: var(--spacing-xxxl); }
-
-.ml-1 { margin-left: var(--spacing-xs); }
-.ml-2 { margin-left: var(--spacing-sm); }
-.ml-3 { margin-left: var(--spacing-md); }
-.ml-4 { margin-left: var(--spacing-lg); }
-.ml-5 { margin-left: var(--spacing-xl); }
-
-.mr-1 { margin-right: var(--spacing-xs); }
-.mr-2 { margin-right: var(--spacing-sm); }
-.mr-3 { margin-right: var(--spacing-md); }
-.mr-4 { margin-right: var(--spacing-lg); }
-.mr-5 { margin-right: var(--spacing-xl); }
 
 /* 订单状态标签 - 苹果风格美学增强版 */
 .status-badge {
@@ -349,36 +302,7 @@ h3 {
   padding: var(--spacing-xxxxl);
 }
 
-.loading-spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid var(--divider-color);
-  border-top: 3px solid var(--primary-color);
-  border-radius: 50%;
-  animation: spin var(--transition-normal) linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 /* 骨架屏 - 苹果风格美学增强版 */
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: var(--border-radius-lg);
-}
-
-@keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
 
 /* 空状态 - 苹果风格美学增强版 */
 .empty-state {
@@ -390,118 +314,13 @@ h3 {
   text-align: center;
 }
 
-.empty-state-icon {
-  width: 96px;
-  height: 96px;
-  margin-bottom: var(--spacing-xxl);
-  opacity: 0.2;
-  transition: opacity var(--transition-normal);
-}
-
 .empty-state:hover .empty-state-icon {
   opacity: 0.3;
 }
 
-.empty-state-text {
-  color: var(--text-secondary);
-  font-size: var(--font-size-md);
-  line-height: var(--line-height-loose);
-  max-width: 280px;
-  margin-bottom: var(--spacing-lg);
-}
-
 /* 动画 - 苹果风格美学增强版 */
-.fade-in {
-  animation: fade-in var(--transition-normal);
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.slide-up {
-  animation: slide-up var(--transition-normal);
-}
-
-@keyframes slide-up {
-  from {
-    transform: translateY(40px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.slide-in-right {
-  animation: slide-in-right var(--transition-normal);
-}
-
-@keyframes slide-in-right {
-  from {
-    transform: translateX(40px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.bounce-in {
-  animation: bounce-in var(--transition-bounce);
-}
-
-@keyframes bounce-in {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  70% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-  }
-}
 
 /* 新动画 - 苹果风格美学增强版 */
-.scale-in {
-  animation: scale-in var(--transition-normal);
-}
-
-@keyframes scale-in {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.fade-up {
-  animation: fade-up var(--transition-smooth);
-}
-
-@keyframes fade-up {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
 
 /* 分割线 - 苹果风格美学增强版 */
 .divider {
@@ -521,65 +340,13 @@ h3 {
   background: linear-gradient(90deg, transparent, var(--divider-color), transparent);
 }
 
-.divider-light {
-  height: 1px;
-  background-color: rgba(0, 0, 0, 0.05);
-  margin: var(--spacing-xxl) 0;
-}
-
 /* 阴影效果 - 苹果风格美学增强版 */
-.shadow-sm {
-  box-shadow: var(--shadow-sm);
-}
-
-.shadow-md {
-  box-shadow: var(--shadow-md);
-}
-
-.shadow-lg {
-  box-shadow: var(--shadow-lg);
-}
-
-.shadow-xl {
-  box-shadow: var(--shadow-xl);
-}
-
-.shadow-2xl {
-  box-shadow: var(--shadow-2xl);
-}
 
 .shadow-soft {
   box-shadow: var(--shadow-soft);
 }
 
 /* 圆角 - 苹果风格美学增强版 */
-.rounded-sm {
-  border-radius: var(--border-radius-sm);
-}
-
-.rounded-md {
-  border-radius: var(--border-radius-md);
-}
-
-.rounded-lg {
-  border-radius: var(--border-radius-lg);
-}
-
-.rounded-xl {
-  border-radius: var(--border-radius-xl);
-}
-
-.rounded-2xl {
-  border-radius: var(--border-radius-2xl);
-}
-
-.rounded-3xl {
-  border-radius: var(--border-radius-3xl);
-}
-
-.rounded-full {
-  border-radius: var(--border-radius-full);
-}
 
 /* 文本截断 */
 .truncate {
@@ -589,62 +356,10 @@ h3 {
 }
 
 /* 多行文本截断 */
-.truncate-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.truncate-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 
 /* 布局工具类 */
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.flex-start {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.flex-end {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-grow {
-  flex-grow: 1;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
-}
 
 /* 响应式隐藏 */
-.hidden {
-  display: none;
-}
 
 /* 触摸反馈美学增强版 */
 .touch-feedback {
@@ -667,38 +382,8 @@ h3 {
 }
 
 /* 毛玻璃效果 - 苹果风格增强版 */
-.backdrop-blur {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.7);
-}
-
-.backdrop-blur-dark {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background-color: rgba(10, 17, 40, 0.8);
-}
 
 /* 渐变背景 */
-.gradient-primary {
-  background: var(--gradient-primary);
-}
-
-.gradient-secondary {
-  background: var(--gradient-secondary);
-}
-
-.gradient-accent {
-  background: var(--gradient-accent);
-}
-
-.gradient-light {
-  background: var(--gradient-light);
-}
-
-.gradient-dark {
-  background: var(--gradient-dark);
-}
 
 /* 文字渐变 */
 .text-gradient {
@@ -716,10 +401,6 @@ h3 {
 }
 
 /* 边框渐变 */
-.border-gradient {
-  position: relative;
-  border-radius: var(--border-radius-lg);
-}
 
 .border-gradient::before {
   content: '';
@@ -761,16 +442,8 @@ h3 {
 }
 
 /* 禁用状态 */
-.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
 
 /* 焦点样式 */
-.focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
 
 /* 过渡效果 */
 .transition {
@@ -795,18 +468,8 @@ h3 {
     padding: var(--spacing-xl);
   }
   
-  h1 {
-    font-size: var(--font-size-xl);
-  }
-  
-  h2 {
-    font-size: var(--font-size-lg);
-  }
-  
   .card {
     padding: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
   }
 }
-
-

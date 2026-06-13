@@ -1,0 +1,72 @@
+<view class="gallery-container">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-content">
+      <view class="loading-brand-mark">
+        <view class="brand-ring"></view>
+        <view class="brand-ring brand-ring--delay"></view>
+        <view class="brand-dot"></view>
+      </view>
+      <view class="loading-dots">
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+      </view>
+      <text class="loading-text">加载中</text>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="gallery-header">
+      <view class="brand-block">
+        <view class="brand-accent-bar"></view>
+        <view class="brand-main">
+          <text class="brand-text">推荐用户</text>
+        </view>
+        <view class="brand-meta">
+          <view class="brand-meta-line"></view>
+          <text class="brand-subtitle">共 {{total}} 人</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gallery-hall">
+      <view wx:if="{{stats}}" class="gallery-card stats-card">
+        <view class="card-accent stats-accent"></view>
+        <view class="card-body">
+          <view class="stats-row">
+            <view class="stats-stat">
+              <text class="stats-value">¥{{stats.totalAmount}}</text>
+              <text class="stats-label">消费总额</text>
+            </view>
+            <view class="stats-stat">
+              <text class="stats-value">{{stats.totalCount}}</text>
+              <text class="stats-label">订单数</text>
+            </view>
+            <view class="stats-stat">
+              <text class="stats-value">¥{{stats.estimatedCommission}}</text>
+              <text class="stats-label">预估佣金</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{users.length === 0}}" class="gallery-empty">
+        <view class="empty-line"></view>
+        <text class="empty-text">暂无推荐用户</text>
+      </view>
+
+      <view wx:for="{{users}}" wx:key="_id" class="gallery-card user-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <view class="user-row">
+            <image class="user-avatar" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onAvatarError" data-index="{{index}}" />
+            <view class="user-info">
+              <text class="user-name">{{item.nickName || '用户'}}</text>
+              <text class="user-stat">订单 {{item.orderCount || 0}} · 消费 ¥{{item.totalSpent || 0}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

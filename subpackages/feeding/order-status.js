@@ -2,6 +2,7 @@ const { FeedingService } = require('./services/FeedingService')
 const DEFAULT_AVATAR = '/images/default-avatar.svg'
 const PaymentService = require('../../services/PaymentService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const { formatTime } = require('../../profile/utils/dateUtils')
 
 const STATUS_CONFIG = {
   pending_payment: { title: '待付款', subtitle: '请尽快完成支付', icon: '💰' },
@@ -10,39 +11,6 @@ const STATUS_CONFIG = {
   completed: { title: '服务已完成', subtitle: '感谢您的使用', icon: '🎉' },
   cancelled: { title: '订单已取消', subtitle: '', icon: '❌' },
 }
-
-function formatTime(date) {
-  if (!date) {return ''}
-  let d
-  if (date instanceof Date) {
-    d = date
-  } else if (typeof date === 'object' && date !== null) {
-    if (date.$date) {
-      d = new Date(date.$date)
-    } else if (typeof date.seconds === 'number') {
-      d = new Date(date.seconds * 1000 + (date.nanoseconds || 0) / 1e6)
-    } else if (date.value && date.value.seconds) {
-      d = new Date(date.value.seconds * 1000 + (date.value.nanoseconds || 0) / 1e6)
-    } else if (date.getTime && typeof date.getTime === 'function') {
-      d = new Date(date.getTime())
-    } else {
-      d = new Date(String(date))
-    }
-  } else if (typeof date === 'string') {
-    d = date.includes('T') ? new Date(date) : new Date(date.replace(/-/g, '/'))
-  } else if (typeof date === 'number') {
-    d = new Date(date)
-  } else {
-    return String(date)
-  }
-  if (!(d instanceof Date) || isNaN(d.getTime())) {return String(date)}
-
-  const pad = n => (n < 10 ? `0${n}` : `${n}`)
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())
-  } ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-}
-
-const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
@@ -177,7 +145,30 @@ Page({
   },
 
   async onCancelOrder() {
-    this.showModal({ titleKey: 'BIZ_B1DRZ9', contentKey: 'BIZ_YMBMOP' })
+    const orderId = this.data.orderId
+    if (!orderId) {return}
+    this.showModal({
+      titleKey: 'BIZ_B1DRZ9',
+      contentKey: 'BIZ_YMBMOP',
+      success: (confirmed) => {
+        if (!confirmed) {return}
+        this._doCancelOrder(orderId)
+      },
+    })
+  },
+
+  async _doCancelOrder(orderId) {
+    try {
+      const res = await FeedingService.updateFeedingOrderStatus({ orderId, status: 'cancelled' })
+      if (res && res.code === 0) {
+        this.toast('CANCEL_SUCCESS')
+        this._fetchOrderStatus()
+      } else {
+        this.errorDynamic((res && res.message) || '', 'CANCEL_FAILED')
+      }
+    } catch (err) {
+      this.errorDynamic((err && err.message) || '', 'CANCEL_FAILED')
+    }
   },
 
   onAvatarError(e) {

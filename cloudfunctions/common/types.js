@@ -1,0 +1,13 @@
+"use strict";
+/**
+ * common/types.ts - 统一公共类型定义
+ *
+ * 目标：
+ *   - 定义所有云函数共享的基础类型
+ *   - 避免在每个服务中重复定义
+ *   - 提供类型扩展机制，各服务可添加特有字段
+ *
+ * 使用方式：
+ *   import { AuthLike, CloudEvent, CloudContext } from '../common/types'
+ */
+Object.defineProperty(exports, "__esModule", { value: true });

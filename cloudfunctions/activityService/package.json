@@ -1,0 +1,9 @@
+{
+  "name": "activityService",
+  "version": "1.0.0",
+  "description": "宠物活动服务",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.7.0"
+  }
+}

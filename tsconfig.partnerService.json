@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.common.json",
+  "compilerOptions": {
+    "outDir": "./cloudfunctions",
+    "rootDir": "./cloudfunctions",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "declaration": true,
+    "target": "ES2020",
+    "module": "CommonJS"
+  },
+  "include": [
+    "cloudfunctions/partnerService/index.ts",
+    "cloudfunctions/partnerService/services/application.ts",
+    "cloudfunctions/partnerService/services/referral.ts",
+    "cloudfunctions/partnerService/services/wallet.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "cloudfunctions/partnerService/node_modules"
+  ]
+}

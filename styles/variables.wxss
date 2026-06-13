@@ -1,0 +1,173 @@
+/* 设计系统变量 - 苹果风格美学增强版 */
+
+/* 品牌颜色 */
+page {
+  /* 主色 */
+  --primary-color: #0A1128;    /* 深空蓝 */
+  /* 辅助色 */
+  --secondary-color: #4ECDC4;  /* 薄荷绿 */
+  /* 点缀色 */
+  --accent-color: #FFD700;     /* 金色 */
+  
+  /* 中性色 - 苹果风格优化 */
+  --background-color: #F5F5F7;  /* 苹果风格背景 */
+  --card-color: #FFFFFF;        /* 卡片白色 */
+  --text-primary: #1D1D1F;      /* 主要文字 */
+  --text-secondary: #86868B;    /* 次要文字 */
+  --text-tertiary: #C7C7CC;     /*  tertiary文字 */
+  --border-color: #D2D2D7;      /* 边框颜色 */
+  --divider-color: #F2F2F7;     /* 分割线颜色 */
+  --overlay-color: rgba(0, 0, 0, 0.5);  /* 遮罩颜色 */
+  
+  /* 扩展中性色 - 苹果风格精致灰阶 */
+  --gray-50: #F9F9F9;
+  --gray-100: #F5F5F7;
+  --gray-200: #E5E5EA;
+  --gray-300: #D2D2D7;
+  --gray-400: #C7C7CC;
+  --gray-500: #AEAEB2;
+  --gray-600: #86868B;
+  --gray-700: #636366;
+  --gray-800: #48484A;
+  --gray-900: #3A3A3C;
+  --gray-950: #2C2C2E;
+  
+  /* 功能色 - 苹果风格 */
+  --success-color: #34C759;
+  --warning-color: #FF9500;
+  --error-color: #FF3B30;
+  --info-color: #007AFF;
+  
+  /* 订单状态色 */
+  --status-pending: #FF9500;
+  --status-active: #007AFF;
+  --status-completed: #34C759;
+  --status-cancelled: #8E8E93;
+  
+  /* 板块主题色 - 艺术展美学增强版 */
+  /* 寄养板块 */
+  --boarding-primary: #FF6B00;    /* 珊瑚橙 - 温暖、活力 */
+  --boarding-secondary: #FF8E40;  /* 浅珊瑚橙 */
+  --boarding-accent: #FFD7B5;     /* 珊瑚粉 */
+  --boarding-gradient: linear-gradient(135deg, #FF6B00 0%, #FF8E40 100%);
+  
+  /* 活动板块 */
+  --activity-primary: #4ECDC4;    /* 薄荷绿 - 新鲜、自然 */
+  --activity-secondary: #26A69A;  /* 深薄荷绿 */
+  --activity-accent: #B2DFDB;     /* 浅薄荷绿 */
+  --activity-gradient: linear-gradient(135deg, #4ECDC4 0%, #26A69A 100%);
+  
+  /* 商城板块 */
+  --mall-primary: #9C27B0;        /* 紫色 - 高贵、神秘 */
+  --mall-secondary: #7B1FA2;      /* 深紫色 */
+  --mall-accent: #E1BEE7;         /* 浅紫色 */
+  --mall-gradient: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+  
+  /* 喂养板块 */
+  --feeding-primary: #2196F3;     /* 蓝色 - 专业、信任 */
+  --feeding-secondary: #1976D2;   /* 深蓝色 */
+  --feeding-accent: #BBDEFB;       /* 浅蓝色 */
+  --feeding-gradient: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  
+  /* 渐变色 - 苹果风格优化 */
+  --gradient-primary: linear-gradient(135deg, #0A1128 0%, #1A237E 100%);
+  --gradient-secondary: linear-gradient(135deg, #4ECDC4 0%, #26A69A 100%);
+  --gradient-accent: linear-gradient(135deg, #FFD700 0%, #FFA000 100%);
+  --gradient-light: linear-gradient(135deg, #F5F5F7 0%, #FFFFFF 100%);
+  --gradient-dark: linear-gradient(135deg, #1D1D1F 0%, #0A1128 100%);
+  
+  /* 字体 - 苹果风格 */
+  --font-bold: 'SF Pro Display Medium';
+  --font-regular: 'SF Pro Text Regular';
+  --font-light: 'SF Pro Text Light';
+  --font-thin: 'SF Pro Text Thin';
+  --font-semibold: 'SF Pro Display Semibold';
+  --font-heavy: 'SF Pro Display Bold';
+  
+  /* 字号 */
+  --font-size-xxxl: 28px;
+  --font-size-xxl: 24px;
+  --font-size-xl: 20px;
+  --font-size-lg: 18px;
+  --font-size-md: 16px;
+  --font-size-sm: 14px;
+  --font-size-xs: 12px;
+  --font-size-xxs: 10px;
+  
+  /* 行高 */
+  --line-height-title: 1.05;
+  --line-height-text: 1.4;
+  --line-height-tight: 1.2;
+  --line-height-loose: 1.6;
+  
+  /* 字间距 */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.01em;
+  --letter-spacing-wider: 0.02em;
+  
+  /* 间距 - 苹果风格更大留白 */
+  --spacing-xxxxs: 1px;
+  --spacing-xxxs: 2px;
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 40px;
+  --spacing-xxxl: 48px;
+  --spacing-xxxxl: 64px;
+  --spacing-xxxxxl: 80px;
+  
+  /* 圆角 - 苹果风格柔和圆角 */
+  --border-radius-xs: 4px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 20px;
+  --border-radius-2xl: 24px;
+  --border-radius-3xl: 28px;
+  --border-radius-4xl: 32px;
+  --border-radius-full: 9999px;
+  
+  /* 阴影 - 苹果风格自然阴影 */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.02);
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 16px rgba(0,0,0,0.06);
+  --shadow-xl: 0 16px 24px rgba(0,0,0,0.08);
+  --shadow-2xl: 0 24px 32px rgba(0,0,0,0.10);
+  --shadow-3xl: 0 32px 48px rgba(0,0,0,0.12);
+  --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-soft: 0 8px 32px rgba(0,0,0,0.08);
+  
+  /* 动画 - 苹果风格平滑过渡 */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-smooth: 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-elastic: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* 布局 */
+  --header-height: 44px;
+  --tabbar-height: 50px;
+  --list-item-height: 56px;
+  --card-padding: var(--spacing-lg);
+  --container-max-width: 414px;
+  
+  /* 安全区域 */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  
+  /* Z-index层级 */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
+}

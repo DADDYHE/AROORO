@@ -115,42 +115,6 @@
 }
 
 /* 未读消息红点样式 */
-.tab-bar-icon-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48rpx;
-  height: 48rpx;
-}
-
-.unread-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 32rpx;
-  height: 32rpx;
-  background-color: #ff4444;
-  color: #ffffff;
-  font-size: 20rpx;
-  font-weight: 700;
-  border-radius: 16rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8rpx;
-  z-index: 10;
-  box-shadow: 0 2rpx 8rpx rgba(255, 68, 68, 0.4);
-  animation: badge-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform: translate(50%, -50%);
-}
-
-.badge-large {
-  min-width: 40rpx;
-  height: 40rpx;
-  font-size: 18rpx;
-  padding: 0 10rpx;
-}
 
 @keyframes badge-pop {
   0% {
@@ -281,4 +245,3 @@
 .tab-bar-item-center.active .center-button::before {
   background: linear-gradient(135deg, rgba(78, 205, 196, 0.35) 0%, rgba(33, 150, 243, 0.05) 100%);
 }
-

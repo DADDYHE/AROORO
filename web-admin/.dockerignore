@@ -1,0 +1,27 @@
+# 源文件和构建工具
+node_modules
+.git
+.gitignore
+README.md
+.env
+.env.*
+*.log
+
+# IDE
+.vscode
+.idea
+
+# 构建产物
+dist
+build
+.cache
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+
+# Cloudbase 配置
+.cloudbaserc
+cloudbaserc.json
+tcb_*

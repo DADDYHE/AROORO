@@ -1,0 +1,15 @@
+node_modules
+miniprogram_npm
+dist
+build
+coverage
+*.min.js
+vendor
+public
+temp
+tmp
+.DS_Store
+.npm
+.eslintcache
+package-lock.json
+yarn.lock

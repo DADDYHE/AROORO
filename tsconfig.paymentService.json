@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.common.json",
+  "compilerOptions": {
+    "outDir": "./cloudfunctions",
+    "rootDir": "./cloudfunctions",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "declaration": true
+  },
+  "include": [
+    "cloudfunctions/paymentService/index.ts",
+    "cloudfunctions/paymentService/services/refund.ts",
+    "cloudfunctions/paymentService/services/pay.ts",
+    "cloudfunctions/paymentService/services/notify.ts",
+    "cloudfunctions/paymentService/services/commission.ts",
+    "cloudfunctions/paymentService/common/payment-state-machine.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "cloudfunctions/paymentService/node_modules"
+  ]
+}

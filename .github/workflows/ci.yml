@@ -1,0 +1,350 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, feature/**]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier check
+        run: npm run format:check
+
+      - name: No empty catch audit
+        run: |
+          echo "Scanning for empty catch blocks..."
+          COUNT=$(grep -rE "} catch \(.*\) \{\s*\}" cloudfunctions/ services/ subpackages/ utils/ --include="*.js" 2>/dev/null | wc -l | tr -d ' ')
+          echo "Empty catch count: $COUNT"
+          if [ "$COUNT" -gt "0" ]; then
+            echo "::warning::Found $COUNT empty catch blocks. See docs/EMPTY_CATCH_AUDIT.md"
+          fi
+
+      - name: Error code whitelist audit (strict)
+        # Sprint 10 质量门禁：未注册的错误码直接 fail CI
+        run: npm run audit:error-codes:strict
+
+      - name: Global rate limit audit (Sprint 21)
+        # Sprint 21 质量门禁：rate-limit-store 必须正确接入到所有使用 withRateLimit 的云函数入口
+        run: npm run audit:global-rate-limit:strict
+
+      - name: Business risk audit (Sprint 22)
+        # Sprint 22 质量门禁：风控必须接入到 submitMallOrder / applyForActivity 等业务点
+        run: npm run audit:s22-business-risk:strict
+
+      - name: i18n override audit (Sprint 23)
+        # Sprint 23 质量门禁：i18n 运营后台必须完整（cloud function / admin service /
+        # 客户端热更新 / 集成测试 / app.json 注册）
+        run: npm run audit:s23-i18n-override:strict
+
+      - name: TypeScript common build
+        # Sprint 12-13 质量门禁：编译 errors.ts / logger.ts / cache.ts /
+        # state-machine.ts / idempotency.ts → .js
+        # 编译产物必须随源码更新，否则报错
+        run: npm run build:common
+
+      - name: Verify build:common produces fresh output
+        # 二次编译若无文件变更则通过；若有 drift 则失败
+        run: |
+          md5_before=$(md5sum \
+            cloudfunctions/common/errors.js \
+            cloudfunctions/common/errors-i18n.js \
+            cloudfunctions/common/logger.js \
+            cloudfunctions/common/cache.js \
+            cloudfunctions/common/state-machine.js \
+            cloudfunctions/common/idempotency.js \
+            cloudfunctions/common/date-holidays.js \
+            cloudfunctions/common/validator.js \
+            cloudfunctions/common/risk-control.js \
+            cloudfunctions/common/utils.js \
+            2>/dev/null | sort | md5sum)
+          npm run build:common > /dev/null 2>&1
+          md5_after=$(md5sum \
+            cloudfunctions/common/errors.js \
+            cloudfunctions/common/errors-i18n.js \
+            cloudfunctions/common/logger.js \
+            cloudfunctions/common/cache.js \
+            cloudfunctions/common/state-machine.js \
+            cloudfunctions/common/idempotency.js \
+            cloudfunctions/common/date-holidays.js \
+            cloudfunctions/common/validator.js \
+            cloudfunctions/common/risk-control.js \
+            cloudfunctions/common/utils.js \
+            2>/dev/null | sort | md5sum)
+          if [ "$md5_before" != "$md5_after" ]; then
+            echo "::error::build:common produced different output on second run, source drift detected"
+            exit 1
+          fi
+          echo "build:common is idempotent."
+
+      - name: Verify TypeScript .ts files are present
+        # Sprint 13-15 质量门禁：所有列出的 .ts 源文件必须真实存在
+        run: |
+          for f in errors.ts errors-i18n.ts logger.ts cache.ts state-machine.ts idempotency.ts date-holidays.ts validator.ts risk-control.ts utils.ts; do
+            if [ ! -f "cloudfunctions/common/$f" ]; then
+              echo "::error::Missing TypeScript source: cloudfunctions/common/$f"
+              exit 1
+            fi
+          done
+          echo "All TypeScript source files present."
+
+      - name: Data validation dry-run
+        # Sprint 10 质量门禁：存量数据问题 dry-run 报告（非阻塞，仅上报）
+        run: |
+          echo "Validating legacy data (dry-run only, no writes)..."
+          node scripts/validate-legacy-data.js --report || echo "validate-legacy-data: report only, ignoring exit"
+
+  naming-audit:
+    name: Naming Convention Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check snake_case in code
+        run: |
+          echo "Auditing snake_case usage..."
+          # 仅检查业务 JS（排除 _ 下划线前缀的合法用法）
+          RESULT=$(grep -rEn "[a-z]+_[a-z]+\s*[:=]" \
+            cloudfunctions/common/ \
+            cloudfunctions/userService/ \
+            cloudfunctions/orderService/ \
+            services/ \
+            --include="*.js" 2>/dev/null | grep -v "out_trade_no\|transaction_id\|sign_type\|appid\|mchid\|notify_url" | wc -l | tr -d ' ')
+          echo "Snake case violations: $RESULT"
+          if [ "$RESULT" -gt "0" ]; then
+            echo "::warning::Found $RESULT potential snake_case violations"
+            grep -rEn "[a-z]+_[a-z]+\s*[:=]" \
+              cloudfunctions/common/ \
+              cloudfunctions/userService/ \
+              cloudfunctions/orderService/ \
+              services/ \
+              --include="*.js" 2>/dev/null | grep -v "out_trade_no\|transaction_id\|sign_type\|appid\|mchid\|notify_url" | head -20
+          fi
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18, 20]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --ci --reporters=default --reporters=jest-junit
+
+      - name: Upload coverage
+        if: matrix.node-version == 20
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./coverage
+          flags: unittests
+          fail_ci_if_error: false
+
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.node-version }}
+          path: junit.xml
+
+  duplication-check:
+    name: Code Duplication Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect duplicate file pairs
+        run: |
+          echo "=== Looking for known duplicate file pairs ==="
+          PAIRS=(
+            "subpackages/booking/utils/OrderManager.js|subpackages/profile/utils/OrderManager.js"
+            "subpackages/booking/utils/eventEmitter.js|subpackages/profile/utils/eventEmitter.js"
+            "subpackages/booking/utils/addressUtils.js|subpackages/other/utils/addressUtils.js"
+            "utils/BookingDataService.js|subpackages/pet/BookingDataService.js"
+          )
+          for PAIR in "${PAIRS[@]}"; do
+            A="${PAIR%%|*}"
+            B="${PAIR##*|}"
+            if [ -f "$A" ] && [ -f "$B" ]; then
+              HASH_A=$(md5sum "$A" | cut -d' ' -f1)
+              HASH_B=$(md5sum "$B" | cut -d' ' -f1)
+              if [ "$HASH_A" = "$HASH_B" ]; then
+                echo "::error::Files are identical: $A <-> $B"
+                exit 1
+              else
+                echo "Files differ (good): $A <-> $B"
+              fi
+            fi
+          done
+
+  ci-status:
+    name: CI Status Gate
+    runs-on: ubuntu-latest
+    needs: [lint, naming-audit, test, duplication-check]
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.naming-audit.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.duplication-check.result }}" != "success" ]; then
+            echo "One or more CI jobs failed."
+            exit 1
+          fi
+          echo "All CI checks passed."
+
+  k6-smoke:
+    # Sprint 14 质量门禁：CI 接入 k6 基线回归（mini smoke）
+    # 仅在 push 到 main 分支时阻塞；PR 触发为 best-effort，失败仅警告
+    name: k6 Smoke Baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true  # k6 未安装时跳过，不阻塞 PR
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install k6
+        # 使用官方安装脚本（跨平台一致）
+        run: |
+          if ! command -v k6 >/dev/null 2>&1; then
+            echo "k6 not found, installing..."
+            sudo gpg --no-default-keyring \
+              --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+              --keyserver hkp://keyserver.ubuntu.com:80 \
+              --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69 2>/dev/null || true
+            echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | \
+              sudo tee /etc/apt/sources.list.d/k6.list >/dev/null
+            sudo apt-get update -qq
+            sudo apt-get install -y k6
+          fi
+          k6 version
+
+      - name: Run k6 CI smoke
+        # 工具链健康检查：5s 心跳，确认脚本可加载
+        run: |
+          mkdir -p results
+          k6 run \
+            --vus 1 \
+            --duration 5s \
+            --summary-export=results/k6-ci-smoke-summary.json \
+            scripts/perf/ci-smoke.js
+          echo "::notice::k6 smoke test passed (toolchain healthy)"
+
+      - name: Validate k6 script syntax (main-flow.js)
+        # 即使 ci-smoke 通过，也要确保主流量脚本可被 k6 解析
+        run: |
+          # dry-run 模式：仅编译，不执行
+          k6 inspect scripts/perf/main-flow.js || {
+            echo "::error::main-flow.js 解析失败"
+            exit 1
+          }
+          k6 inspect scripts/perf/ci-smoke.js || {
+            echo "::error::ci-smoke.js 解析失败"
+            exit 1
+          }
+          echo "All k6 scripts parse OK."
+
+      - name: Archive k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-smoke-results
+          path: results/k6-ci-smoke-summary.json
+          retention-days: 14
+
+  k6-main:
+    # 真实 k6 性能基线：仅在 main 分支定时任务触发（不阻塞 PR）
+    name: k6 Main Flow Baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install k6
+        run: |
+          if ! command -v k6 >/dev/null 2>&1; then
+            sudo gpg --no-default-keyring \
+              --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+              --keyserver hkp://keyserver.ubuntu.com:80 \
+              --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69 2>/dev/null || true
+            echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | \
+              sudo tee /etc/apt/sources.list.d/k6.list >/dev/null
+            sudo apt-get update -qq
+            sudo apt-get install -y k6
+          fi
+          k6 version
+
+      - name: Run k6 main flow (staging baseline)
+        # 仅当 BASE_URL 注入时才跑真实请求；否则仅 dry-run
+        run: |
+          mkdir -p results
+          if [ -n "${{ secrets.STAGING_BASE_URL }}" ]; then
+            echo "Running against staging: ${{ secrets.STAGING_BASE_URL }}"
+            STAGES=baseline k6 run \
+              --summary-export=results/k6-main-baseline.json \
+              --env BASE_URL="${{ secrets.STAGING_BASE_URL }}" \
+              --env CLOUDBASE_ENV="${{ secrets.STAGING_CLOUDBASE_ENV || 'staging-1' }}" \
+              --env STAGES=baseline \
+              scripts/perf/main-flow.js
+          else
+            echo "::notice::STAGING_BASE_URL not configured, skipping real run (toolchain check only)"
+            k6 inspect scripts/perf/main-flow.js
+          fi
+
+      - name: Archive k6 main results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-main-baseline
+          path: results/k6-main-baseline.json
+          retention-days: 90

@@ -6,6 +6,7 @@ const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 
 Page({
   ...pageI18n.mixin(),
@@ -24,10 +25,10 @@ Page({
     appVersion: '1.0.0',
     isHeaderScrolled: false,
     showHostModal: false,
-    iconShoppingCart: 'cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/shopping-cart-2-line.svg',
-    iconBell: 'cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/bell-line.svg',
-    iconDoorOpen: 'cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/door-open-line.svg',
-    iconHomeHeart: 'cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/home-heart-line.svg',
+    iconShoppingCart: CLOUD_ICONS.SHOPPING_CART,
+    iconBell: CLOUD_ICONS.BELL,
+    iconDoorOpen: CLOUD_ICONS.DOOR_OPEN,
+    iconHomeHeart: CLOUD_ICONS.HOME_HEART,
   },
 
   onLoad() {
@@ -42,12 +43,6 @@ Page({
 
   _onSessionRestored() {
     this.getUserInfo()
-  },
-
-  onHide() {
-  },
-
-  onUnload() {
   },
 
   async getUserInfo() {
@@ -232,7 +227,26 @@ Page({
   },
 
   onLogout() {
-    this.showModal({ titleKey: 'BIZ_IIFI5W', contentKey: 'BIZ_19HBY7L' })
+    this.showModal({
+      titleKey: 'BIZ_IIFI5W',
+      contentKey: 'BIZ_19HBY7L',
+      success: (confirmed) => {
+        if (!confirmed) {return}
+        this._doLogout()
+      },
+    })
+  },
+
+  async _doLogout() {
+    try {
+      const res = await authService.logout()
+      this.toast('LOGOUT_SUCCESS')
+      setTimeout(() => {
+        wx.reLaunch({ url: '/pages/home/index' })
+      }, 800)
+    } catch (err) {
+      this.error('LOGOUT_FAILED')
+    }
   },
 
   onPageScroll(e) {

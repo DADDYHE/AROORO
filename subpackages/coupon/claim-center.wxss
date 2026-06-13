@@ -1,0 +1,70 @@
+/* Gallery Voucher — 领券中心 */
+
+.container { padding: 20rpx; background: #F7F6F3; min-height: 100vh; }
+
+/* 卡片基础 */
+.coupon-card {
+  position: relative;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 16rpx rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+.coupon-card:active { transform: scale(0.985); }
+
+.card-ribbon { height: 6rpx; background: var(--accent, #C4956A); }
+
+.card-body { display: flex; padding: 32rpx 28rpx 24rpx; gap: 24rpx; }
+
+.card-main {
+  flex-shrink: 0; width: 180rpx;
+  display: flex; flex-direction: column; justify-content: center;
+  border-right: 2rpx dashed #EDECEA; padding-right: 24rpx;
+}
+
+.card-value { display: flex; align-items: baseline; color: var(--accent, #C4956A); }
+.card-value .num { font-size: 64rpx; font-weight: 700; line-height: 1; }
+.card-value .unit { font-size: 28rpx; margin-right: 4rpx; }
+
+.card-threshold { font-size: 22rpx; color: #8E8E93; margin-top: 8rpx; }
+
+.card-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.card-name { font-size: 30rpx; font-weight: 600; color: #1D1D1F; margin-bottom: 12rpx;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-scopes { display: flex; flex-wrap: wrap; gap: 8rpx; align-items: center; }
+.scope-label { font-size: 22rpx; color: #8E8E93; }
+.scope-tag {
+  font-size: 20rpx; padding: 4rpx 12rpx; background: #F4F2EE; color: #666;
+  border-radius: 6rpx;
+}
+
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16rpx 28rpx 24rpx; border-top: 1rpx solid #F4F2EE;
+}
+.card-stock { font-size: 22rpx; color: #8E8E93; }
+.card-claim-btn {
+  font-size: 26rpx; padding: 12rpx 32rpx;
+  background: #1D1D1F; color: #FAFAF8;
+  border-radius: 30rpx; font-weight: 500;
+}
+.card-claim-btn.disabled {
+  background: #EDECEA; color: #8E8E93;
+}
+
+.empty {
+  text-align: center; padding: 120rpx 0; color: #B0B0B0; font-size: 26rpx;
+}
+
+.load-more {
+  text-align: center; padding: 24rpx 0 60rpx;
+  color: #8E8E93; font-size: 24rpx;
+}
+.load-more:active { color: #4ECDC4; }
+
+.bottom-tip {
+  text-align: center; padding: 40rpx 0 20rpx;
+  color: #B0B0B0; font-size: 22rpx;
+}

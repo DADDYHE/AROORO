@@ -1,8 +1,8 @@
 <view class="page-container">
   <view class="page-content">
     <view class="logo-container">
-      <image lazy-load src="../../images/paw-print.png" class="logo" mode="aspectFit"></image>
-      <text class="app-name">宠物寄养平台</text>
+      <image lazy-load src="../images/paw-print.png" class="logo" mode="aspectFit"></image>
+      <text class="app-name">AROORO</text>
     </view>
     
     <view class="info-section">
@@ -13,12 +13,13 @@
       
       <view class="info-item">
         <text class="info-label">开发者</text>
-        <text class="info-value">宠物寄养团队</text>
+        <text class="info-value">AROORO 团队</text>
       </view>
       
       <view class="info-item">
         <text class="info-label">联系方式</text>
-        <text class="info-value">contact@petsitting.com</text>
+        <!-- TODO: 替换为正式客服邮箱 -->
+        <text class="info-value">support@arooro.com</text>
       </view>
     </view>
     

@@ -1,0 +1,128 @@
+<view class="payment-page">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-content">
+      <view class="loading-brand-mark">
+        <view class="brand-ring"></view>
+        <view class="brand-ring brand-ring--delay"></view>
+        <view class="brand-dot"></view>
+      </view>
+      <view class="loading-dots">
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+        <view class="loading-dot"></view>
+      </view>
+      <text class="loading-text">加载中</text>
+    </view>
+  </view>
+
+  <block wx:elif="{{mode === 'detail'}}">
+    <view class="status-header status-{{orderStatus}}">
+      <text class="status-icon">{{orderStatus === 'pending_payment' ? '💰' : orderStatus === 'confirmed' ? '✅' : '❌'}}</text>
+      <text class="status-title">{{orderStatusText}}</text>
+      <text class="status-subtitle" wx:if="{{orderStatus === 'pending_payment'}}">请尽快完成支付</text>
+      <text class="status-subtitle" wx:elif="{{orderStatus === 'confirmed'}}">平台已确认，期待您的参与</text>
+    </view>
+
+    <view class="order-card">
+      <view class="activity-info" wx:if="{{activity.coverUrl || activity.title}}">
+        <image class="activity-cover" src="{{activity.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl" />
+        <view class="activity-details">
+          <text class="activity-name">{{activity.title}}</text>
+          <text class="activity-time" wx:if="{{activity.startTime}}">{{activity.startTime}}</text>
+          <text class="activity-location" wx:if="{{activity.location}}">📍 {{activity.location}}</text>
+        </view>
+      </view>
+
+      <view class="order-details">
+        <view class="detail-row">
+          <text class="detail-label">参与宠物</text>
+          <text class="detail-value">{{petNames || '无'}}</text>
+        </view>
+        <view class="detail-row" wx:if="{{participantCount > 1}}">
+          <text class="detail-label">参与人数</text>
+          <text class="detail-value">{{participantCount}}人</text>
+        </view>
+        <view class="detail-row">
+          <text class="detail-label">联系电话</text>
+          <text class="detail-value">{{phone}}</text>
+        </view>
+        <view class="detail-row" wx:if="{{notes}}">
+          <text class="detail-label">备注</text>
+          <text class="detail-value">{{notes}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="price-card">
+      <view class="price-row">
+        <text class="price-label">订单金额</text>
+        <text class="price-value">¥{{originalAmount}}</text>
+      </view>
+      <view class="price-row" wx:if="{{couponDiscount > 0}}">
+        <text class="price-label">优惠券抵扣</text>
+        <text class="price-value discount">-¥{{couponDiscount}}</text>
+      </view>
+      <view class="price-row total">
+        <text class="price-label">{{couponDiscount > 0 ? '优惠后金额' : '应付金额'}}</text>
+        <text class="price-value final">¥{{finalAmount}}</text>
+      </view>
+    </view>
+
+    <view class="pay-section" wx:if="{{orderStatus === 'pending_payment' && !activityExpired}}">
+      <button class="pay-btn" bindtap="onGoPay" disabled="{{paying}}">
+        <text class="pay-btn-text">{{paying ? '处理中...' : '去支付 ¥' + finalAmount}}</text>
+      </button>
+    </view>
+    <view class="expired-tip" wx:if="{{orderStatus === 'pending_payment' && activityExpired}}">
+      <text class="expired-text">活动已结束，无法继续支付</text>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="payment-header">
+      <text class="payment-title">确认订单</text>
+    </view>
+
+    <view class="order-card">
+      <view class="activity-info">
+        <image class="activity-cover" src="{{activity.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl" />
+        <view class="activity-details">
+          <text class="activity-name">{{activity.title}}</text>
+          <text class="activity-time">{{activity.startTime}}</text>
+        </view>
+      </view>
+
+      <view class="order-details">
+        <view class="detail-row">
+          <text class="detail-label">参与宠物</text>
+          <text class="detail-value">{{petNames}}</text>
+        </view>
+        <view class="detail-row">
+          <text class="detail-label">联系电话</text>
+          <text class="detail-value">{{phone}}</text>
+        </view>
+        <view class="detail-row" wx:if="{{couponDiscount > 0}}">
+          <text class="detail-label">优惠券抵扣</text>
+          <text class="detail-value discount">-¥{{couponDiscount}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="price-card">
+      <view class="price-row">
+        <text class="price-label">订单金额</text>
+        <text class="price-value">¥{{totalAmount}}</text>
+      </view>
+      <view class="price-row total" wx:if="{{couponDiscount > 0}}">
+        <text class="price-label">优惠后</text>
+        <text class="price-value final">¥{{finalAmount}}</text>
+      </view>
+    </view>
+
+    <view class="pay-section">
+      <button class="pay-btn" bindtap="onConfirmPay" disabled="{{paying}}">
+        <text class="pay-btn-text">{{paying ? '处理中...' : '确认支付 ¥' + finalAmount}}</text>
+      </button>
+    </view>
+  </block>
+</view>

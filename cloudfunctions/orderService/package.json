@@ -1,0 +1,11 @@
+{
+  "name": "orderService",
+  "version": "1.0.0",
+  "description": "订单服务统一入口",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.7.0"
+  },
+  "author": "",
+  "license": "ISC"
+}

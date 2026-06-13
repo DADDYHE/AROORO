@@ -1,0 +1,276 @@
+/* subpackages/activity/friend.wxss */
+.container {
+  padding: 0;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 背景装饰 */
+.container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(78, 205, 196, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(38, 166, 154, 0.1) 0%, transparent 50%);
+  z-index: 0;
+}
+
+.form-section {
+  position: relative;
+  background-color: white;
+  border-radius: 24rpx;
+  padding: 36rpx;
+  margin: 24rpx 24rpx 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  z-index: 1;
+  overflow: hidden;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 32rpx;
+  position: relative;
+  display: inline-block;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8rpx;
+  left: 0;
+  width: 60rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, #4ECDC4, #26A69A);
+  border-radius: 2rpx;
+}
+
+.form-item {
+  margin-bottom: 32rpx;
+  position: relative;
+}
+
+.label {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+
+.input-container {
+  position: relative;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input {
+  width: 100%;
+  padding: 28rpx 32rpx;
+  border: none;
+  font-size: 28rpx;
+  background-color: #f9f9f9;
+  z-index: 2;
+  position: relative;
+  transition: all 0.3s ease;
+  line-height: 1.5;
+  min-height: 88rpx;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  background-color: white;
+  transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.1);
+}
+
+.input-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(38, 166, 154, 0.1));
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.input-container:focus-within .input-decoration {
+  opacity: 1;
+}
+
+.textarea-container {
+  position: relative;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.textarea {
+  width: 100%;
+  padding: 28rpx 32rpx;
+  border: none;
+  font-size: 28rpx;
+  background-color: #f9f9f9;
+  z-index: 2;
+  position: relative;
+  transition: all 0.3s ease;
+  resize: none;
+  line-height: 1.6;
+  min-height: 160rpx;
+  box-sizing: border-box;
+}
+
+.textarea:focus {
+  outline: none;
+  background-color: white;
+  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.1);
+}
+
+.gender-options {
+  display: flex;
+  gap: 24rpx;
+}
+
+.gender-option {
+  flex: 1;
+  padding: 20rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #666;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.gender-option.active {
+  border-color: #4ECDC4;
+  color: #4ECDC4;
+  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.2);
+}
+
+.gender-decoration {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(78, 205, 196, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+
+.gender-option.active .gender-decoration {
+  left: 100%;
+}
+
+.button-section {
+  display: flex;
+  gap: 24rpx;
+  margin: 32rpx 24rpx 48rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.cancel-btn {
+  flex: 1;
+  padding: 20rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  background-color: white;
+  color: #666;
+  height: 88rpx;
+  line-height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.cancel-btn:hover {
+  transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  color: white;
+  border: none;
+  padding: 20rpx;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  height: 88rpx;
+  line-height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.3);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.confirm-btn:hover {
+  box-shadow: 0 6rpx 16rpx rgba(78, 205, 196, 0.4);
+  transform: translateY(-2rpx);
+}
+
+.confirm-decoration {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.confirm-btn:hover .confirm-decoration {
+  left: 100%;
+}
+
+.confirm-text {
+  position: relative;
+  z-index: 2;
+  letter-spacing: 2rpx;
+}
+
+/* 响应式调整 */
+@media (max-width: 375px) {
+  .form-section {
+    padding: 28rpx;
+    margin: 16rpx 16rpx 24rpx;
+  }
+  
+  .section-title {
+    font-size: 28rpx;
+  }
+  
+  .button-section {
+    margin: 28rpx 16rpx 40rpx;
+  }
+  
+  .cancel-btn, .confirm-btn {
+    font-size: 26rpx;
+    height: 80rpx;
+  }
+}

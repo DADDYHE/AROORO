@@ -151,8 +151,20 @@
       </view>
     </view>
     
-    <view class="exhibit-row" bindtap="onPrivacySettings">
+    <view class="exhibit-row">
       <view class="exhibit-row-index">02</view>
+      <view class="exhibit-row-card neutral contact-row-card">
+        <view class="exhibit-row-icon neutral-icon-cs"></view>
+        <view class="exhibit-row-info">
+          <text class="exhibit-row-title">联系客服</text>
+          <text class="exhibit-row-desc">在线咨询与帮助</text>
+        </view>
+        <button class="contact-overlay-btn" open-type="contact"></button>
+      </view>
+    </view>
+
+    <view class="exhibit-row" bindtap="onPrivacySettings">
+      <view class="exhibit-row-index">03</view>
       <view class="exhibit-row-card neutral">
         <view class="exhibit-row-icon neutral-icon-lock"></view>
         <view class="exhibit-row-info">
@@ -164,7 +176,7 @@
     </view>
     
     <view class="exhibit-row" bindtap="onAboutUs">
-      <view class="exhibit-row-index">03</view>
+      <view class="exhibit-row-index">04</view>
       <view class="exhibit-row-card neutral">
         <view class="exhibit-row-icon neutral-icon-info"></view>
         <view class="exhibit-row-info">
@@ -176,7 +188,7 @@
     </view>
 
     <view class="exhibit-row" bindtap="onPartnerTap">
-      <view class="exhibit-row-index">04</view>
+      <view class="exhibit-row-index">05</view>
       <view class="exhibit-row-card partner">
         <view class="exhibit-row-icon partner-icon"></view>
         <view class="exhibit-row-info">
@@ -216,12 +228,12 @@
         <text class="modal-title">入驻平台请联系客服</text>
       </view>
       <view class="modal-body">
-        <text class="modal-phone">13778877888</text>
+        <text class="modal-desc">点击下方按钮联系微信客服</text>
       </view>
       <view class="modal-footer">
-        <view class="modal-btn" bindtap="onMakeCall">
-          <text class="modal-btn-text">去拨号</text>
-        </view>
+        <button class="modal-btn contact-customer-btn" open-type="contact">
+          <text class="modal-btn-text">联系客服</text>
+        </button>
       </view>
       <view class="modal-close" bindtap="onCloseHostModal">
         <view class="modal-close-icon"></view>

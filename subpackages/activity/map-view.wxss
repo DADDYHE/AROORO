@@ -1,0 +1,55 @@
+.map-page {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+.location-card {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 32rpx 32rpx 80rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.location-name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 8rpx;
+}
+
+.location-address {
+  display: block;
+  font-size: 24rpx;
+  color: #86868b;
+  margin-bottom: 24rpx;
+}
+
+.nav-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #4ECDC4 0%, #3db5ad 100%);
+  border: none;
+  border-radius: 16rpx;
+  padding: 24rpx 0;
+  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.3);
+}
+
+.nav-btn::after {
+  border: none;
+}
+
+.nav-btn-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ffffff;
+}

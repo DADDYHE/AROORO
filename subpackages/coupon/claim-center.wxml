@@ -1,0 +1,47 @@
+<view class="container">
+  <view class="list">
+    <view class="coupon-card" wx:for="{{templates}}" wx:key="_id" style="--accent: {{item.accentColor}}">
+      <view class="card-ribbon"></view>
+      <view class="card-body">
+        <view class="card-main">
+          <view class="card-value">
+            <block wx:if="{{item.type==='discount'}}">
+              <text class="num">{{item.rules.discountRate * 100}}</text>
+              <text class="unit">折</text>
+            </block>
+            <block wx:else>
+              <text class="unit">¥</text>
+              <text class="num">{{item.rules.reduceAmount || 0}}</text>
+            </block>
+          </view>
+          <view class="card-threshold" wx:if="{{item.rules.threshold > 0}}">满{{item.rules.threshold}}元可用</view>
+          <view class="card-threshold" wx:else>无门槛</view>
+        </view>
+        <view class="card-info">
+          <view class="card-name">{{item.name}}</view>
+          <view class="card-scopes">
+            <text class="scope-label">适用</text>
+            <text class="scope-tag" wx:for="{{item.scopeLabels}}" wx:key="*this">{{item}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="card-footer">
+        <text class="card-stock">剩余 {{item.remaining}} 张</text>
+        <view class="card-claim-btn {{item.claimBtn.disabled ? 'disabled' : ''}}" catchtap="onClaimCoupon" data-id="{{item._id}}">
+          {{item.claimBtn.text}}
+        </view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!isLoading && templates.length === 0}}">
+      <text>暂无可领取的优惠券</text>
+    </view>
+    <view class="load-more" wx:if="{{hasMore && templates.length > 0 && !isLoading}}" bindtap="onLoadMore">
+      <text>加载更多</text>
+    </view>
+
+    <view class="bottom-tip" wx:if="{{templates.length > 0}}">
+      <text>仅显示近 6 个月的优惠券，更早的记录已自动隐藏</text>
+    </view>
+  </view>
+</view>

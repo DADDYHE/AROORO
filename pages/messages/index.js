@@ -1,34 +1,31 @@
-const tabBarSyncBehavior = require('../../behaviors/tabBarSync');
-const cloudImageBehavior = require('../../behaviors/cloudImageBehavior');
+const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
+const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const { CLOUD_ICONS } = require('../../utils/cloudIcons')
+const pageI18n = require('../../utils/page-i18n.js')
 
 const SERVICE_ICONS = [
-  'cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/door-open-line.svg',
-  'cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/home-heart-line.svg',
+  CLOUD_ICONS.DOOR_OPEN,
+  CLOUD_ICONS.HOME_HEART,
 ]
 
 Page({
+  ...pageI18n.mixin(),
   behaviors: [tabBarSyncBehavior, cloudImageBehavior],
   data: {
     statusBarHeight: 20,
     serviceItems: [
-      { id: 'feeding', name: '上门服务', desc: '洗护·喂养', icon: SERVICE_ICONS[0] },
-      { id: 'boarding', name: '宠物寄养', desc: '安心寄养家庭', icon: SERVICE_ICONS[1] },
+      { id: 'feeding', name: 'FEEDING_SERVICE', desc: 'FEEDING_SERVICE_DESC', icon: SERVICE_ICONS[0] },
+      { id: 'boarding', name: 'BOARDING_SERVICE', desc: 'BOARDING_SERVICE_DESC', icon: SERVICE_ICONS[1] },
     ],
   },
 
   onLoad() {
-    const windowInfo = wx.getWindowInfo();
-    this.setData({ statusBarHeight: windowInfo.statusBarHeight || 20 });
+    const windowInfo = wx.getWindowInfo()
+    this.setData({ statusBarHeight: windowInfo.statusBarHeight || 20 })
   },
 
   onShow() {
     this._syncTabBar()
-  },
-
-  onHide() {
-  },
-
-  onUnload() {
   },
 
   handleServiceTap(e) {
@@ -38,7 +35,7 @@ Page({
       feeding: '/subpackages/feeding/service-home',
     }
     const url = routes[id]
-    if (!url) return
+    if (!url) {return}
     wx.navigateTo({ url })
   },
 })
