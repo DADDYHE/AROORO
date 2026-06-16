@@ -209,34 +209,7 @@ Page({
     this.setData({ remark: e.detail.value })
   },
 
-  async _loadAvailableCoupons() {
-    const { totalAmount } = this.data
-    if (!totalAmount) {return}
-
-    this.setData({ loadingCoupons: true })
-    try {
-      const business = this.data.fromTuan ? 'tuan' : 'mall'
-      const productIds = this.data.fromCart
-        ? this.data.cartItems.map(i => i.productId)
-        : (this.data.product ? [this.data.product._id] : [])
-      const result = await CouponService.getAvailableCoupons({
-        business,
-        items: productIds,
-        amount: totalAmount,
-      })
-      if (result && result.code === 0) {
-        this.setData({ availableCoupons: result.data || [] })
-      }
-    } catch (e) {
-      // 拉取可用优惠券失败不阻断（finally 仍会 reset loading）
-    } finally {
-      this.setData({ loadingCoupons: false })
-    }
-  },
-
-  // onToggleCouponSelector, onSelectCoupon, onRemoveCoupon 已由 couponSelectorBehavior 提供
-
-  onSelectCoupon(e) {
+  onToggleCouponSelector() {
     const { id, amount } = e.currentTarget.dataset
     const coupon = this.data.availableCoupons.find(c => c._id === id)
     if (!coupon) {return}

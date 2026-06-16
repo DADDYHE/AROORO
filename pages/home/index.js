@@ -2,6 +2,7 @@ const app = getApp()
 const { authService } = require('../../services/AuthService')
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const homeBannerBehavior = require('../../behaviors/homeBannerBehavior')
 const homePetBehavior = require('../../behaviors/homePetBehavior')
 const homeActivityBehavior = require('../../behaviors/homeActivityBehavior')
@@ -22,7 +23,7 @@ const CLOUD_ICON_MAP_PIN = CLOUD_ICONS.MAP_PIN
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [tabBarSyncBehavior, cloudImageBehavior, homeBannerBehavior, homePetBehavior, homeActivityBehavior, homeTuanBehavior],
+  behaviors: [tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior, homeBannerBehavior, homePetBehavior, homeActivityBehavior, homeTuanBehavior],
   data: {
     t: pageI18n.buildTMap('zh-CN'),
     isLoggedIn: false,

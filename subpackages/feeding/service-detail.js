@@ -1,8 +1,9 @@
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, shareEntryBehavior],
 
   data: {
     activeTab: 0,

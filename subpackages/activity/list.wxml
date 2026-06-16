@@ -1,4 +1,5 @@
 <view class="page-container">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <!-- 顶部品牌栏 -->
   <view class="page-header">
     <text class="page-title">宠物活动</text>

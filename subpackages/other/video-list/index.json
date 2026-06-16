@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "视频列表",
-  "usingComponents": {}
+  "usingComponents": {
+    "login-prompt": "../../../components/login-prompt/login-prompt"
+  }
 }

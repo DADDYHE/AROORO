@@ -263,8 +263,20 @@ async function requestWithdrawal(event, context, auth) {
 }
 
 async function getMyInvitedUsers(event, context, auth) {
+  console.log('[getMyInvitedUsers] === START ===', {
+    eventKeys: Object.keys(event || {}),
+    authKeys: Object.keys(auth || {}),
+    authOpenid: auth?.openid,
+    eventPage: event?.page,
+    eventPageSize: event?.pageSize
+  })
+
   const { openid } = auth
   const { page = 1, pageSize = 20 } = event
+
+  console.log('[getMyInvitedUsers] 解析参数:', { openid, page, pageSize })
+
+  logger.info('getMyInvitedUsers.start', { openid, page, pageSize })
 
   try {
     let user = null
@@ -274,21 +286,29 @@ async function getMyInvitedUsers(event, context, auth) {
     } catch (e) {
       logger.warn('getMyIncomeDetails.users.fetch', { openid, code: e.errCode, msg: e.message })
     }
-    if (!user) {return handleSuccess({ list: [], total: 0 })}
+    if (!user) {
+      logger.warn('getMyInvitedUsers.noUser', { openid })
+      return handleSuccess({ list: [], total: 0 })
+    }
 
     // inviterId 现在存的是 openid，直接用 openid 查询
     const countRes = await db.collection('users').where({ inviterId: openid }).count()
     const total = countRes.total || 0
 
+    logger.info('getMyInvitedUsers.invitedCount', { openid, total })
+
     const invitedRes = await db.collection('users')
       .where({ inviterId: openid })
       .skip((page - 1) * pageSize)
       .limit(pageSize)
-      .field({ nickName: true, avatarUrl: true, createdAt: true })
+      .field({ _id: true, nickName: true, avatarUrl: true, createdAt: true })
       .get()
 
+    const invitedUsers = invitedRes.data || []
+    logger.info('getMyInvitedUsers.invitedUsers', { count: invitedUsers.length, sampleIds: invitedUsers.slice(0, 3).map(u => u._id) })
+
     const invitedList = []
-    for (const u of (invitedRes.data || [])) {
+    for (const u of invitedUsers) {
       let orderCount = 0
       let totalSpent = 0
 
@@ -296,10 +316,19 @@ async function getMyInvitedUsers(event, context, auth) {
         const [mallRes, feedingRes, tuanRes, activityRes, boardingRes] = await Promise.all([
           db.collection('orders').where({ ownerId: u._id, type: 'mall', status: _.in(['paid', 'shipped', 'completed']) }).get(),
           db.collection('feedingOrders').where({ ownerId: u._id, status: 'completed' }).get(),
-          db.collection('tuan_orders').where({ ownerId: u._id, status: _.in(['paid', 'completed']) }).get(),
-          db.collection('activity_registrations').where({ ownerId: u._id, status: 'confirmed' }).get(),
-          db.collection('orders').where({ ownerId: u._id, status: 'completed', type: 'boarding' }).get(),
+          db.collection('tuan_orders').where({ ownerId: u._id, status: _.in(['pending', 'paid', 'completed']) }).get(),
+          db.collection('activity_registrations').where({ ownerId: u._id, status: 'completed' }).get(),
+          db.collection('orders').where({ ownerId: u._id, status: _.in(['paid', 'shipped', 'completed']), type: 'boarding' }).get(),
         ])
+
+        logger.info('getMyInvitedUsers.orderQuery', {
+          userId: u._id,
+          mall: mallRes.data?.length || 0,
+          feeding: feedingRes.data?.length || 0,
+          tuan: tuanRes.data?.length || 0,
+          activity: activityRes.data?.length || 0,
+          boarding: boardingRes.data?.length || 0
+        })
 
         const countAndSum = res => {
           let c = 0, s = 0
@@ -315,8 +344,10 @@ async function getMyInvitedUsers(event, context, auth) {
 
         orderCount = mall.c + feeding.c + tuan.c + activity.c + boarding.c
         totalSpent = mall.s + feeding.s + tuan.s + activity.s + boarding.s
+
+        logger.info('getMyInvitedUsers.orderStats', { userId: u._id, orderCount, totalSpent })
       } catch (e) {
-        logger.warn('getMyInvitedUsers.consume', { msg: e.message })
+        logger.warn('getMyInvitedUsers.consume', { userId: u._id, msg: e.message })
       }
 
       invitedList.push({

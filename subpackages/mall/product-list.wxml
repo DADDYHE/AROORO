@@ -1,4 +1,5 @@
 <view class="page-container">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="page-divider"></view>
   <view class="main-body">
     <scroll-view class="category-sidebar" scroll-y="true" show-scrollbar="false">

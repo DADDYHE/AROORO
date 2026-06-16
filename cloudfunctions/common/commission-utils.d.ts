@@ -16,7 +16,7 @@
  *   - 无需鉴权 / 无需返回结构
  */
 /** 订单类型 */
-export type CommissionOrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'feeding';
+export type CommissionOrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'boarding' | 'feeding';
 /** 订单文档（最小子集） */
 export interface CommissionOrderDoc {
     _id: string;

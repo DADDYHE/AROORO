@@ -273,21 +273,25 @@ async function applyPaidStatus(
     updateData.status = 'paid'
   } else if (orderType === 'tuan') {
     updateData.status = 'paid'
-    try {
-      await db.collection('tuan_orders').where({ outTradeNo: existingOrder.outTradeNo }).limit(1).update({
-        data: {
-          status: 'paid',
-          paymentStatus: 'paid',
-          transactionId: transactionId || '', // ★ 写入 wx 支付订单号，供 wx 发货信息管理 API 查询
-          paidAt: db.serverDate(),
-          updatedAt: db.serverDate(),
-        },
-      })
-    } catch (e) {
-      logger.warn('paymentNotify tuan_orders sync', {
-        outTradeNo: existingOrder.outTradeNo,
-        msg: (e as Error)?.message,
-      })
+    // 通过 tuanOrderId 关联更新 tuan_orders
+    const tuanOrderId = (existingOrder as Record<string, unknown>).tuanOrderId as string
+    if (tuanOrderId) {
+      try {
+        await db.collection('tuan_orders').doc(tuanOrderId).update({
+          data: {
+            status: 'paid',
+            paymentStatus: 'paid',
+            transactionId: transactionId || '',
+            paidAt: db.serverDate(),
+            updatedAt: db.serverDate(),
+          },
+        })
+      } catch (e) {
+        logger.warn('paymentNotify tuan_orders sync', {
+          tuanOrderId,
+          msg: (e as Error)?.message,
+        })
+      }
     }
   } else if (orderType === 'activity') {
     updateData.status = 'confirmed'
@@ -316,6 +320,7 @@ async function applyPaidStatus(
  * 触发 commission 记录（best-effort）
  */
 async function triggerCommission(orderType: string, order: NotifyOrderDoc): Promise<void> {
+  if (orderType !== 'mall' && orderType !== 'tuan') { return }
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { createCommissionRecord } = require('./commission')

@@ -1,5 +1,6 @@
 const { TuanService } = require('../../services/TuanService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
@@ -8,7 +9,7 @@ const skuHelper = require('../../utils/skuHelper')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, shareEntryBehavior],
 
   data: {
     dealId: '',
@@ -274,6 +275,14 @@ Page({
   },
 
   onSubmitOrder() {
+    const app = getApp()
+    const isLoggedIn = app && app.globalData && app.globalData.isLoggedIn
+    if (!isLoggedIn) {
+      const { authService } = require('../../services/AuthService')
+      authService.startLogin()
+      return
+    }
+
     const product = this.data.products[this.data.selectedProductIndex]
     if (!product) { return }
     const quantity = this.data.quantity

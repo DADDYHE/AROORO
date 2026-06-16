@@ -41,7 +41,7 @@
           <view class="overview-row overview-row-top">
             <view class="overview-stat">
               <text class="overview-stat-value">¥{{commissionText}}</text>
-              <text class="overview-stat-label">佣金</text>
+              <text class="overview-stat-label">带货</text>
               <text class="overview-stat-sub">（团购+商城）</text>
             </view>
             <view class="overview-stat">
@@ -108,7 +108,8 @@
 
       <view class="tab-bar">
         <view class="tab-item {{activeTab === 'all' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="all">全部</view>
-        <view class="tab-item {{activeTab === 'commission' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="commission">佣金</view>
+        <view class="tab-item {{activeTab === 'tuan' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="tuan">团购</view>
+        <view class="tab-item {{activeTab === 'mall' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="mall">商城</view>
         <view class="tab-item {{activeTab === 'activity' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="activity">活动</view>
         <view class="tab-item {{activeTab === 'hosting' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="hosting">寄养</view>
         <view class="tab-item {{activeTab === 'feeding' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="feeding">服务</view>
@@ -124,7 +125,7 @@
         <view class="card-body">
           <view class="detail-row">
             <view class="detail-left">
-              <text class="detail-type">{{item.type === 'commission' ? '佣金' : (item.type === 'activity' ? '活动' : (item.type === 'hosting' ? '寄养' : '服务'))}}</text>
+              <text class="detail-type">{{item.typeName || (item.type === 'tuan' ? '团购' : (item.type === 'mall' ? '商城' : (item.type === 'activity' ? '活动' : (item.type === 'hosting' ? '寄养' : '服务'))))}}</text>
               <text class="detail-desc">{{item.description}}</text>
             </view>
             <text class="detail-amount">+¥{{item.amount}}</text>

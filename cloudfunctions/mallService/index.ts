@@ -1091,6 +1091,14 @@ export async function cancelOrder(
       data: { status: 'cancelled', cancelReason: '买家主动取消', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
     })
 
+    // 取消佣金记录
+    try {
+      const { cancelCommissionRecord } = require('../../common/commission-utils')
+      await cancelCommissionRecord(orderId)
+    } catch (commissionErr) {
+      logger.warn('cancelCommissionRecord', { msg: (commissionErr as Error)?.message })
+    }
+
     const qty = orderData.quantity || 1
     const stockUpdateData: Record<string, unknown> = {
       totalStock: _.inc(qty),
@@ -1197,8 +1205,6 @@ export async function confirmReceive(
     await db.collection('orders').doc(orderId).update({
       data: { status: 'completed', updatedAt: db.serverDate() },
     })
-
-    await createCommissionRecord(orderData.type === 'group_buy' ? 'tuan' : 'mall', orderData)
 
     return handleSuccess(null, '确认收货成功')
   } catch (error) {

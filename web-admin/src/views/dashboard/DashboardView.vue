@@ -114,9 +114,9 @@ import { Box, Sell, DocumentChecked, Money } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { getDashboardStats } from '@/api/dashboard'
 import { formatMoney } from '@/utils/format'
-import { ORDER_ORDER_TYPE_LABELS } from '@/constants/order'
+import { ORDER_TYPE_LABELS } from '@/constants/order'
 
-// ORDER_ORDER_TYPE_LABELS imported from @/constants/order
+// ORDER_TYPE_LABELS imported from @/constants/order
 
 function typeLabel(name) {
   return ORDER_TYPE_LABELS[name] || name

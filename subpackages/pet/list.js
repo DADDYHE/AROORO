@@ -2,13 +2,14 @@ const app = getApp()
 const { petStore, petService } = require('./index.js')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, shareEntryBehavior],
   data: {
     petProfiles: [],
     isLoggedIn: false,

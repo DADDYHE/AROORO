@@ -4,7 +4,7 @@
  * adminService/constants.ts - 订单类型常量（TypeScript 源文件 - Sprint 33 迁移）
  *
  * 业务功能：
- *   - 集中维护订单类型枚举（mall / hosting / feeding / tuan / activity）
+ *   - 集中维护订单类型枚举（mall / boarding / feeding / tuan / activity）
  *   - 提供类型安全的中文显示名称映射
  *
  * 迁移目标：
@@ -18,10 +18,10 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ORDER_TYPE_NAMES = exports.ORDER_TYPES = void 0;
-exports.ORDER_TYPES = ['mall', 'hosting', 'feeding', 'tuan', 'activity'];
+exports.ORDER_TYPES = ['mall', 'boarding', 'feeding', 'tuan', 'activity'];
 exports.ORDER_TYPE_NAMES = {
     mall: '商城',
-    hosting: '寄养',
+    boarding: '寄养',
     feeding: '上门服务',
     tuan: '团购',
     activity: '活动',

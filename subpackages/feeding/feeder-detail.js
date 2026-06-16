@@ -1,12 +1,13 @@
 const { FeedingService } = require('./services/FeedingService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, shareEntryBehavior],
 
   data: {
     feeder: null,

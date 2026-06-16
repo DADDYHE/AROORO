@@ -195,6 +195,10 @@ async function createTuanOrder(event, _context, auth) {
         }
     }
     const finalAmount = Number(totalAmount) || finalPrice * quantity;
+    // 仅在使用优惠券时，校验优惠后金额下限（直接使用前端传入的已扣券金额）
+    if (couponId && Number(totalAmount) > 0 && Number(totalAmount) < 0.1) {
+        throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元');
+    }
     const orderNo = `T${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
     const order = {
         dealId: dealId,

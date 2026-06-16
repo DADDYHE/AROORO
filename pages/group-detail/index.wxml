@@ -1,4 +1,5 @@
 <view class="tuan-detail" wx:if="{{!loading && deal}}">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="detail-title-area">
     <text class="detail-title">{{deal.title}}</text>
   </view>

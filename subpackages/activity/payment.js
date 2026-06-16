@@ -33,6 +33,14 @@ Page({
   },
 
   onLoad(options) {
+    const app = getApp()
+    const isLoggedIn = app && app.globalData && app.globalData.isLoggedIn
+    if (!isLoggedIn) {
+      const { authService } = require('../../services/AuthService')
+      authService.startLogin()
+      return
+    }
+
     if (options.registrationId) {
       this.setData({ mode: 'detail', registrationId: options.registrationId })
       wx.setNavigationBarTitle({ title: '订单详情' })

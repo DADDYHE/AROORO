@@ -348,13 +348,17 @@ exports.confirmPayment = (0, errors_1.withErrorHandling)(async (event, _context,
     }
     // 跨集合状态同步：tuan 与 activity 类型还需同步到对应业务表
     if (orderType === 'tuan') {
-        try {
-            await db.collection('tuan_orders').where({ outTradeNo }).limit(1).update({
-                data: { status: 'paid', paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
-            });
-        }
-        catch (e) {
-            logger.warn('confirmPayment.tuan_orders.sync', { outTradeNo, code: e?.errCode, msg: e?.message });
+        // 通过 tuanOrderId 关联更新 tuan_orders（而非 outTradeNo，因为 tuan_orders 中没有 outTradeNo 字段）
+        const tuanOrderId = existingOrder.tuanOrderId;
+        if (tuanOrderId) {
+            try {
+                await db.collection('tuan_orders').doc(tuanOrderId).update({
+                    data: { status: 'paid', paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
+                });
+            }
+            catch (e) {
+                logger.warn('confirmPayment.tuan_orders.sync', { tuanOrderId, code: e?.errCode, msg: e?.message });
+            }
         }
     }
     else if (orderType === 'activity') {
@@ -383,13 +387,15 @@ exports.confirmPayment = (0, errors_1.withErrorHandling)(async (event, _context,
             orderId: existingOrder._id, orderType, msg: couponErr?.message,
         });
     }
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { createCommissionRecord } = require('./commission');
-        await createCommissionRecord(orderType, existingOrder);
-    }
-    catch (commissionErr) {
-        logger.error('confirmPayment commission', { msg: commissionErr?.message });
+    if (orderType === 'mall' || orderType === 'tuan') {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const { createCommissionRecord } = require('./commission');
+            await createCommissionRecord(orderType, existingOrder);
+        }
+        catch (commissionErr) {
+            logger.error('confirmPayment commission', { msg: commissionErr?.message });
+        }
     }
     return { code: 0, data: { paid: true } };
 });

@@ -39,6 +39,8 @@ const applicationHandlers = require('./services/application');
 const walletHandlers = require('./services/wallet');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const referralHandlers = require('./services/referral');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const incomeHandlers = require('./services/income');
 // =====================================================================
 // handlers 聚合
 // =====================================================================
@@ -53,6 +55,9 @@ exports.handlers = {
     getMyWallet: walletHandlers.getMyWallet,
     getMyWithdrawals: walletHandlers.getMyWithdrawals,
     requestWithdrawal: walletHandlers.requestWithdrawal,
+    // 服务收入（活动创建者、寄养服务者、上门服务者）
+    getServiceIncomeOverview: incomeHandlers.getServiceIncomeOverview,
+    getServiceIncomeDetails: incomeHandlers.getServiceIncomeDetails,
     // 邀请
     getReferralStats: referralHandlers.getReferralStats,
     getMyInvitedUsers: referralHandlers.getMyInvitedUsers,

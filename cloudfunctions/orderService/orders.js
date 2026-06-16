@@ -56,6 +56,8 @@ const { detectReviewSpam, detectBoardingAcceptRisk, mapActionToErrorCode } = req
 const { withRateLimit } = require('./common/risk-rate-limit');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { normalizeDbError } = require('./common/normalize');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { createServiceIncomeRecord, cancelServiceIncomeRecord } = require('../common/service-income-utils');
 /** 订单状态机允许的转换 */
 const ALLOWED_TRANSITIONS = {
     pending: ['paid', 'confirmed', 'cancelled'],
@@ -218,15 +220,21 @@ async function createCommissionRecordInternal(orderType, order) {
         if (!inviterAdmin || inviterAdmin.status !== 'active' || !inviterAdmin.isPartner) {
             return;
         }
-        let config = {};
-        try {
-            const configRes = await db.collection('system_config').doc('commission_rates').get();
-            config = (configRes.data || {});
+        // 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
+        let rate = 0;
+        if (inviterAdmin && inviterAdmin.commissionRates && inviterAdmin.commissionRates[orderType] !== undefined) {
+            rate = Number(inviterAdmin.commissionRates[orderType]);
         }
-        catch (e) {
-            return;
+        if (rate <= 0) {
+            try {
+                const configRes = await db.collection('system_config').doc('commission_rates').get();
+                const config = (configRes.data || {});
+                rate = config[orderType] !== undefined ? Number(config[orderType]) : 0;
+            }
+            catch (e) {
+                return;
+            }
         }
-        const rate = config[orderType] !== undefined ? Number(config[orderType]) : 0;
         if (!rate || rate <= 0) {
             return;
         }
@@ -463,13 +471,9 @@ async function createOrder(event, _context, auth) {
     }
     const petCount = Array.isArray(petIds) ? petIds.length : 1;
     const calculatedPrice = pricePerDay * days * petCount;
-    // Sprint 27: 优先使用客户端传的总价（已扣券）
-    const finalTotalPrice = (originalAmount !== undefined && originalAmount !== null && Number(couponDiscount) > 0)
-        ? Math.max(0, Math.round((calculatedPrice - Number(couponDiscount)) * 100) / 100)
-        : calculatedPrice;
-    // 0.1 元下限校验：finalTotalPrice > 0 但 < 0.1 不允许
-    if (finalTotalPrice > 0 && finalTotalPrice < 0.1) {
-        throw err('INVALID_PARAMS', '订单金额必须 ≥ 0.1 元');
+    // 仅在使用优惠券时，校验优惠后金额下限（直接使用前端传入的已扣券金额）
+    if (couponId && Number(totalAmount) > 0 && Number(totalAmount) < 0.1) {
+        throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元');
     }
     const order = {
         ownerId,
@@ -564,6 +568,30 @@ async function updateOrderStatus(event, _context, auth) {
         await refundCouponForOrder(orderId, openid).catch((e) => {
             logger.error('refundCouponForOrder', e);
         });
+
+        // 根据订单类型取消对应的收入记录
+        const orderType = od.orderType || od.type;
+        if (orderType === 'boarding') {
+            await cancelServiceIncomeRecord(orderId, 'boarding').catch((e) => {
+                logger.warn('cancelServiceIncomeRecord', { orderId, type: 'boarding', msg: e?.message });
+            });
+        } else if (orderType === 'activity') {
+            await cancelServiceIncomeRecord(orderId, 'activity').catch((e) => {
+                logger.warn('cancelServiceIncomeRecord', { orderId, type: 'activity', msg: e?.message });
+            });
+        } else if (orderType === 'feeding') {
+            await cancelServiceIncomeRecord(orderId, 'feeding').catch((e) => {
+                logger.warn('cancelServiceIncomeRecord', { orderId, type: 'feeding', msg: e?.message });
+            });
+        }
+
+        // 取消佣金记录（通用逻辑，会根据 orderId 查找并取消）
+        try {
+            const { cancelCommissionRecord } = require('../../common/commission-utils');
+            await cancelCommissionRecord(orderId);
+        } catch (commissionErr) {
+            logger.warn('cancelCommissionRecord', { orderId, msg: commissionErr?.message });
+        }
     }
     sendOrderNotification(orderId, status).catch(() => { });
     return (0, utils_1.handleSuccess)({ orderId, status }, '更新成功');
@@ -1025,7 +1053,32 @@ async function handleBoardingOrder(event, _context, auth) {
         },
     });
     if (newStatus === 'completed') {
-        await createCommissionRecordInternal('hosting', orderRes.data);
+        await createCommissionRecordInternal('boarding', orderRes.data);
+        
+        // 创建寄养收入记录（寄养家庭的收入）
+        const order = orderRes.data;
+        if (order.organizerId && order._id) {
+            const amount = Number(order.totalPrice) || 0;
+            if (amount > 0) {
+                try {
+                    await createServiceIncomeRecord(
+                        order.organizerId,
+                        'boarding',
+                        order._id,
+                        amount,
+                        order.orderNo || '',
+                        '寄养服务收入'
+                    );
+                }
+                catch (e) {
+                    logger.warn('handleBoardingOrder.createServiceIncomeRecord', {
+                        orderId,
+                        organizerId: order.organizerId,
+                        msg: e?.message
+                    });
+                }
+            }
+        }
     }
     sendOrderNotification(orderId, newStatus).catch(() => { });
     return (0, utils_1.handleSuccess)({ orderId, status: newStatus, pendingReview }, '操作成功');

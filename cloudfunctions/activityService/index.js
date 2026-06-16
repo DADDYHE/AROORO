@@ -51,6 +51,8 @@ const { err, isBusinessError } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createCommissionRecord: createCommissionRecordShared } = require('./common/commission-utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+const { createActivityIncomeRecords } = require('./common/service-income-utils');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { ENDPOINTS } = require('./common/config');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { detectActivityApplyRisk, mapActionToErrorCode } = require('./common/risk-control');
@@ -139,54 +141,75 @@ async function autoUpdateActivityStatus() {
         if (stoppedRes.updated > 0) {
             logger.info('autoUpdate.stopped', { updated: stoppedRes.updated });
         }
-        // 活动结束 → 先查询即将结束的活动，结算收入后再更新状态
-        const endingRes = await db.collection('activities')
+        // 查询即将结束的活动（用于生成佣金）
+        const endingActivitiesRes = await db.collection('activities')
             .where({ status: _.in(['published', 'registration_stopped']), endTime: _.lte(nowStr) })
-            .field({ _id: true, createdBy: true })
             .get();
-        if (endingRes.data && endingRes.data.length > 0) {
-            await creditActivityIncomeForActivities(endingRes.data).catch(() => {})
-        }
+        const endingActivities = endingActivitiesRes.data || [];
+        // 更新活动状态为 ended
         const endedRes = await db.collection('activities')
             .where({ status: _.in(['published', 'registration_stopped']), endTime: _.lte(nowStr) })
             .update({ data: { status: 'ended', updatedAt: db.serverDate() } });
         if (endedRes.updated > 0) {
             logger.info('autoUpdate.ended', { updated: endedRes.updated });
+            // 为每个结束的活动生成佣金记录和收入记录
+            for (const activity of endingActivities) {
+                try {
+                    // 生成佣金记录（推广者的佣金）
+                    await generateActivityCommissions(activity._id);
+                    
+                    // 生成收入记录（活动创建者的收入）
+                    if (activity.createdBy) {
+                        await createActivityIncomeRecords(activity._id, activity.createdBy);
+                    }
+                }
+                catch (e) {
+                    logger.error('autoUpdate.commission', { activityId: activity._id, msg: e.message });
+                }
+            }
         }
     }
     catch (e) {
         logger.error('autoUpdate', e);
     }
 }
-/** 活动结束 → 为每个活动结算报名费收入到买家的邀请人钱包 */
-async function creditActivityIncomeForActivities(activities) {
+/**
+ * 为已结束的活动生成佣金记录
+ * 查询所有已确认的报名，为每个报名创建佣金
+ */
+async function generateActivityCommissions(activityId) {
     try {
-        const { ensureWalletBalance } = require('../common/wallet-utils')
-        for (const act of activities) {
-            // 统计该活动所有已支付订单，按邀请人分组汇总
-            const ordersRes = await db.collection('orders')
-                .where({ activityId: act._id, paymentStatus: 'paid' })
-                .field({ ownerId: true, totalPrice: true, totalAmount: true })
-                .get()
-            // 按邀请人分组
-            const inviterMap = {}
-            for (const o of (ordersRes.data || [])) {
-                if (!o.ownerId) continue
-                const buyerRes = await db.collection('users').doc(o.ownerId).get()
-                const inviterId = buyerRes.data?.inviterId
-                if (!inviterId) continue
-                const amount = Number(o.totalPrice) || Number(o.totalAmount) || 0
-                inviterMap[inviterId] = (inviterMap[inviterId] || 0) + amount
+        // 查询该活动所有已确认的报名
+        const registrationsRes = await db.collection('activity_registrations')
+            .where({ activityId, status: 'confirmed' })
+            .get();
+        const registrations = registrationsRes.data || [];
+        if (registrations.length === 0) {
+            logger.info('generateActivityCommissions.noRegistrations', { activityId });
+            return;
+        }
+        // 获取所有报名对应的订单ID
+        const orderIds = registrations.map(r => r.orderId).filter(Boolean);
+        if (orderIds.length === 0)
+            return;
+        // 批量查询订单
+        const ordersRes = await db.collection('orders')
+            .where({ _id: _.in(orderIds), status: 'confirmed' })
+            .get();
+        const orders = ordersRes.data || [];
+        // 为每个订单创建佣金记录
+        for (const order of orders) {
+            try {
+                await createCommissionRecord('activity', order);
             }
-            // 为每个邀请人增加钱包余额
-            for (const [inviterId, total] of Object.entries(inviterMap)) {
-                if (total > 0) {
-                    await ensureWalletBalance(inviterId, total)
-                }
+            catch (e) {
+                logger.warn('generateActivityCommissions.order', { orderId: order._id, msg: e.message });
             }
         }
-    } catch (e) {
-        logger.error('creditActivityIncomeForActivities', e)
+        logger.info('generateActivityCommissions.done', { activityId, registrations: registrations.length, orders: orders.length });
+    }
+    catch (e) {
+        logger.error('generateActivityCommissions', { activityId, msg: e.message });
     }
 }
 // =====================================================================
@@ -619,6 +642,10 @@ async function submitRegistration(event, context, auth) {
         const friendsArray = Array.isArray(friends) ? friends : [];
         const petCount = petsArray.length + friendsArray.length;
         const calculatedAmount = pricePerPerson * pCount + pricePerPet * petCount;
+        // 仅在使用优惠券时，校验优惠后金额下限（直接使用前端传入的已扣券金额）
+        if (couponId && Number(totalAmount) > 0 && Number(totalAmount) < 0.1) {
+            throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元');
+        }
         // Sprint 22: 活动报名前先做大额风控
         const applyRisk = await performActivityApplyRiskCheck({
             openid,
@@ -1078,7 +1105,8 @@ async function confirmActivityPayment(event, context, auth) {
             },
         });
         await transaction.commit();
-        await createCommissionRecord('activity', order);
+        // 活动佣金在活动结束时生成，不在支付时生成
+        // 佣金由 autoUpdateActivityStatus 在活动时间到达 endTime 时触发
         return handleSuccess({ orderId }, '支付成功');
     }
     catch (error) {

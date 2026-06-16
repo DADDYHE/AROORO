@@ -325,7 +325,7 @@ export async function getReferralOrders(
     }
 
     // inviterId 现在存的是 openid，直接用 openid 查询 tuan_commissions
-    const where: Record<string, unknown> = { inviterId: openid }
+    const where: Record<string, unknown> = { inviterId: openid, status: _.neq('cancelled') }
     if (type && type !== 'all') { where.orderType = type }
     if (status) { where.status = status }
 

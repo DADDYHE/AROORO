@@ -1,6 +1,7 @@
 const { ActivityService } = require('./services/ActivityService')
 const { parseDate } = require('../../utils/dateUtils')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath, buildShareQuery } = require('../../utils/share')
 
 const CATEGORY_MAP = {
@@ -23,7 +24,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, shareEntryBehavior],
   data: {
     activity: null,
     isLoading: true,

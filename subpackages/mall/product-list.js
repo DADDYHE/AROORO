@@ -2,10 +2,11 @@ const { MallService } = require('./MallService')
 const { CartService } = require('./CartService')
 const mallCategories = require('./mallCategories')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, shareEntryBehavior],
   data: {
     currentCategory: '',
     currentCategoryLabel: '',

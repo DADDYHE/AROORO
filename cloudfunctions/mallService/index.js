@@ -675,9 +675,9 @@ async function createOrder(event, _context, auth) {
         const finalAmt = (clientTotalAmount !== undefined && clientTotalAmount !== null && !Number.isNaN(Number(clientTotalAmount)))
             ? Number(clientTotalAmount)
             : baseAmount;
-        // 0.1 元下限校验：finalAmount > 0 但 < 0.1 不允许
-        if (finalAmt > 0 && finalAmt < 0.1) {
-            throw err('INVALID_PARAMS', '订单金额必须 ≥ 0.1 元');
+        // 仅在使用优惠券时，校验优惠后金额下限
+        if (couponId && finalAmt > 0 && finalAmt < 0.1) {
+            throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元');
         }
         const order = {
             orderNo,
@@ -988,7 +988,6 @@ async function confirmReceive(event, _context, auth) {
         await db.collection('orders').doc(orderId).update({
             data: { status: 'completed', updatedAt: db.serverDate() },
         });
-        await createCommissionRecord(orderData.type === 'group_buy' ? 'tuan' : 'mall', orderData);
         return handleSuccess(null, '确认收货成功');
     }
     catch (error) {

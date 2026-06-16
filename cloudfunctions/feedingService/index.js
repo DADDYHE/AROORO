@@ -50,6 +50,8 @@ const { filterFields, FIELD_WHITELISTS } = require('./common/validator');
 const { err, toResponse, isBusinessError } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createCommissionRecord: createCommissionRecordShared } = require('./common/commission-utils');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { createServiceIncomeRecord } = require('./common/service-income-utils');
 const { cloud, db } = initCloud();
 const logger = createLogger('feedingService');
 const _ = db.command;
@@ -299,9 +301,9 @@ async function createFeedingOrder(event, _context, auth) {
     if (!contactPhone || !/^1[3-9]\d{9}$/.test(String(contactPhone).trim())) {
         throw err('INVALID_PARAMS', '请填写正确的联系电话');
     }
-    // Sprint 27: 0.1 元下限校验
-    if (Number(totalAmount) > 0 && Number(totalAmount) < 0.1) {
-        throw err('INVALID_PARAMS', '订单金额必须 ≥ 0.1 元');
+    // 仅在使用优惠券时，校验优惠后金额下限
+    if (couponId && Number(totalAmount) > 0 && Number(totalAmount) < 0.1) {
+        throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元');
     }
     try {
         let feederInfo = {};
@@ -434,6 +436,20 @@ async function updateFeedingOrderStatus(event, _context, auth) {
             await refundCouponForOrder(orderId, openid).catch((e) => {
                 logger.error('refundCouponForOrder failed', { error: e.message || String(e) });
             });
+            // 取消收入记录
+            try {
+                const { cancelServiceIncomeRecord } = require('./common/service-income-utils');
+                await cancelServiceIncomeRecord(orderId, 'feeding');
+            } catch (incomeErr) {
+                logger.warn('cancelServiceIncomeRecord failed', { error: incomeErr?.message });
+            }
+            // 取消佣金记录
+            try {
+                const { cancelCommissionRecord } = require('./common/commission-utils');
+                await cancelCommissionRecord(orderId);
+            } catch (commissionErr) {
+                logger.warn('cancelCommissionRecord failed', { error: commissionErr?.message });
+            }
         }
         return handleSuccess(null, '状态更新成功');
     }
@@ -686,6 +702,33 @@ async function handleFeedingOrder(event, _context, auth) {
     });
     if (targetStatus === 'completed') {
         await createCommissionRecord('feeding', { ...order, totalAmount: order.totalPrice });
+        
+        // Create feeding income record for feeder creator
+        if (order.feederId) {
+            try {
+                const feederRes = await db.collection('feeders').doc(order.feederId).get();
+                const feeder = feederRes.data;
+                if (feeder && feeder.createdBy) {
+                    const amount = Number(order.totalAmount) || 0;
+                    if (amount > 0) {
+                        await createServiceIncomeRecord(
+                            feeder.createdBy,
+                            'feeding',
+                            order._id,
+                            amount,
+                            order.orderNo || '',
+                            '上门服务收入'
+                        );
+                    }
+                }
+            } catch (e) {
+                logger.warn('handleFeedingOrder.createServiceIncomeRecord', {
+                    orderId,
+                    feederId: order.feederId,
+                    msg: e.message
+                });
+            }
+        }
     }
     return handleSuccess(null, '操作成功');
 }

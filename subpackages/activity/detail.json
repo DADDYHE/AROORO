@@ -1,4 +1,6 @@
 {
-  "usingComponents": {},
+  "usingComponents": {
+    "login-prompt": "../../components/login-prompt/login-prompt"
+  },
   "navigationBarTitleText": "活动详情"
 }

@@ -1,4 +1,7 @@
 {
+  "usingComponents": {
+    "login-prompt": "../../components/login-prompt/login-prompt"
+  },
   "navigationBarTitleText": "服务详情",
   "navigationBarTextStyle": "black",
   "navigationBarBackgroundColor": "#FFFFFF",

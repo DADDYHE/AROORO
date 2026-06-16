@@ -1,4 +1,5 @@
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { reverseGeocode } = require('../../utils/reverseGeocoding')
 
 const pageI18n = require('../../utils/page-i18n.js')
@@ -6,7 +7,7 @@ const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [tabBarSyncBehavior],
+  behaviors: [tabBarSyncBehavior, shareEntryBehavior],
 
   data: {
     city: '',

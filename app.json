@@ -176,6 +176,7 @@
         "hosting-profile/index",
         "feeding/index",
         "income/index",
+        "service-income/index",
         "application/index",
         "referral/index",
         "withdrawal/index",

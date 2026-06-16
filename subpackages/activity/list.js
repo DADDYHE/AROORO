@@ -1,12 +1,13 @@
 const { ActivityService } = require('./services/ActivityService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
 const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 const { transformActivityItem, sortActivities, toDate, formatDateTime } = require('./utils/activityHelpers')
 
 Page({
-  behaviors: [ListBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
 
   data: {
     activities: [],

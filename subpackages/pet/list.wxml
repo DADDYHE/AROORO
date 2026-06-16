@@ -1,4 +1,5 @@
 <view class="gallery-container">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
       <view class="loading-brand-mark">

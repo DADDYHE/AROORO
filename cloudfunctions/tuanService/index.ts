@@ -325,6 +325,12 @@ export async function createTuanOrder(
 
   // 金额始终从数据库价格计算，忽略客户端传入的 totalAmount（防止金额篡改）
   const finalAmount = finalPrice * (quantity as number)
+
+  // 仅在使用优惠券时，校验优惠后金额下限（直接使用前端传入的已扣券金额）
+  if (couponId && Number(totalAmount) > 0 && Number(totalAmount) < 0.1) {
+    throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元')
+  }
+
   const orderNo = `T${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`
 
   const order: TuanOrder = {

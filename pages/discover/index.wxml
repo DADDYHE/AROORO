@@ -1,4 +1,5 @@
 <view class="tuan-page">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="tuan-header">
     <view class="brand-accent-bar"></view>
     <view class="brand-block">

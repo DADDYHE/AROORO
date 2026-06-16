@@ -559,6 +559,15 @@ class AdminService {
     return this.cloud.call('adminService', { action: 'getMyWithdrawals', ...data }, { useCache: false })
   }
 
+  // 服务收入（活动创建者、寄养服务者、上门服务者）
+  async getServiceIncomeOverview() {
+    return this.cloud.call('partnerService', { action: 'getServiceIncomeOverview' }, { useCache: false })
+  }
+
+  async getServiceIncomeDetails(data = {}) {
+    return this.cloud.call('partnerService', { action: 'getServiceIncomeDetails', ...data }, { useCache: false })
+  }
+
   async getApplicationStatus() {
     return this.cloud.call('adminService', { action: 'getApplicationStatus' }, { useCache: false })
   }

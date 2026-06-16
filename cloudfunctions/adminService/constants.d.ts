@@ -14,11 +14,11 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.adminService.json
  *   （运行时仍消费 .js 编译产物）
  */
-export declare const ORDER_TYPES: readonly ["mall", "hosting", "feeding", "tuan", "activity"];
+export declare const ORDER_TYPES: readonly ["mall", "boarding", "feeding", "tuan", "activity"];
 export type OrderTypeKey = typeof ORDER_TYPES[number];
 export declare const ORDER_TYPE_NAMES: Record<OrderTypeKey, string>;
 declare const _default: {
-    ORDER_TYPES: readonly ["mall", "hosting", "feeding", "tuan", "activity"];
-    ORDER_TYPE_NAMES: Record<"mall" | "hosting" | "feeding" | "tuan" | "activity", string>;
+    ORDER_TYPES: readonly ["mall", "boarding", "feeding", "tuan", "activity"];
+    ORDER_TYPE_NAMES: Record<"mall" | "boarding" | "feeding" | "tuan" | "activity", string>;
 };
 export default _default;

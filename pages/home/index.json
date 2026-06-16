@@ -1,6 +1,7 @@
 {
   "usingComponents": {
-    "activity-card": "../../components/activity-card/activity-card"
+    "activity-card": "../../components/activity-card/activity-card",
+    "login-prompt": "../../components/login-prompt/login-prompt"
   },
   "navigationBarTitleText": "AROORO",
   "enablePullDownRefresh": true,

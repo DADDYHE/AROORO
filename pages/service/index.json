@@ -1,4 +1,7 @@
 {
+  "usingComponents": {
+    "login-prompt": "../../components/login-prompt/login-prompt"
+  },
   "navigationBarTitleText": "宠物服务",
   "navigationBarTextStyle": "black",
   "navigationBarBackgroundColor": "#FFFFFF",

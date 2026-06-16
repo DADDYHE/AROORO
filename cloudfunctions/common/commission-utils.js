@@ -135,18 +135,13 @@ async function hasExistingCommission(orderId, inviterId) {
  */
 async function createCommissionRecord(orderType, order) {
   try {
-    // 1. 读取佣金率
-    const config = await loadCommissionConfig()
-    const rate = Number(config[orderType]) || 0
-    if (rate <= 0) { return }
-
     if (!order.ownerId) { return }
 
-    // 2. 查询买家
+    // 1. 查询买家
     const buyerData = await loadBuyer(order.ownerId)
     if (!buyerData) { return }
 
-    // 3. 查询邀请人
+    // 2. 查询邀请人
     const inviterId = buyerData.inviterId
     if (!inviterId) { return }
 
@@ -155,6 +150,23 @@ async function createCommissionRecord(orderType, order) {
 
     const inviterData = await loadInviter(inviterId)
     if (!inviterData) { return }
+
+    // 3. 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
+    let rate = 0
+    try {
+      const adminRes = await db.collection('admins').doc(inviterId).get()
+      const admin = adminRes.data
+      if (admin && admin.commissionRates && admin.commissionRates[orderType] !== undefined) {
+        rate = Number(admin.commissionRates[orderType])
+      }
+    } catch (e) {
+      logger.warn('loadAdminCommissionRates', { inviterId, msg: e?.message })
+    }
+    if (rate <= 0) {
+      const config = await loadCommissionConfig()
+      rate = Number(config[orderType]) || 0
+    }
+    if (rate <= 0) { return }
 
     // 4. 计算订单金额 + 佣金金额
     const orderAmount = resolveOrderAmount(order)

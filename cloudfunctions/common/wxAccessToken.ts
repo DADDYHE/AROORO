@@ -52,8 +52,8 @@ export async function getMiniProgramAccessToken(): Promise<string> {
   }
   if (inFlightToken) {return inFlightToken}
 
-  const appid = APP_ID
-  const secret = WECHAT_MINIAPP_SECRET
+  const appid = getAppId()
+  const secret = getSecret()
   if (!appid || !secret) {
     throw new Error('WECHAT_MINIAPP_SECRET / APP_ID not configured')
   }

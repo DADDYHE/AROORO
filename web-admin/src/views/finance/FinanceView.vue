@@ -40,11 +40,11 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import * as echarts from 'echarts'
 import { getFinanceOverview } from '@/api/dashboard'
 import { formatMoney, formatDate } from '@/utils/format'
-import { ORDER_ORDER_TYPE_LABELS } from '@/constants/order'
+import { ORDER_TYPE_LABELS } from '@/constants/order'
 
 let chartInstance = null
 
-// ORDER_ORDER_TYPE_LABELS imported from @/constants/order
+// ORDER_TYPE_LABELS imported from @/constants/order
 
 const loading = ref(false)
 const data = ref({})

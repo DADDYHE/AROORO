@@ -517,12 +517,16 @@ export const confirmPayment: WrappedHandler<ConfirmPaymentResult> = withErrorHan
 
   // 跨集合状态同步：tuan 与 activity 类型还需同步到对应业务表
   if (orderType === 'tuan') {
-    try {
-      await db.collection('tuan_orders').where({ outTradeNo }).limit(1).update({
-        data: { status: 'paid', paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
-      })
-    } catch (e) {
-      logger.warn('confirmPayment.tuan_orders.sync', { outTradeNo, code: (e as { errCode?: string })?.errCode, msg: (e as Error)?.message })
+    // 通过 tuanOrderId 关联更新 tuan_orders（而非 outTradeNo，因为 tuan_orders 中没有 outTradeNo 字段）
+    const tuanOrderId = (existingOrder as Record<string, unknown>).tuanOrderId as string
+    if (tuanOrderId) {
+      try {
+        await db.collection('tuan_orders').doc(tuanOrderId).update({
+          data: { status: 'paid', paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
+        })
+      } catch (e) {
+        logger.warn('confirmPayment.tuan_orders.sync', { tuanOrderId, code: (e as { errCode?: string })?.errCode, msg: (e as Error)?.message })
+      }
     }
   } else if (orderType === 'activity') {
     try {
@@ -540,12 +544,14 @@ export const confirmPayment: WrappedHandler<ConfirmPaymentResult> = withErrorHan
 
   await db.collection(collection).doc(existingOrder._id).update({ data: updateData })
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { createCommissionRecord } = require('./commission')
-    await createCommissionRecord(orderType, existingOrder)
-  } catch (commissionErr) {
-    logger.error('confirmPayment commission', { msg: (commissionErr as Error)?.message })
+  if (orderType === 'mall' || orderType === 'tuan') {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { createCommissionRecord } = require('./commission')
+      await createCommissionRecord(orderType, existingOrder)
+    } catch (commissionErr) {
+      logger.error('confirmPayment commission', { msg: (commissionErr as Error)?.message })
+    }
   }
 
   return { paid: true }

@@ -1,4 +1,5 @@
 <view class="page-container" wx:if="{{activity}}">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <scroll-view scroll-y class="scroll-container" bindscroll="onScroll">
     <view class="page-content">
       <view class="hero-section">

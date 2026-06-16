@@ -156,10 +156,17 @@ async function fetchOrderAndVerifyOwnership(db, outTradeNo, openid, refundAmount
         }
     }
     catch (e) {
+        // 重新抛出 BusinessError（带 code 的错误）
         if (e && typeof e === 'object' && 'code' in e) {
             throw e;
         }
-        logger.warn('createRefund: 查询订单校验失败，继续执行', { msg: e?.message });
+        // DB 异常时记录日志并抛出错误（不吞掉异常）
+        logger.error('createRefund: 查询订单校验失败', { msg: e?.message });
+        throw (0, errors_1.err)('DATA_ERROR', '订单查询失败，无法验证所有权');
+    }
+    // 订单不存在时抛出错误（不允许绕过所有权校验）
+    if (!orderDoc) {
+        throw (0, errors_1.err)('NOT_FOUND', '订单不存在');
     }
     return orderDoc;
 }

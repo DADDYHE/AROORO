@@ -1,6 +1,7 @@
 const { MallService } = require('./MallService')
 const { CartService } = require('./CartService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
 const skuHelper = require('../../utils/skuHelper')
 
@@ -9,7 +10,7 @@ const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, shareEntryBehavior],
   data: {
     product: null,
     isLoading: true,

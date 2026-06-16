@@ -2,12 +2,13 @@ const { HostService, FavoriteService } = require('../../services/CloudFunctionSe
 const { extractCityAndDistrict } = require('../../utils/addressUtils')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, shareEntryBehavior],
   /**
    * 页面的初始数据
    */

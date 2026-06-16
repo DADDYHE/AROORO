@@ -26,7 +26,7 @@
  *   （运行时仍消费 .js 编译产物）
  */
 /** 订单类型（与 pay.ts / notify.ts 保持一致） */
-export type CommissionOrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'feeding';
+export type CommissionOrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'boarding' | 'feeding';
 /** 订单文档（最小子集） */
 export interface CommissionOrderDoc {
     _id: string;
@@ -44,6 +44,7 @@ export interface CommissionConfig {
     mall?: number;
     tuan?: number;
     activity?: number;
+    boarding?: number;
     feeding?: number;
     [k: string]: number | undefined;
 }

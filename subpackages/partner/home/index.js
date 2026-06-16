@@ -10,7 +10,8 @@ Page({
     isPartner: false,
     incomeSummary: null,
     modules: [
-      { id: 'income', title: '收入管理', desc: '查看收入与提现', icon: 'income', path: '/subpackages/partner/income/index' },
+      { id: 'income', title: '佣金管理', desc: '查看佣金与提现', icon: 'income', path: '/subpackages/partner/income/index' },
+      { id: 'serviceIncome', title: '收入管理', desc: '查看服务收入', icon: 'serviceIncome', path: '/subpackages/partner/service-income/index' },
       { id: 'referral', title: '推荐管理', desc: '查看带货数据', icon: 'referral', path: '/subpackages/partner/referral/index' },
       { id: 'activity', title: '活动管理', desc: '管理活动与报名', icon: 'activity', path: '/subpackages/partner/activity-list/index' },
       { id: 'hosting', title: '寄养档案', desc: '管理寄养家庭信息', icon: 'hosting', path: '/subpackages/partner/hosting-profile/index' },
@@ -64,8 +65,8 @@ Page({
           if (incomeRes.code === 0 && incomeRes.data) {
             const d = incomeRes.data
             incomeSummary = {
-              total: ((d.commission?.total || 0) + (d.hosting?.total || 0) + (d.feeding?.total || 0)).toFixed(2),
-              monthly: ((d.commission?.monthly || 0) + (d.hosting?.monthly || 0) + (d.feeding?.monthly || 0)).toFixed(2),
+              total: ((d.commission?.total || 0) + (d.activity?.total || 0) + (d.hosting?.total || 0) + (d.feeding?.total || 0)).toFixed(2),
+              monthly: ((d.commission?.monthly || 0) + (d.activity?.monthly || 0) + (d.hosting?.monthly || 0) + (d.feeding?.monthly || 0)).toFixed(2),
               walletBalance: d.wallet?.balance || 0,
             }
           }

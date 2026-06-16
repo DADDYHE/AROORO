@@ -1,4 +1,5 @@
 <view class="page">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="gallery-header">
     <view class="brand-block">
       <view class="brand-accent-bar"></view>

@@ -1,4 +1,5 @@
 <view class="page">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="tab-bar">
     <view class="tab-item {{activeTab === 0 ? 'active' : ''}}" bindtap="handleTabTap" data-tab="0">
       <text class="tab-text">服务收费</text>

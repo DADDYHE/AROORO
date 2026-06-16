@@ -1,4 +1,5 @@
 <view class="home-container">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <!-- 轮播 Banner -->
   <swiper class="home-banner" style="height: {{bannerHeight}}px;" autoplay circular interval="5000" indicator-dots indicator-color="rgba(255,255,255,0.3)" indicator-active-color="#ffffff">
     <swiper-item wx:for="{{bannerList}}" wx:key="id">

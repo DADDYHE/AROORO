@@ -1,0 +1,152 @@
+<view class="service-income-page">
+  <!-- 加载状态 -->
+  <view wx:if="{{isLoading && !overview}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <view wx:else class="gallery-container">
+    <!-- 主展品：总收入概览 -->
+    <view class="hero-exhibit">
+      <view class="exhibit-label">累计收入</view>
+      <view class="exhibit-amount">
+        <text class="currency">¥</text>
+        <text class="value">{{overview.totalIncome || 0}}</text>
+      </view>
+      <view class="exhibit-meta">
+        <view class="meta-item">
+          <text class="meta-label">本月</text>
+          <text class="meta-value">¥{{overview.monthlyIncome || 0}}</text>
+        </view>
+        <view class="meta-divider"></view>
+        <view class="meta-item">
+          <text class="meta-label">今日</text>
+          <text class="meta-value">¥{{overview.todayIncome || 0}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 分类展区：三种收入类型 -->
+    <view class="category-gallery">
+      <view class="category-frame activity-frame">
+        <view class="frame-accent"></view>
+        <view class="frame-content">
+          <view class="frame-icon">
+            <view class="icon-dot activity-dot"></view>
+          </view>
+          <view class="frame-info">
+            <text class="frame-title">活动收入</text>
+            <text class="frame-amount">¥{{overview.activity.total || 0}}</text>
+          </view>
+          <view class="frame-stat">
+            <text class="stat-text">{{overview.activity.count || 0}} 笔</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="category-frame boarding-frame">
+        <view class="frame-accent"></view>
+        <view class="frame-content">
+          <view class="frame-icon">
+            <view class="icon-dot boarding-dot"></view>
+          </view>
+          <view class="frame-info">
+            <text class="frame-title">寄养收入</text>
+            <text class="frame-amount">¥{{overview.boarding.total || 0}}</text>
+          </view>
+          <view class="frame-stat">
+            <text class="stat-text">{{overview.boarding.count || 0}} 笔</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="category-frame feeding-frame">
+        <view class="frame-accent"></view>
+        <view class="frame-content">
+          <view class="frame-icon">
+            <view class="icon-dot feeding-dot"></view>
+          </view>
+          <view class="frame-info">
+            <text class="frame-title">上门服务</text>
+            <text class="frame-amount">¥{{overview.feeding.total || 0}}</text>
+          </view>
+          <view class="frame-stat">
+            <text class="stat-text">{{overview.feeding.count || 0}} 笔</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 明细展区：收入记录时间线 -->
+    <view class="timeline-exhibit">
+      <view class="exhibit-header">
+        <text class="exhibit-title">收入明细</text>
+      </view>
+
+      <!-- 筛选导航 -->
+      <view class="filter-nav">
+        <view 
+          class="nav-pill {{activeTab === 'all' ? 'active' : ''}}" 
+          data-tab="all" 
+          bindtap="onTabChange"
+        >
+          <text>全部</text>
+        </view>
+        <view 
+          class="nav-pill {{activeTab === 'activity' ? 'active' : ''}}" 
+          data-tab="activity" 
+          bindtap="onTabChange"
+        >
+          <text>活动</text>
+        </view>
+        <view 
+          class="nav-pill {{activeTab === 'boarding' ? 'active' : ''}}" 
+          data-tab="boarding" 
+          bindtap="onTabChange"
+        >
+          <text>寄养</text>
+        </view>
+        <view 
+          class="nav-pill {{activeTab === 'feeding' ? 'active' : ''}}" 
+          data-tab="feeding" 
+          bindtap="onTabChange"
+        >
+          <text>上门</text>
+        </view>
+      </view>
+
+      <!-- 时间线列表 -->
+      <view class="timeline-list">
+        <view wx:if="{{details.length === 0}}" class="empty-gallery">
+          <view class="empty-icon"></view>
+          <text class="empty-text">暂无收入记录</text>
+        </view>
+
+        <view wx:for="{{details}}" wx:key="id" class="timeline-item">
+          <view class="timeline-marker">
+            <view class="marker-dot {{item.type}}-marker"></view>
+          </view>
+          <view class="timeline-content">
+            <view class="content-header">
+              <text class="content-title">{{item.description}}</text>
+              <text class="content-amount">+¥{{item.amount}}</text>
+            </view>
+            <view class="content-footer">
+              <text class="content-time">{{item.createdAt}}</text>
+              <text class="content-status">{{item.status === 'completed' ? '已完成' : '待结算'}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 加载更多 -->
+        <view wx:if="{{hasMore}}" class="load-more" bindtap="onLoadMore">
+          <text>查看更多</text>
+        </view>
+        
+        <view wx:elif="{{details.length > 0}}" class="end-mark">
+          <view class="end-dot"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

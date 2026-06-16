@@ -25,7 +25,7 @@ Page({
     try {
       const [usersRes, statsRes] = await Promise.all([
         AdminService.getMyInvitedUsers({ page: 1, pageSize: this.data.pageSize }),
-        AdminService.getReferralOrderStats({ type: 'mall' }),
+        AdminService.getReferralOrderStats({ type: 'all' }),
       ])
       const list = usersRes.code === 0 && usersRes.data ? usersRes.data.list || [] : []
       const stats = statsRes.code === 0 && statsRes.data ? statsRes.data : null
@@ -40,7 +40,7 @@ Page({
     try {
       const [usersRes, statsRes] = await Promise.all([
         AdminService.getMyInvitedUsers({ page: this.data.page, pageSize: this.data.pageSize }),
-        AdminService.getReferralOrderStats({ type: 'mall' }),
+        AdminService.getReferralOrderStats({ type: 'all' }),
       ])
 
       const list = usersRes.code === 0 && usersRes.data ? usersRes.data.list || [] : []

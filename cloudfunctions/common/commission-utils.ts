@@ -25,7 +25,7 @@ import type { CloudBaseDB } from './types'
 // =====================================================================
 
 /** 订单类型 */
-export type CommissionOrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'feeding'
+export type CommissionOrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'boarding' | 'feeding'
 
 /** 订单文档（最小子集） */
 export interface CommissionOrderDoc {
@@ -45,6 +45,7 @@ export interface CommissionConfig {
   mall?: number
   tuan?: number
   activity?: number
+  boarding?: number
   feeding?: number
   [k: string]: number | undefined
 }
@@ -194,23 +195,35 @@ export async function createCommissionRecord(
   order: CommissionOrderDoc
 ): Promise<void> {
   try {
-    // 1. 读取佣金率
-    const config = await loadCommissionConfig(db)
-    const rate = Number(config[orderType as string]) || 0
-    if (rate <= 0) { return }
-
     if (!order.ownerId) { return }
 
-    // 2. 查询买家
+    // 1. 查询买家
     const buyerData = await loadBuyer(db, order.ownerId)
     if (!buyerData) { return }
 
-    // 3. 查询邀请人
+    // 2. 查询邀请人
     const inviterId = buyerData.inviterId
     if (!inviterId) { return }
 
     const inviterData = await loadInviter(db, inviterId)
     if (!inviterData) { return }
+
+    // 3. 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
+    let rate = 0
+    try {
+      const adminRes = await db.collection('admins').doc(inviterId).get()
+      const admin = adminRes.data
+      if (admin && admin.commissionRates && admin.commissionRates[orderType as string] !== undefined) {
+        rate = Number(admin.commissionRates[orderType as string])
+      }
+    } catch (e) {
+      logger.warn('loadAdminCommissionRates', { inviterId, msg: (e as Error)?.message })
+    }
+    if (rate <= 0) {
+      const config = await loadCommissionConfig(db)
+      rate = Number(config[orderType as string]) || 0
+    }
+    if (rate <= 0) { return }
 
     // 4. 计算订单金额 + 佣金金额
     const orderAmount = resolveOrderAmount(order)
@@ -244,6 +257,44 @@ export async function createCommissionRecord(
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : '未知错误'
     logger.error('createCommissionRecord', { msg, orderType, orderId: order?._id })
+  }
+}
+
+/**
+ * 取消佣金记录（best-effort）
+ *
+ * 调用时机：
+ *   - 订单取消/退款时
+ *
+ * 流程：
+ *   1. 查找 tuan_commissions 中 orderId 对应的所有记录
+ *   2. 将 status 从 'pending' 更新为 'cancelled'
+ *
+ * 错误处理：
+ *   - 任何异常都被吞掉，仅记录日志
+ *   - 不影响主业务（订单取消）的响应
+ *
+ * @param orderId 订单ID
+ * @returns 始终返回 void；失败仅记日志
+ */
+export async function cancelCommissionRecord(orderId: string): Promise<void> {
+  try {
+    if (!orderId) { return }
+
+    const result = await db.collection('tuan_commissions')
+      .where({ orderId, status: 'pending' })
+      .update({
+        data: {
+          status: 'cancelled',
+          cancelledAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+        },
+      })
+
+    logger.info('commission_cancelled', { orderId, updated: result.updated })
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : '未知错误'
+    logger.error('cancelCommissionRecord', { msg, orderId })
   }
 }
 

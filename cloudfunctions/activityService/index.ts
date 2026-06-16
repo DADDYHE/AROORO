@@ -399,15 +399,27 @@ async function createCommissionRecord(orderType: string, order: OrderRecord): Pr
     }
     if (!user || !user.inviterId) { return }
 
-    let config: Record<string, unknown> = {}
+    // 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
+    let rate = 0
     try {
-      const configRes = await db.collection('system_config').doc('commission_rates').get()
-      config = configRes.data || {}
+      const adminRes = await db.collection('admins').doc(user.inviterId).get()
+      const admin = adminRes.data
+      if (admin && admin.commissionRates && admin.commissionRates[orderType] !== undefined) {
+        rate = Number(admin.commissionRates[orderType])
+      }
     } catch (e) {
-      logger.warn('commission.system_config', { code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
-      return
+      logger.warn('commission.admins.fetch', { inviterId: user.inviterId, msg: (e as Error).message })
     }
-    const rate = config[orderType] !== undefined ? Number(config[orderType]) : 0
+    if (rate <= 0) {
+      try {
+        const configRes = await db.collection('system_config').doc('commission_rates').get()
+        const config = configRes.data || {}
+        rate = config[orderType] !== undefined ? Number(config[orderType]) : 0
+      } catch (e) {
+        logger.warn('commission.system_config', { code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
+        return
+      }
+    }
     if (!rate || rate <= 0) { return }
 
     const orderAmount = Number(order.totalAmount || order.totalPrice || order.basicPrice || 0)
@@ -466,14 +478,72 @@ async function autoUpdateActivityStatus(): Promise<void> {
       logger.info('autoUpdate.stopped', { updated: stoppedRes.updated })
     }
 
+    // 查询即将结束的活动（用于生成佣金）
+    const endingActivitiesRes = await db.collection('activities')
+      .where({ status: _.in(['published', 'registration_stopped']), endTime: _.lte(nowStr) })
+      .get()
+    const endingActivities = endingActivitiesRes.data || []
+
+    // 更新活动状态为 ended
     const endedRes = await db.collection('activities')
       .where({ status: _.in(['published', 'registration_stopped']), endTime: _.lte(nowStr) })
       .update({ data: { status: 'ended', updatedAt: db.serverDate() } })
     if (endedRes.updated > 0) {
       logger.info('autoUpdate.ended', { updated: endedRes.updated })
+
+      // 为每个结束的活动生成佣金记录
+      for (const activity of endingActivities) {
+        try {
+          await generateActivityCommissions(activity._id)
+        } catch (e) {
+          logger.error('autoUpdate.commission', { activityId: activity._id, msg: (e as Error).message })
+        }
+      }
     }
   } catch (e) {
     logger.error('autoUpdate', e)
+  }
+}
+
+/**
+ * 为已结束的活动生成佣金记录
+ * 查询所有已确认的报名，为每个报名创建佣金
+ */
+async function generateActivityCommissions(activityId: string): Promise<void> {
+  try {
+    // 查询该活动所有已确认的报名
+    const registrationsRes = await db.collection('activity_registrations')
+      .where({ activityId, status: 'confirmed' })
+      .get()
+    const registrations = registrationsRes.data || []
+
+    if (registrations.length === 0) {
+      logger.info('generateActivityCommissions.noRegistrations', { activityId })
+      return
+    }
+
+    // 获取所有报名对应的订单ID
+    const orderIds = registrations.map(r => r.orderId).filter(Boolean)
+    if (orderIds.length === 0) return
+
+    // 批量查询订单
+    const ordersRes = await db.collection('orders')
+      .where({ _id: _.in(orderIds), status: 'confirmed' })
+      .get()
+    const orders = ordersRes.data || []
+
+    // 为每个订单创建佣金记录
+    for (const order of orders) {
+      try {
+        await createCommissionRecord('activity', order as OrderRecord)
+      } catch (e) {
+        logger.warn('generateActivityCommissions.order', { orderId: order._id, msg: (e as Error).message })
+      }
+    }
+
+    logger.info('generateActivityCommissions.done', { activityId, registrations: registrations.length, orders: orders.length })
+  } catch (e) {
+    logger.error('generateActivityCommissions', { activityId, msg: (e as Error).message })
   }
 }
 
@@ -957,6 +1027,11 @@ export async function submitRegistration(
     const petCount = petsArray.length + friendsArray.length
     const calculatedAmount = pricePerPerson * pCount + pricePerPet * petCount
 
+    // 仅在使用优惠券时，校验优惠后金额下限（直接使用前端传入的已扣券金额）
+    if (couponId && Number(totalAmount) > 0 && Number(totalAmount) < 0.1) {
+      throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元')
+    }
+
     // Sprint 22: 活动报名前先做大额风控
     const applyRisk = await performActivityApplyRiskCheck({
       openid,
@@ -1432,7 +1507,8 @@ export async function confirmActivityPayment(
 
     await transaction.commit()
 
-    await createCommissionRecord('activity', order)
+    // 活动佣金在活动结束时生成，不在支付时生成
+    // 佣金由 autoUpdateActivityStatus 在活动时间到达 endTime 时触发
 
     return handleSuccess({ orderId }, '支付成功')
   } catch (error) {

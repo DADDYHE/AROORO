@@ -1,7 +1,10 @@
 // 视频列表页面逻辑
 const { buildSharePath } = require('../../../utils/share')
+const shareEntryBehavior = require('../../../behaviors/shareEntryBehavior')
 
 Page({
+  behaviors: [shareEntryBehavior],
+
   /**
    * 页面的初始数据
    */

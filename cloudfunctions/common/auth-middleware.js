@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyAuth = void 0;
 const utils_1 = require("./utils");
 const errors_1 = require("./errors");
+const permissions_1 = require("./permissions");
 // =====================================================================
 // 主入口
 // =====================================================================
@@ -39,7 +40,7 @@ async function verifyAuth(event, options = {}) {
     if (!openid) {
         throw (0, errors_1.err)('AUTH_REQUIRED', '未登录');
     }
-    const { isSuperAdmin, isPartner } = require('./permissions');
+    // isSuperAdmin 和 isPartner 已在文件顶部通过 import 导入
     let doc = null;
     try {
         const res = await db.collection('admins').doc(openid).get();
@@ -52,19 +53,19 @@ async function verifyAuth(event, options = {}) {
         throw (0, errors_1.err)('PARTNER_REQUIRED', '无有效管理账号');
     }
     if (permission === 'super_admin') {
-        if (!isSuperAdmin(doc)) {
+        if (!(0, permissions_1.isSuperAdmin)(doc)) {
             throw (0, errors_1.err)('PERMISSION_DENIED', '需要超级管理员权限');
         }
         return { openid, adminId: doc._id, isSuperAdmin: true };
     }
     if (permission === 'admin') {
-        if (!isSuperAdmin(doc) && !isPartner(doc)) {
+        if (!(0, permissions_1.isSuperAdmin)(doc) && !(0, permissions_1.isPartner)(doc)) {
             throw (0, errors_1.err)('PERMISSION_DENIED', '需要管理员或合作伙伴权限');
         }
-        return { openid, adminId: doc._id, isAdmin: true, isSuperAdmin: isSuperAdmin(doc) };
+        return { openid, adminId: doc._id, isAdmin: true, isSuperAdmin: (0, permissions_1.isSuperAdmin)(doc) };
     }
     // permission === 'partner'
-    if (!isPartner(doc)) {
+    if (!(0, permissions_1.isPartner)(doc)) {
         throw (0, errors_1.err)('PARTNER_REQUIRED', '无合作伙伴权限');
     }
     return {

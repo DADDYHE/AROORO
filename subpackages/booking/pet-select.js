@@ -3,6 +3,7 @@ const { PetService } = require('../../services/CloudFunctionService')
 const { BookingData } = require('../../utils/BookingDataService')
 const DEFAULT_AVATAR = '/images/default-avatar.svg'
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
 const { isHoliday } = require('../../utils/holidays')
 
@@ -10,7 +11,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [cloudImageBehavior, shareEntryBehavior],
   data: {
     pets: [],
     selectedPets: [],

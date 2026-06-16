@@ -261,6 +261,7 @@ async function applyPaidStatus(orderType, existingOrder, transactionId) {
  * 触发 commission 记录（best-effort）
  */
 async function triggerCommission(orderType, order) {
+    if (orderType !== 'mall' && orderType !== 'tuan') { return; }
     try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { createCommissionRecord } = require('./commission');

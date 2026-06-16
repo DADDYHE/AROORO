@@ -40,7 +40,11 @@ function validate(schema, data) {
             continue;
         }
         if (value !== undefined && value !== null) {
-            if (rules.type && typeof value !== rules.type) {
+            // 特殊处理 array 类型（typeof [] === 'object'）
+            if (rules.type === 'array' && !Array.isArray(value)) {
+                errors.push({ field, message: rules.message || `${field} 类型错误，期望数组` });
+            }
+            else if (rules.type && rules.type !== 'array' && typeof value !== rules.type) {
                 errors.push({ field, message: rules.message || `${field} 类型错误，期望 ${rules.type}` });
             }
             if (rules.enum && !rules.enum.includes(value)) {

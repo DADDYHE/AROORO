@@ -292,15 +292,27 @@ async function createCommissionRecord(orderType: string, order: FeedingOrderReco
     }
     if (!user || !user.inviterId) { return }
 
-    let config: SystemConfig = {}
+    // 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
+    let rate = 0
     try {
-      const configRes = await db.collection('system_config').doc('commission_rates').get()
-      config = configRes.data || {}
+      const adminRes = await db.collection('admins').doc(user.inviterId).get()
+      const admin = adminRes.data
+      if (admin && admin.commissionRates && admin.commissionRates[orderType] !== undefined) {
+        rate = Number(admin.commissionRates[orderType])
+      }
     } catch (e) {
-      logger.warn('commission.tuan_config', { msg: (e as Error).message })
-      return
+      logger.warn('commission.admins.fetch', { inviterId: user.inviterId, msg: (e as Error).message })
     }
-    const rate = config[orderType] !== undefined ? Number(config[orderType]) : 0
+    if (rate <= 0) {
+      try {
+        const configRes = await db.collection('system_config').doc('commission_rates').get()
+        const config = configRes.data || {}
+        rate = config[orderType] !== undefined ? Number(config[orderType]) : 0
+      } catch (e) {
+        logger.warn('commission.tuan_config', { msg: (e as Error).message })
+        return
+      }
+    }
     if (!rate || rate <= 0) { return }
 
     const orderAmount = Number(order.totalAmount || order.totalPrice || order.basicPrice || 0)

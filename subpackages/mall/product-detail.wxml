@@ -1,4 +1,5 @@
 <view class="page-container" wx:if="{{product}}">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <!-- 商品图片画廊 -->
   <view class="image-gallery">
     <swiper class="gallery-swiper" current="{{currentImageIndex}}" bindchange="onImageChange">

@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "寄养家庭详情",
   "usingComponents": {
-    "favorite-btn": "./components/favorite-btn/index"
+    "favorite-btn": "./components/favorite-btn/index",
+    "login-prompt": "../../components/login-prompt/login-prompt"
   }
 }

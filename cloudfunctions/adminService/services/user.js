@@ -7,6 +7,15 @@ const { ORDER_TYPES, ORDER_TYPE_NAMES } = require('../constants')
 const { db, cloud } = initCloud()
 const logger = createLogger('adminService')
 
+function toTimestamp(val) {
+  if (!val) return val
+  if (typeof val === 'object' && val !== null) {
+    if (val.$date != null) return typeof val.$date === 'object' && val.$date.$numberLong ? Number(val.$date.$numberLong) : val.$date
+    if (typeof val.seconds === 'number') return val.seconds * 1000 + (val.nanoseconds || 0) / 1e6
+  }
+  return val
+}
+
 async function getUserList(event, context, auth) {
   const { page = 1, pageSize = 20, keyword } = event
   const where = {}
@@ -18,21 +27,38 @@ async function getUserList(event, context, auth) {
   const result = await paginate(db, 'users', { page, pageSize, where })
 
   if (result.list && result.list.length > 0) {
+    for (const user of result.list) {
+      if (user.createdAt) user.createdAt = toTimestamp(user.createdAt)
+      if (user.updatedAt) user.updatedAt = toTimestamp(user.updatedAt)
+    }
+
     const openids = result.list.map(u => u._id).filter(Boolean)
     if (openids.length > 0) {
-      const adminRes = await db.collection('admins')
-        .where({ _id: db.command.in(openids) })
-        .field({ isPartner: true, permissions: true })
-        .limit(100)
-        .get()
+      const [adminRes, spendRes] = await Promise.all([
+        db.collection('admins')
+          .where({ _id: db.command.in(openids) })
+          .field({ isPartner: true, permissions: true })
+          .limit(100)
+          .get(),
+        db.collection('orders')
+          .aggregate()
+          .match({ ownerId: db.command.in(openids), status: db.command.neq('cancelled') })
+          .group({ _id: '$ownerId', total: { $sum: '$totalAmount' } })
+          .end(),
+      ])
       const adminMap = {}
       for (const a of (adminRes.data || [])) {
         adminMap[a._id] = a
+      }
+      const spendMap = {}
+      for (const s of (spendRes.list || [])) {
+        spendMap[s._id] = s.total || 0
       }
       for (const user of result.list) {
         const admin = adminMap[user._id]
         user.isPartner = admin ? Boolean(admin.isPartner) : false
         user.permissions = admin ? (admin.permissions || []) : []
+        user.totalSpent = spendMap[user._id] || 0
       }
     }
   }
@@ -41,6 +67,7 @@ async function getUserList(event, context, auth) {
 }
 
 async function getUserDetail(event, context, auth) {
+  const _ = db.command
   const targetOpenid = event.targetOpenid || event.data?.targetOpenid
   if (!targetOpenid) {throw err('INVALID_PARAMS', '缺少用户ID')}
 
@@ -49,11 +76,18 @@ async function getUserDetail(event, context, auth) {
     throw err('USER_NOT_FOUND', '用户不存在')
   }
   const userData = userRes.data[0]
-  const [petCountRes, orderCountRes, adminRes] = await Promise.all([
-    db.collection('pets').where({ ownerId: userData._id }).count(),
-    db.collection('orders').where({ ownerId: userData._id }).count(),
-    db.collection('admins').where({ _id: userData._id }).field({ isPartner: true, permissions: true }).limit(1).get(),
+  const uid = userData._id
+  const [petCountRes, orderCountRes, adminRes, ordersSum, tuanSum, feedSum, actSum] = await Promise.all([
+    db.collection('pets').where({ ownerId: uid }).count(),
+    db.collection('orders').where({ ownerId: uid }).count(),
+    db.collection('admins').where({ _id: uid }).field({ isPartner: true, permissions: true }).limit(1).get(),
+    db.collection('orders').aggregate().match({ ownerId: uid, status: _.neq('cancelled') }).group({ _id: null, total: { $sum: '$totalAmount' } }).end(),
+    db.collection('tuan_orders').aggregate().match({ userId: uid, status: _.neq('cancelled') }).group({ _id: null, total: { $sum: '$tuanPrice' } }).end(),
+    db.collection('feedingOrders').aggregate().match({ userId: uid, status: _.neq('cancelled') }).group({ _id: null, total: { $sum: '$totalPrice' } }).end(),
+    db.collection('activity_registrations').aggregate().match({ userId: uid, status: _.neq('cancelled') }).group({ _id: null, total: { $sum: '$totalAmount' } }).end(),
   ])
+  const extractSum = (res) => (res.list && res.list[0] && res.list[0].total) || 0
+  userData.totalSpent = extractSum(ordersSum) + extractSum(tuanSum) + extractSum(feedSum) + extractSum(actSum)
   const admin = (adminRes.data && adminRes.data[0]) || null
   userData.isPartner = admin ? Boolean(admin.isPartner) : false
   userData.permissions = admin ? (admin.permissions || []) : []
@@ -203,10 +237,14 @@ async function getEnhancedDashboardStats(event, context, auth) {
 
     // 订单类型分布（近30天）
     // orders 集合按 type 分组：mall 归类为商城，group_buy 归类为团购，其余归类为寄养
-    const [mallTypeAgg, tuanTypeAgg, feedingTypeAgg, activityTypeAgg] = await Promise.all([
+    const [mallTypeAgg, boardingTypeAgg, tuanTypeAgg, feedingTypeAgg, activityTypeAgg] = await Promise.all([
       db.collection('orders').aggregate()
-        .match({ createdAt: _.gte(thirtyDaysAgo) })
-        .group({ _id: '$type', count: { $sum: 1 } })
+        .match({ createdAt: _.gte(thirtyDaysAgo), type: 'mall' })
+        .group({ _id: null, count: { $sum: 1 } })
+        .end(),
+      db.collection('orders').aggregate()
+        .match({ createdAt: _.gte(thirtyDaysAgo), type: 'boarding' })
+        .group({ _id: null, count: { $sum: 1 } })
         .end(),
       db.collection('tuan_orders').aggregate()
         .match({ createdAt: _.gte(thirtyDaysAgo), status: _.neq('cancelled') })
@@ -220,21 +258,11 @@ async function getEnhancedDashboardStats(event, context, auth) {
     ])
 
     const ordersByType = {}
-    let boardingCount = 0
-    ;(mallTypeAgg.data || []).forEach(t => {
-      const typeName = t._id || 'mall'
-      if (typeName === 'mall') {
-        ordersByType.mall = { name: 'mall', count: t.count }
-      } else if (typeName === 'group_buy') {
-        // group_buy 在 orders 集合中，但业务上属于团购
-        ordersByType.tuan = { name: 'tuan', count: (ordersByType.tuan?.count || 0) + t.count }
-      } else {
-        // 其余（无 type 或其他值）归为寄养
-        boardingCount += t.count
-      }
-    })
-    if (boardingCount > 0) {
-      ordersByType.boarding = { name: 'boarding', count: boardingCount }
+    if (mallTypeAgg.data && mallTypeAgg.data[0] && mallTypeAgg.data[0].count > 0) {
+      ordersByType.mall = { name: 'mall', count: mallTypeAgg.data[0].count }
+    }
+    if (boardingTypeAgg.data && boardingTypeAgg.data[0] && boardingTypeAgg.data[0].count > 0) {
+      ordersByType.boarding = { name: 'boarding', count: boardingTypeAgg.data[0].count }
     }
     if (tuanTypeAgg.data && tuanTypeAgg.data[0] && tuanTypeAgg.data[0].count > 0) {
       ordersByType.tuan = { name: 'tuan', count: (ordersByType.tuan?.count || 0) + tuanTypeAgg.data[0].count }
@@ -333,14 +361,14 @@ async function getFinanceOverview(event, context, auth) {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
     // 各订单类型的查询配置，与实际数据库集合结构对齐：
-    // - orders 集合：用 type 字段区分（mall / group_buy），寄养订单无 type 或 type 非 mall/group_buy
+    // - orders 集合：用 type 字段区分（mall / group_buy / boarding）
     // - feedingOrders 集合：有 orderType='feeding'
     // - tuan_orders 集合：独立集合
     // - activity_registrations 集合：独立集合
     // 金额字段统一用 totalAmount，状态用 completed / paid 表示已完成
     const ORDER_TYPE_MAP = {
       mall: { collection: 'orders', where: { type: 'mall', status: _.in(['completed', 'paid']) } },
-      boarding: { collection: 'orders', where: { type: _.or([_.exists(false), _.and(_.neq('mall'), _.neq('group_buy'))]), status: _.in(['completed', 'paid']) } },
+      boarding: { collection: 'orders', where: { type: 'boarding', status: _.in(['completed', 'paid']) } },
       activity: { collection: 'activity_registrations', where: { status: _.in(['completed', 'paid']) } },
       tuan: { collection: 'tuan_orders', where: { status: _.in(['completed', 'paid']) } },
       feeding: { collection: 'feedingOrders', where: { status: _.in(['completed', 'paid']) } },
@@ -912,17 +940,16 @@ async function getReferralOrders(event, context, auth) {
       }
     }
 
-    if (!type || type === 'hosting') {
+    if (!type || type === 'boarding') {
       try {
-        const hostWhere = { ownerId: _.in(invitedOpenids) }
+        const hostWhere = { type: 'boarding', ownerId: _.in(invitedOpenids) }
         const hostRes = await db.collection('orders').where(hostWhere)
           .orderBy('createdAt', 'desc').skip((page - 1) * pageSize).limit(pageSize).get()
         ;(hostRes.data || []).forEach(o => {
-          if (o.type === 'mall') {return}
-          orders.push({ ...o, orderType: 'hosting', buyerNick: nickMap[o.ownerId] || '' })
+          orders.push({ ...o, orderType: 'boarding', buyerNick: nickMap[o.ownerId] || '' })
         })
       } catch (e) {
-        logger.warn('getReferralOrders.hosting', { code: e.errCode, msg: e.message })
+        logger.warn('getReferralOrders.boarding', { code: e.errCode, msg: e.message })
       }
     }
 
@@ -939,8 +966,8 @@ async function getReferralOrders(event, context, auth) {
 
     if (!type || type === 'tuan') {
       try {
-        const tuanWhere = { ownerId: _.in(invitedOpenids) }
-        const tuanRes = await db.collection('tuan_orders').where(tuanWhere)
+        const tuanWhere = { type: 'group_buy', ownerId: _.in(invitedOpenids) }
+        const tuanRes = await db.collection('orders').where(tuanWhere)
           .orderBy('createdAt', 'desc').skip((page - 1) * pageSize).limit(pageSize).get()
         ;(tuanRes.data || []).forEach(o => orders.push({ ...o, orderType: 'tuan', buyerNick: nickMap[o.ownerId] || '' }))
       } catch (e) {
@@ -1011,41 +1038,73 @@ async function getReferralOrderStats(event, context, auth) {
 
     let totalAmount = 0
     let totalCount = 0
+    let typeBreakdown = {} // 记录各类型订单金额（用于 type === 'all' 时分别计算佣金）
 
-    if (type === 'mall') {
+    const sumOrders = (res) => {
+      let c = 0, s = 0
+      ;(res.data || []).forEach(o => { c++; s += Number(o.totalPrice) || Number(o.totalAmount) || Number(o.price) || 0 })
+      return { c, s }
+    }
+
+    if (type === 'all') {
+      try {
+        const [mallRes, boardingRes, feedingRes, tuanRes, activityRes] = await Promise.all([
+          db.collection('orders').where({ ownerId: _.in(invitedOpenids), type: 'mall', status: _.in(['paid', 'shipped', 'completed']) }).get(),
+          db.collection('orders').where({ ownerId: _.in(invitedOpenids), type: 'boarding', status: _.in(['paid', 'shipped', 'completed']) }).get(),
+          db.collection('feedingOrders').where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) }).get(),
+          db.collection('tuan_orders').where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) }).get(),
+          db.collection('activity_registrations').where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'confirmed', 'completed']) }).get(),
+        ])
+        const mall = sumOrders(mallRes)
+        const boarding = sumOrders(boardingRes)
+        const feeding = sumOrders(feedingRes)
+        const tuan = sumOrders(tuanRes)
+        const activity = sumOrders(activityRes)
+        
+        totalCount = mall.c + boarding.c + feeding.c + tuan.c + activity.c
+        totalAmount = mall.s + boarding.s + feeding.s + tuan.s + activity.s
+        
+        // 记录各类型金额，用于后续分别计算佣金
+        typeBreakdown = {
+          mall: mall.s,
+          boarding: boarding.s,
+          feeding: feeding.s,
+          tuan: tuan.s,
+          activity: activity.s,
+        }
+      } catch (e) {
+        logger.warn('getReferralOrderStats.all', { code: e.errCode, msg: e.message })
+      }
+    } else if (type === 'mall') {
       try {
         const res = await db.collection('orders')
           .where({ type: 'mall', ownerId: _.in(invitedOpenids), status: _.in(['paid', 'shipped', 'completed']) })
           .get()
-        ;(res.data || []).forEach(o => {
-          totalAmount += Number(o.totalPrice) || Number(o.totalAmount) || 0
-          totalCount++
-        })
+        const { c, s } = sumOrders(res)
+        totalCount += c
+        totalAmount += s
       } catch (e) {
         logger.warn('getReferralOrderStats.mall', { type, code: e.errCode, msg: e.message })
       }
-    } else if (type === 'hosting') {
+    } else if (type === 'boarding') {
       try {
         const res = await db.collection('orders')
-          .where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'confirmed', 'completed']) })
+          .where({ type: 'boarding', ownerId: _.in(invitedOpenids), status: _.in(['paid', 'confirmed', 'completed']) })
           .get()
-        ;(res.data || []).forEach(o => {
-          if (o.type === 'mall') {return}
-          totalAmount += Number(o.totalPrice) || Number(o.totalAmount) || 0
-          totalCount++
-        })
+        const { c, s } = sumOrders(res)
+        totalCount += c
+        totalAmount += s
       } catch (e) {
-        logger.warn('getReferralOrderStats.hosting', { type, code: e.errCode, msg: e.message })
+        logger.warn('getReferralOrderStats.boarding', { type, code: e.errCode, msg: e.message })
       }
     } else if (type === 'feeding') {
       try {
         const res = await db.collection('feedingOrders')
           .where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) })
           .get()
-        ;(res.data || []).forEach(o => {
-          totalAmount += Number(o.totalPrice) || Number(o.totalAmount) || 0
-          totalCount++
-        })
+        const { c, s } = sumOrders(res)
+        totalCount += c
+        totalAmount += s
       } catch (e) {
         logger.warn('getReferralOrderStats.feedingOrders', { type, code: e.errCode, msg: e.message })
       }
@@ -1054,10 +1113,9 @@ async function getReferralOrderStats(event, context, auth) {
         const res = await db.collection('tuan_orders')
           .where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) })
           .get()
-        ;(res.data || []).forEach(o => {
-          totalAmount += Number(o.totalPrice) || Number(o.totalAmount) || 0
-          totalCount++
-        })
+        const { c, s } = sumOrders(res)
+        totalCount += c
+        totalAmount += s
       } catch (e) {
         logger.warn('getReferralOrderStats.tuan_orders', { type, code: e.errCode, msg: e.message })
       }
@@ -1066,10 +1124,9 @@ async function getReferralOrderStats(event, context, auth) {
         const res = await db.collection('activity_registrations')
           .where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'confirmed', 'completed']) })
           .get()
-        ;(res.data || []).forEach(o => {
-          totalAmount += Number(o.totalPrice) || Number(o.totalAmount) || 0
-          totalCount++
-        })
+        const { c, s } = sumOrders(res)
+        totalCount += c
+        totalAmount += s
       } catch (e) {
         logger.warn('getReferralOrderStats.activity_registrations', { type, code: e.errCode, msg: e.message })
       }
@@ -1077,44 +1134,52 @@ async function getReferralOrderStats(event, context, auth) {
 
     totalAmount = Math.round(totalAmount * 100) / 100
 
+    let estimatedCommission = 0
     let commissionRate = 0
-    if (targetOpenid) {
+
+    // 读取佣金配置：优先使用合作伙伴自定义配置，fallback 到系统默认配置
+    let commissionConfig = {}
+    try {
+      // 先尝试读取系统默认配置
+      const configRes = await db.collection('system_config').doc('commission_rates').get()
+      commissionConfig = configRes.data || {}
+    } catch (e) {
+      logger.warn('getReferralOrderStats.system_config', { type, code: e.errCode, msg: e.message })
+    }
+
+    // 如果有 targetOpenid 或 auth.openid，尝试读取合作伙伴自定义配置
+    const targetId = targetOpenid || (auth.openid && !auth._isHttpAuth ? auth.openid : null)
+    if (targetId) {
       try {
-        // targetOpenid 是 openid（admins 集合 _id = openid）
-        let admin = null
-        try {
-          const adminRes = await db.collection('admins').doc(targetOpenid).get()
-          admin = adminRes.data
-        } catch (e) {
-          logger.warn('getReferralOrderStats.admins.fetch', { targetOpenid, code: e.errCode, msg: e.message })
-        }
-        if (admin && admin.commissionRates && admin.commissionRates[type] !== undefined) {
-          commissionRate = Number(admin.commissionRates[type])
-        } else {
-          const configRes = await db.collection('system_config').doc('commission_rates').get()
-          const config = configRes.data || {}
-          commissionRate = config[type] !== undefined ? Number(config[type]) : 0
+        const adminRes = await db.collection('admins').doc(targetId).get()
+        const admin = adminRes.data
+        if (admin && admin.commissionRates) {
+          // 合作伙伴自定义配置覆盖系统默认配置
+          commissionConfig = { ...commissionConfig, ...admin.commissionRates }
         }
       } catch (e) {
-        try {
-          const configRes = await db.collection('system_config').doc('commission_rates').get()
-          const config = configRes.data || {}
-          commissionRate = config[type] !== undefined ? Number(config[type]) : 0
-        } catch (e2) {
-          logger.warn('getReferralOrderStats.system_config.fallback', { targetOpenid, type, code: e2.errCode, msg: e2.message })
-        }
-      }
-    } else {
-      try {
-        const configRes = await db.collection('system_config').doc('commission_rates').get()
-        const config = configRes.data || {}
-        commissionRate = config[type] !== undefined ? Number(config[type]) : 0
-      } catch (e) {
-        logger.warn('getReferralOrderStats.system_config', { type, code: e.errCode, msg: e.message })
+        logger.warn('getReferralOrderStats.admins.fetch', { targetId, code: e.errCode, msg: e.message })
       }
     }
 
-    const estimatedCommission = Math.round(totalAmount * commissionRate / 100 * 100) / 100
+    if (type === 'all') {
+      // 分别计算各类型订单的佣金后求和
+      const rates = {}
+      for (const orderType of Object.keys(typeBreakdown)) {
+        const amount = typeBreakdown[orderType]
+        const rate = Number(commissionConfig[orderType]) || 0
+        rates[orderType] = rate
+        estimatedCommission += amount * rate / 100
+      }
+      // 计算加权平均佣金率（用于前端展示）
+      commissionRate = totalAmount > 0 ? Math.round(estimatedCommission / totalAmount * 100 * 100) / 100 : 0
+    } else {
+      // 单一类型，使用对应的佣金率
+      commissionRate = Number(commissionConfig[type]) || 0
+      estimatedCommission = totalAmount * commissionRate / 100
+    }
+
+    estimatedCommission = Math.round(estimatedCommission * 100) / 100
 
     return handleSuccess({ totalAmount, totalCount, commissionRate, estimatedCommission })
   } catch (error) {

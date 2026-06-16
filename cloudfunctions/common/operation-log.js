@@ -1,6 +1,6 @@
 "use strict";
 /**
- * operation-log.js - 统一操作日志写入工具（best-effort）
+ * operation-log.ts - 统一操作日志写入工具（best-effort）
  *
  * 设计目标：
  *   1. 集中所有写入 `operation_logs` 集合的逻辑（不再各 service 各自散落）
@@ -25,30 +25,37 @@
  *   - 绝不 rethrow，绝不让 audit 失败阻断业务
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.writeOperationLog = writeOperationLog;
-exports.writeOperationLogs = writeOperationLogs;
+exports.writeOperationLogs = exports.writeOperationLog = void 0;
 // 懒加载 initCloud，避免在测试/CI 阶段强制初始化 wx-server-sdk
-function _resolveDb(extra) {
-    if (extra && extra.db) {return extra.db;}
+function resolveDb(opts) {
+    if (opts?.db) {
+        return opts.db;
+    }
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { initCloud } = require('./utils');
     return initCloud().db;
 }
+/** 懒加载默认 logger，避免循环依赖 */
+function defaultLogger() {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { createLogger } = require('./logger');
+    return createLogger('operationLog');
+}
 /**
  * 写一条操作日志（best-effort）
  *
- * @param {object} data  日志字段
- * @param {object} [opts]  可选注入（db / logger）
- * @returns {Promise<boolean>} true=写入成功，false=被吞掉
+ * @param data  日志字段（module/action 必填）
+ * @param opts  可选注入
+ * @returns true=写入成功，false=被吞掉
  */
 async function writeOperationLog(data, opts) {
     if (!data || !data.module || !data.action) {
-        const logger = (opts && opts.logger) || _defaultLogger();
-        logger.warn('operationLog', 'writeOperationLog: 缺少 module/action 字段', { data });
+        const lg = opts?.logger || defaultLogger();
+        lg.warn('operationLog', 'writeOperationLog: 缺少 module/action 字段', { data });
         return false;
     }
-    const db = _resolveDb(opts);
-    const logger = (opts && opts.logger) || _defaultLogger();
+    const db = resolveDb(opts);
+    const logger = opts?.logger || defaultLogger();
     try {
         await db.collection('operation_logs').add({
             data: {
@@ -64,32 +71,30 @@ async function writeOperationLog(data, opts) {
         logger.warn('operationLog', 'writeOperationLog: 写入失败（已吞掉）', {
             module: data.module,
             action: data.action,
-            msg: e && e.message ? e.message : String(e),
+            msg: e instanceof Error ? e.message : String(e),
         });
         return false;
     }
 }
+exports.writeOperationLog = writeOperationLog;
 /**
- * 批量写日志（all-or-nothing 都吞掉，best-effort）
- *
- * @param {Array<object>} list
- * @param {object} [opts]
- * @returns {Promise<{ success: number, failed: number }>}
+ * 批量写日志（全部 best-effort）
  */
 async function writeOperationLogs(list, opts) {
-    if (!Array.isArray(list) || list.length === 0) {return { success: 0, failed: 0 };}
+    if (!Array.isArray(list) || list.length === 0) {
+        return { success: 0, failed: 0 };
+    }
     let success = 0;
     let failed = 0;
     for (const item of list) {
         const ok = await writeOperationLog(item, opts);
-        if (ok) {success++;}
-        else {failed++;}
+        if (ok) {
+            success++;
+        }
+        else {
+            failed++;
+        }
     }
     return { success, failed };
 }
-/** 懒加载默认 logger，避免循环依赖 */
-function _defaultLogger() {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { createLogger } = require('./logger');
-    return createLogger('operationLog');
-}
+exports.writeOperationLogs = writeOperationLogs;

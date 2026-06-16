@@ -1,4 +1,5 @@
 <view class="page-container" wx:if="{{feeder}}">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <!-- 顶部图片区 -->
   <view class="hero-section">
     <image class="hero-image" src="{{feeder.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{feeder.avatarUrl}}" data-path="feeder.avatarUrl" />

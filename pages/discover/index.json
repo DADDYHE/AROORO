@@ -1,6 +1,9 @@
 {
-  "usingComponents": {},
+  "usingComponents": {
+    "login-prompt": "../../components/login-prompt/login-prompt"
+  },
   "navigationBarTitleText": "宠团团",
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "light"
+
 }

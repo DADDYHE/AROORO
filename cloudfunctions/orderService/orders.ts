@@ -66,6 +66,8 @@ const { detectReviewSpam, detectBoardingAcceptRisk, mapActionToErrorCode } = req
 const { withRateLimit } = require('../common/risk-rate-limit')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { normalizeDbError } = require('../common/normalize')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { createServiceIncomeRecord } = require('../common/service-income-utils')
 
 // =====================================================================
 // 类型定义
@@ -291,13 +293,22 @@ async function createCommissionRecordInternal(orderType: string, order: OrderDoc
     } catch (e) { return }
     if (!user || !user.inviterId) {return}
 
-    let config: Record<string, unknown> = {}
+    // 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
+    let rate = 0
     try {
-      const configRes = await db.collection('system_config').doc('commission_rates').get()
-      config = (configRes.data || {}) as Record<string, unknown>
-    } catch (e) { return }
-
-    const rate = config[orderType] !== undefined ? Number(config[orderType]) : 0
+      const adminRes = await db.collection('admins').doc(user.inviterId).get()
+      const admin = adminRes.data
+      if (admin && admin.commissionRates && admin.commissionRates[orderType] !== undefined) {
+        rate = Number(admin.commissionRates[orderType])
+      }
+    } catch (e) { /* ignore */ }
+    if (rate <= 0) {
+      try {
+        const configRes = await db.collection('system_config').doc('commission_rates').get()
+        const config = (configRes.data || {}) as Record<string, unknown>
+        rate = config[orderType] !== undefined ? Number(config[orderType]) : 0
+      } catch (e) { return }
+    }
     if (!rate || rate <= 0) {return}
 
     const orderAmount = Number(o.totalAmount || o.totalPrice || o.basicPrice || 0)
@@ -547,6 +558,11 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
   }
   const petCount = Array.isArray(petIds) ? petIds.length : 1
   const calculatedPrice = pricePerDay * days * petCount
+
+  // 仅在使用优惠券时，校验优惠后金额下限（直接使用前端传入的已扣券金额）
+  if (couponId && Number(totalAmount) > 0 && Number(totalAmount) < 0.1) {
+    throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元')
+  }
 
   const order: Record<string, unknown> = {
     ownerId,
@@ -1015,7 +1031,33 @@ export async function handleBoardingOrder(event: EventLike, _context: ContextLik
     },
   })
 
-  if (newStatus === 'completed') {await createCommissionRecordInternal('hosting', orderRes.data as OrderDoc)}
+  if (newStatus === 'completed') {
+    await createCommissionRecordInternal('boarding', orderRes.data as OrderDoc)
+    
+    // 创建寄养收入记录（寄养家庭的收入）
+    const order = orderRes.data as { organizerId?: string, _id?: string, totalPrice?: number, orderNo?: string }
+    if (order.organizerId && order._id) {
+      const amount = Number(order.totalPrice) || 0
+      if (amount > 0) {
+        try {
+          await createServiceIncomeRecord(
+            order.organizerId,
+            'boarding',
+            order._id,
+            amount,
+            order.orderNo || '',
+            '寄养服务收入'
+          )
+        } catch (e) {
+          logger.warn('handleBoardingOrder.createServiceIncomeRecord', { 
+            orderId, 
+            organizerId: order.organizerId, 
+            msg: (e as Error).message 
+          })
+        }
+      }
+    }
+  }
 
   sendOrderNotification(orderId, newStatus).catch(() => {})
 

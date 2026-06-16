@@ -270,6 +270,7 @@ async function enrichAuthFromAdmin(decoded) {
 }
 
 exports.main = async (event, context) => {
+  console.log('[adminService.main] called', { action: event.action, hasHTTPContext: !!(context && context.HTTP_CONTEXT) });
   loadModules();
   const { handleSuccess, handleError, ERROR_CODES, convertCloudUrls, verifyAuth, err, isBusinessError } = exports.__utils;
   const logger = _logger;

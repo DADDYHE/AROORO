@@ -2,6 +2,7 @@ const { TuanService } = require('../../services/TuanService')
 const { CouponService } = require('../../services/CouponService')
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
@@ -15,7 +16,7 @@ const ACCENT_COLORS = {
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [tabBarSyncBehavior, cloudImageBehavior, ListBehavior],
+  behaviors: [tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior, ListBehavior],
 
   data: {
     dealList: [],

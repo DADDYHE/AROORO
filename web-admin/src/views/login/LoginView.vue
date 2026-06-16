@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { createScanLogin } from '@/api/auth'
@@ -137,6 +137,7 @@ function startPolling() {
         stopPolling()
         clearTimeout(expireTimer)
         ElMessage.success('登录成功')
+        await nextTick()
         router.push('/dashboard')
       } else if (status === 'denied') {
         scanStatus.value = 'denied'
@@ -194,6 +195,7 @@ async function onLogin() {
   try {
     await auth.login(form.username, form.password)
     ElMessage.success('登录成功')
+    await nextTick()
     router.push('/dashboard')
   } catch (e) {
     ElMessage.error(e?.message || '登录失败，请检查账号密码')

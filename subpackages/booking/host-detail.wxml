@@ -1,4 +1,5 @@
 <view class="container">
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <!-- 加载中状态 -->
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">

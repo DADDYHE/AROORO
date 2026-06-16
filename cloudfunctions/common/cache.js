@@ -28,6 +28,9 @@ function getCache(key) {
         cache.delete(key);
         return null;
     }
+    // LRU：访问时刷新顺序（删除后重新插入，使其成为最新访问的）
+    cache.delete(key);
+    cache.set(key, item);
     return item.value;
 }
 exports.getCache = getCache;

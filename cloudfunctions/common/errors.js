@@ -24,7 +24,7 @@
  *   - 移除 `instanceof BusinessError` 判定，改用鸭子类型
  *   - 原因：每个 require 路径会创建独立的 class，跨 module 引用同一 class 不可行
  *   - 新判定：`error instanceof Error && error.name === 'BusinessError' && typeof error.code === 'string'`
- *   - 替代了 Sprint 19 shim 模式（shim 引用 require("../common/errors.js') 在云端部署会失败）
+ *   - 替代了 Sprint 19 shim 模式（shim 引用 require('../../common/errors.js') 在云端部署会失败）
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.withErrorHandling = exports.toResponse = exports.wrapUnknown = exports.isBusinessError = exports.err = exports.BusinessErrors = exports.BusinessError = void 0;
