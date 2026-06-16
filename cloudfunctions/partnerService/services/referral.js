@@ -286,7 +286,10 @@ async function getReferralOrderStats(event, context, auth) {
             return handleSuccess({ totalOrders: 0, totalCommission: 0, pendingCommission: 0, settledCommission: 0 });
         }
         // inviterId 现在存的是 openid，直接用 openid 查询 tuan_commissions
-        const where = { inviterId: openid };
+        const where = {
+            inviterId: openid,
+            status: _.neq('cancelled')  // 排除已取消的佣金
+        };
         if (type && type !== 'all') {
             where.orderType = type;
         }
