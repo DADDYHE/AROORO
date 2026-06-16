@@ -110,7 +110,7 @@ async function getMyIncomeOverview(event, context, auth) {
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const [commissionRes, hostingRes, feedingRes, walletRes] = await Promise.all([
-            db.collection('tuan_commissions').where({ inviterId: openid }).get(),
+            db.collection('tuan_commissions').where({ inviterId: openid, status: _.neq('cancelled') }).get(),
             db.collection('orders').where({ organizerId: openid, status: 'completed', type: 'boarding' }).get(),
             (async () => {
                 const feederRes = await db.collection('feeders').where({ createdBy: openid }).limit(1).get();
@@ -159,18 +159,36 @@ async function getMyIncomeDetails(event, context, auth) {
             return handleSuccess({ list: [], total: 0, totalAmount: 0 });
         }
         const allItems = [];
-        if (type === 'all' || type === 'commission') {
+        if (type === 'all' || type === 'tuan' || type === 'mall') {
             const res = await db.collection('tuan_commissions').where({ inviterId: openid }).get();
             (res.data || []).forEach((c) => {
+                const orderType = c.orderType || '';
+                if (type !== 'all' && type !== orderType) return;
+                const subType = orderType === 'mall' ? 'mall' : 'tuan';
                 allItems.push({
                     id: c._id || '',
-                    type: 'commission',
-                    typeName: '佣金',
+                    type: subType,
+                    typeName: subType === 'mall' ? '商城' : '团购',
                     amount: Number(c.commissionAmount) || 0,
                     orderNo: c.orderNo || '',
-                    description: `带货佣金-${c.orderType || ''}`,
+                    description: `带货佣金-${orderType}`,
                     status: c.status || 'pending',
                     createdAt: c.createdAt,
+                });
+            });
+        }
+        if (type === 'all' || type === 'activity') {
+            const res = await db.collection('activity_registrations').where({ userId: openid, status: 'completed' }).get();
+            (res.data || []).forEach((o) => {
+                allItems.push({
+                    id: o._id || '',
+                    type: 'activity',
+                    typeName: '活动',
+                    amount: Number(o.commissionAmount) || Number(o.amount) || 0,
+                    orderNo: o.orderNo || '',
+                    description: '活动推广收入',
+                    status: 'completed',
+                    createdAt: o.createdAt,
                 });
             });
         }
