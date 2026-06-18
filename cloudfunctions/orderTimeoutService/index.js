@@ -380,7 +380,7 @@ exports.fetchAllExpired = fetchAllExpired;
 async function cancelBoardingOrders(result, boardingTimeout) {
     try {
         const expiredBoardingOrders = await fetchAllExpired('orders', {
-            status: 'pending',
+            status: 'pending_payment',
             paymentStatus: 'unpaid',
             createdAt: _.lte(boardingTimeout),
         }, { _id: true, outTradeNo: true });
@@ -418,7 +418,7 @@ async function cancelBoardingOrders(result, boardingTimeout) {
 async function cancelFeedingOrders(result, feedingTimeout) {
     try {
         const expiredFeedingOrders = await fetchAllExpired('feedingOrders', {
-            status: _.in(['pending', 'pending_payment']),
+            status: 'pending_payment',
             createdAt: _.lte(feedingTimeout),
         }, { _id: true, outTradeNo: true });
         for (const order of expiredFeedingOrders) {

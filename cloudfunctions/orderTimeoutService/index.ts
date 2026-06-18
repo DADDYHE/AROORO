@@ -632,7 +632,7 @@ export async function fetchAllExpired<T = OrderDoc>(
 async function cancelBoardingOrders(result: TimeoutResult, boardingTimeout: Date): Promise<void> {
   try {
     const expiredBoardingOrders = await fetchAllExpired<OrderDoc>('orders', {
-      status: 'pending',
+      status: 'pending_payment',
       paymentStatus: 'unpaid',
       createdAt: _.lte(boardingTimeout),
     }, { _id: true, outTradeNo: true })
@@ -669,7 +669,7 @@ async function cancelBoardingOrders(result: TimeoutResult, boardingTimeout: Date
 async function cancelFeedingOrders(result: TimeoutResult, feedingTimeout: Date): Promise<void> {
   try {
     const expiredFeedingOrders = await fetchAllExpired<FeedingOrderDoc>('feedingOrders', {
-      status: _.in(['pending', 'pending_payment']),
+      status: 'pending_payment',
       createdAt: _.lte(feedingTimeout),
     }, { _id: true, outTradeNo: true })
 
