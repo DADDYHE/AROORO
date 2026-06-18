@@ -1,53 +1,51 @@
 export const ORDER_STATUS_LABELS = {
-  pending: '待确认',
+  pending_payment: '待支付',
   paid: '已支付',
   confirmed: '已确认',
   in_progress: '进行中',
+  pending_shipment: '待发货',
+  shipped: '已发货',
   completed: '已完成',
   cancelled: '已取消',
-  pending_payment: '待支付',
-  shipped: '已发货',
-  rejected: '已拒绝',
   refunded: '已退款',
+  deleted: '已删除',
+  rejected: '已拒绝',
 }
 
 export const ORDER_STATUS_TAG_TYPE = {
-  pending: 'warning',
+  pending_payment: 'warning',
   paid: 'primary',
   confirmed: 'primary',
   in_progress: '',
+  pending_shipment: 'warning',
+  shipped: '',
   completed: 'success',
   cancelled: 'info',
-  pending_payment: 'warning',
-  shipped: '',
-  rejected: 'danger',
   refunded: 'info',
+  deleted: 'info',
+  rejected: 'danger',
 }
 
 export const PAYMENT_STATUS_LABELS = {
   unpaid: '未支付',
-  pending: '支付中',
   paying: '支付中',
   paid: '已支付',
   refunded: '已退款',
-  failed: '支付失败',
-  partial_refunded: '部分退款',
+  closed: '已关闭',
 }
 
 export const PAYMENT_STATUS_TAG_TYPE = {
   unpaid: 'info',
-  pending: 'warning',
   paying: 'warning',
   paid: 'success',
   refunded: 'info',
-  failed: 'danger',
-  partial_refunded: 'warning',
+  closed: 'info',
 }
 
 export const WITHDRAWAL_STATUS_LABELS = {
   pending: '待审核',
-  approved: '已通过',
-  processing: '处理中',
+  processing: '转账中',
+  approved: '待人工转账',
   completed: '已完成',
   rejected: '已拒绝',
 }
