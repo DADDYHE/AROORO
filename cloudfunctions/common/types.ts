@@ -10,6 +10,9 @@
  *   import { AuthLike, CloudEvent, CloudContext } from '../common/types'
  */
 
+import type { OrderStatus, PaymentStatus, WithdrawalStatus } from './order-status'
+export type { OrderStatus, PaymentStatus, WithdrawalStatus }
+
 // =====================================================================
 // 基础类型
 // =====================================================================
@@ -107,20 +110,6 @@ export type ErrorCode =
   | 'DATA_ERROR'
   | 'INTERNAL_ERROR'
   | 'UNKNOWN_ACTION'
-
-/**
- * 订单状态
- */
-export type OrderStatus = 
-  | 'pending'
-  | 'pending_payment'
-  | 'paid'
-  | 'confirmed'
-  | 'ongoing'
-  | 'completed'
-  | 'cancelled'
-  | 'refunded'
-  | 'closed'
 
 /**
  * 优惠券状态

@@ -81,10 +81,7 @@ export interface ApiResponse<T = unknown> {
  * 错误码类型
  */
 export type ErrorCode = 'INVALID_PARAMS' | 'MISSING_REQUIRED' | 'AUTH_REQUIRED' | 'TOKEN_EXPIRED' | 'TOKEN_INVALID' | 'PERMISSION_DENIED' | 'NOT_FOUND' | 'BUSINESS_ERROR' | 'DATA_ERROR' | 'INTERNAL_ERROR' | 'UNKNOWN_ACTION';
-/**
- * 订单状态
- */
-export type OrderStatus = 'pending' | 'pending_payment' | 'paid' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled' | 'refunded' | 'closed';
+export type { OrderStatus, PaymentStatus, WithdrawalStatus } from './order-status';
 /**
  * 优惠券状态
  */
