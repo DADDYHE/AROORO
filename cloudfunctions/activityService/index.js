@@ -49,7 +49,7 @@ const { filterFields, FIELD_WHITELISTS } = require('./common/validator');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, isBusinessError } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createCommissionRecord: createCommissionRecordShared } = require('./common/commission-utils');
+const { createCommissionRecord: createCommissionRecordShared, cancelCommissionRecord } = require('./common/commission-utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createActivityIncomeRecords } = require('./common/service-income-utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -556,6 +556,57 @@ async function updateActivity(event, context, auth) {
         }
     }
     await db.collection('activities').doc(activityId).update({ data: updateData });
+    // 活动取消时取消佣金记录
+    if (updateData.status === 'cancelled') {
+        try {
+            // 查询该活动所有已确认的报名
+            const registrationsRes = await db.collection('activity_registrations')
+                .where({ activityId, status: 'confirmed' })
+                .get();
+            const registrations = registrationsRes.data || [];
+            // 获取所有报名对应的订单ID
+            const orderIds = registrations.map(r => r.orderId).filter(Boolean);
+            if (orderIds.length > 0) {
+                // 批量查询订单
+                const ordersRes = await db.collection('orders')
+                    .where({ _id: _.in(orderIds) })
+                    .get();
+                const orders = ordersRes.data || [];
+                // 为每个订单取消佣金记录和收入记录
+                for (const order of orders) {
+                    try {
+                        await cancelCommissionRecord(order._id);
+                    }
+                    catch (e) {
+                        logger.warn('updateActivity.cancelCommissionRecord', {
+                            orderId: order._id,
+                            msg: e?.message
+                        });
+                    }
+                    try {
+                        const { cancelServiceIncomeRecord } = require('./common/service-income-utils');
+                        await cancelServiceIncomeRecord(order._id, 'activity');
+                    }
+                    catch (e) {
+                        logger.warn('updateActivity.cancelServiceIncomeRecord', {
+                            orderId: order._id,
+                            msg: e?.message
+                        });
+                    }
+                }
+                logger.info('updateActivity.cancelCommissions', {
+                    activityId,
+                    cancelledCount: orders.length
+                });
+            }
+        }
+        catch (e) {
+            logger.warn('updateActivity.cancelCommissions.failed', {
+                activityId,
+                msg: e?.message
+            });
+        }
+    }
     return handleSuccess(null, '更新成功');
 }
 exports.updateActivity = updateActivity;
@@ -1116,6 +1167,105 @@ async function confirmActivityPayment(event, context, auth) {
 }
 exports.confirmActivityPayment = confirmActivityPayment;
 // =====================================================================
+// Handler 14: cancelRegistration - 用户取消活动报名
+// =====================================================================
+async function cancelRegistration(event, context, auth) {
+  const { openid } = auth;
+  if (!openid) {
+    throw err('AUTH_REQUIRED', '未登录');
+  }
+  const { registrationId } = event;
+  if (!registrationId) {
+    throw err('INVALID_PARAMS', '缺少报名ID');
+  }
+
+  const regRes = await db.collection('activity_registrations').doc(registrationId).get();
+  if (!regRes.data) {
+    throw err('NOT_FOUND', '报名记录不存在');
+  }
+  const reg = regRes.data;
+  if (reg.ownerId !== openid) {
+    throw err('PERMISSION_DENIED', '无权操作');
+  }
+  if (!['confirmed', 'pending_payment'].includes(reg.status)) {
+    throw err('BUSINESS_ERROR', '当前状态不可取消');
+  }
+
+  const now = db.serverDate();
+
+  // 1. 取消佣金（已结束时可能已经生成佣金）
+  if (reg.orderId) {
+    try {
+      await cancelCommissionRecord(reg.orderId);
+      logger.info('cancelRegistration.cancelCommissionRecord.success', { registrationId, orderId: reg.orderId });
+    } catch (e) {
+      logger.warn('cancelRegistration.cancelCommissionRecord.failed', { registrationId, orderId: reg.orderId, msg: e.message });
+    }
+  }
+
+  // 2. 取消收入
+  if (reg.orderId) {
+    try {
+      const { cancelServiceIncomeRecord } = require('./common/service-income-utils');
+      await cancelServiceIncomeRecord(reg.orderId, 'activity');
+      logger.info('cancelRegistration.cancelServiceIncomeRecord.success', { registrationId, orderId: reg.orderId });
+    } catch (e) {
+      logger.warn('cancelRegistration.cancelServiceIncomeRecord.failed', { registrationId, orderId: reg.orderId, msg: e.message });
+    }
+  }
+
+  // 3. 调用微信支付退款（已支付/confirmed 状态）
+  if (reg.status === 'confirmed' && reg.orderId) {
+    try {
+      const finalAmount = Math.round(Number(reg.finalAmount || reg.totalAmount || 0) * 100);
+      if (finalAmount > 0) {
+        await cloud.callFunction({
+          name: 'paymentService',
+          data: {
+            action: 'createRefund',
+            outTradeNo: reg.orderId,
+            refundAmount: finalAmount,
+            totalAmount: Math.round(Number(reg.totalAmount || reg.finalAmount || 0) * 100),
+          },
+        });
+        logger.info('cancelRegistration.refundCreated', { registrationId, orderId: reg.orderId });
+      }
+    } catch (e) {
+      logger.warn('cancelRegistration.refundFailed', { registrationId, orderId: reg.orderId, msg: e.message });
+    }
+  }
+
+  // 4. 更新 activity_registrations 状态
+  await db.collection('activity_registrations').doc(registrationId).update({
+    data: { status: 'cancelled', updatedAt: now },
+  });
+
+  // 5. 同步 orders 统一表状态
+  if (reg.orderId) {
+    try {
+      await db.collection('orders').where({ orderId: reg.orderId, ownerId: openid }).update({
+        data: { status: 'cancelled', updatedAt: now },
+      });
+    } catch (e) {
+      logger.warn('cancelRegistration.syncOrderFailed', { registrationId, orderId: reg.orderId, msg: e.message });
+    }
+  }
+
+  // 6. 恢复活动名额
+  if (reg.activityId) {
+    try {
+      await db.collection('activities').doc(reg.activityId).update({
+        data: { currentParticipants: _.inc(-(reg.petCount || 1)), updatedAt: now },
+      });
+    } catch (e) {
+      logger.warn('cancelRegistration.restoreParticipantsFailed', { registrationId, activityId: reg.activityId, msg: e.message });
+    }
+  }
+
+  return handleSuccess(null, '取消成功');
+}
+exports.cancelRegistration = cancelRegistration;
+// =====================================================================
 // Handler 11: getActivityRegistrations - 活动报名列表（合作伙伴）
 // =====================================================================
 async function getActivityRegistrations(event, context, auth) {
@@ -1266,6 +1416,7 @@ exports.handlers = {
     getRegistrationList,
     createActivityPaymentOrder,
     confirmActivityPayment,
+    cancelRegistration,
     getActivityRegistrations,
     exportActivityRegistrations,
     getActivityOrders,
@@ -1278,8 +1429,8 @@ async function main(event, context) {
     if (!action || !exports.handlers[action]) {
         throw err('INVALID_PARAMS', '无效的操作类型');
     }
-    const WRITE_ACTIONS = ['createActivity', 'updateActivity', 'deleteActivity', 'submitRegistration', 'createActivityPaymentOrder', 'confirmActivityPayment'];
-    const LOGIN_REQUIRED_ACTIONS = [...WRITE_ACTIONS, 'getActivityDetail', 'getRegistrationDetail', 'getRegistrationList', 'getActivityRegistrations', 'exportActivityRegistrations', 'getActivityOrders'];
+    const WRITE_ACTIONS = ['createActivity', 'updateActivity', 'deleteActivity', 'submitRegistration', 'createActivityPaymentOrder', 'confirmActivityPayment', 'cancelRegistration'];
+    const LOGIN_REQUIRED_ACTIONS = [...WRITE_ACTIONS, 'getActivityDetail', 'getRegistrationDetail', 'getRegistrationList', 'getActivityRegistrations', 'exportActivityRegistrations', 'getActivityOrders', 'cancelRegistration'];
     const requireLogin = LOGIN_REQUIRED_ACTIONS.includes(action);
     try {
         const auth = await verifyAuth(event, { requireLogin });
