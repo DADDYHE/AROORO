@@ -43,39 +43,30 @@ exports.getHostEvaluations = exports.submitEvaluation = exports.handleBoardingOr
 //   - 对 .js 文件（utils / errors / risk-control / risk-rate-limit / normalize / boarding-state-machine）使用 require() 而非 import
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - handler 在 module.exports 时统一用 withErrorHandling 包装
-const utils_1 = require("./common/utils");
-const logger_1 = require("./common/logger");
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { writeOperationLog } = require('./common/operation-log');
+const utils_1 = require("../common/utils");
+const logger_1 = require("../common/logger");
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, isBusinessError, withErrorHandling } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { detectReviewSpam, detectBoardingAcceptRisk, mapActionToErrorCode } = require('./common/risk-control');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { withRateLimit } = require('./common/risk-rate-limit');
+const { withRateLimit } = require('../common/risk-rate-limit');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { normalizeDbError } = require('./common/normalize');
+const { normalizeDbError } = require('../common/normalize');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createServiceIncomeRecord, cancelServiceIncomeRecord } = require('../common/service-income-utils');
-/** 订单状态机允许的转换 */
-const ALLOWED_TRANSITIONS = {
-    pending: ['paid', 'confirmed', 'cancelled'],
-    paid: ['confirmed', 'cancelled'],
-    confirmed: ['in_progress', 'ongoing', 'cancelled', 'completed'],
-    in_progress: ['completed', 'cancelled'],
-    ongoing: ['completed'],
-    completed: [],
-    cancelled: [],
-};
+const { createServiceIncomeRecord } = require('../common/service-income-utils');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { createCommissionRecord, cancelCommissionRecord } = require('../common/commission-utils');
 /** 状态中文映射（订单状态通知） */
 const STATUS_TEXT_MAP = {
-    pending: '待确认',
+    pending_payment: '待支付',
+    paid: '已支付',
     confirmed: '已确认',
-    ongoing: '寄养中',
     in_progress: '寄养中',
     completed: '已结束',
     cancelled: '已取消',
+    refunded: '已退款',
 };
 /** 寄养家庭档案敏感字段（不写入订单文档） */
 const SENSITIVE_HOST_FIELDS = [
@@ -132,7 +123,7 @@ async function checkDateAvailabilityInternal(hostId, startDate, endDate) {
         const existingOrders = await db.collection('orders')
             .where({
             hostId,
-            status: db.command.in(['confirmed', 'ongoing']),
+            status: db.command.in(['confirmed', 'in_progress']),
         })
             .field({ startDate: true, endDate: true })
             .limit(100)
@@ -160,12 +151,20 @@ async function sendOrderNotification(orderId, status) {
             isRead: false,
             createdAt: db.serverDate(),
         };
-        await db.collection('notifications').add({
-            data: { ...notification, ownerId: order.data.ownerId, isRead: false },
-        });
-        await db.collection('notifications').add({
-            data: { ...notification, ownerId: order.data.organizerId, isRead: false },
-        });
+        // 发送通知给买家
+        const ownerId = order.data.ownerId;
+        if (ownerId) {
+            await db.collection('notifications').add({
+                data: { ...notification, ownerId, isRead: false },
+            });
+        }
+        // 发送通知给卖家（organizerId 可能不存在）
+        const organizerId = order.data.organizerId;
+        if (organizerId) {
+            await db.collection('notifications').add({
+                data: { ...notification, ownerId: organizerId, isRead: false },
+            });
+        }
     }
     catch (error) {
         logger.error('_sendOrderNotification', { msg: error?.message });
@@ -190,98 +189,6 @@ async function checkPartnerPermission(openid, permission) {
         throw err('PERMISSION_DENIED', `权限不足：需要 ${permission} 权限`);
     }
     return admin;
-}
-/** 内部：创建佣金记录（best-effort） */
-async function createCommissionRecordInternal(orderType, order) {
-    try {
-        const o = order;
-        if (!o.ownerId) {
-            return;
-        }
-        let user = null;
-        try {
-            const userRes = await db.collection('users').doc(o.ownerId).field({ _id: true, inviterId: true }).get();
-            user = userRes.data;
-        }
-        catch (e) {
-            return;
-        }
-        if (!user || !user.inviterId) {
-            return;
-        }
-        // 校验邀请人是否为合作伙伴
-        let inviterAdmin = null;
-        try {
-            const inviterAdminRes = await db.collection('admins').doc(user.inviterId).get();
-            inviterAdmin = inviterAdminRes.data;
-        } catch (e) {
-            return;
-        }
-        if (!inviterAdmin || inviterAdmin.status !== 'active' || !inviterAdmin.isPartner) {
-            return;
-        }
-        // 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
-        let rate = 0;
-        if (inviterAdmin && inviterAdmin.commissionRates && inviterAdmin.commissionRates[orderType] !== undefined) {
-            rate = Number(inviterAdmin.commissionRates[orderType]);
-        }
-        if (rate <= 0) {
-            try {
-                const configRes = await db.collection('system_config').doc('commission_rates').get();
-                const config = (configRes.data || {});
-                rate = config[orderType] !== undefined ? Number(config[orderType]) : 0;
-            }
-            catch (e) {
-                return;
-            }
-        }
-        if (!rate || rate <= 0) {
-            return;
-        }
-        const orderAmount = Number(o.totalAmount || o.totalPrice || o.basicPrice || 0);
-        if (orderAmount <= 0) {
-            return;
-        }
-        const commissionAmount = Math.round(orderAmount * rate / 100 * 100) / 100;
-        let inviter = null;
-        try {
-            const inviterRes = await db.collection('users').doc(user.inviterId).field({ _id: true, nickName: true }).get();
-            inviter = inviterRes.data;
-        }
-        catch (e) {
-            return;
-        }
-        if (!inviter) {
-            return;
-        }
-        const existRes = await db.collection('tuan_commissions').where({
-            orderNo: o.orderNo || o._id,
-            inviterId: user.inviterId,
-        }).count();
-        if (existRes.total > 0) {
-            return;
-        }
-        await db.collection('tuan_commissions').add({
-            data: {
-                _id: (0, utils_1.generateId)('commission', o.ownerId),
-                inviterId: user.inviterId,
-                inviterNickName: inviter.nickName || '',
-                ownerId: user._id,
-                orderType,
-                orderId: o._id,
-                orderNo: o.orderNo || o._id,
-                orderAmount,
-                commissionRate: rate,
-                commissionAmount,
-                status: 'pending',
-                createdAt: db.serverDate(),
-                updatedAt: db.serverDate(),
-            },
-        });
-    }
-    catch (e) {
-        logger.error('_createCommissionRecord', { msg: e?.message });
-    }
 }
 /** 内部：重算 host.rating / host.ratingCount */
 async function recalcHostRating(hostId) {
@@ -335,7 +242,7 @@ async function getOrders(event, _context, auth) {
     }
     if (status && status !== 'all') {
         if (status === 'in_progress') {
-            query.status = db.command.in(['in_progress', 'confirmed', 'ongoing']);
+            query.status = db.command.in(['in_progress', 'confirmed']);
         }
         else {
             query.status = status;
@@ -486,12 +393,12 @@ async function createOrder(event, _context, auth) {
         pricePerDay,
         petCount,
         basicPrice: calculatedPrice,
-        originalAmount: Number(originalAmount) || calculatedPrice,
-        totalPrice: finalTotalPrice,
+        originalAmount: originalAmount || calculatedPrice,
+        totalPrice: calculatedPrice,
         couponId: couponId || '',
         couponDiscount: Number(couponDiscount) || 0,
         note: note || '',
-        status: 'pending',
+        status: 'pending_payment',
         paymentStatus: 'unpaid',
         createdAt: db.serverDate(),
         updatedAt: db.serverDate(),
@@ -549,148 +456,20 @@ async function updateOrderStatus(event, _context, auth) {
     if (status === 'cancelled' && od.refundStatus === 'completed') {
         throw err('ORDER_ALREADY_REFUNDED', '订单已退款，不能再次取消');
     }
-    if (od.status === 'pending' && od.timeoutAt && Date.now() > od.timeoutAt) {
+    if (od.status === 'pending_payment' && od.timeoutAt && Date.now() > od.timeoutAt) {
         throw err('ORDER_TIMEOUT', '订单已超时未支付');
     }
-    const allowed = ALLOWED_TRANSITIONS[od.status];
-    if (!allowed || !allowed.includes(status)) {
+    const { boardingOrderStateMachine } = require('./common/boarding-state-machine');
+    if (!boardingOrderStateMachine.canTransition(od.status, status)) {
         throw err('BUSINESS_ERROR', '状态变更无效');
     }
     await db.collection('orders').doc(orderId).update({
         data: { status, updatedAt: db.serverDate() },
     });
-    // 寄养订单服务开始（confirmed）→ 增加组织者钱包余额
-    if (status === 'confirmed' && od.type === 'boarding') {
-        creditOrderIncome(od).catch(() => { });
-    }
-    // 订单取消时退回优惠券（coupon_usage 关联的 user_coupons 从 used → unused/expired）
-    if (status === 'cancelled') {
-        await refundCouponForOrder(orderId, openid).catch((e) => {
-            logger.error('refundCouponForOrder', e);
-        });
-
-        // 根据订单类型取消对应的收入记录
-        const orderType = od.orderType || od.type;
-        if (orderType === 'boarding') {
-            await cancelServiceIncomeRecord(orderId, 'boarding').catch((e) => {
-                logger.warn('cancelServiceIncomeRecord', { orderId, type: 'boarding', msg: e?.message });
-            });
-        } else if (orderType === 'activity') {
-            await cancelServiceIncomeRecord(orderId, 'activity').catch((e) => {
-                logger.warn('cancelServiceIncomeRecord', { orderId, type: 'activity', msg: e?.message });
-            });
-        } else if (orderType === 'feeding') {
-            await cancelServiceIncomeRecord(orderId, 'feeding').catch((e) => {
-                logger.warn('cancelServiceIncomeRecord', { orderId, type: 'feeding', msg: e?.message });
-            });
-        }
-
-        // 取消佣金记录（通用逻辑，会根据 orderId 查找并取消）
-        try {
-            const { cancelCommissionRecord } = require('../../common/commission-utils');
-            await cancelCommissionRecord(orderId);
-        } catch (commissionErr) {
-            logger.warn('cancelCommissionRecord', { orderId, msg: commissionErr?.message });
-        }
-    }
     sendOrderNotification(orderId, status).catch(() => { });
     return (0, utils_1.handleSuccess)({ orderId, status }, '更新成功');
 }
 exports.updateOrderStatus = updateOrderStatus;
-/** 寄养订单完成 → 增加组织者钱包余额 */
-async function creditOrderIncome(order) {
-    try {
-        const ownerId = order.ownerId
-        if (!ownerId) return
-        // 买家的邀请人才是推广分成受益人
-        const userRes = await db.collection('users').doc(ownerId).get()
-        const inviterId = userRes.data?.inviterId
-        if (!inviterId) return
-        const amount = Number(order.totalPrice) || Number(order.price) || 0
-        if (amount <= 0) return
-        const { ensureWalletBalance } = require('../common/wallet-utils')
-        await ensureWalletBalance(inviterId, amount)
-    } catch (e) {
-        logger.error('creditOrderIncome', { msg: e?.message })
-    }
-}
-/**
- * 订单取消时退回优惠券
- *
- * 覆盖两种场景：
- *   1) 券已使用（coupon_usage 有记录、status='used'）→ 标记为 refunded
- *   2) 券仅被锁定（coupon_usage 无记录、status='locked'）→ 直接解锁
- *
- * 释放后根据 endTime 决定新状态：过期 → expired，未过期 → unused
- */
-async function refundCouponForOrder(orderId, openid) {
-    const now = Date.now();
-
-    // 1) 已使用券
-    const usageRes = await db.collection('coupon_usage').where({ orderId }).limit(10).get();
-    if (usageRes.data && usageRes.data.length > 0) {
-        for (const usage of usageRes.data) {
-            if (usage.status === 'refunded') {
-                continue;
-            }
-            const couponId = usage.userCouponId;
-            if (!couponId) {continue;}
-            const cRes = await db.collection('user_coupons').doc(couponId).get();
-            if (!cRes.data) {continue;}
-            const c = cRes.data;
-            if (c.ownerId !== openid) {continue;}
-            if (c.status !== 'used') {continue;}
-            const isExpired = c.endTime ? new Date(c.endTime).getTime() < now : false;
-            const newStatus = isExpired ? 'expired' : 'unused';
-            await db.collection('user_coupons').doc(couponId).update({
-                data: { status: newStatus, updatedAt: db.serverDate() },
-            });
-            await db.collection('coupon_usage').doc(usage._id).update({
-                data: { status: 'refunded', refundedAt: db.serverDate(), updatedAt: db.serverDate() },
-            });
-            await writeOperationLog({
-                module: 'user_coupon',
-                action: 'refund_on_cancel',
-                targetId: couponId,
-                targetName: c.templateName || '',
-                operatorId: openid,
-                operatorName: openid,
-                beforeData: { status: 'used', orderId },
-                afterData: { status: newStatus, orderId },
-            });
-        }
-    }
-
-    // 2) 仅被锁定的券（取消时还未支付成功）
-    const lockedRes = await db.collection('user_coupons')
-        .where({ lockedOrderId: orderId, status: 'locked' })
-        .limit(10)
-        .get();
-    if (lockedRes.data && lockedRes.data.length > 0) {
-        for (const c of lockedRes.data) {
-            if (c.ownerId !== openid) {continue;}
-            const isExpired = c.endTime ? new Date(c.endTime).getTime() < now : false;
-            const newStatus = isExpired ? 'expired' : 'unused';
-            await db.collection('user_coupons').doc(c._id).update({
-                data: {
-                    status: newStatus,
-                    lockedOrderId: '',
-                    updatedAt: db.serverDate(),
-                },
-            });
-            await writeOperationLog({
-                module: 'user_coupon',
-                action: 'unlock_on_cancel',
-                targetId: c._id,
-                targetName: c.templateName || '',
-                operatorId: openid,
-                operatorName: openid,
-                beforeData: { status: 'locked', orderId },
-                afterData: { status: newStatus, orderId },
-            });
-        }
-    }
-}
 /**
  * 5. getActivityOrders - 活动订单列表
  */
@@ -752,9 +531,9 @@ exports.getActivityOrderDetail = getActivityOrderDetail;
  * 7. cancelOrder - 取消订单（= updateOrderStatus('cancelled')）
  */
 async function cancelOrder(event, _context, auth) {
-    ;
-    event.status = 'cancelled';
-    return updateOrderStatus(event, _context, auth);
+    // 创建新对象而非修改输入（避免副作用）
+    const cancelEvent = { ...event, status: 'cancelled' };
+    return updateOrderStatus(cancelEvent, _context, auth);
 }
 exports.cancelOrder = cancelOrder;
 /**
@@ -821,11 +600,14 @@ async function checkDateAvailability(event) {
     if (!startDate || !endDate) {
         return (0, utils_1.handleSuccess)({ available: false }, '缺少日期参数');
     }
+    if (!hostId) {
+        return (0, utils_1.handleSuccess)({ available: false }, '缺少 hostId 参数');
+    }
     try {
         const existingOrders = await db.collection('orders')
             .where({
-            hostId: hostId || '',
-            status: db.command.in(['confirmed', 'ongoing']),
+            hostId,
+            status: db.command.in(['confirmed', 'in_progress']),
         })
             .field({ startDate: true, endDate: true })
             .limit(100)
@@ -1053,31 +835,45 @@ async function handleBoardingOrder(event, _context, auth) {
         },
     });
     if (newStatus === 'completed') {
-        await createCommissionRecordInternal('boarding', orderRes.data);
-        
+        await createCommissionRecord('boarding', orderRes.data);
         // 创建寄养收入记录（寄养家庭的收入）
         const order = orderRes.data;
         if (order.organizerId && order._id) {
             const amount = Number(order.totalPrice) || 0;
             if (amount > 0) {
                 try {
-                    await createServiceIncomeRecord(
-                        order.organizerId,
-                        'boarding',
-                        order._id,
-                        amount,
-                        order.orderNo || '',
-                        '寄养服务收入'
-                    );
+                    await createServiceIncomeRecord(order.organizerId, 'boarding', order._id, amount, order.orderNo || '', '寄养服务收入');
                 }
                 catch (e) {
                     logger.warn('handleBoardingOrder.createServiceIncomeRecord', {
                         orderId,
                         organizerId: order.organizerId,
-                        msg: e?.message
+                        msg: e.message
                     });
                 }
             }
+        }
+    }
+    // 取消订单时取消佣金记录和收入记录
+    if (newStatus === 'cancelled') {
+        try {
+            await cancelCommissionRecord(orderId);
+        }
+        catch (e) {
+            logger.warn('handleBoardingOrder.cancelCommissionRecord', {
+                orderId,
+                msg: e.message
+            });
+        }
+        try {
+            const { cancelServiceIncomeRecord } = require('../common/service-income-utils');
+            await cancelServiceIncomeRecord(orderId, 'boarding');
+        }
+        catch (e) {
+            logger.warn('handleBoardingOrder.cancelServiceIncomeRecord', {
+                orderId,
+                msg: e.message
+            });
         }
     }
     sendOrderNotification(orderId, newStatus).catch(() => { });

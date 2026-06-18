@@ -68,6 +68,8 @@ const { withRateLimit } = require('../common/risk-rate-limit')
 const { normalizeDbError } = require('../common/normalize')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createServiceIncomeRecord } = require('../common/service-income-utils')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { createCommissionRecord, cancelCommissionRecord } = require('../common/commission-utils')
 
 // =====================================================================
 // 类型定义
@@ -80,25 +82,15 @@ type ContextLike = Record<string, unknown>
 type HandlerResult = Promise<ApiResponse<unknown> | unknown>
 type WrappedHandler<T = unknown> = (event: EventLike, context: ContextLike, auth: AuthLike | null) => Promise<ApiResponse<T>>
 
-/** 订单状态机允许的转换 */
-const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending: ['paid', 'confirmed', 'cancelled'],
-  paid: ['confirmed', 'cancelled'],
-  confirmed: ['in_progress', 'ongoing', 'cancelled', 'completed'],
-  in_progress: ['completed', 'cancelled'],
-  ongoing: ['completed'],
-  completed: [],
-  cancelled: [],
-}
-
 /** 状态中文映射（订单状态通知） */
 const STATUS_TEXT_MAP: Record<string, string> = {
-  pending: '待确认',
+  pending_payment: '待支付',
+  paid: '已支付',
   confirmed: '已确认',
-  ongoing: '寄养中',
   in_progress: '寄养中',
   completed: '已结束',
   cancelled: '已取消',
+  refunded: '已退款',
 }
 
 /** 寄养家庭档案敏感字段（不写入订单文档） */
@@ -205,7 +197,7 @@ async function checkDateAvailabilityInternal(hostId: string, startDate: string, 
     const existingOrders = await db.collection('orders')
       .where({
         hostId,
-        status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'ongoing']),
+        status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'in_progress']),
       })
       .field({ startDate: true, endDate: true })
       .limit(100)
@@ -280,78 +272,6 @@ interface AdminDoc {
   permissions?: string[]
 }
 
-/** 内部：创建佣金记录（best-effort） */
-async function createCommissionRecordInternal(orderType: string, order: OrderDoc | Record<string, unknown>): Promise<void> {
-  try {
-    const o = order as { ownerId?: string, totalAmount?: number, totalPrice?: number, basicPrice?: number, orderNo?: string, _id?: string }
-    if (!o.ownerId) {return}
-
-    let user: { _id: string, inviterId?: string } | null = null
-    try {
-      const userRes = await db.collection('users').doc(o.ownerId).field({ _id: true, inviterId: true }).get()
-      user = userRes.data
-    } catch (e) { return }
-    if (!user || !user.inviterId) {return}
-
-    // 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
-    let rate = 0
-    try {
-      const adminRes = await db.collection('admins').doc(user.inviterId).get()
-      const admin = adminRes.data
-      if (admin && admin.commissionRates && admin.commissionRates[orderType] !== undefined) {
-        rate = Number(admin.commissionRates[orderType])
-      }
-    } catch (e) { /* ignore */ }
-    if (rate <= 0) {
-      try {
-        const configRes = await db.collection('system_config').doc('commission_rates').get()
-        const config = (configRes.data || {}) as Record<string, unknown>
-        rate = config[orderType] !== undefined ? Number(config[orderType]) : 0
-      } catch (e) { return }
-    }
-    if (!rate || rate <= 0) {return}
-
-    const orderAmount = Number(o.totalAmount || o.totalPrice || o.basicPrice || 0)
-    if (orderAmount <= 0) {return}
-
-    const commissionAmount = Math.round(orderAmount * rate / 100 * 100) / 100
-
-    let inviter: { _id: string, nickName?: string } | null = null
-    try {
-      const inviterRes = await db.collection('users').doc(user.inviterId).field({ _id: true, nickName: true }).get()
-      inviter = inviterRes.data
-    } catch (e) { return }
-    if (!inviter) {return}
-
-    // 幂等检查：使用 orderId 而非 orderNo（与 paymentService 保持一致）
-    const existRes = await db.collection('tuan_commissions').where({
-      orderId: o._id,
-      inviterId: user.inviterId,
-    }).count()
-    if (existRes.total > 0) {return}
-
-    await db.collection('tuan_commissions').add({
-      data: {
-        _id: generateId('commission', o.ownerId),
-        inviterId: user.inviterId,
-        inviterNickName: inviter.nickName || '',
-        ownerId: user._id,
-        orderType,
-        orderId: o._id,
-        orderNo: o.orderNo || o._id,
-        orderAmount,
-        commissionRate: rate,
-        commissionAmount,
-        status: 'pending',
-        createdAt: db.serverDate(),
-        updatedAt: db.serverDate(),
-      },
-    })
-  } catch (e: unknown) {
-    logger.error('_createCommissionRecord', { msg: (e as Error)?.message })
-  }
-}
-
 /** 内部：重算 host.rating / host.ratingCount */
 async function recalcHostRating(hostId: string): Promise<void> {
   if (!hostId) {return}
@@ -403,7 +323,7 @@ export async function getOrders(event: EventLike, _context: ContextLike, auth: A
 
   if (status && status !== 'all') {
     if (status === 'in_progress') {
-      query.status = (db.command as { in: (arr: string[]) => unknown }).in(['in_progress', 'confirmed', 'ongoing'])
+      query.status = (db.command as { in: (arr: string[]) => unknown }).in(['in_progress', 'confirmed'])
     } else {
       query.status = status
     }
@@ -580,7 +500,7 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
     couponId: couponId || '',
     couponDiscount: Number(couponDiscount) || 0,
     note: note || '',
-    status: 'pending',
+    status: 'pending_payment',
     paymentStatus: 'unpaid',
     createdAt: db.serverDate(),
     updatedAt: db.serverDate(),
@@ -639,12 +559,12 @@ export async function updateOrderStatus(event: EventLike, _context: ContextLike,
     throw err('ORDER_ALREADY_REFUNDED', '订单已退款，不能再次取消')
   }
 
-  if (od.status === 'pending' && od.timeoutAt && Date.now() > od.timeoutAt) {
+  if (od.status === 'pending_payment' && od.timeoutAt && Date.now() > od.timeoutAt) {
     throw err('ORDER_TIMEOUT', '订单已超时未支付')
   }
 
-  const allowed = ALLOWED_TRANSITIONS[od.status as OrderStatus]
-  if (!allowed || !allowed.includes(status)) {
+  const { boardingOrderStateMachine } = require('./common/boarding-state-machine')
+  if (!boardingOrderStateMachine.canTransition(od.status, status)) {
     throw err('BUSINESS_ERROR', '状态变更无效')
   }
 
@@ -800,7 +720,7 @@ export async function checkDateAvailability(event: EventLike): HandlerResult {
     const existingOrders = await db.collection('orders')
       .where({
         hostId,
-        status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'ongoing']),
+        status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'in_progress']),
       })
       .field({ startDate: true, endDate: true })
       .limit(100)
@@ -1032,7 +952,7 @@ export async function handleBoardingOrder(event: EventLike, _context: ContextLik
   })
 
   if (newStatus === 'completed') {
-    await createCommissionRecordInternal('boarding', orderRes.data as OrderDoc)
+    await createCommissionRecord('boarding', orderRes.data as OrderDoc)
     
     // 创建寄养收入记录（寄养家庭的收入）
     const order = orderRes.data as { organizerId?: string, _id?: string, totalPrice?: number, orderNo?: string }
@@ -1056,6 +976,27 @@ export async function handleBoardingOrder(event: EventLike, _context: ContextLik
           })
         }
       }
+    }
+  }
+
+  // 取消订单时取消佣金记录和收入记录
+  if (newStatus === 'cancelled') {
+    try {
+      await cancelCommissionRecord(orderId)
+    } catch (e) {
+      logger.warn('handleBoardingOrder.cancelCommissionRecord', { 
+        orderId, 
+        msg: (e as Error).message 
+      })
+    }
+    try {
+      const { cancelServiceIncomeRecord } = require('../common/service-income-utils')
+      await cancelServiceIncomeRecord(orderId, 'boarding')
+    } catch (e) {
+      logger.warn('handleBoardingOrder.cancelServiceIncomeRecord', { 
+        orderId, 
+        msg: (e as Error).message 
+      })
     }
   }
 
