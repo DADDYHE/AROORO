@@ -214,7 +214,7 @@ Page({
         if (currentStatus === 'cancelled' && item.status !== 'cancelled') {return false}
       } else {
         if (currentStatus === 'pending_payment' && item.status !== 'pending_payment') {return false}
-        if (currentStatus === 'in_progress' && item.status !== 'in_progress' && item.status !== 'ongoing' && item.status !== 'confirmed' && item.status !== 'paid') {return false}
+        if (currentStatus === 'in_progress' && item.status !== 'in_progress' && item.status !== 'confirmed' && item.status !== 'paid') {return false}
         if (currentStatus === 'completed' && item.status !== 'completed') {return false}
         if (currentStatus === 'cancelled' && item.status !== 'cancelled') {return false}
       }
@@ -464,7 +464,7 @@ Page({
   _calcStats() {
     const orders = this._allOrders || []
     const PAID_STATUSES = [
-      'paid', 'confirmed', 'in_progress', 'ongoing', 'completed',
+      'paid', 'confirmed', 'in_progress', 'completed',
       'pending_shipment', 'shipped',
     ]
     const paidOrders = orders.filter(o => PAID_STATUSES.includes(o.status))
