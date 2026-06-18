@@ -25,6 +25,7 @@ import { initCloud } from '../../common/utils'
 import { createLogger } from '../../common/logger'
 import { detectRefundAbuse, mapActionToErrorCode } from '../../common/risk-control'
 import { withRateLimit } from '../../common/risk-rate-limit'
+import { cancelCommissionRecord } from '../../common/commission-utils'
 import type { CloudBaseDB } from '../../common/types'
 
 // service 内部 .js 模块走 CommonJS require
@@ -74,6 +75,9 @@ interface OrderDoc {
   ownerId?: string
   totalPrice?: number
   paidAmount?: number
+  orderType?: string
+  tuanOrderId?: string
+  activityId?: string
 }
 
 // =====================================================================
@@ -160,6 +164,71 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
 
   if (refundResult && refundResult.status === 'FAIL') {
     throw err('REFUND_FAILED', `微信退款失败：${refundResult.message || '未知原因'}`)
+  }
+
+  // 退款成功后取消佣金记录
+  if (orderDoc._id) {
+    try {
+      await cancelCommissionRecord(orderDoc._id)
+      logger.info('createRefund.cancelCommissionRecord.success', { orderId: orderDoc._id })
+    } catch (e) {
+      logger.warn('createRefund.cancelCommissionRecord.failed', {
+        orderId: orderDoc._id,
+        msg: (e as Error).message,
+      })
+    }
+  }
+
+  // 退款成功后更新订单状态
+  if (orderDoc._id) {
+    try {
+      await db.collection('orders').doc(orderDoc._id).update({
+        data: {
+          status: 'refunded',
+          paymentStatus: 'refunded',
+          refundAmount: Number(refundAmount) / 100,
+          refundedAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+        },
+      })
+      logger.info('createRefund.orderStatusUpdated', { orderId: orderDoc._id })
+    } catch (e) {
+      logger.warn('createRefund.updateOrderStatusFailed', {
+        orderId: orderDoc._id,
+        msg: (e as Error).message,
+      })
+    }
+  }
+
+  // 同步业务表状态
+  if (orderDoc._id) {
+    try {
+      const orderType = orderDoc.orderType || outTradeNo.split('_')[0]
+      if (orderType === 'tuan' && orderDoc.tuanOrderId) {
+        await db.collection('tuan_orders').doc(orderDoc.tuanOrderId).update({
+          data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
+        })
+      }
+      if (orderType === 'activity' && orderDoc.activityId && orderDoc.ownerId) {
+        await db.collection('activity_registrations').where({
+          activityId: orderDoc.activityId,
+          ownerId: orderDoc.ownerId,
+        }).update({
+          data: { status: 'refunded', updatedAt: db.serverDate() },
+        })
+      }
+      if (orderType === 'feeding') {
+        await db.collection('feedingOrders').doc(orderDoc._id).update({
+          data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
+        })
+      }
+      logger.info('createRefund.syncBusinessOrder.success', { orderId: orderDoc._id, orderType })
+    } catch (e) {
+      logger.warn('createRefund.syncBusinessOrder.failed', {
+        orderId: orderDoc._id,
+        msg: (e as Error).message,
+      })
+    }
   }
 
   // 返回 raw data：withErrorHandling 透传，由 index.js 统一 toResponse
