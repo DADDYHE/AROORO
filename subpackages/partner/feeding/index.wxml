@@ -82,7 +82,7 @@
           <view class="card-body">
             <view class="card-header">
               <text class="card-title">{{item.userName || '服务订单'}}</text>
-              <text class="card-status status-{{item.status}}">{{item.status === 'pending' ? '待确认' : (item.status === 'confirmed' ? '已确认' : (item.status === 'in_progress' ? '服务中' : (item.status === 'completed' ? '已完成' : '已取消')))}}</text>
+              <text class="card-status status-{{item.status}}">{{item.status === 'pending_payment' ? '待确认' : (item.status === 'confirmed' ? '已确认' : (item.status === 'in_progress' ? '服务中' : (item.status === 'completed' ? '已完成' : '已取消')))}}</text>
             </view>
             <view class="card-info">
               <text class="card-info-item" wx:if="{{item.serviceDate}}">服务日期：{{item.serviceDate}}</text>

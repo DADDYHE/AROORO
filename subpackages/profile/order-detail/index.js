@@ -56,7 +56,7 @@ Page({
   },
 
   _normalizeOrder(raw) {
-    const status = raw.status || 'pending'
+    const status = raw.status || 'pending_payment'
     const hostInfo = raw.hostInfo || {}
     const ownerInfo = raw.ownerInfo || {}
     const petList = raw.petsInfo || raw.pets || []

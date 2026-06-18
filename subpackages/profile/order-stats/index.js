@@ -225,7 +225,7 @@ Page({
 
   _normalizeOrder(raw) {
     const orderType = raw.orderType || raw.type || 'boarding'
-    const status = this._resolveShippingStatus(raw) || raw.status || 'pending'
+    const status = this._resolveShippingStatus(raw) || raw.status || 'pending_payment'
 
     if (orderType === 'activity') {
       const endTime = raw.endDate || raw.activityEndTime || ''

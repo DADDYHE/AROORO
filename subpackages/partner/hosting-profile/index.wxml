@@ -92,7 +92,7 @@
           <view class="card-body">
             <view class="card-header">
               <text class="card-title">{{item.hostName || '寄养订单'}}</text>
-              <text class="card-status status-{{item.status}}">{{item.status === 'pending' ? '待确认' : (item.status === 'confirmed' ? '已确认' : (item.status === 'checked_in' ? '已入住' : (item.status === 'completed' ? '已完成' : '已取消')))}}</text>
+              <text class="card-status status-{{item.status}}">{{item.status === 'pending_payment' ? '待确认' : (item.status === 'confirmed' ? '已确认' : (item.status === 'checked_in' ? '已入住' : (item.status === 'completed' ? '已完成' : '已取消')))}}</text>
             </view>
             <view class="card-info">
               <text class="card-info-item" wx:if="{{item.ownerName}}">宠物主人：{{item.ownerName}}</text>

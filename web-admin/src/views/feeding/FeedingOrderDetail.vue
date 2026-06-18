@@ -14,7 +14,7 @@
         <el-descriptions-item label="下单时间">{{ formatDate(order.createdAt) }}</el-descriptions-item>
         <el-descriptions-item label="备注" :span="2">{{ order.note || order.remark || '-' }}</el-descriptions-item>
       </el-descriptions>
-      <div style="margin-top:20px" v-if="order.status === 'pending_payment' || order.status === 'paid' || order.status === 'pending'">
+      <div style="margin-top:20px" v-if="order.status === 'pending_payment' || order.status === 'paid'">
         <el-button type="primary" @click="handleOrder('confirm')">确认订单</el-button>
         <el-button type="danger" @click="handleOrder('cancel')">取消</el-button>
       </div>

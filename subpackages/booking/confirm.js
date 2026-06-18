@@ -502,7 +502,7 @@ Page({
         finalPrice: this.data.selectedCouponId ? this.data.finalPrice : this.data.totalPrice,
         couponId: this.data.selectedCouponId || undefined,
         couponDiscount: this.data.couponDiscount || 0,
-        status: 'pending',
+        status: 'pending_payment',
         paymentStatus: 'unpaid',
         createdAt: new Date(),
         updatedAt: new Date(),
