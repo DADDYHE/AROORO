@@ -720,6 +720,11 @@ async function submitRegistration(event, context, auth) {
             phone: phone || '',
             notes: notes || '',
             friends: friendsArray,
+            // 活动报名状态语义：
+            //   pending_payment: 待支付
+            //   confirmed: 报名成功且支付完成
+            //   cancelled: 已取消报名
+            //   refunded: 已退款
             status: isPaid ? 'pending_payment' : 'confirmed',
             participantCount: pCount,
             petCount,

@@ -121,7 +121,18 @@ export interface TuanOrder {
   [k: string]: unknown
 }
 
-/** 统一订单（含团购订单联动） */
+/**
+ * 统一订单（含团购订单联动）
+ *
+ * 团购订单状态语义：
+ *   pending_payment: 待支付
+ *   paid: 已支付/已确认，等待发货
+ *   pending_shipment: 待发货
+ *   shipped: 已发货
+ *   completed: 已完成
+ *   cancelled: 已取消
+ *   refunded: 已退款
+ */
 export interface UnifiedOrder {
   _id?: string
   orderNo: string

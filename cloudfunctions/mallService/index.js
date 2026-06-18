@@ -78,7 +78,7 @@ const { err, isBusinessError } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { detectMallOrderRisk, mapActionToErrorCode } = require('./common/risk-control');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createCommissionRecord: createCommissionRecordShared } = require('./common/commission-utils');
+const { createCommissionRecord: createCommissionRecordShared } = require('../common/commission-utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { withRateLimit } = require('./common/risk-rate-limit');
 // Sprint 50: 限流统一 bootstrap
@@ -679,6 +679,15 @@ async function createOrder(event, _context, auth) {
         if (couponId && finalAmt > 0 && finalAmt < 0.1) {
             throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元');
         }
+        // 商城订单状态语义：
+        //   pending_payment: 待支付
+        //   paid: 已支付/已确认，等待发货
+        //   pending_shipment: 待发货
+        //   shipped: 已发货
+        //   completed: 已完成
+        //   cancelled: 已取消
+        //   refunded: 已退款
+        //   deleted: 已删除
         const order = {
             orderNo,
             productId,
@@ -840,6 +849,13 @@ async function cancelOrder(event, _context, auth) {
         await refundCouponForOrder(orderId, openid).catch((e) => {
             logger.error('refundCouponForOrder', e);
         });
+        // 取消订单时取消佣金记录
+        try {
+            const { cancelCommissionRecord } = require('../common/commission-utils');
+            await cancelCommissionRecord(orderId);
+        } catch (commissionErr) {
+            logger.warn('cancelCommissionRecord', { error: commissionErr?.message });
+        }
         return handleSuccess(null, '取消成功');
     }
     catch (error) {

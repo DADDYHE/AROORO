@@ -344,6 +344,12 @@ async function createFeedingOrder(event, _context, auth) {
             couponId: couponId || '',
             couponDiscount: Number(couponDiscount) || 0,
             contactPhone: String(contactPhone).trim(),
+            // 喂养订单状态语义：
+            //   pending_payment: 待支付
+            //   confirmed: 服务提供者已确认上门时间
+            //   in_progress: 服务进行中
+            //   completed: 服务已完成
+            //   cancelled: 订单已取消
             status: 'pending_payment',
             paymentStatus: 'unpaid',
             createdAt: db.serverDate(),

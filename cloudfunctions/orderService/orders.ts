@@ -82,6 +82,17 @@ type ContextLike = Record<string, unknown>
 type HandlerResult = Promise<ApiResponse<unknown> | unknown>
 type WrappedHandler<T = unknown> = (event: EventLike, context: ContextLike, auth: AuthLike | null) => Promise<ApiResponse<T>>
 
+/**
+ * 寄养订单状态语义：
+ *   - pending_payment: 待支付
+ *   - paid: 已支付，等待商家确认
+ *   - confirmed: 商家已确认接单
+ *   - in_progress: 寄养服务进行中
+ *   - completed: 寄养服务已完成
+ *   - cancelled: 订单已取消
+ *   - rejected: 商家已拒绝
+ */
+
 /** 状态中文映射（订单状态通知） */
 const STATUS_TEXT_MAP: Record<string, string> = {
   pending_payment: '待支付',
