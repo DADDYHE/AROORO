@@ -115,6 +115,7 @@ export interface TuanOrder {
   couponId?: string
   couponDiscount?: number
   status?: string
+  paymentStatus?: string
   createdAt?: Date
   updatedAt?: Date
   [k: string]: unknown
@@ -184,7 +185,12 @@ export const TUAN_DEAL_LIST_FIELDS: Record<string, boolean> = {
   totalOrders: true, totalAmount: true, createdAt: true,
 }
 
-export const WRITE_ACTIONS: readonly string[] = ['createTuanOrder']
+export const WRITE_ACTIONS: readonly string[] = [
+  'createTuanOrder',
+  'shipTuanOrder',
+  'confirmReceiveTuanOrder',
+  'cancelTuanOrder',
+]
 
 export const DEFAULT_PAGE_SIZE = 10
 export const MAX_PAGE_SIZE = 100
@@ -345,7 +351,8 @@ export async function createTuanOrder(
     totalAmount: finalAmount,
     couponId: (couponId as string) || '',
     couponDiscount: Number(couponDiscount) || 0,
-    status: 'pending',
+    status: 'pending_payment',
+    paymentStatus: 'unpaid',
     createdAt: db.serverDate(),
     updatedAt: db.serverDate(),
   }
@@ -438,6 +445,171 @@ export async function createTuanOrder(
 }
 
 // =====================================================================
+// Handler 4: shipTuanOrder（商家发货）
+// =====================================================================
+async function shipTuanOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown> {
+  const { orderId } = event.data || {}
+  if (!orderId) {
+    throw err('INVALID_PARAMS', '缺少订单ID')
+  }
+  // 权限：仅管理员或商家可发货
+  if (!auth.isSuperAdmin && !auth.adminId) {
+    throw err('PERMISSION_DENIED', '无权操作')
+  }
+
+  const orderRes = await db.collection('orders').doc(orderId as string).get()
+  const order = orderRes.data as UnifiedOrder | undefined
+  if (!order) {
+    throw err('NOT_FOUND', '订单不存在')
+  }
+  if (order.type !== 'group_buy') {
+    throw err('BUSINESS_ERROR', '非团购订单')
+  }
+  if (order.status !== 'paid') {
+    throw err('BUSINESS_ERROR', '当前状态不可发货')
+  }
+
+  await db.collection('orders').doc(orderId as string).update({
+    data: { status: 'pending_shipment', updatedAt: db.serverDate() },
+  })
+
+  if (order.tuanOrderId) {
+    try {
+      await db.collection('tuan_orders').doc(order.tuanOrderId).update({
+        data: { status: 'pending_shipment', updatedAt: db.serverDate() },
+      })
+    } catch (e) {
+      logger.warn('shipTuanOrder.syncTuanOrderFailed', { orderId, tuanOrderId: order.tuanOrderId, msg: (e as Error).message })
+    }
+  }
+
+  return handleSuccess(null, '发货成功')
+}
+
+// =====================================================================
+// Handler 5: confirmReceiveTuanOrder（用户确认收货）
+// =====================================================================
+async function confirmReceiveTuanOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown> {
+  const { orderId } = event.data || {}
+  if (!orderId) {
+    throw err('INVALID_PARAMS', '缺少订单ID')
+  }
+  const openid = auth.openid
+  if (!openid) {
+    throw err('AUTH_REQUIRED', '未登录')
+  }
+
+  const orderRes = await db.collection('orders').doc(orderId as string).get()
+  const order = orderRes.data as UnifiedOrder | undefined
+  if (!order) {
+    throw err('NOT_FOUND', '订单不存在')
+  }
+  if (order.ownerId !== openid) {
+    throw err('PERMISSION_DENIED', '无权操作')
+  }
+  if (order.type !== 'group_buy') {
+    throw err('BUSINESS_ERROR', '非团购订单')
+  }
+  if (!['pending_shipment', 'shipped'].includes(order.status)) {
+    throw err('BUSINESS_ERROR', '当前状态不可确认收货')
+  }
+
+  await db.collection('orders').doc(orderId as string).update({
+    data: { status: 'completed', updatedAt: db.serverDate() },
+  })
+
+  if (order.tuanOrderId) {
+    try {
+      await db.collection('tuan_orders').doc(order.tuanOrderId).update({
+        data: { status: 'completed', updatedAt: db.serverDate() },
+      })
+    } catch (e) {
+      logger.warn('confirmReceiveTuanOrder.syncTuanOrderFailed', { orderId, tuanOrderId: order.tuanOrderId, msg: (e as Error).message })
+    }
+  }
+
+  return handleSuccess(null, '确认收货成功')
+}
+
+// =====================================================================
+// Handler 6: cancelTuanOrder（取消订单并退款）
+// =====================================================================
+async function cancelTuanOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown> {
+  const { orderId } = event.data || {}
+  if (!orderId) {
+    throw err('INVALID_PARAMS', '缺少订单ID')
+  }
+  const openid = auth.openid
+  if (!openid) {
+    throw err('AUTH_REQUIRED', '未登录')
+  }
+
+  const orderRes = await db.collection('orders').doc(orderId as string).get()
+  const order = orderRes.data as UnifiedOrder | undefined
+  if (!order) {
+    throw err('NOT_FOUND', '订单不存在')
+  }
+  if (order.type !== 'group_buy') {
+    throw err('BUSINESS_ERROR', '非团购订单')
+  }
+  // 用户只能取消自己的订单；管理员可取消任意订单
+  if (order.ownerId !== openid && !auth.isSuperAdmin && !auth.adminId) {
+    throw err('PERMISSION_DENIED', '无权操作')
+  }
+  if (!['pending_payment', 'paid', 'pending_shipment'].includes(order.status)) {
+    throw err('BUSINESS_ERROR', '当前状态不可取消')
+  }
+
+  // 取消佣金
+  try {
+    const { cancelCommissionRecord } = require('./common/commission-utils')
+    await cancelCommissionRecord(orderId as string)
+    logger.info('cancelTuanOrder.cancelCommissionRecord.success', { orderId })
+  } catch (e) {
+    logger.warn('cancelTuanOrder.cancelCommissionRecord.failed', { orderId, msg: (e as Error).message })
+  }
+
+  // 调用微信支付退款（已支付/待发货状态）
+  if (['paid', 'pending_shipment'].includes(order.status)) {
+    try {
+      const totalAmount = Math.round(Number(order.totalAmount) * 100)
+      if (totalAmount > 0) {
+        await cloud.callFunction({
+          name: 'paymentService',
+          data: {
+            action: 'createRefund',
+            outTradeNo: order.orderNo || (orderId as string),
+            refundAmount: totalAmount,
+            totalAmount: totalAmount,
+          },
+        })
+        logger.info('cancelTuanOrder.refundCreated', { orderId })
+      }
+    } catch (e) {
+      logger.warn('cancelTuanOrder.refundFailed', { orderId, msg: (e as Error).message })
+    }
+  }
+
+  // 未支付订单直接标记取消
+  if (order.status === 'pending_payment') {
+    await db.collection('orders').doc(orderId as string).update({
+      data: { status: 'cancelled', updatedAt: db.serverDate() },
+    })
+    if (order.tuanOrderId) {
+      try {
+        await db.collection('tuan_orders').doc(order.tuanOrderId).update({
+          data: { status: 'cancelled', updatedAt: db.serverDate() },
+        })
+      } catch (e) {
+        logger.warn('cancelTuanOrder.syncTuanOrderFailed', { orderId, tuanOrderId: order.tuanOrderId, msg: (e as Error).message })
+      }
+    }
+  }
+
+  return handleSuccess(null, '取消申请已提交')
+}
+
+// =====================================================================
 // Handlers 聚合 + Main 入口
 // =====================================================================
 
@@ -445,6 +617,9 @@ const handlers: Record<string, (event: CloudEvent, context: CloudContext, auth: 
   getTuanDealList: (event, _context, _auth) => getTuanDealList(event),
   getTuanDealDetail: (event, _context, _auth) => getTuanDealDetail(event),
   createTuanOrder,
+  shipTuanOrder,
+  confirmReceiveTuanOrder,
+  cancelTuanOrder,
 }
 
 export async function main(event: CloudEvent, context: CloudContext): Promise<unknown> {
@@ -476,6 +651,9 @@ _mod.exports = {
   getTuanDealList,
   getTuanDealDetail,
   createTuanOrder,
+  shipTuanOrder,
+  confirmReceiveTuanOrder,
+  cancelTuanOrder,
   // 常量
   TUAN_DEAL_LIST_FIELDS,
   WRITE_ACTIONS,
@@ -491,6 +669,9 @@ export default {
   getTuanDealList,
   getTuanDealDetail,
   createTuanOrder,
+  shipTuanOrder,
+  confirmReceiveTuanOrder,
+  cancelTuanOrder,
   TUAN_DEAL_LIST_FIELDS,
   WRITE_ACTIONS,
   DEFAULT_PAGE_SIZE,
