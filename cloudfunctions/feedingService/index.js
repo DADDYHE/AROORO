@@ -49,7 +49,7 @@ const { filterFields, FIELD_WHITELISTS } = require('./common/validator');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, toResponse, isBusinessError } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createCommissionRecord: createCommissionRecordShared } = require('./common/commission-utils');
+const { createCommissionRecord: createCommissionRecordShared } = require('../common/commission-utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createServiceIncomeRecord } = require('./common/service-income-utils');
 const { cloud, db } = initCloud();
@@ -427,28 +427,46 @@ async function updateFeedingOrderStatus(event, _context, auth) {
         await db.collection('feedingOrders').doc(orderId).update({
             data: { status, updatedAt: db.serverDate() },
         });
-        // 服务订单服务开始（confirmed）→ 创建佣金记录 + 增加喂养师创建者钱包余额
-        if (status === 'confirmed') {
-            await createCommissionRecord('feeding', { ...order, totalAmount: order.totalPrice });
-            creditFeedingIncome(order).catch(() => { });
-        }
         if (status === 'cancelled') {
+            // 1. 退回优惠券
             await refundCouponForOrder(orderId, openid).catch((e) => {
                 logger.error('refundCouponForOrder failed', { error: e.message || String(e) });
             });
-            // 取消收入记录
+
+            // 2. 取消收入记录
             try {
                 const { cancelServiceIncomeRecord } = require('./common/service-income-utils');
                 await cancelServiceIncomeRecord(orderId, 'feeding');
             } catch (incomeErr) {
                 logger.warn('cancelServiceIncomeRecord failed', { error: incomeErr?.message });
             }
-            // 取消佣金记录
+
+            // 3. 取消佣金记录
             try {
-                const { cancelCommissionRecord } = require('./common/commission-utils');
+                const { cancelCommissionRecord } = require('../common/commission-utils');
                 await cancelCommissionRecord(orderId);
             } catch (commissionErr) {
                 logger.warn('cancelCommissionRecord failed', { error: commissionErr?.message });
+            }
+
+            // 4. 调用微信支付退款
+            try {
+                const totalAmount = Math.round((Number(order.totalAmount) || Number(order.totalPrice) || 0) * 100);
+                const finalAmount = Math.round((Number(order.finalAmount) || Number(order.totalAmount) || Number(order.totalPrice) || 0) * 100);
+                if (totalAmount > 0 && finalAmount > 0) {
+                    await cloud.callFunction({
+                        name: 'paymentService',
+                        data: {
+                            action: 'createRefund',
+                            outTradeNo: order.outTradeNo || orderId,
+                            refundAmount: finalAmount,
+                            totalAmount: totalAmount,
+                        },
+                    });
+                    logger.info('updateFeedingOrderStatus.refundCreated', { orderId, outTradeNo: order.outTradeNo });
+                }
+            } catch (refundErr) {
+                logger.warn('updateFeedingOrderStatus.refundFailed', { error: refundErr?.message || String(refundErr) });
             }
         }
         return handleSuccess(null, '状态更新成功');
@@ -461,23 +479,6 @@ async function updateFeedingOrderStatus(event, _context, auth) {
     }
 }
 exports.updateFeedingOrderStatus = updateFeedingOrderStatus;
-/** 服务订单服务开始 → 增加买家邀请人钱包余额 */
-async function creditFeedingIncome(order) {
-    try {
-        const ownerId = order.ownerId
-        if (!ownerId) return
-        // 买家的邀请人才是推广分成受益人
-        const buyerRes = await db.collection('users').doc(ownerId).get()
-        const inviterId = buyerRes.data?.inviterId
-        if (!inviterId) return
-        const amount = Number(order.totalPrice) || 0
-        if (amount <= 0) return
-        const { ensureWalletBalance } = require('../common/wallet-utils')
-        await ensureWalletBalance(inviterId, amount)
-    } catch (e) {
-        // best-effort
-    }
-}
 /**
  * 取消订单时退回优惠券
  *
@@ -701,7 +702,10 @@ async function handleFeedingOrder(event, _context, auth) {
         data: { status: targetStatus, updatedAt: db.serverDate() },
     });
     if (targetStatus === 'completed') {
-        await createCommissionRecord('feeding', { ...order, totalAmount: order.totalPrice });
+        await createCommissionRecord('feeding', { ...order, totalAmount: order.totalPrice }, {
+            configCollection: 'system_config',
+            customLogger: logger,
+        });
         
         // Create feeding income record for feeder creator
         if (order.feederId) {
