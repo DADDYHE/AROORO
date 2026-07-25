@@ -385,18 +385,20 @@ class FavoriteService {
     this.cloud = cloudService
   }
 
-  async getFavorites() {
-    return this.cloud.get('favoriteService', { action: 'list' })
+  async getFavorites(params = {}) {
+    // 默认拉取寄养家庭收藏；调用方可通过 params.targetType 覆盖
+    return this.cloud.get('favoriteService', { action: 'list', targetType: 'host', ...params })
   }
 
   async addFavorite(data) {
     const hostProfileId = typeof data === 'string' ? data : data.hostProfileId
-    return this.cloud.post('favoriteService', { action: 'add', hostProfileId })
+    // 云函数规范参数为 targetType/targetId；hostProfileId 为向后兼容别名
+    return this.cloud.post('favoriteService', { action: 'add', targetType: 'host', targetId: hostProfileId })
   }
 
   async removeFavorite(data) {
     const hostProfileId = typeof data === 'string' ? data : data.hostProfileId
-    return this.cloud.post('favoriteService', { action: 'remove', hostProfileId })
+    return this.cloud.post('favoriteService', { action: 'remove', targetType: 'host', targetId: hostProfileId })
   }
 }
 

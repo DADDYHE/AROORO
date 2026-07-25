@@ -196,6 +196,7 @@ export interface RegistrationRecord {
   pricePerPerson?: number
   pricePerPet?: number
   orderId?: string
+  outTradeNo?: string
   pendingReview?: boolean
   riskDecision?: string
   riskReasons?: string[]
@@ -208,6 +209,7 @@ export interface OrderRecord {
   _id?: string
   ownerId?: string
   orderId?: string
+  outTradeNo?: string
   orderType?: string
   activityId?: string
   activityTitle?: string
@@ -306,14 +308,19 @@ const { filterFields, FIELD_WHITELISTS } = require('./common/validator')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, isBusinessError } = require('./common/errors')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { ENDPOINTS } = require('../common/config')
+const { ENDPOINTS, WECHAT_PAY } = require('./common/config')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { detectActivityApplyRisk, mapActionToErrorCode } = require('../common/risk-control')
+const { detectActivityApplyRisk, mapActionToErrorCode } = require('./common/risk-control')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { withRateLimit } = require('../common/risk-rate-limit')
+const { withRateLimit } = require('./common/risk-rate-limit')
 // Sprint 50: 限流统一 bootstrap
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { bootstrapRateLimit } = require('../common/rate-limit-bootstrap')
+const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap')
+// H1/H6 修复：crypto、https 提升到模块级（避免函数内重复 require，并供微信查单复用）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const crypto = require('crypto')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const https = require('https')
 
 const { cloud, db } = initCloud()
 const logger = createLogger('activityService')
@@ -358,7 +365,7 @@ async function performActivityApplyRiskCheck(ctx: {
     riskDecision = mapActionToErrorCode(risk.action) as 'RISK_PASS' | 'RISK_PENDING' | 'RISK_REJECT'
     riskReasons = risk.reasons
     if (risk.action === 'reject') {
-      logger.warn('activityApply.risk_reject', { userId: openid, activityId, amountFen, reasons: risk.reasons })
+      logger.warn('activityApply.risk_reject', { userId: maskOpenid(openid), activityId, amountFen, reasons: risk.reasons })
       throw err('RISK_REJECT', '报名被风控拦截', {
         reasons: risk.reasons,
         level: risk.level,
@@ -367,16 +374,16 @@ async function performActivityApplyRiskCheck(ctx: {
     }
     if (risk.action === 'review') {
       pendingReview = true
-      logger.info('activityApply.risk_pending', { userId: openid, activityId, amountFen, reasons: risk.reasons })
+      logger.info('activityApply.risk_pending', { userId: maskOpenid(openid), activityId, amountFen, reasons: risk.reasons })
     } else {
       const debug = (logger as { debug?: (msg: string, meta: unknown) => void }).debug
-      if (debug) { debug('activityApply.risk_pass', { userId: openid, activityId }) }
+      if (debug) { debug('activityApply.risk_pass', { userId: maskOpenid(openid), activityId }) }
     }
   } catch (e) {
     if (isBusinessError(e) && ((e as { code?: string }).code === 'RATE_LIMITED' || (e as { code?: string }).code === 'RISK_REJECT')) {
       throw e
     }
-    logger.warn('activityApply.risk_control_error', { userId: openid, activityId, msg: e && (e as Error).message })
+    logger.warn('activityApply.risk_control_error', { userId: maskOpenid(openid), activityId, msg: e && (e as Error).message })
     riskDecision = 'RISK_PASS'
   }
   return { pendingReview, reasons: riskReasons, decision: riskDecision }
@@ -436,17 +443,22 @@ async function createCommissionRecord(orderType: string, order: OrderRecord): Pr
     }
     if (!inviter) { return }
 
-    const existRes = await db.collection('tuan_commissions').where({ orderNo: order.orderId || order._id, inviterId: user.inviterId }).count()
+    const orderNo = String(order.orderId || order._id || '')
+    const existRes = await db.collection('commissions').where({ orderNo, inviterId: user.inviterId }).count()
     if (existRes.total > 0) { return }
 
+    // M6 修复：确定性 _id（orderNo + inviterId 派生），并发下同键 add 触发主键冲突
+    // 而非产生重复佣金；count 查重仅作为快速路径保留
+    const idempotentId = `comm_${orderNo}_${String(user.inviterId).slice(-12)}`.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)
+
     const commissionData: CommissionRecord = {
-      _id: generateId('commission', order.ownerId),
+      _id: idempotentId,
       inviterId: user.inviterId,
       inviterNickName: inviter.nickName || '',
       ownerId: user._id || order.ownerId,
       orderType,
       orderId: order._id,
-      orderNo: order.orderId || order._id,
+      orderNo,
       orderAmount,
       commissionRate: rate,
       commissionAmount,
@@ -454,7 +466,18 @@ async function createCommissionRecord(orderType: string, order: OrderRecord): Pr
       createdAt: db.serverDate(),
       updatedAt: db.serverDate(),
     }
-    await db.collection('tuan_commissions').add({ data: commissionData })
+    try {
+      await db.collection('commissions').add({ data: commissionData })
+    } catch (addErr) {
+      // M6 修复：主键冲突 = 并发下已有同单同人佣金，静默幂等返回
+      const msg = (addErr as Error).message || ''
+      const code = (addErr as { errCode?: number }).errCode
+      if (code === -502001 || /exist|duplicate/i.test(msg)) {
+        logger.info('commission.idempotent.skip', { orderNo, inviterId: user.inviterId })
+        return
+      }
+      throw addErr
+    }
   } catch (e) {
     logger.error('commission_error', e)
   }
@@ -464,6 +487,8 @@ async function createCommissionRecord(orderType: string, order: OrderRecord): Pr
 // 辅助函数：活动状态自动更新
 // =====================================================================
 
+// M4 修复：本函数不再挂在 getActivityList 上同步执行（写放大），
+// 改由 config.json 定时触发器（activityStatusTrigger，每 5 分钟）驱动
 async function autoUpdateActivityStatus(): Promise<void> {
   try {
     const now = new Date()
@@ -478,27 +503,29 @@ async function autoUpdateActivityStatus(): Promise<void> {
       logger.info('autoUpdate.stopped', { updated: stoppedRes.updated })
     }
 
-    // 查询即将结束的活动（用于生成佣金）
+    // M4 修复：消除"查询-批量 update"竞态——先查候选，再逐活动条件更新，
+    // updated===1（本次真正置为 ended）才生成佣金，不重不漏
     const endingActivitiesRes = await db.collection('activities')
       .where({ status: _.in(['published', 'registration_stopped']), endTime: _.lte(nowStr) })
+      .field({ _id: true })
       .get()
-    const endingActivities = endingActivitiesRes.data || []
+    const endingActivities = (endingActivitiesRes.data || []) as { _id?: string }[]
+    if (endingActivities.length === 0) { return }
 
-    // 更新活动状态为 ended
-    const endedRes = await db.collection('activities')
-      .where({ status: _.in(['published', 'registration_stopped']), endTime: _.lte(nowStr) })
-      .update({ data: { status: 'ended', updatedAt: db.serverDate() } })
-    if (endedRes.updated > 0) {
-      logger.info('autoUpdate.ended', { updated: endedRes.updated })
-
-      // 为每个结束的活动生成佣金记录
-      for (const activity of endingActivities) {
-        try {
-          await generateActivityCommissions(activity._id)
-        } catch (e) {
-          logger.error('autoUpdate.commission', { activityId: activity._id, msg: (e as Error).message })
-        }
+    let endedCount = 0
+    // M6 修复：分批限流（每批 5），避免瞬时打满数据库连接
+    await runInBatches(endingActivities, 5, async (activity) => {
+      if (!activity._id) { return }
+      const upRes = await db.collection('activities')
+        .where({ _id: activity._id, status: _.in(['published', 'registration_stopped']), endTime: _.lte(nowStr) })
+        .update({ data: { status: 'ended', updatedAt: db.serverDate() } })
+      if ((upRes.updated || 0) > 0) {
+        endedCount += 1
+        await generateActivityCommissions(activity._id)
       }
+    })
+    if (endedCount > 0) {
+      logger.info('autoUpdate.ended', { updated: endedCount })
     }
   } catch (e) {
     logger.error('autoUpdate', e)
@@ -523,23 +550,22 @@ async function generateActivityCommissions(activityId: string): Promise<void> {
     }
 
     // 获取所有报名对应的订单ID
-    const orderIds = registrations.map(r => r.orderId).filter(Boolean)
+    const orderIds = registrations.map((r: { orderId?: string }) => r.orderId).filter(Boolean) as string[]
     if (orderIds.length === 0) return
 
-    // 批量查询订单
-    const ordersRes = await db.collection('orders')
-      .where({ _id: _.in(orderIds), status: 'confirmed' })
-      .get()
-    const orders = ordersRes.data || []
-
-    // 为每个订单创建佣金记录
-    for (const order of orders) {
-      try {
-        await createCommissionRecord('activity', order as OrderRecord)
-      } catch (e) {
-        logger.warn('generateActivityCommissions.order', { orderId: order._id, msg: (e as Error).message })
-      }
+    // M6 修复：_.in 大数组分批查询（每批 100）
+    const orders: Record<string, unknown>[] = []
+    for (let i = 0; i < orderIds.length; i += 100) {
+      const ordersRes = await db.collection('orders')
+        .where({ _id: _.in(orderIds.slice(i, i + 100)), status: 'confirmed' })
+        .get()
+      orders.push(...(ordersRes.data || []))
     }
+
+    // M6 修复：分批限流（每批 5）创建佣金，替代无上限 Promise.all
+    await runInBatches(orders, 5, async (order) => {
+      await createCommissionRecord('activity', order as OrderRecord)
+    })
 
     logger.info('generateActivityCommissions.done', { activityId, registrations: registrations.length, orders: orders.length })
   } catch (e) {
@@ -569,111 +595,383 @@ async function checkPartnerPermission(openid: string, permission: string): Promi
 }
 
 // =====================================================================
-// 辅助函数：支付参数创建
+// 辅助函数：金额 / 优惠券 服务端校验（H3 修复）
+// =====================================================================
+
+// 复刻 couponService.calculateCouponDiscount，避免跨云函数调用带来的不确定性
+type CouponRulesLite = { threshold?: number; reduceAmount?: number; discountRate?: number; maxReduceAmount?: number }
+function calculateActivityCouponDiscount(
+  type: string | undefined,
+  rules: CouponRulesLite | undefined,
+  orderAmount: number
+): { eligible: boolean; discountAmount?: number; message?: string } {
+  if (!rules) { return { eligible: false, message: '优惠券规则缺失' } }
+  if (rules.threshold && orderAmount < rules.threshold) {
+    return { eligible: false, message: `订单金额未达到满${rules.threshold}元使用门槛` }
+  }
+  let discountAmount = 0
+  switch (type) {
+    case 'fixed_amount':
+    case 'full_reduction':
+      discountAmount = rules.reduceAmount || 0
+      break
+    case 'discount': {
+      const discountRate = Number(rules.discountRate) || 1
+      if (discountRate <= 0 || discountRate > 1) { return { eligible: false, message: '折扣率无效' } }
+      discountAmount = orderAmount * (1 - discountRate)
+      if (rules.maxReduceAmount && rules.maxReduceAmount > 0) { discountAmount = Math.min(discountAmount, rules.maxReduceAmount) }
+      break
+    }
+    default:
+      return { eligible: false, message: '未知优惠券类型' }
+  }
+  discountAmount = Math.min(discountAmount, orderAmount)
+  discountAmount = Math.round(discountAmount * 100) / 100
+  return { eligible: true, discountAmount }
+}
+
+// 服务端重算活动金额（H3：不再信任前端 totalAmount）
+function computeActivityAmount(activity: ActivityRecord, pCount: number, petCount: number): number {
+  const pricePerPerson = activity.pricePerPerson || 0
+  const pricePerPet = activity.pricePerPet || 0
+  return Math.max(0, pricePerPerson * pCount + pricePerPet * petCount)
+}
+
+// 校验并解析优惠券，返回服务端认定的折扣（H3）
+// 仅做校验 + 计算，不修改券状态，避免与 couponService 的 lock/use 流程冲突导致重复核销
+async function resolveCoupon(
+  openid: string,
+  couponId: string | undefined,
+  calculatedAmount: number
+): Promise<{ couponId: string; discount: number }> {
+  if (!couponId) { return { couponId: '', discount: 0 } }
+  try {
+    const couponRes = await db.collection('user_coupons').where({ _id: couponId }).limit(1).get()
+    const coupon = (couponRes.data || [])[0] as
+      | { ownerId?: string; status?: string; startTime?: string | Date; endTime?: string | Date; applicableScopes?: string[]; type?: string; rules?: CouponRulesLite }
+      | undefined
+    if (!coupon) { logger.warn('resolveCoupon.notFound', { couponId, openid: maskOpenid(openid) }); return { couponId: '', discount: 0 } }
+    if (coupon.ownerId !== openid) { logger.warn('resolveCoupon.ownerMismatch', { couponId, openid: maskOpenid(openid) }); return { couponId: '', discount: 0 } }
+    if (coupon.status && coupon.status !== 'unused' && coupon.status !== 'locked') {
+      logger.warn('resolveCoupon.statusInvalid', { couponId, status: coupon.status }); return { couponId: '', discount: 0 }
+    }
+    const now = new Date()
+    if (coupon.startTime && now < new Date(coupon.startTime as string)) { return { couponId: '', discount: 0 } }
+    if (coupon.endTime && now > new Date(coupon.endTime as string)) { return { couponId: '', discount: 0 } }
+    const scopes = coupon.applicableScopes || []
+    if (scopes.length > 0 && !scopes.includes('activity')) { return { couponId: '', discount: 0 } }
+    const result = calculateActivityCouponDiscount(coupon.type, coupon.rules, calculatedAmount)
+    if (!result.eligible || result.discountAmount === undefined) { return { couponId: '', discount: 0 } }
+    return { couponId, discount: result.discountAmount }
+  } catch (e) {
+    logger.warn('resolveCoupon.error', { couponId, msg: (e as Error).message })
+    return { couponId: '', discount: 0 }
+  }
+}
+
+// 手机号脱敏（H5：列表/订单场景不直接暴露完整号码）
+function maskPhone(phone: string | undefined): string {
+  if (!phone) { return '' }
+  const s = String(phone).trim()
+  if (s.length < 7) { return s }
+  return `${s.slice(0, 3)}****${s.slice(-4)}`
+}
+
+// L9 修复：openid 属 PII，日志中掩码，避免明文落盘
+function maskOpenid(openid: string | undefined): string {
+  if (!openid) { return '' }
+  const s = String(openid)
+  if (s.length <= 6) { return s }
+  return `${s.slice(0, 6)}***`
+}
+
+// =====================================================================
+// M7 修复：活动状态枚举 + 状态机 + 关键字段校验
+// =====================================================================
+
+/** 创建时允许指定的状态（其余一律拒绝，防止绕过流程直接进入任意状态） */
+const ACTIVITY_CREATE_STATUS = ['draft', 'published'] as const
+
+/** 活动状态转移表：key=当前状态，value=允许迁入的目标状态 */
+const ACTIVITY_STATUS_TRANSITIONS: Record<string, string[]> = {
+  draft: ['published', 'cancelled', 'deleted'],
+  published: ['registration_stopped', 'cancelled'],
+  registration_stopped: ['ended', 'cancelled'],
+  ended: [],
+  cancelled: ['deleted'],
+}
+
+/** 校验活动关键字段（创建/更新共用；字段未提供时跳过对应校验） */
+function validateActivityFields(data: {
+  startTime?: unknown
+  endTime?: unknown
+  price?: unknown
+  pricePerPerson?: unknown
+  pricePerPet?: unknown
+  maxParticipants?: unknown
+}): void {
+  const parseTime = (v: unknown): Date | null => {
+    if (v === undefined || v === null || v === '') { return null }
+    const d = new Date(String(v).replace(/-/g, '/'))
+    return isNaN(d.getTime()) ? null : d
+  }
+  if (data.startTime !== undefined && data.startTime !== '' && !parseTime(data.startTime)) {
+    throw err('INVALID_PARAMS', '活动开始时间格式无效')
+  }
+  if (data.endTime !== undefined && data.endTime !== '' && !parseTime(data.endTime)) {
+    throw err('INVALID_PARAMS', '活动结束时间格式无效')
+  }
+  const st = parseTime(data.startTime)
+  const et = parseTime(data.endTime)
+  if (st && et && et <= st) {
+    throw err('INVALID_PARAMS', '活动结束时间必须晚于开始时间')
+  }
+  for (const key of ['price', 'pricePerPerson', 'pricePerPet'] as const) {
+    if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
+      const n = Number(data[key])
+      if (isNaN(n) || n < 0) { throw err('INVALID_PARAMS', `${key} 必须为不小于 0 的数字`) }
+    }
+  }
+  if (data.maxParticipants !== undefined && data.maxParticipants !== null && data.maxParticipants !== '') {
+    const n = Number(data.maxParticipants)
+    if (isNaN(n) || n < 0 || !Number.isInteger(n)) {
+      throw err('INVALID_PARAMS', 'maxParticipants 必须为非负整数')
+    }
+  }
+}
+
+/**
+ * M3 修复：循环分页拉取集合全量数据，规避 CloudBase 单次 get 上限静默截断
+ * @param maxTotal 安全上限，防止超大集合拖爆内存/超时
+ */
+async function fetchAllPaged<T>(
+  collection: string,
+  where: Record<string, unknown>,
+  orderByField: string,
+  maxTotal = 5000
+): Promise<T[]> {
+  const BATCH = 100
+  const all: T[] = []
+  let skip = 0
+  for (;;) {
+    const res = await db.collection(collection)
+      .where(where)
+      .orderBy(orderByField, 'desc')
+      .skip(skip)
+      .limit(BATCH)
+      .get()
+    const batch = (res.data || []) as T[]
+    all.push(...batch)
+    if (batch.length < BATCH || all.length >= maxTotal) { break }
+    skip += BATCH
+  }
+  return all.slice(0, maxTotal)
+}
+
+/**
+ * M3 修复：CSV 公式注入防护——以 = + - @ 及制表符/回车开头的单元格加单引号前缀，
+ * 防止 Excel/WPS 打开时把用户可控内容当公式执行
+ */
+function sanitizeCsvCell(value: unknown): string {
+  const str = String(value ?? '')
+  if (/^[=+\-@\t\r]/.test(str)) {
+    return `'${str}`
+  }
+  return str
+}
+
+/**
+ * M6 修复：并发批处理限流——分批执行异步任务，避免 Promise.all 无上限打满数据库连接
+ */
+async function runInBatches<T>(items: T[], batchSize: number, worker: (item: T) => Promise<void>): Promise<void> {
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize)
+    await Promise.all(batch.map((item) => worker(item).catch((e) => {
+      logger.warn('runInBatches.item', { msg: (e as Error).message })
+    })))
+  }
+}
+
+// =====================================================================
+// 辅助函数：微信支付 V3 工具
+// 升级说明：与 paymentService/services/wechatPayUtils.js 的签名规则保持一致
+//   - Authorization: WECHATPAY2-SHA256-RSA2048（RSA-SHA256 商户私钥签名）
+//   - 报文: JSON（替代 V2 XML + MD5）
+//   - 配置来源: WECHAT_PAY（WECHAT_APPID / WECHAT_MCHID / WECHAT_SERIAL_NO / WECHAT_PRIVATE_KEY / WECHAT_NOTIFY_URL）
+// =====================================================================
+
+function _wxRandomString(length = 32): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const bytes = crypto.randomBytes(length) as Buffer
+  let result = ''
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(bytes[i] % chars.length)
+  }
+  return result
+}
+
+/** 商户私钥归一化：支持原始 PEM / base64 编码 PEM / 字面量 \n 三种形态 */
+function _normalizeWxPrivateKey(key: string): string {
+  const trimmed = String(key || '').trim()
+  if (!trimmed) { return '' }
+  if (trimmed.includes('-----BEGIN')) { return trimmed.replace(/\\n/g, '\n') }
+  try {
+    const decoded = Buffer.from(trimmed, 'base64').toString('utf8')
+    if (decoded.includes('-----BEGIN')) { return decoded }
+  } catch (_) { /* fallthrough */ }
+  return trimmed.replace(/\\n/g, '\n')
+}
+
+function _wxRsaSign(privateKey: string, data: string): string {
+  const sign = crypto.createSign('RSA-SHA256')
+  sign.update(data)
+  sign.end()
+  return sign.sign(_normalizeWxPrivateKey(privateKey), 'base64')
+}
+
+function _wxGenerateAuthorization(method: string, path: string, body: string): string {
+  const timestamp = String(Math.floor(Date.now() / 1000))
+  const nonceStr = _wxRandomString(32)
+  const message = `${[method, path, timestamp, nonceStr, body].join('\n')}\n`
+  const signature = _wxRsaSign(WECHAT_PAY.privateKey, message)
+  return `WECHATPAY2-SHA256-RSA2048 mchid="${WECHAT_PAY.mchId}",nonce_str="${nonceStr}",timestamp="${timestamp}",serial_no="${WECHAT_PAY.serialNo}",signature="${signature}"`
+}
+
+/** 微信支付 V3 JSON 请求（5s 超时，非 2xx 抛错） */
+function _wxPayV3Request(
+  method: 'GET' | 'POST',
+  path: string,
+  bodyObj?: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    const bodyStr = method === 'GET' ? '' : JSON.stringify(bodyObj || {})
+    const authorization = _wxGenerateAuthorization(method, path, bodyStr)
+    const urlObj = new URL(`${ENDPOINTS.WECHAT_PAY_API_BASE}${path}`)
+    const headers: Record<string, string | number> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': authorization,
+      'User-Agent': 'WeChat-Mini-Program-Pay',
+    }
+    if (method === 'POST') {
+      headers['Content-Length'] = Buffer.byteLength(bodyStr)
+    }
+    const req = https.request({
+      hostname: urlObj.hostname,
+      port: 443,
+      path: urlObj.pathname + urlObj.search,
+      method,
+      headers,
+      timeout: 5000,
+    }, (res: { statusCode?: number; on: (e: string, cb: (chunk?: Buffer) => void) => void }) => {
+      let chunks = ''
+      res.on('data', (chunk?: Buffer) => { chunks += chunk ? chunk.toString() : '' })
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(chunks || '{}') as Record<string, unknown>
+          const status = res.statusCode || 0
+          if (status >= 200 && status < 300) {
+            resolve(json)
+          } else {
+            reject(new Error(`微信支付V3 HTTP ${status}: ${(json as { message?: string }).message || chunks}`))
+          }
+        } catch (e) {
+          reject(new Error(`微信支付V3响应解析失败：${chunks}`))
+        }
+      })
+    })
+    req.on('error', reject)
+    req.on('timeout', () => { req.destroy(); reject(new Error('微信支付V3请求超时')) })
+    if (method === 'POST') { req.write(bodyStr) }
+    req.end()
+  })
+}
+
+// =====================================================================
+// 辅助函数：支付参数创建（微信支付 V3 JSAPI 下单）
 // =====================================================================
 
 async function _createPaymentParams(
   openid: string,
   orderId: string,
+  outTradeNo: string,
   amount: number,
   description: string
 ): Promise<PaymentParams> {
-  const wxContext = cloud.getWXContext() as { APPID?: string; [k: string]: unknown }
-  const mchId = (cloud as { env: Record<string, string | undefined> }).env.MERCHANT_ID || process.env.MERCHANT_ID
-
-  if (!mchId) {
-    throw new Error('商户号未配置')
+  const config = WECHAT_PAY
+  if (!config.appId || !config.mchId || !config.serialNo || !config.privateKey) {
+    throw new Error('微信支付V3未配置（需 WECHAT_APPID / WECHAT_MCHID / WECHAT_SERIAL_NO / WECHAT_PRIVATE_KEY）')
   }
 
-  const nonceStr = Math.random().toString(36).substr(2, 15)
-  const timestamp = String(Math.floor(Date.now() / 1000))
-  const body = description
-  const totalFee = Math.round(amount * 100)
-
-  const outTradeNo = orderId
   const cloudEnv = (cloud as { env: string }).env
-  const notifyUrl = `https://${cloudEnv}-1300000000.ap-shanghai.tencentscf.com/payment/notify`
-  const spbillCreateIp = '127.0.0.1'
-  const tradeType = 'JSAPI'
+  // notify_url 配置化；未配置时回退到当前云环境回调地址（应指向 paymentService 的 paymentNotify HTTP 触发地址）
+  const notifyUrl = config.notifyUrl || `https://${cloudEnv}.ap-shanghai.tencentscf.com/payment/notify`
 
-  const signStr = `appid=${wxContext.APPID}&body=${body}&mch_id=${mchId}&nonce_str=${nonceStr}&notify_url=${notifyUrl}&openid=${openid}&out_trade_no=${outTradeNo}&spbill_create_ip=${spbillCreateIp}&total_fee=${totalFee}&trade_type=${tradeType}`
+  // time_expire 需为北京时间（+08:00）：UTC 时刻先 +8h 再打 +08:00 标签，保证过期时刻正确
+  const timeExpire = new Date(Date.now() + 30 * 60 * 1000 + 8 * 3600 * 1000)
+    .toISOString().replace(/\.\d{3}Z$/, '+08:00')
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const crypto = require('crypto')
-  const merchantKey = (cloud as { env: Record<string, string | undefined> }).env.MERCHANT_KEY || process.env.MERCHANT_KEY || ''
-  const paySign = crypto.createHash('md5').update(`${signStr}&key=${merchantKey}`).digest('hex').toUpperCase()
-
-  // XML 转义函数，防止 XML 注入
-  const escapeXml = (str: string): string => {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;')
+  const requestBody = {
+    appid: config.appId,
+    mchid: config.mchId,
+    description,
+    out_trade_no: outTradeNo,
+    time_expire: timeExpire,
+    notify_url: notifyUrl,
+    attach: JSON.stringify({ type: 'activity', orderId }),
+    amount: { total: Math.round(amount * 100), currency: 'CNY' },
+    payer: { openid },
   }
-
-  const unifiedOrderXml = `<xml>
-    <appid>${escapeXml(wxContext.APPID || '')}</appid>
-    <body>${escapeXml(body)}</body>
-    <mch_id>${escapeXml(mchId)}</mch_id>
-    <nonce_str>${escapeXml(nonceStr)}</nonce_str>
-    <notify_url>${escapeXml(notifyUrl)}</notify_url>
-    <openid>${escapeXml(openid)}</openid>
-    <out_trade_no>${escapeXml(outTradeNo)}</out_trade_no>
-    <spbill_create_ip>${escapeXml(spbillCreateIp)}</spbill_create_ip>
-    <total_fee>${escapeXml(String(totalFee))}</total_fee>
-    <trade_type>${escapeXml(tradeType)}</trade_type>
-    <sign>${escapeXml(paySign)}</sign>
-  </xml>`
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const https = require('https')
-    const result = await new Promise<string>((resolve, reject) => {
-      const req = https.request(`${ENDPOINTS.WECHAT_PAY_API_BASE}${ENDPOINTS.WECHAT_PAY_UNIFIEDORDER}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/xml' },
-      }, (res: { on: (e: string, cb: (chunk: Buffer) => void) => void }) => {
-        let data = ''
-        res.on('data', (chunk: Buffer) => { data += chunk.toString() })
-        res.on('end', () => resolve(data))
-      })
-      req.on('error', reject)
-      req.write(unifiedOrderXml)
-      req.end()
-    })
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const xml2js = require('xml2js')
-    const xmlResult = await new Promise<{ xml: Record<string, string> }>((resolve, reject) => {
-      xml2js.parseString(result, { explicitArray: false }, (e: Error | null, parsed: { xml: Record<string, string> }) => {
-        if (e) { reject(e) } else { resolve(parsed) }
-      })
-    })
-
-    if (xmlResult.xml.return_code === 'SUCCESS' && xmlResult.xml.result_code === 'SUCCESS') {
-      const prepayId = xmlResult.xml.prepay_id
-      const jsNounceStr = Math.random().toString(36).substr(2, 15)
-      const jsTimestamp = String(Math.floor(Date.now() / 1000))
-      const jsPackage = `prepay_id=${prepayId}`
-
-      const jsSignStr = `appid=${wxContext.APPID}&noncestr=${jsNounceStr}&package=${jsPackage}&signType=MD5&timeStamp=${jsTimestamp}`
-      const jsPaySign = crypto.createHash('md5').update(`${jsSignStr}&key=${merchantKey}`).digest('hex').toUpperCase()
-
-      return {
-        timeStamp: jsTimestamp,
-        nonceStr: jsNounceStr,
-        package: jsPackage,
-        signType: 'MD5',
-        paySign: jsPaySign,
-      }
-    } else {
-      throw new Error(xmlResult.xml.err_code_des || xmlResult.xml.return_msg || '统一下单失败')
+    const result = await _wxPayV3Request('POST', ENDPOINTS.WECHAT_PAY_JSAPI, requestBody)
+    const prepayId = (result as { prepay_id?: string }).prepay_id
+    if (!prepayId) {
+      logger.error('_createPaymentParams.v3.noPrepayId', { outTradeNo, result })
+      throw new Error(`微信支付V3下单失败：${(result as { message?: string }).message || '未返回 prepay_id'}`)
     }
+
+    // 小程序调起支付签名：appId\ntimeStamp\nnonceStr\npackage\n（RSA-SHA256）
+    const timeStamp = String(Math.floor(Date.now() / 1000))
+    const nonceStr = _wxRandomString(32)
+    const packageStr = `prepay_id=${prepayId}`
+    const paySign = _wxRsaSign(config.privateKey, `${[config.appId, timeStamp, nonceStr, packageStr].join('\n')}\n`)
+
+    return { timeStamp, nonceStr, package: packageStr, signType: 'RSA', paySign }
   } catch (e) {
     logger.error('创建支付参数失败:', e)
     throw new Error(`创建支付参数失败: ${(e as Error).message}`)
+  }
+}
+
+// =====================================================================
+// 辅助函数：微信支付 V3 查单（H2 修复：confirm 前核实真实支付状态）
+// =====================================================================
+
+async function _queryWechatOrder(outTradeNo: string): Promise<{
+  paid: boolean
+  totalFee?: number
+  tradeState?: string
+  transactionId?: string
+}> {
+  try {
+    const config = WECHAT_PAY
+    if (!config.mchId || !config.privateKey) { return { paid: false, tradeState: 'NOT_CONFIGURED' } }
+
+    const path = `/v3/pay/transactions/out-trade-no/${encodeURIComponent(outTradeNo)}?mchid=${config.mchId}`
+    const result = await _wxPayV3Request('GET', path)
+
+    const tradeState = (result as { trade_state?: string }).trade_state
+    const amountInfo = ((result as { amount?: { total?: number } }).amount || {}) as { total?: number }
+    return {
+      paid: tradeState === 'SUCCESS',
+      totalFee: typeof amountInfo.total === 'number' ? amountInfo.total : undefined,
+      tradeState,
+      transactionId: (result as { transaction_id?: string }).transaction_id,
+    }
+  } catch (e) {
+    logger.error('_queryWechatOrder.failed', { outTradeNo, msg: (e as Error).message })
+    return { paid: false, tradeState: 'QUERY_FAILED' }
   }
 }
 
@@ -702,7 +1000,7 @@ export async function getActivityList(
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 10), 100)
   logger.info('getActivityList.query', { page, pageSize: safePageSize, status, category })
 
-  await autoUpdateActivityStatus()
+  // M4 修复：状态自动更新迁移至定时触发器（见 main 入口 Timer 分支），列表接口只读
 
   const where: Record<string, unknown> = {}
   if (status && status !== 'all') {
@@ -785,16 +1083,17 @@ export async function getActivityDetail(
   if (!activityId) { throw err('INVALID_PARAMS', '缺少活动ID') }
 
   try {
-    const res = await db.collection('activities').doc(activityId).get()
+    // L8 修复：主查询与"我是否报名"相互独立，并行执行降低详情接口 P95
+    const [res, regRes] = await Promise.all([
+      db.collection('activities').doc(activityId).get(),
+      auth.openid
+        ? db.collection('activity_registrations')
+            .where({ activityId, ownerId: auth.openid, status: 'confirmed' })
+            .count()
+        : Promise.resolve<{ total: number }>({ total: 0 }),
+    ])
 
-    let isRegistered = false
-    if (auth.openid) {
-      const regRes = await db.collection('activity_registrations')
-        .where({ activityId, ownerId: auth.openid, status: 'confirmed' })
-        .count()
-      isRegistered = regRes.total > 0
-    }
-
+    const isRegistered = regRes.total > 0
     const data = res.data as ActivityRecord | null
     if (!data) {
       throw err('NOT_FOUND', '活动不存在')
@@ -802,43 +1101,40 @@ export async function getActivityDetail(
 
     const result: ActivityDetailResult = { ...data, isRegistered }
 
-    if (result.organizer && result.organizer.avatar) {
-      const avatar = result.organizer.avatar
-      if (!avatar.startsWith('cloud://') && !avatar.startsWith('https://')) {
+    // L8 修复：头像补全与活动数彼此独立且都依赖主查询结果 → 并行执行
+    await Promise.all([
+      (async () => {
+        if (!(result.organizer && result.organizer.avatar)) return
+        const avatar = result.organizer.avatar
+        if (avatar.startsWith('cloud://') || avatar.startsWith('https://')) return
         result.organizer.avatar = ''
-        if (result.createdBy) {
-          try {
-            let admin: AdminRecord | null = null
-            try {
-              const adminRes = await db.collection('admins').doc(result.createdBy).field({ avatarUrl: true, nickName: true }).get()
-              admin = adminRes.data
-            } catch (e) {
-              logger.warn('getActivityDetail.admins.fetch', { createdBy: result.createdBy, code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
+        if (!result.createdBy) return
+        try {
+          const adminRes = await db.collection('admins').doc(result.createdBy).field({ avatarUrl: true, nickName: true }).get()
+          const admin = adminRes.data as AdminRecord | null
+          if (admin && admin.avatarUrl && (admin.avatarUrl.startsWith('cloud://') || admin.avatarUrl.startsWith('https://'))) {
+            result.organizer.avatar = admin.avatarUrl
+            if (admin.nickName && result.organizer.name === '宠团团') {
+              result.organizer.name = admin.nickName
             }
-            if (admin && admin.avatarUrl && (admin.avatarUrl.startsWith('cloud://') || admin.avatarUrl.startsWith('https://'))) {
-              result.organizer.avatar = admin.avatarUrl
-              if (admin.nickName && result.organizer.name === '宠团团') {
-                result.organizer.name = admin.nickName
-              }
-            }
-          } catch (e) {
-            logger.warn('getActivityDetail.organizer.fill', { createdBy: result.createdBy, code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
           }
+        } catch (e) {
+          logger.warn('getActivityDetail.admins.fetch', { createdBy: result.createdBy, code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
         }
-      }
-    }
-
-    if (data.createdBy && result.organizer) {
-      try {
-        const countRes = await db.collection('activities')
-          .where({ createdBy: data.createdBy, status: _.in(['published', 'ongoing', 'ended']) })
-          .count()
-        result.organizer.activityCount = countRes.total || 0
-      } catch (e) {
-        logger.warn('queryHostActivities', e)
-        result.organizer.activityCount = 0
-      }
-    }
+      })(),
+      (async () => {
+        if (!(data.createdBy && result.organizer)) return
+        try {
+          const countRes = await db.collection('activities')
+            .where({ createdBy: data.createdBy, status: _.in(['published', 'ongoing', 'ended']) })
+            .count()
+          result.organizer.activityCount = countRes.total || 0
+        } catch (e) {
+          logger.warn('queryHostActivities', e)
+          result.organizer.activityCount = 0
+        }
+      })(),
+    ])
 
     return handleSuccess(result, '获取成功')
   } catch (error) {
@@ -861,12 +1157,26 @@ export async function createActivity(
   const { title, description, coverUrl, startTime, endTime, location, latitude, longitude, maxParticipants, category, price } = event
   if (!title) { throw err('INVALID_PARAMS', '缺少活动标题') }
 
+  // M7 修复：status 枚举白名单（仅 draft/published），杜绝直接创建任意状态
+  const requestedStatus = String(event.status || 'draft')
+  if (!ACTIVITY_CREATE_STATUS.includes(requestedStatus as typeof ACTIVITY_CREATE_STATUS[number])) {
+    throw err('INVALID_PARAMS', `无效的活动状态: ${requestedStatus}`)
+  }
+  // M7 修复：直接创建 published 活动时要求关键信息完整
+  if (requestedStatus === 'published') {
+    if (!startTime || !endTime || !location) {
+      throw err('INVALID_PARAMS', '发布活动必须填写开始时间、结束时间和地点')
+    }
+  }
+  // M7 修复：时间格式/先后关系、价格、名额校验
+  validateActivityFields({ startTime, endTime, price, pricePerPerson: event.pricePerPerson, pricePerPet: event.pricePerPet, maxParticipants })
+
   let organizer: UserRecord | null = null
   try {
     const userRes = await db.collection('users').doc(openid).get()
     organizer = userRes.data
   } catch (e) {
-    logger.warn('createActivity.users.fetch', { openid, msg: (e as Error).message })
+    logger.warn('createActivity.users.fetch', { openid: maskOpenid(openid), msg: (e as Error).message })
   }
 
   const activity: ActivityRecord = {
@@ -888,7 +1198,7 @@ export async function createActivity(
     contactName: event.contactName || '',
     contactPhone: event.contactPhone || '',
     wechatId: event.wechatId || '',
-    status: event.status || 'draft',
+    status: requestedStatus,
     createdBy: openid,
     organizer: organizer ? {
       name: organizer.nickName || '宠团团',
@@ -930,6 +1240,36 @@ export async function updateActivity(
     } catch (e) {
       throw err('PERMISSION_DENIED', '无权修改此活动')
     }
+  }
+
+  // M7 修复：status 变更走状态机校验，杜绝任意状态跳转（如 ended 改回 published）
+  if (updateData.status !== undefined) {
+    const nextStatus = String(updateData.status)
+    const currStatus = String(existData.status || 'draft')
+    if (nextStatus !== currStatus) {
+      const allowed = ACTIVITY_STATUS_TRANSITIONS[currStatus] || []
+      if (!allowed.includes(nextStatus)) {
+        throw err('INVALID_PARAMS', `活动状态不允许从 ${currStatus} 变更为 ${nextStatus}`)
+      }
+    } else {
+      delete updateData.status
+    }
+  }
+
+  // M7 修复：更新时同样校验时间/价格/名额字段合法性
+  validateActivityFields({
+    startTime: updateData.startTime ?? (event.startTime !== undefined ? event.startTime : undefined),
+    endTime: updateData.endTime ?? (event.endTime !== undefined ? event.endTime : undefined),
+    price: updateData.price,
+    pricePerPerson: updateData.pricePerPerson,
+    pricePerPet: updateData.pricePerPet,
+    maxParticipants: updateData.maxParticipants,
+  })
+  // 时间只改其一时，与库中另一端做先后关系校验
+  const effStart = updateData.startTime !== undefined ? updateData.startTime : existData.startTime
+  const effEnd = updateData.endTime !== undefined ? updateData.endTime : existData.endTime
+  if (effStart && effEnd) {
+    validateActivityFields({ startTime: effStart, endTime: effEnd })
   }
 
   await db.collection('activities').doc(activityId).update({ data: updateData })
@@ -996,41 +1336,41 @@ export async function submitRegistration(
   if (!pets || !Array.isArray(pets) || pets.length === 0) { throw err('INVALID_PARAMS', '请选择参与的宠物') }
   if (!phone) { throw err('INVALID_PARAMS', '请填写联系电话') }
 
+  // M1 修复：查重前置到事务外（CloudBase 事务内不支持 where 查询），
+  // 名额检查移入事务内基于快照读，避免"读-判-写"跨事务竞态
+  const existReg = await db.collection('activity_registrations')
+    .where({ activityId, ownerId: openid, status: 'confirmed' })
+    .count()
+  if (existReg.total > 0) {
+    throw err('BUSINESS_ERROR', '您已报名此活动')
+  }
+
   const transaction = await db.startTransaction()
 
   try {
-    const activityRes = await db.collection('activities').doc(activityId).get()
+    // M1 修复：活动读取走事务快照，与后续 _.inc 同事务；
+    // 并发提交冲突时 CloudBase 事务失败回滚，杜绝名额超卖
+    const activityRes = await transaction.collection('activities').doc(activityId).get()
     const activity = activityRes.data as ActivityRecord | null
     if (!activity) {
-      await transaction.rollback()
       throw err('NOT_FOUND', '活动不存在')
-    }
-
-    if (activity.maxParticipants && (activity.currentParticipants || 0) >= activity.maxParticipants) {
-      await transaction.rollback()
-      throw err('BUSINESS_ERROR', '报名人数已满')
-    }
-
-    const existReg = await db.collection('activity_registrations')
-      .where({ activityId, openid, status: 'confirmed' })
-      .count()
-    if (existReg.total > 0) {
-      await transaction.rollback()
-      throw err('BUSINESS_ERROR', '您已报名此活动')
     }
 
     const pricePerPerson = activity.pricePerPerson || 0
     const pricePerPet = activity.pricePerPet || 0
-    const pCount = participantCount || 1
+    // M2 修复：participantCount 服务端规范化（≥1 的整数），不再裸信前端
+    const pCount = Math.max(1, Math.floor(Number(participantCount) || 1))
+
+    if (activity.maxParticipants && (activity.currentParticipants || 0) + pCount > activity.maxParticipants) {
+      throw err('BUSINESS_ERROR', '报名人数已满')
+    }
     const petsArray = pets as PetInput[]
     const friendsArray = Array.isArray(friends) ? friends : []
     const petCount = petsArray.length + friendsArray.length
-    const calculatedAmount = pricePerPerson * pCount + pricePerPet * petCount
-
-    // 仅在使用优惠券时，校验优惠后金额下限（直接使用前端传入的已扣券金额）
-    if (couponId && Number(totalAmount) > 0 && Number(totalAmount) < 0.1) {
-      throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元')
-    }
+    // H3 修复：金额一律服务端重算，不再信任前端 totalAmount
+    const calculatedAmount = computeActivityAmount(activity, pCount, petCount)
+    const coupon = await resolveCoupon(openid, couponId, calculatedAmount)
+    const finalAmount = Math.max(0, Math.round((calculatedAmount - coupon.discount) * 100) / 100)
 
     // Sprint 22: 活动报名前先做大额风控
     const applyRisk = await performActivityApplyRiskCheck({
@@ -1063,10 +1403,10 @@ export async function submitRegistration(
       pricePerPerson,
       pricePerPet,
       totalAmount: calculatedAmount,
-      originalAmount: originalAmount || calculatedAmount,
-      couponId: couponId || '',
-      couponDiscount: couponDiscount || 0,
-      finalAmount: totalAmount,
+      originalAmount: calculatedAmount,
+      couponId: coupon.couponId,
+      couponDiscount: coupon.discount,
+      finalAmount,
       pendingReview: applyRisk.pendingReview,
       riskDecision: applyRisk.decision,
       riskReasons: applyRisk.reasons,
@@ -1090,7 +1430,7 @@ export async function submitRegistration(
         const userRes = await db.collection('users').doc(openid).get()
         user = userRes.data
       } catch (e) {
-        logger.warn('submitRegistration.users.fetch', { openid, code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
+        logger.warn('submitRegistration.users.fetch', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
       }
 
       const activityOrder: OrderRecord = {
@@ -1114,10 +1454,10 @@ export async function submitRegistration(
         pricePerPerson,
         pricePerPet,
         basicPrice: calculatedAmount,
-        totalPrice: totalAmount || calculatedAmount,
-        originalAmount: originalAmount || calculatedAmount,
-        couponId: couponId || '',
-        couponDiscount: couponDiscount || 0,
+        totalPrice: finalAmount,
+        originalAmount: calculatedAmount,
+        couponId: coupon.couponId,
+        couponDiscount: coupon.discount,
         phone: phone || '',
         notes: notes || '',
         status: isPaid ? 'pending_payment' : 'confirmed',
@@ -1134,7 +1474,8 @@ export async function submitRegistration(
     await transaction.commit()
     return handleSuccess({ id: (regResult as { _id?: string })._id || 'ok', registrationId: (regResult as { _id?: string })._id }, '报名成功')
   } catch (error) {
-    await transaction.rollback()
+    // M1 修复：rollback 包裹 try/catch，避免二次 rollback 抛新错掩盖原始业务错误
+    try { await transaction.rollback() } catch (_) { /* ignore rollback error */ }
     return handleError(error, '报名失败', ERROR_CODES.DATA)
   }
 }
@@ -1252,12 +1593,52 @@ export async function getRegistrationList(
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
   const { page = 1, pageSize = 20, activityId, status } = event
+  // M5 修复：pageSize 增加下限保护（0/负数/非数字回退默认），与其他 handler 口径一致
+  const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 20)
   const where: Record<string, unknown> = { ownerId: openid }
   if (activityId) { where.activityId = activityId }
-  if (status) { where.status = status }
+
+  // M5 修复：status==='active'（进行中的已报名活动）过滤提前到查询层，
+  // 分页与 total 均基于过滤后的数据集，不再对"当前页"做内存过滤导致分页错乱
+  if (status === 'active') {
+    const myRegs = await fetchAllPaged<{ activityId?: string }>(
+      'activity_registrations', { ownerId: openid, status: 'confirmed' }, 'createdAt', 1000)
+    const myActivityIds = [...new Set(myRegs.map((r) => r.activityId).filter((id): id is string => Boolean(id)))]
+    if (myActivityIds.length === 0) {
+      return handleSuccess({ list: [], total: 0, page, pageSize: safePageSize }, '获取成功')
+    }
+
+    const now = new Date()
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000)
+    const bjTime = new Date(utc + (8 * 3600000))
+    const nowStr = `${bjTime.getFullYear()}-${String(bjTime.getMonth() + 1).padStart(2, '0')}-${String(bjTime.getDate()).padStart(2, '0')} ${String(bjTime.getHours()).padStart(2, '0')}:${String(bjTime.getMinutes()).padStart(2, '0')}`
+
+    const activeIds: string[] = []
+    for (let i = 0; i < myActivityIds.length; i += 100) {
+      const actRes = await db.collection('activities')
+        .where({
+          _id: _.in(myActivityIds.slice(i, i + 100)),
+          status: _.nin(['ended', 'cancelled', 'deleted']),
+        })
+        .field({ _id: true, endTime: true })
+        .get()
+      ;((actRes.data || []) as { _id?: string; endTime?: string }[]).forEach((a) => {
+        if (!a._id) { return }
+        if (a.endTime && String(a.endTime) <= nowStr) { return }
+        activeIds.push(a._id)
+      })
+    }
+    if (activeIds.length === 0) {
+      return handleSuccess({ list: [], total: 0, page, pageSize: safePageSize }, '获取成功')
+    }
+    where.activityId = _.in(activeIds)
+    where.status = 'confirmed'
+  } else if (status) {
+    where.status = status
+  }
 
   const result = await paginate(db, 'activity_registrations', {
-    page, pageSize: Math.min(pageSize, 20), where, projection: REGISTRATION_LIST_FIELDS,
+    page, pageSize: safePageSize, where, projection: REGISTRATION_LIST_FIELDS,
     orderBy: { field: 'createdAt', direction: 'desc' },
   })
 
@@ -1270,10 +1651,14 @@ export async function getRegistrationList(
     const activityMap: Record<string, ActivityRecord> = {}
     ;(activitiesRes.data as ActivityRecord[] || []).forEach((a) => { if (a._id) { activityMap[a._id] = a } })
 
+    // M5 修复：regMap 保留每个活动"最新"一条报名（列表已按 createdAt desc 排序，首条即最新），
+    // 存量重复报名不再互相覆盖
     const regMap: Record<string, RegistrationRecord> = {}
-    ;(result.list as RegistrationRecord[]).forEach((r) => { if (r.activityId) { regMap[r.activityId] = r } })
+    ;(result.list as RegistrationRecord[]).forEach((r) => {
+      if (r.activityId && !regMap[r.activityId]) { regMap[r.activityId] = r }
+    })
 
-    let activities: (ActivityRecord & { joined: boolean; _registrationId: string; regStatus: string; regCreatedAt: Date | undefined })[] = activityIds
+    const activities: (ActivityRecord & { joined: boolean; _registrationId: string; regStatus: string; regCreatedAt: Date | undefined })[] = activityIds
       .map((id) => activityMap[id])
       .filter((a): a is ActivityRecord => Boolean(a))
       .map((a) => {
@@ -1287,22 +1672,7 @@ export async function getRegistrationList(
         }
       })
 
-    if (status === 'active') {
-      const now = new Date()
-      const utc = now.getTime() + (now.getTimezoneOffset() * 60000)
-      const bjTime = new Date(utc + (8 * 3600000))
-      const nowStr = `${bjTime.getFullYear()}-${String(bjTime.getMonth() + 1).padStart(2, '0')}-${String(bjTime.getDate()).padStart(2, '0')} ${String(bjTime.getHours()).padStart(2, '0')}:${String(bjTime.getMinutes()).padStart(2, '0')}`
-
-      activities = activities.filter((a) => {
-        if (a.status === 'ended' || a.status === 'cancelled' || a.status === 'deleted') { return false }
-        if (a.endTime) {
-          const end = new Date(String(a.endTime).replace(/-/g, '/'))
-          if (!isNaN(end.getTime()) && end <= now) { return false }
-        }
-        return true
-      })
-      result.total = activities.length
-    }
+    // M5 修复：active 过滤已提前到查询层（见上方 where 构造），此处不再内存过滤、不再覆盖 result.total
 
     const invalidAvatarList: ActivityRecord[] = []
     for (const activity of activities) {
@@ -1356,11 +1726,11 @@ export async function createActivityPaymentOrder(
   const { openid } = auth
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
-  const { activityId, pets, phone, notes, friends, petIds, totalAmount, originalAmount, couponId, couponDiscount, orderId } = event
+  const { activityId, pets, phone, notes, friends, petIds, totalAmount, originalAmount, couponId, couponDiscount, orderId, participantCount } = event
   if (!activityId) { throw err('INVALID_PARAMS', '缺少活动ID') }
   if (!pets || !Array.isArray(pets) || pets.length === 0) { throw err('INVALID_PARAMS', '请选择参与的宠物') }
   if (!phone) { throw err('INVALID_PARAMS', '请填写联系电话') }
-  if (!totalAmount || totalAmount <= 0) { throw err('INVALID_PARAMS', '金额异常') }
+  if (!orderId) { throw err('INVALID_PARAMS', '缺少订单ID') }
 
   try {
     const activityRes = await db.collection('activities').doc(activityId).get()
@@ -1380,8 +1750,20 @@ export async function createActivityPaymentOrder(
       throw err('BUSINESS_ERROR', '您已报名此活动')
     }
 
-    const now = db.serverDate()
     const petsArray = pets as PetInput[]
+    const friendsArray = Array.isArray(friends) ? friends : []
+    // M2 修复：participantCount 服务端规范化（≥1 的整数）
+    const pCount = Math.max(1, Math.floor(Number(participantCount) || 1))
+    const petCount = petsArray.length + friendsArray.length
+    // H3 修复：金额服务端重算，不信任前端 totalAmount
+    const calculatedAmount = computeActivityAmount(activity, pCount, petCount)
+    const coupon = await resolveCoupon(openid, couponId, calculatedAmount)
+    const finalAmount = Math.max(0, Math.round((calculatedAmount - coupon.discount) * 100) / 100)
+    if (finalAmount <= 0) {
+      throw err('INVALID_PARAMS', '订单金额异常，请联系客服')
+    }
+
+    const now = db.serverDate()
     const petsInfo: PetInfo[] = petsArray.map((p) => ({
       name: p.petName || p.name || '',
       gender: p.petGender || p.gender || 'male',
@@ -1389,22 +1771,30 @@ export async function createActivityPaymentOrder(
       petId: p.petId || '',
     }))
 
+    // V3 升级：生成 ACT_ 前缀商户单号（与 paymentService 的 outTradeNo 路由约定一致，
+    // paymentNotify 回调按前缀识别订单类型、按 outTradeNo 字段查 activity_registrations）
+    const outTradeNo = `ACT_${Date.now()}_${_wxRandomString(6).toUpperCase()}`
+
     const pendingRegistration: RegistrationRecord = {
       _id: generateId('registration', openid),
       activityId,
       ownerId: openid,
+      openid,
       orderId,
+      outTradeNo,
       pets: petsInfo,
       petIds: petIds || [],
       phone: phone || '',
       notes: notes || '',
-      friends: Array.isArray(friends) ? friends : [],
+      friends: friendsArray,
       status: 'pending_payment',
-      totalAmount,
-      originalAmount: originalAmount || totalAmount,
-      couponId: couponId || '',
-      couponDiscount: couponDiscount || 0,
-      finalAmount: totalAmount,
+      participantCount: pCount,
+      petCount,
+      totalAmount: calculatedAmount,
+      originalAmount: calculatedAmount,
+      couponId: coupon.couponId,
+      couponDiscount: coupon.discount,
+      finalAmount,
       createdAt: now,
       updatedAt: now,
     }
@@ -1414,6 +1804,7 @@ export async function createActivityPaymentOrder(
       ownerId: openid,
       orderType: 'activity',
       orderId,
+      outTradeNo,
       activityId,
       activityTitle: activity.title || '',
       activityCoverUrl: activity.coverUrl || '',
@@ -1427,12 +1818,13 @@ export async function createActivityPaymentOrder(
       endDate: activity.endTime || '',
       duration: 1,
       pricePerDay: activity.price || 0,
-      petCount: petsArray.length,
-      basicPrice: totalAmount,
-      totalPrice: totalAmount,
-      originalAmount: originalAmount || totalAmount,
-      couponId: couponId || '',
-      couponDiscount: couponDiscount || 0,
+      participantCount: pCount,
+      petCount,
+      basicPrice: calculatedAmount,
+      totalPrice: finalAmount,
+      originalAmount: calculatedAmount,
+      couponId: coupon.couponId,
+      couponDiscount: coupon.discount,
       phone: phone || '',
       notes: notes || '',
       status: 'pending_payment',
@@ -1443,10 +1835,11 @@ export async function createActivityPaymentOrder(
 
     await db.collection('orders').add({ data: orderDoc })
 
-    const paymentParams = await _createPaymentParams(openid, orderId || '', totalAmount, activity.title || '活动报名')
+    const paymentParams = await _createPaymentParams(openid, orderId || '', outTradeNo, finalAmount, activity.title || '活动报名')
 
     return handleSuccess({
       orderId,
+      outTradeNo,
       registrationId: (regResult as { _id?: string })._id,
       paymentParams,
     }, '订单创建成功')
@@ -1470,37 +1863,82 @@ export async function confirmActivityPayment(
   const { orderId } = event
   if (!orderId) { throw err('INVALID_PARAMS', '缺少订单ID') }
 
+  // 事务前：查询订单（CloudBase 事务内不支持 where().get()/update()，必须先查 _id）
+  const orderRes = await db.collection('orders').where({ orderId, ownerId: openid }).limit(1).get()
+  const orderList = (orderRes.data || []) as OrderRecord[]
+  if (orderList.length === 0) {
+    throw err('NOT_FOUND', '订单不存在')
+  }
+
+  const order = orderList[0]
+
+  // V3 升级：幂等互斥——paymentNotify 回调可能已先行确认（status=confirmed + paymentStatus=paid），
+  // 此时直接返回成功，避免重复递增活动名额
+  if (order.paymentStatus === 'paid' || order.status === 'confirmed') {
+    return handleSuccess({ orderId, alreadyConfirmed: true }, '支付成功')
+  }
+  if (order.status !== 'pending_payment') {
+    throw err('BUSINESS_ERROR', '订单状态异常')
+  }
+
+  // H2 修复：向微信查单核实真实支付状态，杜绝 0 元"确认支付"
+  // V3 升级：查单改用 V3 商户单号 outTradeNo（旧数据无 outTradeNo 时回退 orderId 兼容 V2 存量单）
+  const wxQuery = await _queryWechatOrder(order.outTradeNo || orderId)
+  if (!wxQuery.paid) {
+    throw err('BUSINESS_ERROR', '支付未完成或支付状态未确认，请稍后重试')
+  }
+  const expectedFee = Math.round((order.totalPrice || order.basicPrice || 0) * 100)
+  if (wxQuery.totalFee !== undefined && expectedFee > 0 && wxQuery.totalFee !== expectedFee) {
+    logger.error('confirmActivityPayment.amountMismatch', { orderId, expectedFee, actualFee: wxQuery.totalFee })
+    throw err('BUSINESS_ERROR', '支付金额与订单不一致，请联系客服')
+  }
+
+  // 事务前：查询需要更新的 activity_registrations _id 列表
+  let registrationIds: string[] = []
+  try {
+    const regRes = await db.collection('activity_registrations')
+      .where({ orderId, ownerId: openid, status: 'pending_payment' })
+      .field({ _id: true } as Record<string, true>)
+      .limit(10)
+      .get()
+    registrationIds = ((regRes && regRes.data) || []).map((r: { _id: string }) => r._id)
+  } catch (e) {
+    // 查询失败不阻塞流程，但记录日志
+    logger.warn('confirmActivityPayment.queryRegistrations.failed', {
+      orderId, openid, msg: (e as Error)?.message,
+    })
+  }
+
   const transaction = await db.startTransaction()
 
   try {
-    const orderRes = await db.collection('orders').where({ orderId, ownerId: openid }).get()
-    const orderList = (orderRes.data || []) as OrderRecord[]
-    if (orderList.length === 0) {
-      await transaction.rollback()
-      throw err('NOT_FOUND', '订单不存在')
-    }
-
-    const order = orderList[0]
-    if (order.status !== 'pending_payment') {
-      await transaction.rollback()
-      throw err('BUSINESS_ERROR', '订单状态异常')
-    }
-
     const now = db.serverDate()
 
+    // 1) 更新订单状态（V3 升级：落库微信交易号 transactionId）
     await transaction.collection('orders').doc(order._id || '').update({
-      data: { status: 'confirmed', paymentStatus: 'paid', paidAt: now, updatedAt: now },
+      data: {
+        status: 'confirmed',
+        paymentStatus: 'paid',
+        transactionId: wxQuery.transactionId || '',
+        paidAt: now,
+        updatedAt: now,
+      },
     })
 
-    await transaction.collection('activity_registrations')
-      .where({ orderId, openid, status: 'pending_payment' })
-      .update({
-        data: { status: 'confirmed', updatedAt: now },
+    // 2) 同步 activity_registrations 状态（事务内逐个 doc(id).update()）
+    // 同时置 paymentStatus='paid'：与 paymentNotify 回调的幂等守卫（读报名单 paymentStatus==='paid' 直接返回）对齐，
+    // 避免"前端主动确认 + 微信回调"两条路径对同一订单重复递增 currentParticipants。
+    for (const regId of registrationIds) {
+      await transaction.collection('activity_registrations').doc(regId).update({
+        data: { status: 'confirmed', paymentStatus: 'paid', updatedAt: now },
       })
+    }
 
+    // 3) 活动名额递增
+    // M2 修复：口径统一为"人数"（与 submitRegistration 免费路径一致），不再误用宠物数
     await transaction.collection('activities').doc(order.activityId || '').update({
       data: {
-        currentParticipants: _.inc(order.petCount || 1),
+        currentParticipants: _.inc(order.participantCount || 1),
         updatedAt: now,
       },
     })
@@ -1512,7 +1950,11 @@ export async function confirmActivityPayment(
 
     return handleSuccess({ orderId }, '支付成功')
   } catch (error) {
-    await transaction.rollback()
+    try { await transaction.rollback() } catch (_) { /* ignore rollback error */ }
+    logger.error('confirmActivityPayment.transaction.failed', {
+      orderId, openid, msg: (error as Error)?.message,
+      alert: '活动支付确认 DB 状态同步失败，需人工对账',
+    })
     return handleError(error, '支付确认失败', ERROR_CODES.DATA)
   }
 }
@@ -1532,7 +1974,17 @@ export async function getActivityRegistrations(
   const { activityId, page = 1, pageSize = 20 } = event
   if (!activityId) { throw err('INVALID_PARAMS', '缺少活动ID') }
 
-  await checkPartnerPermission(openid, 'activity')
+  const admin = await checkPartnerPermission(openid, 'activity')
+  const isSuperAdmin = (admin.roles || []).includes('super_admin')
+
+  // H5 修复：非超级管理员强制校验活动归属，防止横向越权查看他人活动报名
+  if (!isSuperAdmin) {
+    const actRes = await db.collection('activities').doc(activityId).get()
+    const act = actRes.data as ActivityRecord | null
+    if (!act || act.createdBy !== openid) {
+      throw err('PERMISSION_DENIED', '无权查看该活动的报名信息')
+    }
+  }
 
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 100)
 
@@ -1553,6 +2005,7 @@ export async function getActivityRegistrations(
         const user = userMap[r.ownerId || ''] || {}
         return {
           ...r,
+          phone: maskPhone(r.phone),
           userNickName: user.nickName || '',
           userAvatar: user.avatarUrl || '',
           displayName: user.nickName || '未知用户',
@@ -1561,6 +2014,7 @@ export async function getActivityRegistrations(
     } else {
       result.list = (result.list as RegistrationRecord[]).map((r) => ({
         ...r,
+        phone: maskPhone(r.phone),
         userNickName: '',
         userAvatar: '',
         displayName: '未知用户',
@@ -1586,7 +2040,8 @@ export async function exportActivityRegistrations(
   const { activityId } = event
   if (!activityId) { throw err('INVALID_PARAMS', '缺少活动ID') }
 
-  await checkPartnerPermission(openid, 'activity')
+  const admin = await checkPartnerPermission(openid, 'activity')
+  const isSuperAdmin = (admin.roles || []).includes('super_admin')
 
   const activityRes = await db.collection('activities').doc(activityId).get()
   const activity = activityRes.data as ActivityRecord | null
@@ -1594,19 +2049,25 @@ export async function exportActivityRegistrations(
     throw err('NOT_FOUND', '活动不存在')
   }
 
-  const registrationsRes = await db.collection('activity_registrations')
-    .where({ activityId })
-    .orderBy('createdAt', 'desc')
-    .get()
+  // H5 修复：非超级管理员强制校验活动归属，防止横向越权导出全平台报名数据
+  if (!isSuperAdmin && activity.createdBy !== openid) {
+    throw err('PERMISSION_DENIED', '无权导出该活动的报名信息')
+  }
 
-  let registrations: (RegistrationRecord & { userNickName?: string })[] = (registrationsRes.data || []) as RegistrationRecord[]
+  // M3 修复：循环分页拉取全量报名，规避单次 get 上限静默截断（大活动导出不全）
+  let registrations: (RegistrationRecord & { userNickName?: string })[] =
+    await fetchAllPaged<RegistrationRecord>('activity_registrations', { activityId }, 'createdAt')
 
   if (registrations.length > 0) {
-    const openids = registrations.map((r) => r.ownerId).filter((id): id is string => Boolean(id))
+    const openids = [...new Set(registrations.map((r) => r.ownerId).filter((id): id is string => Boolean(id)))]
     if (openids.length > 0) {
-      const usersRes = await db.collection('users').where({ _id: _.in(openids) }).get()
+      // M3 修复：_.in 大数组分批查询（每批 100），规避服务端 in 数组上限
       const userMap: Record<string, UserRecord> = {}
-      ;((usersRes.data || []) as UserRecord[]).forEach((u) => { if (u._id) { userMap[u._id] = u } })
+      for (let i = 0; i < openids.length; i += 100) {
+        const idBatch = openids.slice(i, i + 100)
+        const usersRes = await db.collection('users').where({ _id: _.in(idBatch) }).field({ nickName: true }).get()
+        ;((usersRes.data || []) as UserRecord[]).forEach((u) => { if (u._id) { userMap[u._id] = u } })
+      }
 
       registrations = registrations.map((r) => ({
         ...r,
@@ -1627,8 +2088,9 @@ export async function exportActivityRegistrations(
     '',
   ])
 
+  // M3 修复：sanitizeCsvCell 防公式注入（= + - @ 开头的用户可控内容）
   const csvContent = [headers.join(','), ...rows.map((row) => row.map((cell) => {
-    const str = String(cell).replace(/"/g, '""')
+    const str = sanitizeCsvCell(cell).replace(/"/g, '""')
     return `"${str}"`
   }).join(','))].join('\n')
 
@@ -1652,13 +2114,16 @@ export async function getActivityOrders(
   const { openid } = auth
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
-  await checkPartnerPermission(openid, 'activity')
+  const admin = await checkPartnerPermission(openid, 'activity')
+  const isSuperAdmin = (admin.roles || []).includes('super_admin')
 
   const { status, page = 1, pageSize = 20 } = event
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 100)
 
   const where: Record<string, unknown> = { orderType: 'activity' }
   if (status) { where.status = status }
+  // H5 修复：非超级管理员仅能查看自己创建的活动订单，防止全平台订单泄露
+  if (!isSuperAdmin) { where.organizerId = openid }
 
   const result = await paginate(db, 'orders', {
     page, pageSize: safePageSize,
@@ -1671,6 +2136,7 @@ export async function getActivityOrders(
     ...order,
     buyerNickName: order.ownerInfo?.nickName || '',
     productName: order.activityTitle || '',
+    ownerInfo: order.ownerInfo ? { ...order.ownerInfo, phone: maskPhone(order.ownerInfo.phone) } : order.ownerInfo,
   }))
 
   return handleSuccess({ ...result, list: enrichedList }, '获取成功')
@@ -1700,22 +2166,32 @@ export const handlers: Record<string, ActivityActionHandler> = {
 // Main 入口（云函数调用）
 // =====================================================================
 
+// P3-010: 写操作和登录校验 action 列表提升为模块级常量，避免每次调用重新创建数组
+const WRITE_ACTIONS = ['createActivity', 'updateActivity', 'deleteActivity', 'submitRegistration', 'createActivityPaymentOrder', 'confirmActivityPayment'] as const
+const LOGIN_REQUIRED_ACTIONS = [...WRITE_ACTIONS, 'getActivityDetail', 'getRegistrationDetail', 'getRegistrationList', 'getActivityRegistrations', 'exportActivityRegistrations', 'getActivityOrders'] as const
+
 export async function main(
   event: CloudEvent,
   context: CloudContext
 ): Promise<unknown> {
+  // M4 修复：定时触发器入口（config.json triggers: activityStatusTrigger）
+  // 仅接受平台 Timer 事件，不暴露为外部可调 action
+  if ((event as { Type?: string }).Type === 'Timer') {
+    logger.info('timer.autoUpdateActivityStatus', { trigger: (event as { TriggerName?: string }).TriggerName || 'timer' })
+    await autoUpdateActivityStatus()
+    return handleSuccess(null, '活动状态定时更新完成')
+  }
+
   const { action } = event
   if (!action || !handlers[action]) {
     throw err('INVALID_PARAMS', '无效的操作类型')
   }
 
-  const WRITE_ACTIONS = ['createActivity', 'updateActivity', 'deleteActivity', 'submitRegistration', 'createActivityPaymentOrder', 'confirmActivityPayment']
-  const LOGIN_REQUIRED_ACTIONS = [...WRITE_ACTIONS, 'getActivityDetail', 'getRegistrationDetail', 'getRegistrationList', 'getActivityRegistrations', 'exportActivityRegistrations', 'getActivityOrders']
-  const requireLogin = LOGIN_REQUIRED_ACTIONS.includes(action)
+  const requireLogin = LOGIN_REQUIRED_ACTIONS.includes(action as typeof LOGIN_REQUIRED_ACTIONS[number])
 
   try {
     const auth = await verifyAuth(event, { requireLogin })
-    logger.info(action, { openid: auth.openid })
+    logger.info(action, { openid: maskOpenid(auth.openid) })
     return await handlers[action](event, context, auth)
   } catch (error) {
     logger.error(action, error)

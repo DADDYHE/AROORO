@@ -12,6 +12,10 @@
  *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.partnerService.json
+ *
+ * 数据库索引建议（运维需在对应集合上创建）：
+ *   admin_applications: { openid: 1, status: 1, createdAt: -1 } - 覆盖 pending 申请查询
+ *   admins: { _id: 1, status: 1 }                                - 覆盖合作伙伴权限查询
  */
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -68,6 +72,8 @@ export interface AuthLike {
   isPartner?: boolean
   roles?: string[]
   permissions?: string[]
+  // M6: 显式声明 nickName 字段（硬约束 #40）
+  nickName?: string
   [k: string]: unknown
 }
 
@@ -88,6 +94,29 @@ export type ApplicationHandler = (
 ) => Promise<unknown>
 
 // =====================================================================
+// 校验常量
+// =====================================================================
+
+// 大陆手机号格式（11 位，1 开头，第二位 3-9）
+const PHONE_REGEX = /^1[3-9]\d{9}$/
+const MAX_REALNAME_LEN = 30
+const MAX_REASON_LEN = 500
+const MAX_PERMISSIONS_COUNT = 20
+
+// H2: 敏感权限禁用清单——合作伙伴申请不得包含平台级管理权限
+//   防止用户申请 super_admin/admin/operator 等敏感角色权限，审批人疏忽批准导致权限越权
+//   业务级合作伙伴权限（如 'partner'、'order:list' 等）由 adminService 审批时分配
+const FORBIDDEN_PERMISSIONS = Object.freeze([
+  'super_admin',
+  'admin',
+  'operator',
+  'viewer',
+  'all',          // 通配权限，仅 super_admin 隐含
+  'finance',
+  'finance_admin',
+])
+
+// =====================================================================
 // Handler 实现
 // =====================================================================
 
@@ -99,41 +128,88 @@ export async function submitApplication(
   const { openid } = auth
   const { realName, phone, reason, permissions } = event as SubmitApplicationEvent
 
-  if (!realName || !phone || !reason) {
-    throw err('INVALID_PARAMS', '请填写完整信息')
+  // M9: 参数校验——非空 + 长度 + 格式 + 类型
+  if (!realName || typeof realName !== 'string' || !realName.trim()) {
+    throw err('INVALID_PARAMS', '请填写真实姓名')
+  }
+  if (realName.length > MAX_REALNAME_LEN) {
+    throw err('INVALID_PARAMS', `姓名长度不能超过 ${MAX_REALNAME_LEN} 字`)
+  }
+  if (!phone || typeof phone !== 'string' || !PHONE_REGEX.test(phone)) {
+    throw err('INVALID_PARAMS', '请填写有效的手机号')
+  }
+  if (!reason || typeof reason !== 'string' || !reason.trim()) {
+    throw err('INVALID_PARAMS', '请填写申请理由')
+  }
+  if (reason.length > MAX_REASON_LEN) {
+    throw err('INVALID_PARAMS', `申请理由长度不能超过 ${MAX_REASON_LEN} 字`)
+  }
+  // permissions 数组元素必须为非空字符串，且数量受限
+  let safePermissions: string[] = []
+  if (permissions !== undefined) {
+    if (!Array.isArray(permissions)) {
+      throw err('INVALID_PARAMS', 'permissions 必须为数组')
+    }
+    if (permissions.length > MAX_PERMISSIONS_COUNT) {
+      throw err('INVALID_PARAMS', `权限项不能超过 ${MAX_PERMISSIONS_COUNT} 个`)
+    }
+    safePermissions = permissions.filter(
+      (p): p is string => typeof p === 'string' && p.trim().length > 0
+    )
+    // H2: 拦截敏感权限申请——防止用户申请 super_admin/admin 等平台级管理权限
+    //   审批人若疏忽批准即授予高危权限，故在申请阶段直接拒绝
+    const forbidden = safePermissions.filter(p => FORBIDDEN_PERMISSIONS.includes(p.trim()))
+    if (forbidden.length > 0) {
+      throw err('INVALID_PARAMS', `不允许申请以下权限：${forbidden.join(', ')}`)
+    }
   }
 
-  const existingRes = await db.collection('admin_applications')
-    .where({ openid, status: 'pending' }).limit(1).get()
-  if (existingRes.data && existingRes.data.length > 0) {
-    throw err('BUSINESS_ERROR', '您已有待审核申请')
-  }
-
-  let admin: Partial<AdminRecord> = {}
   try {
-    const adminRes = await db.collection('admins').doc(openid).get()
-    admin = adminRes.data || {}
-  } catch (e) {
-    admin = {}
-  }
+    const existingRes = await db.collection('admin_applications')
+      .where({ openid, status: 'pending' }).limit(1).get()
+    if (existingRes.data && existingRes.data.length > 0) {
+      throw err('BUSINESS_ERROR', '您已有待审核申请')
+    }
 
-  const application: ApplicationRecord = {
-    _id: generateId('application', openid),
-    openid: openid || '',
-    nickName: admin.nickName || '',
-    avatarUrl: admin.avatarUrl || '',
-    realName,
-    phone,
-    role: 'partner',
-    permissions: Array.isArray(permissions) ? permissions : [],
-    reason,
-    status: 'pending',
-    createdAt: db.serverDate(),
-    updatedAt: db.serverDate(),
-  }
+    let admin: Partial<AdminRecord> = {}
+    try {
+      const adminRes = await db.collection('admins').doc(openid!).get()
+      admin = adminRes.data || {}
+    } catch (e) {
+      // L4: admins 集合未初始化或查询异常时降级为空对象（首次申请场景）
+      logger.warn('submitApplication.admins.fetch', {
+        openid, msg: (e as Error).message,
+      })
+      admin = {}
+    }
 
-  const res = await db.collection('admin_applications').add({ data: application })
-  return handleSuccess({ id: res._id }, '提交成功')
+    // M3: 拦截已是 active 合作伙伴的用户重复提交申请
+    //   原：仅检查 pending 申请，未检查已是 active 合作伙伴，可重复提交无效申请
+    if (admin && admin.status === 'active' && admin.isPartner) {
+      throw err('BUSINESS_ERROR', '您已是合作伙伴，无需重复申请')
+    }
+
+    const application: ApplicationRecord = {
+      _id: generateId('application', openid!),
+      openid: openid || '',
+      nickName: admin.nickName || '',
+      avatarUrl: admin.avatarUrl || '',
+      realName: realName.trim(),
+      phone,
+      role: 'partner',
+      permissions: safePermissions,
+      reason: reason.trim(),
+      status: 'pending',
+      createdAt: db.serverDate(),
+      updatedAt: db.serverDate(),
+    }
+
+    const res = await db.collection('admin_applications').add({ data: application })
+    return handleSuccess({ id: res._id }, '提交成功')
+  } catch (error) {
+    logger.error('submitApplication', error)
+    return handleError(error, '提交申请失败', ERROR_CODES.DATA)
+  }
 }
 
 export async function getApplicationStatus(
@@ -142,13 +218,31 @@ export async function getApplicationStatus(
   auth: AuthLike
 ): Promise<unknown> {
   const { openid } = auth
-  const res = await db.collection('admin_applications')
-    .where({ openid, status: 'pending' }).limit(1).get()
-  const hasPending = res.data && res.data.length > 0
-  return handleSuccess({
-    hasPending,
-    application: hasPending ? res.data[0] : null,
-  })
+  try {
+    // H3: 字段投影——仅返回前端展示所需字段，避免 PII 泄露
+    //   原：直接返回 res.data[0]，含 phone/realName/permissions 等敏感字段
+    //   新：仅返回 _id/status/createdAt/rejectedReason/reason 等展示字段
+    const res = await db.collection('admin_applications')
+      .where({ openid, status: 'pending' })
+      .field({
+        _id: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        reason: true,
+        rejectedReason: true,
+      })
+      .limit(1)
+      .get()
+    const hasPending = res.data && res.data.length > 0
+    return handleSuccess({
+      hasPending,
+      application: hasPending ? res.data[0] : null,
+    })
+  } catch (error) {
+    logger.error('getApplicationStatus', error)
+    return handleError(error, '获取申请状态失败', ERROR_CODES.DATA)
+  }
 }
 
 export async function getMyPermissions(
@@ -162,6 +256,10 @@ export async function getMyPermissions(
     const adminRes = await db.collection('admins').doc(openid).get()
     admin = adminRes.data
   } catch (e) {
+    // L4: 静默吞错改为告警，便于排查权限查询异常
+    logger.warn('getMyPermissions.admins.fetch', {
+      openid, msg: (e as Error).message,
+    })
     admin = null
   }
 
@@ -190,8 +288,3 @@ export default {
   getApplicationStatus,
   getMyPermissions,
 }
-
-// 避免 unused 警告
-void logger
-void handleError
-void ERROR_CODES

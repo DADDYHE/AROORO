@@ -4,18 +4,28 @@
  * couponExpiryCheck/index.ts - 优惠券过期检查（TypeScript 源文件 - Sprint 46 迁移）
  *
  * 业务功能（cron 触发）：
- *   - 扫描 user_coupons 集合中 status='unused' 且 endTime<now 的记录
- *   - 标记 status='expired'
+ *   - 阶段 1: 扫描 user_coupons 中 status='unused' 且 endTime<now 的记录
+ *             循环分批标记 status='expired'（每批 100 条，最多 20 轮 = 2000 条/次）
+ *   - 阶段 2: 扫描 status='locked' 且 endTime<now-7天 的卡死券
+ *             标记为 expired，清理 orderId 等关联字段，发 warn 告警让运营核查
+ *   - cron 失败时主动告警，避免长期静默故障
  *
  * 迁移目标：
  *   - 强类型化 main 函数签名与 UserCouponDoc 接口
  *   - 与 orderTimeoutService / tuanExpiryCheck 模式一致
  *
+ * 历史修复：
+ *   - H1: 修复 where().update() 单次 100 条静默截断问题（循环分批）
+ *   - M1: 扫描 locked 卡死券（endTime < now - 7天），清理关联字段并告警
+ *   - M3: 接入 recordAlert，cron 失败主动告警
+ *   - L2: 进程内并发保护（_isRunning 标志）
+ *   - L3/L4: 日志打印 ISO 时间戳，区分 updated=0 场景
+ *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.couponExpiryCheck.json
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.NEW_STATUS = exports.TARGET_STATUS = exports.COLLECTION = void 0;
+exports.main = exports.STUCK_LOCKED_LIMIT = exports.STUCK_LOCKED_DAYS = exports.STUCK_LOCKED_STATUS = exports.MAX_ROUNDS = exports.BATCH_LIMIT = exports.NEW_STATUS = exports.TARGET_STATUS = exports.COLLECTION = void 0;
 // =====================================================================
 // 内部模块初始化
 // =====================================================================
@@ -25,9 +35,12 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createLogger } = require('./common/logger');
+const { createLogger } = require('../common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError } = require('./common/utils');
+const { handleSuccess, handleError } = require('../common/utils');
+// M3: 接入告警模块（cron 失败时主动通知，避免长期静默故障）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('../common/alert');
 const logger = createLogger('couponExpiryCheck');
 // =====================================================================
 // 常量
@@ -35,38 +48,189 @@ const logger = createLogger('couponExpiryCheck');
 exports.COLLECTION = 'user_coupons';
 exports.TARGET_STATUS = 'unused';
 exports.NEW_STATUS = 'expired';
+// H1: CloudBase where().update() 单次最多影响 100 条记录
+//   - 超过部分会被静默丢弃（不报错），导致大批过期券未被标记
+//   - 用循环分批 update 直到 updated < BATCH_SIZE 表示已处理完
+//   - MAX_ROUNDS 上限防止异常情况下无限循环（20 轮 × 100 条 = 2000 条，覆盖单日过期量）
+exports.BATCH_LIMIT = 100;
+exports.MAX_ROUNDS = 20;
+// M1: locked 状态卡死券处理
+//   - locked 券关联未完成订单，正常流程由 unlockCoupon 在订单取消时释放
+//   - 若订单长期卡死（用户关闭小程序未触发取消），券会永久停留在 locked 状态
+//   - 方案：扫描 locked + endTime < now - STUCK_LOCKED_DAYS 的券，标记为 expired
+//   - 7 天缓冲期避免误处理进行中订单（寄养最长 30 天，但券过期 7 天后基本可判定订单卡死）
+//   - 同时清理 orderId/orderType/business 字段，避免下次 lock 时显示错误关联
+//   - 发 warn 告警让运营人工核查是否有误处理
+exports.STUCK_LOCKED_STATUS = 'locked';
+exports.STUCK_LOCKED_DAYS = 7;
+exports.STUCK_LOCKED_LIMIT = 100; // 单次最多处理 100 张卡死券，避免影响 cron 性能
 // =====================================================================
 // Main 入口
 // =====================================================================
+// L2: 简单的进程内并发保护，防止 cron 重叠执行（虽 24h 间隔基本不会重叠，但加保险）
+//   - 云函数多实例并发时，每个实例有独立的 module 作用域，此标志仅保护单实例内并发
+//   - 跨实例并发由 CloudBase cron 调度保证（默认不重叠）
+let _isRunning = false;
 /**
  * 优惠券过期检查主入口（cron 触发）。
  *
  * 流程：
  *   1. 扫描 user_coupons 中 status='unused' 且 endTime<now 的记录
- *   2. 批量更新为 status='expired'
- *   3. 返回 updatedCount
+ *      → 循环分批更新为 status='expired'（每批最多 100 条，CloudBase 单次 update 上限）
+ *   2. M1: 扫描 status='locked' 且 endTime<now-7天 的卡死券
+ *      → 标记为 expired，清理 orderId 等关联字段，发 warn 告警让运营核查
+ *   3. 返回 updatedCount（累计所有批次）
+ *
+ * H1: 修复 where().update() 单次 100 条静默截断问题
+ *   - 旧实现：单次 update，超过 100 条的部分被丢弃且无错误
+ *   - 新实现：循环 update 直到 updated < BATCH_SIZE 或达到 MAX_ROUNDS 上限
+ *   - 幂等性：update 操作天然幂等，重复执行只更新状态相同的记录
+ *
+ * L3: 在日志中打印 ISO 时间戳，便于跨时区排查
+ * L4: 区分 updated=0（无过期券）和 updated>0（处理完成）的日志
  */
 async function main(event, _context) {
-    logger.info('start', { trigger: event.TriggerName || 'manual' });
+    // L2: 并发保护——若上次执行未完成，直接跳过本次
+    if (_isRunning) {
+        logger.warn('skip: previous run still in progress');
+        return handleSuccess({ updatedCount: 0, skipped: true }, '上次执行未完成，已跳过');
+    }
+    _isRunning = true;
+    // L3: 打印 ISO 时间戳，便于排查时区问题（CloudBase 云函数运行在 UTC）
+    logger.info('start', {
+        trigger: event.TriggerName || 'manual',
+        now: new Date().toISOString(),
+    });
     const now = new Date();
+    let totalUpdated = 0;
+    let rounds = 0;
+    let stuckLockedUpdated = 0;
     try {
-        const res = await db.collection(exports.COLLECTION)
+        // ===== 阶段 1：处理 unused 过期券（H1 循环分批） =====
+        for (let round = 0; round < exports.MAX_ROUNDS; round++) {
+            const res = await db.collection(exports.COLLECTION)
+                .where({
+                status: exports.TARGET_STATUS,
+                endTime: _.lt(now),
+            })
+                .update({
+                data: {
+                    status: exports.NEW_STATUS,
+                    updatedAt: db.serverDate(),
+                },
+            });
+            const updated = res.stats.updated;
+            totalUpdated += updated;
+            rounds = round + 1;
+            // 不足 BATCH_LIMIT 说明已处理完，退出循环
+            if (updated < exports.BATCH_LIMIT) {
+                break;
+            }
+        }
+        // ===== 阶段 2：M1 处理 locked 卡死券（endTime < now - 7天） =====
+        //   - 这些券关联的订单大概率已卡死（用户关闭小程序未触发取消）
+        //   - 7 天缓冲期避免误处理进行中订单
+        //   - 单次最多处理 STUCK_LOCKED_LIMIT 张，避免影响 cron 性能
+        //   - CloudBase where().update() 不支持 limit()，故先 get() 再逐条 update
+        const stuckThreshold = new Date(now.getTime() - exports.STUCK_LOCKED_DAYS * 24 * 60 * 60 * 1000);
+        const stuckQueryRes = await db.collection(exports.COLLECTION)
             .where({
-            status: exports.TARGET_STATUS,
-            endTime: _.lt(now),
+            status: exports.STUCK_LOCKED_STATUS,
+            endTime: _.lt(stuckThreshold),
         })
-            .update({
-            data: {
-                status: exports.NEW_STATUS,
-                updatedAt: db.serverDate(),
-            },
-        });
-        logger.info('done', { updated: res.stats.updated });
-        return handleSuccess({ updatedCount: res.stats.updated }, '过期检查完成');
+            .limit(exports.STUCK_LOCKED_LIMIT)
+            .get();
+        const stuckCoupons = stuckQueryRes.data || [];
+        for (const coupon of stuckCoupons) {
+            if (!coupon._id) {
+                continue;
+            }
+            try {
+                await db.collection(exports.COLLECTION).doc(coupon._id).update({
+                    data: {
+                        status: exports.NEW_STATUS,
+                        // M1: 清理 lockCoupon 时写入的关联字段，避免下次 lock 显示错误订单
+                        //   与 unlockCoupon 的清理逻辑保持一致（couponService/index.ts unlockCoupon）
+                        orderId: '',
+                        orderType: '',
+                        business: '',
+                        updatedAt: db.serverDate(),
+                    },
+                });
+                stuckLockedUpdated++;
+            }
+            catch (e) {
+                // 单条失败不影响整体，记录警告继续处理下一张
+                logger.warn('stuck coupon update failed', {
+                    couponId: coupon._id,
+                    msg: e?.message,
+                });
+            }
+        }
+        // L4: 区分无过期券和正常处理完成的日志
+        if (totalUpdated === 0 && stuckLockedUpdated === 0) {
+            logger.info('no expired coupons', { rounds, now: now.toISOString() });
+        }
+        else {
+            logger.info('done', {
+                updated: totalUpdated,
+                stuckLocked: stuckLockedUpdated,
+                rounds,
+            });
+        }
+        // H1: 若达到 MAX_ROUNDS 仍有剩余记录未处理，记录警告便于排查
+        if (rounds === exports.MAX_ROUNDS && totalUpdated === exports.MAX_ROUNDS * exports.BATCH_LIMIT) {
+            logger.warn('max rounds reached, may have remaining expired coupons', {
+                maxRounds: exports.MAX_ROUNDS,
+                batchLimit: exports.BATCH_LIMIT,
+                totalUpdated,
+            });
+            // M3: 达到上限也是异常情况，主动告警
+            try {
+                await recordAlert('warn', 'coupon.expiry.max.rounds', '优惠券过期检查达到最大轮次，可能存在未处理的过期券', { totalUpdated, maxRounds: exports.MAX_ROUNDS, batchLimit: exports.BATCH_LIMIT });
+            }
+            catch (_) { /* best-effort */ }
+        }
+        // M1: 卡死券处理告警——让运营人工核查是否有误处理
+        if (stuckLockedUpdated > 0) {
+            logger.warn('stuck locked coupons expired', {
+                count: stuckLockedUpdated,
+                threshold: `${exports.STUCK_LOCKED_DAYS} days before ${now.toISOString()}`,
+            });
+            try {
+                await recordAlert('warn', 'coupon.expiry.stuck.locked', `检测到 ${stuckLockedUpdated} 张卡死券已被标记为过期（locked 状态超过 ${exports.STUCK_LOCKED_DAYS} 天）`, {
+                    count: stuckLockedUpdated,
+                    stuckThreshold: stuckThreshold.toISOString(),
+                    note: '请人工核查是否有进行中订单的券被误处理',
+                });
+            }
+            catch (_) { /* best-effort */ }
+        }
+        return handleSuccess({
+            updatedCount: totalUpdated,
+            stuckLockedCount: stuckLockedUpdated,
+        }, '过期检查完成');
     }
     catch (error) {
         logger.error('main', error);
+        // M3: cron 失败主动告警，避免长期静默故障
+        //   场景：db 集合被误删、索引冲突、权限丢失、CloudBase 服务异常
+        //   若不告警，需人工查询日志才能发现，过期券会持续堆积
+        try {
+            await recordAlert('critical', 'coupon.expiry.check.failed', '优惠券过期检查失败', {
+                msg: error?.message,
+                rounds,
+                totalUpdated,
+                stuckLockedUpdated,
+                now: now.toISOString(),
+            });
+        }
+        catch (_) { /* best-effort */ }
         return handleError(error, '过期检查失败');
+    }
+    finally {
+        // L2: 释放并发标志
+        _isRunning = false;
     }
 }
 exports.main = main;
@@ -79,6 +243,11 @@ _mod.exports = {
     COLLECTION: exports.COLLECTION,
     TARGET_STATUS: exports.TARGET_STATUS,
     NEW_STATUS: exports.NEW_STATUS,
+    BATCH_LIMIT: exports.BATCH_LIMIT,
+    MAX_ROUNDS: exports.MAX_ROUNDS,
+    STUCK_LOCKED_STATUS: exports.STUCK_LOCKED_STATUS,
+    STUCK_LOCKED_DAYS: exports.STUCK_LOCKED_DAYS,
+    STUCK_LOCKED_LIMIT: exports.STUCK_LOCKED_LIMIT,
 };
 _mod.exports.default = _mod.exports;
 exports.default = {
@@ -86,4 +255,9 @@ exports.default = {
     COLLECTION: exports.COLLECTION,
     TARGET_STATUS: exports.TARGET_STATUS,
     NEW_STATUS: exports.NEW_STATUS,
+    BATCH_LIMIT: exports.BATCH_LIMIT,
+    MAX_ROUNDS: exports.MAX_ROUNDS,
+    STUCK_LOCKED_STATUS: exports.STUCK_LOCKED_STATUS,
+    STUCK_LOCKED_DAYS: exports.STUCK_LOCKED_DAYS,
+    STUCK_LOCKED_LIMIT: exports.STUCK_LOCKED_LIMIT,
 };

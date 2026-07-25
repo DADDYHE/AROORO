@@ -39,6 +39,32 @@ export interface BootstrapOptions {
     };
     /** db.command（可选；不传则尝试 db.command） */
     command?: any;
+    /**
+     * H1（paymentService 审查）: strict 模式——注入失败时抛错而非降级
+     *
+     * 业务背景：
+     *   - 资金类云函数（paymentService）必须保证限流可用，否则资金接口裸奔
+     *   - 项目硬约束：paymentService 必须开启 strict: true
+     *
+     * 行为：
+     *   - strict=true 且 countStoreInjected=false 或 configStoreInjected=false
+     *     → 抛 BootstrapError，阻断云函数 main 入口
+     *   - strict=false（默认）→ 降级到内存模式，仅 logger.warn
+     */
+    strict?: boolean;
+    /** strict 模式抛出的错误标识，用于 recordAlert */
+    service?: string;
+}
+/**
+ * H1: strict 模式注入失败错误类型
+ *
+ * 用于 paymentService 等资金类云函数——失败时上抛而非降级
+ * 调用方应在 main 入口 try/catch 中识别此错误并 recordAlert
+ */
+export declare class BootstrapError extends Error {
+    readonly code = "RATE_LIMIT_BOOTSTRAP_FAILED";
+    readonly bootstrapResult: BootstrapResult;
+    constructor(message: string, result: BootstrapResult);
 }
 export interface BootstrapResult {
     /** 计数 store 是否注入成功 */

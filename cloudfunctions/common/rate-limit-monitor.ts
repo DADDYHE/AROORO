@@ -383,11 +383,11 @@ export async function withRateLimitMonitored<T>(
     const result: T = await mod.withRateLimit(input, fn, config)
     recordRateLimitConsume({ type: input.type, scope, allowed: true })
     return result
-  } catch (e: any) {
-    if (e && e.code === 'RATE_LIMITED') {
+  } catch (e: unknown) {
+    if (e && (e as { code?: string }).code === 'RATE_LIMITED') {
       allowed = false
       recordRateLimitConsume({ type: input.type, scope, allowed: false })
-      recordRateLimitHit({ type: input.type, scope, reason: e.message })
+      recordRateLimitHit({ type: input.type, scope, reason: (e as Error).message })
       throw e
     }
     throw e

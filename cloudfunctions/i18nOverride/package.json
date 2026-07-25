@@ -5,5 +5,9 @@
   "main": "index.js",
   "dependencies": {
     "wx-server-sdk": "~2.7.0"
+  },
+  "devDependencies": {
+    "typescript": "5.4.5",
+    "@cloudbase/node-sdk": "^4.0.0"
   }
 }

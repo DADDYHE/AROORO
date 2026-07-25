@@ -53,6 +53,24 @@ const ADMIN_DOCS = {
     isPartner: true,
     status: 'active',
   },
+  // H1 修复后：权限判定以 DB 实时状态为准，测试 token 的 adminId 必须有对应 active 记录
+  s1: {
+    _id: 's1',
+    openid: 'oSuper',
+    username: 'super1',
+    roles: ['super_admin'],
+    permissions: ['all'],
+    isPartner: true,
+    status: 'active',
+  },
+  p1: {
+    _id: 'p1',
+    openid: 'oPartner',
+    username: 'partner1',
+    roles: ['partner'],
+    isPartner: true,
+    status: 'active',
+  },
 }
 jest.mock('@cloudbase/node-sdk', () => ({
   init: () => ({
@@ -307,10 +325,22 @@ describe('adminService P1 鉴权修复：enrich auth.roles / auth.permissions', 
     expect(lastCall.auth_roles).toEqual(['super_admin'])
   })
 
-  test('HTTP 路径：adminId 不存在的 token → enrich 失败但请求仍继续（向后兼容）', async () => {
+  test('HTTP 路径：adminId 不存在的 token → enrich 失败必须拒绝（H1 修复：DB 为权威）', async () => {
     const orphanToken = generateToken({ openid: '', adminId: 'deleted_admin', isSuperAdmin: true, isPartner: true })
     const res = await adminService.main(buildHttpEvent('getProductList', orphanToken), {})
-    // enrich 失败（adminId 找不到），但 partner action 仍可调（因为 isPartner=true 已在 token 里）
-    expect(res.statusCode).toBe(200)
+    // H1 修复：admins 记录不存在/被删除 → enrich 失败 → 即使 token 声明 isPartner=true 也拒绝
+    expect(res.statusCode).toBe(403)
+    expect(handlerCalls).toHaveLength(0)
+  })
+
+  test('HTTP 路径：账号已停用（status!=active）→ 即使 token 有效也拒绝（H1 修复）', async () => {
+    ADMIN_DOCS.disabled_admin = {
+      _id: 'disabled_admin', openid: 'oDisabled', roles: ['super_admin'], isPartner: true, status: 'disabled',
+    }
+    const token = generateToken({ openid: 'oDisabled', adminId: 'disabled_admin', isSuperAdmin: true, isPartner: true })
+    const res = await adminService.main(buildHttpEvent('getUserList', token), {})
+    expect(res.statusCode).toBe(403)
+    expect(handlerCalls).toHaveLength(0)
+    delete ADMIN_DOCS.disabled_admin
   })
 })

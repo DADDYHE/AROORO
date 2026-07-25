@@ -14,8 +14,8 @@
  *   4. updateFeederProfile - 更新喂养师档案
  *   5. createFeedingOrder - 创建喂养订单
  *   6. getFeedingOrders - 我的喂养订单
- *   7. updateFeedingOrderStatus - 更新订单状态
- *   8. getOrderStatus - 获取订单状态
+ *   7. getOrderStatus - 获取订单状态
+ *   8. updateFeedingOrderStatus - 更新订单状态
  *   9. getFeederOrders - 喂养师视角订单列表
  *  10. getFeedingOrderDetail - 喂养师视角订单详情
  *  11. handleFeedingOrder - 喂养师接单/完成操作
@@ -246,10 +246,33 @@ const { verifyAuth } = require('./common/auth-middleware')
 const { filterFields, FIELD_WHITELISTS } = require('./common/validator')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, toResponse, isBusinessError } = require('./common/errors')
+// H1+H3+M1: 改用公共 commission-utils 模块（含自购防护 P0-8、整数分计算、cancelCommissionRecord 配套）
+//   旧实现存在 3 个问题：
+//   - H1: 调用处传入 { ...order, totalAmount: order.totalPrice }，totalPrice 为 undefined 覆盖了 totalAmount，佣金永远不触发
+//   - H3: 缺少自购订单防护（inviterId === ownerId）
+//   - M1: 重复实现，维护成本高
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { createCommissionRecord } = require('./common/commission-utils')
+// M4: 接入告警模块（关键失败主动通知）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('./common/alert')
+// M3: 接入限流（防短时高频下单刷接口）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { withRateLimit } = require('./common/risk-rate-limit')
+// Sprint 50: 限流统一 bootstrap
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap')
 
 const { cloud, db } = initCloud()
 const logger = createLogger('feedingService')
 const _ = db.command
+
+// Sprint 50: 注入全局限流存储（rate_limits + rate_limit_configs 一次注入）
+try {
+  bootstrapRateLimit(db, { logger })
+} catch (e) {
+  logger.warn('bootstrapRateLimit failed, fallback to memory:', e && (e as Error).message)
+}
 
 // =====================================================================
 // 字段投影常量
@@ -272,89 +295,6 @@ const FEEDING_ORDER_FIELDS: Record<string, boolean> = {
   multiVisit: true, multiVisitText: true, multiVisitDates: true,
   totalAmount: true, originalAmount: true, couponId: true, couponDiscount: true,
   status: true, paymentStatus: true, createdAt: true, updatedAt: true,
-}
-
-// =====================================================================
-// 辅助函数：佣金记录
-// =====================================================================
-
-async function createCommissionRecord(orderType: string, order: FeedingOrderRecord): Promise<void> {
-  try {
-    if (!order.ownerId) { return }
-    // users._id = openid，直接 doc 查询
-    let user: UserRecord | null = null
-    try {
-      const userRes = await db.collection('users').doc(order.ownerId).field({ _id: true, inviterId: true }).get()
-      user = userRes.data
-    } catch (e) {
-      logger.warn('commission.users.fetch', { ownerId: order.ownerId, msg: (e as Error).message })
-      return
-    }
-    if (!user || !user.inviterId) { return }
-
-    // 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
-    let rate = 0
-    try {
-      const adminRes = await db.collection('admins').doc(user.inviterId).get()
-      const admin = adminRes.data
-      if (admin && admin.commissionRates && admin.commissionRates[orderType] !== undefined) {
-        rate = Number(admin.commissionRates[orderType])
-      }
-    } catch (e) {
-      logger.warn('commission.admins.fetch', { inviterId: user.inviterId, msg: (e as Error).message })
-    }
-    if (rate <= 0) {
-      try {
-        const configRes = await db.collection('system_config').doc('commission_rates').get()
-        const config = configRes.data || {}
-        rate = config[orderType] !== undefined ? Number(config[orderType]) : 0
-      } catch (e) {
-        logger.warn('commission.tuan_config', { msg: (e as Error).message })
-        return
-      }
-    }
-    if (!rate || rate <= 0) { return }
-
-    const orderAmount = Number(order.totalAmount || order.totalPrice || order.basicPrice || 0)
-    if (orderAmount <= 0) { return }
-    const commissionAmount = Math.round(orderAmount * rate / 100 * 100) / 100
-
-    // inviterId 就是 openid，直接 doc 查询
-    let inviter: UserRecord | null = null
-    try {
-      const inviterRes = await db.collection('users').doc(user.inviterId).field({ _id: true, nickName: true }).get()
-      inviter = inviterRes.data
-    } catch (e) {
-      logger.warn('commission.inviter.fetch', { inviterId: user.inviterId, msg: (e as Error).message })
-      return
-    }
-    if (!inviter) { return }
-
-    const existRes = await db.collection('tuan_commissions').where({ orderNo: order.orderNo || order._id, inviterId: user.inviterId }).count()
-    if (existRes.total > 0) { return }
-
-    const commissionId = generateId('commission', order.ownerId)
-    await db.collection('tuan_commissions').add({
-      data: {
-        _id: commissionId,
-        inviterId: user.inviterId,
-        inviterNickName: inviter.nickName || '',
-        ownerId: user._id || order.ownerId,
-        orderType,
-        orderId: order._id,
-        orderNo: order.orderNo || order._id,
-        orderAmount,
-        commissionRate: rate,
-        commissionAmount,
-        status: 'pending',
-        createdAt: db.serverDate(),
-        updatedAt: db.serverDate(),
-      },
-    })
-    logger.info('commission_created', { orderType, orderNo: order.orderNo || order._id, amount: orderAmount, rate, commission: commissionAmount })
-  } catch (e) {
-    logger.error('commission_error', e)
-  }
 }
 
 // =====================================================================
@@ -606,6 +546,56 @@ export async function createFeedingOrder(
 
   if (!petIds || petIds.length === 0) { throw err('INVALID_PARAMS', '请选择宠物') }
 
+  // L3: 基础参数校验
+  //   - couponDiscount 必须为非负数（防止负数折扣导致 finalAmount 异常）
+  //   - multiVisit 必须为非负整数
+  //   - startDate/endDate 若提供必须为合法日期字符串（YYYY-MM-DD）
+  if (couponDiscount !== undefined) {
+    const cd = Number(couponDiscount)
+    if (!Number.isFinite(cd) || cd < 0) {
+      throw err('INVALID_PARAMS', '优惠券折扣金额必须为非负数')
+    }
+  }
+  if (multiVisit !== undefined && multiVisit !== null) {
+    const mv = Number(multiVisit)
+    if (!Number.isFinite(mv) || mv < 0 || !Number.isInteger(mv)) {
+      throw err('INVALID_PARAMS', 'multiVisit 必须为非负整数')
+    }
+  }
+  const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
+  if (startDate && typeof startDate === 'string' && !DATE_REGEX.test(startDate)) {
+    throw err('INVALID_PARAMS', 'startDate 格式必须为 YYYY-MM-DD')
+  }
+  if (endDate && typeof endDate === 'string' && !DATE_REGEX.test(endDate)) {
+    throw err('INVALID_PARAMS', 'endDate 格式必须为 YYYY-MM-DD')
+  }
+  if (startDate && endDate && startDate > endDate) {
+    throw err('INVALID_PARAMS', '开始日期不能晚于结束日期')
+  }
+
+  // M3: 下单前限流（防短时高频刷单）
+  //   - 类型 feeding_order：每用户每分钟 6 次，同一喂养师每分钟 3 次
+  //   - 超限抛出 RATE_LIMITED（HTTP 429）
+  try {
+    await withRateLimit(
+      { userId: openid, type: 'feeding_order', targetId: feederId || 'default' },
+      async () => { /* 仅消费限流配额，无额外风控逻辑 */ }
+    )
+  } catch (rateLimitErr) {
+    if ((rateLimitErr as { code?: string }).code === 'RATE_LIMITED') {
+      throw rateLimitErr
+    }
+    // 限流系统异常：降级放行，但告警
+    logger.warn('createFeedingOrder.rateLimit.error', {
+      openid, msg: (rateLimitErr as Error)?.message,
+    })
+    try {
+      await recordAlert('warning', 'feeding.rateLimit.systemError',
+        '喂养下单限流系统异常，已降级放行',
+        { openid, error: (rateLimitErr as Error)?.message })
+    } catch (_) { /* best-effort */ }
+  }
+
   try {
     let feederInfo: FeederRecord = {}
     if (feederId) {
@@ -617,7 +607,17 @@ export async function createFeedingOrder(
       }
     }
 
-    const orderNo = `FD${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`
+    // P0-5: 服务端重算订单金额，不信任客户端 totalAmount（防止价格篡改）
+    const pricePerVisit = Number(feederInfo.pricePerVisit) || 0
+    const visitCount = Array.isArray(visitTimes) ? visitTimes.length : 1
+    const petCount = Array.isArray(petIds) ? petIds.length : 1
+    const multiVisitFactor = Number(multiVisit) > 0 ? Number(multiVisit) : 1
+    // 单次上门 × 宠物数 × 访问次数 × 多次访问因子
+    const calculatedAmount = Math.round(pricePerVisit * 100 * visitCount * petCount * multiVisitFactor) / 100
+    const couponDiscountNum = Number(couponDiscount) || 0
+    const finalAmount = Math.max(0, Math.round((calculatedAmount - couponDiscountNum) * 100) / 100)
+
+    const orderNo = `FD${Date.now()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`
 
     const order: FeedingOrderRecord = {
       orderNo,
@@ -641,10 +641,11 @@ export async function createFeedingOrder(
       multiVisit: Number(multiVisit) || 0,
       multiVisitText: multiVisitText || '',
       multiVisitDates: multiVisitDates || [],
-      totalAmount: Number(totalAmount) || 0,
-      originalAmount: Number(originalAmount) || 0,
+      // P0-5: 使用服务端计算的金额，忽略客户端 totalAmount
+      totalAmount: finalAmount,
+      originalAmount: calculatedAmount,
       couponId: couponId || '',
-      couponDiscount: Number(couponDiscount) || 0,
+      couponDiscount: couponDiscountNum,
       status: 'pending_payment',
       paymentStatus: 'unpaid',
       createdAt: db.serverDate(),
@@ -653,6 +654,72 @@ export async function createFeedingOrder(
 
     order._id = generateId('feeding', openid)
     const res = await db.collection('feedingOrders').add({ data: order })
+
+    // H2: 订单创建成功后锁定优惠券（防止并发下单重复用券）
+    //   - 锁定失败需回滚订单（标记 cancelled + paymentStatus=refunded），
+    //     避免出现「订单已创建但券未锁定」的中间状态
+    //   - lockCoupon 内部含幂等检查（同 orderId 重复锁定会直接成功）
+    if (couponId) {
+      try {
+        const lockResult = await cloud.callFunction({
+          name: 'couponService',
+          data: {
+            action: 'lockCoupon',
+            couponId,
+            orderId: res._id,
+            orderType: 'feeding_order',
+            business: 'feeding',
+          },
+        })
+        const lockRes = lockResult && (lockResult.result as { code?: number; message?: string })
+        if (!lockRes || lockRes.code !== 0) {
+          // 锁定失败：回滚订单
+          try {
+            await db.collection('feedingOrders').doc(res._id).update({
+              data: {
+                status: 'cancelled',
+                paymentStatus: 'refunded',
+                updatedAt: db.serverDate(),
+              },
+            })
+          } catch (rollbackErr) {
+            logger.error('createFeedingOrder.couponRollback.failed', {
+              orderId: res._id, msg: (rollbackErr as Error)?.message,
+            })
+            try {
+              await recordAlert('critical', 'feeding.order.couponRollback.failed',
+                '喂养订单锁定优惠券失败且回滚订单失败，需人工核对',
+                {
+                  orderId: res._id, orderNo, couponId,
+                  error: (rollbackErr as Error)?.message,
+                })
+            } catch (_) { /* best-effort */ }
+          }
+          throw err('COUPON_LOCK_FAILED',
+            lockRes && lockRes.message ? lockRes.message : '优惠券锁定失败')
+        }
+      } catch (lockErr) {
+        // 锁定过程异常：先回滚订单，再抛出错误
+        if ((lockErr as { code?: string }).code !== 'COUPON_LOCK_FAILED') {
+          try {
+            await db.collection('feedingOrders').doc(res._id).update({
+              data: {
+                status: 'cancelled',
+                paymentStatus: 'refunded',
+                updatedAt: db.serverDate(),
+              },
+            })
+          } catch (rollbackErr) {
+            logger.error('createFeedingOrder.couponRollback.failed', {
+              orderId: res._id, msg: (rollbackErr as Error)?.message,
+            })
+          }
+        }
+        if ((lockErr as { code?: string }).code) { throw lockErr }
+        throw err('COUPON_LOCK_FAILED', '优惠券锁定失败')
+      }
+    }
+
     return handleSuccess({ id: res._id, orderNo, totalAmount: order.totalAmount }, '下单成功')
   } catch (error) {
     if ((error as { code?: string }).code) { throw error }
@@ -714,6 +781,22 @@ export async function updateFeedingOrderStatus(
       throw err('PERMISSION_DENIED', '无权操作该订单')
     }
 
+    // M6: 校验 paymentStatus，防止跨支付状态误操作
+    //   - 未支付订单（paymentStatus=unpaid）：仅允许从 pending_payment → cancelled
+    //   - 已支付订单（paymentStatus=paid）：允许推进业务状态（confirmed→in_progress→completed）
+    //     不允许通过此接口取消已支付订单（需走退款流程，避免绕过资金流）
+    //   - paymentStatus 异常（unknown/缺失）：拒绝状态变更，需人工核对
+    const paymentStatus = String(order.paymentStatus || '').toLowerCase()
+    if (paymentStatus !== 'unpaid' && paymentStatus !== 'paid') {
+      try {
+        await recordAlert('warning', 'feeding.updateStatus.invalidPaymentStatus',
+          '喂养订单状态异常，paymentStatus 非 unpaid/paid',
+          { orderId, currentStatus: order.status, paymentStatus })
+      } catch (_) { /* best-effort */ }
+      throw err('ORDER_STATUS_INVALID',
+        `订单支付状态异常：${paymentStatus || '(空)'}`)
+    }
+
     const allowedTransitions: Record<string, string[]> = {
       pending_payment: ['cancelled'],
       confirmed: ['in_progress', 'cancelled'],
@@ -727,12 +810,71 @@ export async function updateFeedingOrderStatus(
       throw err('BUSINESS_ERROR', '状态变更无效')
     }
 
+    // M6: 已支付订单不允许通过此接口取消（必须走退款流程）
+    if (status === 'cancelled' && paymentStatus === 'paid') {
+      throw err('ORDER_STATUS_INVALID',
+        '已支付订单无法直接取消，请申请退款')
+    }
+    // M6: 非取消状态变更需要订单已支付（confirmed/in_progress/completed 必须建立在已支付基础上）
+    if (status !== 'cancelled' && paymentStatus !== 'paid') {
+      throw err('ORDER_STATUS_INVALID',
+        '订单尚未支付，无法推进业务状态')
+    }
+
     await db.collection('feedingOrders').doc(orderId).update({
       data: { status, updatedAt: db.serverDate() },
     })
 
     if (status === 'completed') {
-      await createCommissionRecord('feeding', { ...order, totalAmount: order.totalPrice })
+      // H1: 修复 totalPrice 覆盖 bug——直接传 order，totalAmount 已存在
+      //   旧代码 { ...order, totalAmount: order.totalPrice } 会用 undefined 覆盖 totalAmount，导致佣金永远不触发
+      try {
+        await createCommissionRecord('feeding', order)
+      } catch (commissionErr) {
+        // M4: 佣金记录失败需告警（best-effort，不阻塞订单状态变更）
+        logger.error('updateFeedingOrderStatus.createCommission.failed', {
+          orderId, msg: (commissionErr as Error)?.message,
+        })
+        try {
+          await recordAlert('critical', 'feeding.updateStatus.commission.failed',
+            '喂养订单完成时佣金记录失败，需人工核对',
+            {
+              orderId, orderNo: order.orderNo, ownerId: order.ownerId,
+              totalAmount: order.totalAmount,
+              error: (commissionErr as Error)?.message,
+            })
+        } catch (_) { /* best-effort */ }
+      }
+    }
+
+    // H2 配套：取消未支付订单时解锁优惠券（lockCoupon 的逆操作）
+    if (status === 'cancelled' && paymentStatus === 'unpaid' && order.couponId) {
+      try {
+        await cloud.callFunction({
+          name: 'couponService',
+          data: {
+            action: 'unlockCoupon',
+            couponId: order.couponId,
+          },
+        })
+        logger.info('updateFeedingOrderStatus.unlockCoupon.success', {
+          orderId, couponId: order.couponId,
+        })
+      } catch (unlockErr) {
+        // 解锁失败不阻塞取消流程，但需告警（券可能已被其他流程处理）
+        logger.warn('updateFeedingOrderStatus.unlockCoupon.failed', {
+          orderId, couponId: order.couponId,
+          msg: (unlockErr as Error)?.message,
+        })
+        try {
+          await recordAlert('warning', 'feeding.cancel.unlockCoupon.failed',
+            '喂养订单取消时解锁优惠券失败，需人工核对',
+            {
+              orderId, couponId: order.couponId,
+              error: (unlockErr as Error)?.message,
+            })
+        } catch (_) { /* best-effort */ }
+      }
     }
 
     return handleSuccess(null, '状态更新成功')
@@ -889,6 +1031,20 @@ export async function handleFeedingOrder(
     throw err('ORDER_NOT_FOUND', '订单不存在', { orderId })
   }
   const order = orderRes.data as FeedingOrderRecord
+  // M6 配套：handleFeedingOrder 也需校验 paymentStatus
+  //   - confirm（接单）：要求订单已支付（paymentStatus=paid）
+  //   - complete（完成）：要求订单已支付
+  //   - paymentStatus 异常：告警并拒绝
+  const paymentStatus = String(order.paymentStatus || '').toLowerCase()
+  if (paymentStatus !== 'paid') {
+    try {
+      await recordAlert('warning', 'feeding.handleOrder.invalidPaymentStatus',
+        '喂养师操作订单时 paymentStatus 异常',
+        { orderId, operation, currentStatus: order.status, paymentStatus, operator: openid })
+    } catch (_) { /* best-effort */ }
+    throw err('ORDER_STATUS_INVALID',
+      `订单支付状态异常（${paymentStatus || '(空)'}），无法执行操作`)
+  }
   const TRANSITIONS: Record<string, string[]> = {
     pending_payment: ['confirmed'],
     confirmed: ['completed'],
@@ -902,7 +1058,24 @@ export async function handleFeedingOrder(
     data: { status: targetStatus, updatedAt: db.serverDate() },
   })
   if (targetStatus === 'completed') {
-    await createCommissionRecord('feeding', { ...order, totalAmount: order.totalPrice })
+    // H1: 修复 totalPrice 覆盖 bug——直接传 order，totalAmount 已存在
+    try {
+      await createCommissionRecord('feeding', order)
+    } catch (commissionErr) {
+      // M4: 佣金记录失败需告警（best-effort，不阻塞订单状态变更）
+      logger.error('handleFeedingOrder.createCommission.failed', {
+        orderId, msg: (commissionErr as Error)?.message,
+      })
+      try {
+        await recordAlert('critical', 'feeding.handleOrder.commission.failed',
+          '喂养订单完成时佣金记录失败，需人工核对',
+          {
+            orderId, orderNo: order.orderNo, ownerId: order.ownerId,
+            totalAmount: order.totalAmount,
+            error: (commissionErr as Error)?.message,
+          })
+      } catch (_) { /* best-effort */ }
+    }
   }
   return handleSuccess(null, '操作成功')
 }

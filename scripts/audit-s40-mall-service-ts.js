@@ -89,7 +89,9 @@ if (mallTs) {
   check('index.ts 包含 RiskCheckResult 接口', /export\s+interface\s+RiskCheckResult\b/.test(mallTs))
   check('index.ts 包含 SkuSpec 接口', /export\s+interface\s+SkuSpec\b/.test(mallTs))
   check('index.ts 包含 performMallOrderRiskCheck 函数', /async\s+function\s+performMallOrderRiskCheck\b/.test(mallTs))
-  check('index.ts 包含 createCommissionRecord 函数', /async\s+function\s+createCommissionRecord\b/.test(mallTs))
+  // H1: createCommissionRecord 已统一使用 common/commission-utils（含自购保护、system_config 配置、幂等）
+  check('index.ts 使用共享 createCommissionRecord（common/commission-utils）',
+    /sharedCreateCommissionRecord/.test(mallTs) && /common\/commission-utils/.test(mallTs))
   check('index.ts 包含 batchGetTempFileURL 函数', /async\s+function\s+batchGetTempFileURL\b/.test(mallTs))
   check('index.ts 包含 handlers 聚合对象', /export\s+const\s+handlers\s*:\s*Record<string,\s*MallActionHandler>/.test(mallTs))
   check('index.ts 包含 main 入口函数', /export\s+async\s+function\s+main\b/.test(mallTs))

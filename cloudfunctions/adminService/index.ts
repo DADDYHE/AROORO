@@ -2,7 +2,7 @@
  * adminService/index.ts - 管理后台主入口（TypeScript 源文件 - Sprint 33 迁移）
  *
  * 业务功能：
- *   - 小程序云函数入口：处理 16 类业务模块的统一调度
+ *   - 小程序云函数入口：处理 17 类业务模块的统一调度
  *   - HTTP/JWT 路径：web 端管理后台 + 小程序扫码登录
  *   - 普通路径：小程序端直接调用
  *
@@ -162,6 +162,9 @@ const statsHandlers: Record<string, ActionHandler> = require('./services/stats')
 const i18nOverrideHandlers: Record<string, ActionHandler> = require('./services/i18nOverride')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const uploadHandlers: Record<string, ActionHandler> = require('./services/upload')
+// P1-2: 注册退款 handler（web-admin 调用 adminRefund/queryRefund）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const refundHandlers: Record<string, ActionHandler> = require('./services/refund')
 
 // =====================================================================
 // handlers 汇总
@@ -182,6 +185,7 @@ export const handlers: Record<string, ActionHandler> = {
   ...commissionConfigHandlers,
   ...walletHandlers,
   ...statsHandlers,
+  ...refundHandlers,
   ...i18nOverrideHandlers,
   ...uploadHandlers,
 }
@@ -235,6 +239,9 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   approveWithdrawal: 'super_admin',
   rejectWithdrawal: 'super_admin',
   retryTransfer: 'super_admin',
+  // P1-2: 管理员退款（web-admin 后台客诉处理）
+  adminRefund: 'super_admin',
+  queryRefund: 'super_admin',
   // 佣金配置（平台级）
   getPartnerCommissionRates: 'super_admin',
   updatePartnerCommissionRates: 'super_admin',
@@ -242,6 +249,7 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   updateCommissionConfig: 'super_admin',
   // 危险操作
   initIndexes: 'super_admin',
+  initI18nOverrideIndexes: 'super_admin',
   getOperationLogList: 'super_admin',
   exportOrders: 'super_admin',
 
@@ -438,6 +446,28 @@ export function checkHttpPermission(decoded: JwtDecodedToken | null, action: str
   return decoded.isPartner === true
 }
 
+/**
+ * H1 安全修复：以 DB 实时状态（enrichAuthFromAdmin 结果）为权威判权依据。
+ *
+ * 背景：旧逻辑仅信任 JWT 内的 isSuperAdmin/isPartner 声明，账号被禁用/降权后
+ * 旧 token 在有效期内仍可越权；叠加自动续期后 token 可永不过期。
+ *
+ * 规则：
+ *   - permission 为 null/undefined（仅需登录）→ 放行（token 已验签）
+ *   - 需要等级权限但 enrichment 为空（admins 记录不存在 / status!=='active'）→ 一律拒绝
+ *   - super_admin → 实时 roles 含 super_admin
+ *   - admin / partner → super_admin 向下兼容，或实时 isPartner
+ */
+export function checkEnrichedPermission(enrichment: EnrichmentResult | null, action: string): boolean {
+  const permission = ACTION_PERMISSIONS[action]
+  if (permission === null || permission === undefined) {return true}
+  if (!enrichment) {return false}
+  const isSuper = enrichment.roles.includes('super_admin')
+  if (permission === 'super_admin') {return isSuper}
+  // 'admin' 与 'partner' 等级：super_admin 向下兼容 + 实时 partner 身份
+  return isSuper || enrichment.isPartner === true
+}
+
 let _enrichAdminDb: CloudBaseDB | null = null
 export function getEnrichAdminDb(): CloudBaseDB {
   if (_enrichAdminDb === null) {
@@ -517,12 +547,19 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
         return { statusCode: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ code: 401, message: '未登录或Token已过期' }) }
       }
       // P1 修复：adminService HTTP 路径必须按 ACTION_PERMISSIONS 等级校验
+      // （token 声明作为快速前置过滤，省一次 DB 读；权威判定见下方 enrichment 校验）
       if (!checkHttpPermission(httpAuth, validHttpInfo.action)) {
         logger.warn('http.permission_denied', { action: validHttpInfo.action, openid: httpAuth.openid, isSuperAdmin: httpAuth.isSuperAdmin, isPartner: httpAuth.isPartner })
         return { statusCode: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ code: 403, message: '权限不足' }) }
       }
       // P1 修复：补全 auth.roles / auth.permissions
       const enrichment = await enrichAuthFromAdmin(httpAuth)
+      // H1 安全修复：等级权限以 DB 实时状态为准（禁用/降权立即生效），
+      // token 声明不再是权威依据；enrich 失败（记录不存在或非 active）一律拒绝。
+      if (!checkEnrichedPermission(enrichment, validHttpInfo.action)) {
+        logger.warn('http.permission_denied.db', { action: validHttpInfo.action, openid: httpAuth.openid, adminId: httpAuth.adminId, enriched: !!enrichment })
+        return { statusCode: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ code: 403, message: '权限不足或账号已停用' }) }
+      }
       const auth: AuthLike = {
         openid: httpAuth.openid,
         partnerId: httpAuth.adminId,
@@ -614,6 +651,11 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
         throw err('PERMISSION_DENIED', '权限不足')
       }
       const jwtEnrichment = await enrichAuthFromAdmin(decoded)
+      // H1 安全修复：等级权限以 DB 实时状态为准，enrich 失败一律拒绝（详见 checkEnrichedPermission）
+      if (!checkEnrichedPermission(jwtEnrichment, action)) {
+        logger.warn('jwt.permission_denied.db', { action, openid: decoded.openid, adminId: decoded.adminId, enriched: !!jwtEnrichment })
+        throw err('PERMISSION_DENIED', '权限不足或账号已停用')
+      }
       const mergedEvent = revertCloudUrls({ ...event, ...(event.data || {}) })
       const auth: AuthLike = { openid: decoded.openid, partnerId: decoded.adminId, isPartner: jwtEnrichment?.isPartner || decoded.isPartner || false, _isHttpAuth: true }
       if (jwtEnrichment) {
@@ -628,8 +670,15 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
       const result = await handlers[action](mergedEvent, context, auth)
       const converted = await convertCloudUrls(result)
       const now = Math.floor(Date.now() / 1000)
-      if (decoded.exp && decoded.exp - now < 3600) {
-        const newToken = generateToken({ openid: decoded.openid, adminId: decoded.adminId, isPartner: decoded.isPartner, isSuperAdmin: decoded.isSuperAdmin })
+      // H1 安全修复：续期声明必须从 DB 实时状态派生（而非复制旧 token 声明），
+      // 且 enrich 失败（账号不存在/停用）时不续期 —— 否则被降权/禁用的账号可无限续命。
+      if (decoded.exp && decoded.exp - now < 3600 && jwtEnrichment) {
+        const newToken = generateToken({
+          openid: decoded.openid,
+          adminId: decoded.adminId,
+          isPartner: jwtEnrichment.isPartner,
+          isSuperAdmin: jwtEnrichment.roles.includes('super_admin'),
+        })
         ;(converted as { _renewedToken?: string })._renewedToken = newToken
       }
       return converted

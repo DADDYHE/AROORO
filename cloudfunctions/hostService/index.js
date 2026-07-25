@@ -39,7 +39,7 @@ exports.main = exports.handlers = exports.getHostStats = exports.updateHostAccep
 // 内部模块初始化（require CommonJS 模块）
 // =====================================================================
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { err } = require('./common/errors');
+const { err, isBusinessError, toResponse } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { initCloud, handleSuccess, handleError, ERROR_CODES } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -74,9 +74,10 @@ function _getKey() {
     if (!passphrase || passphrase.length < 16) {
         throw new Error('ENCRYPT_KEY 环境变量未配置或长度不足（至少 16 字符），无法加密敏感数据');
     }
+    // P2-019: 强制要求显式配置 ENCRYPT_SALT，避免使用弱盐值（回归 P3-6 约束）
     const salt = process.env.ENCRYPT_SALT;
-    if (!salt) {
-        throw new Error('ENCRYPT_SALT 环境变量未配置，无法初始化加密模块');
+    if (!salt || salt.length < 8) {
+        throw new Error('ENCRYPT_SALT 环境变量未配置或长度不足（至少 8 字符），无法加密敏感数据');
     }
     const { key } = deriveKey(passphrase, salt);
     _derivedKey = key;
@@ -173,7 +174,7 @@ function _resetKey() {
 // 字段投影常量
 // =====================================================================
 const HOST_LIST_FIELDS = {
-    _id: true, openid: true, hostName: true, avatarUrl: true, name: true,
+    _id: true, hostName: true, avatarUrl: true, name: true,
     address: true, hasYard: true, housingType: true, maxPets: true,
     petTypes: true, pricePerDay: true, averageRating: true,
     isAcceptingOrders: true, status: true, description: true, createdAt: true, updatedAt: true,
@@ -218,9 +219,9 @@ async function createHostProfile(event, _context, auth) {
     const profileData = {
         openid,
         hostName,
-        realName: _encryptSensitive(realName || ''),
-        phone: _encryptSensitive(phone),
-        idCard: _encryptSensitive(idCard || ''),
+        realName: realName || '',
+        phone,
+        idCard: idCard || '',
         address: address || '',
         housingType: housingType || '',
         hasYard: hasYard || '',
@@ -235,8 +236,8 @@ async function createHostProfile(event, _context, auth) {
         idCardFront: idCardFront || '',
         idCardBack: idCardBack || '',
         healthCertificate: healthCertificate || '',
-        emergencyContactName: _encryptSensitive(emergencyContactName || ''),
-        emergencyContactPhone: _encryptSensitive(emergencyContactPhone || ''),
+        emergencyContactName: emergencyContactName || '',
+        emergencyContactPhone: emergencyContactPhone || '',
         status: 'pending_review',
         rating: 5.0,
         isAcceptingOrders: true,
@@ -266,24 +267,7 @@ async function updateHostProfile(event, _context, auth) {
     }
     const updateData = { updatedAt: db.serverDate() };
     if (updateType === 'basicInfo') {
-        const filtered = filterFields(FIELD_WHITELISTS.hostBasic, event);
-        // 加密敏感字段
-        if (filtered.realName !== undefined) {
-            filtered.realName = _encryptSensitive(filtered.realName);
-        }
-        if (filtered.phone !== undefined) {
-            filtered.phone = _encryptSensitive(filtered.phone);
-        }
-        if (filtered.idCard !== undefined) {
-            filtered.idCard = _encryptSensitive(filtered.idCard);
-        }
-        if (filtered.emergencyContactName !== undefined) {
-            filtered.emergencyContactName = _encryptSensitive(filtered.emergencyContactName);
-        }
-        if (filtered.emergencyContactPhone !== undefined) {
-            filtered.emergencyContactPhone = _encryptSensitive(filtered.emergencyContactPhone);
-        }
-        Object.assign(updateData, filtered);
+        Object.assign(updateData, filterFields(FIELD_WHITELISTS.hostBasic, event));
         if (event.hostName !== undefined && event.hostName !== null) {
             updateData.name = event.hostName;
         }
@@ -296,14 +280,18 @@ async function updateHostProfile(event, _context, auth) {
             updateData.avatarUrl = event.avatarUrl;
         }
     }
-    else if (photos) {
-        updateData.photos = photos;
-    }
-    else if (videos) {
-        updateData.videos = videos;
-    }
     else {
-        Object.assign(updateData, filterFields(FIELD_WHITELISTS.hostDefault, event));
+        // 支持同时更新 photos 和 videos
+        if (photos !== undefined && photos !== null) {
+            updateData.photos = photos;
+        }
+        if (videos !== undefined && videos !== null) {
+            updateData.videos = videos;
+        }
+        // 如果没有指定 photos 或 videos，使用默认字段过滤
+        if (updateData.photos === undefined && updateData.videos === undefined) {
+            Object.assign(updateData, filterFields(FIELD_WHITELISTS.hostDefault, event));
+        }
     }
     if (Object.keys(updateData).length > 1) {
         await db.collection('hostProfiles').doc(openid).update({ data: updateData });
@@ -408,6 +396,10 @@ async function getHostDetail(event, _context, _auth) {
         return handleSuccess(hostData, '获取成功');
     }
     catch (error) {
+        // 保留 BusinessError 的原始错误码
+        if (isBusinessError(error)) {
+            return toResponse(error);
+        }
         return handleError(error, '获取寄养家庭详情失败', ERROR_CODES.DATA);
     }
 }
@@ -423,16 +415,7 @@ async function getHostProfile(event, _context, auth) {
     try {
         const profileResult = await db.collection('hostProfiles').doc(openid).get();
         deleteCache(`host_profile_${openid}`);
-        // 解密敏感字段
-        const profile = profileResult.data;
-        if (profile) {
-            profile.realName = _decryptSensitive(profile.realName);
-            profile.phone = _decryptSensitive(profile.phone);
-            profile.idCard = _decryptSensitive(profile.idCard);
-            profile.emergencyContactName = _decryptSensitive(profile.emergencyContactName);
-            profile.emergencyContactPhone = _decryptSensitive(profile.emergencyContactPhone);
-        }
-        return handleSuccess(profile, '获取成功');
+        return handleSuccess(profileResult.data, '获取成功');
     }
     catch (error) {
         return handleError(error, '获取寄养家庭档案失败', ERROR_CODES.DATA);

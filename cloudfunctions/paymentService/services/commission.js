@@ -10,7 +10,7 @@
  *     3) 查找邀请人（inviterId）
  *     4) 计算佣金金额 = 订单金额 × 佣金率 / 100
  *     5) 幂等检查（已存在则跳过）
- *     6) 写入 tuan_commissions 集合
+ *     6) 写入 commissions 集合
  *
  * 与 pay.ts / refund.ts / notify.ts 的关键差异：
  *   - 工具函数（非 handler）：被 pay.ts / notify.ts 异步调用
@@ -34,11 +34,19 @@ exports.createCommissionRecord = void 0;
 //   - 对 .js 文件（utils）使用 require() 而非 import
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - 默认导出为函数本身（与原 CommonJS 行为一致），支持 `require('./commission')(orderType, order)`
-const utils_1 = require("../common/utils");
-const logger_1 = require("../common/logger");
+const utils_1 = require("../../common/utils");
+const logger_1 = require("../../common/logger");
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { generateId } = require('../common/utils');
+// H7+M12: 复用 pay.ts 的 amount 字段映射，避免字段优先级不一致
+//   旧实现用 totalPrice || totalAmount || basicPrice，与 pay.ts 的 ORDER_TYPE_AMOUNT_FIELD 不一致
+//   导致 activity 佣金计算用错字段（activity 应取 finalAmount，旧逻辑 fallback 到 totalAmount）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { ORDER_TYPE_AMOUNT_FIELD_MAP } = require('./pay');
+// H7: 引入 recordAlert 用于幂等写入失败告警
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('../../common/alert');
 // =====================================================================
 // 模块初始化
 // =====================================================================
@@ -50,16 +58,27 @@ const logger = (0, logger_1.createLogger)('paymentService:commission');
 /**
  * 读取系统佣金率配置
  *
- * @returns 配置对象（缺失则返回空对象）
+ * M7: 加入模块级缓存——避免高并发支付回调时每次都查 system_config
+ *   TTL 5 分钟，与 rate-limit-config 的 TTL 模式一致
+ *   失效后下次请求触发异步刷新（不阻塞当前请求）
  */
+let _cachedConfig = null;
+const CONFIG_CACHE_TTL_MS = 5 * 60 * 1000;
 async function loadCommissionConfig(dbInstance) {
+    // 命中缓存直接返回
+    if (_cachedConfig && _cachedConfig.expiresAt > Date.now()) {
+        return _cachedConfig.data;
+    }
     try {
         const configRes = await dbInstance.collection('system_config').doc('commission_rates').get();
-        return (configRes.data || {});
+        const data = (configRes.data || {});
+        _cachedConfig = { data, expiresAt: Date.now() + CONFIG_CACHE_TTL_MS };
+        return data;
     }
     catch (e) {
         logger.warn('loadCommissionConfig: 读取 system_config 失败', { msg: e?.message });
-        return {};
+        // 失败时返回旧缓存（若有），否则空对象
+        return _cachedConfig ? _cachedConfig.data : {};
     }
 }
 /**
@@ -89,17 +108,40 @@ async function loadInviter(dbInstance, inviterId) {
     }
 }
 /**
- * 计算订单金额（兼容 totalPrice / totalAmount / basicPrice 三种字段）
+ * 计算订单金额——按 orderType 路由字段（M12）
+ *
+ * 旧实现：`totalPrice || totalAmount || basicPrice`
+ *   与 pay.ts 的 ORDER_TYPE_AMOUNT_FIELD 不一致：
+ *   - activity 应取 finalAmount，旧逻辑 fallback 到 totalAmount（可能不存在）
+ *   - 导致 activity 佣金计算可能为 0 而静默跳过
+ *
+ * 新实现：复用 pay.ts 的 ORDER_TYPE_AMOUNT_FIELD_MAP，按 orderType 取正确字段；
+ *   若映射字段缺失则回退到旧的兼容逻辑（保持向后兼容）
  */
-function resolveOrderAmount(order) {
+function resolveOrderAmount(order, orderType) {
+    // M12: 优先按 orderType 取映射字段
+    const amountField = ORDER_TYPE_AMOUNT_FIELD_MAP[orderType];
+    if (amountField && order[amountField] !== undefined) {
+        return Number(order[amountField]) || 0;
+    }
+    // 兼容回退（历史订单/未映射类型）
     return Number(order.totalPrice) || Number(order.totalAmount) || Number(order.basicPrice) || 0;
 }
 /**
  * 检查是否已存在佣金记录（幂等保护）
+ *
+ * H7: 注意——此查询 + 后续 add 两步非原子，存在 TOCTOU 竞态
+ *   并发场景下同一订单支付回调重试或 confirmPayment + notify 同时触发，
+ *   可创建多条 pending 佣金记录，结算时重复发放佣金
+ *
+ * 缓解措施：
+ *   1. commissions 集合必须创建唯一索引 { orderId: 1, inviterId: 1 }
+ *   2. add 失败时若为唯一约束冲突，视为已存在直接 return
+ *   3. 长期方案：将 hasExistingCommission + add 纳入 transaction
  */
 async function hasExistingCommission(dbInstance, orderId, inviterId) {
     try {
-        const existRes = await dbInstance.collection('tuan_commissions')
+        const existRes = await dbInstance.collection('commissions')
             .where({ orderId, inviterId })
             .count();
         return existRes.total > 0;
@@ -108,6 +150,27 @@ async function hasExistingCommission(dbInstance, orderId, inviterId) {
         logger.warn('hasExistingCommission: 幂等检查失败', { orderId, inviterId, msg: e?.message });
         return false;
     }
+}
+/**
+ * H7: 检测错误是否为唯一约束冲突（CloudBase errCode -502019 / MongoDB 11000）
+ *   用于 add 失败时识别"已存在"场景，避免抛错污染主流程
+ */
+function isDuplicateKeyError(e) {
+    const err = e;
+    if (!err) {
+        return false;
+    }
+    // CloudBase 唯一约束冲突 errCode
+    if (Number(err.errCode) === -502019 || Number(err.code) === -502019) {
+        return true;
+    }
+    // MongoDB 11000
+    if (Number(err.code) === 11000) {
+        return true;
+    }
+    // 错误消息兜底匹配
+    const msg = err.message || '';
+    return msg.includes('duplicate key') || msg.includes('E11000');
 }
 // =====================================================================
 // 主入口
@@ -128,7 +191,7 @@ async function hasExistingCommission(dbInstance, orderId, inviterId) {
  *   6. 查询邀请人档案
  *   7. 计算佣金金额（orderAmount × rate / 100，保留 2 位小数）
  *   8. 幂等检查（orderId + inviterId 已存在 → 跳过）
- *   9. 写入 tuan_commissions
+ *   9. 写入 commissions
  *
  * 错误处理：
  *   - 任何异常都被吞掉，仅记录日志
@@ -153,6 +216,15 @@ async function createCommissionRecord(orderType, order) {
         if (!inviterId) {
             return;
         }
+        // H3: 自购订单不触发佣金（防止 inviterId === ownerId 时给自己发佣金）
+        //   与 common/commission-utils.ts P0-8 保持一致
+        //   场景：用户用自己的邀请码下单，若不拦截会导致佣金自付
+        if (inviterId === order.ownerId) {
+            logger.info('createCommissionRecord.skipped_self_purchase', {
+                orderId: order._id, ownerId: order.ownerId,
+            });
+            return;
+        }
         const inviterData = await loadInviter(db, inviterId);
         if (!inviterData) {
             return;
@@ -162,8 +234,9 @@ async function createCommissionRecord(orderType, order) {
         try {
             const adminRes = await db.collection('admins').doc(inviterId).get();
             const admin = adminRes.data;
-            if (admin && admin.commissionRates && admin.commissionRates[orderType] !== undefined) {
-                rate = Number(admin.commissionRates[orderType]);
+            const rates = admin?.commissionRates || {};
+            if (rates[orderType] !== undefined) {
+                rate = Number(rates[orderType]);
             }
         }
         catch (e) {
@@ -176,12 +249,19 @@ async function createCommissionRecord(orderType, order) {
         if (rate <= 0) {
             return;
         }
-        // 4. 计算订单金额 + 佣金金额
-        const orderAmount = resolveOrderAmount(order);
-        if (orderAmount <= 0) {
+        // 4. 计算订单金额 + 佣金金额（M12: 按 orderType 路由字段）
+        const orderAmount = resolveOrderAmount(order, orderType);
+        // 项目硬约束：佣金计算的最低订单金额为 ¥1
+        if (orderAmount < 1) {
             return;
         }
-        const commissionAmount = Math.round((orderAmount * rate / 100) * 100) / 100;
+        // P0-3: 使用整数分计算佣金，避免浮点精度误差
+        //   原 `Math.round((orderAmount * rate / 100) * 100) / 100` 在
+        //   orderAmount=100.005、rate=3.5 等场景下可能产生精度漂移
+        //   与 common/commission-utils.ts P0-3 保持一致
+        const orderAmountFen = Math.round(orderAmount * 100);
+        const commissionAmountFen = Math.round(orderAmountFen * rate / 100);
+        const commissionAmount = commissionAmountFen / 100;
         if (commissionAmount <= 0) {
             return;
         }
@@ -190,6 +270,8 @@ async function createCommissionRecord(orderType, order) {
             return;
         }
         // 6. 写入佣金记录
+        //   H7: _id 含时间戳，无法用 _id 兜底去重——必须依赖 (orderId, inviterId) 唯一索引
+        //   运维需在 commissions 集合创建唯一索引：{ orderId: 1, inviterId: 1 }
         const payload = {
             _id: generateId('commission', order.ownerId),
             inviterId,
@@ -205,16 +287,28 @@ async function createCommissionRecord(orderType, order) {
             createdAt: db.serverDate(),
             updatedAt: db.serverDate(),
         };
-        await db.collection('tuan_commissions').add({ data: payload });
-        // 商城/团购佣金支付后立即增加邀请人钱包余额
         try {
-            const { ensureWalletBalance } = require('../common/wallet-utils')
-            await ensureWalletBalance(inviterId, commissionAmount)
-        } catch (_a) { /* best-effort */ }
+            await db.collection('commissions').add({ data: payload });
+        }
+        catch (addError) {
+            // H7: 唯一约束冲突视为已存在，静默跳过
+            //   并发场景下 hasExistingCommission 通过后另一请求已写入，
+            //   此时 add 会触发唯一索引冲突，不应抛错污染主流程
+            if (isDuplicateKeyError(addError)) {
+                logger.info('createCommissionRecord.duplicate_key_recovered', {
+                    orderId: order._id, inviterId, orderType,
+                });
+                return;
+            }
+            // 其他错误上抛，由外层 catch 吞掉 + 记录
+            throw addError;
+        }
     }
     catch (error) {
         const msg = error instanceof Error ? error.message : '未知错误';
         logger.error('createCommissionRecord', { msg, orderType, orderId: order?._id });
+        // L14+H7: 持久化告警，便于运维发现佣金写入异常
+        await recordAlert('warning', 'paymentService.commission.create.failed', `佣金记录创建失败：${msg}`, { orderType, orderId: order?._id, error: msg }).catch((e) => logger.error('recordAlert failed', { msg: e.message }));
     }
 }
 exports.createCommissionRecord = createCommissionRecord;

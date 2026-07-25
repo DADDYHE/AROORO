@@ -79,6 +79,8 @@ async function getActivityDetail(event, context, auth) {
 async function createActivity(event, context, auth) {
   const { title, category, description, price, maxParticipants, location, latitude, longitude, startTime, endTime, coverUrl, images, contactName, contactPhone, wechatId } = event
   if (!title) {throw err('INVALID_PARAMS', '缺少活动标题')}
+  if (price !== undefined && Number(price) < 0) {throw err('INVALID_PARAMS', '活动价格不能为负')}
+  if (maxParticipants !== undefined && Number(maxParticipants) < 0) {throw err('INVALID_PARAMS', '参与人数不能为负')}
 
   let organizer = null
   try {
@@ -116,14 +118,18 @@ async function updateActivity(event, context, auth) {
   const { activityId } = event
   if (!activityId) {throw err('INVALID_PARAMS', '缺少活动ID')}
 
-  logger.info('updateActivity.input', { event: JSON.stringify(event) })
+  const existing = await db.collection('activities').doc(activityId).get()
+  if (!existing.data) {throw err('NOT_FOUND', '活动不存在')}
+  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
 
+  // P2-015: 移除完整 event 调试日志（可能含手机号/地址等敏感字段），仅记录字段名
   const { filterFields, FIELD_WHITELISTS } = require('../common/validator')
   const filteredFields = filterFields(FIELD_WHITELISTS.activity, event)
-  logger.info('updateActivity.filtered', { fields: JSON.stringify(filteredFields) })
+  logger.info('updateActivity', { activityId, fields: Object.keys(filteredFields) })
 
   const updateData = { updatedAt: db.serverDate(), ...filteredFields }
-  logger.info('updateActivity.updateData', { data: JSON.stringify(updateData) })
 
   await db.collection('activities').doc(activityId).update({ data: updateData })
   return handleSuccess(null, '更新成功')
@@ -132,6 +138,12 @@ async function updateActivity(event, context, auth) {
 async function getActivityRegistrations(event, context, auth) {
   const { activityId, page = 1, pageSize = 20 } = event
   if (!activityId) {throw err('INVALID_PARAMS', '缺少活动ID')}
+
+  const activityRes = await db.collection('activities').doc(activityId).get()
+  if (!activityRes.data) {throw err('NOT_FOUND', '活动不存在')}
+  if (!auth.isSuperAdmin && activityRes.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
 
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 100)
 
@@ -181,10 +193,14 @@ async function exportActivityRegistrations(event, context, auth) {
   if (!activityRes.data) {
     throw err('NOT_FOUND', '活动不存在')
   }
+  if (!auth.isSuperAdmin && activityRes.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
 
   const registrationsRes = await db.collection('activity_registrations')
     .where({ activityId })
     .orderBy('createdAt', 'desc')
+    .limit(1000)
     .get()
 
   let registrations = registrationsRes.data || []

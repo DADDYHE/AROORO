@@ -7,7 +7,7 @@
  *   - 下单流程（普通下单 + 团购下单，含风控前置）
  *   - 订单管理（我的订单 / 详情 / 取消 / 确认收货 / 删除）
  *
- * 共 16 个 action：
+ * 共 18 个 action：
  *   1. getProductList - 商品列表
  *   2. getProductDetail - 商品详情
  *   3. getCategoryStats - 分类统计
@@ -25,6 +25,7 @@
  *  15. cancelOrder - 取消订单
  *  16. confirmReceive - 确认收货
  *  17. deleteOrder - 删除订单
+ *  18. getWxShippingStatus - 查询微信发货状态
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
@@ -33,6 +34,14 @@
  *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.mallService.json
+ *
+ * 数据库索引建议（运维需在对应集合上创建）：
+ *   products:
+ *     - { status: 1, categoryId: 1 }               - 覆盖 getProductList / getCategoryStats
+ *     - { createdBy: 1, updatedAt: -1 }             - 覆盖 batchUpdateProducts 权限校验
+ *   orders:
+ *     - { ownerId: 1, type: 1, status: 1, createdAt: -1 } - 覆盖 getMyOrders / getGroupBuyOrders
+ *     - { orderNo: 1 }                              - 覆盖佣金记录查询
  */
 export interface AuthLike {
     openid?: string;
@@ -59,6 +68,8 @@ export interface CloudEvent {
     productId?: string;
     productIds?: string[];
     orderId?: string;
+    orderIds?: string[];
+    orderType?: string;
     operation?: string;
     name?: string;
     description?: string;
@@ -148,6 +159,7 @@ export interface OrderRecord {
     sellerId?: string;
     status?: string;
     type?: string;
+    paymentStatus?: string;
     pendingReview?: boolean;
     riskDecision?: string;
     riskReasons?: string[];

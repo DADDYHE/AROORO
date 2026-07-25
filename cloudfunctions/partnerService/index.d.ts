@@ -26,6 +26,7 @@ export interface AuthLike {
     roles?: string[];
     permissions?: string[];
     _isHttpAuth?: boolean;
+    nickName?: string;
     [k: string]: unknown;
 }
 export interface CloudEvent {
@@ -54,6 +55,7 @@ export interface AdminRecord {
     roles?: string[];
     permissions?: string[];
     isPartner?: boolean;
+    nickName?: string;
     [k: string]: unknown;
 }
 export type PartnerActionHandler = (event: CloudEvent, context: CloudContext, auth: AuthLike) => Promise<unknown>;

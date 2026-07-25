@@ -2,5 +2,12 @@
   "timeout": 15,
   "permissions": {
     "openapi": []
-  }
+  },
+  "triggers": [
+    {
+      "name": "activityStatusTrigger",
+      "type": "timer",
+      "config": "0 */5 * * * * *"
+    }
+  ]
 }

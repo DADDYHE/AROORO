@@ -17,14 +17,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../common/utils");
 const logger_1 = require("../common/logger");
 const errors_1 = require("../common/errors");
+// P0-6: 敏感接口限流
+const risk_rate_limit_1 = require("../common/risk-rate-limit");
 const logger = (0, logger_1.createLogger)('uploadService');
 /* ============================================================
  * Handlers
  * ============================================================ */
 const uploadFile = (0, errors_1.withErrorHandling)(async (event, _context, _auth) => {
     const { cloudPath, fileContent } = event;
+    // P0-6: 上传限流（每用户每分钟 N 次）
+    const auth = _auth || {};
+    if (auth.openid) {
+        await (0, risk_rate_limit_1.withRateLimit)(
+            { userId: auth.openid, type: 'upload', targetId: 'file' },
+            async () => null
+        );
+    }
     if (!cloudPath) {
         throw (0, errors_1.err)('INVALID_PARAMS', '缺少 cloudPath');
+    }
+    // P0-4: 路径穿越校验（仅允许字母/数字/下划线/横线/斜线/点）
+    if (/[.]{2}|[\\]|\.\//.test(cloudPath)) {
+        throw (0, errors_1.err)('INVALID_PARAMS', '云存储路径不合法');
+    }
+    // P0-4: 文件扩展名白名单校验
+    const extWhitelist = /\.(jpg|jpeg|png|gif|webp|bmp|svg|mp4|mov|avi|mp3|wav|m4a|pdf|doc|docx|xls|xlsx)$/i;
+    if (!extWhitelist.test(cloudPath)) {
+        throw (0, errors_1.err)('INVALID_PARAMS', '不支持的文件类型');
     }
     // HTTP 调用时文件通过 base64 传入
     let buffer;
@@ -33,6 +52,11 @@ const uploadFile = (0, errors_1.withErrorHandling)(async (event, _context, _auth
     }
     else {
         throw (0, errors_1.err)('INVALID_PARAMS', '缺少文件内容');
+    }
+    // P0-4: 文件大小校验（上限 10MB）
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (buffer.length > MAX_FILE_SIZE) {
+        throw (0, errors_1.err)('INVALID_PARAMS', '文件大小超过 10MB 限制');
     }
     const { cloud } = (0, utils_1.initCloud)();
     const uploadResult = await cloud.uploadFile({

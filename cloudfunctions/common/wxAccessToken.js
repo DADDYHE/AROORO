@@ -17,7 +17,15 @@ exports.clearAccessTokenCache = exports.getWxOrderStatus = exports.getMiniProgra
  */
 const https_1 = require("https");
 const url_1 = require("url");
-const config_1 = require("./config");
+// 注意：不要在模块级用 const { APP_ID, WECHAT_MINIAPP_SECRET } = require('./config')
+// 因为云函数实例在启动时读一次 process.env，模块级常量会被冻结。
+// 改成函数内实时读 process.env，保证 env 更新后能被新调用感知到。
+function getAppId() {
+    return process.env.APP_ID || process.env.WECHAT_APPID || '';
+}
+function getSecret() {
+    return process.env.WECHAT_MINIAPP_SECRET || '';
+}
 const TOKEN_URL = 'https://api.weixin.qq.com/cgi-bin/token';
 const GET_ORDER_URL = 'https://api.weixin.qq.com/wxa/sec/order/get_order';
 const TOKEN_TTL_MS = 110 * 60 * 1000; // 2 小时有效期，提前 10 分钟刷新
@@ -42,8 +50,8 @@ async function getMiniProgramAccessToken() {
     if (inFlightToken) {
         return inFlightToken;
     }
-    const appid = config_1.APP_ID;
-    const secret = config_1.WECHAT_MINIAPP_SECRET;
+    const appid = getAppId();
+    const secret = getSecret();
     if (!appid || !secret) {
         throw new Error('WECHAT_MINIAPP_SECRET / APP_ID not configured');
     }

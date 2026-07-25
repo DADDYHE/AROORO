@@ -15,33 +15,8 @@
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.userService.json
  */
-export interface AuthLike {
-    openid?: string;
-    [k: string]: unknown;
-}
-export interface CloudEvent {
-    action?: string;
-    data?: Record<string, unknown>;
-    addressId?: string;
-    address?: AddressInput;
-    [k: string]: unknown;
-}
-export interface CloudContext {
-    [k: string]: unknown;
-}
+import type { AuthLike, CloudEvent, CloudContext, AddressInput } from './common/types';
 export type AddressHandler = (event: CloudEvent, context: CloudContext, auth: AuthLike) => Promise<unknown>;
-export interface AddressInput {
-    name?: string;
-    phone?: string;
-    province?: string;
-    city?: string;
-    district?: string;
-    detail?: string;
-    fullAddress?: string;
-    postalCode?: string;
-    isDefault?: boolean;
-    [k: string]: unknown;
-}
 export interface AddressRecord extends AddressInput {
     _id: string;
     openid: string;

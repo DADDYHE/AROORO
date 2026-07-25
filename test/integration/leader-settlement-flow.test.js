@@ -40,20 +40,27 @@ const mockDb = {
         return docChain
       },
       where: query => {
-        const docs = allDocs().filter(doc => {
-          for (const [k, v] of Object.entries(query || {})) {
+        const matchDoc = (doc, q) => {
+          for (const [k, v] of Object.entries(q || {})) {
             if (v && typeof v === 'object' && v._op) {
               if (v._op === 'in' && Array.isArray(v.v)) {
                 if (!v.v.includes(doc[k])) {return false}
               } else if (v._op === 'eq') {
                 if (doc[k] !== v.v) {return false}
+              } else if (v._op === 'ne' || v._op === 'neq') {
+                if (doc[k] === v.v) {return false}
+              } else if (v._op === 'lte') {
+                if (!(doc[k] <= v.v)) {return false}
+              } else if (v._op === 'gte') {
+                if (!(doc[k] >= v.v)) {return false}
               }
               continue
             }
             if (doc[k] !== v) {return false}
           }
           return true
-        })
+        }
+        const docs = allDocs().filter(doc => matchDoc(doc, query))
         const chain = {
           count: async () => ({ total: docs.length }),
           field: () => chain,
@@ -61,6 +68,20 @@ const mockDb = {
           skip: () => chain,
           limit: () => chain,
           get: async () => ({ data: docs }),
+          // P1-B: 条件更新 — 返回 { stats: { updated: <count> } } 以匹配 CloudBase SDK 行为
+          update: async ({ data }) => {
+            let updated = 0
+            for (const doc of docs) {
+              Object.assign(doc, data)
+              updated += 1
+            }
+            return { stats: { updated } }
+          },
+          remove: async () => {
+            const ids = new Set(docs.map(d => d._id))
+            self._collections[name].docs = self._collections[name].docs.filter(d => !ids.has(d._id))
+            return { stats: { removed: docs.length } }
+          },
         }
         return chain
       },
@@ -84,9 +105,13 @@ const mockDb = {
   command: {
     in: arr => ({ _op: 'in', v: arr }),
     eq: v => ({ _op: 'eq', v }),
+    ne: v => ({ _op: 'ne', v }),
     neq: v => ({ _op: 'neq', v }),
     lte: v => ({ _op: 'lte', v }),
     gte: v => ({ _op: 'gte', v }),
+    lt: v => ({ _op: 'lt', v }),
+    gt: v => ({ _op: 'gt', v }),
+    inc: n => ({ _op: 'inc', v: n }),
   },
   serverDate: () => new Date(),
   RegExp: opts => ({ _regexp: opts }),
@@ -364,7 +389,7 @@ describe('集成测试：团长结算子链路', () => {
       expect(caught.code).toBe('INVALID_PARAMS')
     })
 
-    test('已 settled 的记录再次结算：status 保持 settled（覆盖更新）', async () => {
+    test('已 settled 的记录再次结算：status 保持 settled，settledBy 不被覆盖（P1-B 并发安全）', async () => {
       setupScenario({
         commissions: [
           { _id: 'c1', inviterId: 'L1', status: 'settled', commissionAmount: 50, settledAt: new Date(0), settledBy: 'old' },
@@ -373,10 +398,11 @@ describe('集成测试：团长结算子链路', () => {
       await tuanAdmin.settleTuanCommissions({ ids: ['c1'] }, {}, { openid: 'newAdmin' })
       const c1 = mockDb._collections.tuan_commissions.docs.find(d => d._id === 'c1')
       expect(c1.status).toBe('settled')
-      expect(c1.settledBy).toBe('newAdmin')
+      // P1-B: 已结算记录被跳过（where status=pending 命中 0 条），原 settledBy 保留
+      expect(c1.settledBy).toBe('old')
     })
 
-    test('混合 pending + settled：所有命中记录都会写入新 settledAt / settledBy（业务幂等覆盖）', async () => {
+    test('混合 pending + settled：仅 pending 记录被结算，settled 记录保持原状（P1-B 并发安全）', async () => {
       const oldTime = new Date(1000)
       setupScenario({
         commissions: [
@@ -390,9 +416,9 @@ describe('集成测试：团长结算子链路', () => {
       // c1 之前是 pending，现在有 settledAt/settledBy
       expect(c1.settledBy).toBe('adminX')
       expect(c1.settledAt).toBeDefined()
-      // c2 之前已经 settled；当前实现会覆盖 settledAt（业务上允许）
-      expect(c2.settledBy).toBe('adminX')
-      expect(c2.settledAt.getTime()).toBeGreaterThan(oldTime.getTime())
+      // P1-B: c2 已 settled，where status=pending 不命中，保留原 settledBy/settledAt
+      expect(c2.settledBy).toBe('prev')
+      expect(c2.settledAt.getTime()).toBe(oldTime.getTime())
     })
   })
 

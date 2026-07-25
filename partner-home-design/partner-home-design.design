@@ -1,0 +1,16 @@
+{
+  "data": [],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "mobile",
+    "projectName": "合作伙伴管理中心",
+    "designLibrary": {
+      "name": "苹果",
+      "id": "dl_builtin_apple",
+      "version": null,
+      "scope": "built-in-global",
+      "path": "/Users/yy/.trae-cn/design_libraries/dl_builtin_apple",
+      "versionSource": "metadata.json"
+    }
+  }
+}

@@ -173,6 +173,7 @@ export interface RegistrationRecord {
     pricePerPerson?: number;
     pricePerPet?: number;
     orderId?: string;
+    outTradeNo?: string;
     pendingReview?: boolean;
     riskDecision?: string;
     riskReasons?: string[];
@@ -184,6 +185,7 @@ export interface OrderRecord {
     _id?: string;
     ownerId?: string;
     orderId?: string;
+    outTradeNo?: string;
     orderType?: string;
     activityId?: string;
     activityTitle?: string;

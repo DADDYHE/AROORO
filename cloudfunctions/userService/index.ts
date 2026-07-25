@@ -19,55 +19,22 @@
  */
 
 // =====================================================================
-// 公共类型（与 adminService/index.ts / partnerService 保持一致）
+// 公共类型（与 adminService / partnerService 保持一致，抽至 common/types.ts）
 // =====================================================================
-
-export interface AuthLike {
-  openid?: string
-  adminId?: string
-  partnerId?: string
-  isPartner?: boolean
-  isSuperAdmin?: boolean
-  roles?: string[]
-  permissions?: string[]
-  _isHttpAuth?: boolean
-  [k: string]: unknown
-}
-
-export interface CloudEvent {
-  action?: string
-  data?: Record<string, unknown>
-  body?: string | Record<string, unknown>
-  headers?: Record<string, string | undefined>
-  httpMethod?: string
-  requestContext?: {
-    httpMethod?: string
-    [k: string]: unknown
-  }
-  accessToken?: string
-  openid?: string
-  [k: string]: unknown
-}
-
-export interface CloudContext {
-  HTTP_CONTEXT?: {
-    headers: Record<string, string | undefined>
-  }
-  [k: string]: unknown
-}
+import type { AuthLike, CloudEvent, CloudContext } from './common/types'
 
 // =====================================================================
 // 内部模块初始化（require CommonJS 模块）
 // =====================================================================
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { initCloud, handleError, ERROR_CODES } = require('./common/utils')
+const { initCloud, maskOpenid } = require('./common/utils')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { verifyAuth } = require('./common/auth-middleware')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { err, toResponse, isBusinessError } = require('./common/errors')
+const { err, toResponse, isBusinessError, wrapUnknown } = require('./common/errors')
 
 const { db } = initCloud()
 const logger = createLogger('userService')
@@ -156,7 +123,8 @@ export const handlers: UserHandlers = {
 }
 
 // 不需要登录的 action（公共接口）
-const NO_AUTH_ACTIONS: ReadonlySet<string> = new Set(['login', 'check'])
+// M8 修复：getConfig 返回静态空配置，首屏通常未登录拉取，免登录
+const NO_AUTH_ACTIONS: ReadonlySet<string> = new Set(['login', 'check', 'getConfig'])
 
 // =====================================================================
 // 主入口
@@ -171,15 +139,15 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
   try {
     const requireLogin = !NO_AUTH_ACTIONS.has(action)
     const auth = await verifyAuth(event, { requireLogin })
-    logger.info(action, { openid: auth.openid })
+    logger.info(action, { openid: maskOpenid(auth.openid) })
     return await handlers[action as keyof UserHandlers](event, context, auth)
   } catch (error) {
     logger.error(action, error)
     if (isBusinessError(error)) {
-      return toResponse(error)
+      return toResponse(error) // 受控：业务异常 message 安全回显
     }
-    const code = (error as { code?: number })?.code || ERROR_CODES.BUSINESS
-    return handleError(error, (error as Error).message, code)
+    // H1 修复：未知异常经 wrapUnknown 脱敏，避免原始 message（含集合名/内部标识）透传客户端
+    return toResponse(wrapUnknown(error))
   }
 }
 

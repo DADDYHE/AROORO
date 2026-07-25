@@ -59,7 +59,42 @@ describe('Sprint 46: couponExpiryCheck TypeScript 迁移', () => {
       expect(code).toMatch(/status:\s*NEW_STATUS/)
       expect(code).toMatch(/updatedAt:\s*db\.serverDate\(\)/)
     })
-    test('返回 updatedCount', () => { expect(code).toMatch(/updatedCount:\s*res\.stats\.updated/) })
+    // H1: 循环分批更新，累计 totalUpdated 后返回
+    test('返回 updatedCount（累计 totalUpdated）', () => { expect(code).toMatch(/updatedCount:\s*totalUpdated/) })
+    test('H1: BATCH_LIMIT = 100', () => { expect(code).toMatch(/BATCH_LIMIT\s*=\s*100/) })
+    test('H1: MAX_ROUNDS = 20', () => { expect(code).toMatch(/MAX_ROUNDS\s*=\s*20/) })
+    test('H1: 循环分批 update', () => {
+      expect(code).toMatch(/for\s*\(\s*let\s+round\s*=\s*0/)
+      expect(code).toMatch(/updated\s*<\s*BATCH_LIMIT/)
+    })
+    // M1: locked 卡死券处理
+    test('M1: STUCK_LOCKED_STATUS = locked', () => {
+      expect(code).toMatch(/STUCK_LOCKED_STATUS.*=.*['"]locked['"]/)
+    })
+    test('M1: STUCK_LOCKED_DAYS = 7', () => {
+      expect(code).toMatch(/STUCK_LOCKED_DAYS\s*=\s*7/)
+    })
+    test('M1: 阶段 2 处理逻辑', () => {
+      expect(code).toMatch(/stuckThreshold/)
+      expect(code).toMatch(/stuckLockedUpdated/)
+    })
+    test('M1: 清理关联字段', () => {
+      expect(code).toMatch(/orderId:\s*['"]{2}/)
+      expect(code).toMatch(/orderType:\s*['"]{2}/)
+    })
+    test('M1: 卡死券告警', () => {
+      expect(code).toMatch(/coupon\.expiry\.stuck\.locked/)
+    })
+    // M3: 接入告警
+    test('M3: recordAlert 接入', () => {
+      expect(code).toMatch(/require\(['"]\.\.\/common\/alert['"]\)/)
+      expect(code).toMatch(/recordAlert\(['"]critical['"]/)
+    })
+    // L2: 并发保护
+    test('L2: 并发保护标志', () => {
+      expect(code).toMatch(/_isRunning/)
+      expect(code).toMatch(/if\s*\(\s*_isRunning\s*\)/)
+    })
   })
 
   describe('6. Runtime shim', () => {

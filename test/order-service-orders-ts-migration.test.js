@@ -88,8 +88,11 @@ describe('Sprint 28: orderService/orders TypeScript 迁移', () => {
       expect(tsCode).toMatch(/interface\s+AdminDoc\b/)
     })
 
-    test('强类型化 ALLOWED_TRANSITIONS（订单状态机）', () => {
-      expect(tsCode).toMatch(/ALLOWED_TRANSITIONS/)
+    test('订单状态机（boardingOrderStateMachine.canTransition）', () => {
+      // Sprint 28 重构：状态机外置到 ./common/boarding-state-machine，
+      // orders.ts 通过 boardingOrderStateMachine.canTransition() 推进状态，
+      // 不再内联 ALLOWED_TRANSITIONS 常量
+      expect(tsCode).toMatch(/boardingOrderStateMachine\.canTransition/)
     })
 
     test('强类型化 STATUS_TEXT_MAP', () => {
@@ -181,8 +184,9 @@ describe('Sprint 28: orderService/orders TypeScript 迁移', () => {
       expect(tsCode).toMatch(/paginate/)
     })
 
-    test('检测订单状态机（ALLOWED_TRANSITIONS）', () => {
-      expect(tsCode).toMatch(/ALLOWED_TRANSITIONS/)
+    test('检测订单状态机（boardingOrderStateMachine.canTransition）', () => {
+      // Sprint 28 重构：状态机外置到 ./common/boarding-state-machine
+      expect(tsCode).toMatch(/boardingOrderStateMachine\.canTransition/)
     })
   })
 

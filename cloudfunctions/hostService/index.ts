@@ -214,7 +214,11 @@ function _getKey(): Buffer {
   if (!passphrase || passphrase.length < 16) {
     throw new Error('ENCRYPT_KEY 环境变量未配置或长度不足（至少 16 字符），无法加密敏感数据')
   }
-  const salt = process.env.ENCRYPT_SALT || 'hostService-default-salt'
+  // P2-019: 强制要求显式配置 ENCRYPT_SALT，避免使用弱盐值（回归 P3-6 约束）
+  const salt = process.env.ENCRYPT_SALT
+  if (!salt || salt.length < 8) {
+    throw new Error('ENCRYPT_SALT 环境变量未配置或长度不足（至少 8 字符），无法加密敏感数据')
+  }
   const { key } = deriveKey(passphrase, salt)
   _derivedKey = key
   return key

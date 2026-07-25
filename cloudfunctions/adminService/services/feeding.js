@@ -102,6 +102,12 @@ async function updateFeederProfile(event, context, auth) {
   const { feederId } = event
   if (!feederId) {throw err('INVALID_PARAMS', '缺少喂养师ID')}
 
+  const existing = await db.collection('feeders').doc(feederId).get()
+  if (!existing.data) {throw err('NOT_FOUND', '喂养师不存在')}
+  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
+
   const updateData = { updatedAt: db.serverDate(), ...filterFields(FIELD_WHITELISTS.feeder, event) }
 
   await db.collection('feeders').doc(feederId).update({ data: updateData })
@@ -174,6 +180,22 @@ async function handleFeedingOrder(event, context, auth) {
   const orderRes = await db.collection('feedingOrders').where({ _id: orderId }).limit(1).get()
   if (!orderRes.data || orderRes.data.length === 0) {throw err('NOT_FOUND', '订单不存在')}
   const orderData = orderRes.data[0]
+
+  // 资源归属校验：super_admin 可操作所有订单；其他角色须为订单 feeder 的归属人
+  if (!auth.isSuperAdmin) {
+    let feederOwner
+    if (orderData.feederId) {
+      try {
+        const feederRes = await db.collection('feeders').doc(orderData.feederId).field({ createdBy: true }).get()
+        feederOwner = feederRes.data && feederRes.data.createdBy
+      } catch (e) {
+        feederOwner = null
+      }
+    }
+    if (feederOwner !== auth.openid) {
+      throw err('PERMISSION_DENIED', '无权操作他人资源')
+    }
+  }
 
   try {
     validateTransition(FEEDING_ORDER_TRANSITIONS, orderData.status, newStatus)

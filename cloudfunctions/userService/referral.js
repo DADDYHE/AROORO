@@ -18,23 +18,17 @@ exports.getInvitedUsers = exports.getReferralStats = void 0;
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { initCloud, handleSuccess, handleError, ERROR_CODES } = require('./common/utils');
+const { initCloud, handleSuccess, handleError, ERROR_CODES, maskOpenid } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { db } = initCloud();
 const _ = db.command;
+const $ = db.command.aggregate;
 const logger = createLogger('userService:referral');
 // =====================================================================
 // 辅助函数
 // =====================================================================
-function sumOrderTotal(orders) {
-    let total = 0;
-    orders.forEach((o) => {
-        total += Number(o.totalPrice) || Number(o.price) || 0;
-    });
-    return total;
-}
 // =====================================================================
 // Handler 实现
 // =====================================================================
@@ -51,7 +45,7 @@ async function getReferralStats(event, context, auth) {
         }
         catch (e) {
             logger.warn('getReferralStats.users.fetch', {
-                openid,
+                openid: maskOpenid(openid),
                 code: e.errCode,
                 msg: e.message,
             });
@@ -63,6 +57,7 @@ async function getReferralStats(event, context, auth) {
         const invitedUsersRes = await db.collection('users')
             .where({ inviterId: openid })
             .field({ _id: true, nickName: true, avatarUrl: true, createdAt: true })
+            .limit(500)
             .get();
         const invitedUsers = (invitedUsersRes.data || []);
         const totalInvited = invitedUsers.length;
@@ -71,83 +66,47 @@ async function getReferralStats(event, context, auth) {
         let totalSpent = 0;
         if (invitedOpenids.length > 0) {
             const spenderOpenids = new Set();
-            // 查询非 mall 类型的已完成订单（mall 类型单独查询，避免重复计算）
-            const ordersRes = await db.collection('orders')
-                .where({ ownerId: _.in(invitedOpenids), status: 'completed', type: _.ne('mall') })
-                .limit(1000)
-                .get();
-            (ordersRes.data || []).forEach((o) => {
-                if (o.ownerId) {
-                    spenderOpenids.add(o.ownerId);
+            // L3 修复：原 5 个查询各 limit(1000) 累加，大流量 KOL 统计系统性偏低。
+            //   改为服务端聚合（group + sum + addToSet），彻底消除截断。并行 Promise.all + 独立 .catch 容错（沿用 M5）。
+            //   ⚠️ orders 集合真实字段是 orderType（非 type）；原 type/type:'mall' 过滤对所有文档恒匹配/恒不匹配，
+            //      此处修正为 orderType，mall 桶统计才正确。tuan_orders 金额字段是 totalAmount（L4 修正，原取 totalPrice/price 恒为 0）。
+            const [ordersAgg, mallAgg, feedAgg, tuanAgg, actAgg] = await Promise.all([
+                db.collection('orders').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed', orderType: _.ne('mall') })
+                    .group({ _id: null, total: $.sum('$totalPrice'), owners: $.addToSet('$ownerId') })
+                    .end()
+                    .catch((e) => { logger.warn('getReferralStats.orders', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+                db.collection('orders').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed', orderType: 'mall' })
+                    .group({ _id: null, total: $.sum('$totalPrice'), owners: $.addToSet('$ownerId') })
+                    .end()
+                    .catch((e) => { logger.warn('getReferralStats.mall', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+                db.collection('feedingOrders').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+                    .group({ _id: null, total: $.sum('$totalPrice'), owners: $.addToSet('$ownerId') })
+                    .end()
+                    .catch((e) => { logger.warn('getReferralStats.feedingOrders', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+                // L4 修正：tuan_orders 金额字段是 totalAmount（元），原 sumOrderTotal 取 totalPrice/price 恒为 0，团购消费从未计入
+                db.collection('tuan_orders').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+                    .group({ _id: null, total: $.sum('$totalAmount'), owners: $.addToSet('$ownerId') })
+                    .end()
+                    .catch((e) => { logger.warn('getReferralStats.tuan_orders', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+                db.collection('activity_registrations').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+                    .group({ _id: null, total: $.sum('$totalPrice'), owners: $.addToSet('$ownerId') })
+                    .end()
+                    .catch((e) => { logger.warn('getReferralStats.activity_registrations', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+            ]);
+            const aggRows = [ordersAgg, mallAgg, feedAgg, tuanAgg, actAgg];
+            for (const r of aggRows) {
+                const row = (r.data || [])[0];
+                if (row) {
+                    totalSpent += Number(row.total) || 0;
+                    (row.owners || []).forEach((o) => { if (o) {
+                        spenderOpenids.add(o);
+                    } });
                 }
-            });
-            totalSpent += sumOrderTotal((ordersRes.data || []));
-            const mallRes = await db.collection('orders')
-                .where({ ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' })
-                .limit(1000)
-                .get();
-            (mallRes.data || []).forEach((o) => {
-                if (o.ownerId) {
-                    spenderOpenids.add(o.ownerId);
-                }
-            });
-            totalSpent += sumOrderTotal((mallRes.data || []));
-            try {
-                const feedRes = await db.collection('feedingOrders')
-                    .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-                    .limit(1000)
-                    .get();
-                (feedRes.data || []).forEach((o) => {
-                    if (o.ownerId) {
-                        spenderOpenids.add(o.ownerId);
-                    }
-                });
-                totalSpent += sumOrderTotal((feedRes.data || []));
-            }
-            catch (e) {
-                logger.warn('getReferralStats.feedingOrders', {
-                    openid,
-                    code: e.errCode,
-                    msg: e.message,
-                });
-            }
-            try {
-                const tuanRes = await db.collection('tuan_orders')
-                    .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-                    .limit(1000)
-                    .get();
-                (tuanRes.data || []).forEach((o) => {
-                    if (o.ownerId) {
-                        spenderOpenids.add(o.ownerId);
-                    }
-                });
-                totalSpent += sumOrderTotal((tuanRes.data || []));
-            }
-            catch (e) {
-                logger.warn('getReferralStats.tuan_orders', {
-                    openid,
-                    code: e.errCode,
-                    msg: e.message,
-                });
-            }
-            try {
-                const actRes = await db.collection('activity_registrations')
-                    .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-                    .limit(1000)
-                    .get();
-                (actRes.data || []).forEach((o) => {
-                    if (o.ownerId) {
-                        spenderOpenids.add(o.ownerId);
-                    }
-                });
-                totalSpent += sumOrderTotal((actRes.data || []));
-            }
-            catch (e) {
-                logger.warn('getReferralStats.activity_registrations', {
-                    openid,
-                    code: e.errCode,
-                    msg: e.message,
-                });
             }
             consumingCount = spenderOpenids.size;
         }
@@ -178,7 +137,7 @@ async function getInvitedUsers(event, context, auth) {
         }
         catch (e) {
             logger.warn('getInvitedUsers.users.fetch', {
-                openid,
+                openid: maskOpenid(openid),
                 code: e.errCode,
                 msg: e.message,
             });
@@ -202,72 +161,56 @@ async function getInvitedUsers(event, context, auth) {
         const invitedOpenids = invitedUsers.map((u) => u._id).filter((id) => Boolean(id));
         const orderMap = {};
         if (invitedOpenids.length > 0) {
-            const collectInto = (orders) => {
-                orders.forEach((o) => {
-                    const key = o.ownerId;
+            // L3 修复：原 collectInto 逐条 limit(1000) 累加，大流量 KOL 的受邀用户订单被截断。
+            //   改为按 ownerId 的 per-user 聚合（group + sum + count），彻底消除截断。
+            //   orderType / tuan.totalAmount 字段修正同 getReferralStats（L3/L4）。
+            const mergeAgg = (r) => {
+                ;
+                (r.data || []).forEach((g) => {
+                    const key = g._id;
                     if (!key) {
                         return;
                     }
                     if (!orderMap[key]) {
                         orderMap[key] = { orderCount: 0, totalSpent: 0 };
                     }
-                    orderMap[key].orderCount += 1;
-                    orderMap[key].totalSpent += Number(o.totalPrice) || Number(o.price) || 0;
+                    orderMap[key].orderCount += Number(g.count) || 0;
+                    orderMap[key].totalSpent += Number(g.total) || 0;
                 });
             };
-            // 查询非 mall 类型的已完成订单（mall 类型单独查询，避免重复计算）
-            const ordersRes = await db.collection('orders')
-                .where({ ownerId: _.in(invitedOpenids), status: 'completed', type: _.ne('mall') })
-                .limit(1000)
-                .get();
-            collectInto((ordersRes.data || []));
-            const mallRes = await db.collection('orders')
-                .where({ ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' })
-                .limit(1000)
-                .get();
-            collectInto((mallRes.data || []));
-            try {
-                const feedRes = await db.collection('feedingOrders')
-                    .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-                    .limit(1000)
-                    .get();
-                collectInto((feedRes.data || []));
-            }
-            catch (e) {
-                logger.warn('getInvitedUsers.feedingOrders', {
-                    openid,
-                    code: e.errCode,
-                    msg: e.message,
-                });
-            }
-            try {
-                const tuanRes = await db.collection('tuan_orders')
-                    .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-                    .limit(1000)
-                    .get();
-                collectInto((tuanRes.data || []));
-            }
-            catch (e) {
-                logger.warn('getInvitedUsers.tuan_orders', {
-                    openid,
-                    code: e.errCode,
-                    msg: e.message,
-                });
-            }
-            try {
-                const actRes = await db.collection('activity_registrations')
-                    .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-                    .limit(1000)
-                    .get();
-                collectInto((actRes.data || []));
-            }
-            catch (e) {
-                logger.warn('getInvitedUsers.activity_registrations', {
-                    openid,
-                    code: e.errCode,
-                    msg: e.message,
-                });
-            }
+            const [ordersAgg, mallAgg, feedAgg, tuanAgg, actAgg] = await Promise.all([
+                db.collection('orders').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed', orderType: _.ne('mall') })
+                    .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalPrice') })
+                    .end()
+                    .catch((e) => { logger.warn('getInvitedUsers.orders', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+                db.collection('orders').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed', orderType: 'mall' })
+                    .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalPrice') })
+                    .end()
+                    .catch((e) => { logger.warn('getInvitedUsers.mall', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+                db.collection('feedingOrders').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+                    .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalPrice') })
+                    .end()
+                    .catch((e) => { logger.warn('getInvitedUsers.feedingOrders', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+                // L4 修正：tuan_orders 金额字段是 totalAmount（元）
+                db.collection('tuan_orders').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+                    .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalAmount') })
+                    .end()
+                    .catch((e) => { logger.warn('getInvitedUsers.tuan_orders', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+                db.collection('activity_registrations').aggregate()
+                    .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+                    .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalPrice') })
+                    .end()
+                    .catch((e) => { logger.warn('getInvitedUsers.activity_registrations', { openid: maskOpenid(openid), code: e.errCode }); return { data: [] }; }),
+            ]);
+            mergeAgg(ordersAgg);
+            mergeAgg(mallAgg);
+            mergeAgg(feedAgg);
+            mergeAgg(tuanAgg);
+            mergeAgg(actAgg);
         }
         const list = invitedUsers.map((u) => {
             const stats = orderMap[u._id] || { orderCount: 0, totalSpent: 0 };

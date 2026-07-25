@@ -49,9 +49,7 @@ describe('Sprint 46: i18nOverride TypeScript 迁移', () => {
     let code
     beforeAll(() => { code = readFileSafe(path.join(TS_DIR, 'index.ts')) })
     test('fetchActive', () => { expect(code).toMatch(/export\s+async\s+function\s+fetchActive\b/) })
-    test('别名 fetchActiveOverrides', () => {
-      expect(code).toMatch(/fetchActiveOverrides:\s*fetchActive/)
-    })
+    // L2：fetchActiveOverrides 别名已移除（不再与 adminService 内部函数名重复）
   })
 
   describe('6. 业务流程', () => {
@@ -81,7 +79,8 @@ describe('Sprint 46: i18nOverride TypeScript 迁移', () => {
     let pkg
     beforeAll(() => { pkg = JSON.parse(readFileSafe(path.join(ROOT, 'package.json'))) })
     test('audit', () => { expect(pkg.scripts['audit:s46-i18n-override-ts']).toBe('node scripts/audit-s46-i18n-override-ts.js') })
-    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:s46-batch-services-ts:strict/) })
+    // ci:check 现走统一入口 audit:all:strict（含本服务 audit），不再硬编码 batch 入口
+    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/) })
   })
 
   describe('10. audit 脚本', () => {

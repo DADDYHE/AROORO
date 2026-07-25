@@ -101,13 +101,27 @@ const mockDb = {
           return true
         })
         return {
+          // H4: 添加 field 支持（refund.ts 事务前查询 _id 列表用）
+          field: _projection => ({
+            limit: _n => ({ get: async () => ({ data: docs }) }),
+            get: async () => ({ data: docs }),
+          }),
           limit: n => ({ get: async () => ({ data: docs }) }),
           get: async () => ({ data: docs }),
         }
       },
     }
   },
-  command: {},
+  // P4-1-1: 支持事务——refund.ts 退款时使用 db.startTransaction() 原子更新订单/业务表/佣金
+  startTransaction: async () => {
+    const txCollection = (name) => mockDb.collection(name)
+    return {
+      collection: txCollection,
+      commit: async () => ({}),
+      rollback: async () => ({}),
+    }
+  },
+  command: { inc: n => ({ _inc: n }) },
   serverDate: () => 'MOCK_DATE',
 }
 
@@ -269,8 +283,8 @@ describe('Sprint 17: paymentService/refund 风险控制 + 限流集成', () => {
         action: 'allow', level: 'none', reasons: [],
       })
 
-      // 默认 perUserPerTargetPerMinute=5，先发 5 次
-      for (let i = 0; i < 5; i++) {
+      // BUSINESS_TYPE_DEFAULT_CONFIG.refund: perUserPerTargetPerMinute=2，先发 2 次
+      for (let i = 0; i < 2; i++) {
         const r = await refund.createRefund(
           { outTradeNo: 'T1', refundAmount: 100, totalAmount: 100 },
           {},
@@ -281,7 +295,7 @@ describe('Sprint 17: paymentService/refund 风险控制 + 限流集成', () => {
         expect(r.pendingReview).toBe(false)
       }
 
-      // 第 6 次应被限流
+      // 第 3 次应被限流
       const blocked = await refund.createRefund(
         { outTradeNo: 'T1', refundAmount: 100, totalAmount: 100 },
         {},
@@ -305,8 +319,8 @@ describe('Sprint 17: paymentService/refund 风险控制 + 限流集成', () => {
         action: 'allow', level: 'none', reasons: [],
       })
 
-      // 用户 oU1 用满 5 次
-      for (let i = 0; i < 5; i++) {
+      // 用户 oU1 用满 2 次（refund 类型 perUserPerTargetPerMinute=2）
+      for (let i = 0; i < 2; i++) {
         const r = await refund.createRefund(
           { outTradeNo: 'T1', refundAmount: 100, totalAmount: 100 },
           {},

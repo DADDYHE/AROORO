@@ -14,26 +14,41 @@
  *   4. 团购订单（orders collection，type=group_buy）
  *   5. 活动报名（activity_registrations collection）
  *
- * 共 7 个内部函数：
- *   1. main - 入口（cron 触发）
- *   2. fetchAllExpired - 分批拉取过期订单
- *   3. closeWechatOrder - 关闭微信支付订单
- *   4. restoreProductStock - 恢复商品库存
- *   5. unlockOrderCoupons - 解锁订单相关优惠券
- *   6. restoreTuanDealStock - 恢复团购名额
- *   7. restoreActivityQuota - 恢复活动名额
+ * 共 10 个内部函数：
+ *   1. main - 入口（cron 触发，含 _isRunning 并发保护）
+ *   2. normalizePrivateKey - 微信支付私钥格式归一化
+ *   3. generateAuthorization - 微信支付 V3 签名生成
+ *   4. closeWechatOrder - 关闭微信支付订单（fetch async/await）
+ *   5. restoreProductStock - 恢复商品库存（含 SKU 校验）
+ *   6. unlockOrderCoupons - 解锁订单相关优惠券
+ *   7. restoreTuanDealStock - 恢复团购名额
+ *   8. restoreActivityQuota - 恢复活动名额
+ *   9. cancelTuanOrder - 同步取消 tuan_orders（幂等保护）
+ *  10. pushError - 错误收集（限制数组上限）
+ *  11. fetchAllExpired - 分批拉取过期订单
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
  *   - 复用 AuthLike / CloudEvent / CloudContext 公共类型
- *   - 5 类订单 / 6 个辅助函数 / 7 个超时时长常量全部强类型化
+ *   - 5 类订单 / 11 个辅助函数 / 7 个超时时长常量全部强类型化
  *   - 与已迁移的 11 个服务保持类型一致
  *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.orderTimeoutService.json
+ *
+ * 数据库索引建议（运维需在对应集合上创建）：
+ *   orders:
+ *     - { status: 1, paymentStatus: 1, createdAt: 1 }                        - 覆盖 cancelBoardingOrders/Feeding/Mall/GroupBuy
+ *     - { type: 1, status: 1, paymentStatus: 1, createdAt: 1 }               - 覆盖 cancelMallOrders/cancelGroupBuyOrders（H1 修复后按 type 过滤）
+ *   feedingOrders:
+ *     - { status: 1, paymentStatus: 1, createdAt: 1 }                        - 覆盖 cancelFeedingOrders
+ *   activity_registrations:
+ *     - { status: 1, paymentStatus: 1, createdAt: 1 }                        - 覆盖 cancelActivityOrders
+ *   user_coupons:
+ *     - { lockedOrderId: 1, status: 1 }                                      - 覆盖 unlockOrderCoupons
+ *   tuan_orders:
+ *     - { _id: 1, status: 1 }                                                - 覆盖 cancelTuanOrder
  */
-/// <reference types="node" />
-/// <reference types="node" />
 export interface AuthLike {
     openid?: string;
     nickName?: string;
@@ -50,9 +65,9 @@ export interface CloudEvent {
     action?: string;
     data?: Record<string, unknown>;
     body?: string | Record<string, unknown>;
-    /** cron 触发时携带的时间戳 */
+    /** cron 触发时携带的时间戳（ISO 字符串，优先用作超时基准时间） */
     Time?: string;
-    /** cron 触发时携带的时间戳（毫秒） */
+    /** cron 触发时携带的时间戳（毫秒，Time 不可用时降级使用） */
     Timestamp?: number;
     /** cron 触发时携带的触发器名称 */
     TriggerName?: string;
@@ -168,19 +183,6 @@ export interface TimeoutResult {
         stockRestoreError?: string;
     }>;
 }
-/** HTTPS 请求选项（关闭微信订单） */
-export interface HttpsRequestOptions {
-    hostname: string;
-    port: number;
-    path: string;
-    method: 'POST';
-    headers: Record<string, string | number>;
-}
-/** https.IncomingMessage 简化类型 */
-export interface IncomingMessageLite {
-    statusCode?: number;
-    on: (event: 'data' | 'end', listener: (chunk?: string | Buffer) => void) => void;
-}
 /** 寄养订单超时（分钟） */
 export declare const ORDER_TIMEOUT_MINUTES = 30;
 /** 喂养订单超时（分钟） */
@@ -216,8 +218,13 @@ export declare function closeWechatOrder(outTradeNo: string): Promise<boolean>;
 /**
  * 取消订单时恢复商品库存：
  *   - totalStock / soldCount
- *   - stock 兜底
- *   - SKU 维度：skus[index].stock / soldCount
+ *   - SKU 维度：skus[index].stock / soldCount（仅 SKU 模式）
+ *   - 顶层 stock：仅无 SKU 模式才更新
+ *
+ * H5: SKU 模式下不更新顶层 stock——与 mallService 下单逻辑对称
+ *   （下单时 SKU 模式只减 skus[index].stock 不减 stock，
+ *    取消时若同时加 stock 和 skus[index].stock 会导致 stock 虚高）
+ * M7: 补充 skus 字段类型校验，避免 null/非数组时 findIndex 抛错
  */
 export declare function restoreProductStock(productId: string | undefined, skuId: string | null | undefined, quantity: number | undefined): Promise<void>;
 /**
@@ -237,8 +244,14 @@ export declare function restoreTuanDealStock(dealId: string | undefined, quantit
  *   paymentService 在支付回调中会把 tuan_orders 状态从 pending → paid，
  *   但 orderTimeoutService 取消时只更新 orders，没联动 tuan_orders，
  *   导致管理后台 / 团长视图看到 "待确认" 的幽灵订单。
+ *
+ * H3: 删除 outTradeNo fallback——paymentService/services/pay.js 注释明确
+ *     "tuan_orders 中没有 outTradeNo 字段"，fallback 路径永远查不到记录
+ * H4: 不写 paymentStatus='cancelled'——'cancelled' 不是合法 PaymentStatus 枚举值，
+ *     超时未支付的 tuan_orders 应保持 paymentStatus='unpaid'，仅更新 status
+ * M8: 直接使用 where().update() 替代两步查询+更新，避免 TOCTOU 风险
  */
-export declare function cancelTuanOrder(tuanOrderId: string | undefined, outTradeNo: string | undefined): Promise<void>;
+export declare function cancelTuanOrder(tuanOrderId: string | undefined): Promise<void>;
 /**
  * 取消活动报名时回退 activities 集合的 currentParticipants。
  */
@@ -247,20 +260,6 @@ export declare function restoreActivityQuota(activityId: string | undefined, par
  * 通用分批拉取接口（最大 MAX_BATCHES * BATCH_SIZE = 1000 条）。
  */
 export declare function fetchAllExpired<T = OrderDoc>(collection: string, where: Record<string, unknown>, fields: Record<string, boolean>): Promise<T[]>;
-/**
- * 订单超时自动取消主入口。
- *
- * cron 表达式：7 段（秒 分 时 日 月 星期 年），每 30 分钟触发一次
- * 入口签名遵循 CloudBase 云函数约定（event, context）
- *
- * 流程：
- *   1. 计算 5 类订单各自的超时截止时间（now - 30min）
- *   2. 依次扫描 5 类订单集合的过期未支付记录
- *   3. 标记 status='cancelled' + 记录 cancelReason
- *   4. 关闭对应的微信支付订单
- *   5. 恢复相关资源（库存 / 团名额 / 活动名额 / 优惠券锁定）
- *   6. 汇总结果（各类取消数 + 微信关单数 + 错误列表）
- */
 export declare function main(event: CloudEvent, _context: CloudContext): Promise<unknown>;
 declare const _default: {
     main: typeof main;

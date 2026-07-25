@@ -2,7 +2,7 @@
  * adminService/index.ts - 管理后台主入口（TypeScript 源文件 - Sprint 33 迁移）
  *
  * 业务功能：
- *   - 小程序云函数入口：处理 16 类业务模块的统一调度
+ *   - 小程序云函数入口：处理 17 类业务模块的统一调度
  *   - HTTP/JWT 路径：web 端管理后台 + 小程序扫码登录
  *   - 普通路径：小程序端直接调用
  *
@@ -109,17 +109,20 @@ export declare function parseHttpAuth(httpContext: {
     headers: Record<string, string | undefined>;
 }): JwtDecodedToken | null;
 export declare function checkHttpPermission(decoded: JwtDecodedToken | null, action: string): boolean;
+/**
+ * H1 安全修复：以 DB 实时状态（enrichAuthFromAdmin 结果）为权威判权依据。
+ *
+ * 背景：旧逻辑仅信任 JWT 内的 isSuperAdmin/isPartner 声明，账号被禁用/降权后
+ * 旧 token 在有效期内仍可越权；叠加自动续期后 token 可永不过期。
+ *
+ * 规则：
+ *   - permission 为 null/undefined（仅需登录）→ 放行（token 已验签）
+ *   - 需要等级权限但 enrichment 为空（admins 记录不存在 / status!=='active'）→ 一律拒绝
+ *   - super_admin → 实时 roles 含 super_admin
+ *   - admin / partner → super_admin 向下兼容，或实时 isPartner
+ */
+export declare function checkEnrichedPermission(enrichment: EnrichmentResult | null, action: string): boolean;
 export declare function getEnrichAdminDb(): CloudBaseDB;
 export declare function enrichAuthFromAdmin(decoded: JwtDecodedToken | null): Promise<EnrichmentResult | null>;
 export declare const main: (event: CloudEvent, context: CloudContext) => Promise<unknown>;
-declare const _default: {
-    main: (event: CloudEvent, context: CloudContext) => Promise<unknown>;
-    ACTION_PERMISSIONS: Record<string, PermissionLevel>;
-    NO_AUTH_REQUIRED: Set<string>;
-    checkHttpPermission: typeof checkHttpPermission;
-    enrichAuthFromAdmin: typeof enrichAuthFromAdmin;
-    parseHttpEvent: typeof parseHttpEvent;
-    parseHttpAuth: typeof parseHttpAuth;
-    getEnrichAdminDb: typeof getEnrichAdminDb;
-};
-export default _default;
+export { main as default };

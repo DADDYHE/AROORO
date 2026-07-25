@@ -158,6 +158,10 @@ async function updateCouponTemplate(event, context, auth) {
 
   const template = existRes.data[0]
 
+  if (!auth.isSuperAdmin && template.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
+
   // active/paused/ended 状态下：
   // - 允许调整 stock + perUserLimit（高频管理需求）
   // - 允许切换领取相关设置 claimable/popupEnabled/popupPage
@@ -438,12 +442,43 @@ async function createCouponGrant(event, context, auth) {
     throw err('PERMISSION_DENIED', '无权管理此模板的业务范围')
   }
 
-  const grantQuantity = Math.min(userIds.length, template.remaining)
+  // H8: 单次发放人数上限，防止大批量发放导致云函数超时（15s）/ DoS
+  const MAX_GRANT_USERS = 200
+  if (userIds.length > MAX_GRANT_USERS) {
+    throw err('INVALID_PARAMS', `单次发放用户数不能超过 ${MAX_GRANT_USERS}，请分批发放`)
+  }
+  const validUserIds = [...new Set(userIds.filter((id) => typeof id === 'string' && id))]
+  if (validUserIds.length === 0) { throw err('INVALID_PARAMS', '目标用户列表无效') }
+
+  // H7: 预留式原子扣减库存 —— where(remaining >= n) 条件更新 + inc(-n)，并发发放不会超发。
+  // 整批预留失败（库存不足 n）时读取最新库存降低预留量重试，最多 3 次。
+  // 发放结束后将未用完的预留量归还（见函数尾部）。
+  let reserved = 0
+  let attemptRemaining = Number(template.remaining) || 0
+  for (let attempt = 0; attempt < 3 && reserved === 0; attempt++) {
+    const want = Math.min(validUserIds.length, attemptRemaining)
+    if (want <= 0) { break }
+    const reserveRes = await db.collection('coupon_templates')
+      .where({ _id: templateId, status: 'active', remaining: _.gte(want) })
+      .update({ data: { remaining: _.inc(-want), updatedAt: db.serverDate() } })
+    if (((reserveRes && reserveRes.stats && reserveRes.stats.updated) || 0) > 0) {
+      reserved = want
+      break
+    }
+    // 预留失败：被并发发放抢占，读取最新库存后重试
+    try {
+      const freshRes = await db.collection('coupon_templates').doc(templateId).field({ remaining: true }).get()
+      attemptRemaining = (freshRes.data && Number(freshRes.data.remaining)) || 0
+    } catch (_) { attemptRemaining = 0 }
+  }
+  if (reserved === 0) { throw err('BUSINESS_ERROR', '优惠券库存不足，发放失败') }
+
+  const grantQuantity = reserved
   const grant = {
     templateId,
     templateName: template.name,
     grantType: grantType || 'manual_batch',
-    userIds,
+    userIds: validUserIds,
     grantQuantity,
     status: 'processing',
     successCount: 0,
@@ -463,13 +498,8 @@ async function createCouponGrant(event, context, auth) {
   const errorLog = []
   const now = new Date()
 
-  for (const targetOpenid of userIds) {
-    if (successCount >= template.remaining) {
-      errorLog.push({ targetOpenid, reason: '库存不足' })
-      failedCount++
-      continue
-    }
-
+  // 单个用户发放逻辑（返回 true=成功 / false=失败并已记录 errorLog）
+  const grantToOneUser = async (targetOpenid) => {
     try {
       // perUserLimit 统计：只算"真正占用名额"的券
       //   - unused：用户持有的可用券，占名额
@@ -480,8 +510,7 @@ async function createCouponGrant(event, context, auth) {
         .count()
       if (existingCount.total >= template.perUserLimit) {
         errorLog.push({ targetOpenid, reason: `已达领取上限(${template.perUserLimit}张)` })
-        failedCount++
-        continue
+        return false
       }
 
       const startTime = template.validFrom ? new Date(template.validFrom) : now
@@ -515,16 +544,44 @@ async function createCouponGrant(event, context, auth) {
 
       coupon._id = generateId('coupon', targetOpenid)
       await db.collection('user_coupons').add({ data: coupon })
-      successCount++
+      return true
     } catch (e) {
       errorLog.push({ targetOpenid, reason: e.message || '发放异常' })
-      failedCount++
+      return false
     }
   }
 
-  await db.collection('coupon_templates').doc(templateId).update({
-    data: { remaining: _.inc(-successCount), updatedAt: db.serverDate() },
-  })
+  // H8: 分批并发发放（每批 20），替代串行 await，避免大批量发放时云函数 15s 超时
+  const BATCH_SIZE = 20
+  let cursor = 0
+  while (cursor < validUserIds.length && successCount < reserved) {
+    // 每批最多发放剩余预留量，避免超过已预留库存
+    const take = Math.min(BATCH_SIZE, reserved - successCount, validUserIds.length - cursor)
+    const batch = validUserIds.slice(cursor, cursor + take)
+    cursor += take
+    const results = await Promise.all(batch.map((openid) => grantToOneUser(openid)))
+    successCount += results.filter(Boolean).length
+    failedCount += results.filter((r) => !r).length
+  }
+  // 预留量耗尽后剩余用户直接记为库存不足
+  for (let i = cursor; i < validUserIds.length; i++) {
+    errorLog.push({ targetOpenid: validUserIds[i], reason: '库存不足' })
+    failedCount++
+  }
+
+  // H7: 归还未使用的预留库存（预留 reserved，实际成功 successCount）
+  const unusedReserved = reserved - successCount
+  if (unusedReserved > 0) {
+    try {
+      await db.collection('coupon_templates').doc(templateId).update({
+        data: { remaining: _.inc(unusedReserved), updatedAt: db.serverDate() },
+      })
+    } catch (e) {
+      logger.error('grantCoupon.releaseReserved.failed', {
+        templateId, unusedReserved, msg: e?.message,
+      })
+    }
+  }
 
   await db.collection('coupon_grants').doc(grantId).update({
     data: {
@@ -799,6 +856,15 @@ async function initIndexes() {
       unique: false,
     },
     {
+      // M2: couponExpiryCheck 查询 {status, endTime: {$lt}} 的最优索引
+      //   - 等值条件 status 在前，范围条件 endTime 在后（MongoDB 最左前缀原则）
+      //   - 也服务于 getMyCoupons（{ownerId, status} 已有 idx_ownerId_status 覆盖）
+      collection: 'user_coupons',
+      indexName: 'idx_status_endTime',
+      keys: [{ Name: 'status', Direction: '1' }, { Name: 'endTime', Direction: '1' }],
+      unique: false,
+    },
+    {
       collection: 'coupon_grants',
       indexName: 'idx_executedBy_createdAt',
       keys: [{ Name: 'executedBy', Direction: '1' }, { Name: 'createdAt', Direction: '-1' }],
@@ -810,13 +876,36 @@ async function initIndexes() {
       keys: [{ Name: 'templateId', Direction: '1' }],
       unique: false,
     },
+    // ===== 以下为非 coupon 业务索引，统一在此初始化（adminService 唯一索引入口）=====
+    {
+      // H2 防超卖：createOrder 写入 bookingKey 唯一约束，并发重复预订触发 DUPLICATE_KEY
+      //   字段真名 bookingKey（orders.ts:819 bookingKey: `booking_${hostId}_${startDate}_${endDate}`）
+      collection: 'orders',
+      indexName: 'idx_bookingKey_unique',
+      keys: [{ Name: 'bookingKey', Direction: '1' }],
+      unique: true,
+    },
+    {
+      // 补偿队列扫描：orderTimeoutService 定时 where(status:'pending').orderBy('createdAt','asc')
+      collection: 'failed_operations',
+      indexName: 'idx_status_createdAt',
+      keys: [{ Name: 'status', Direction: '1' }, { Name: 'createdAt', Direction: '1' }],
+      unique: false,
+    },
+    {
+      // M4 事务加速：addresses.setDefault 事务内 where({ openid, isDefault: true })
+      collection: 'addresses',
+      indexName: 'idx_openid_isDefault',
+      keys: [{ Name: 'openid', Direction: '1' }, { Name: 'isDefault', Direction: '1' }],
+      unique: false,
+    },
   ]
 
   const results = []
   for (const idx of indexes) {
     try {
       await db.collection(idx.collection).createIndex({
-        index: { keys: idx.keys },
+        index: { keys: idx.keys, unique: idx.unique },
         name: idx.indexName,
       })
       results.push({ collection: idx.collection, indexName: idx.indexName, status: 'ok' })

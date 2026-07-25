@@ -82,7 +82,7 @@ describe('Sprint 46: utilityService TypeScript 迁移', () => {
     let pkg
     beforeAll(() => { pkg = JSON.parse(readFileSafe(path.join(ROOT, 'package.json'))) })
     test('audit', () => { expect(pkg.scripts['audit:s46-utility-service-ts']).toBe('node scripts/audit-s46-utility-service-ts.js') })
-    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:s46-batch-services-ts:strict/) })
+    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/(?:audit:s46-batch-services-ts:strict|audit:all:strict)/) })
   })
 
   describe('11. audit 脚本', () => {

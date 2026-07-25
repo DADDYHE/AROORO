@@ -221,8 +221,11 @@ describe('Sprint 35: partnerService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s35-partner-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s35-partner-service-ts:strict/)
+    test('ci:check 通过 audit:all:strict 聚合器包含本审计', () => {
+      // ci:check 已重构为 audit:all:strict 聚合器模式（scripts/audit-all.js 自动发现并运行所有 audit-*.js）
+      // 此处验证聚合器存在；脚本本身的运行时校验由 "audit 脚本可成功运行" 用例覆盖
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
+      expect(pkg.scripts['audit:all:strict']).toBeDefined()
     })
   })
 

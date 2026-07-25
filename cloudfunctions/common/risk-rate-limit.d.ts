@@ -76,11 +76,21 @@ export declare function peekRateLimit(input: RateLimitCheckInput, config?: RateL
  */
 export declare function consumeRateLimit(input: RateLimitCheckInput, config?: RateLimitConfig, store?: RateLimitStore): RateLimitResult;
 /**
+ * H2 安全修复：资金/支付敏感业务类型清单
+ *
+ * 这些类型的限流在"全局存储异常"时必须 fail-closed（拒绝请求），
+ * 不允许降级到实例级内存计数 —— 云函数实例是临时的，冷启动内存 Map 为空，
+ * 降级等同于完全不限流，DB 抖动窗口内敏感接口会被整体放开。
+ */
+export declare const SENSITIVE_FAIL_CLOSED_TYPES: ReadonlySet<string>;
+/**
  * 通过全局 db 限流（带内存兜底）
  *
  * 流程：
  *   1. 优先调用 rate-limit-store 的 consumeGlobalRateLimit（原子计数）
- *   2. 若全局 store 未配置 / db 失败 → 降级到内存 consumeRateLimit
+ *   2. 若全局 store 已配置但 db 失败：
+ *      - 敏感类型（SENSITIVE_FAIL_CLOSED_TYPES）→ fail-closed，抛 RATE_LIMITED
+ *      - 其他类型 → 降级到内存 consumeRateLimit（best-effort）
  *   3. 若 db 配置 enabled=false（紧急关停）→ 跳过限流直接放行
  *
  * @throws BusinessError RATE_LIMITED / INTERNAL_ERROR
@@ -136,6 +146,7 @@ export declare function initGlobalRateLimitFromDb(db: any, options?: {
 }): boolean;
 declare const _default: {
     DEFAULT_RISK_RATE_LIMIT_CONFIG: RateLimitConfig;
+    SENSITIVE_FAIL_CLOSED_TYPES: ReadonlySet<string>;
     peekRateLimit: typeof peekRateLimit;
     consumeRateLimit: typeof consumeRateLimit;
     withRateLimit: typeof withRateLimit;

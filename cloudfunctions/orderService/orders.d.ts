@@ -71,6 +71,12 @@ export declare function getOrders(event: EventLike, _context: ContextLike, auth:
 export declare function enrichOrders(orders: unknown[]): Promise<EnrichedOrder[]>;
 /**
  * 3. createOrder - 创建订单
+ *
+ * P0 修复（H8）：优惠券 couponDiscount/originalAmount 不再信任客户端。
+ *   - couponId 存在时服务端查 user_coupons 校验归属/状态/有效期/规则
+ *   - 服务端按 coupon.rules 计算 discountAmount
+ *   - 调 couponService.lockCoupon 锁定券（防重复使用）
+ *   - 订单写入失败时 best-effort 调 unlockCoupon 回滚
  */
 export declare function createOrder(event: EventLike, _context: ContextLike, auth: AuthLike | null): HandlerResult;
 /**

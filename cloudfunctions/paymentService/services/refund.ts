@@ -25,7 +25,6 @@ import { initCloud } from '../../common/utils'
 import { createLogger } from '../../common/logger'
 import { detectRefundAbuse, mapActionToErrorCode } from '../../common/risk-control'
 import { withRateLimit } from '../../common/risk-rate-limit'
-import { cancelCommissionRecord } from '../../common/commission-utils'
 import type { CloudBaseDB } from '../../common/types'
 
 // service 内部 .js 模块走 CommonJS require
@@ -33,6 +32,18 @@ import type { CloudBaseDB } from '../../common/types'
 const { WECHAT_PAY, ENDPOINTS } = require('../common/config')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { randomString, httpsRequest, generateAuthorization } = require('./wechatPayUtils')
+// P0-6: 资金事务失败主动告警
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('../../common/alert')
+// H4+M15: 复用 pay.ts 的 orderType 推断与 collection 路由，避免双份逻辑漂移
+//   旧实现 `outTradeNo.split('_')[0].toLowerCase()`：
+//   - ACT_xxx → act（不匹配 activity）；FD_xxx → fd（不匹配 feeding）
+//   - 导致 activity/feeding 退款时业务表同步全部跳过
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const {
+  getOrderType,
+  ORDER_TYPE_COLLECTION_MAP,
+} = require('./pay')
 
 // =====================================================================
 // 类型定义
@@ -115,6 +126,15 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
     throw err('INVALID_PARAMS', '参数不完整')
   }
 
+  // M2: 退款金额类型严格校验——必须为有限正数（分单位）
+  //   原 `!refundAmount` 在 refundAmount=0 时跳过校验，且字符串/"NaN"/Infinity 均可绕过
+  if (typeof refundAmount !== 'number' || !Number.isFinite(refundAmount) || refundAmount <= 0) {
+    throw err('INVALID_PARAMS', '退款金额必须为正数')
+  }
+  if (typeof totalAmount !== 'number' || !Number.isFinite(totalAmount) || totalAmount <= 0) {
+    throw err('INVALID_PARAMS', '支付总额必须为正数')
+  }
+
   // 安全校验：退款金额不得超过支付金额
   if (Math.round(refundAmount) > Math.round(totalAmount)) {
     throw err('INVALID_PARAMS', '退款金额异常')
@@ -162,27 +182,78 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
     requestBody, authorization
   )) as WechatRefundResponse
 
+  // M5: 仅 SUCCESS/PROCESSING 才推进 DB——CLOSED/ABNORMAL 等异常状态不推进
+  //   原仅判断 `status === 'FAIL'` 抛错，其他状态（CLOSED/ABNORMAL）会误推进 DB 为 refunded
+  //   导致资金未实际退回但订单状态已变
   if (refundResult && refundResult.status === 'FAIL') {
     throw err('REFUND_FAILED', `微信退款失败：${refundResult.message || '未知原因'}`)
   }
-
-  // 退款成功后取消佣金记录
-  if (orderDoc._id) {
-    try {
-      await cancelCommissionRecord(orderDoc._id)
-      logger.info('createRefund.cancelCommissionRecord.success', { orderId: orderDoc._id })
-    } catch (e) {
-      logger.warn('createRefund.cancelCommissionRecord.failed', {
-        orderId: orderDoc._id,
-        msg: (e as Error).message,
-      })
-    }
+  if (refundResult && !['SUCCESS', 'PROCESSING'].includes(refundResult.status || '')) {
+    // 异常状态（CLOSED/ABNORMAL 等）——不推进 DB，记录告警供人工核查
+    logger.error('createRefund: 退款异常状态', {
+      outTradeNo, outRefundNo, status: refundResult.status,
+    })
+    await recordAlert(
+      'warning',
+      'createRefund.abnormal_status',
+      `退款返回异常状态：${refundResult.status}`,
+      { outTradeNo, outRefundNo, status: refundResult.status }
+    ).catch((e: Error) => logger.error('recordAlert failed', { msg: e.message }))
+    throw err('REFUND_FAILED', `退款异常状态：${refundResult.status}`)
   }
 
-  // 退款成功后更新订单状态
+  // P4-1-1: 退款成功后，订单状态 + 业务表同步 + 佣金撤销 必须原子完成
+  // 旧实现三步分别 try/catch，任一步失败会留下中间状态（订单已退款但业务表未同步，
+  // 或订单已退款但佣金记录仍 pending），导致数据不一致与对账困难。
+  // 新实现：事务前先用 where 查询需更新的文档 _id 列表（CloudBase 事务内不支持 where().update()），
+  // 然后在单一事务内逐个 doc(id).update()，任一步失败整体回滚。
+  // 注意：微信退款已实际发生无法回滚，事务失败时记录告警日志供人工对账。
   if (orderDoc._id) {
+    // H4+M15: 复用 pay.ts 的 getOrderType（基于完整前缀匹配）
+    //   旧实现 `outTradeNo.split('_')[0].toLowerCase()`：
+    //   - ACT_xxx → act（不匹配 activity）；FD_xxx → fd（不匹配 feeding）
+    //   - 导致后续 tuan_orders 同步、佣金撤销、registration 状态同步全部跳过
+    const inferredType = getOrderType(outTradeNo)
+    const orderType = orderDoc.orderType || (inferredType || 'order')
+
+    // 事务前：查询所有需要在事务内更新的文档 _id 列表
+    let commissionIds: string[] = []
+    let registrationIds: string[] = []
     try {
-      await db.collection('orders').doc(orderDoc._id).update({
+      const commissionRes = await db.collection('commissions')
+        .where({ orderId: orderDoc._id, status: 'pending' })
+        .field({ _id: true } as Record<string, true>)
+        .limit(100)
+        .get()
+      commissionIds = (((commissionRes && commissionRes.data) || []) as Array<{ _id: string }>)
+        .map((c) => c._id)
+    } catch (e) {
+      logger.warn('createRefund.queryCommissions.failed', {
+        orderId: orderDoc._id,
+        msg: (e as Error)?.message,
+      })
+    }
+    if (orderType === 'activity' && orderDoc.activityId && orderDoc.ownerId) {
+      try {
+        const regRes = await db.collection('activity_registrations')
+          .where({ activityId: orderDoc.activityId, ownerId: orderDoc.ownerId })
+          .field({ _id: true } as Record<string, true>)
+          .limit(10)
+          .get()
+        registrationIds = (((regRes && regRes.data) || []) as Array<{ _id: string }>)
+          .map((r) => r._id)
+      } catch (e) {
+        logger.warn('createRefund.queryRegistrations.failed', {
+          orderId: orderDoc._id,
+          msg: (e as Error)?.message,
+        })
+      }
+    }
+
+    const transaction = await db.startTransaction()
+    try {
+      // 1) 更新订单状态
+      await transaction.collection('orders').doc(orderDoc._id).update({
         data: {
           status: 'refunded',
           paymentStatus: 'refunded',
@@ -191,43 +262,61 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
           updatedAt: db.serverDate(),
         },
       })
-      logger.info('createRefund.orderStatusUpdated', { orderId: orderDoc._id })
-    } catch (e) {
-      logger.warn('createRefund.updateOrderStatusFailed', {
-        orderId: orderDoc._id,
-        msg: (e as Error).message,
-      })
-    }
-  }
 
-  // 同步业务表状态
-  if (orderDoc._id) {
-    try {
-      const orderType = orderDoc.orderType || outTradeNo.split('_')[0]
+      // 2) 同步业务表状态
       if (orderType === 'tuan' && orderDoc.tuanOrderId) {
-        await db.collection('tuan_orders').doc(orderDoc.tuanOrderId).update({
+        await transaction.collection('tuan_orders').doc(orderDoc.tuanOrderId).update({
           data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
-        })
-      }
-      if (orderType === 'activity' && orderDoc.activityId && orderDoc.ownerId) {
-        await db.collection('activity_registrations').where({
-          activityId: orderDoc.activityId,
-          ownerId: orderDoc.ownerId,
-        }).update({
-          data: { status: 'refunded', updatedAt: db.serverDate() },
         })
       }
       if (orderType === 'feeding') {
-        await db.collection('feedingOrders').doc(orderDoc._id).update({
+        await transaction.collection('feedingOrders').doc(orderDoc._id).update({
           data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
         })
       }
-      logger.info('createRefund.syncBusinessOrder.success', { orderId: orderDoc._id, orderType })
-    } catch (e) {
-      logger.warn('createRefund.syncBusinessOrder.failed', {
+      for (const rid of registrationIds) {
+        await transaction.collection('activity_registrations').doc(rid).update({
+          data: { status: 'refunded', updatedAt: db.serverDate() },
+        })
+      }
+
+      // 3) 取消佣金记录
+      for (const cid of commissionIds) {
+        await transaction.collection('commissions').doc(cid).update({
+          data: { status: 'cancelled', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
+        })
+      }
+
+      await transaction.commit()
+      logger.info('createRefund.transaction.success', {
         orderId: orderDoc._id,
-        msg: (e as Error).message,
+        orderType,
+        commissionCount: commissionIds.length,
+        registrationCount: registrationIds.length,
       })
+    } catch (txError) {
+      try { await transaction.rollback() } catch (_) { /* ignore rollback error */ }
+      // 退款资金已实际发生，DB 同步失败需告警人工对账
+      logger.error('createRefund.transaction.failed', {
+        orderId: orderDoc._id,
+        orderType,
+        msg: (txError as Error)?.message,
+        alert: '退款已成功但 DB 状态同步失败，需人工对账',
+      })
+      // P0-6: 持久化告警，供运维主动查询对账
+      await recordAlert(
+        'critical',
+        'createRefund.transaction.failed',
+        '退款已成功但 DB 状态同步失败，需人工对账',
+        {
+          orderId: orderDoc._id,
+          orderType,
+          outTradeNo,
+          outRefundNo,
+          refundAmount: Number(refundAmount) / 100,
+          error: (txError as Error)?.message,
+        }
+      )
     }
   }
 
@@ -263,6 +352,11 @@ export const queryRefund: WrappedHandler<WechatRefundResponse> = withErrorHandli
     throw err('INVALID_PARAMS', '缺少退款单号')
   }
 
+  // H9: queryRefund 返回 user_received_account 等敏感字段，需记录访问审计
+  //   outRefundNo 命名为 REFUND_{ts}_{random}，无法直接反推 outTradeNo 做所有权校验
+  //   保留访问日志，便于事后追溯滥用行为
+  logger.info('queryRefund.access', { outRefundNo, accessor: _auth.openid })
+
   const config = WECHAT_PAY
   if (!config.mchId || !config.privateKey) {
     throw err('BUSINESS_ERROR', '微信支付未配置')
@@ -293,18 +387,30 @@ async function fetchOrderAndVerifyOwnership(
 ): Promise<OrderDoc> {
   let orderDoc: OrderDoc | null = null
   try {
-    const orderRes = await db.collection('orders')
+    // H4: 按 orderType 路由到正确集合——原仅查 orders，但 activity 在 activity_registrations、feeding 在 feedingOrders
+    //   导致 activity/feeding 退款时订单查不到直接返回 NOT_FOUND
+    const inferredType = getOrderType(outTradeNo)
+    const collectionName = inferredType
+      ? (ORDER_TYPE_COLLECTION_MAP as Record<string, string>)[inferredType] || 'orders'
+      : 'orders'
+
+    const orderRes = await db.collection(collectionName)
       .where({ outTradeNo }).limit(1).get()
-    const list = (orderRes && (orderRes as { data?: OrderDoc[] }).data) || []
+    const list = (((orderRes && orderRes.data) || []) as unknown as OrderDoc[])
     if (list.length > 0) {
       orderDoc = list[0]
       if (orderDoc.ownerId && orderDoc.ownerId !== openid) {
         throw err('PERMISSION_DENIED', '权限不足')
       }
-      // 使用数据库中的实际支付金额校验：申请退款金额不能超过实际已支付金额
-      const actualTotal = Number(orderDoc.paidAmount || orderDoc.totalPrice || 0)
-      if (actualTotal > 0 && Math.round(refundAmount) > Math.round(actualTotal)) {
+      // P0-2: 使用数据库中的实际支付金额校验：申请退款金额不能超过实际已支付金额
+      // refundAmount 单位为分（由 event 传入，与微信 API 一致），DB 中 paidAmount/totalPrice 单位为元
+      const actualTotalYuan = Number(orderDoc.paidAmount || orderDoc.totalPrice || 0)
+      if (actualTotalYuan > 0 && Number(refundAmount) > actualTotalYuan * 100) {
         throw err('INVALID_PARAMS', '退款金额异常')
+      }
+      // H4: 若文档本身未存 orderType，用推断值回填，便于后续事务逻辑使用
+      if (!orderDoc.orderType && inferredType) {
+        orderDoc.orderType = inferredType
       }
     }
   } catch (e) {
@@ -314,12 +420,12 @@ async function fetchOrderAndVerifyOwnership(
     logger.error('createRefund: 查询订单校验失败', { msg: (e as Error)?.message })
     throw err('DATA_ERROR', '订单查询失败，无法验证所有权')
   }
-  
+
   // 订单不存在时抛出错误（不允许绕过所有权校验）
   if (!orderDoc) {
     throw err('NOT_FOUND', '订单不存在')
   }
-  
+
   return orderDoc
 }
 
@@ -391,6 +497,19 @@ async function runRiskControl(input: RiskControlInput): Promise<RiskControlOutpu
       errorStack: (e as Error)?.stack,
       timestamp: new Date().toISOString(),
     })
+    await recordAlert(
+      'warning',
+      'refund.risk_control.fail_open',
+      '退款风控检测异常，已降级为放行（fail-open），需排查风控系统',
+      {
+        outTradeNo,
+        userId: openid,
+        refundAmount,
+        totalAmount,
+        reason,
+        error: (e as Error)?.message || String(e),
+      }
+    )
     riskDecision = 'RISK_PASS' // 异常降级为放行，避免误伤
   }
 

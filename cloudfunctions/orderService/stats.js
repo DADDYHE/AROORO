@@ -32,24 +32,31 @@ exports.getIncomeStats = exports.getStats = void 0;
 //   - 对 .js 文件（utils / errors）使用 require() 而非 import
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - handler 在 module.exports 时统一用 withErrorHandling 包装
-const utils_1 = require("./common/utils");
-const logger_1 = require("./common/logger");
+const utils_1 = require("../common/utils");
+const logger_1 = require("../common/logger");
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, isBusinessError, withErrorHandling } = require('./common/errors');
-/** 状态文本映射（订单状态通知） */
+/** 状态文本映射（订单状态通知）
+ *
+ * P0 修复（H6）：与 orders.ts 实际写入的状态值对齐
+ *   - pending_payment / paid / confirmed / in_progress / completed / cancelled / refunded
+ *   - 删除原 pending / ongoing（订单文档从不使用这两个值）
+ */
 const STATUS_TEXT_MAP = {
-    pending: '待确认',
+    pending_payment: '待支付',
+    paid: '已支付',
     confirmed: '已确认',
-    ongoing: '寄养中',
+    in_progress: '进行中',
     completed: '已结算',
     cancelled: '已取消',
+    refunded: '已退款',
 };
 // =====================================================================
 // 模块初始化
 // =====================================================================
 const { db } = (0, utils_1.initCloud)();
-const _ = db.command;
+// L2 修复：删除未使用的 const _（死代码）
 const $ = db.command.aggregate || { sum: () => 0 };
 const logger = (0, logger_1.createLogger)('orderService');
 // =====================================================================
@@ -66,7 +73,8 @@ function getDateRangeFromPreset(range) {
             endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
             break;
         case 'week': {
-            const dayOfWeek = now.getDay();
+            // L3 修复：中文业务以周一为一周起点（getDay() 周日=0 → 周一=0，周日=6）
+            const dayOfWeek = (now.getDay() + 6) % 7;
             const weekStart = new Date(now);
             weekStart.setDate(now.getDate() - dayOfWeek);
             weekStart.setHours(0, 0, 0, 0);
@@ -133,8 +141,10 @@ async function getStats(event, _context, auth) {
             }
         }
         else if (userRole === 'host') {
+            // P0 修复（H5）：host 视角应按 organizerId（寄养家庭 openid）查询，
+            //   而非 hostId（寄养家庭档案 _id），否则统计永远为 0
             const hostStatsRes = await db.collection('orders')
-                .where({ hostId: openid, status: 'completed' })
+                .where({ organizerId: openid, status: 'completed' })
                 .aggregate()
                 .group({
                 _id: null,
@@ -154,9 +164,7 @@ async function getStats(event, _context, auth) {
         return (0, utils_1.handleSuccess)(stats, '获取成功');
     }
     catch (error) {
-        if (isBusinessError(error)) {
-            return (0, utils_1.handleError)(error, '获取统计数据失败', utils_1.ERROR_CODES.DATA);
-        }
+        // L9 修复：两个分支返回完全相同，if (isBusinessError) 判断冗余，简化为单一 return
         logger.error('getStats', { msg: error?.message });
         return (0, utils_1.handleError)(error, '获取统计数据失败', utils_1.ERROR_CODES.DATA);
     }
@@ -175,17 +183,20 @@ async function getIncomeStats(event, _context, auth) {
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
     }
-    const { status, dateRange } = event;
+    // P2 修复（M13）：limit 在解构中声明，避免直接 event.limit 取值（风格不一致）
+    const { status, dateRange, limit: requestLimit } = event;
     const now = new Date();
     const { startDate, endDate } = getDateRangeFromPreset(dateRange || '');
     try {
-        const query = { hostId: openid };
+        // P0 修复（H5）：host 视角应按 organizerId 查询；与 getStats 保持一致
+        const query = { organizerId: openid };
         if (status && status !== 'all') {
             if (status === 'completed') {
                 query.status = 'completed';
             }
             else if (status === 'pending') {
-                query.status = db.command.in(['pending', 'confirmed', 'ongoing']);
+                // P0 修复（H6）：待结算状态含未支付/已支付/已确认/进行中（与 orders.ts 状态命名对齐）
+                query.status = db.command.in(['pending_payment', 'paid', 'confirmed', 'in_progress']);
             }
         }
         if (startDate && endDate && dateRange && dateRange !== 'all' && dateRange !== '全部') {
@@ -196,13 +207,21 @@ async function getIncomeStats(event, _context, auth) {
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
         const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).getTime();
         const completedQuery = { ...query, status: 'completed' };
-        const inOp = db.command.in(['pending', 'confirmed', 'in_progress', 'ongoing']);
+        // P0 修复（H6）：pendingQuery 状态值与 orders.ts 实际写入对齐（移除 ongoing/pending）
+        const inOp = db.command.in(['pending_payment', 'paid', 'confirmed', 'in_progress']);
         const pendingQuery = { ...query, status: inOp };
+        // P0 修复（H7）：monthlyIncome 应独立于 dateRange 计算（始终是当月已完成订单），
+        //   不复用 completedQuery（其 createdAt 是 dateRange 范围，会导致 last_month 等场景下 monthlyIncome=0）
+        const monthlyQuery = {
+            organizerId: openid,
+            status: 'completed',
+            createdAt: db.command.gte(monthStart).and(db.command.lte(monthEnd)),
+        };
         const [totalRes, monthlyRes, pendingRes] = await Promise.all([
             db.collection('orders').where(completedQuery).aggregate()
                 .group({ _id: null, totalIncome: $.sum({ $cond: [{ $ne: ['$totalPrice', null] }, '$totalPrice', 0] }) })
                 .end(),
-            db.collection('orders').where({ ...completedQuery, createdAt: db.command.gte(monthStart).and(db.command.lte(monthEnd)) }).aggregate()
+            db.collection('orders').where(monthlyQuery).aggregate()
                 .group({ _id: null, monthlyIncome: $.sum({ $cond: [{ $ne: ['$totalPrice', null] }, '$totalPrice', 0] }) })
                 .end(),
             db.collection('orders').where(pendingQuery).aggregate()
@@ -212,7 +231,7 @@ async function getIncomeStats(event, _context, auth) {
         const totalIncome = pickSum(totalRes, 'totalIncome');
         const monthlyIncome = pickSum(monthlyRes, 'monthlyIncome');
         const pendingIncome = pickSum(pendingRes, 'pendingIncome');
-        const limit = Math.min(Number(event.limit) || 500, 1000);
+        const limit = Math.min(Number(requestLimit) || 500, 1000);
         const ordersResult = await db.collection('orders').where(query)
             .field({ _id: true, totalPrice: true, status: true, createdAt: true, type: true })
             .orderBy('createdAt', 'desc')

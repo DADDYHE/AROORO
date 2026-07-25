@@ -16,35 +16,25 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err } = require('./common/errors')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { initCloud, handleSuccess, handleError, ERROR_CODES } = require('./common/utils')
+const { initCloud, handleSuccess, handleError, ERROR_CODES, maskOpenid } = require('./common/utils')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger')
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { db } = initCloud()
 const _ = db.command
+// L3 修复：统计改用服务端聚合，需要聚合运算符（sum / addToSet）
+interface AggregateOps {
+  sum: (field: number | string) => unknown
+  addToSet: (field: string) => unknown
+}
+const $ = (db.command as { aggregate: AggregateOps }).aggregate
 const logger = createLogger('userService:referral')
 
 // =====================================================================
-// 类型定义
+// 类型定义（AuthLike / CloudEvent / CloudContext 抽至 common/types.ts）
 // =====================================================================
-
-export interface AuthLike {
-  openid?: string
-  [k: string]: unknown
-}
-
-export interface CloudEvent {
-  action?: string
-  data?: Record<string, unknown>
-  page?: number
-  pageSize?: number
-  [k: string]: unknown
-}
-
-export interface CloudContext {
-  [k: string]: unknown
-}
+import type { AuthLike, CloudEvent, CloudContext } from './common/types'
 
 export type ReferralHandler = (
   event: CloudEvent,
@@ -82,11 +72,17 @@ export interface InvitedUsersResult {
   total: number
 }
 
-interface OrderLike {
-  ownerId?: string
-  totalPrice?: number | string
-  price?: number | string
-  [k: string]: unknown
+// L3 修复：统计改用服务端聚合（group），不再逐条 limit 累加，避免大流量 KOL 截断
+interface AggRow {
+  _id: string | null
+  total?: number | string
+  owners?: string[]
+}
+
+interface AggUserRow {
+  _id: string | null
+  count?: number
+  total?: number | string
 }
 
 interface OwnerSummary {
@@ -97,14 +93,6 @@ interface OwnerSummary {
 // =====================================================================
 // 辅助函数
 // =====================================================================
-
-function sumOrderTotal(orders: OrderLike[]): number {
-  let total = 0
-  orders.forEach((o) => {
-    total += Number(o.totalPrice) || Number(o.price) || 0
-  })
-  return total
-}
 
 // =====================================================================
 // Handler 实现
@@ -125,7 +113,7 @@ export async function getReferralStats(
       user = userRes.data
     } catch (e) {
       logger.warn('getReferralStats.users.fetch', {
-        openid,
+        openid: maskOpenid(openid),
         code: (e as { errCode?: unknown }).errCode,
         msg: (e as Error).message,
       })
@@ -136,6 +124,7 @@ export async function getReferralStats(
     const invitedUsersRes = await db.collection('users')
       .where({ inviterId: openid })
       .field({ _id: true, nickName: true, avatarUrl: true, createdAt: true })
+      .limit(500)
       .get()
 
     const invitedUsers = (invitedUsersRes.data || []) as UserRecord[]
@@ -145,81 +134,52 @@ export async function getReferralStats(
     let consumingCount = 0
     let totalSpent = 0
 
-    if (invitedOpenids.length > 0) {
-      const spenderOpenids = new Set<string>()
+      if (invitedOpenids.length > 0) {
+        const spenderOpenids = new Set<string>()
 
-      // 查询非 mall 类型的已完成订单（mall 类型单独查询，避免重复计算）
-      const ordersRes = await db.collection('orders')
-        .where({ ownerId: _.in(invitedOpenids), status: 'completed', type: _.ne('mall') })
-        .limit(1000)
-        .get()
-      ;(ordersRes.data || []).forEach((o: OrderLike) => {
-        if (o.ownerId) { spenderOpenids.add(o.ownerId) }
-      })
-      totalSpent += sumOrderTotal((ordersRes.data || []) as OrderLike[])
+        // L3 修复：原 5 个查询各 limit(1000) 累加，大流量 KOL 统计系统性偏低。
+        //   改为服务端聚合（group + sum + addToSet），彻底消除截断。并行 Promise.all + 独立 .catch 容错（沿用 M5）。
+        //   ⚠️ orders 集合真实字段是 orderType（非 type）；原 type/type:'mall' 过滤对所有文档恒匹配/恒不匹配，
+        //      此处修正为 orderType，mall 桶统计才正确。tuan_orders 金额字段是 totalAmount（L4 修正，原取 totalPrice/price 恒为 0）。
+        const [ordersAgg, mallAgg, feedAgg, tuanAgg, actAgg] = await Promise.all([
+          db.collection('orders').aggregate()
+            .match({ ownerId: _.in(invitedOpenids), status: 'completed', orderType: _.ne('mall') })
+            .group({ _id: null, total: $.sum('$totalPrice'), owners: $.addToSet('$ownerId') })
+            .end()
+            .catch((e: unknown) => { logger.warn('getReferralStats.orders', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggRow[] } }),
+          db.collection('orders').aggregate()
+            .match({ ownerId: _.in(invitedOpenids), status: 'completed', orderType: 'mall' })
+            .group({ _id: null, total: $.sum('$totalPrice'), owners: $.addToSet('$ownerId') })
+            .end()
+            .catch((e: unknown) => { logger.warn('getReferralStats.mall', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggRow[] } }),
+          db.collection('feedingOrders').aggregate()
+            .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+            .group({ _id: null, total: $.sum('$totalPrice'), owners: $.addToSet('$ownerId') })
+            .end()
+            .catch((e: unknown) => { logger.warn('getReferralStats.feedingOrders', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggRow[] } }),
+          // L4 修正：tuan_orders 金额字段是 totalAmount（元），原 sumOrderTotal 取 totalPrice/price 恒为 0，团购消费从未计入
+          db.collection('tuan_orders').aggregate()
+            .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+            .group({ _id: null, total: $.sum('$totalAmount'), owners: $.addToSet('$ownerId') })
+            .end()
+            .catch((e: unknown) => { logger.warn('getReferralStats.tuan_orders', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggRow[] } }),
+          db.collection('activity_registrations').aggregate()
+            .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+            .group({ _id: null, total: $.sum('$totalPrice'), owners: $.addToSet('$ownerId') })
+            .end()
+            .catch((e: unknown) => { logger.warn('getReferralStats.activity_registrations', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggRow[] } }),
+        ])
 
-      const mallRes = await db.collection('orders')
-        .where({ ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' })
-        .limit(1000)
-        .get()
-      ;(mallRes.data || []).forEach((o: OrderLike) => {
-        if (o.ownerId) { spenderOpenids.add(o.ownerId) }
-      })
-      totalSpent += sumOrderTotal((mallRes.data || []) as OrderLike[])
-
-      try {
-        const feedRes = await db.collection('feedingOrders')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(feedRes.data || []).forEach((o: OrderLike) => {
-          if (o.ownerId) { spenderOpenids.add(o.ownerId) }
-        })
-        totalSpent += sumOrderTotal((feedRes.data || []) as OrderLike[])
-      } catch (e) {
-        logger.warn('getReferralStats.feedingOrders', {
-          openid,
-          code: (e as { errCode?: unknown }).errCode,
-          msg: (e as Error).message,
-        })
+        const aggRows = [ordersAgg, mallAgg, feedAgg, tuanAgg, actAgg]
+        for (const r of aggRows) {
+          const row = (r.data || [])[0] as AggRow | undefined
+          if (row) {
+            totalSpent += Number(row.total) || 0
+            ;(row.owners || []).forEach((o: string) => { if (o) { spenderOpenids.add(o) } })
+          }
+        }
+        consumingCount = spenderOpenids.size
       }
-
-      try {
-        const tuanRes = await db.collection('tuan_orders')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(tuanRes.data || []).forEach((o: OrderLike) => {
-          if (o.ownerId) { spenderOpenids.add(o.ownerId) }
-        })
-        totalSpent += sumOrderTotal((tuanRes.data || []) as OrderLike[])
-      } catch (e) {
-        logger.warn('getReferralStats.tuan_orders', {
-          openid,
-          code: (e as { errCode?: unknown }).errCode,
-          msg: (e as Error).message,
-        })
-      }
-
-      try {
-        const actRes = await db.collection('activity_registrations')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(actRes.data || []).forEach((o: OrderLike) => {
-          if (o.ownerId) { spenderOpenids.add(o.ownerId) }
-        })
-        totalSpent += sumOrderTotal((actRes.data || []) as OrderLike[])
-      } catch (e) {
-        logger.warn('getReferralStats.activity_registrations', {
-          openid,
-          code: (e as { errCode?: unknown }).errCode,
-          msg: (e as Error).message,
-        })
-      }
-
-      consumingCount = spenderOpenids.size
-    }
 
     const result: ReferralStatsResult = {
       totalInvited,
@@ -249,7 +209,7 @@ export async function getInvitedUsers(
       user = userRes.data
     } catch (e) {
       logger.warn('getInvitedUsers.users.fetch', {
-        openid,
+        openid: maskOpenid(openid),
         code: (e as { errCode?: unknown }).errCode,
         msg: (e as Error).message,
       })
@@ -275,70 +235,53 @@ export async function getInvitedUsers(
     const orderMap: Record<string, OwnerSummary> = {}
 
     if (invitedOpenids.length > 0) {
-      const collectInto = (orders: OrderLike[]): void => {
-        orders.forEach((o) => {
-          const key = o.ownerId
+      // L3 修复：原 collectInto 逐条 limit(1000) 累加，大流量 KOL 的受邀用户订单被截断。
+      //   改为按 ownerId 的 per-user 聚合（group + sum + count），彻底消除截断。
+      //   orderType / tuan.totalAmount 字段修正同 getReferralStats（L3/L4）。
+      const mergeAgg = (r: { data?: AggUserRow[] }): void => {
+        ;(r.data || []).forEach((g) => {
+          const key = g._id
           if (!key) { return }
           if (!orderMap[key]) { orderMap[key] = { orderCount: 0, totalSpent: 0 } }
-          orderMap[key].orderCount += 1
-          orderMap[key].totalSpent += Number(o.totalPrice) || Number(o.price) || 0
+          orderMap[key].orderCount += Number(g.count) || 0
+          orderMap[key].totalSpent += Number(g.total) || 0
         })
       }
 
-      // 查询非 mall 类型的已完成订单（mall 类型单独查询，避免重复计算）
-      const ordersRes = await db.collection('orders')
-        .where({ ownerId: _.in(invitedOpenids), status: 'completed', type: _.ne('mall') })
-        .limit(1000)
-        .get()
-      collectInto((ordersRes.data || []) as OrderLike[])
+      const [ordersAgg, mallAgg, feedAgg, tuanAgg, actAgg] = await Promise.all([
+        db.collection('orders').aggregate()
+          .match({ ownerId: _.in(invitedOpenids), status: 'completed', orderType: _.ne('mall') })
+          .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalPrice') })
+          .end()
+          .catch((e: unknown) => { logger.warn('getInvitedUsers.orders', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggUserRow[] } }),
+        db.collection('orders').aggregate()
+          .match({ ownerId: _.in(invitedOpenids), status: 'completed', orderType: 'mall' })
+          .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalPrice') })
+          .end()
+          .catch((e: unknown) => { logger.warn('getInvitedUsers.mall', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggUserRow[] } }),
+        db.collection('feedingOrders').aggregate()
+          .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+          .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalPrice') })
+          .end()
+          .catch((e: unknown) => { logger.warn('getInvitedUsers.feedingOrders', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggUserRow[] } }),
+        // L4 修正：tuan_orders 金额字段是 totalAmount（元）
+        db.collection('tuan_orders').aggregate()
+          .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+          .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalAmount') })
+          .end()
+          .catch((e: unknown) => { logger.warn('getInvitedUsers.tuan_orders', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggUserRow[] } }),
+        db.collection('activity_registrations').aggregate()
+          .match({ ownerId: _.in(invitedOpenids), status: 'completed' })
+          .group({ _id: '$ownerId', count: $.sum(1), total: $.sum('$totalPrice') })
+          .end()
+          .catch((e: unknown) => { logger.warn('getInvitedUsers.activity_registrations', { openid: maskOpenid(openid), code: (e as { errCode?: unknown }).errCode }); return { data: [] as AggUserRow[] } }),
+      ])
 
-      const mallRes = await db.collection('orders')
-        .where({ ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' })
-        .limit(1000)
-        .get()
-      collectInto((mallRes.data || []) as OrderLike[])
-
-      try {
-        const feedRes = await db.collection('feedingOrders')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        collectInto((feedRes.data || []) as OrderLike[])
-      } catch (e) {
-        logger.warn('getInvitedUsers.feedingOrders', {
-          openid,
-          code: (e as { errCode?: unknown }).errCode,
-          msg: (e as Error).message,
-        })
-      }
-
-      try {
-        const tuanRes = await db.collection('tuan_orders')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        collectInto((tuanRes.data || []) as OrderLike[])
-      } catch (e) {
-        logger.warn('getInvitedUsers.tuan_orders', {
-          openid,
-          code: (e as { errCode?: unknown }).errCode,
-          msg: (e as Error).message,
-        })
-      }
-
-      try {
-        const actRes = await db.collection('activity_registrations')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        collectInto((actRes.data || []) as OrderLike[])
-      } catch (e) {
-        logger.warn('getInvitedUsers.activity_registrations', {
-          openid,
-          code: (e as { errCode?: unknown }).errCode,
-          msg: (e as Error).message,
-        })
-      }
+      mergeAgg(ordersAgg)
+      mergeAgg(mallAgg)
+      mergeAgg(feedAgg)
+      mergeAgg(tuanAgg)
+      mergeAgg(actAgg)
     }
 
     const list: InvitedUserView[] = invitedUsers.map((u) => {

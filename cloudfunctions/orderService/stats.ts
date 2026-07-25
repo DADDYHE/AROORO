@@ -93,13 +93,20 @@ interface IncomeListItem {
 /** 日期范围预设 */
 type DateRangePreset = 'today' | 'week' | 'month' | 'last_month' | string
 
-/** 状态文本映射（订单状态通知） */
+/** 状态文本映射（订单状态通知）
+ *
+ * P0 修复（H6）：与 orders.ts 实际写入的状态值对齐
+ *   - pending_payment / paid / confirmed / in_progress / completed / cancelled / refunded
+ *   - 删除原 pending / ongoing（订单文档从不使用这两个值）
+ */
 const STATUS_TEXT_MAP: Record<string, string> = {
-  pending: '待确认',
+  pending_payment: '待支付',
+  paid: '已支付',
   confirmed: '已确认',
-  ongoing: '寄养中',
+  in_progress: '进行中',
   completed: '已结算',
   cancelled: '已取消',
+  refunded: '已退款',
 }
 
 /** CloudBase 聚合操作符 - 简化版 */
@@ -116,7 +123,7 @@ interface AggregateCommand {
 // =====================================================================
 
 const { db } = initCloud() as { cloud: unknown, db: CloudBaseDB }
-const _ = (db as CloudBaseDB & { command: unknown }).command
+// L2 修复：删除未使用的 const _（死代码）
 const $: AggregateOps = (db as unknown as AggregateCommand).command.aggregate || { sum: () => 0 }
 const logger: ServiceLogger = createLogger('orderService')
 
@@ -135,7 +142,8 @@ function getDateRangeFromPreset(range: DateRangePreset): { startDate: Date | nul
     endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
     break
   case 'week': {
-    const dayOfWeek = now.getDay()
+    // L3 修复：中文业务以周一为一周起点（getDay() 周日=0 → 周一=0，周日=6）
+    const dayOfWeek = (now.getDay() + 6) % 7
     const weekStart = new Date(now)
     weekStart.setDate(now.getDate() - dayOfWeek)
     weekStart.setHours(0, 0, 0, 0)
@@ -202,8 +210,10 @@ export async function getStats(event: EventLike, _context: ContextLike, auth: Au
         stats.totalSpent = Number(statsData.totalSpent || 0)
       }
     } else if (userRole === 'host') {
+      // P0 修复（H5）：host 视角应按 organizerId（寄养家庭 openid）查询，
+      //   而非 hostId（寄养家庭档案 _id），否则统计永远为 0
       const hostStatsRes = await db.collection('orders')
-        .where({ hostId: openid, status: 'completed' })
+        .where({ organizerId: openid, status: 'completed' })
         .aggregate()
         .group({
           _id: null,
@@ -223,9 +233,7 @@ export async function getStats(event: EventLike, _context: ContextLike, auth: Au
 
     return handleSuccess(stats, '获取成功')
   } catch (error: unknown) {
-    if (isBusinessError(error)) {
-      return handleError(error as Error, '获取统计数据失败', ERROR_CODES.DATA)
-    }
+    // L9 修复：两个分支返回完全相同，if (isBusinessError) 判断冗余，简化为单一 return
     logger.error('getStats', { msg: (error as Error)?.message })
     return handleError(error as Error, '获取统计数据失败', ERROR_CODES.DATA)
   }
@@ -243,18 +251,21 @@ export async function getIncomeStats(event: EventLike, _context: ContextLike, au
   const openid = auth?.openid
   if (!openid) {throw err('AUTH_REQUIRED', '未登录')}
 
-  const { status, dateRange } = event as { status?: string, dateRange?: DateRangePreset }
+  // P2 修复（M13）：limit 在解构中声明，避免直接 event.limit 取值（风格不一致）
+  const { status, dateRange, limit: requestLimit } = event as { status?: string, dateRange?: DateRangePreset, limit?: number }
   const now = new Date()
 
   const { startDate, endDate } = getDateRangeFromPreset(dateRange || '')
 
   try {
-    const query: Record<string, unknown> = { hostId: openid }
+    // P0 修复（H5）：host 视角应按 organizerId 查询；与 getStats 保持一致
+    const query: Record<string, unknown> = { organizerId: openid }
     if (status && status !== 'all') {
       if (status === 'completed') {
         query.status = 'completed'
       } else if (status === 'pending') {
-        query.status = (db.command as { in: (arr: string[]) => unknown }).in(['pending', 'confirmed', 'ongoing'])
+        // P0 修复（H6）：待结算状态含未支付/已支付/已确认/进行中（与 orders.ts 状态命名对齐）
+        query.status = (db.command as { in: (arr: string[]) => unknown }).in(['pending_payment', 'paid', 'confirmed', 'in_progress'])
       }
     }
 
@@ -268,14 +279,23 @@ export async function getIncomeStats(event: EventLike, _context: ContextLike, au
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).getTime()
 
     const completedQuery: Record<string, unknown> = { ...query, status: 'completed' }
-    const inOp = (db.command as { in: (arr: string[]) => unknown }).in(['pending', 'confirmed', 'in_progress', 'ongoing'])
+    // P0 修复（H6）：pendingQuery 状态值与 orders.ts 实际写入对齐（移除 ongoing/pending）
+    const inOp = (db.command as { in: (arr: string[]) => unknown }).in(['pending_payment', 'paid', 'confirmed', 'in_progress'])
     const pendingQuery: Record<string, unknown> = { ...query, status: inOp }
+
+    // P0 修复（H7）：monthlyIncome 应独立于 dateRange 计算（始终是当月已完成订单），
+    //   不复用 completedQuery（其 createdAt 是 dateRange 范围，会导致 last_month 等场景下 monthlyIncome=0）
+    const monthlyQuery: Record<string, unknown> = {
+      organizerId: openid,
+      status: 'completed',
+      createdAt: ((db.command as unknown as { gte: (v: number) => unknown }).gte(monthStart) as { and: (other: unknown) => unknown }).and((db.command as unknown as { lte: (v: number) => unknown }).lte(monthEnd)),
+    }
 
     const [totalRes, monthlyRes, pendingRes] = await Promise.all([
       db.collection('orders').where(completedQuery).aggregate()
         .group({ _id: null, totalIncome: $.sum({ $cond: [{ $ne: ['$totalPrice', null] }, '$totalPrice', 0] }) })
         .end() as unknown as AggregateSumResult,
-      db.collection('orders').where({ ...completedQuery, createdAt: ((db.command as unknown as { gte: (v: number) => unknown }).gte(monthStart) as { and: (other: unknown) => unknown }).and((db.command as unknown as { lte: (v: number) => unknown }).lte(monthEnd)) }).aggregate()
+      db.collection('orders').where(monthlyQuery).aggregate()
         .group({ _id: null, monthlyIncome: $.sum({ $cond: [{ $ne: ['$totalPrice', null] }, '$totalPrice', 0] }) })
         .end() as unknown as AggregateMonthlyResult,
       db.collection('orders').where(pendingQuery).aggregate()
@@ -287,7 +307,7 @@ export async function getIncomeStats(event: EventLike, _context: ContextLike, au
     const monthlyIncome = pickSum(monthlyRes, 'monthlyIncome')
     const pendingIncome = pickSum(pendingRes, 'pendingIncome')
 
-    const limit = Math.min(Number(event.limit) || 500, 1000)
+    const limit = Math.min(Number(requestLimit) || 500, 1000)
     const ordersResult = await db.collection('orders').where(query as never)
       .field({ _id: true, totalPrice: true, status: true, createdAt: true, type: true })
       .orderBy('createdAt', 'desc')

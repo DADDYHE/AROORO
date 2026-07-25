@@ -1,6 +1,7 @@
 const { err } = require('../common/errors')
 const { handleSuccess, handleError, ERROR_CODES, paginate, initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
+const { recordAlert } = require('../common/alert')
 const { ORDER_TYPES, ORDER_TYPE_NAMES } = require('../constants')
 const { enrichBuyerFields, enrichTuanOrderNos } = require('./_enrichBuyers')
 
@@ -28,6 +29,8 @@ async function createTuanDeal(event, context, auth) {
     let skuType = p.skuType || 'single'
     let specGroups = p.specGroups || []
     let skus = p.skus || []
+
+    if (Number(p.tuanPrice) < 0) {throw err('INVALID_PARAMS', '团购价格不能为负')}
 
     if (productId) {
       try {
@@ -105,6 +108,9 @@ async function updateTuanDeal(event, context, auth) {
   if (!id) {throw err('INVALID_PARAMS', '缺少团购ID')}
   const existing = await db.collection('tuan_deals').doc(id).get()
   if (!existing.data) {throw err('NOT_FOUND', '团购不存在')}
+  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
   const update = { updatedAt: new Date() }
   if (title !== undefined) {update.title = title}
   if (coverUrl !== undefined) {update.coverUrl = coverUrl}
@@ -190,6 +196,9 @@ async function deleteTuanDeal(event, context, auth) {
   if (!id) {throw err('INVALID_PARAMS', '缺少团购ID')}
   const existing = await db.collection('tuan_deals').doc(id).get()
   if (!existing.data) {throw err('NOT_FOUND', '团购不存在')}
+  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
   await db.collection('tuan_deals').doc(id).remove()
   return handleSuccess(null, '删除成功')
 }
@@ -199,6 +208,9 @@ async function publishTuanDeal(event, context, auth) {
   if (!id) {throw err('INVALID_PARAMS', '缺少团购ID')}
   const existing = await db.collection('tuan_deals').doc(id).get()
   if (!existing.data) {throw err('NOT_FOUND', '团购不存在')}
+  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
   const updateData = { status: 'published', updatedAt: new Date() }
   if (!existing.data.startTime) {updateData.startTime = new Date()}
   if (!existing.data.endTime) {updateData.endTime = new Date('2099-12-31T23:59:59')}
@@ -211,6 +223,9 @@ async function endTuanDeal(event, context, auth) {
   if (!id) {throw err('INVALID_PARAMS', '缺少团购ID')}
   const existing = await db.collection('tuan_deals').doc(id).get()
   if (!existing.data) {throw err('NOT_FOUND', '团购不存在')}
+  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
   await db.collection('tuan_deals').doc(id).update({ data: { status: 'ended', updatedAt: new Date() } })
   return handleSuccess(null, '已结束')
 }
@@ -276,7 +291,7 @@ async function getTuanLeaderList(event, context, auth) {
 
     let commData = []
     try {
-      const commissions = await db.collection('tuan_commissions')
+      const commissions = await db.collection('commissions')
         .where({ inviterId: _.in(leaderIds) })
         .get()
       commData = commissions.data || []
@@ -362,7 +377,7 @@ async function getTuanLeaderCommissions(event, context, auth) {
   if (status) {where.status = status}
   if (orderType) {where.orderType = orderType}
   try {
-    const result = await paginate(db, 'tuan_commissions', { page, pageSize, where, orderBy: { field: 'createdAt', direction: 'desc' } })
+    const result = await paginate(db, 'commissions', { page, pageSize, where, orderBy: { field: 'createdAt', direction: 'desc' } })
     return handleSuccess(result)
   } catch (e) {
     return handleSuccess({ list: [], total: 0, page, pageSize })
@@ -372,10 +387,10 @@ async function getTuanLeaderCommissions(event, context, auth) {
 async function getTuanCommissionStats(event, context, auth) {
   let commData = []
   try {
-    const commissions = await db.collection('tuan_commissions').limit(1000).get()
+    const commissions = await db.collection('commissions').limit(1000).get()
     commData = commissions.data || []
   } catch (e) {
-    // tuan_commissions集合不存在时返回空
+    // commissions集合不存在时返回空
   }
 
   let configData = {}
@@ -420,12 +435,62 @@ async function settleTuanCommissions(event, context, auth) {
   const { ids } = event
   if (!ids || ids.length === 0) {throw err('INVALID_PARAMS', '请选择待结算记录')}
   const now = new Date()
-  await Promise.all(ids.map(id =>
-    db.collection('tuan_commissions').doc(id).update({
-      data: { status: 'settled', settledAt: now, settledBy: auth.openid },
+  // ★ 顺序更新替代 Promise.all：避免部分失败导致部分结算状态。
+  // CloudBase 事务有 10s 超时限制，批量结算可能涉及大量记录，不适合单事务。
+  // P0-1: 结算成功后调用 ensureWalletBalance 将佣金入账钱包（原子增 balance/totalIncome）
+  const { ensureWalletBalance } = require('../../common/wallet-utils')
+  let successCount = 0
+  let failedCount = 0
+  const failedIds = []
+  for (const id of ids) {
+    try {
+      // 先查询佣金记录，获取 inviterId 和 commissionAmount
+      const commRes = await db.collection('commissions').doc(id).get()
+      const comm = commRes.data
+      if (!comm) { throw new Error('佣金记录不存在') }
+
+      // P1-B: 条件更新防并发重复入账 — where(status=pending) 原子更新
+      // 若已 settled（被并发请求抢先），update 命中 0 条，跳过钱包入账
+      const updateRes = await db.collection('commissions')
+        .where({ _id: id, status: 'pending' })
+        .update({ data: { status: 'settled', settledAt: now, settledBy: auth.openid } })
+
+      const updatedCount = (updateRes && updateRes.stats && updateRes.stats.updated) || 0
+      if (updatedCount === 0) {
+        // 已被并发结算或记录不存在，跳过钱包入账
+        logger.info('settleTuanCommissions.skip_already_settled', { id, currentStatus: comm.status })
+        successCount += 1
+        continue
+      }
+
+      // P0-1: 仅对首次结算（pending → settled）的记录入账钱包
+      // 钱包入账失败不阻塞结算（佣金已结算），通过告警补偿
+      if (comm.inviterId && Number(comm.commissionAmount) > 0) {
+        try {
+          await ensureWalletBalance(comm.inviterId, Number(comm.commissionAmount), 'commission')
+        } catch (walletErr) {
+          logger.error('settleTuanCommissions.wallet.failed', {
+            id, inviterId: comm.inviterId, amount: comm.commissionAmount,
+            error: walletErr && walletErr.message ? walletErr.message : String(walletErr),
+          })
+          await recordAlert('critical', 'tuan.commission.wallet.failed', '团购佣金入账钱包失败', {
+            commissionId: id, inviterId: comm.inviterId, amount: comm.commissionAmount,
+          })
+        }
+      }
+      successCount += 1
+    } catch (e) {
+      failedCount += 1
+      failedIds.push(id)
+      logger.error('settleTuanCommissions.item.failed', { id, error: e && e.message ? e.message : String(e) })
+    }
+  }
+  if (failedCount > 0) {
+    await recordAlert('critical', 'tuan.commission.settle.partial', '团购佣金批量结算部分失败', {
+      total: ids.length, successCount, failedCount, failedIds, operator: auth.openid,
     })
-  ))
-  return handleSuccess({ settledCount: ids.length })
+  }
+  return handleSuccess({ successCount, failedCount, settledCount: successCount })
 }
 
 async function getTuanDealOrderDetail(event, context, auth) {

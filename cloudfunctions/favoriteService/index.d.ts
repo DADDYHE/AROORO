@@ -11,6 +11,19 @@
  *   - 复用 AuthLike / CloudEvent / CloudContext 公共类型
  *   - 抽离 FavoriteTargetType 联合类型与 COLLECTION 常量
  *
+ * 代码审查修复（2026-07-25，docs/favoriteService-code-review.md）：
+ *   - H1: 防重改用确定性 _id（md5(openid|targetType|targetId)），并发插入天然冲突，消除 TOCTOU 竞态
+ *   - H2: 重复键兜底只匹配真正的 duplicate 错误；限流等基础设施错误必须抛出
+ *   - H3: main catch 对非业务错误脱敏，不向客户端回传原始 error.message
+ *   - M1/L5: targetId 强制 string + trim + 长度校验（1-128）
+ *   - M2: list 响应回显清洗后的 safePage/safePageSize
+ *   - M3: add/remove 写操作接入内存滑动窗口限流（openid 维度）
+ *   - M6: count 与 get 并行执行
+ *   - M5: add 前按 targetType 校验目标集合中是否存在，防止空壳收藏
+ *   - L1: openid 日志掩码
+ *   - L3: add 返回 data.created 区分"新收藏"与"已收藏"
+ *   - 兼容: 前端历史参数 hostProfileId → targetType='host' + targetId
+ *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.favoriteService.json
  */

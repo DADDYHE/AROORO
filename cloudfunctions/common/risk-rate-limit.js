@@ -30,8 +30,10 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.common.json
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initGlobalRateLimitFromDb = exports.getStoreStats = exports._resetStore = exports.withRateLimit = exports.peekGlobalRateLimitWithFallback = exports.consumeGlobalRateLimitWithFallback = exports.consumeRateLimit = exports.peekRateLimit = exports.getGlobalRateLimitStore = exports.setGlobalRateLimitStore = exports.DEFAULT_RISK_RATE_LIMIT_CONFIG = void 0;
+exports.initGlobalRateLimitFromDb = exports.getStoreStats = exports._resetStore = exports.withRateLimit = exports.peekGlobalRateLimitWithFallback = exports.consumeGlobalRateLimitWithFallback = exports.SENSITIVE_FAIL_CLOSED_TYPES = exports.consumeRateLimit = exports.peekRateLimit = exports.getGlobalRateLimitStore = exports.setGlobalRateLimitStore = exports.DEFAULT_RISK_RATE_LIMIT_CONFIG = void 0;
 const errors_1 = require("./errors");
+// P2-003: 引入统一日志（替代 console.warn）
+const logger_1 = require("./logger");
 const rate_limit_store_1 = require("./rate-limit-store");
 const rate_limit_config_1 = require("./rate-limit-config");
 // ===== 默认配置 =====
@@ -165,11 +167,28 @@ function consumeRateLimit(input, config = exports.DEFAULT_RISK_RATE_LIMIT_CONFIG
 exports.consumeRateLimit = consumeRateLimit;
 // ===== 全局版限流（推荐）=====
 /**
+ * H2 安全修复：资金/支付敏感业务类型清单
+ *
+ * 这些类型的限流在"全局存储异常"时必须 fail-closed（拒绝请求），
+ * 不允许降级到实例级内存计数 —— 云函数实例是临时的，冷启动内存 Map 为空，
+ * 降级等同于完全不限流，DB 抖动窗口内敏感接口会被整体放开。
+ */
+exports.SENSITIVE_FAIL_CLOSED_TYPES = new Set([
+    'payment',
+    'refund',
+    'admin_refund',
+    'withdrawal',
+    'transfer',
+    'boarding_accept',
+]);
+/**
  * 通过全局 db 限流（带内存兜底）
  *
  * 流程：
  *   1. 优先调用 rate-limit-store 的 consumeGlobalRateLimit（原子计数）
- *   2. 若全局 store 未配置 / db 失败 → 降级到内存 consumeRateLimit
+ *   2. 若全局 store 已配置但 db 失败：
+ *      - 敏感类型（SENSITIVE_FAIL_CLOSED_TYPES）→ fail-closed，抛 RATE_LIMITED
+ *      - 其他类型 → 降级到内存 consumeRateLimit（best-effort）
  *   3. 若 db 配置 enabled=false（紧急关停）→ 跳过限流直接放行
  *
  * @throws BusinessError RATE_LIMITED / INTERNAL_ERROR
@@ -216,9 +235,18 @@ async function consumeGlobalRateLimitWithFallback(input, config) {
             if (e && e.code === 'RATE_LIMITED') {
                 throw e;
             }
-            // 其他错误（db 不可用等）降级到内存
-            // eslint-disable-next-line no-console
-            console.warn('[risk-rate-limit] global store failed, fallback to memory:', e && e.message);
+            const log = (0, logger_1.createLogger)('risk-rate-limit');
+            // H2 安全修复：敏感类型（支付/退款/提现等）在权威存储异常时 fail-closed，
+            // 绝不降级到空的实例内存（那等同于不限流）。
+            if (exports.SENSITIVE_FAIL_CLOSED_TYPES.has(input.type)) {
+                log.error('global store failed on sensitive type, fail-closed', { type: input.type, msg: e?.message });
+                throw (0, errors_1.err)('RATE_LIMITED', `RATE_LIMIT_STORE_UNAVAILABLE:${input.type}`, {
+                    remaining: 0,
+                    resetAt: Date.now() + effectiveConfig.windowMs,
+                });
+            }
+            // 其他非敏感类型（db 不可用等）降级到内存（best-effort）
+            log.warn('global store failed, fallback to memory', { msg: e?.message });
         }
     }
     // 降级到内存
@@ -339,8 +367,9 @@ function initGlobalRateLimitFromDb(db, options = {}) {
         return true;
     }
     catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn('[risk-rate-limit] init from db failed:', e && e.message);
+        // P2-003: 使用统一 logger 替代 console.warn，避免 any 断言
+        const log = (0, logger_1.createLogger)('risk-rate-limit');
+        log.warn('init from db failed', { msg: e?.message });
         return false;
     }
 }
@@ -348,6 +377,7 @@ exports.initGlobalRateLimitFromDb = initGlobalRateLimitFromDb;
 // 默认导出（保持 CommonJS 兼容）
 exports.default = {
     DEFAULT_RISK_RATE_LIMIT_CONFIG: exports.DEFAULT_RISK_RATE_LIMIT_CONFIG,
+    SENSITIVE_FAIL_CLOSED_TYPES: exports.SENSITIVE_FAIL_CLOSED_TYPES,
     peekRateLimit,
     consumeRateLimit,
     withRateLimit,

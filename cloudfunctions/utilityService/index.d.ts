@@ -23,9 +23,6 @@ export interface CloudEvent {
     Message?: string;
     [k: string]: unknown;
 }
-export interface CloudContext {
-    [k: string]: unknown;
-}
 /** Banner 文档（原始） */
 export interface BannerDoc {
     _id: string;
@@ -55,11 +52,20 @@ export interface BannerItem {
 export interface BannerListResult {
     list: BannerItem[];
 }
-/** 寄养家庭信息 */
+/** 寄养家庭公开信息（M5: 与 getHostInfo 实际返回对齐，不含 openid 等隐私数据） */
 export interface HostInfoResult {
-    openid: string;
     hostName: string;
     pricePerDay: number;
+    avatarUrl: string;
+}
+/** 寄养家庭档案（L2: 从模块初始化区移到类型区，保持类型定义集中） */
+export interface HostProfileDoc {
+    _id: string;
+    openid?: string;
+    hostName?: string;
+    pricePerDay?: number;
+    avatarUrl?: string;
+    [k: string]: unknown;
 }
 export declare const BANNERS_CACHE_TTL = 300000;
 export declare const BANNER_FETCH_LIMIT = 10;

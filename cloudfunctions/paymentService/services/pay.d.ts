@@ -17,6 +17,7 @@
  *   （运行时仍消费 .js 编译产物）
  */
 import { type WrappedHandler } from '../../common/errors';
+type OrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'feeding';
 interface CreatePaymentResult {
     orderId: string;
     outTradeNo: string;
@@ -42,6 +43,10 @@ interface WechatPayQueryResult {
     transaction_id?: string;
     [k: string]: unknown;
 }
+export declare const ORDER_TYPE_PREFIX_MAP: Record<string, OrderType>;
+export declare const ORDER_TYPE_COLLECTION_MAP: Record<OrderType, string>;
+export declare const ORDER_TYPE_AMOUNT_FIELD_MAP: Record<OrderType, string>;
+export declare function getOrderType(outTradeNo: string): OrderType | null;
 /**
  * 发起微信支付预付单
  *

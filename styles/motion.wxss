@@ -1,0 +1,719 @@
+/* ========================================================================
+   AROORO Motion System v5.0 — 公共动效库
+   所有可复用 @keyframes、动画工具类、入场编排、板块色彩动效
+   引用方式：@import './motion.wxss'; 或在 app.wxss 中全局引入
+   ======================================================================== */
+
+/* ======================================================================
+   公共 @keyframes — 入场动效
+   ====================================================================== */
+
+/* 渐入上浮 — 最常用入场动效 */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(var(--entrance-offset)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 渐入上浮 — 小偏移（精致入场） */
+@keyframes fadeUpSm {
+  from { opacity: 0; transform: translateY(var(--entrance-offset-sm)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 渐入上浮 — 大偏移（全页段落入场） */
+@keyframes fadeUpLg {
+  from { opacity: 0; transform: translateY(var(--entrance-offset-lg)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 纯透明度渐入 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 渐入+极轻缩放（奢牌入场 — 不夸张） */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* 缩放渐入 — 弹性 */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* 左滑入场 */
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(-40rpx); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* 右滑入场（返回） */
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(40rpx); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* 上滑入场 */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* 下滑入场 */
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* ======================================================================
+   公共 @keyframes — 持续动效
+   ====================================================================== */
+
+/* 呼吸缩放 — 4s 周期 */
+@keyframes breathe {
+  0%, 100% { opacity: 0.5; transform: scale(var(--breathe-scale-min)); }
+  50% { opacity: 1; transform: scale(var(--breathe-scale-max)); }
+}
+
+/* 状态脉动 — 2s 周期 */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.8); opacity: 0; }
+}
+
+/* 轨道旋转 */
+@keyframes orbit {
+  to { transform: rotate(360deg); }
+}
+
+/* 加载点跳动 */
+@keyframes dotBounce {
+  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-12rpx); }
+}
+
+/* 旋转 */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ======================================================================
+   公共 @keyframes — 骨架屏
+   ====================================================================== */
+
+/* 骨架屏扫光 */
+@keyframes skeletonSweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ======================================================================
+   入场编排工具类 — staggered delay
+   使用：在父容器添加 .stagger-fade-up / .stagger-scale-in，子项添加 .stagger-item
+   示例：<view class="stagger-fade-up"><view class="stagger-item">...</view></view>
+   ====================================================================== */
+
+/* 渐入上浮编排 — 使用设计系统变量 */
+.stagger-fade-up .stagger-item:nth-child(1) { animation: fadeUp var(--duration-elegant) var(--ease-velvet) 0s both; }
+.stagger-fade-up .stagger-item:nth-child(2) { animation: fadeUp var(--duration-elegant) var(--ease-velvet) var(--stagger-delay) both; }
+.stagger-fade-up .stagger-item:nth-child(3) { animation: fadeUp var(--duration-elegant) var(--ease-velvet) calc(var(--stagger-delay) * 2) both; }
+.stagger-fade-up .stagger-item:nth-child(4) { animation: fadeUp var(--duration-elegant) var(--ease-velvet) calc(var(--stagger-delay) * 3) both; }
+.stagger-fade-up .stagger-item:nth-child(5) { animation: fadeUp var(--duration-elegant) var(--ease-velvet) calc(var(--stagger-delay) * 4) both; }
+.stagger-fade-up .stagger-item:nth-child(6) { animation: fadeUp var(--duration-elegant) var(--ease-velvet) calc(var(--stagger-delay) * 5) both; }
+
+/* 缩放渐入编排 — 使用设计系统变量 */
+.stagger-scale-in .stagger-item:nth-child(1) { animation: scaleIn var(--duration-normal) var(--ease-maison) 0s both; }
+.stagger-scale-in .stagger-item:nth-child(2) { animation: scaleIn var(--duration-normal) var(--ease-maison) var(--stagger-delay) both; }
+.stagger-scale-in .stagger-item:nth-child(3) { animation: scaleIn var(--duration-normal) var(--ease-maison) calc(var(--stagger-delay) * 2) both; }
+.stagger-scale-in .stagger-item:nth-child(4) { animation: scaleIn var(--duration-normal) var(--ease-maison) calc(var(--stagger-delay) * 3) both; }
+.stagger-scale-in .stagger-item:nth-child(5) { animation: scaleIn var(--duration-normal) var(--ease-maison) calc(var(--stagger-delay) * 4) both; }
+.stagger-scale-in .stagger-item:nth-child(6) { animation: scaleIn var(--duration-normal) var(--ease-maison) calc(var(--stagger-delay) * 5) both; }
+
+/* 奢牌精致入场编排 — fadeInScale + 优雅缓动 */
+.stagger-elegant .stagger-item:nth-child(1) { animation: fadeInScale var(--duration-elegant) var(--ease-velvet) 0s both; }
+.stagger-elegant .stagger-item:nth-child(2) { animation: fadeInScale var(--duration-elegant) var(--ease-velvet) var(--stagger-delay-lg) both; }
+.stagger-elegant .stagger-item:nth-child(3) { animation: fadeInScale var(--duration-elegant) var(--ease-velvet) calc(var(--stagger-delay-lg) * 2) both; }
+.stagger-elegant .stagger-item:nth-child(4) { animation: fadeInScale var(--duration-elegant) var(--ease-velvet) calc(var(--stagger-delay-lg) * 3) both; }
+.stagger-elegant .stagger-item:nth-child(5) { animation: fadeInScale var(--duration-elegant) var(--ease-velvet) calc(var(--stagger-delay-lg) * 4) both; }
+.stagger-elegant .stagger-item:nth-child(6) { animation: fadeInScale var(--duration-elegant) var(--ease-velvet) calc(var(--stagger-delay-lg) * 5) both; }
+
+/* ======================================================================
+   Loading 动画 — 品牌呼吸环 + 跳动点
+   ======================================================================== */
+.loading-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-100);
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40rpx;
+}
+
+.loading-brand-mark {
+  position: relative;
+  width: 120rpx;
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-ring {
+  position: absolute;
+  width: 100rpx;
+  height: 100rpx;
+  border: 3rpx solid transparent;
+  border-radius: 50%;
+  animation: breathe var(--breathe-duration) ease-in-out infinite;
+}
+
+.brand-ring--delay {
+  width: 80rpx;
+  height: 80rpx;
+  animation-delay: 0.6s;
+}
+
+.brand-ring::before {
+  content: '';
+  position: absolute;
+  inset: -3rpx;
+  border-radius: 50%;
+  border: 3rpx solid transparent;
+  border-top-color: var(--accent-color);
+  border-right-color: rgba(201, 160, 76, 0.3);
+  animation: orbit 2s linear infinite;
+}
+
+.brand-ring--delay::before {
+  border-top-color: var(--metallic-gold-dark);
+  border-right-color: rgba(168, 128, 48, 0.2);
+  animation-duration: 2.8s;
+  animation-direction: reverse;
+}
+
+.brand-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: var(--accent-color);
+  animation: pulse var(--breathe-duration) ease-in-out infinite;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+}
+
+.loading-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: var(--accent-color);
+  animation: dotBounce 1.4s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  letter-spacing: 8rpx;
+  font-weight: 300;
+}
+
+/* ======================================================================
+   骨架屏工具类
+   ====================================================================== */
+.skeleton-line {
+  height: 28rpx;
+  border-radius: 14rpx;
+  background: var(--skeleton-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: skeletonSweep var(--skeleton-duration) ease-in-out infinite;
+}
+
+/* ======================================================================
+   板块色彩动效 — 6 板块专属持续动效语言
+   ====================================================================== */
+
+/* 商城 · 阳光黄 — sparkle 光点闪烁 */
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+/* 团购 · 柑橘橙 — energyPulse 能量脉冲 */
+@keyframes energyPulse {
+  0% { opacity: 0; transform: scaleX(0); }
+  30% { opacity: 0.9; transform: scaleX(1); }
+  70% { opacity: 0.9; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(0); }
+}
+
+/* 活动 · 薄荷绿 — pulseExpand 脉冲扩散 */
+@keyframes pulseExpand {
+  0% { transform: scale(0.5); opacity: 0.7; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+/* 服务 · 晴空蓝 — prismRotate 水晶折射（支持自定义基础角度） */
+@keyframes prismRotate {
+  0%, 100% { opacity: 0.3; transform: rotate(var(--base-rotate, 15deg)) scale(0.9); }
+  50% { opacity: 1; transform: rotate(calc(var(--base-rotate, 15deg) + 20deg)) scale(1.05); border-color: rgba(0, 180, 216, 0.8); }
+}
+
+/* 寄养 · 暖杏粉 — pinkBreathe 柔光呼吸 */
+@keyframes pinkBreathe {
+  0%, 100% { transform: scale(0.8); opacity: 0.4; }
+  50% { transform: scale(1.6); opacity: 0.9; }
+}
+
+/* 优惠券 · 电光紫 — starTwinkle 星辉闪烁 */
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.6) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
+}
+
+/* ======================================================================
+   页面切换动效 — 奢牌级柔和转场
+   ====================================================================== */
+
+/* TabBar 页面切换 — 容器级柔和入场
+   在页面容器上通过 .page-enter-active 类触发
+   JS: onShow 时 setData({ pageEnterActive: true })
+       animationend 后 setData({ pageEnterActive: false }) */
+@keyframes pageTabEnter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--page-enter-offset));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter-active {
+  animation: pageTabEnter var(--transition-page) both;
+}
+
+/* 前进入场 — 底部上浮 + 淡入 */
+@keyframes pageEnterForward {
+  from {
+    opacity: calc(1 - var(--page-enter-fade));
+    transform: translateY(var(--page-enter-offset));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 前进退场 — 原位淡出（不移动，留白感） */
+@keyframes pageExitForward {
+  from { opacity: 1; }
+  to { opacity: var(--page-exit-fade); }
+}
+
+/* 返回入场 — 原位淡入（旧页面从淡出中恢复） */
+@keyframes pageEnterBack {
+  from { opacity: var(--page-exit-fade); }
+  to { opacity: 1; }
+}
+
+/* 返回退场 — 轻微上移 + 淡出 */
+@keyframes pageExitBack {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: var(--page-exit-fade);
+    transform: translateY(var(--page-enter-offset-back));
+  }
+}
+
+/* 遮罩渐现 */
+@keyframes maskFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 遮罩渐隐 */
+@keyframes maskFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ======================================================================
+   交互反馈动效 — 奢牌级按压/悬浮
+   ====================================================================== */
+
+/* 按压缩放 */
+@keyframes pressIn {
+  from { transform: scale(1); }
+  to { transform: scale(var(--press-scale)); }
+}
+
+/* 按压恢复 */
+@keyframes pressOut {
+  from { transform: scale(var(--press-scale)); }
+  to { transform: scale(1); }
+}
+
+/* 卡片悬浮上浮 */
+@keyframes cardLift {
+  from { transform: translateY(0); }
+  to { transform: translateY(var(--press-lift-lg)); }
+}
+
+/* 卡片悬浮回落 */
+@keyframes cardDrop {
+  from { transform: translateY(var(--press-lift-lg)); }
+  to { transform: translateY(0); }
+}
+
+/* 选中指示器展开 */
+@keyframes indicatorExpand {
+  from { transform: translateX(-50%) scaleX(0); }
+  to { transform: translateX(-50%) scaleX(1); }
+}
+
+/* 选中指示器收起 */
+@keyframes indicatorCollapse {
+  from { transform: translateX(-50%) scaleX(1); }
+  to { transform: translateX(-50%) scaleX(0); }
+}
+
+/* 柔光点亮 */
+@keyframes glowIgnite {
+  from {
+    transform: translateX(-50%) scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 柔光熄灭 */
+@keyframes glowDim {
+  from {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* 流光扫过 — 卡片表面 */
+@keyframes shimmerSweep {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  40% {
+    left: 120%;
+    opacity: 1;
+  }
+  41% {
+    opacity: 0;
+  }
+  100% {
+    left: 120%;
+    opacity: 0;
+  }
+}
+
+/* 弹窗入场 — 底部上浮 + 缩放（奢牌感） */
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(60rpx) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 弹窗退场 */
+@keyframes modalExit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(30rpx) scale(0.97);
+  }
+}
+
+/* 抽屉从底部滑入 */
+@keyframes drawerSlideUp {
+  from { transform: translateY(var(--drawer-enter-offset)); }
+  to { transform: translateY(0); }
+}
+
+/* 抽屉滑出 */
+@keyframes drawerSlideDown {
+  from { transform: translateY(0); }
+  to { transform: translateY(var(--drawer-enter-offset)); }
+}
+
+/* 开关滑块 — 关闭→开启 */
+@keyframes toggleOn {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(calc(var(--toggle-track-width, 80rpx) - var(--toggle-knob-size, 32rpx) - 4rpx)) scaleX(1.1); }
+  100% { transform: translateX(calc(var(--toggle-track-width, 80rpx) - var(--toggle-knob-size, 32rpx) - 4rpx)) scaleX(1); }
+}
+
+/* 开关滑块 — 开启→关闭 */
+@keyframes toggleOff {
+  0% { transform: translateX(calc(var(--toggle-track-width, 80rpx) - var(--toggle-knob-size, 32rpx) - 4rpx)); }
+  50% { transform: translateX(4rpx) scaleX(1.1); }
+  100% { transform: translateX(4rpx) scaleX(1); }
+}
+
+/* 列表项删除 */
+@keyframes listItemRemove {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 200rpx;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-80rpx);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+
+/* 数字滚动（金额/计数器） */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ======================================================================
+   微交互动效 — 按钮按压、卡片悬浮、心形弹跳
+   ====================================================================== */
+
+/* 心形弹跳 */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.35) rotate(-8deg); }
+  60% { transform: scale(0.95) rotate(3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* 状态脉动点 */
+@keyframes statusPulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.8); opacity: 0; }
+}
+
+/* 呼吸光带 — 带亮度变化 */
+@keyframes breatheBar {
+  0%, 100% { opacity: 0.3; filter: brightness(0.8); }
+  50% { opacity: 1; filter: brightness(1.3); }
+}
+
+/* ======================================================================
+   呼吸动效增强 — 光圈、按钮光晕、背景漂移
+   ====================================================================== */
+
+/* 呼吸光圈 — 带 box-shadow 呼吸 */
+@keyframes breathRing {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.5;
+    box-shadow: var(--shadow-glow-primary-soft);
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+    box-shadow: var(--shadow-glow-primary-lg);
+  }
+}
+
+/* 外圈扩散 */
+@keyframes breathRingOuter {
+  0%, 100% { transform: scale(0.9); opacity: 0.2; }
+  50% { transform: scale(1.25); opacity: 0.6; }
+}
+
+/* 按钮光晕呼吸 */
+@keyframes breathBtnGlow {
+  0%, 100% { box-shadow: var(--shadow-glow-primary-btn); }
+  50% { box-shadow: var(--shadow-glow-primary-btn-lg); }
+}
+
+/* 渐变背景漂移 */
+@keyframes frostedBgShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ======================================================================
+   光影质感工具类 — 玻璃卡片、按钮交互、开关、悬浮卡片
+   ====================================================================== */
+
+/* 超白玻璃卡片 */
+.glass-card {
+  background: var(--glass-card-bg);
+  border: 1px solid var(--glass-card-border);
+  border-radius: var(--radius-lg, 20rpx);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-card), transform var(--transition-card);
+}
+
+/* 按钮按压反馈 */
+.btn-interactive {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-card);
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+}
+
+/* 渐变光泽扫过 */
+.btn-interactive::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: var(--shine-gradient);
+  transition: left var(--transition-shimmer);
+}
+
+.btn-interactive:hover::before {
+  left: 120%;
+}
+
+/* 生命绿按钮变体 */
+.btn-green {
+  background: var(--primary-gradient, var(--gradient-secondary));
+  color: var(--text-inverse);
+}
+
+.btn-green:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-primary), var(--shadow-lg);
+}
+
+.btn-green:active {
+  transform: scale(0.97);
+}
+
+/* 阳光黄按钮变体 */
+.btn-yellow {
+  background: var(--mall-gradient);
+  color: var(--text-inverse);
+}
+
+.btn-yellow:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-mall), var(--shadow-lg);
+}
+
+.btn-yellow:active {
+  transform: scale(0.97);
+}
+
+/* 电光紫按钮变体 */
+.btn-purple {
+  background: var(--coupon-gradient);
+  color: var(--text-inverse);
+}
+
+.btn-purple:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-coupon), var(--shadow-lg);
+}
+
+.btn-purple:active {
+  transform: scale(0.97);
+}
+
+/* 弹性开关 */
+.toggle-switch {
+  transition: background var(--transition-switch);
+}
+
+.toggle-knob {
+  transition: all var(--transition-bounce);
+}
+
+/* 卡片悬浮 */
+.hover-card {
+  transition: all var(--transition-card);
+}
+
+.hover-card:hover {
+  transform: translateY(var(--press-lift-lg));
+  box-shadow: var(--shadow-lg), var(--shadow-glow-primary-xs);
+}
+
+/* 珍珠边缘光卡片 */
+.pearl-card {
+  transition: all var(--transition-card);
+  box-shadow: var(--shadow-pearl-card), var(--shadow-md);
+}
+
+.pearl-card:hover {
+  box-shadow: var(--shadow-pearl-card-hover), var(--shadow-lg);
+}
+
+/* 金属微浮雕按钮 */
+.emboss-btn {
+  box-shadow:
+    var(--shadow-glow-primary),
+    var(--shadow-emboss),
+    var(--shadow-emboss-btn);
+  transition: all var(--transition-card);
+}
+
+.emboss-btn:hover {
+  transform: translateY(var(--press-lift));
+  box-shadow:
+    var(--shadow-glow-primary),
+    var(--shadow-lg),
+    var(--shadow-emboss-btn-hover);
+}

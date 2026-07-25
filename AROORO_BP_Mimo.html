@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AROORO · 私域群主的数字资产操作系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <style>
+    :root {
+      --bg: #FAF9F7;
+      --bg-subtle: #F3F2EF;
+      --bg-card: #F6F5F2;
+      --ink: #000000;
+      --ink-2: #666666;
+      --ink-3: #999999;
+      --ink-4: #BBBBBB;
+      --border: #E0E0E0;
+      --border-dark: #000000;
+      --accent: #000000;
+      --accent-hover: #F0EFEC;
+      --font-cn: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      --font-en: 'DM Sans', 'Helvetica Neue', sans-serif;
+      --font-serif: 'Fraunces', 'Georgia', serif;
+    }
+
+    /* ─── Noise Texture Overlay ─── */
+    .noise-overlay {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 9998;
+      opacity: 0.03; mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ─── Scroll Progress Bar ─── */
+    .progress-bar {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 2px;
+      background: transparent; z-index: 9999;
+    }
+    .progress-fill {
+      height: 100%; width: 100%;
+      background: var(--ink);
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+
+    /* ─── Selection Style ─── */
+    ::selection { background: var(--ink); color: var(--bg); }
+
+    /* ─── Serif Accent ─── */
+    .serif-italic { font-family: var(--font-serif); font-style: italic; font-weight: 400; }
+    .cover-title { font-family: var(--font-en); }
+    .contact-title { font-family: var(--font-serif); font-weight: 400; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: var(--font-cn);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      font-size: 14px;
+    }
+
+    /* ─── GSAP Initial States (prevent FOUC) ─── */
+    .gsap-fade-up { opacity: 0; transform: translateY(40px); }
+    .gsap-fade-in { opacity: 0; }
+    .gsap-fade-left { opacity: 0; transform: translateX(-40px); }
+    .gsap-fade-right { opacity: 0; transform: translateX(40px); }
+    .gsap-scale-in { opacity: 0; transform: scale(0.92); }
+    .gsap-mask-reveal { opacity: 0; transform: translateY(60px); }
+    .gsap-split-char { opacity: 0; transform: translateY(80px) rotateX(-40deg); transform-origin: bottom; display: inline-block; }
+    .gsap-draw-line { transform: scaleX(0); transform-origin: left; }
+
+    /* ─── Magnetic Hover Targets ─── */
+    .magnetic { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform; }
+    .card-item, .trust-card, .team-card, .chain-cell, .defense-cell, .stat-item, .metric-row-item, .spiral-item, .list-item, .flywheel-cell, .breakeven-item, .contact-item, .vs-side, .nav-link { will-change: transform; }
+
+    /* ─── Scroll Hint Pulse ─── */
+    .scroll-hint { opacity: 0; }
+
+    /* ─── Background Pattern ─── */
+    .bg-pattern {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+      opacity: 0.03;
+    }
+    .bg-pattern span {
+      position: absolute;
+      font-family: var(--font-en);
+      font-weight: 700;
+      font-size: 8vw;
+      color: var(--ink);
+      letter-spacing: 0.15em;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    /* ─── Navigation ─── */
+    .top-nav {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 52px;
+      background: rgba(250,249,247,0.85);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+    .top-nav.scrolled {
+      background: rgba(250,249,247,0.95);
+    }
+    .nav-logo {
+      font-family: var(--font-en);
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    .nav-link {
+      font-size: 0.8rem;
+      color: var(--ink-2);
+      text-decoration: none;
+      transition: color 0.2s;
+      cursor: pointer;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+    .nav-link:hover { color: var(--ink); }
+    .nav-link.active { color: var(--ink); font-weight: 500; }
+
+    /* ─── Sections ─── */
+    .section {
+      position: relative;
+      z-index: 1;
+      border-bottom: 1px solid var(--border-dark);
+      padding: 5rem 8vw;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .section:last-child { border-bottom: none; }
+
+    /* ─── Editorial Section Index Marker ─── */
+    .section[data-num]::before {
+      content: attr(data-num);
+      position: absolute;
+      top: 2rem;
+      right: 8vw;
+      font-family: var(--font-en);
+      font-size: clamp(8rem, 18vw, 16rem);
+      font-weight: 700;
+      color: var(--ink);
+      opacity: 0;
+      line-height: 0.8;
+      letter-spacing: -0.05em;
+      pointer-events: none;
+      z-index: 0;
+      user-select: none;
+      transform: translateY(30px);
+      transition: opacity 1.2s ease, transform 1.2s ease;
+    }
+    .section[data-num].in-view::before {
+      opacity: 0.025;
+      transform: translateY(0);
+    }
+    .section > * { position: relative; z-index: 1; }
+
+    /* Compact variant — heavy content pages */
+    .section-compact {
+      padding: 3.5rem 8vw;
+    }
+    .section-compact .section-header { margin-bottom: 1rem; }
+    .section-compact .data-table { margin-top: 0.5rem; }
+    .section-compact .data-table tbody td { padding: 0.3rem 0.7rem; }
+    .section-compact .data-table thead th { padding: 0.3rem 0.7rem; }
+    .section-compact .cards-grid { margin-top: 0.5rem; }
+    .section-compact .card-item { padding: 0.7rem 0.9rem; }
+    .section-compact .vs-container { margin-top: 0.5rem; }
+    .section-compact .vs-side { padding: 0.8rem 1rem; }
+    .section-compact .defense-row { margin-top: 0.5rem; }
+    .section-compact .defense-cell { padding: 0.5rem 0.7rem; }
+    .section-compact .breakeven-grid { margin-top: 0.5rem; }
+    .section-compact .breakeven-item { padding: 0.5rem 0.7rem; }
+    .section-compact .insight-panel { margin-top: 0.5rem; padding: 0.5rem 0.8rem; }
+    .section-compact .chain-row { margin-top: 0.5rem; }
+    .section-compact .chain-cell { padding: 0.5rem 0.7rem; }
+    .section-compact .stats-row { margin-top: 0.5rem; }
+    .section-compact .stat-item { padding: 0.5rem 0.4rem; }
+    .section-compact .timeline-item { padding: 0.3rem 0; }
+    .section-compact .planb-box { margin-top: 0.5rem; padding: 0.5rem 0.8rem; }
+
+    /* Spacious variant — light content pages */
+    .section-spacious {
+      padding: 6rem 10vw;
+    }
+    .section-spacious .section-header { margin-bottom: 2rem; }
+
+    /* ─── Section Header ─── */
+    .section-header {
+      margin-bottom: 1rem;
+    }
+    .section-label {
+      font-family: var(--font-en);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 0.4rem;
+    }
+    .section-title {
+      font-family: var(--font-cn);
+      font-weight: 700;
+      font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+      line-height: 1.2;
+      color: var(--ink);
+      letter-spacing: 0.03em;
+    }
+    .section-subtitle {
+      font-size: 0.9rem;
+      color: var(--ink-2);
+      margin-top: 0.4rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      max-width: 600px;
+    }
+    .body-lg {
+      font-size: 1.1rem;
+      color: var(--ink-2);
+      line-height: 1.6;
+      max-width: 600px;
+    }
+
+    /* ─── Numbered List Items ─── */
+    .list-item {
+      display: grid;
+      grid-template-columns: 50px 1fr 24px;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.25s ease;
+      cursor: default;
+    }
+    .list-item:hover {
+      background: var(--accent-hover);
+      margin: 0 -1.5rem;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-num {
+      font-family: var(--font-en);
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--ink-3);
+    }
+    .list-content h3 {
+      font-family: var(--font-cn);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.15rem;
+      letter-spacing: 0.02em;
+    }
+    .list-content p {
+      font-size: 0.78rem;
+      color: var(--ink-2);
+      line-height: 1.4;
+    }
+    .list-arrow {
+      font-size: 1.2rem;
+      color: var(--ink-3);
+      transition: transform 0.3s ease, color 0.2s;
+    }
+    .list-item:hover .list-arrow {
+      transform: translateX(4px);
+      color: var(--ink);
+    }
+
+    /* ─── Cover Section ─── */
+    .cover-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+    .cover-label {
+      font-family: var(--font-en);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 1rem;
+    }
+    .cover-title {
+      font-family: var(--font-en);
+      font-weight: 700;
+      font-size: clamp(3rem, 10vw, 7rem);
+      letter-spacing: 0.03em;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .cover-divider {
+      width: 60px;
+      height: 1px;
+      background: var(--ink);
+      margin: 1.5rem auto;
+    }
+    .cover-desc {
+      font-family: var(--font-cn);
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: var(--ink-2);
+      max-width: 500px;
+    }
+    .cover-tagline {
+      font-size: 0.85rem;
+      color: var(--ink-3);
+      margin-top: 1.5rem;
+      letter-spacing: 0.05em;
+    }
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      font-family: var(--font-en);
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      color: var(--ink-3);
+      animation: scrollBounce 2s ease-in-out infinite;
+    }
+    @keyframes scrollBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+    }
+
+    /* ─── Summary Grid ─── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .summary-statement {
+      font-family: var(--font-cn);
+      font-weight: 700;
+      font-size: clamp(1.3rem, 2.8vw, 1.9rem);
+      letter-spacing: 0.03em;
+      line-height: 1.3;
+      color: var(--ink);
+    }
+    .summary-statement .highlight {
+      position: relative;
+    }
+    .summary-statement .highlight::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--ink);
+    }
+    .metric-row {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .metric-row-item {
+      padding-bottom: 0.7rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .metric-row-item:last-child { border-bottom: none; }
+    .metric-row-value {
+      font-family: var(--font-en);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .metric-row-label {
+      font-size: 0.7rem;
+      color: var(--ink-3);
+      margin-top: 0.15rem;
+    }
+    .metric-row-desc {
+      font-size: 0.75rem;
+      color: var(--ink-2);
+      margin-top: 0.2rem;
+    }
+
+    /* ─── Spiral Steps ─── */
+    .spiral-list {
+      margin-top: 0.5rem;
+    }
+    .spiral-item {
+      display: grid;
+      grid-template-columns: 50px 1fr;
+      gap: 1rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--border);
+      align-items: start;
+    }
+    .spiral-item:last-child { border-bottom: none; }
+    .spiral-num {
+      font-family: var(--font-en);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--bg-subtle);
+      -webkit-text-stroke: 1px var(--border);
+      line-height: 1;
+    }
+    .spiral-title {
+      font-family: var(--font-cn);
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--ink);
+      margin-bottom: 0.15rem;
+    }
+    .spiral-desc {
+      font-size: 0.78rem;
+      color: var(--ink-2);
+    }
+
+    /* ─── Cards Grid ─── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      margin-top: 0.8rem;
+      border: 1px solid var(--border-dark);
+    }
+    .cards-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .cards-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .card-item {
+      padding: 1rem 1.2rem;
+      border-right: 1px solid var(--border-dark);
+      border-bottom: 1px solid var(--border-dark);
+      transition: background 0.25s ease;
+    }
+    .card-item:hover { background: var(--accent-hover); }
+    .cards-grid:not(.cols-2):not(.cols-4) .card-item:nth-child(3n) { border-right: none; }
+    .cards-grid.cols-2 .card-item:nth-child(2n) { border-right: none; }
+    .cards-grid.cols-4 .card-item:nth-child(4n) { border-right: none; }
+    .cards-grid:not(.cols-2):not(.cols-4) .card-item:nth-last-child(-n+3) { border-bottom: none; }
+    .cards-grid.cols-2 .card-item:nth-last-child(-n+2) { border-bottom: none; }
+    .cards-grid.cols-4 .card-item:nth-last-child(-n+4) { border-bottom: none; }
+    .card-role {
+      font-family: var(--font-en);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 0.5rem;
+    }
+    .card-title {
+      font-family: var(--font-cn);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--ink);
+      letter-spacing: 0.02em;
+      margin-bottom: 0.3rem;
+    }
+    .card-desc {
+      font-size: 0.78rem;
+      color: var(--ink-2);
+      line-height: 1.45;
+    }
+
+    /* ─── VS Comparison ─── */
+    .vs-container {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0;
+      margin-top: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .vs-side {
+      padding: 1.2rem 1.5rem;
+    }
+    .vs-side:first-child { border-right: 1px solid var(--border); }
+    .vs-mid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1.5rem;
+      font-family: var(--font-en);
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--ink-3);
+      letter-spacing: 0.1em;
+    }
+    .vs-name {
+      font-family: var(--font-en);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 0.6rem;
+    }
+    .vs-amount {
+      font-family: var(--font-en);
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .vs-amount .unit {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+    .vs-detail {
+      font-size: 0.78rem;
+      color: var(--ink-2);
+      margin-top: 0.6rem;
+      line-height: 1.45;
+    }
+
+    /* ─── Table Title ─── */
+    .table-title {
+      font-family: var(--font-cn);
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--ink);
+      margin-top: 2rem;
+      margin-bottom: 0.8rem;
+      letter-spacing: 0.02em;
+      padding: 0 0.8rem;
+    }
+
+    /* ─── Data Table ─── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.8rem;
+      font-size: 0.82rem;
+    }
+    .data-table thead th {
+      font-family: var(--font-en);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      text-align: left;
+      padding: 0.4rem 0.8rem;
+      border-bottom: 2px solid var(--ink);
+    }
+    .data-table tbody td {
+      padding: 0.4rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--ink-2);
+      vertical-align: top;
+    }
+    .data-table tbody tr {
+      transition: background 0.2s ease;
+    }
+    .data-table tbody tr:hover {
+      background: var(--accent-hover);
+    }
+    .data-table tbody td:first-child {
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .data-table .check-cell {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    /* ─── Trust Cards ─── */
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      margin-top: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    .trust-card {
+      padding: 1.5rem 1.5rem;
+      border-right: 1px solid var(--border);
+    }
+    .trust-card:last-child { border-right: none; }
+    .trust-num {
+      font-family: var(--font-en);
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--ink-3);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.8rem;
+    }
+    .trust-title {
+      font-family: var(--font-cn);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+    .trust-desc {
+      font-size: 0.88rem;
+      color: var(--ink-2);
+      line-height: 1.6;
+      margin-bottom: 0.6rem;
+    }
+    .trust-source {
+      font-size: 0.75rem;
+      color: var(--ink-3);
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    /* ─── Timeline ─── */
+    .timeline-list {
+      margin-top: 0.5rem;
+    }
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 1rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      align-items: start;
+    }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-period {
+      font-family: var(--font-en);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .timeline-title {
+      font-family: var(--font-cn);
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: var(--ink);
+      margin-bottom: 0.15rem;
+    }
+    .timeline-desc {
+      font-size: 0.78rem;
+      color: var(--ink-2);
+      line-height: 1.4;
+    }
+
+    /* ─── Allocation Bars ─── */
+    .alloc-list {
+      margin-top: 0.8rem;
+    }
+    .alloc-item {
+      display: grid;
+      grid-template-columns: 90px 1fr 50px;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .alloc-item:last-child { border-bottom: none; }
+    .alloc-name {
+      font-weight: 500;
+      font-size: 0.82rem;
+      color: var(--ink);
+    }
+    .alloc-bar-bg {
+      height: 5px;
+      background: var(--bg-subtle);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .alloc-bar-fill {
+      height: 100%;
+      background: var(--ink);
+      border-radius: 2px;
+      width: 0;
+    }
+    .alloc-pct {
+      font-family: var(--font-en);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--ink);
+      text-align: right;
+    }
+
+    /* ─── Team Cards ─── */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin-top: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .team-card {
+      padding: 1.2rem 1.5rem;
+      border-right: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+    .team-card:last-child { border-right: none; }
+    .team-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-cn);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .team-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--ink);
+      margin-bottom: 0.15rem;
+    }
+    .team-role {
+      font-family: var(--font-en);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 0.5rem;
+    }
+    .team-desc {
+      font-size: 0.78rem;
+      color: var(--ink-2);
+      line-height: 1.45;
+    }
+
+    /* ─── Contact Section ─── */
+    .contact-section {
+      text-align: center;
+      align-items: center;
+    }
+    .contact-title {
+      font-family: var(--font-cn);
+      font-weight: 700;
+      font-size: clamp(1.3rem, 2.8vw, 1.9rem);
+      letter-spacing: 0.03em;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+    .contact-desc {
+      font-size: 0.9rem;
+      color: var(--ink-2);
+      max-width: 500px;
+      margin: 0 auto 1.5rem;
+    }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      border: 1px solid var(--border);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .contact-item {
+      padding: 1.2rem 1.5rem;
+      border-right: 1px solid var(--border);
+    }
+    .contact-item:last-child { border-right: none; }
+    .contact-label {
+      font-family: var(--font-en);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 0.5rem;
+    }
+    .contact-value {
+      font-weight: 500;
+      font-size: 0.88rem;
+      color: var(--ink);
+    }
+
+    /* ─── Insight Panel ─── */
+    .insight-panel {
+      margin-top: 0.8rem;
+      padding: 0.8rem 1.2rem;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .insight-panel .panel-label {
+      font-family: var(--font-en);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 0.4rem;
+    }
+    .insight-panel p {
+      font-size: 0.82rem;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    /* ─── Big Number ─── */
+    .big-number {
+      font-family: var(--font-en);
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+    .big-number-label {
+      font-size: 0.8rem;
+      color: var(--ink-2);
+      margin-top: 0.3rem;
+    }
+
+    /* ─── Tech Stats ─── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-top: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .stat-item {
+      padding: 0.8rem 0.6rem;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-value {
+      font-family: var(--font-en);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--ink-3);
+      margin-top: 0.2rem;
+    }
+
+    /* ─── Flywheel ─── */
+    .flywheel-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-top: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .flywheel-cell {
+      padding: 0.8rem 0.6rem;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .flywheel-cell:last-child { border-right: none; }
+
+    /* ─── Supply Chain ─── */
+    .chain-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      margin-top: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .chain-cell {
+      padding: 0.8rem 1rem;
+      border-right: 1px solid var(--border);
+    }
+    .chain-cell:last-child { border-right: none; }
+    .chain-period {
+      font-family: var(--font-en);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--ink-3);
+      margin-bottom: 0.3rem;
+    }
+    .chain-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--ink);
+      margin-bottom: 0.2rem;
+    }
+    .chain-desc {
+      font-size: 0.78rem;
+      color: var(--ink-2);
+    }
+
+    /* ─── Defense Row ─── */
+    .defense-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      margin-top: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .defense-cell {
+      padding: 0.8rem 1rem;
+      border-right: 1px solid var(--border);
+    }
+    .defense-cell:last-child { border-right: none; }
+    .defense-label {
+      font-family: var(--font-en);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 0.3rem;
+    }
+    .defense-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--ink);
+      margin-bottom: 0.2rem;
+    }
+    .defense-desc {
+      font-size: 0.78rem;
+      color: var(--ink-2);
+      line-height: 1.4;
+    }
+
+    /* ─── Conclusion Bar ─── */
+    .conclusion-bar {
+      margin-top: 0.8rem;
+      padding: 0.8rem 1.2rem;
+      border: 1px solid var(--border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .conclusion-bar p {
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: var(--ink);
+    }
+    .conclusion-bar .arrow {
+      font-size: 1.1rem;
+      color: var(--ink);
+    }
+
+    /* ─── Plan B ─── */
+    .planb-box {
+      margin-top: 0.8rem;
+      padding: 0.8rem 1.2rem;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--ink);
+    }
+    .planb-label {
+      font-family: var(--font-en);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 0.3rem;
+    }
+    .planb-box p {
+      font-size: 0.82rem;
+      color: var(--ink-2);
+      line-height: 1.5;
+    }
+
+    /* ── Breakeven ─── */
+    .breakeven-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      margin-top: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .breakeven-item {
+      padding: 0.8rem 1rem;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .breakeven-item:last-child { border-right: none; }
+    .breakeven-label {
+      font-size: 0.75rem;
+      color: var(--ink-3);
+      margin-bottom: 0.3rem;
+    }
+    .breakeven-value {
+      font-family: var(--font-en);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* ─── Reveal Animation (GSAP-driven, classes used as selectors) ─── */
+    .reveal { opacity: 0; }
+    .reveal-delay-1, .reveal-delay-2, .reveal-delay-3, .reveal-delay-4 { opacity: 0; }
+
+    /* ─── Card Hover Enhancement: Left Accent Bar ─── */
+    .card-item, .trust-card, .team-card, .chain-cell, .defense-cell, .breakeven-item, .contact-item, .flywheel-cell, .stat-item {
+      position: relative;
+      transition: background 0.35s ease, transform 0.35s ease;
+    }
+    .card-item::before, .trust-card::before, .team-card::before, .chain-cell::before, .defense-cell::before, .breakeven-item::before, .contact-item::before, .flywheel-cell::before, .stat-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--ink);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      z-index: 2;
+    }
+    .card-item:hover::before, .trust-card:hover::before, .team-card:hover::before, .chain-cell:hover::before, .defense-cell:hover::before, .breakeven-item:hover::before, .contact-item:hover::before, .flywheel-cell:hover::before, .stat-item:hover::before {
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+    .card-item:hover, .trust-card:hover, .team-card:hover, .chain-cell:hover, .defense-cell:hover, .breakeven-item:hover, .contact-item:hover, .flywheel-cell:hover, .stat-item:hover {
+      transform: translateY(-2px);
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 900px) {
+      .section { padding: 4rem 5vw; }
+      .summary-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .cards-grid, .cards-grid.cols-2, .cards-grid.cols-4 { grid-template-columns: 1fr; }
+      .cards-grid .card-item,
+      .cards-grid.cols-2 .card-item,
+      .cards-grid.cols-4 .card-item { border-right: none; }
+      .trust-grid { grid-template-columns: 1fr; }
+      .trust-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .trust-card:last-child { border-bottom: none; }
+      .vs-container { grid-template-columns: 1fr; }
+      .vs-side:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+      .vs-mid { padding: 1rem 0; }
+      .team-grid { grid-template-columns: 1fr; }
+      .team-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .team-card:last-child { border-bottom: none; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .stat-item:nth-child(2) { border-right: none; }
+      .stat-item:nth-child(1), .stat-item:nth-child(2) { border-bottom: 1px solid var(--border); }
+      .flywheel-row { grid-template-columns: repeat(2, 1fr); }
+      .flywheel-cell:nth-child(2) { border-right: none; }
+      .flywheel-cell:nth-child(1), .flywheel-cell:nth-child(2) { border-bottom: 1px solid var(--border); }
+      .chain-row { grid-template-columns: 1fr; }
+      .chain-cell { border-right: none; border-bottom: 1px solid var(--border); }
+      .chain-cell:last-child { border-bottom: none; }
+      .defense-row { grid-template-columns: 1fr; }
+      .defense-cell { border-right: none; border-bottom: 1px solid var(--border); }
+      .defense-cell:last-child { border-bottom: none; }
+      .breakeven-grid { grid-template-columns: 1fr; }
+      .breakeven-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .breakeven-item:last-child { border-bottom: none; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .contact-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .contact-item:last-child { border-bottom: none; }
+      .alloc-item { grid-template-columns: 100px 1fr 50px; }
+      .list-item { grid-template-columns: 50px 1fr 30px; gap: 1rem; }
+      .nav-links { display: none; }
+      .timeline-item { grid-template-columns: 70px 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Pattern -->
+  <div class="bg-pattern" id="bgPattern"></div>
+
+  <!-- Noise Texture Overlay -->
+  <div class="noise-overlay"></div>
+
+  <!-- Scroll Progress Bar -->
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- Navigation -->
+  <nav class="top-nav" id="topNav">
+    <a class="nav-logo" href="#cover">AROORO</a>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+
+  <main id="app"></main>
+
+  <script src="content.js"></script>
+  <script>
+    // ─── Render: Build page from PAGE_DATA ───
+    (function() {
+      const D = PAGE_DATA;
+      const app = document.getElementById('app');
+
+      function el(tag, cls, html) {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (html !== undefined) e.innerHTML = html;
+        return e;
+      }
+
+      function sectionHeader(d) {
+        const h = el('div', 'section-header');
+        h.appendChild(el('div', 'section-label reveal', d.label));
+        h.appendChild(el('h2', 'section-title reveal reveal-delay-1', d.title));
+        if (d.subtitle) h.appendChild(el('p', 'section-subtitle reveal reveal-delay-1', d.subtitle));
+        return h;
+      }
+
+      function makeTable(t) {
+        const wrapper = document.createElement('div');
+        if (t.title) {
+          wrapper.appendChild(el('div', 'table-title reveal reveal-delay-2', t.title));
+        }
+        const table = el('table', 'data-table reveal reveal-delay-2');
+        const thead = el('thead'); const tr = el('tr');
+        t.headers.forEach(h => tr.appendChild(el('th', null, h)));
+        thead.appendChild(tr); table.appendChild(thead);
+        const tbody = el('tbody');
+        t.rows.forEach(row => {
+          const r = el('tr');
+          row.forEach(cell => r.appendChild(el('td', null, cell)));
+          tbody.appendChild(r);
+        });
+        table.appendChild(tbody);
+        wrapper.appendChild(table);
+        return wrapper;
+      }
+
+      function makeInsight(d) {
+        const p = el('div', 'insight-panel reveal reveal-delay-3');
+        if (d.label) p.appendChild(el('div', 'panel-label', d.label));
+        p.appendChild(el('p', null, d.text));
+        return p;
+      }
+
+      function makeCards(cards, cols, delay) {
+        const grid = el('div', 'cards-grid reveal reveal-delay-' + (delay || 2));
+        if (cols === 2) grid.classList.add('cols-2');
+        if (cols === 4) grid.classList.add('cols-4');
+        cards.forEach(c => {
+          const card = el('div', 'card-item');
+          if (c.role) card.appendChild(el('div', 'card-role', c.role));
+          card.appendChild(el('div', 'card-title', c.title));
+          card.appendChild(el('div', 'card-desc', c.desc));
+          grid.appendChild(card);
+        });
+        return grid;
+      }
+
+      // ─── Nav links ───
+      const navLinks = document.getElementById('navLinks');
+      D.nav.links.forEach(l => {
+        const a = el('a', 'nav-link');
+        a.setAttribute('data-target', l.target);
+        a.textContent = l.label;
+        navLinks.appendChild(a);
+      });
+
+      // ─── 00 · Cover ───
+      const cover = el('section', 'section cover-section');
+      cover.id = 'cover';
+      cover.appendChild(el('div', 'cover-label reveal', D.cover.label));
+      cover.appendChild(el('h1', 'cover-title reveal reveal-delay-1', D.cover.title));
+      cover.appendChild(el('div', 'cover-divider reveal reveal-delay-2'));
+      cover.appendChild(el('p', 'cover-desc reveal reveal-delay-2', D.cover.desc));
+      cover.appendChild(el('p', 'cover-tagline reveal reveal-delay-3', D.cover.tagline));
+      cover.appendChild(el('div', 'scroll-hint', D.cover.scrollHint));
+      app.appendChild(cover);
+
+      // ─── 01 · Summary ───
+      (function() {
+        const s = el('section', 'section section-spacious'); s.id = 'summary'; s.setAttribute('data-num', '01');
+        s.appendChild(sectionHeader(D.summary));
+        const grid = el('div', 'summary-grid reveal reveal-delay-2');
+        const left = el('div');
+        left.appendChild(el('p', 'body-lg', D.summary.desc));
+        grid.appendChild(left);
+        const right = el('div', 'metric-row');
+        D.summary.metrics.forEach(m => {
+          const item = el('div', 'metric-row-item');
+          item.appendChild(el('div', 'metric-row-value', m.value));
+          item.appendChild(el('div', 'metric-row-label', m.label));
+          item.appendChild(el('div', 'metric-row-desc', m.desc));
+          right.appendChild(item);
+        });
+        grid.appendChild(right);
+        s.appendChild(grid);
+        s.appendChild(makeInsight(D.summary.insight));
+        app.appendChild(s);
+      })();
+
+      // ─── 02 · Pain ───
+      (function() {
+        const s = el('section', 'section'); s.id = 'pain'; s.setAttribute('data-num', '02');
+        s.appendChild(sectionHeader(D.pain));
+        const list = el('div', 'spiral-list reveal reveal-delay-2');
+        D.pain.spiral.forEach(item => {
+          const row = el('div', 'spiral-item');
+          row.appendChild(el('div', 'spiral-num', item.num));
+          const c = el('div');
+          c.appendChild(el('div', 'spiral-title', item.title));
+          c.appendChild(el('div', 'spiral-desc', item.desc));
+          row.appendChild(c);
+          list.appendChild(row);
+        });
+        s.appendChild(list);
+        s.appendChild(makeInsight(D.pain.insight));
+        app.appendChild(s);
+      })();
+
+      // ─── 03 · Breakthrough ───
+      (function() {
+        const s = el('section', 'section'); s.id = 'breakthrough'; s.setAttribute('data-num', '03');
+        s.appendChild(sectionHeader(D.breakthrough));
+        s.appendChild(makeCards(D.breakthrough.cards, 3, 2));
+        if (D.breakthrough.insight) {
+          const p = el('div', 'insight-panel reveal reveal-delay-3');
+          p.appendChild(el('p', null, D.breakthrough.insight.text));
+          s.appendChild(p);
+        }
+        const fly = el('div', 'flywheel-row reveal reveal-delay-3');
+        D.breakthrough.flywheel.forEach(f => fly.appendChild(el('div', 'flywheel-cell', f)));
+        s.appendChild(fly);
+        app.appendChild(s);
+      })();
+
+      // ─── 04 · Trust ───
+      (function() {
+        const s = el('section', 'section section-spacious'); s.id = 'trust'; s.setAttribute('data-num', '04');
+        s.appendChild(sectionHeader(D.trust));
+        const grid = el('div', 'trust-grid reveal reveal-delay-2');
+        D.trust.cards.forEach(c => {
+          const card = el('div', 'trust-card');
+          card.appendChild(el('div', 'trust-num', c.num));
+          card.appendChild(el('div', 'trust-title', c.title));
+          card.appendChild(el('div', 'trust-desc', c.desc));
+          card.appendChild(el('div', 'trust-source', c.source));
+          grid.appendChild(card);
+        });
+        s.appendChild(grid);
+        s.appendChild(makeTable(D.trust.table));
+        app.appendChild(s);
+      })();
+
+      // ─── 05 · Benefit ───
+      (function() {
+        const s = el('section', 'section section-compact'); s.id = 'benefit'; s.setAttribute('data-num', '05');
+        s.appendChild(sectionHeader(D.benefit));
+        const vs = el('div', 'vs-container reveal reveal-delay-2');
+        const left = el('div', 'vs-side');
+        left.appendChild(el('div', 'vs-name', D.benefit.vs.leftName));
+        left.appendChild(el('div', 'vs-amount', D.benefit.vs.leftAmount + ' <span class="unit">' + D.benefit.vs.leftUnit + '</span>'));
+        left.appendChild(el('div', 'vs-detail', D.benefit.vs.leftDetail));
+        const mid = el('div', 'vs-mid', 'VS');
+        const right = el('div', 'vs-side');
+        right.appendChild(el('div', 'vs-name', D.benefit.vs.rightName));
+        right.appendChild(el('div', 'vs-amount', D.benefit.vs.rightAmount + ' <span class="unit">' + D.benefit.vs.rightUnit + '</span>'));
+        right.appendChild(el('div', 'vs-detail', D.benefit.vs.rightDetail));
+        vs.appendChild(left); vs.appendChild(mid); vs.appendChild(right);
+        s.appendChild(vs);
+        s.appendChild(makeTable(D.benefit.table));
+        app.appendChild(s);
+      })();
+
+      // ─── 06 · Product ───
+      (function() {
+        const s = el('section', 'section section-spacious'); s.id = 'product'; s.setAttribute('data-num', '06');
+        s.appendChild(sectionHeader(D.product));
+        s.appendChild(makeCards(D.product.cards, 4, 2));
+        app.appendChild(s);
+      })();
+
+      // ─── 07 · Model ───
+      (function() {
+        const s = el('section', 'section section-compact'); s.id = 'model'; s.setAttribute('data-num', '07');
+        s.appendChild(sectionHeader(D.model));
+        s.appendChild(makeCards(D.model.cards, 3, 2));
+        // Chain with title
+        const chainWrapper = document.createElement('div');
+        if (D.model.chain.title) {
+          chainWrapper.appendChild(el('div', 'table-title reveal reveal-delay-3', D.model.chain.title));
+        }
+        const chain = el('div', 'chain-row reveal reveal-delay-3');
+        D.model.chain.items.forEach(c => {
+          const cell = el('div', 'chain-cell');
+          cell.appendChild(el('div', 'chain-period', c.period));
+          cell.appendChild(el('div', 'chain-title', c.title));
+          cell.appendChild(el('div', 'chain-desc', c.desc));
+          chain.appendChild(cell);
+        });
+        chainWrapper.appendChild(chain);
+        s.appendChild(chainWrapper);
+        s.appendChild(makeInsight(D.model.insight));
+        app.appendChild(s);
+      })();
+
+      // ─── 08 · Profit ───
+      (function() {
+        const s = el('section', 'section section-compact'); s.id = 'profit'; s.setAttribute('data-num', '08');
+        s.appendChild(sectionHeader(D.profit));
+        s.appendChild(makeTable(D.profit.table));
+        const bg = el('div', 'breakeven-grid reveal reveal-delay-3');
+        D.profit.breakeven.forEach(b => {
+          const item = el('div', 'breakeven-item');
+          item.appendChild(el('div', 'breakeven-label', b.label));
+          item.appendChild(el('div', 'breakeven-value', b.value));
+          bg.appendChild(item);
+        });
+        s.appendChild(bg);
+        if (D.profit.insight) s.appendChild(makeInsight(D.profit.insight));
+        const dr = el('div', 'defense-row reveal reveal-delay-3');
+        D.profit.defense.forEach(d => {
+          const cell = el('div', 'defense-cell');
+          cell.appendChild(el('div', 'defense-label', d.label));
+          cell.appendChild(el('div', 'defense-title', d.title));
+          cell.appendChild(el('div', 'defense-desc', d.desc));
+          dr.appendChild(cell);
+        });
+        s.appendChild(dr);
+        app.appendChild(s);
+      })();
+
+      // ─── 09 · Compete ───
+      (function() {
+        const s = el('section', 'section'); s.id = 'compete'; s.setAttribute('data-num', '09');
+        s.appendChild(sectionHeader(D.compete));
+        s.appendChild(makeTable(D.compete.table));
+        const bar = el('div', 'conclusion-bar reveal reveal-delay-3');
+        bar.appendChild(el('p', null, D.compete.conclusion));
+        bar.appendChild(el('span', 'arrow', '→'));
+        s.appendChild(bar);
+        app.appendChild(s);
+      })();
+
+      // ── 10 · Tech ───
+      (function() {
+        const s = el('section', 'section section-compact'); s.id = 'tech'; s.setAttribute('data-num', '10');
+        s.appendChild(sectionHeader(D.tech));
+        const stats = el('div', 'stats-row reveal reveal-delay-2');
+        D.tech.stats.forEach(st => {
+          const item = el('div', 'stat-item');
+          item.appendChild(el('div', 'stat-value', st.value));
+          item.appendChild(el('div', 'stat-label', st.label));
+          stats.appendChild(item);
+        });
+        s.appendChild(stats);
+        s.appendChild(makeTable(D.tech.table));
+        // Timeline with title
+        const tlWrapper = document.createElement('div');
+        if (D.tech.timeline.title) {
+          tlWrapper.appendChild(el('div', 'table-title reveal reveal-delay-3', D.tech.timeline.title));
+        }
+        const tl = el('div', 'timeline-list reveal reveal-delay-3');
+        D.tech.timeline.items.forEach(t => {
+          const item = el('div', 'timeline-item');
+          item.appendChild(el('div', 'timeline-period', t.period));
+          const c = el('div');
+          c.appendChild(el('div', 'timeline-title', t.title));
+          c.appendChild(el('div', 'timeline-desc', t.desc));
+          item.appendChild(c);
+          tl.appendChild(item);
+        });
+        tlWrapper.appendChild(tl);
+        s.appendChild(tlWrapper);
+        app.appendChild(s);
+      })();
+
+      // ─── 11 · Milestone ───
+      (function() {
+        const s = el('section', 'section'); s.id = 'milestone'; s.setAttribute('data-num', '11');
+        s.appendChild(sectionHeader(D.milestone));
+        const tl = el('div', 'timeline-list reveal reveal-delay-2');
+        D.milestone.timeline.forEach(t => {
+          const item = el('div', 'timeline-item');
+          item.appendChild(el('div', 'timeline-period', t.period));
+          const c = el('div');
+          c.appendChild(el('div', 'timeline-title', t.title));
+          c.appendChild(el('div', 'timeline-desc', t.desc));
+          item.appendChild(c);
+          tl.appendChild(item);
+        });
+        s.appendChild(tl);
+        if (D.milestone.insight) {
+          const ip = el('div', 'insight-panel reveal reveal-delay-3');
+          ip.appendChild(el('div', 'panel-label', D.milestone.insight.label));
+          const bn = el('div', 'big-number', D.milestone.insight.bigNumber);
+          ip.appendChild(bn);
+          ip.appendChild(el('div', 'big-number-label', D.milestone.insight.bigNumberLabel));
+          ip.appendChild(el('p', null, D.milestone.insight.text));
+          s.appendChild(ip);
+        }
+        app.appendChild(s);
+      })();
+
+      // ─── 12 · Funding ───
+      (function() {
+        const s = el('section', 'section section-spacious'); s.id = 'funding'; s.setAttribute('data-num', '12');
+        s.appendChild(sectionHeader(D.funding));
+        const center = el('div', 'reveal reveal-delay-2');
+        center.style.textAlign = 'center';
+        center.style.marginTop = '1.5rem';
+        center.appendChild(el('div', 'big-number', D.funding.bigNumber));
+        center.appendChild(el('div', 'big-number-label', D.funding.bigNumberLabel));
+        s.appendChild(center);
+        const alloc = el('div', 'alloc-list reveal reveal-delay-3');
+        D.funding.alloc.forEach(a => {
+          const item = el('div', 'alloc-item');
+          item.appendChild(el('div', 'alloc-name', a.name));
+          const bar = el('div', 'alloc-bar-bg');
+          const fill = el('div', 'alloc-bar-fill');
+          fill.style.setProperty('--target-width', a.pct);
+          bar.appendChild(fill);
+          item.appendChild(bar);
+          item.appendChild(el('div', 'alloc-pct', a.pct));
+          alloc.appendChild(item);
+        });
+        s.appendChild(alloc);
+        if (D.funding.insight) s.appendChild(makeInsight(D.funding.insight));
+        app.appendChild(s);
+      })();
+
+      // ─── 13 · Risk ───
+      (function() {
+        const s = el('section', 'section section-compact'); s.id = 'risk'; s.setAttribute('data-num', '13');
+        s.appendChild(sectionHeader(D.risk));
+        s.appendChild(makeTable(D.risk.table));
+        const dr = el('div', 'defense-row reveal reveal-delay-3');
+        D.risk.defense.forEach(d => {
+          const cell = el('div', 'defense-cell');
+          cell.appendChild(el('div', 'defense-label', d.label));
+          cell.appendChild(el('div', 'defense-title', d.title));
+          cell.appendChild(el('div', 'defense-desc', d.desc));
+          dr.appendChild(cell);
+        });
+        s.appendChild(dr);
+        const pb = el('div', 'planb-box reveal reveal-delay-3');
+        pb.appendChild(el('div', 'planb-label', 'Plan B'));
+        pb.appendChild(el('p', null, D.risk.planB));
+        s.appendChild(pb);
+        app.appendChild(s);
+      })();
+
+      // ─── 14 · Timing ───
+      (function() {
+        const s = el('section', 'section section-spacious'); s.id = 'timing'; s.setAttribute('data-num', '14');
+        s.appendChild(sectionHeader(D.timing));
+        s.appendChild(makeCards(D.timing.cards, 3, 2));
+        const bar = el('div', 'conclusion-bar reveal reveal-delay-3');
+        bar.appendChild(el('p', null, D.timing.conclusion));
+        bar.appendChild(el('span', 'arrow', '→'));
+        s.appendChild(bar);
+        app.appendChild(s);
+      })();
+
+      // ─── 15 · Team ───
+      (function() {
+        const s = el('section', 'section section-spacious'); s.id = 'team'; s.setAttribute('data-num', '15');
+        s.appendChild(sectionHeader(D.team));
+        const grid = el('div', 'team-grid reveal reveal-delay-2');
+        D.team.members.forEach(m => {
+          const card = el('div', 'team-card');
+          card.appendChild(el('div', 'team-avatar', m.avatar));
+          const c = el('div');
+          c.appendChild(el('div', 'team-name', m.name));
+          c.appendChild(el('div', 'team-role', m.role));
+          c.appendChild(el('div', 'team-desc', m.desc));
+          card.appendChild(c);
+          grid.appendChild(card);
+        });
+        s.appendChild(grid);
+        if (D.team.insight) s.appendChild(makeInsight(D.team.insight));
+        app.appendChild(s);
+      })();
+
+      // ─── 16 · Contact ───
+      (function() {
+        const s = el('section', 'section contact-section section-spacious'); s.id = 'contact'; s.setAttribute('data-num', '16');
+        s.appendChild(el('div', 'section-label reveal', D.contact.label));
+        s.appendChild(el('h2', 'contact-title reveal reveal-delay-1', D.contact.title));
+        s.appendChild(el('p', 'contact-desc reveal reveal-delay-2', D.contact.desc));
+        const grid = el('div', 'contact-grid reveal reveal-delay-3');
+        D.contact.items.forEach(item => {
+          const cell = el('div', 'contact-item');
+          cell.appendChild(el('div', 'contact-label', item.label));
+          cell.appendChild(el('div', 'contact-value', item.value));
+          grid.appendChild(cell);
+        });
+        s.appendChild(grid);
+        app.appendChild(s);
+      })();
+
+    })();
+  </script>
+  <script>
+    // ─── Background Pattern ───
+    (function() {
+      const container = document.getElementById('bgPattern');
+      const letters = ['A','R','O','O','R','O'];
+      const rows = 8;
+      const cols = 6;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const span = document.createElement('span');
+          span.textContent = letters[(r + c) % letters.length];
+          span.style.left = (c * 18 - 2) + 'vw';
+          span.style.top = (r * 14 - 2) + 'vh';
+          span.style.transform = 'rotate(' + ((r % 2 === 0 ? 1 : -1) * 3) + 'deg)';
+          container.appendChild(span);
+        }
+      }
+    })();
+
+    // ─── Nav scroll effect ───
+    const nav = document.getElementById('topNav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // ─── Nav link click (event delegation for dynamic links) ───
+    document.getElementById('navLinks').addEventListener('click', (e) => {
+      if (e.target.classList.contains('nav-link')) {
+        e.preventDefault();
+        const target = e.target.getAttribute('data-target');
+        const el = document.getElementById(target);
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.pageYOffset - 52;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }
+    });
+
+    // ─── Active nav link on scroll ───
+    function updateActiveNav() {
+      const sections = document.querySelectorAll('.section');
+      const navLinks = document.querySelectorAll('.nav-link');
+      const scrollY = window.scrollY + 120;
+      let activeId = '';
+      sections.forEach(s => {
+        if (s.offsetTop <= scrollY) activeId = s.id;
+      });
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('data-target') === activeId);
+      });
+    }
+    window.addEventListener('scroll', updateActiveNav, { passive: true });
+
+    // ─── GSAP Animation System ───
+    window.addEventListener('load', () => {
+      updateActiveNav();
+      gsap.registerPlugin(ScrollTrigger);
+
+      // ── 1. Cover Cinematic Intro ──
+      const coverTitle = document.querySelector('#cover .cover-title');
+      let coverChars = null;
+      if (coverTitle) {
+        const text = coverTitle.textContent;
+        coverTitle.innerHTML = '';
+        text.split('').forEach(ch => {
+          const span = document.createElement('span');
+          span.className = 'gsap-split-char';
+          span.textContent = ch === ' ' ? '\u00A0' : ch;
+          coverTitle.appendChild(span);
+        });
+        coverChars = coverTitle.querySelectorAll('.gsap-split-char');
+      }
+
+      const coverTl = gsap.timeline({ delay: 0.2 });
+      // Reset cover elements to visible (CSS .reveal sets opacity:0, but cover is handled by timeline)
+      gsap.set('#cover .cover-label, #cover .cover-desc, #cover .cover-tagline', { opacity: 1, y: 0 });
+      gsap.set('#cover .cover-title', { opacity: 1 });
+      gsap.set('#cover .cover-divider', { opacity: 1, scaleX: 1 });
+      if (coverChars && coverChars.length) {
+        gsap.set(coverChars, { opacity: 0, y: 80, rotateX: -40 });
+      }
+      coverTl
+        .from('#cover .cover-label', { opacity: 0, y: -20, duration: 0.8, ease: 'power3.out' })
+        .to(coverChars || [], { opacity: 1, y: 0, rotateX: 0, duration: 1, stagger: 0.06, ease: 'power4.out' }, '-=0.3')
+        .fromTo('#cover .cover-divider', { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.7, ease: 'power3.inOut' }, '-=0.4')
+        .from('#cover .cover-desc', { opacity: 0, y: 24, duration: 0.7, ease: 'power3.out' }, '-=0.3')
+        .from('#cover .cover-tagline', { opacity: 0, y: 16, duration: 0.6, ease: 'power3.out' }, '-=0.3')
+        .to('#cover .scroll-hint', { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.2');
+
+      // ── 2. Section Index Marker Reveal ──
+      document.querySelectorAll('.section[data-num]').forEach(section => {
+        ScrollTrigger.create({
+          trigger: section,
+          start: 'top 70%',
+          end: 'bottom 30%',
+          onEnter: () => section.classList.add('in-view'),
+          onLeave: () => section.classList.remove('in-view'),
+          onEnterBack: () => section.classList.add('in-view'),
+          onLeaveBack: () => section.classList.remove('in-view')
+        });
+      });
+
+      // ── 3. Generic Reveal: All .reveal elements (except special cases) ──
+      document.querySelectorAll('.reveal').forEach(el => {
+        // Skip cover (handled by intro timeline)
+        if (el.closest('#cover')) return;
+        // Skip VS container (handled by dramatic split)
+        if (el.classList.contains('vs-container')) return;
+        // Skip data-table itself (handled by row-by-row), but keep table-title
+        if (el.tagName === 'TABLE' && el.classList.contains('data-table')) return;
+
+        const delayMatch = el.className.match(/reveal-delay-(\d)/);
+        const delayVal = delayMatch ? parseInt(delayMatch[1]) * 0.08 : 0;
+        gsap.set(el, { opacity: 0, y: 30 });
+        ScrollTrigger.create({
+          trigger: el,
+          start: 'top 88%',
+          onEnter: () => gsap.to(el, { opacity: 1, y: 0, duration: 0.9, delay: delayVal, ease: 'power3.out' }),
+          onLeaveBack: () => gsap.set(el, { opacity: 0, y: 30 })
+        });
+      });
+
+      // ── 3b. Child Element Stagger Reveals (no .reveal class) ──
+      function staggerReveal(selector, opts) {
+        const els = document.querySelectorAll(selector);
+        if (!els.length) return;
+        gsap.set(els, { opacity: 0, y: opts.y || 24, x: opts.x || 0 });
+        els.forEach((el, i) => {
+          ScrollTrigger.create({
+            trigger: el,
+            start: 'top 90%',
+            onEnter: () => gsap.to(el, { opacity: 1, y: 0, x: 0, duration: 0.7, delay: (i % 4) * 0.06, ease: 'power3.out' }),
+            onLeaveBack: () => gsap.set(el, { opacity: 0, y: opts.y || 24, x: opts.x || 0 })
+          });
+        });
+      }
+
+      staggerReveal('.card-item', { y: 30 });
+      staggerReveal('.trust-card', { y: 30 });
+      staggerReveal('.team-card', { y: 30 });
+      staggerReveal('.spiral-item', { y: 20 });
+      staggerReveal('.metric-row-item', { y: 20 });
+      staggerReveal('.flywheel-cell', { y: 20 });
+      staggerReveal('.chain-cell', { y: 20 });
+      staggerReveal('.defense-cell', { y: 20 });
+      staggerReveal('.breakeven-item', { y: 20 });
+      staggerReveal('.contact-item', { y: 20 });
+      staggerReveal('.stat-item', { y: 20 });
+      staggerReveal('.timeline-item', { y: 20 });
+      staggerReveal('.alloc-item', { y: 20 });
+
+      // ── 4. Data Tables: Row-by-Row Reveal ──
+      document.querySelectorAll('.data-table').forEach(table => {
+        gsap.set(table, { opacity: 1 }); // Override .reveal opacity:0
+        const rows = table.querySelectorAll('tbody tr');
+        gsap.set(rows, { opacity: 0, x: -30 });
+        ScrollTrigger.create({
+          trigger: table,
+          start: 'top 85%',
+          onEnter: () => gsap.to(rows, { opacity: 1, x: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out' }),
+          onLeaveBack: () => gsap.set(rows, { opacity: 0, x: -30 })
+        });
+        const thead = table.querySelector('thead');
+        if (thead) {
+          gsap.set(thead, { opacity: 0, y: -10 });
+          ScrollTrigger.create({
+            trigger: table,
+            start: 'top 85%',
+            onEnter: () => gsap.to(thead, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }),
+            onLeaveBack: () => gsap.set(thead, { opacity: 0, y: -10 })
+          });
+        }
+      });
+
+      // ── 5. VS Comparison: Dramatic Split Reveal ──
+      document.querySelectorAll('.vs-container').forEach(vs => {
+        gsap.set(vs, { opacity: 1 }); // Override .reveal opacity:0
+        const left = vs.querySelector('.vs-side:first-child');
+        const mid = vs.querySelector('.vs-mid');
+        const right = vs.querySelector('.vs-side:last-child');
+        if (left) {
+          gsap.set(left, { opacity: 0, x: -60 });
+          ScrollTrigger.create({
+            trigger: vs, start: 'top 80%',
+            onEnter: () => gsap.to(left, { opacity: 1, x: 0, duration: 0.9, ease: 'power3.out' }),
+            onLeaveBack: () => gsap.set(left, { opacity: 0, x: -60 })
+          });
+        }
+        if (right) {
+          gsap.set(right, { opacity: 0, x: 60 });
+          ScrollTrigger.create({
+            trigger: vs, start: 'top 80%',
+            onEnter: () => gsap.to(right, { opacity: 1, x: 0, duration: 0.9, delay: 0.2, ease: 'power3.out' }),
+            onLeaveBack: () => gsap.set(right, { opacity: 0, x: 60 })
+          });
+        }
+        if (mid) {
+          gsap.set(mid, { opacity: 0, scale: 0.4 });
+          ScrollTrigger.create({
+            trigger: vs, start: 'top 80%',
+            onEnter: () => gsap.to(mid, { opacity: 1, scale: 1, duration: 0.6, delay: 0.5, ease: 'back.out(2)' }),
+            onLeaveBack: () => gsap.set(mid, { opacity: 0, scale: 0.4 })
+          });
+        }
+      });
+
+      // ── 6. Number Counter Animation ──
+      function animateCounter(el) {
+        const text = el.textContent.trim();
+        const match = text.match(/^([¥￥]?\s*)(\d[\d,]*\.?\d*)(.*)$/);
+        if (!match) return;
+        const prefix = match[1];
+        const numStr = match[2].replace(/,/g, '');
+        const num = parseFloat(numStr);
+        const suffix = match[3];
+        if (isNaN(num)) return;
+        const decimals = (numStr.split('.')[1] || '').length;
+        const obj = { val: 0 };
+        gsap.to(obj, {
+          val: num,
+          duration: 1.8,
+          ease: 'power2.out',
+          onUpdate: () => {
+            const v = obj.val.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            el.textContent = prefix + v + suffix;
+          }
+        });
+      }
+
+      // Metric values & stat values & breakeven values & big numbers
+      document.querySelectorAll('.metric-row-value, .stat-value, .breakeven-value, .big-number').forEach(el => {
+        const text = el.textContent.trim();
+        if (!/\d/.test(text)) return;
+        const original = text;
+        ScrollTrigger.create({
+          trigger: el, start: 'top 88%',
+          onEnter: () => animateCounter(el),
+          onLeaveBack: () => { el.textContent = original; }
+        });
+      });
+
+      // ── 7. Alloc Bar Fill Animation ──
+      document.querySelectorAll('.alloc-bar-fill').forEach(bar => {
+        const targetWidth = bar.style.getPropertyValue('--target-width') || '0%';
+        const pct = parseInt(targetWidth);
+        gsap.set(bar, { width: '0%' });
+        ScrollTrigger.create({
+          trigger: bar, start: 'top 90%',
+          onEnter: () => gsap.to(bar, { width: pct + '%', duration: 1.4, ease: 'power3.inOut' }),
+          onLeaveBack: () => gsap.set(bar, { width: '0%' })
+        });
+      });
+
+      // ── 8. Divider Draw (non-cover dividers) ──
+      document.querySelectorAll('.cover-divider').forEach(div => {
+        if (div.closest('#cover')) return; // cover divider handled by intro timeline
+        gsap.set(div, { scaleX: 0, transformOrigin: 'center' });
+        ScrollTrigger.create({
+          trigger: div, start: 'top 90%',
+          onEnter: () => gsap.to(div, { scaleX: 1, duration: 0.8, ease: 'power3.inOut' }),
+          onLeaveBack: () => gsap.set(div, { scaleX: 0 })
+        });
+      });
+
+      // ── 9. Parallax: Background Pattern ──
+      gsap.to('#bgPattern', {
+        y: -200,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: 'body',
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 1.2
+        }
+      });
+
+      // ── 10. Scroll Progress Bar ──
+      const progressFill = document.getElementById('progressFill');
+      if (progressFill) {
+        gsap.to(progressFill, {
+          scaleX: 1,
+          ease: 'none',
+          transformOrigin: 'left',
+          scrollTrigger: {
+            trigger: 'body',
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 0.3
+          }
+        });
+      }
+
+      // ── 11. Magnetic Hover Effect ──
+      document.querySelectorAll('.card-item, .trust-card, .team-card, .nav-link').forEach(el => {
+        el.addEventListener('mouseenter', () => gsap.to(el, { scale: 1.015, duration: 0.4, ease: 'power2.out' }));
+        el.addEventListener('mouseleave', () => gsap.to(el, { scale: 1, duration: 0.4, ease: 'power2.out' }));
+      });
+
+      // ── 12. Scroll Hint Bounce (already CSS animated, ensure visible) ──
+
+      // Refresh after all triggers created
+      ScrollTrigger.refresh();
+    });
+  </script>
+</body>
+</html>

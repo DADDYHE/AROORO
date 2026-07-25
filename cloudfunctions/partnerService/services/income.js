@@ -76,6 +76,7 @@ async function getServiceIncomeOverview(event, context, auth) {
                     status: _.neq('cancelled')
                 })
                 .field({ amount: true, createdAt: true, settledAt: true })
+                .limit(500)
                 .get(),
             // 寄养收入
             db.collection('service_incomes')
@@ -85,6 +86,7 @@ async function getServiceIncomeOverview(event, context, auth) {
                     status: _.neq('cancelled')
                 })
                 .field({ amount: true, createdAt: true, settledAt: true })
+                .limit(500)
                 .get(),
             // 上门服务收入
             db.collection('service_incomes')
@@ -94,6 +96,7 @@ async function getServiceIncomeOverview(event, context, auth) {
                     status: _.neq('cancelled')
                 })
                 .field({ amount: true, createdAt: true, settledAt: true })
+                .limit(500)
                 .get()
         ]);
 
@@ -191,6 +194,7 @@ async function getServiceIncomeDetails(event, context, auth) {
         const allIncomesRes = await db.collection('service_incomes')
             .where(where)
             .field({ amount: true })
+            .limit(500)
             .get();
         const totalAmount = (allIncomesRes.data || []).reduce((sum, item) => {
             return sum + (Number(item.amount) || 0);

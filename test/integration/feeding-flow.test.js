@@ -86,6 +86,10 @@ jest.mock('wx-server-sdk', () => ({
   getWXContext: () => ({ OPENID: global.__openid }),
   DYNAMIC_CURRENT_ENV: 'mock-env',
   database: () => mockDb,
+  // H2: mock callFunction 用于 feedingService 调用 couponService.lockCoupon/unlockCoupon
+  callFunction: jest.fn(async ({ data }) => ({
+    result: { code: 0, message: 'ok', data: null },
+  })),
 }))
 
 global.__openid = 'oOwner'
@@ -111,6 +115,13 @@ function call(action, params, openid = 'oOwner') {
 describe('Sprint 12: 喂食服务子链路', () => {
   describe('createFeedingOrder', () => {
     test('完整参数创建成功', async () => {
+      // P0-5: 服务端根据 feeder.pricePerVisit 重算金额，需先设置 feeder 数据
+      // pricePerVisit=125 × visitCount=1 × petCount=2 × multiVisitFactor=1 = 250（originalAmount）
+      // finalAmount = max(0, 250 - 50券) = 200
+      mockDb._collections.feeders.docs = [
+        { _id: 'feeder_1', pricePerVisit: 125, status: 'active' },
+      ]
+
       const res = await call('createFeedingOrder', {
         petIds: ['pet_1', 'pet_2'],
         feederId: 'feeder_1',
@@ -124,10 +135,13 @@ describe('Sprint 12: 喂食服务子链路', () => {
       })
 
       expect(res.code).toBe(0)
+      // P0-5: totalAmount 来自服务端重算（125×1×2 - 50 = 200），非客户端传入
       expect(res.data.totalAmount).toBe(200)
       expect(mockDb._collections.feedingOrders.docs.length).toBe(1)
 
       const saved = mockDb._collections.feedingOrders.docs[0]
+      // P0-5: originalAmount 也由服务端重算（125×1×2 = 250）
+      expect(saved.originalAmount).toBe(250)
       expect(saved.orderType).toBe('feeding')
       expect(saved.ownerId).toBe('oOwner')
       expect(saved.status).toBe('pending_payment')

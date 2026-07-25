@@ -116,11 +116,57 @@ export const SUPPORTED_ACTIONS: readonly string[] = [
   'getIncomeStats',
 ]
 
+/**
+ * 公开访问的 action 白名单（无需登录）
+ *
+ * P1 修复（H9）：原 index.ts 对所有 action 强制 requireLogin=true，但 orders.ts 注释
+ *   说 calculatePrice / checkDateAvailability / getHostEvaluations 是公开访问。
+ *   现抽出白名单，命中时跳过 verifyAuth，传 auth=null 给 handler。
+ *   - calculatePrice：未登录用户可试算价格
+ *   - checkDateAvailability：未登录用户可查询日期可用性
+ *   - getHostEvaluations：未登录用户可查看寄养家庭评价（用于公开页面）
+ */
+export const PUBLIC_ACTIONS: ReadonlySet<string> = new Set([
+  'calculatePrice',
+  'checkDateAvailability',
+  'getHostEvaluations',
+])
+
 // =====================================================================
 // 模块初始化
 // =====================================================================
 
 const logger: ServiceLogger = createLogger('orderService')
+
+// L10 修复：日志脱敏，避免 PII（手机号 / openid / outTradeNo 等）进入日志系统
+const SENSITIVE_LOG_KEYS = ['phone', 'mobile', 'openid', 'outtradeno', 'idcard', 'email', 'address', 'id_card']
+function maskOpenid(openid?: string): string {
+  if (!openid) return '(unknown)'
+  return openid.length > 4 ? `${openid.slice(0, 4)}***` : '***'
+}
+function maskSensitive(value: unknown, depth = 0): unknown {
+  if (depth > 4) return '***'
+  if (Array.isArray(value)) return value.map(v => maskSensitive(v, depth + 1))
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (SENSITIVE_LOG_KEYS.includes(k.toLowerCase())) {
+        out[k] = typeof v === 'string' && v.length > 2 ? `${v.slice(0, 2)}***` : '***'
+      } else {
+        out[k] = maskSensitive(v, depth + 1)
+      }
+    }
+    return out
+  }
+  return value
+}
+function toSafeLogPayload(error: unknown): Record<string, unknown> {
+  const e = error as { message?: string, code?: unknown, details?: unknown }
+  const payload: Record<string, unknown> = { msg: e?.message || String(error) }
+  if (e?.code !== undefined) payload.code = e.code
+  if (e?.details !== undefined) payload.details = maskSensitive(e.details)
+  return payload
+}
 
 // =====================================================================
 // 子服务 handlers 聚合
@@ -158,13 +204,28 @@ export const handlers: HandlerMap = {
 // Sprint 50: 限流统一 bootstrap（rate_limits + rate_limit_configs 一次注入）
 //   - 跨云函数实例共享计数 + 业务类型差异化配置
 //   - 若 db 不可用则降级到内存（bootstrapRateLimit 内部 try/catch）
+// P2 修复（M12）：加 5 分钟内存缓存，避免每次冷启动都查 db（rate_limits + rate_limit_configs）
+//   - 单实例内复用：5 分钟内只查一次 db
+//   - 跨实例不共享：每个新实例冷启动时若缓存过期才重新查
 // =====================================================================
 
-try {
-  const { db } = initCloud() as { cloud: unknown, db: unknown }
-  ;(bootstrapRateLimit as (db: unknown, opts?: object) => unknown)(db, { logger })
-} catch (e) {
-  logger.warn('bootstrapRateLimit failed, fallback to memory:', { msg: (e as Error)?.message })
+const RATE_LIMIT_BOOTSTRAP_TTL_MS = 5 * 60 * 1000  // 5 分钟
+const RATE_LIMIT_BOOTSTRAP_KEY = '__rateLimitBootstrapAt'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _globalCache = globalThis as unknown as { [RATE_LIMIT_BOOTSTRAP_KEY]?: number }
+
+const lastBootstrapAt = _globalCache[RATE_LIMIT_BOOTSTRAP_KEY] || 0
+const cacheValid = lastBootstrapAt && (Date.now() - lastBootstrapAt < RATE_LIMIT_BOOTSTRAP_TTL_MS)
+
+if (!cacheValid) {
+  try {
+    const { db } = initCloud() as { cloud: unknown, db: unknown }
+    ;(bootstrapRateLimit as (db: unknown, opts?: object) => unknown)(db, { logger })
+    _globalCache[RATE_LIMIT_BOOTSTRAP_KEY] = Date.now()
+  } catch (e) {
+    logger.warn('bootstrapRateLimit failed, fallback to memory:', { msg: (e as Error)?.message })
+  }
 }
 
 // =====================================================================
@@ -176,7 +237,7 @@ try {
  *
  * 流程：
  *   1. 校验 event.action 非空且在 SUPPORTED_ACTIONS 中
- *   2. 调 verifyAuth 注入 auth（所有 action 都需要登录）
+ *   2. 调 verifyAuth 注入 auth（公开 action 跳过；其他 action 需登录）
  *   3. 按 action 分发到对应 handler
  *   4. 错误统一走 handleError / toResponse 序列化
  *
@@ -187,18 +248,27 @@ export async function main(event: CloudEvent, context: CloudContext): Promise<un
   if (!action) {
     throw err('UNKNOWN_ACTION', '缺少 action 参数')
   }
-  if (!handlers[action]) {
+  // L1 修复：SUPPORTED_ACTIONS 作为权威白名单做真正的 fail-fast 校验
+  if (!SUPPORTED_ACTIONS.includes(action)) {
     throw err('UNKNOWN_ACTION', `未知的操作：${action}`)
   }
+  const handler = handlers[action]
 
   try {
-    // Sprint 32: 所有 action 都需要登录（wechatPayNotify 已迁移到 paymentService）
+    // P1 修复（H9）：公开 action 跳过 verifyAuth，传 auth=null 给 handler
+    //   - calculatePrice / checkDateAvailability / getHostEvaluations
+    //   - 其他 action 仍要求登录
+    if (PUBLIC_ACTIONS.has(action)) {
+      logger.info(action, { openid: '(public)' })
+      return await handler(event, context, null)
+    }
     const requireLogin = true
     const auth: AuthLike = await verifyAuth(event, { requireLogin })
-    logger.info(action, { openid: auth.openid })
-    return await handlers[action](event, context, auth)
+    logger.info(action, { openid: maskOpenid(auth.openid) })
+    return await handler(event, context, auth)
   } catch (error) {
-    logger.error(action, error as Error)
+    // L10 修复：错误日志脱敏，避免 PII 进入日志系统
+    logger.error(action, toSafeLogPayload(error))
     if (isBusinessError(error)) {
       return toResponse(error)
     }
@@ -216,6 +286,7 @@ _mod.exports = {
   main,
   // 常量
   SUPPORTED_ACTIONS,
+  PUBLIC_ACTIONS,
   // 聚合 handlers（用于单元测试）
   handlers,
 }
@@ -224,5 +295,6 @@ _mod.exports.default = _mod.exports
 export default {
   main,
   SUPPORTED_ACTIONS,
+  PUBLIC_ACTIONS,
   handlers,
 }

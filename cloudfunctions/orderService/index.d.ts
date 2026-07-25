@@ -64,6 +64,17 @@ export type Handler = (event: CloudEvent, context: CloudContext, auth: AuthLike 
 export type HandlerMap = Record<string, Handler>;
 /** 支持的 action 集合（用于 fail-fast 校验） */
 export declare const SUPPORTED_ACTIONS: readonly string[];
+/**
+ * 公开访问的 action 白名单（无需登录）
+ *
+ * P1 修复（H9）：原 index.ts 对所有 action 强制 requireLogin=true，但 orders.ts 注释
+ *   说 calculatePrice / checkDateAvailability / getHostEvaluations 是公开访问。
+ *   现抽出白名单，命中时跳过 verifyAuth，传 auth=null 给 handler。
+ *   - calculatePrice：未登录用户可试算价格
+ *   - checkDateAvailability：未登录用户可查询日期可用性
+ *   - getHostEvaluations：未登录用户可查看寄养家庭评价（用于公开页面）
+ */
+export declare const PUBLIC_ACTIONS: ReadonlySet<string>;
 /** 聚合后的 handlers（与原 index.js 字段顺序保持一致） */
 export declare const handlers: HandlerMap;
 /**
@@ -71,7 +82,7 @@ export declare const handlers: HandlerMap;
  *
  * 流程：
  *   1. 校验 event.action 非空且在 SUPPORTED_ACTIONS 中
- *   2. 调 verifyAuth 注入 auth（所有 action 都需要登录）
+ *   2. 调 verifyAuth 注入 auth（公开 action 跳过；其他 action 需登录）
  *   3. 按 action 分发到对应 handler
  *   4. 错误统一走 handleError / toResponse 序列化
  *
@@ -81,6 +92,7 @@ export declare function main(event: CloudEvent, context: CloudContext): Promise<
 declare const _default: {
     main: typeof main;
     SUPPORTED_ACTIONS: readonly string[];
+    PUBLIC_ACTIONS: ReadonlySet<string>;
     handlers: HandlerMap;
 };
 export default _default;

@@ -81,7 +81,7 @@ describe('Sprint 46: favoriteService TypeScript 迁移', () => {
     let pkg
     beforeAll(() => { pkg = JSON.parse(readFileSafe(path.join(ROOT, 'package.json'))) })
     test('audit', () => { expect(pkg.scripts['audit:s46-favorite-service-ts']).toBe('node scripts/audit-s46-favorite-service-ts.js') })
-    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:s46-batch-services-ts:strict/) })
+    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/(?:audit:s46-batch-services-ts:strict|audit:all:strict)/) })
   })
 
   describe('11. audit 脚本', () => {

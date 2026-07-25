@@ -11,6 +11,7 @@
 import { initCloud } from './utils'
 import { err } from './errors'
 import { isSuperAdmin, isPartner } from './permissions'
+import type { RoleName } from './permissions'
 
 // =====================================================================
 // 类型定义
@@ -59,7 +60,7 @@ interface AdminDoc {
   openid: string
   status: 'active' | 'disabled' | 'pending'
   isPartner?: boolean
-  roles?: string[]
+  roles?: RoleName[]
   permissions?: string[]
   [key: string]: unknown
 }

@@ -148,7 +148,6 @@ describe('Sprint 40: mallService TypeScript 迁移', () => {
 
     const HELPERS = [
       'performMallOrderRiskCheck',
-      'createCommissionRecord',
       'batchGetTempFileURL',
     ]
 
@@ -156,6 +155,12 @@ describe('Sprint 40: mallService TypeScript 迁移', () => {
       test(`包含 ${fn} 函数`, () => {
         expect(code).toMatch(new RegExp(`async\\s+function\\s+${fn}\\b`))
       })
+    })
+
+    // H1: createCommissionRecord 已统一使用 common/commission-utils（含自购保护、system_config 配置、幂等）
+    test('使用共享 createCommissionRecord（common/commission-utils）', () => {
+      expect(code).toMatch(/sharedCreateCommissionRecord/)
+      expect(code).toMatch(/common\/commission-utils/)
     })
   })
 
@@ -197,8 +202,8 @@ describe('Sprint 40: mallService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s40-mall-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s40-mall-service-ts:strict/)
+    test('ci:check 包含 audit:s40-mall-service-ts:strict 或 audit:all:strict', () => {
+      expect(pkg.scripts['ci:check']).toMatch(/audit:s40-mall-service-ts:strict|audit:all:strict/)
     })
   })
 

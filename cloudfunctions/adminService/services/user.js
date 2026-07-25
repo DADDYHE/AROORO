@@ -16,6 +16,61 @@ function toTimestamp(val) {
   return val
 }
 
+/**
+ * H3 安全修复：判断当前 auth 是否为超级管理员（以入口 enrich 后的实时 roles 为准）
+ */
+function isSuperAdminAuth(auth) {
+  return !!(auth && Array.isArray(auth.roles) && auth.roles.includes('super_admin'))
+}
+
+/**
+ * H3 安全修复：解析邀请/带货类接口的目标 inviterId，强制数据归属隔离。
+ *
+ * 规则：
+ *   - super_admin：可查任意 targetOpenid；不传 target 时返回 null（表示全局统计）
+ *   - 非 super_admin（partner）：
+ *       - 传了 targetOpenid 且不是自己 → 抛 PERMISSION_DENIED（禁止横向越权）
+ *       - 未传 targetOpenid → 锁定为 auth.openid（只能看自己的数据）
+ *
+ * @throws BusinessError PERMISSION_DENIED
+ */
+function resolveReferralTarget(auth, targetOpenid) {
+  if (isSuperAdminAuth(auth)) {
+    return targetOpenid || null
+  }
+  if (targetOpenid && targetOpenid !== auth.openid) {
+    logger.warn('referral.ownership_denied', { authOpenid: auth.openid, targetOpenid })
+    throw err('PERMISSION_DENIED', '无权查看其他合作伙伴的邀请数据')
+  }
+  if (!auth.openid) {
+    throw err('PERMISSION_DENIED', '无法确认身份，禁止访问邀请数据')
+  }
+  return auth.openid
+}
+
+/**
+ * H3 安全修复：校验"被邀请用户"是否归属于当前调用者（partner 只能查自己邀请的用户）。
+ * 返回该用户文档（含 nickName），供调用方复用，避免重复查询。
+ *
+ * @throws BusinessError PERMISSION_DENIED
+ */
+async function assertInvitedUserOwnership(auth, invitedUserOpenid) {
+  const uRes = await db.collection('users')
+    .where({ _id: invitedUserOpenid })
+    .field({ _id: true, nickName: true, inviterId: true })
+    .limit(1)
+    .get()
+  const userDoc = (uRes.data || [])[0] || null
+  if (isSuperAdminAuth(auth)) {
+    return userDoc
+  }
+  if (!userDoc || userDoc.inviterId !== auth.openid) {
+    logger.warn('referral.invited_user_denied', { authOpenid: auth.openid, invitedUserOpenid })
+    throw err('PERMISSION_DENIED', '无权查看该用户的订单数据')
+  }
+  return userDoc
+}
+
 async function getUserList(event, context, auth) {
   const { page = 1, pageSize = 20, keyword } = event
   const where = {}
@@ -442,12 +497,8 @@ async function getReferralStats(event, context, auth) {
     const _ = db.command
     const targetOpenid = event.targetOpenid || event.data?.targetOpenid
 
-    let targetInviterId = null
-
-    if (targetOpenid) {
-      // inviterId 现在直接存 openid，无需转换
-      targetInviterId = targetOpenid
-    }
+    // H3 安全修复：partner 只能查自己的邀请统计；全局统计仅 super_admin 可见
+    const targetInviterId = resolveReferralTarget(auth, targetOpenid)
 
     if (!targetInviterId) {
       const invitedCountRes = await db.collection('users')
@@ -754,8 +805,11 @@ async function getReferralList(event, context, auth) {
 }
 
 async function getInvitedUsersByAdmin(event, context, auth) {
-  const targetOpenid = event.targetOpenid || event.data?.targetOpenid
-  if (!targetOpenid) {throw err('INVALID_PARAMS', '缺少用户ID')}
+  const rawTargetOpenid = event.targetOpenid || event.data?.targetOpenid
+  if (!rawTargetOpenid) {throw err('INVALID_PARAMS', '缺少用户ID')}
+
+  // H3 安全修复：partner 只能查自己邀请的用户列表
+  const targetOpenid = resolveReferralTarget(auth, rawTargetOpenid)
 
   try {
     const _ = db.command
@@ -869,48 +923,20 @@ async function getReferralOrders(event, context, auth) {
     const nickMap = {}
 
     if (invitedUserOpenid && invitedUserOpenid.trim()) {
-      invitedOpenids = [invitedUserOpenid.trim()]
-      try {
-        const uRes = await db.collection('users')
-          .where({ _id: invitedUserOpenid.trim() })
-          .field({ _id: true, nickName: true })
-          .limit(1)
-          .get()
-        ;(uRes.data || []).forEach(u => { nickMap[u._id] = u.nickName })
-      } catch (e) {
-        logger.warn('getReferralOrders.users.fetchNick', { invitedUserOpenid, code: e.errCode, msg: e.message })
-      }
-    } else if (targetOpenid) {
-      // inviterId 现在直接存 openid，无需转换
-      const invitedRes = await db.collection('users')
-        .where({ inviterId: targetOpenid })
-        .field({ _id: true, nickName: true })
-        .limit(1000)
-        .get()
-
-      const invitedUsers = invitedRes.data || []
-      if (invitedUsers.length === 0) {
-        return handleSuccess({ list: [], total: 0 })
-      }
-      invitedOpenids = invitedUsers.map(u => u._id).filter(Boolean)
-      invitedUsers.forEach(u => { nickMap[u._id] = u.nickName })
-    } else if (auth.openid && !auth._isHttpAuth) {
-      // inviterId 现在直接存 openid，无需转换
-      const invitedRes = await db.collection('users')
-        .where({ inviterId: auth.openid })
-        .field({ _id: true, nickName: true })
-        .limit(1000)
-        .get()
-
-      const invitedUsers = invitedRes.data || []
-      if (invitedUsers.length === 0) {
-        return handleSuccess({ list: [], total: 0 })
-      }
-      invitedOpenids = invitedUsers.map(u => u._id).filter(Boolean)
-      invitedUsers.forEach(u => { nickMap[u._id] = u.nickName })
+      // H3 安全修复：partner 只能查自己邀请的用户的订单
+      const invitedId = invitedUserOpenid.trim()
+      const userDoc = await assertInvitedUserOwnership(auth, invitedId)
+      invitedOpenids = [invitedId]
+      if (userDoc) {nickMap[userDoc._id] = userDoc.nickName}
     } else {
+      // H3 安全修复：统一经归属解析 —— partner 锁定自己；super_admin 可查任意/全局
+      const effectiveTarget = resolveReferralTarget(auth, targetOpenid)
+      const inviterWhere = effectiveTarget
+        ? { inviterId: effectiveTarget }
+        : { inviterId: _.exists(true).and(_.neq('')) } // 仅 super_admin 可达（全局）
+
       const invitedRes = await db.collection('users')
-        .where({ inviterId: _.exists(true).and(_.neq('')) })
+        .where(inviterWhere)
         .field({ _id: true, nickName: true })
         .limit(1000)
         .get()
@@ -1006,31 +1032,17 @@ async function getReferralOrderStats(event, context, auth) {
   try {
     let invitedOpenids = []
 
-    if (targetOpenid) {
-      // inviterId 现在直接存 openid，无需转换
-      const invitedRes = await db.collection('users')
-        .where({ inviterId: targetOpenid })
-        .field({ _id: true })
-        .limit(1000)
-        .get()
-      invitedOpenids = (invitedRes.data || []).map(u => u._id).filter(Boolean)
-    } else if (auth.openid && !auth._isHttpAuth) {
-      // inviterId 现在直接存 openid，无需转换
-      const invitedRes = await db.collection('users')
-        .where({ inviterId: auth.openid })
-        .field({ _id: true })
-        .limit(1000)
-        .get()
-
-      invitedOpenids = (invitedRes.data || []).map(u => u._id).filter(Boolean)
-    } else {
-      const invitedRes = await db.collection('users')
-        .where({ inviterId: _.exists(true).and(_.neq('')) })
-        .field({ _id: true })
-        .limit(1000)
-        .get()
-      invitedOpenids = (invitedRes.data || []).map(u => u._id).filter(Boolean)
-    }
+    // H3 安全修复：partner 只能统计自己邀请的用户；全局统计仅 super_admin 可达
+    const effectiveTarget = resolveReferralTarget(auth, targetOpenid)
+    const inviterWhere = effectiveTarget
+      ? { inviterId: effectiveTarget }
+      : { inviterId: _.exists(true).and(_.neq('')) }
+    const invitedRes = await db.collection('users')
+      .where(inviterWhere)
+      .field({ _id: true })
+      .limit(1000)
+      .get()
+    invitedOpenids = (invitedRes.data || []).map(u => u._id).filter(Boolean)
 
     if (invitedOpenids.length === 0) {
       return handleSuccess({ totalAmount: 0, totalCount: 0, commissionRate: 0, estimatedCommission: 0 })

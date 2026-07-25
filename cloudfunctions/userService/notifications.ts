@@ -23,26 +23,9 @@ const { initCloud, handleSuccess, handleError, ERROR_CODES } = require('./common
 const { db } = initCloud()
 
 // =====================================================================
-// 类型定义
+// 类型定义（AuthLike / CloudEvent / CloudContext 抽至 common/types.ts）
 // =====================================================================
-
-export interface AuthLike {
-  openid?: string
-  [k: string]: unknown
-}
-
-export interface CloudEvent {
-  action?: string
-  data?: Record<string, unknown>
-  page?: number
-  pageSize?: number
-  notificationId?: string
-  [k: string]: unknown
-}
-
-export interface CloudContext {
-  [k: string]: unknown
-}
+import type { AuthLike, CloudEvent, CloudContext } from './common/types'
 
 export type NotificationHandler = (
   event: CloudEvent,
@@ -83,7 +66,9 @@ export async function getNotificationList(
   const { openid } = auth
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
-  const { page = 1, pageSize = 20 } = event
+  const { page = 1 } = event
+  // L5 修复：pageSize 加 100 上限保护，避免前端传超大值拉爆 DB（与 utils.MAX_PAGE_SIZE 语义一致）
+  const pageSize = Math.min(Number(event.pageSize) || 20, 100)
 
   try {
     const unreadRes = await db.collection('notifications')

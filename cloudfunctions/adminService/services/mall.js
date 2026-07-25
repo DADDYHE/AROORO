@@ -72,6 +72,7 @@ async function getProductDetail(event, context, auth) {
 async function createProduct(event, context, auth) {
   const { name, category, categoryId, categoryName, description, price, originalPrice, stock, coverImage, images, detailImages, subTitle, tags, isFeatured, sortOrder, skuType, specGroups, skus, minPrice, maxPrice, totalStock, status } = event
   if (!name) {throw err('INVALID_PARAMS', '缺少商品名称')}
+  if (price !== undefined && Number(price) < 0) {throw err('INVALID_PARAMS', '商品价格不能为负')}
 
   const isMultiSku = skuType === 'multi' && specGroups && specGroups.length > 0
 
@@ -123,6 +124,13 @@ async function createProduct(event, context, auth) {
 async function updateProduct(event, context, auth) {
   const { productId } = event
   if (!productId) {throw err('INVALID_PARAMS', '缺少商品ID')}
+  if (event.price !== undefined && Number(event.price) < 0) {throw err('INVALID_PARAMS', '商品价格不能为负')}
+
+  const existing = await db.collection('products').doc(productId).get()
+  if (!existing.data) {throw err('PRODUCT_NOT_FOUND', '商品不存在')}
+  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
 
   const updateData = { updatedAt: db.serverDate(), ...filterFields(FIELD_WHITELISTS.product, event) }
 
@@ -144,6 +152,9 @@ async function deleteProduct(event, context, auth) {
 
   const product = await db.collection('products').doc(productId).get()
   if (!product.data) {throw err('PRODUCT_NOT_FOUND', '商品不存在')}
+  if (!auth.isSuperAdmin && product.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
   if (product.data.status === 'on_sale') {
     throw err('BUSINESS_ERROR', '在售商品无法删除，请先下架')
   }
@@ -159,6 +170,9 @@ async function batchUpdateProducts(event, context, auth) {
   }
 
   const updateData = { updatedAt: db.serverDate() }
+  // 资源归属过滤：super_admin 可操作所有，其他角色仅可操作自己创建的商品
+  const ownerFilter = auth.isSuperAdmin ? {} : { createdBy: auth.openid }
+  const where = { _id: _.in(productIds), ...ownerFilter }
 
   switch (operation) {
   case 'on_shelf':
@@ -176,13 +190,13 @@ async function batchUpdateProducts(event, context, auth) {
     updateData.isFeatured = false
     break
   case 'delete':
-    await db.collection('products').where({ _id: _.in(productIds) }).remove()
+    await db.collection('products').where(where).remove()
     return handleSuccess(null, '批量删除成功')
   default:
     throw err('INVALID_PARAMS', '无效操作')
   }
 
-  await db.collection('products').where({ _id: _.in(productIds) }).update({ data: updateData })
+  await db.collection('products').where(where).update({ data: updateData })
   return handleSuccess(null, '批量操作成功')
 }
 
@@ -192,6 +206,9 @@ async function cloneProduct(event, context, auth) {
 
   const source = await db.collection('products').doc(productId).get()
   if (!source.data) {throw err('PRODUCT_NOT_FOUND', '商品不存在')}
+  if (!auth.isSuperAdmin && source.data.createdBy !== auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人资源')
+  }
 
   const cloned = { ...source.data }
   delete cloned._id

@@ -32,15 +32,28 @@ const { createLogger } = require('./common/logger');
 const { verifyAuth } = require('./common/auth-middleware');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, toResponse, isBusinessError } = require('./common/errors');
+// M10: 资金类 action 限流（参考 mallService 风控模式）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { withRateLimit } = require('./common/risk-rate-limit');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap');
 const logger = createLogger('partnerService');
+// M10: 启动时注入限流存储（strict 模式，Redis 失败时拒绝资金接口调用）
+try {
+    const { db } = initCloud();
+    bootstrapRateLimit(db, { logger, strict: true });
+}
+catch (e) {
+    logger.warn('bootstrapRateLimit failed', { msg: e.message });
+}
+// M10: 资金类 action 集合——需通过限流中间件
+const RATE_LIMITED_ACTIONS = new Set(['requestWithdrawal']);
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const applicationHandlers = require('./services/application');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const walletHandlers = require('./services/wallet');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const referralHandlers = require('./services/referral');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const incomeHandlers = require('./services/income');
 // =====================================================================
 // handlers 聚合
 // =====================================================================
@@ -55,9 +68,6 @@ exports.handlers = {
     getMyWallet: walletHandlers.getMyWallet,
     getMyWithdrawals: walletHandlers.getMyWithdrawals,
     requestWithdrawal: walletHandlers.requestWithdrawal,
-    // 服务收入（活动创建者、寄养服务者、上门服务者）
-    getServiceIncomeOverview: incomeHandlers.getServiceIncomeOverview,
-    getServiceIncomeDetails: incomeHandlers.getServiceIncomeDetails,
     // 邀请
     getReferralStats: referralHandlers.getReferralStats,
     getMyInvitedUsers: referralHandlers.getMyInvitedUsers,
@@ -95,6 +105,11 @@ async function checkPartnerPermission(openid, permission) {
         admin = (adminRes && adminRes.data) || null;
     }
     catch (e) {
+        // M7: 静默吞错改为告警，便于排查权限查询异常
+        //   原：catch (e) { admin = null } 无任何日志
+        logger.warn('checkPartnerPermission.admins.fetch', {
+            openid, msg: e.message,
+        });
         admin = null;
     }
     if (!admin || admin.status !== 'active') {
@@ -132,15 +147,27 @@ const main = async (event, context) => {
     const permission = ACTION_PERMISSIONS[action];
     try {
         const auth = await verifyAuth(event, { requireLogin: true });
+        // M11: 主入口容错——verifyAuth 在 requireLogin 下应保证 openid 存在
+        //   但部分 HTTP 触发场景可能仅校验 token 未取到 openid，提前拦截避免后续 db.doc(undefined)
+        if (!auth.openid) {
+            throw err('AUTH_REQUIRED', '登录态无效，缺少 openid');
+        }
         logger.info(action, { openid: auth.openid });
         if (permission !== null) {
-            const admin = await checkPartnerPermission(auth.openid || '', permission);
+            const admin = await checkPartnerPermission(auth.openid, permission);
             auth.adminId = admin._id;
             auth.roles = admin.roles || [];
             auth.permissions = (admin.roles || []).includes('super_admin')
                 ? ['all']
                 : (admin.permissions || []);
             auth.isPartner = admin.isPartner || false;
+            // H1: 提现记录需要 nickName 字段（project_memory 硬约束）
+            // admin 集合可能没有 nickName，fallback 到 users 集合查询由 wallet.ts 内部处理
+            auth.nickName = admin.nickName || auth.nickName || '';
+        }
+        // M10: 资金类 action 通过限流中间件，防止单用户高频调用提现接口
+        if (RATE_LIMITED_ACTIONS.has(action)) {
+            return await withRateLimit({ userId: auth.openid || '', type: 'withdrawal', targetId: 'wallet' }, () => exports.handlers[action](event, context, auth));
         }
         return await exports.handlers[action](event, context, auth);
     }

@@ -2,6 +2,8 @@ const { err } = require('../common/errors')
 const { handleSuccess, handleError, generateId, ERROR_CODES } = require('../common/utils')
 const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
+// P0-6: 敏感接口限流
+const { withRateLimit } = require('../common/risk-rate-limit')
 
 const { db } = initCloud()
 const logger = createLogger('adminService.application')
@@ -13,6 +15,23 @@ async function submitApplication(event, context, auth) {
   if (!realName || !phone || !reason) {
     throw err('INVALID_PARAMS', '请填写完整信息')
   }
+  // P2-016: 手机号格式校验 + reason 长度限制，防止恶意写入超长文本
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
+    throw err('INVALID_PARAMS', '手机号格式无效')
+  }
+  if (String(reason).length > 500) {
+    throw err('INVALID_PARAMS', '申请理由不得超过 500 字')
+  }
+
+  // P0-6: 限流（每用户每小时 1 次申请）
+  await withRateLimit(
+    { userId: openid, type: 'application', targetId: 'submit' },
+    async () => {
+      const existingRes = db.collection('admin_applications')
+        .where({ openid, status: 'pending' }).limit(1).get()
+      return existingRes
+    }
+  )
 
   const existingRes = await db.collection('admin_applications')
     .where({ openid, status: 'pending' }).limit(1).get()

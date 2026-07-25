@@ -2,7 +2,7 @@
  * adminService/constants.ts - 订单类型常量（TypeScript 源文件 - Sprint 33 迁移）
  *
  * 业务功能：
- *   - 集中维护订单类型枚举（mall / hosting / feeding / tuan / activity）
+ *   - 集中维护订单类型枚举（mall / boarding / feeding / tuan / activity）
  *   - 提供类型安全的中文显示名称映射
  *
  * 迁移目标：
@@ -19,6 +19,6 @@ export type OrderTypeKey = typeof ORDER_TYPES[number];
 export declare const ORDER_TYPE_NAMES: Record<OrderTypeKey, string>;
 declare const _default: {
     ORDER_TYPES: readonly ["mall", "boarding", "feeding", "tuan", "activity"];
-    ORDER_TYPE_NAMES: Record<"mall" | "boarding" | "feeding" | "tuan" | "activity", string>;
+    ORDER_TYPE_NAMES: Record<"activity" | "tuan" | "boarding" | "feeding" | "mall", string>;
 };
 export default _default;

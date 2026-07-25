@@ -11,7 +11,7 @@
  *
  * 关键类型：
  *   - CacheEntry<V>：内部存储结构，value / timestamp / ttl
- *   - LruTtlCache<V>：公共类型（types.d.ts 中也定义了同名接口）
+ *   - LruTtlCache<V>：公共类型（定义在 types.ts 中）
  */
 import type { LruTtlCache, CacheEntry } from './types';
 export declare function getCache<V = unknown>(key: string): V | null;

@@ -14,8 +14,8 @@
  *   4. updateFeederProfile - 更新喂养师档案
  *   5. createFeedingOrder - 创建喂养订单
  *   6. getFeedingOrders - 我的喂养订单
- *   7. updateFeedingOrderStatus - 更新订单状态
- *   8. getOrderStatus - 获取订单状态
+ *   7. getOrderStatus - 获取订单状态
+ *   8. updateFeedingOrderStatus - 更新订单状态
  *   9. getFeederOrders - 喂养师视角订单列表
  *  10. getFeedingOrderDetail - 喂养师视角订单详情
  *  11. handleFeedingOrder - 喂养师接单/完成操作

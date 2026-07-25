@@ -96,9 +96,14 @@ describe('Sprint 47: paymentService/index TypeScript 迁移', () => {
   describe('8. 业务流程', () => {
     let code
     beforeAll(() => { code = readFileSafe(path.join(TS_DIR, 'index.ts')) })
-    test('Sprint 21 限流：initGlobalRateLimitFromDb', () => { expect(code).toMatch(/initGlobalRateLimitFromDb/) })
-    test('try/catch 降级到内存', () => {
-      expect(code).toMatch(/try\s*\{[\s\S]*?initGlobalRateLimitFromDb[\s\S]*?\}\s*catch\s*\(/s)
+    test('Sprint 50 限流：bootstrapRateLimit strict 模式', () => {
+      expect(code).toMatch(/bootstrapRateLimit/)
+      expect(code).toMatch(/strict:\s*true/)
+    })
+    test('strict 失败时持久化告警 + 阻断服务', () => {
+      expect(code).toMatch(/_bootstrapFailed/)
+      expect(code).toMatch(/recordAlert/)
+      expect(code).toMatch(/SERVICE_UNAVAILABLE/)
     })
   })
 

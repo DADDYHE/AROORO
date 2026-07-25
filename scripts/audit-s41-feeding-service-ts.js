@@ -86,7 +86,12 @@ if (feedingTs) {
   check('index.ts 包含 FeedingActionHandler 类型', /export\s+type\s+FeedingActionHandler\b/.test(feedingTs))
   check('index.ts 包含 FeederRecord 接口', /export\s+interface\s+FeederRecord\b/.test(feedingTs))
   check('index.ts 包含 FeedingOrderRecord 接口', /export\s+interface\s+FeedingOrderRecord\b/.test(feedingTs))
-  check('index.ts 包含 createCommissionRecord 函数', /async\s+function\s+createCommissionRecord\b/.test(feedingTs))
+  // H1+H3+M1: createCommissionRecord 已迁移到公共模块 commission-utils
+  //   旧检查：/async\s+function\s+createCommissionRecord\b/
+  //   新检查：require('./common/commission-utils') 且使用 createCommissionRecord
+  check('index.ts 从公共模块引入 createCommissionRecord（H1+H3+M1 迁移）',
+    /require\(['"]\.\/common\/commission-utils['"]\)/.test(feedingTs) &&
+    /\bcreateCommissionRecord\b/.test(feedingTs))
   check('index.ts 包含 checkPartnerPermission 函数', /async\s+function\s+checkPartnerPermission\b/.test(feedingTs))
   check('index.ts 包含 refreshPetAvatars 函数', /async\s+function\s+refreshPetAvatars\b/.test(feedingTs))
   check('index.ts 包含 handlers 聚合对象', /export\s+const\s+handlers\s*:\s*Record<string,\s*FeedingActionHandler>/.test(feedingTs))

@@ -8,24 +8,29 @@
  *   - 与 utils/i18n.js 的 applyCustomOverrides / loadFromCdn 衔接
  *
  * 迁移目标：
- *   - 强类型化 2 个 action handler 签名（fetchActive + fetchActiveOverrides）
+ *   - 强类型化 action handler 签名（fetchActive）
  *   - 抽离 SUPPORTED_LOCALES 联合类型与 COLLECTION 常量
  *   - I18nOverrides 类型化（key → locale → value）
  *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.i18nOverride.json
+ *
+ * 数据库索引建议（运维需在 i18n_overrides 集合上创建）：
+ *   1. { key: 1, locale: 1 }                  - 唯一索引，保证 upsert 幂等
+ *   2. { status: 1, locale: 1, updatedAt: -1 } - 覆盖 fetchActive 与 listI18nOverrides 查询
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.main = exports.fetchActive = exports.FETCH_LIMIT = exports.SUPPORTED_LOCALES = exports.COLLECTION = void 0;
 // =====================================================================
 // 内部模块初始化（带 wx-server-sdk 降级）
 // =====================================================================
+// 合并 common 模块导入，减少冷启动 require 次数
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createLogger } = require('./common/logger');
+const { createLogger } = require('../common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError } = require('./common/utils');
+const { handleSuccess, handleError, ERROR_CODES } = require('../common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { err } = require('./common/errors');
+const { err, isBusinessError, toResponse } = require('../common/errors');
 let cloudbase = null;
 try {
     cloudbase = require('wx-server-sdk');
@@ -43,22 +48,52 @@ exports.COLLECTION = 'i18n_overrides';
 exports.SUPPORTED_LOCALES = ['zh-CN', 'en-US', 'ja-JP'];
 exports.FETCH_LIMIT = 200;
 // =====================================================================
+// 辅助函数
+// =====================================================================
+/** 判断异常是否为"集合未初始化"类错误（可安全降级为空覆盖） */
+function isCollectionMissingError(e) {
+    if (!e || typeof e !== 'object') {
+        return false;
+    }
+    const errObj = e;
+    const msg = (errObj.message || '').toLowerCase();
+    // -502001：cloud sdk 集合不存在 / 文档已存在
+    // 兼容文案：collection not exist / collection does not exist
+    return (errObj.errCode === -502001 ||
+        errObj.errCode === -501019 ||
+        /collection.*(not.*exist|does.*not.*exist)/i.test(msg));
+}
+// =====================================================================
 // Action：fetchActive
 // =====================================================================
 /**
  * 客户端匿名拉取 active 文案覆盖。
  *
- * 入参：{ action: 'fetchActive', locale?: 'en-US' }
- * 返回：{ code, message, data: { overrides, count, locale } }
+ * 入参：{ action: 'fetchActive', locale?: 'zh-CN' | 'en-US' | 'ja-JP' }
+ *   - locale 不传：返回所有 locale
+ *   - locale 非法：抛 INVALID_PARAMS（避免客户端 bug 被静默掩盖）
+ * 返回：{ code, message, data: { overrides, count, keyCount, entryCount, locale } }
  */
 async function fetchActive(event = {}) {
     if (!cloudbase) {
         throw err('INTERNAL_ERROR', 'cloudbase sdk unavailable');
     }
     const { locale } = event;
+    // M2：locale 类型守卫，避免非法值静默降级
+    if (locale !== undefined) {
+        if (typeof locale !== 'string') {
+            throw err('INVALID_PARAMS', 'locale 必须为字符串', { type: typeof locale });
+        }
+        if (!exports.SUPPORTED_LOCALES.includes(locale)) {
+            throw err('INVALID_PARAMS', '不支持的 locale', {
+                locale,
+                supported: exports.SUPPORTED_LOCALES,
+            });
+        }
+    }
     const db = cloudbase.database();
     const filter = { status: 'active' };
-    if (locale && exports.SUPPORTED_LOCALES.includes(locale)) {
+    if (typeof locale === 'string') {
         filter.locale = locale;
     }
     let data = [];
@@ -70,11 +105,23 @@ async function fetchActive(event = {}) {
         data = res.data || [];
     }
     catch (e) {
-        // 集合不存在：返回空覆盖（兼容未初始化场景）
-        logger.warn('fetchActive.collection_missing_or_error', e?.message);
-        return handleSuccess({ overrides: {}, count: 0, locale: locale || 'all' }, '获取成功（空覆盖）');
+        // H2：仅对"集合未初始化"降级返回空覆盖，其他异常向上抛由 main 统一处理
+        if (isCollectionMissingError(e)) {
+            logger.warn('fetchActive.collection_missing', { message: e?.message });
+            return handleSuccess({
+                overrides: {},
+                count: 0,
+                keyCount: 0,
+                entryCount: 0,
+                locale: (typeof locale === 'string' ? locale : 'all'),
+            }, '获取成功（空覆盖）');
+        }
+        // 真实错误：记录完整上下文后抛出
+        logger.errorWithContext('fetchActive.db_error', e, { filter });
+        throw e;
     }
     const overrides = {};
+    let entryCount = 0;
     for (const doc of data) {
         if (!doc || !doc.key || !doc.locale) {
             continue;
@@ -83,11 +130,15 @@ async function fetchActive(event = {}) {
             overrides[doc.key] = {};
         }
         overrides[doc.key][doc.locale] = doc.value;
+        entryCount++;
     }
+    const keyCount = Object.keys(overrides).length;
     return handleSuccess({
         overrides,
-        count: Object.keys(overrides).length,
-        locale: locale || 'all',
+        count: keyCount, // L1：保留 count 向后兼容，新增 keyCount / entryCount
+        keyCount,
+        entryCount,
+        locale: (typeof locale === 'string' ? locale : 'all'),
     }, '获取成功');
 }
 exports.fetchActive = fetchActive;
@@ -96,8 +147,6 @@ exports.fetchActive = fetchActive;
 // =====================================================================
 const handlers = {
     fetchActive,
-    // 兼容别名（与 adminService 命名对齐）
-    fetchActiveOverrides: fetchActive,
 };
 async function main(event) {
     try {
@@ -113,7 +162,11 @@ async function main(event) {
     }
     catch (e) {
         logger.error('main', e);
-        return handleError(e, e?.message ? e.message : 'unknown error', e?.code ? e.code : 5001);
+        // 使用 isBusinessError 正确处理 BusinessError 实例
+        if (isBusinessError(e)) {
+            return toResponse(e);
+        }
+        return handleError(e, e?.message ? e.message : 'unknown error', ERROR_CODES.SERVER);
     }
 }
 exports.main = main;

@@ -95,8 +95,12 @@ if (petTs) {
   const ACTIONS = [
     'createPet', 'updatePet', 'deletePet', 'getPet', 'getPetList', 'getPetDetail',
   ]
+  // Sprint 51: 兼容 withErrorHandling 包装风格
+  //   - 旧风格：export async function createPet
+  //   - 新风格：export const createPet = withErrorHandling(async (...) => ...)
   ACTIONS.forEach(act => {
-    check(`index.ts 导出 ${act}`, new RegExp(`export\\s+async\\s+function\\s+${act}\\b`).test(petTs))
+    const re = new RegExp(`export\\s+(async\\s+function|const)\\s+${act}\\b`)
+    check(`index.ts 导出 ${act}`, re.test(petTs))
   })
   check('index.ts 包含 Runtime shim', /_mod\.exports\s*=\s*\{/.test(petTs))
   check('index.ts 包含软删除（isActive=0）', /isActive:\s*0/.test(petTs))

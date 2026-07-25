@@ -52,7 +52,21 @@ if (code) {
   check('NEW_STATUS = expired', /NEW_STATUS:.*=\s*['"]expired['"]/.test(code))
   check('where status=unused + endTime<now', /status:\s*TARGET_STATUS/.test(code) && /endTime:\s*_\.lt\(now\)/.test(code))
   check('update to expired', /status:\s*NEW_STATUS/.test(code))
-  check('updatedCount 返回', /updatedCount:\s*res\.stats\.updated/.test(code))
+  check('updatedCount 返回', /updatedCount:\s*totalUpdated/.test(code))
+  // H1: 循环分批更新（每批 100 条，最多 20 轮）
+  check('BATCH_LIMIT 常量', /BATCH_LIMIT\s*=\s*100/.test(code))
+  check('MAX_ROUNDS 常量', /MAX_ROUNDS\s*=\s*20/.test(code))
+  check('循环分批 update', /for\s*\(\s*let\s+round\s*=\s*0/.test(code) && /updated\s*<\s*BATCH_LIMIT/.test(code))
+  // M1: locked 卡死券处理
+  check('STUCK_LOCKED_STATUS 常量', /STUCK_LOCKED_STATUS.*=.*['"]locked['"]/.test(code))
+  check('STUCK_LOCKED_DAYS = 7', /STUCK_LOCKED_DAYS\s*=\s*7/.test(code))
+  check('M1 阶段 2 处理', /stuckThreshold/.test(code) && /stuckLockedUpdated/.test(code))
+  check('M1 清理关联字段', /orderId:\s*['"]{2}/.test(code) && /orderType:\s*['"]{2}/.test(code))
+  check('M1 卡死券告警', /coupon\.expiry\.stuck\.locked/.test(code))
+  // M3: 接入告警
+  check('recordAlert 接入', /require\(['"]\.\.\/common\/alert['"]\)/.test(code) && /recordAlert\(['"]critical['"]/.test(code))
+  // L2: 并发保护
+  check('L2 并发保护', /_isRunning/.test(code) && /if\s*\(\s*_isRunning\s*\)/.test(code))
   check('Runtime shim', /_mod\.exports\s*=\s*\{/.test(code))
   check('export default', /export\s+default\s+\{/.test(code))
 }

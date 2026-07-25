@@ -49,6 +49,7 @@ project.private.config.json
 # AI tool directories
 .codebuddy/
 .trae/
+.workbuddy/
 
 # Cloud functions dependencies
 cloudfunctions/*/node_modules/

@@ -158,6 +158,8 @@ export const BusinessErrors: Record<BusinessErrorCode, BusinessErrorSpec> = {
   ORDER_ALREADY_PAID: { code: 'ORDER_ALREADY_PAID', message: '订单已支付', httpStatus: 409, severity: 'BUSINESS' },
   ORDER_ALREADY_REFUNDED: { code: 'ORDER_ALREADY_REFUNDED', message: '订单已退款', httpStatus: 409, severity: 'BUSINESS' },
   ORDER_TIMEOUT: { code: 'ORDER_TIMEOUT', message: '订单已超时', httpStatus: 410, severity: 'BUSINESS' },
+  // H5: createPayment 条件更新未命中——订单已被并发流程推进
+  ORDER_STATUS_CHANGED: { code: 'ORDER_STATUS_CHANGED', message: '订单状态已变更', httpStatus: 409, severity: 'BUSINESS' },
   REFUND_FAILED: { code: 'REFUND_FAILED', message: '退款失败', httpStatus: 500, severity: 'BUSINESS' },
 
   // ========== 支付 ==========
@@ -183,6 +185,8 @@ export const BusinessErrors: Record<BusinessErrorCode, BusinessErrorSpec> = {
   CATEGORY_HAS_PRODUCTS: { code: 'CATEGORY_HAS_PRODUCTS', message: '该分类下存在商品，无法删除', httpStatus: 409, severity: 'BUSINESS' },
   COUPON_LIMIT_REACHED: { code: 'COUPON_LIMIT_REACHED', message: '已达到领取上限', httpStatus: 409, severity: 'BUSINESS' },
   COUPON_STATUS_INVALID: { code: 'COUPON_STATUS_INVALID', message: '优惠券状态不允许此操作', httpStatus: 409, severity: 'BUSINESS' },
+  COUPON_LOCK_FAILED: { code: 'COUPON_LOCK_FAILED', message: '优惠券锁定失败', httpStatus: 409, severity: 'BUSINESS' },
+  COUPON_USE_FAILED: { code: 'COUPON_USE_FAILED', message: '优惠券核销失败', httpStatus: 500, severity: 'BUSINESS' },
   STOCK_INSUFFICIENT: { code: 'STOCK_INSUFFICIENT', message: '库存不足', httpStatus: 409, severity: 'BUSINESS' },
   ACTIVITY_HAS_REGISTRATIONS: { code: 'ACTIVITY_HAS_REGISTRATIONS', message: '活动已有报名，无法删除', httpStatus: 409, severity: 'BUSINESS' },
   BUSINESS_ERROR: { code: 'BUSINESS_ERROR', message: '业务校验失败', httpStatus: 400, severity: 'BUSINESS' },

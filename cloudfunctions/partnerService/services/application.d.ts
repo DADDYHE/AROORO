@@ -12,6 +12,10 @@
  *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.partnerService.json
+ *
+ * 数据库索引建议（运维需在对应集合上创建）：
+ *   admin_applications: { openid: 1, status: 1, createdAt: -1 } - 覆盖 pending 申请查询
+ *   admins: { _id: 1, status: 1 }                                - 覆盖合作伙伴权限查询
  */
 export interface ApplicationRecord {
     _id: string;
@@ -49,6 +53,7 @@ export interface AuthLike {
     isPartner?: boolean;
     roles?: string[];
     permissions?: string[];
+    nickName?: string;
     [k: string]: unknown;
 }
 export interface CloudEvent {

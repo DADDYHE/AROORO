@@ -144,7 +144,6 @@ describe('Sprint 41: feedingService TypeScript 迁移', () => {
     })
 
     const HELPERS = [
-      'createCommissionRecord',
       'checkPartnerPermission',
       'refreshPetAvatars',
     ]
@@ -153,6 +152,13 @@ describe('Sprint 41: feedingService TypeScript 迁移', () => {
       test(`包含 ${fn} 函数`, () => {
         expect(code).toMatch(new RegExp(`async\\s+function\\s+${fn}\\b`))
       })
+    })
+
+    // H1+H3+M1: createCommissionRecord 已迁移到公共模块 commission-utils
+    //   旧测试期望本地定义 async function createCommissionRecord，已不适用
+    test('createCommissionRecord 从公共模块引入（H1+H3+M1 迁移）', () => {
+      expect(code).toMatch(/require\(['"]\.\/common\/commission-utils['"]\)/)
+      expect(code).toMatch(/createCommissionRecord/)
     })
   })
 

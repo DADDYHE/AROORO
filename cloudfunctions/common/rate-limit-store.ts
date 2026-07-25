@@ -211,9 +211,9 @@ export async function consumeGlobalRateLimit(
           updatedAt: now,
         })
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       // target 写入失败不回滚 global（已记录即扣减），但要告知调用方
-      throw err('INTERNAL_ERROR', `目标限流写入失败：${(e && e.message) || 'unknown'}`)
+      throw err('INTERNAL_ERROR', `目标限流写入失败：${(e as Error)?.message || 'unknown'}`)
     }
   }
 
@@ -287,6 +287,11 @@ async function _writeNewRecord(coll: any, record: GlobalRateLimitRecord): Promis
  * - 由定时任务调用（建议每 5-10 分钟一次）
  * - 也可由 CI 审计脚本调用
  *
+ * 性能优化（Sprint 51）：
+ *   - 原实现串行 doc().remove()，N 条记录需 N 次 DB 调用
+ *   - 改为 where + in + remove 批量删除，1 次 DB 调用完成
+ *   - 大幅减少云函数执行时间与数据库连接数
+ *
  * @returns 删除的记录数
  */
 export async function cleanupExpiredRateLimits(
@@ -297,24 +302,20 @@ export async function cleanupExpiredRateLimits(
   const coll = store.collection
   const _ = store.command
   const now = Date.now()
-  let total = 0
   try {
     const expired = await coll.where({ expireAt: _.lt(now) })
       .limit(batchSize)
       .get()
     const list = (expired && expired.data) || []
-    for (const r of list) {
-      try {
-        await coll.doc(r._id).remove()
-        total++
-      } catch (e) {
-        // ignore single delete failure
-      }
-    }
+    if (list.length === 0) {return 0}
+    // 批量删除：where + in + remove（1 次 DB 调用替代 N 次串行 doc().remove()）
+    const ids = list.map((r: GlobalRateLimitRecord) => r._id)
+    const deleteRes = await coll.where({ _id: _.in(ids) }).remove()
+    return (deleteRes && deleteRes.stats && deleteRes.stats.removed) || 0
   } catch (e) {
     // ignore
+    return 0
   }
-  return total
 }
 
 // ===== 工具：统计 =====
@@ -334,20 +335,20 @@ export async function getGlobalRateLimitStats(
   }
   const coll = store.collection
   try {
-    const res = await coll.limit(1000).get()
-    const list = (res && res.data) || []
-    let globalKeys = 0
-    let targetKeys = 0
-    let oldestExpireAt: number | null = null
-    for (const r of list) {
-      if (r.scope === 'global') {globalKeys++} else if (r.scope === 'target') {targetKeys++}
-      if (oldestExpireAt === null || r.expireAt < oldestExpireAt) {oldestExpireAt = r.expireAt}
-    }
+    // 并行查询：总数 / global 数 / target 数 / 最旧记录
+    // 替代原 limit(1000).get() 方案，避免 1000 条上限导致统计不准
+    const [totalRes, globalRes, targetRes, oldestRes] = await Promise.all([
+      coll.count(),
+      coll.where({ scope: 'global' }).count(),
+      coll.where({ scope: 'target' }).count(),
+      coll.orderBy('expireAt', 'asc').limit(1).get(),
+    ])
+    const oldest = oldestRes && oldestRes.data && oldestRes.data[0]
     return {
-      totalRecords: list.length,
-      globalKeys,
-      targetKeys,
-      oldestExpireAt,
+      totalRecords: (totalRes && totalRes.total) || 0,
+      globalKeys: (globalRes && globalRes.total) || 0,
+      targetKeys: (targetRes && targetRes.total) || 0,
+      oldestExpireAt: oldest ? oldest.expireAt : null,
     }
   } catch (e) {
     return { totalRecords: 0, globalKeys: 0, targetKeys: 0, oldestExpireAt: null }

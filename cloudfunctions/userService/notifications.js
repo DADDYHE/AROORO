@@ -30,7 +30,9 @@ async function getNotificationList(event, context, auth) {
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
     }
-    const { page = 1, pageSize = 20 } = event;
+    const { page = 1 } = event;
+    // L5 修复：pageSize 加 100 上限保护，避免前端传超大值拉爆 DB（与 utils.MAX_PAGE_SIZE 语义一致）
+    const pageSize = Math.min(Number(event.pageSize) || 20, 100);
     try {
         const unreadRes = await db.collection('notifications')
             .where({ ownerId: openid, isRead: false })

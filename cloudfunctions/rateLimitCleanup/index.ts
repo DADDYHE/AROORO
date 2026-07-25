@@ -9,6 +9,19 @@
  *   - 强类型化 main 函数与 2 个 action handler
  *   - RateLimitStats 接口化
  *
+ * 审查修复（Sprint 51）：
+ *   - H1: 并发保护 _isRunning（防止 cron 与 HTTP 调用同时执行）
+ *   - H2: 循环上限 MAX_CLEANUP_ROUNDS（防止无限循环导致云函数超时）
+ *   - H3: bootstrapRateLimit 错误处理 + recordAlert 告警
+ *   - M1: 集成 createLogger 记录操作日志
+ *   - M2: 集成 recordAlert 关键错误持久化告警
+ *   - M3: 使用 isBusinessError + toResponse 标准化错误响应
+ *   - L1: 精确类型定义（CloudCollection/CloudQuery/CloudCommand），消除 as never
+ *   - L2: 为所有导出常量补充 JSDoc
+ *   - L3: event 参数校验（非 null 对象），非法 event 降级为 cleanup
+ *   - L7: 提取 ALERT_ACTION 常量，消除告警 action 魔法字符串
+ *   - 修复: bootstrap 失败告警去重（每实例仅告警一次，避免 cron 每 10min 重复告警）
+ *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.rateLimitCleanup.json
  */
@@ -39,11 +52,57 @@ export interface CloudContext {
 /** 限流清理结果 */
 export interface CleanupResult {
   cleaned: number
+  skipped?: boolean
 }
 
 /** 限流统计 */
 export interface RateLimitStats {
-  [k: string]: unknown
+  totalRecords: number
+  globalKeys: number
+  targetKeys: number
+  oldestExpireAt: number | null
+  timestamp: number
+}
+
+// =====================================================================
+// CloudBase 数据库操作类型（精确类型，替代 as never）
+// =====================================================================
+
+interface CloudQuery {
+  where: (q: Record<string, unknown>) => CloudQuery
+  field: (f: Record<string, boolean>) => CloudQuery
+  orderBy: (field: string, direction: 'asc' | 'desc') => CloudQuery
+  limit: (n: number) => CloudQuery
+  skip: (n: number) => CloudQuery
+  get: () => Promise<{ data: unknown[] }>
+  count: () => Promise<{ total: number }>
+  remove: () => Promise<{ stats?: { removed?: number } }>
+  update: (p: { data: Record<string, unknown> }) => Promise<{ stats?: { updated?: number } }>
+}
+
+interface CloudCollection {
+  where: (q: Record<string, unknown>) => CloudQuery
+  field: (f: Record<string, boolean>) => CloudQuery
+  orderBy: (field: string, direction: 'asc' | 'desc') => CloudQuery
+  limit: (n: number) => CloudQuery
+  skip: (n: number) => CloudQuery
+  doc: (id: string) => {
+    get: () => Promise<{ data: unknown }>
+    update: (p: { data: Record<string, unknown> }) => Promise<{ stats?: { updated?: number } }>
+    remove: () => Promise<{ stats?: { removed?: number } }>
+  }
+  get: () => Promise<{ data: unknown[] }>
+  count: () => Promise<{ total: number }>
+  add: (p: { data: Record<string, unknown> }) => Promise<{ _id: string }>
+}
+
+interface CloudCommand {
+  lt: (v: number | Date) => unknown
+  lte: (v: number | Date) => unknown
+  gt: (v: number | Date) => unknown
+  gte: (v: number | Date) => unknown
+  in: (arr: unknown[]) => unknown
+  inc: (n: number) => unknown
 }
 
 // =====================================================================
@@ -55,15 +114,8 @@ const cloudbase = require('wx-server-sdk') as {
   init: (opts: { env: string }) => void
   DYNAMIC_CURRENT_ENV: string
   database: () => {
-    collection: (name: string) => unknown
-    command: {
-      lt: (d: Date) => unknown
-      lte: (d: Date) => unknown
-      gt: (d: Date) => unknown
-      gte: (d: Date) => unknown
-      in: (arr: unknown[]) => unknown
-      inc: (n: number) => unknown
-    }
+    collection: (name: string) => CloudCollection
+    command: CloudCommand
     serverDate: () => Date
   }
 }
@@ -75,81 +127,214 @@ const _ = db.command
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { handleSuccess, handleError } = require('../common/utils')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { err } = require('../common/errors')
+const { err, isBusinessError, toResponse } = require('../common/errors')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { initGlobalRateLimitFromDb } = require('../common/risk-rate-limit')
+const { createLogger } = require('../common/logger')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('../common/alert')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { bootstrapRateLimit } = require('../common/rate-limit-bootstrap')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { cleanupExpiredRateLimits, getGlobalRateLimitStats } = require('../common/rate-limit-store')
 
+const logger = createLogger('rateLimitCleanup')
+
 // 注入全局限流 store（Sprint 50：统一 bootstrap）
-bootstrapRateLimit(db, {})
+// H3: 失败时降级到内存模式，记录标志供 main 入口告警
+let _bootstrapFailed = false
+try {
+  const result = bootstrapRateLimit(db, { service: 'rateLimitCleanup' })
+  if (!result || !result.countStoreInjected || !result.configStoreInjected) {
+    _bootstrapFailed = true
+    logger.warn('bootstrap.incomplete', { result })
+  }
+} catch (e) {
+  _bootstrapFailed = true
+  logger.error('bootstrap.error', e)
+}
 
 // =====================================================================
 // 常量
 // =====================================================================
 
+/** rate_limits 集合名（限流计数存储） */
 export const COLLECTION = 'rate_limits'
+/** 单批清理的记录数上限（CloudBase where+remove 单次上限约 1000，200 留安全余量） */
 export const CLEANUP_BATCH_SIZE = 200
+/** 清理 action 标识 */
 export const ACTION_CLEANUP = 'cleanup'
+/** 统计 action 标识 */
 export const ACTION_STATS = 'stats'
+/** 清理循环最大轮次（每轮 CLEANUP_BATCH_SIZE 条，20 轮 = 4000 条上限） */
+const MAX_CLEANUP_ROUNDS = 20
+
+/** L7: 告警 action 标识常量（点分风格，便于运维查询） */
+const ALERT_ACTION = {
+  BOOTSTRAP_FAILED: 'rateLimitCleanup.bootstrap.failed',
+  MAX_ROUNDS: 'rateLimitCleanup.max_rounds',
+  MAIN_ERROR: 'rateLimitCleanup.main.error',
+} as const
+
+/** 限流 store（兼容 common/rate-limit-store 的 GlobalRateLimitStore 接口） */
+const rateLimitStore = {
+  collection: db.collection(COLLECTION),
+  command: _,
+}
 
 // =====================================================================
-// Action 1：cleanup
+// 并发保护（参考 orderTimeoutService 实现）
 // =====================================================================
 
+let _isRunning = false
+/** bootstrap 告警去重标志（每实例仅告警一次，避免 cron 每 10min 重复告警） */
+let _bootstrapAlertSent = false
+
+// =====================================================================
+// Action 1：cleanup - 分批清理过期记录
+// =====================================================================
+
+/**
+ * 清理 rate_limits 集合中 expireAt < now 的记录
+ *
+ * 优化点：
+ *   - 循环上限：MAX_CLEANUP_ROUNDS 防止无限循环导致云函数超时
+ *   - 批量删除：cleanupExpiredRateLimits 内部使用 where + in + remove 批量删除
+ *   - 告警：达到最大轮次仍有数据时触发 recordAlert
+ *
+ * @returns 清理的记录数
+ */
 export async function cleanupAction(): Promise<CleanupResult> {
   let total = 0
   let batch = 0
+  let rounds = 0
   do {
-    batch = await cleanupExpiredRateLimits(
-      { collection: db.collection(COLLECTION), command: _ } as never,
-      CLEANUP_BATCH_SIZE
-    )
+    batch = await cleanupExpiredRateLimits(rateLimitStore, CLEANUP_BATCH_SIZE)
     total += batch
+    rounds++
+    // H2: 达到最大轮次时中断，避免云函数超时
+    if (rounds >= MAX_CLEANUP_ROUNDS) {
+      logger.warn('cleanup.max_rounds_reached', { total, rounds })
+      // 检查是否仍有未清理数据，触发告警
+      try {
+        const remaining = await db.collection(COLLECTION)
+          .where({ expireAt: _.lt(Date.now()) })
+          .count()
+        if (remaining.total > 0) {
+          await recordAlert('warning', ALERT_ACTION.MAX_ROUNDS,
+            `清理达到最大轮次(${MAX_CLEANUP_ROUNDS})，仍有 ${remaining.total} 条未清理`,
+            { total, rounds, remaining: remaining.total }).catch(() => {})
+        }
+      } catch (e) {
+        logger.warn('cleanup.check_remaining_failed', { msg: (e as Error).message })
+      }
+      break
+    }
   } while (batch > 0)
+  logger.info('cleanup.done', { total, rounds })
   return { cleaned: total }
 }
 
 // =====================================================================
-// Action 2：stats
+// Action 2：stats - 限流统计
 // =====================================================================
 
+/**
+ * 拉取 rate_limits 集合的统计数据
+ *
+ * 使用 count() 和 where().count() 获取准确统计（无 1000 条上限）
+ */
 export async function statsAction(): Promise<RateLimitStats> {
-  return await getGlobalRateLimitStats({
-    collection: db.collection(COLLECTION),
-    command: _,
-  } as never) as RateLimitStats
+  const stats = await getGlobalRateLimitStats(rateLimitStore) as {
+    totalRecords: number
+    globalKeys: number
+    targetKeys: number
+    oldestExpireAt: number | null
+  }
+  return {
+    totalRecords: stats.totalRecords,
+    globalKeys: stats.globalKeys,
+    targetKeys: stats.targetKeys,
+    oldestExpireAt: stats.oldestExpireAt,
+    timestamp: Date.now(),
+  }
 }
 
 // =====================================================================
-// Handlers 聚合 + Main 入口
+// Main 入口
 // =====================================================================
 
-const handlers: Record<string, () => Promise<unknown>> = {
-  cleanup: cleanupAction,
-  stats: statsAction,
-}
-
+/**
+ * 云函数主入口（cron 触发 + HTTP 调用）
+ *
+ * 流程：
+ *   1. H3: 检查 bootstrap 状态，失败时触发告警
+ *   2. H1: 并发保护 _isRunning 防止 cleanup 重复执行
+ *   3. 分发到 cleanupAction / statsAction
+ *   4. M3: 错误处理 BusinessError 走 toResponse，未知错误走 recordAlert + handleError
+ *
+ * @param event 云函数事件（cron 触发或 HTTP 调用）
+ */
 export async function main(event: CloudEvent): Promise<unknown> {
   try {
-    const action = (event && event.action) || ACTION_CLEANUP
+    // L3: event 参数校验——非 null 对象才读取字段，否则降级为 cleanup
+    //   cron 触发时 event 可能为 { Message, Time, TriggerName } 无 action 字段
+    //   HTTP 调用未传 event 时降级为默认 cleanup action
+    const safeEvent = (event && typeof event === 'object') ? event : {} as CloudEvent
+
+    // H3: bootstrap 失败时告警（best-effort，不阻断执行）
+    //   去重：每实例仅告警一次，避免 cron 每 10min 触发重复告警
+    if (_bootstrapFailed && !_bootstrapAlertSent) {
+      _bootstrapAlertSent = true
+      try {
+        await recordAlert('warning', ALERT_ACTION.BOOTSTRAP_FAILED,
+          '限流 store 注入失败，清理功能可能失效',
+          {}).catch(() => {})
+      } catch {
+        // ignore alert failure
+      }
+    }
+
+    const action = safeEvent.action || ACTION_CLEANUP
+    logger.info('main.start', { action, trigger: safeEvent.TriggerName || 'manual' })
 
     if (action === ACTION_CLEANUP) {
-      const result = await cleanupAction()
-      return handleSuccess(result, 'cleanup done')
+      // H1: 并发保护——前次未完成时跳过
+      if (_isRunning) {
+        logger.info('main.skipped_concurrent_run')
+        return handleSuccess({ skipped: true }, '上一次清理尚未完成，跳过本次')
+      }
+      _isRunning = true
+      try {
+        const result = await cleanupAction()
+        logger.info('main.cleanup.success', { cleaned: result.cleaned })
+        return handleSuccess(result, 'cleanup done')
+      } finally {
+        _isRunning = false
+      }
     }
 
     if (action === ACTION_STATS) {
       const stats = await statsAction()
+      logger.info('main.stats.success', { totalRecords: stats.totalRecords })
       return handleSuccess(stats, 'ok')
     }
 
     throw err('UNKNOWN_ACTION', `unknown action: ${action}`)
   } catch (e) {
-    if (e && (e as { code?: unknown }).code) { return e as unknown }
-    return handleError(e, (e as Error)?.message || 'unknown error')
+    logger.error('main.error', e)
+    // M3: 业务错误（如 UNKNOWN_ACTION）返回标准响应
+    if (isBusinessError(e)) {
+      return toResponse(e)
+    }
+    // M2: 未知错误触发 critical 告警
+    try {
+      await recordAlert('critical', ALERT_ACTION.MAIN_ERROR,
+        `限流清理主流程异常：${(e as Error)?.message || 'unknown'}`,
+        { stack: (e as Error)?.stack }).catch(() => {})
+    } catch {
+      // ignore alert failure
+    }
+    return handleError(e as Error, (e as Error)?.message || 'unknown error')
   }
 }
 

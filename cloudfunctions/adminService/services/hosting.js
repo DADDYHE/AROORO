@@ -151,6 +151,26 @@ async function handleBoardingOrder(event, context, auth) {
   const orderRes = await db.collection('orders').doc(orderId).get()
   if (!orderRes.data) {throw err('NOT_FOUND', '订单不存在')}
 
+  // 资源归属校验：super_admin 可操作所有订单；其他角色须为订单 host 的归属人
+  // 参考 getBoardingOrders：通过 hostProfiles.doc(auth.openid) 反查 hostId
+  if (!auth.isSuperAdmin) {
+    let hostOwner
+    if (orderRes.data.hostId) {
+      // 直接以 auth.openid 作为 hostProfiles 主键反查自身 hostId
+      try {
+        const hostProfileRes = await db.collection('hostProfiles').doc(auth.openid).get()
+        if (hostProfileRes.data && hostProfileRes.data._id === orderRes.data.hostId) {
+          hostOwner = auth.openid
+        }
+      } catch (e) {
+        hostOwner = null
+      }
+    }
+    if (hostOwner !== auth.openid) {
+      throw err('PERMISSION_DENIED', '无权操作他人资源')
+    }
+  }
+
   try {
     validateTransition(BOARDING_ORDER_TRANSITIONS, orderRes.data.status, newStatus)
   } catch (e) {
@@ -179,6 +199,7 @@ async function updateHostProfile(event, context, auth) {
   const updateData = { updatedAt: db.serverDate(), ...filterFields(FIELD_WHITELISTS.hostDefault, event) }
   if (event.pricePerDay !== undefined) {updateData.pricePerDay = Number(event.pricePerDay)}
   if (event.maxPets !== undefined) {updateData.maxPets = Number(event.maxPets)}
+  if (event.pricePerDay !== undefined && Number(event.pricePerDay) < 0) {throw err('INVALID_PARAMS', '价格不能为负')}
 
   let hostProfileRes
   try {

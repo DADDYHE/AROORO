@@ -69,7 +69,7 @@ describe('Sprint 46: tuanExpiryCheck TypeScript 迁移', () => {
     let pkg
     beforeAll(() => { pkg = JSON.parse(readFileSafe(path.join(ROOT, 'package.json'))) })
     test('audit', () => { expect(pkg.scripts['audit:s46-tuan-expiry-check-ts']).toBe('node scripts/audit-s46-tuan-expiry-check-ts.js') })
-    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:s46-batch-services-ts:strict/) })
+    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/(audit:s46-batch-services-ts:strict|audit:all:strict)/) })
   })
 
   describe('8. audit 脚本', () => {

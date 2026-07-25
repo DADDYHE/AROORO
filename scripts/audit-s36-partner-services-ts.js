@@ -10,7 +10,7 @@
  *   4. build-all-services.js TARGETS 含 4 个 target（index.js / application.js / referral.js / wallet.js）
  *   5. application.ts 类型与 handler（ApplicationRecord / AdminRecord / SubmitApplicationEvent / ApplicationHandler / submitApplication / getApplicationStatus / getMyPermissions）
  *   6. referral.ts 类型与 handler（ReferralHandler / InvitedUser / CommissionItem / countAndSum + 4 个 action）
- *   7. wallet.ts 类型与 handler（WalletRecord / CommissionItem / OrderAggregate / IncomeOverview / IncomeDetailItem / WalletHandler / sumOrders / sumCommissions + 5 个 action）
+ *   7. wallet.ts 类型与 handler（WalletRecord / CommissionItem / OrderAggregate / IncomeOverview / IncomeDetailItem / WalletHandler / safeAggSum + 5 个 action）
  *   8. 12 个 action 全部强类型化（Sprint 36 注释）
  *   9. package.json 注册 audit:s36-partner-services-ts
  *  10. package.json ci:check 包含 audit:s36-partner-services-ts:strict
@@ -132,8 +132,11 @@ if (walTs) {
   check('wallet.ts 含 IncomeOverview 接口', /export\s+interface\s+IncomeOverview\b/.test(walTs))
   check('wallet.ts 含 IncomeDetailItem 接口', /export\s+interface\s+IncomeDetailItem\b/.test(walTs))
   check('wallet.ts 含 WalletHandler 类型', /export\s+type\s+WalletHandler\b/.test(walTs))
-  check('wallet.ts 含 sumOrders 函数', /function\s+sumOrders\s*\(/.test(walTs))
-  check('wallet.ts 含 sumCommissions 函数', /function\s+sumCommissions\s*\(/.test(walTs))
+  // H1: sumOrders/sumCommissions 已被 aggregate sum 替代（避免 limit(100) 截断）
+  //   改为检查 safeAggSum 辅助函数存在
+  check('wallet.ts 含 safeAggSum 函数（aggregate sum 替代内存累加）', /function\s+safeAggSum\s*\(|const\s+safeAggSum\s*=/.test(walTs) || /safeAggSum\s*=/.test(walTs))
+  check('wallet.ts 含 CommissionOverview 接口（H3 按 orderType 分组）', /export\s+interface\s+CommissionOverview\b/.test(walTs))
+  check('wallet.ts 含 ServiceIncomeOverview 接口（H3 按 type 分组）', /export\s+interface\s+ServiceIncomeOverview\b/.test(walTs))
   for (const a of ['getMyIncomeOverview', 'getMyIncomeDetails', 'getMyWallet', 'getMyWithdrawals', 'requestWithdrawal']) {
     check(`wallet.ts 导出 ${a}`, new RegExp(`export\\s+async\\s+function\\s+${a}\\b`).test(walTs))
   }

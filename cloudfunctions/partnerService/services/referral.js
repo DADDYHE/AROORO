@@ -15,9 +15,19 @@
  *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.partnerService.json
+ *
+ * 数据库索引建议（运维需在对应集合上创建）：
+ *   users: { inviterId: 1 }                                  - 覆盖 getReferralStats/getMyInvitedUsers 邀请人查询
+ *   commissions: { inviterId: 1, status: 1, createdAt: -1 } - 覆盖 getReferralOrders/Stats
+ *   orders: { ownerId: 1, status: 1, type: 1 }               - 覆盖 getReferralStats 邀请用户消费查询
+ *   feedingOrders: { ownerId: 1, status: 1 }                 - 覆盖 feeding 消费查询
+ *   tuan_orders: { ownerId: 1, status: 1 }                   - 覆盖 tuan 消费查询
+ *   activity_registrations: { ownerId: 1, status: 1 }        - 覆盖 activity 消费查询
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getReferralOrderStats = exports.getReferralOrders = exports.getMyInvitedUsers = exports.getReferralStats = void 0;
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { err } = require('../common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { initCloud, handleSuccess, handleError, ERROR_CODES } = require('../common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -58,83 +68,72 @@ async function getReferralStats(event, context, auth) {
             return handleSuccess({ totalInvited: 0, consumingCount: 0, totalSpent: '0.00' });
         }
         // inviterId 现在存的是 openid，直接用 openid 查询
-        const invitedUsersRes = await db.collection('users')
-            .where({ inviterId: openid })
-            .field({ _id: true, nickName: true, avatarUrl: true, createdAt: true })
-            .get();
-        const invitedUsers = (invitedUsersRes.data || []);
-        const totalInvited = invitedUsers.length;
-        const invitedOpenids = invitedUsers.map((u) => u._id).filter((id) => Boolean(id));
-        let consumingCount = 0;
-        let totalSpent = 0;
-        if (invitedOpenids.length > 0) {
-            const spenderOpenids = new Set();
-            const [ordersRes, mallRes] = await Promise.all([
-                db.collection('orders').where({ ownerId: _.in(invitedOpenids), status: 'completed' }).limit(1000).get(),
-                db.collection('orders').where({ ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' }).limit(1000).get(),
-            ]);
-            (ordersRes.data || []).forEach((o) => {
-                if (o.ownerId) {
-                    spenderOpenids.add(o.ownerId);
-                }
-                totalSpent += Number(o.totalPrice) || Number(o.price) || 0;
-            });
-            (mallRes.data || []).forEach((o) => {
-                if (o.ownerId) {
-                    spenderOpenids.add(o.ownerId);
-                }
-                totalSpent += Number(o.totalPrice) || Number(o.price) || 0;
-            });
-            try {
-                const feedRes = await db.collection('feedingOrders').where({ ownerId: _.in(invitedOpenids), status: 'completed' }).limit(1000).get();
-                (feedRes.data || []).forEach((o) => {
-                    if (o.ownerId) {
-                        spenderOpenids.add(o.ownerId);
-                    }
-                    totalSpent += Number(o.totalPrice) || Number(o.price) || 0;
-                });
-            }
-            catch (e) {
-                logger.warn('getReferralStats.feedingOrders', {
-                    openid,
-                    code: e.errCode,
-                    msg: e.message,
-                });
-            }
-            try {
-                const tuanRes = await db.collection('tuan_orders').where({ ownerId: _.in(invitedOpenids), status: 'completed' }).limit(1000).get();
-                (tuanRes.data || []).forEach((o) => {
-                    if (o.ownerId) {
-                        spenderOpenids.add(o.ownerId);
-                    }
-                    totalSpent += Number(o.totalPrice) || Number(o.price) || 0;
-                });
-            }
-            catch (e) {
-                logger.warn('getReferralStats.tuan_orders', {
-                    openid,
-                    code: e.errCode,
-                    msg: e.message,
-                });
-            }
-            try {
-                const actRes = await db.collection('activity_registrations').where({ ownerId: _.in(invitedOpenids), status: 'completed' }).limit(1000).get();
-                (actRes.data || []).forEach((o) => {
-                    if (o.ownerId) {
-                        spenderOpenids.add(o.ownerId);
-                    }
-                    totalSpent += Number(o.totalPrice) || Number(o.price) || 0;
-                });
-            }
-            catch (e) {
-                logger.warn('getReferralStats.activity_registrations', {
-                    openid,
-                    code: e.errCode,
-                    msg: e.message,
-                });
-            }
-            consumingCount = spenderOpenids.size;
+        // M8: 用 count() 替代 limit(500).get().length，避免超过 500 时漏统计
+        const countRes = await db.collection('users').where({ inviterId: openid }).count();
+        const totalInvited = countRes.total || 0;
+        if (totalInvited === 0) {
+            return handleSuccess({ totalInvited: 0, consumingCount: 0, totalSpent: '0.00' });
         }
+        // M2+M8: 改用 aggregate 在数据库侧统计，避免 limit(1000) 静默截断
+        //   优化前：5 次 limit(1000).get() + 内存累加，超过 1000 单时数据偏低
+        //   优化后：5 次 aggregate sum，无截断风险，DB 侧完成计算
+        const $ = _.aggregate;
+        const sumAggregate = async (collection, match) => {
+            try {
+                const aggRes = await db.collection(collection)
+                    .aggregate()
+                    .match(match)
+                    .group({
+                    _id: null,
+                    total: $.sum('$totalPrice'),
+                    count: $.sum(1),
+                })
+                    .end();
+                if (aggRes.list && aggRes.list.length > 0) {
+                    const r = aggRes.list[0];
+                    // 仍需拉取订单列表用于统计 spenderOpenids，但用 aggregate 计算金额
+                    const listRes = await db.collection(collection).where(match).field({ ownerId: true }).limit(5000).get();
+                    const openids = new Set();
+                    (listRes.data || []).forEach((o) => {
+                        if (o.ownerId) {
+                            openids.add(o.ownerId);
+                        }
+                    });
+                    return { count: Number(r.count) || 0, sum: Number(r.total) || 0, openids };
+                }
+            }
+            catch (e) {
+                logger.warn(`getReferralStats.${collection}.aggregate`, {
+                    openid, msg: e.message,
+                });
+            }
+            return { count: 0, sum: 0, openids: new Set() };
+        };
+        const spenderOpenids = new Set();
+        let totalSpent = 0;
+        // M2: 一次性查询所有被邀请人 openids，避免重复查询
+        const invitedOpenids = await getInvitedOpenids(openid || '');
+        if (invitedOpenids.length === 0) {
+            return handleSuccess({ totalInvited, consumingCount: 0, totalSpent: '0.00' });
+        }
+        // P2-007: 第一条查询需排除 type='mall'，避免与第二条 mall 专查重复累计
+        const [ordersAgg, mallAgg] = await Promise.all([
+            sumAggregate('orders', { ownerId: _.in(invitedOpenids), status: 'completed', type: _.ne('mall') }),
+            sumAggregate('orders', { ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' }),
+        ]);
+        totalSpent += ordersAgg.sum + mallAgg.sum;
+        ordersAgg.openids.forEach(id => spenderOpenids.add(id));
+        mallAgg.openids.forEach(id => spenderOpenids.add(id));
+        const [feedingAgg, tuanAgg, actAgg] = await Promise.all([
+            sumAggregate('feedingOrders', { ownerId: _.in(invitedOpenids), status: 'completed' }),
+            sumAggregate('tuan_orders', { ownerId: _.in(invitedOpenids), status: 'completed' }),
+            sumAggregate('activity_registrations', { ownerId: _.in(invitedOpenids), status: 'completed' }),
+        ]);
+        totalSpent += feedingAgg.sum + tuanAgg.sum + actAgg.sum;
+        feedingAgg.openids.forEach(id => spenderOpenids.add(id));
+        tuanAgg.openids.forEach(id => spenderOpenids.add(id));
+        actAgg.openids.forEach(id => spenderOpenids.add(id));
+        const consumingCount = spenderOpenids.size;
         return handleSuccess({ totalInvited, consumingCount, totalSpent: totalSpent.toFixed(2) });
     }
     catch (error) {
@@ -143,9 +142,22 @@ async function getReferralStats(event, context, auth) {
     }
 }
 exports.getReferralStats = getReferralStats;
+// M2: 缓存当前用户的被邀请人 openids 列表（同一次请求内复用）
+async function getInvitedOpenids(inviterId) {
+    const res = await db.collection('users')
+        .where({ inviterId })
+        .field({ _id: true })
+        .limit(5000)
+        .get();
+    return (res.data || []).map((u) => u._id).filter((id) => Boolean(id));
+}
 async function getMyInvitedUsers(event, context, auth) {
     const { openid } = auth;
-    const { page = 1, pageSize = 20 } = event;
+    // M9: 分页参数边界校验——page >= 1，pageSize 范围 [1, 100]
+    //   原：未限制上限，传入 pageSize=9999 会拉取全表数据
+    //   原：page=0 / -1 会导致 skip 负数（CloudBase 会按 0 处理，但行为不明确）
+    const page = Math.max(1, Math.floor(Number(event.page) || 1));
+    const pageSize = Math.min(100, Math.max(1, Math.floor(Number(event.pageSize) || 20)));
     try {
         let user = null;
         try {
@@ -171,38 +183,47 @@ async function getMyInvitedUsers(event, context, auth) {
             .limit(pageSize)
             .field({ nickName: true, avatarUrl: true, createdAt: true })
             .get();
-        const invitedList = [];
-        for (const u of (invitedRes.data || [])) {
-            let orderCount = 0;
-            let totalSpent = 0;
-            try {
-                const [mallRes, feedingRes, tuanRes, activityRes, boardingRes] = await Promise.all([
-                    db.collection('orders').where({ ownerId: u._id, type: 'mall', status: _.in(['paid', 'shipped', 'completed']) }).get(),
-                    db.collection('feedingOrders').where({ ownerId: u._id, status: 'completed' }).get(),
-                    db.collection('tuan_orders').where({ ownerId: u._id, status: _.in(['paid', 'completed']) }).get(),
-                    db.collection('activity_registrations').where({ ownerId: u._id, status: 'confirmed' }).get(),
-                    db.collection('orders').where({ ownerId: u._id, status: 'completed', type: 'boarding' }).get(),
-                ]);
-                const mall = countAndSum(mallRes);
-                const feeding = countAndSum(feedingRes);
-                const tuan = countAndSum(tuanRes);
-                const activity = countAndSum(activityRes);
-                const boarding = countAndSum(boardingRes);
-                orderCount = mall.c + feeding.c + tuan.c + activity.c + boarding.c;
-                totalSpent = mall.s + feeding.s + tuan.s + activity.s + boarding.s;
-            }
-            catch (e) {
-                logger.warn('getMyInvitedUsers.consume', { msg: e.message });
-            }
-            invitedList.push({
+        const invitedUsers = (invitedRes.data || []);
+        // M2: 批量查询——一次性拉取所有被邀请用户的订单，按 ownerId 分组在内存累加
+        //   优化前：N 个用户 × 5 次 DB 查询 = 100 次（N=20）
+        //   优化后：5 次 DB 查询（用 _.in() 批量查所有用户）
+        const invitedOpenids = invitedUsers.map(u => u._id).filter(Boolean);
+        const statsByUser = new Map();
+        if (invitedOpenids.length > 0) {
+            const [mallRes, feedingRes, tuanRes, activityRes, boardingRes] = await Promise.all([
+                db.collection('orders').where({ ownerId: _.in(invitedOpenids), type: 'mall', status: _.in(['paid', 'shipped', 'completed']) }).limit(5000).get().catch((e) => { logger.warn('getMyInvitedUsers.mall', { msg: e.message }); return { data: [] }; }),
+                db.collection('feedingOrders').where({ ownerId: _.in(invitedOpenids), status: 'completed' }).limit(5000).get().catch((e) => { logger.warn('getMyInvitedUsers.feeding', { msg: e.message }); return { data: [] }; }),
+                db.collection('tuan_orders').where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) }).limit(5000).get().catch((e) => { logger.warn('getMyInvitedUsers.tuan', { msg: e.message }); return { data: [] }; }),
+                db.collection('activity_registrations').where({ ownerId: _.in(invitedOpenids), status: 'confirmed' }).limit(5000).get().catch((e) => { logger.warn('getMyInvitedUsers.activity', { msg: e.message }); return { data: [] }; }),
+                db.collection('orders').where({ ownerId: _.in(invitedOpenids), status: 'completed', type: 'boarding' }).limit(5000).get().catch((e) => { logger.warn('getMyInvitedUsers.boarding', { msg: e.message }); return { data: [] }; }),
+            ]);
+            const accumulate = (res) => {
+                for (const o of (res.data || [])) {
+                    if (!o.ownerId)
+                        continue;
+                    const s = statsByUser.get(o.ownerId) || { orderCount: 0, totalSpent: 0 };
+                    s.orderCount++;
+                    s.totalSpent += Number(o.totalPrice) || Number(o.totalAmount) || Number(o.price) || 0;
+                    statsByUser.set(o.ownerId, s);
+                }
+            };
+            accumulate(mallRes);
+            accumulate(feedingRes);
+            accumulate(tuanRes);
+            accumulate(activityRes);
+            accumulate(boardingRes);
+        }
+        const invitedList = invitedUsers.map((u) => {
+            const s = statsByUser.get(u._id) || { orderCount: 0, totalSpent: 0 };
+            return {
                 _id: u._id,
                 nickName: u.nickName || '',
                 avatarUrl: u.avatarUrl || '',
                 createdAt: u.createdAt,
-                orderCount,
-                totalSpent: Math.round(totalSpent * 100) / 100,
-            });
-        }
+                orderCount: s.orderCount,
+                totalSpent: Math.round(s.totalSpent * 100) / 100,
+            };
+        });
         return handleSuccess({ list: invitedList, total });
     }
     catch (error) {
@@ -213,7 +234,19 @@ async function getMyInvitedUsers(event, context, auth) {
 exports.getMyInvitedUsers = getMyInvitedUsers;
 async function getReferralOrders(event, context, auth) {
     const { openid } = auth;
-    const { type = 'all', status, page = 1, pageSize = 20 } = event;
+    // M9: 参数白名单与范围校验
+    //   type: 业务支持的 orderType（tuan/mall 等）+ 'all' 全部
+    //   status: 限制为业务有效状态，避免任意字符串注入
+    //   page/pageSize: 与 getMyInvitedUsers 一致的边界
+    // M10: ALLOWED_TYPES 收窄为业务实际支持的带货 orderType
+    //   commissions 仅写入 tuan/mall 两类 orderType，boarding/feeding/activity 不产生带货佣金
+    //   保留无效选项会误导前端传入永远查不到数据的类型
+    const ALLOWED_TYPES = ['all', 'tuan', 'mall'];
+    const ALLOWED_STATUSES = ['pending', 'settled', 'cancelled'];
+    const type = typeof event.type === 'string' && ALLOWED_TYPES.includes(event.type) ? event.type : 'all';
+    const status = typeof event.status === 'string' && ALLOWED_STATUSES.includes(event.status) ? event.status : null;
+    const page = Math.max(1, Math.floor(Number(event.page) || 1));
+    const pageSize = Math.min(100, Math.max(1, Math.floor(Number(event.pageSize) || 20)));
     try {
         let user = null;
         try {
@@ -230,20 +263,23 @@ async function getReferralOrders(event, context, auth) {
         if (!user) {
             return handleSuccess({ list: [], total: 0 });
         }
-        // inviterId 现在存的是 openid，直接用 openid 查询 tuan_commissions
-        const where = { 
-            inviterId: openid,
-            status: _.neq('cancelled')  // 默认排除已取消的佣金
-        };
-        if (type && type !== 'all') {
+        // inviterId 现在存的是 openid，直接用 openid 查询 commissions
+        // M9: status 逻辑冲突修复——原代码同时设置 status: _.neq('cancelled') 与 status: event.status
+        //   会导致 where.status 字段被覆盖，最终行为不确定（取决于 CloudBase 实现）
+        //   新逻辑：未传 status 时默认排除 cancelled；传 status 时按用户指定值精确查询
+        const where = { inviterId: openid };
+        if (type !== 'all') {
             where.orderType = type;
         }
         if (status) {
             where.status = status;
         }
-        const countRes = await db.collection('tuan_commissions').where(where).count();
+        else {
+            where.status = _.neq('cancelled');
+        }
+        const countRes = await db.collection('commissions').where(where).count();
         const total = countRes.total || 0;
-        const res = await db.collection('tuan_commissions')
+        const res = await db.collection('commissions')
             .where(where)
             .orderBy('createdAt', 'desc')
             .skip((page - 1) * pageSize)
@@ -268,7 +304,14 @@ async function getReferralOrders(event, context, auth) {
 exports.getReferralOrders = getReferralOrders;
 async function getReferralOrderStats(event, context, auth) {
     const { openid } = auth;
-    const { type = 'all' } = event;
+    // M10: type 参数白名单校验，避免任意字符串注入
+    //   commissions 仅写入 tuan/mall 两类 orderType，收窄白名单与 getReferralOrders 对齐
+    const ALLOWED_TYPES = ['all', 'tuan', 'mall'];
+    const rawType = typeof event.type === 'string' ? event.type : 'all';
+    if (!ALLOWED_TYPES.includes(rawType)) {
+        throw err('INVALID_PARAMS', `无效的 type，仅支持：${ALLOWED_TYPES.join(', ')}`);
+    }
+    const type = rawType;
     try {
         let user = null;
         try {
@@ -285,31 +328,47 @@ async function getReferralOrderStats(event, context, auth) {
         if (!user) {
             return handleSuccess({ totalOrders: 0, totalCommission: 0, pendingCommission: 0, settledCommission: 0 });
         }
-        // inviterId 现在存的是 openid，直接用 openid 查询 tuan_commissions
-        const where = {
-            inviterId: openid,
-            status: _.neq('cancelled')  // 排除已取消的佣金
-        };
-        if (type && type !== 'all') {
+        // inviterId 现在存的是 openid，直接用 openid 查询 commissions
+        const where = { inviterId: openid };
+        if (type !== 'all') {
             where.orderType = type;
         }
-        const res = await db.collection('tuan_commissions').where(where).get();
-        let totalOrders = 0;
-        let totalCommission = 0;
-        let pendingCommission = 0;
-        let settledCommission = 0;
-        (res.data || []).forEach((c) => {
-            totalOrders++;
-            const amt = Number(c.commissionAmount) || 0;
-            totalCommission += amt;
-            if (c.status === 'pending') {
-                pendingCommission += amt;
+        // M2: 改用 aggregate 在数据库侧统计，避免全量 get() 导致的 OOM 风险
+        //   原：db.collection().where().get() 后内存累加（无 limit，大数据集会 OOM）
+        //   新：3 次 aggregate（按 status 分组），DB 侧完成计算
+        //   参考 getReferralStats 中的 sumAggregate 模式
+        const $ = _.aggregate;
+        const statsByStatus = async (statusFilter) => {
+            try {
+                const aggRes = await db.collection('commissions')
+                    .aggregate()
+                    .match({ ...where, ...statusFilter })
+                    .group({ _id: null, total: $.sum('$commissionAmount'), count: $.sum(1) })
+                    .end();
+                if (aggRes.list && aggRes.list.length > 0) {
+                    const r = aggRes.list[0];
+                    return { count: Number(r.count) || 0, sum: Number(r.total) || 0 };
+                }
             }
-            if (c.status === 'settled') {
-                settledCommission += amt;
+            catch (e) {
+                logger.warn('getReferralOrderStats.aggregate', {
+                    openid, msg: e.message,
+                });
             }
+            return { count: 0, sum: 0 };
+        };
+        // status: _.neq('cancelled') 排除已取消的佣金单
+        const [allAgg, pendingAgg, settledAgg] = await Promise.all([
+            statsByStatus({ status: _.neq('cancelled') }),
+            statsByStatus({ status: 'pending' }),
+            statsByStatus({ status: 'settled' }),
+        ]);
+        return handleSuccess({
+            totalOrders: allAgg.count,
+            totalCommission: allAgg.sum,
+            pendingCommission: pendingAgg.sum,
+            settledCommission: settledAgg.sum,
         });
-        return handleSuccess({ totalOrders, totalCommission, pendingCommission, settledCommission });
     }
     catch (error) {
         logger.error('getReferralOrderStats', error);

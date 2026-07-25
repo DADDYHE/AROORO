@@ -594,7 +594,7 @@ async function createCommission(orderType, order) {
   // 关键：金额 × 费率 结果用 (rate / 100) 并 toFixed(2) 保留 2 位小数
   const amount = Math.round(Number(order.totalPrice) * (rate / 100) * 100) / 100
 
-  await db.collection('tuan_commissions').add({
+  await db.collection('commissions').add({
     data: {
       orderId: order._id,
       inviterId: inviter._id,
@@ -610,7 +610,7 @@ async function createCommission(orderType, order) {
 }
 ```
 
-**幂等保证**：业务层在调用 `createCommission` 之前先 `where({ orderId, orderType }).count()`，count>0 直接 return。`tuan_commissions` 集合的 `_id` 设为 `orderId + ':' + orderType` 也可作为天然去重 key。
+**幂等保证**：业务层在调用 `createCommission` 之前先 `where({ orderId, orderType }).count()`，count>0 直接 return。`commissions` 集合的 `_id` 设为 `orderId + ':' + orderType` 也可作为天然去重 key。
 
 ---
 

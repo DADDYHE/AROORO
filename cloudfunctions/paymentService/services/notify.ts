@@ -42,6 +42,9 @@ import type { CloudBaseDB } from '../../common/types'
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { WECHAT_PAY } = require('../common/config')
+// P0-6: 资金事务失败主动告警
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('../../common/alert')
 
 // =====================================================================
 // 类型定义
@@ -239,11 +242,23 @@ function verifySignature(
   }
 
   const message = `${timestamp}\n${nonce}\n${rawBody}\n`
-  const publicKey = crypto.createPublicKey(certOrKey)
+  // M1: createPublicKey 失败时错误信息可能包含证书片段，需包装为业务错误
+  let publicKey
+  try {
+    publicKey = crypto.createPublicKey(certOrKey)
+  } catch (e) {
+    throw err('PAYMENT_NOTIFY_INVALID', '平台证书格式无效')
+  }
   const verify = crypto.createVerify('SHA256withRSA')
   verify.update(message)
   verify.end()
-  const isValid = verify.verify(publicKey, Buffer.from(signature, 'base64'))
+  let isValid = false
+  try {
+    isValid = verify.verify(publicKey, Buffer.from(signature, 'base64'))
+  } catch (e) {
+    // verify 失败视为签名无效，不泄露底层错误
+    isValid = false
+  }
   if (!isValid) {
     throw err('PAYMENT_NOTIFY_INVALID', '签名验证失败')
   }
@@ -255,72 +270,137 @@ function verifySignature(
 
 /**
  * 推进订单状态：paymentStatus=paid + 同步状态字段 + 跨表同步
+ *
+ * P4-3-4: 订单状态更新 + 业务表同步 + 活动名额递增 纳入单一事务
+ * 旧实现各步独立 try/catch，任一步失败留下中间状态（如订单已支付但活动名额未递增）。
+ * 新实现：事务前查询 _id 列表（CloudBase 事务内不支持 where().update()），
+ * 然后在单一事务内逐个 doc(id).update()，任一失败整体回滚。
  */
 async function applyPaidStatus(
   orderType: OrderType,
   existingOrder: NotifyOrderDoc,
   transactionId: string | undefined
-): Promise<void> {
+): Promise<boolean> {
   const collection = ORDER_TYPE_COLLECTION[orderType]
+  const serverDate = db.serverDate()
   const updateData: Record<string, unknown> = {
     paymentStatus: 'paid',
     transactionId: transactionId || '',
-    paidAt: db.serverDate(),
-    updatedAt: db.serverDate(),
+    paidAt: serverDate,
+    updatedAt: serverDate,
   }
 
   if (orderType === 'order' || orderType === 'mall') {
     updateData.status = 'paid'
   } else if (orderType === 'tuan') {
     updateData.status = 'paid'
-    // 通过 tuanOrderId 关联更新 tuan_orders
-    const tuanOrderId = (existingOrder as Record<string, unknown>).tuanOrderId as string
-    if (tuanOrderId) {
-      try {
-        await db.collection('tuan_orders').doc(tuanOrderId).update({
-          data: {
-            status: 'paid',
-            paymentStatus: 'paid',
-            transactionId: transactionId || '',
-            paidAt: db.serverDate(),
-            updatedAt: db.serverDate(),
-          },
-        })
-      } catch (e) {
-        logger.warn('paymentNotify tuan_orders sync', {
-          tuanOrderId,
-          msg: (e as Error)?.message,
-        })
-      }
-    }
   } else if (orderType === 'activity') {
     updateData.status = 'confirmed'
-    try {
-      await db.collection('orders').where({
-        activityId: existingOrder.activityId,
-        ownerId: existingOrder.openid,
-        orderType: 'activity',
-      }).limit(1).update({
-        data: { status: 'confirmed', paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
-      })
-    } catch (e) {
-      logger.warn('paymentNotify activity sync', {
-        outTradeNo: existingOrder.outTradeNo,
-        msg: (e as Error)?.message,
-      })
-    }
   } else if (orderType === 'feeding') {
     updateData.status = 'confirmed'
   }
 
-  await db.collection(collection).doc(existingOrder._id).update({ data: updateData })
+  // 事务前：查询需要在事务内更新的关联文档 _id 列表
+  let relatedOrderIds: string[] = []
+  const tuanOrderId = (existingOrder as Record<string, unknown>).tuanOrderId as string | undefined
+
+  if (orderType === 'activity' && existingOrder.activityId && existingOrder.openid) {
+    try {
+      const relatedRes = await db.collection('orders')
+        .where({
+          activityId: existingOrder.activityId,
+          ownerId: existingOrder.openid,
+          orderType: 'activity',
+        })
+        .field({ _id: true } as Record<string, true>)
+        .limit(5)
+        .get()
+      relatedOrderIds = (((relatedRes && relatedRes.data) || []) as Array<{ _id: string }>)
+        .map((r) => r._id)
+    } catch (e) {
+      logger.warn('paymentNotify queryRelatedOrders.failed', {
+        outTradeNo: existingOrder.outTradeNo,
+        msg: (e as Error)?.message,
+      })
+    }
+  }
+
+  const transaction = await db.startTransaction()
+  try {
+    // 1) 更新主集合文档（activity_registrations / orders / feedingOrders）
+    await transaction.collection(collection).doc(existingOrder._id).update({ data: updateData })
+
+    // 2) 同步业务表
+    if (orderType === 'tuan' && tuanOrderId) {
+      await transaction.collection('tuan_orders').doc(tuanOrderId).update({
+        data: {
+          status: 'paid',
+          paymentStatus: 'paid',
+          transactionId: transactionId || '',
+          paidAt: serverDate,
+          updatedAt: serverDate,
+        },
+      })
+    }
+
+    if (orderType === 'activity') {
+      // 2a) 同步关联的 orders 文档
+      for (const oid of relatedOrderIds) {
+        await transaction.collection('orders').doc(oid).update({
+          data: { status: 'confirmed', paymentStatus: 'paid', paidAt: serverDate, updatedAt: serverDate },
+        })
+      }
+
+      // 2b) P4-3-4: 活动名额递增（currentParticipants）
+      // 修复：按报名单实际 participantCount 递增，避免团体/多宠报名（participantCount > 1）少计名额。
+      // 旧实现硬编码 inc(1)，导致多人报名时 currentParticipants 与实际支付人数不一致。
+      // 注意：免费活动在 submitRegistration 提交时已按 pCount 递增，付费活动延迟到此回调递增一次（见 activityService.submitRegistration）。
+      if (existingOrder.activityId) {
+        const pCount = Math.max(1, Math.floor(Number((existingOrder as Record<string, unknown>).participantCount) || 1))
+        await transaction.collection('activities').doc(existingOrder.activityId).update({
+          data: { currentParticipants: db.command.inc(pCount), updatedAt: serverDate },
+        })
+      }
+    }
+
+    await transaction.commit()
+    logger.info('paymentNotify.applyPaidStatus.transaction.success', {
+      orderId: existingOrder._id,
+      orderType,
+      relatedCount: relatedOrderIds.length,
+    })
+    return true
+  } catch (txError) {
+    try { await transaction.rollback() } catch (_) { /* ignore rollback error */ }
+    logger.error('paymentNotify.applyPaidStatus.transaction.failed', {
+      orderId: existingOrder._id,
+      orderType,
+      msg: (txError as Error)?.message,
+      alert: '支付回调 DB 状态同步失败，需人工对账',
+    })
+    // P0-6: 持久化告警，供运维主动查询对账
+    await recordAlert(
+      'critical',
+      'paymentNotify.applyPaidStatus.transaction.failed',
+      '支付回调 DB 状态同步失败，需人工对账',
+      {
+        orderId: existingOrder._id,
+        orderType,
+        outTradeNo: existingOrder.outTradeNo,
+        transactionId: transactionId || '',
+        error: (txError as Error)?.message,
+      }
+    )
+    // 不抛错：微信支付回调需要返回 SUCCESS 避免重试轰炸
+    return false
+  }
 }
 
 /**
  * 触发 commission 记录（best-effort）
  */
 async function triggerCommission(orderType: string, order: NotifyOrderDoc): Promise<void> {
-  if (orderType !== 'mall' && orderType !== 'tuan') { return }
+  if (orderType !== 'mall' && orderType !== 'tuan' && orderType !== 'feeding') { return }
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { createCommissionRecord } = require('./commission')
@@ -329,6 +409,73 @@ async function triggerCommission(orderType: string, order: NotifyOrderDoc): Prom
     logger.error('paymentNotify commission', {
       msg: (commissionErr as Error)?.message,
     })
+  }
+}
+
+/**
+ * H2: 核销 feeding 订单关联的优惠券（best-effort）
+ *
+ * 流程：
+ *   - 仅 feeding 类型订单需要在此核销（mall/tuan 由前端在支付成功后调用 useCoupon）
+ *   - feedingService.createFeedingOrder 已在订单创建时锁定券（lockCoupon）
+ *   - 此处在支付成功后调用 couponService.useCoupon 完成「锁定 → 已使用」状态转换
+ *   - 失败不阻塞回调返回，仅记日志 + 告警，避免微信支付重复通知
+ *
+ * 注意：
+ *   - 跨云函数调用使用 cloud.callFunction（paymentService 内已有 cloud 实例）
+ *   - orderId 必须为 feedingOrders 集合的 _id，与 lockCoupon 时传入的 orderId 一致
+ */
+async function triggerFeedingCouponUse(order: NotifyOrderDoc): Promise<void> {
+  const couponId = (order as Record<string, unknown>).couponId as string | undefined
+  if (!couponId) { return }
+
+  const orderId = order._id
+  const originalAmount = Number((order as Record<string, unknown>).originalAmount) || 0
+  const couponDiscount = Number((order as Record<string, unknown>).couponDiscount) || 0
+  const finalAmount = Number((order as Record<string, unknown>).totalAmount) || 0
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { initCloud } = require('../../common/utils')
+    const { cloud } = initCloud()
+    const useResult = await cloud.callFunction({
+      name: 'couponService',
+      data: {
+        action: 'useCoupon',
+        couponId,
+        orderId,
+        business: 'feeding',
+        originalAmount,
+        discountAmount: couponDiscount,
+        finalAmount,
+      },
+    })
+    const useRes = useResult && (useResult.result as { code?: number; message?: string })
+    if (!useRes || useRes.code !== 0) {
+      logger.warn('paymentNotify.feeding.useCoupon.failed', {
+        orderId, couponId, msg: useRes && useRes.message,
+      })
+      try {
+        await recordAlert('warning', 'paymentNotify.feeding.useCoupon.failed',
+          '喂养订单优惠券核销失败，需人工核对',
+          {
+            orderId, outTradeNo: order.outTradeNo, couponId,
+            message: useRes && useRes.message,
+          })
+      } catch (_) { /* best-effort */ }
+    }
+  } catch (useErr) {
+    logger.error('paymentNotify.feeding.useCoupon.exception', {
+      orderId, couponId, msg: (useErr as Error)?.message,
+    })
+    try {
+      await recordAlert('warning', 'paymentNotify.feeding.useCoupon.exception',
+        '喂养订单优惠券核销异常，需人工核对',
+        {
+          orderId, outTradeNo: order.outTradeNo, couponId,
+          error: (useErr as Error)?.message,
+        })
+    } catch (_) { /* best-effort */ }
   }
 }
 
@@ -373,6 +520,20 @@ export async function paymentNotify(
       return httpResponse(401, 'FAIL', '缺少签名头信息')
     }
 
+    // H3: timestamp 时效校验——拒绝 5 分钟外的回调，防重放
+    //   原逻辑未校验时效，攻击者可重放历史合法回调触发重复状态推进
+    //   微信回调时间戳为秒级 Unix 时间戳
+    const tsNum = Number(timestamp)
+    if (!Number.isFinite(tsNum) || tsNum <= 0) {
+      return httpResponse(401, 'FAIL', 'timestamp 格式非法')
+    }
+    const MAX_SKEW_SECONDS = 300 // 5 分钟
+    const skew = Math.abs(Math.floor(Date.now() / 1000) - tsNum)
+    if (skew > MAX_SKEW_SECONDS) {
+      logger.warn('paymentNotify: timestamp 超出时效', { timestamp, skew })
+      return httpResponse(401, 'FAIL', 'timestamp 超出时效')
+    }
+
     const rawBody = typeof e.body === 'string' ? e.body : JSON.stringify(e.body || {})
     const body = parseBody(e)
     const resource = body.resource || {}
@@ -383,20 +544,48 @@ export async function paymentNotify(
     if (!ciphertext) {
       return httpResponse(400, 'FAIL', '回调数据缺少 ciphertext')
     }
-    if (typeof ciphertext !== 'string' || ciphertext.length > 1024 * 1024) {
-      logger.error('paymentNotify: ciphertext 非法', { len: ciphertext.length })
+    // M3: ciphertext 长度上限收紧——实际微信回调 <1KB，1MB 过大易受内存/CPU 攻击
+    if (typeof ciphertext !== 'string' || ciphertext.length > 16 * 1024) {
+      logger.error('paymentNotify: ciphertext 非法', { len: typeof ciphertext === 'string' ? ciphertext.length : -1 })
       throw err('PAYMENT_NOTIFY_INVALID', '回调数据格式错误')
     }
 
     const wechatpayCertificate = WECHAT_PAY.certificate
     if (!wechatpayCertificate) {
+      // H10: 配置缺失时持久化告警，运维主动感知
+      //   微信收到 5xx 会重试 8 次（每次递增），重试期间配置若恢复可成功
+      //   原仅 logger.error 无持久化，运维无法主动发现
+      logger.error('paymentNotify: 微信支付平台证书/公钥未配置', new Error('certificate missing'))
+      await recordAlert(
+        'critical',
+        'paymentService.wechat_pay.misconfigured',
+        '微信支付平台证书/公钥未配置，回调全部失败',
+        { missing: 'certificate' }
+      ).catch((e: Error) => logger.error('recordAlert failed', { msg: e.message }))
       return httpResponse(500, 'FAIL', '未配置微信支付平台证书/公钥')
+    }
+
+    // H3: serial 头与商户证书序列号比对——防伪造回调
+    //   原逻辑解析了 serial 但未比对，攻击者持有任意合法 RSA 私钥即可构造通过验签的伪造回调
+    //   必须确认 serial 与本商户配置的平台证书序列号一致
+    const expectedSerial = WECHAT_PAY.serialNo
+    if (serial && expectedSerial && serial !== expectedSerial) {
+      logger.warn('paymentNotify: serial 不匹配', { serial, expectedSerial })
+      return httpResponse(401, 'FAIL', '证书序列号不匹配')
     }
 
     verifySignature(rawBody, timestamp, nonce, signature, wechatpayCertificate)
 
     const apiV3Key = WECHAT_PAY.apiV3Key
     if (!apiV3Key) {
+      // H10: 同 certificate 缺失，持久化告警
+      logger.error('paymentNotify: 微信支付API V3密钥未配置', new Error('apiV3Key missing'))
+      await recordAlert(
+        'critical',
+        'paymentService.wechat_pay.misconfigured',
+        '微信支付API V3密钥未配置，回调全部失败',
+        { missing: 'apiV3Key' }
+      ).catch((e: Error) => logger.error('recordAlert failed', { msg: e.message }))
       return httpResponse(500, 'FAIL', '未配置微信支付API V3密钥')
     }
 
@@ -425,8 +614,15 @@ export async function paymentNotify(
           return httpResponse(200, 'SUCCESS', 'OK')
         }
 
-        await applyPaidStatus(orderType, existingOrder, transaction_id)
-        await triggerCommission(orderType, existingOrder)
+        const paidSuccess = await applyPaidStatus(orderType, existingOrder, transaction_id)
+        // 仅当支付状态同步成功后才触发佣金记录，避免为未确认的订单创建佣金
+        if (paidSuccess) {
+          await triggerCommission(orderType, existingOrder)
+          // H2: feeding 订单支付成功后核销优惠券（mall/tuan 由前端调用 useCoupon）
+          if (orderType === 'feeding') {
+            await triggerFeedingCouponUse(existingOrder)
+          }
+        }
       } else {
         logger.warn('paymentNotify: 未找到订单', { outTradeNo: out_trade_no, orderType, serial })
       }

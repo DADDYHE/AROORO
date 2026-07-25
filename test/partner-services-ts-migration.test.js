@@ -238,12 +238,17 @@ describe('Sprint 36: partnerService services TypeScript 迁移', () => {
       expect(code).toMatch(/export\s+type\s+WalletHandler\b/)
     })
 
-    test('包含 sumOrders 函数', () => {
-      expect(code).toMatch(/function\s+sumOrders\s*\(/)
+    test('包含 safeAggSum 函数（H1: aggregate sum 替代内存累加）', () => {
+      // H1: sumOrders/sumCommissions 已被 safeAggSum 替代，避免 limit(100) 截断
+      expect(code).toMatch(/safeAggSum\s*=/)
     })
 
-    test('包含 sumCommissions 函数', () => {
-      expect(code).toMatch(/function\s+sumCommissions\s*\(/)
+    test('包含 CommissionOverview 接口（H3: 按 orderType 分组）', () => {
+      expect(code).toMatch(/export\s+interface\s+CommissionOverview\b/)
+    })
+
+    test('包含 ServiceIncomeOverview 接口（H3: 按 type 分组）', () => {
+      expect(code).toMatch(/export\s+interface\s+ServiceIncomeOverview\b/)
     })
 
     const ACTIONS = ['getMyIncomeOverview', 'getMyIncomeDetails', 'getMyWallet', 'getMyWithdrawals', 'requestWithdrawal']
@@ -299,8 +304,11 @@ describe('Sprint 36: partnerService services TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s36-partner-services-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s36-partner-services-ts:strict/)
+    test('ci:check 通过 audit:all:strict 聚合器包含本审计', () => {
+      // ci:check 已重构为 audit:all:strict 聚合器模式（scripts/audit-all.js 自动发现并运行所有 audit-*.js）
+      // 此处验证聚合器存在；脚本本身的运行时校验由 "audit 脚本可成功运行" 用例覆盖
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
+      expect(pkg.scripts['audit:all:strict']).toBeDefined()
     })
   })
 

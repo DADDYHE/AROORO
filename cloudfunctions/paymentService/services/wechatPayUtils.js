@@ -111,11 +111,34 @@ function rsaSign(privateKey, data) {
   return sign.sign(key, 'base64')
 }
 
-function httpsRequest(url, data, authorization, method = 'POST') {
+/**
+ * H8: 微信 API HTTPS 请求——必须设置超时，避免 hang 导致云函数 15s 超时
+ *
+ * 分级超时策略（毫秒）：
+ *   - GET 查询类（queryPayment/queryRefund）：5000ms——查询应快速响应
+ *   - POST 下单类（createPayment）：8000ms——下单可能稍慢
+ *   - POST 退款类（createRefund）：12000ms——退款涉及资金清算，给予充分时间
+ *   - 默认：10000ms
+ *
+ * 超时后主动 destroy 连接，释放资源并 reject，调用方可重试或上抛
+ *
+ * L2: 响应拼接改用 Buffer.concat——避免 += 字符串的 O(n²) 性能问题
+ */
+const DEFAULT_HTTP_TIMEOUT_MS = 10000
+const TIMEOUT_BY_METHOD = {
+  GET: 5000,
+  POST: 8000,
+  REFUND: 12000, // createRefund 调用时通过 options.timeoutHint = 'REFUND' 传入
+}
+
+function httpsRequest(url, data, authorization, method = 'POST', options = {}) {
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url)
     const bodyStr = method === 'GET' ? '' : JSON.stringify(data)
-    const options = {
+    // H8: 按调用类型分级超时
+    const timeoutHint = options.timeoutHint && TIMEOUT_BY_METHOD[options.timeoutHint]
+    const timeoutMs = timeoutHint || DEFAULT_HTTP_TIMEOUT_MS
+    const reqOptions = {
       hostname: urlObj.hostname,
       port: 443,
       path: urlObj.pathname + urlObj.search,
@@ -128,24 +151,32 @@ function httpsRequest(url, data, authorization, method = 'POST') {
       },
     }
     if (method === 'POST') {
-      options.headers['Content-Length'] = Buffer.byteLength(bodyStr)
+      reqOptions.headers['Content-Length'] = Buffer.byteLength(bodyStr)
     }
 
-    const req = https.request(options, res => {
-      let chunks = ''
-      res.on('data', chunk => { chunks += chunk })
+    const req = https.request(reqOptions, res => {
+      // L2: 用 Buffer 数组替代字符串拼接，避免大响应 O(n²)
+      const chunks = []
+      res.on('data', chunk => { chunks.push(Buffer.from(chunk)) })
       res.on('end', () => {
         try {
-          const json = JSON.parse(chunks || '{}')
+          const body = Buffer.concat(chunks).toString('utf8')
+          const json = JSON.parse(body || '{}')
           if (res.statusCode >= 200 && res.statusCode < 300) {
             resolve(json)
           } else {
             reject(new Error(`HTTP ${res.statusCode}: ${JSON.stringify(json)}`))
           }
         } catch (e) {
-          reject(new Error(`解析响应失败：${chunks}`))
+          const body = Buffer.concat(chunks).toString('utf8')
+          reject(new Error(`解析响应失败：${body}`))
         }
       })
+    })
+
+    // H8: 设置超时——超时后 destroy 连接，触发 'error' 事件
+    req.setTimeout(timeoutMs, () => {
+      req.destroy(new Error(`wechat_api_timeout after ${timeoutMs}ms`))
     })
     req.on('error', reject)
     if (method === 'POST') {req.write(bodyStr)}

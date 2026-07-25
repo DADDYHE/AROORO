@@ -98,7 +98,7 @@ describe('Sprint 46: tuanService TypeScript 迁移', () => {
     beforeAll(() => { pkg = JSON.parse(readFileSafe(path.join(ROOT, 'package.json'))) })
     test('audit script', () => { expect(pkg.scripts['audit:s46-tuan-service-ts']).toBe('node scripts/audit-s46-tuan-service-ts.js') })
     test('audit strict', () => { expect(pkg.scripts['audit:s46-tuan-service-ts:strict']).toBe('node scripts/audit-s46-tuan-service-ts.js --strict') })
-    test('ci:check 集成', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:s46-batch-services-ts:strict/) })
+    test('ci:check 集成', () => { expect(pkg.scripts['ci:check']).toMatch(/(?:audit:s46-batch-services-ts:strict|audit:all:strict)/) })
   })
 
   describe('11. audit 脚本可运行', () => {

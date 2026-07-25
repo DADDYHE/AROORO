@@ -60,10 +60,12 @@ async function list(event, context, auth) {
         throw err('AUTH_REQUIRED', '未登录');
     }
     try {
+        // L6 修复：list 加 .limit(50) 兜底，避免无上限拉取（地址通常 <20 条，50 足够且防异常）
         const result = await db.collection('addresses')
             .where({ openid })
             .orderBy('isDefault', 'desc')
             .orderBy('createdAt', 'desc')
+            .limit(50)
             .get();
         return handleSuccess(result.data || [], '获取地址列表成功');
     }
@@ -203,12 +205,31 @@ async function setDefault(event, context, auth) {
         if (!existData || existData.openid !== openid) {
             throw err('PERMISSION_DENIED', '无权限操作此地址');
         }
-        await db.collection('addresses')
-            .where({ openid, isDefault: true })
-            .update({ data: { isDefault: false } });
-        await db.collection('addresses').doc(addressId).update({
-            data: { isDefault: true, updatedAt: db.serverDate() },
-        });
+        // M4 修复：并发 setDefault 竞态保护。两个并发请求都基于"当前默认地址"快照做置否+置真，
+        // 后到者会遗留前者的多余默认地址。用事务保证"清默认+置真"原子，且事务内重查默认地址。
+        const transaction = await db.startTransaction();
+        try {
+            const defaultsRes = await transaction.collection('addresses')
+                .where({ openid, isDefault: true })
+                .get();
+            const defaultIds = (defaultsRes.data || [])
+                .map((d) => d._id)
+                .filter((id) => Boolean(id));
+            for (const id of defaultIds) {
+                if (id === addressId) {
+                    continue;
+                } // 目标地址稍后单独置真，跳过
+                await transaction.collection('addresses').doc(id).update({ data: { isDefault: false } });
+            }
+            await transaction.collection('addresses').doc(addressId).update({
+                data: { isDefault: true, updatedAt: db.serverDate() },
+            });
+            await transaction.commit();
+        }
+        catch (txErr) {
+            await transaction.rollback().catch(() => { });
+            throw txErr;
+        }
         return handleSuccess(null, '设置默认地址成功');
     }
     catch (error) {

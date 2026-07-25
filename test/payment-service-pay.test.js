@@ -84,6 +84,8 @@ const mockDb = {
                 if (!v.v.includes(doc[k])) {return false}
               } else if (v._op === 'eq') {
                 if (doc[k] !== v.v) {return false}
+              } else if (v._op === 'neq') {
+                if (doc[k] === v.v) {return false}
               }
               continue
             }
@@ -94,6 +96,11 @@ const mockDb = {
         return {
           limit: n => ({ get: async () => ({ data: docs }), update: async ({ data }) => docs.forEach(d => Object.assign(d, data)) }),
           get: async () => ({ data: docs }),
+          // H5: 支持 where().update() 条件更新——返回 stats.updated 供业务判断是否命中
+          update: async ({ data }) => {
+            docs.forEach(d => Object.assign(d, data))
+            return { stats: { updated: docs.length } }
+          },
         }
       },
       add: async ({ data }) => {
@@ -106,6 +113,7 @@ const mockDb = {
   command: {
     in: arr => ({ _op: 'in', v: arr }),
     eq: v => ({ _op: 'eq', v }),
+    neq: v => ({ _op: 'neq', v }),
   },
   serverDate: () => 'MOCK_DATE',
 }

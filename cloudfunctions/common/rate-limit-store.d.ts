@@ -98,6 +98,11 @@ export declare function peekGlobalRateLimit(input: GlobalRateLimitInput, store: 
  * - 由定时任务调用（建议每 5-10 分钟一次）
  * - 也可由 CI 审计脚本调用
  *
+ * 性能优化（Sprint 51）：
+ *   - 原实现串行 doc().remove()，N 条记录需 N 次 DB 调用
+ *   - 改为 where + in + remove 批量删除，1 次 DB 调用完成
+ *   - 大幅减少云函数执行时间与数据库连接数
+ *
  * @returns 删除的记录数
  */
 export declare function cleanupExpiredRateLimits(store: GlobalRateLimitStore, batchSize?: number): Promise<number>;

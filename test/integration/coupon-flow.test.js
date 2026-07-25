@@ -79,8 +79,22 @@ const mockDb = {
   command: {
     in: arr => ({ _op: 'in', v: arr }),
     eq: v => ({ _op: 'eq', v }),
+    gt: v => ({ _op: 'gt', v }),
+    gte: v => ({ _op: 'gte', v }),
+    lt: v => ({ _op: 'lt', v }),
+    lte: v => ({ _op: 'lte', v }),
+    inc: v => ({ _op: 'inc', v }),
   },
   serverDate: () => 'MOCK_DATE',
+  // P0-5: 事务 mock（与 db.collection 共享同一数据集）
+  startTransaction: async () => {
+    const self = mockDb
+    return {
+      collection: self.collection.bind(self),
+      commit: async () => {},
+      rollback: async () => {},
+    }
+  },
 }
 
 global.__openid = 'oCouponTest'
@@ -96,6 +110,11 @@ beforeEach(() => {
   for (const k of Object.keys(mockDb._collections)) {
     mockDb._collections[k] = { docs: [] }
   }
+  // P0-6: 重置限流内存 store，避免测试间相互影响
+  try {
+    const { _resetStore } = require('../../cloudfunctions/couponService/common/risk-rate-limit')
+    if (typeof _resetStore === 'function') { _resetStore() }
+  } catch (e) { /* best-effort */ }
 })
 
 const { main: couponMain } = require('../../cloudfunctions/couponService/index')
@@ -281,25 +300,37 @@ describe('集成测试：优惠券核销子链路', () => {
     test('locked → used 状态', async () => {
       setupCoupon()
       const c = mockDb._collections.user_coupons.docs[0]
-      await callCoupon('useCoupon', { couponId: 'uc1' }, 'oUser1')
+      await callCoupon('useCoupon', { couponId: 'uc1', orderId: 'o1' }, 'oUser1')
       expect(c.status).toBe('used')
     })
 
     test('unused 状态的券不能直接核销（应先 lock）', async () => {
       setupCoupon({ status: 'unused' })
-      const res = await callCoupon('useCoupon', { couponId: 'uc1' }, 'oUser1')
+      const res = await callCoupon('useCoupon', { couponId: 'uc1', orderId: 'o1' }, 'oUser1')
       expect(res.code).not.toBe(0)
     })
 
     test('已 used 的券重复核销 → 拒绝', async () => {
       setupCoupon({ status: 'used' })
-      const res = await callCoupon('useCoupon', { couponId: 'uc1' }, 'oUser1')
+      const res = await callCoupon('useCoupon', { couponId: 'uc1', orderId: 'o1' }, 'oUser1')
       expect(res.code).not.toBe(0)
     })
 
     test('非 owner 调用 → PERMISSION_DENIED', async () => {
       setupCoupon()
-      const res = await callCoupon('useCoupon', { couponId: 'uc1' }, 'oOther')
+      const res = await callCoupon('useCoupon', { couponId: 'uc1', orderId: 'o1' }, 'oOther')
+      expect(res.code).not.toBe(0)
+    })
+
+    test('N3: 缺少 orderId → 拒绝', async () => {
+      setupCoupon()
+      const res = await callCoupon('useCoupon', { couponId: 'uc1' }, 'oUser1')
+      expect(res.code).not.toBe(0)
+    })
+
+    test('N4: items 为字符串 → 拒绝', async () => {
+      const res = await callCoupon('getAvailableCoupons',
+        { business: 'mall', amount: 100, items: 'abc' }, 'oUser1')
       expect(res.code).not.toBe(0)
     })
   })
@@ -350,7 +381,7 @@ describe('集成测试：优惠券核销子链路', () => {
       expect(uc.status).toBe('locked')
 
       // 3. 核销
-      await callCoupon('useCoupon', { couponId: uc._id }, 'oUser1')
+      await callCoupon('useCoupon', { couponId: uc._id, orderId: 'o1' }, 'oUser1')
       expect(uc.status).toBe('used')
     })
   })

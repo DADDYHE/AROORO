@@ -168,8 +168,8 @@ export async function getWxOrderStatus(params: {
       return { ok: true, data: result.order }
     }
     return { ok: false, error: result?.errmsg || `errcode=${result?.errcode}` }
-  } catch (e: any) {
-    return { ok: false, error: e?.message || String(e) }
+  } catch (e: unknown) {
+    return { ok: false, error: (e as Error)?.message || String(e) }
   }
 }
 

@@ -232,13 +232,15 @@ describe('Sprint 45: orderTimeoutService TypeScript 迁移', () => {
       code = readFileSafe(path.join(TS_DIR, 'index.ts'))
     })
 
-    test('寄养订单：status=pending + paymentStatus=unpaid', () => {
-      expect(code).toMatch(/status:\s*['"]pending['"]/)
+    test('寄养订单：status=pending_payment + paymentStatus=unpaid', () => {
+      // H1 修复后寄养订单查询使用 status='pending_payment'（与 mall/group_buy 一致）
+      expect(code).toMatch(/status:\s*['"]pending_payment['"]/)
       expect(code).toMatch(/paymentStatus:\s*['"]unpaid['"]/)
     })
 
-    test('喂养订单：status in [pending, pending_payment]', () => {
-      expect(code).toMatch(/_\.in\(\[?['"]pending['"]/)
+    test('喂养订单：status=pending_payment + paymentStatus=unpaid', () => {
+      // 与 feedingService 保持一致：待支付状态为 pending_payment
+      expect(code).toMatch(/status:\s*['"]pending_payment['"]/)
     })
 
     test('商城订单：type=mall + status=pending_payment', () => {
@@ -330,8 +332,8 @@ describe('Sprint 45: orderTimeoutService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s45-order-timeout-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s45-order-timeout-service-ts:strict/)
+    test('ci:check 包含 audit:s45-order-timeout-service-ts:strict 或 audit:all:strict', () => {
+      expect(pkg.scripts['ci:check']).toMatch(/audit:s45-order-timeout-service-ts:strict|audit:all:strict/)
     })
   })
 

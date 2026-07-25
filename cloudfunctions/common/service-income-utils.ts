@@ -6,7 +6,7 @@
  *   - 在特定时机（活动结束、订单完成）调用
  * 
  * 与佣金的区别：
- *   - 佣金：推广奖励，记录在 tuan_commissions 表
+ *   - 佣金：推广奖励，记录在 commissions 表
  *   - 收入：服务报酬，记录在 service_incomes 表
  */
 
@@ -16,6 +16,7 @@ const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
 
 const { cloud, db } = initCloud()
+const _ = db.command
 const logger = createLogger('service-income-utils')
 
 // =====================================================================
@@ -31,11 +32,12 @@ export interface ServiceIncomeRecord {
   orderId: string             // 关联订单ID
   orderNo?: string            // 订单编号
   amount: number              // 收入金额
-  status: 'pending' | 'completed'  // 收入状态
+  status: 'pending' | 'completed' | 'cancelled'  // 收入状态
   description?: string        // 收入描述
   createdAt?: Date
   updatedAt?: Date
   settledAt?: Date            // 结算时间
+  cancelledAt?: Date          // 取消时间
 }
 
 // =====================================================================
@@ -91,12 +93,28 @@ export async function createServiceIncomeRecord(
     }
 
     await db.collection('service_incomes').add({ data: record })
-    
-    logger.info('createServiceIncomeRecord: success', { 
-      providerId, 
-      type, 
-      orderId, 
-      amount 
+
+    // P0-1: 服务收入入账钱包（原子增 balance/totalIncome，幂等：已有记录则跳过）
+    try {
+      const { ensureWalletBalance } = require('./wallet-utils')
+      await ensureWalletBalance(providerId, amount, 'serviceIncome')
+    } catch (walletErr) {
+      logger.error('createServiceIncomeRecord: wallet update failed', {
+        providerId, type, orderId, amount,
+        error: walletErr instanceof Error ? walletErr.message : String(walletErr)
+      })
+      // 钱包更新失败不回滚收入记录（已创建），通过告警补偿
+      const { recordAlert } = require('./alert')
+      await recordAlert('critical', 'service.income.wallet.failed', '服务收入入账钱包失败', {
+        providerId, type, orderId, amount
+      })
+    }
+
+    logger.info('createServiceIncomeRecord: success', {
+      providerId,
+      type,
+      orderId,
+      amount
     })
   } catch (error) {
     logger.error('createServiceIncomeRecord: error', { 
@@ -154,16 +172,66 @@ export async function createActivityIncomeRecords(
       }
     }
 
-    logger.info('createActivityIncomeRecords: success', { 
-      activityId, 
-      creatorId, 
-      orderCount: ordersRes.data.length 
+    logger.info('createActivityIncomeRecords: success', {
+      activityId,
+      creatorId,
+      orderCount: ordersRes.data.length
     })
   } catch (error) {
-    logger.error('createActivityIncomeRecords: error', { 
-      activityId, 
-      creatorId, 
-      error: error instanceof Error ? error.message : String(error) 
+    logger.error('createActivityIncomeRecords: error', {
+      activityId,
+      creatorId,
+      error: error instanceof Error ? error.message : String(error)
+    })
+  }
+}
+
+/**
+ * 取消服务收入记录
+ *
+ * 调用时机：
+ *   - 取消活动订单/报名时（type='activity'）
+ *   - 取消寄养订单时（type='boarding'）
+ *   - 取消喂养订单时（type='feeding'）
+ *
+ * 行为：
+ *   - 将匹配的 service_incomes 记录 status 更新为 'cancelled'
+ *   - best-effort：异常被吞掉，仅记日志
+ *
+ * @param orderId 订单ID
+ * @param type 收入类型
+ * @returns 始终返回 void；失败仅记日志
+ */
+export async function cancelServiceIncomeRecord(
+  orderId: string,
+  type: ServiceIncomeType
+): Promise<void> {
+  try {
+    if (!orderId || !type) {
+      logger.warn('cancelServiceIncomeRecord: invalid params', { orderId, type })
+      return
+    }
+
+    const result = await db.collection('service_incomes')
+      .where({ orderId, type, status: _.in(['pending', 'completed']) })
+      .update({
+        data: {
+          status: 'cancelled',
+          cancelledAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+        },
+      })
+
+    logger.info('cancelServiceIncomeRecord: success', {
+      orderId,
+      type,
+      updated: result.updated,
+    })
+  } catch (error) {
+    logger.error('cancelServiceIncomeRecord: error', {
+      orderId,
+      type,
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 }
@@ -177,12 +245,14 @@ const _mod = module as { exports: Record<string, unknown> }
 _mod.exports = {
   createServiceIncomeRecord,
   createActivityIncomeRecords,
+  cancelServiceIncomeRecord,
 }
 _mod.exports.default = _mod.exports
 
 export default {
   createServiceIncomeRecord,
   createActivityIncomeRecords,
+  cancelServiceIncomeRecord,
 }
 
 // 避免 unused 警告

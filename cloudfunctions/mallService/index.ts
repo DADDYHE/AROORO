@@ -7,7 +7,7 @@
  *   - 下单流程（普通下单 + 团购下单，含风控前置）
  *   - 订单管理（我的订单 / 详情 / 取消 / 确认收货 / 删除）
  *
- * 共 16 个 action：
+ * 共 18 个 action：
  *   1. getProductList - 商品列表
  *   2. getProductDetail - 商品详情
  *   3. getCategoryStats - 分类统计
@@ -25,6 +25,7 @@
  *  15. cancelOrder - 取消订单
  *  16. confirmReceive - 确认收货
  *  17. deleteOrder - 删除订单
+ *  18. getWxShippingStatus - 查询微信发货状态
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
@@ -33,6 +34,14 @@
  *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.mallService.json
+ *
+ * 数据库索引建议（运维需在对应集合上创建）：
+ *   products:
+ *     - { status: 1, categoryId: 1 }               - 覆盖 getProductList / getCategoryStats
+ *     - { createdBy: 1, updatedAt: -1 }             - 覆盖 batchUpdateProducts 权限校验
+ *   orders:
+ *     - { ownerId: 1, type: 1, status: 1, createdAt: -1 } - 覆盖 getMyOrders / getGroupBuyOrders
+ *     - { orderNo: 1 }                              - 覆盖佣金记录查询
  */
 
 // =====================================================================
@@ -65,6 +74,9 @@ export interface CloudEvent {
   productId?: string
   productIds?: string[]
   orderId?: string
+  // M11: getWxShippingStatus 使用，orderType 仅允许 'mall' | 'group_buy'
+  orderIds?: string[]
+  orderType?: string
   operation?: string
   name?: string
   description?: string
@@ -168,6 +180,9 @@ export interface OrderRecord {
   sellerId?: string
   status?: string
   type?: string
+  // H6: 与 feedingService/tuanService/orderService 一致，新增订单须初始化 paymentStatus: 'unpaid'
+  // orderTimeoutService 通过 paymentStatus='unpaid' 过滤待支付超时订单，缺失将导致超时取消失效
+  paymentStatus?: string
   pendingReview?: boolean
   riskDecision?: string
   riskReasons?: string[]
@@ -229,6 +244,14 @@ const { withRateLimit } = require('./common/risk-rate-limit')
 // Sprint 50: 限流统一 bootstrap
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap')
+// H1: 佣金记录统一使用 common/commission-utils（含自购保护、system_config 配置、幂等）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { createCommissionRecord: sharedCreateCommissionRecord, cancelCommissionRecord: sharedCancelCommissionRecord } = require('./common/commission-utils')
+// M6: 静态 require 替代动态 import，减少冷启动开销并保留类型推断
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { reconcileOrderWithWx } = require('./common/wxOrderSync')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { getWxOrderStatus } = require('./common/wxAccessToken')
 
 const { cloud, db } = initCloud()
 const logger = createLogger('mallService')
@@ -292,77 +315,31 @@ async function performMallOrderRiskCheck(ctx: {
 }
 
 // =====================================================================
-// 辅助函数：佣金记录
-// =====================================================================
-
-async function createCommissionRecord(orderType: string, order: OrderRecord): Promise<void> {
-  try {
-    if (!order.ownerId) { return }
-    let user: UserRecord | null = null
-    try {
-      const userRes = await db.collection('users').doc(order.ownerId).field({ _id: true, inviterId: true }).get()
-      user = userRes.data
-    } catch (e) {
-      logger.warn('commission.users.fetch', { ownerId: order.ownerId, code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
-      return
-    }
-    if (!user || !user.inviterId) { return }
-
-    let config: Record<string, unknown> = {}
-    try {
-      const configRes = await db.collection('tuan_config').doc('commission_rates').get()
-      config = configRes.data || {}
-    } catch (e) {
-      logger.warn('commission.tuan_config', { code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
-      return
-    }
-    const rate = config[orderType] !== undefined ? Number(config[orderType]) : 0
-    if (!rate || rate <= 0) { return }
-
-    const orderAmount = Number(order.totalAmount || order.totalPrice || order.basicPrice || 0)
-    if (orderAmount <= 0) { return }
-    const commissionAmount = Math.round(orderAmount * rate / 100 * 100) / 100
-
-    let inviter: UserRecord | null = null
-    try {
-      const inviterRes = await db.collection('users').doc(user.inviterId).field({ _id: true, nickName: true }).get()
-      inviter = inviterRes.data
-    } catch (e) {
-      logger.warn('commission.inviter.fetch', { inviterId: user.inviterId, code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
-      return
-    }
-    if (!inviter) { return }
-
-    const existRes = await db.collection('tuan_commissions').where({ orderNo: order.orderNo || order._id, inviterId: user.inviterId }).count()
-    if (existRes.total > 0) { return }
-
-    const commissionId = generateId('commission', order.ownerId)
-    await db.collection('tuan_commissions').add({
-      data: {
-        _id: commissionId,
-        inviterId: user.inviterId,
-        inviterNickName: inviter.nickName || '',
-        ownerId: user._id || order.ownerId,
-        orderType,
-        orderId: order._id,
-        orderNo: order.orderNo || order._id,
-        orderAmount,
-        commissionRate: rate,
-        commissionAmount,
-        status: 'pending',
-        createdAt: db.serverDate(),
-        updatedAt: db.serverDate(),
-      },
-    })
-    logger.info('commission_created', { orderType, orderNo: order.orderNo || order._id, amount: orderAmount, rate, commission: commissionAmount })
-  } catch (e) {
-    logger.error('commission_error', e)
-  }
-}
-
-// =====================================================================
 // 辅助函数：批量获取临时文件 URL
 // =====================================================================
+
+/**
+ * 有限并发执行器（M4: 用于 batchUpdateProducts 替代串行 await）
+ * @param tasks 任务函数数组
+ * @param concurrency 并发上限
+ * @returns 按 tasks 顺序返回结果
+ */
+async function runWithConcurrency<T>(tasks: Array<() => Promise<T>>, concurrency: number): Promise<T[]> {
+  const results = new Array<T>(tasks.length)
+  let cursor = 0
+  async function worker() {
+    while (cursor < tasks.length) {
+      const idx = cursor++
+      results[idx] = await tasks[idx]()
+    }
+  }
+  const workers: Promise<void>[] = []
+  for (let i = 0; i < Math.min(concurrency, tasks.length); i++) {
+    workers.push(worker())
+  }
+  await Promise.all(workers)
+  return results
+}
 
 async function batchGetTempFileURL(fileIds: string[]): Promise<UrlMap> {
   const BATCH_SIZE = 50
@@ -447,25 +424,41 @@ export async function getCategoryStats(
   _auth: AuthLike
 ): Promise<unknown> {
   try {
-    const res = await db.collection('products')
-      .where({ status: 'on_sale' })
-      .field({ category: true, categoryId: true })
-      .limit(1000)
-      .get()
+    // M8: 使用 aggregate group 在数据库侧分组统计，避免 limit(1000) 静默截断
+    const $ = _.aggregate || { sum: (n: number) => ({ $sum: n }) }
+    const aggRes = await db.collection('products')
+      .aggregate()
+      .match({ status: 'on_sale' })
+      .group({
+        _id: { category: '$category', categoryId: '$categoryId' },
+        count: $.sum(1),
+      })
+      .end()
 
     const stats: Record<string, number> = {}
-    for (const item of (res.data || []) as ProductRecord[]) {
-      if (item.category) {
-        stats[item.category] = (stats[item.category] || 0) + 1
+    for (const item of (aggRes.list || []) as Array<{ _id: { category?: string; categoryId?: string }; count: number }>) {
+      if (item._id && item._id.category) {
+        stats[item._id.category] = (stats[item._id.category] || 0) + (item.count || 0)
       }
-      if (item.categoryId) {
-        stats[item.categoryId] = (stats[item.categoryId] || 0) + 1
+      if (item._id && item._id.categoryId) {
+        stats[item._id.categoryId] = (stats[item._id.categoryId] || 0) + (item.count || 0)
       }
     }
     return handleSuccess(stats, '获取成功')
   } catch (error) {
+    // M2: 区分集合未初始化与真实错误
+    const errCode = (error as { errCode?: number }).errCode
+    const msg = ((error as Error).message || '').toLowerCase()
+    const collectionMissing =
+      errCode === -502001 ||
+      errCode === -501019 ||
+      /collection.*(not.*exist|does.*not.*exist)/i.test(msg)
+    if (collectionMissing) {
+      logger.warn('getCategoryStats.collection_missing', { msg: (error as Error).message })
+      return handleSuccess({}, '获取成功')
+    }
     logger.error('getCategoryStats', error)
-    return handleSuccess({}, '获取成功')
+    throw error
   }
 }
 
@@ -479,12 +472,40 @@ export async function listCategories(
   _auth: AuthLike
 ): Promise<unknown> {
   try {
-    const res = await db.collection('categories')
-      .orderBy('sortOrder', 'asc')
-      .limit(100)
-      .get()
-    return handleSuccess(res.data, '获取成功')
+    // M9: 分类理论上数量不多，但 limit(100) 仍可能在分类膨胀时静默截断
+    //     采用分页拉取直到 isLastPage=true，确保返回完整分类列表
+    const all: unknown[] = []
+    const PAGE_SIZE = 100
+    let page = 0
+    while (true) {
+      const res = await db.collection('categories')
+        .orderBy('sortOrder', 'asc')
+        .skip(page * PAGE_SIZE)
+        .limit(PAGE_SIZE)
+        .get()
+      const data = (res.data || []) as unknown[]
+      all.push(...data)
+      if (data.length < PAGE_SIZE) { break }
+      page++
+      // 安全上限：防止异常数据导致死循环（1000 个分类足够业务使用）
+      if (page >= 10) {
+        logger.warn('listCategories.truncated_at_safety_limit', { count: all.length })
+        break
+      }
+    }
+    return handleSuccess(all, '获取成功')
   } catch (error) {
+    // M2: 区分集合未初始化与真实错误
+    const errCode = (error as { errCode?: number }).errCode
+    const msg = ((error as Error).message || '').toLowerCase()
+    const collectionMissing =
+      errCode === -502001 ||
+      errCode === -501019 ||
+      /collection.*(not.*exist|does.*not.*exist)/i.test(msg)
+    if (collectionMissing) {
+      logger.warn('listCategories.collection_missing', { msg: (error as Error).message })
+      return handleSuccess([], '获取成功')
+    }
     logger.error('listCategories', error)
     return handleError(error, '获取分类列表失败', ERROR_CODES.DATA)
   }
@@ -504,11 +525,19 @@ export async function checkCartItems(
     return handleSuccess({}, '获取成功')
   }
 
+  // M10: 校验 productIds 数量并限制单次查询上限，避免 limit(100) 静默截断
+  //   - 购物车场景单次最多 50 个商品（与 getWxShippingStatus 一致的业务上限）
+  //   - 超过则报错提示前端分批处理，防止静默丢失商品状态
+  const MAX_CART_ITEMS = 50
+  if (productIds.length > MAX_CART_ITEMS) {
+    throw err('INVALID_PARAMS', `单次最多查询 ${MAX_CART_ITEMS} 个商品状态`)
+  }
+
   try {
     const res = await db.collection('products')
       .where({ _id: _.in(productIds) })
       .field({ _id: true, status: true, coverUrl: true, coverImage: true, name: true, price: true })
-      .limit(100)
+      .limit(MAX_CART_ITEMS)
       .get()
 
     const cloudFileIds: string[] = []
@@ -548,8 +577,19 @@ export async function checkCartItems(
     }
     return handleSuccess(statusMap, '获取成功')
   } catch (error) {
+    // M2: 区分集合未初始化与真实错误
+    const errCode = (error as { errCode?: number }).errCode
+    const msg = ((error as Error).message || '').toLowerCase()
+    const collectionMissing =
+      errCode === -502001 ||
+      errCode === -501019 ||
+      /collection.*(not.*exist|does.*not.*exist)/i.test(msg)
+    if (collectionMissing) {
+      logger.warn('checkCartItems.collection_missing', { msg: (error as Error).message })
+      return handleSuccess({}, '获取成功')
+    }
     logger.error('checkCartItems', error)
-    return handleSuccess({}, '获取成功')
+    throw error
   }
 }
 
@@ -619,7 +659,12 @@ export async function getProductDetail(
 
     return handleSuccess(product, '获取成功')
   } catch (error) {
-    return handleError(error, '商品不存在', ERROR_CODES.NOT_FOUND)
+    // M3: 区分 NOT_FOUND 与其他错误（数据库异常、权限等）
+    if (isBusinessError(error) && (error as { code?: string }).code === 'NOT_FOUND') {
+      return handleError(error, '商品不存在', ERROR_CODES.NOT_FOUND)
+    }
+    logger.error('getProductDetail', error)
+    return handleError(error, '获取商品详情失败', ERROR_CODES.DATA)
   }
 }
 
@@ -643,7 +688,8 @@ export async function createProduct(
     name,
     description: description || '',
     price: Number(price),
-    originalPrice: Number(originalPrice) || undefined as unknown as number,
+    // L1: 移除双重类型断言，使用条件表达式
+    originalPrice: originalPrice ? Number(originalPrice) : undefined,
     coverUrl: coverUrl || '',
     images: images || [],
     category: category || 'general',
@@ -745,7 +791,9 @@ export async function batchUpdateProducts(
   const STATUS_MAP: Record<string, string> = { on_shelf: 'on_sale', off_shelf: 'off_sale' }
   const results: BatchUpdateResult = { success: 0, failed: 0 }
 
-  for (const productId of productIds as string[]) {
+  // M4: 改为有限并发，避免串行 await 在批量操作时触发云函数超时
+  const BATCH_CONCURRENCY = 6
+  const tasks = (productIds as string[]).map((productId) => async () => {
     try {
       // 验证商品归属权（防止操作其他用户的商品）
       const productRes = await db.collection('products').doc(productId).get()
@@ -753,7 +801,7 @@ export async function batchUpdateProducts(
       if (!product || product.createdBy !== openid) {
         logger.warn('batchUpdateProducts: permission denied', { productId, openid })
         results.failed++
-        continue
+        return
       }
 
       if (operation === 'delete') {
@@ -776,7 +824,8 @@ export async function batchUpdateProducts(
       logger.error('batchUpdateProducts', { productId, error: e })
       results.failed++
     }
-  }
+  })
+  await runWithConcurrency(tasks, BATCH_CONCURRENCY)
 
   return handleSuccess(results, `操作完成: 成功${results.success}个, 失败${results.failed}个`)
 }
@@ -816,7 +865,9 @@ export async function createGroupBuyOrder(
   const transaction = await db.startTransaction()
 
   try {
-    const product = previewProduct
+    // H4: 事务内重新读取商品并校验库存，避免 TOCTOU 超卖竞态
+    const txProductRes = await transaction.collection('products').doc(productId).get()
+    const product = txProductRes.data as ProductRecord | null
     if (!product || product.status !== 'on_sale') {
       await transaction.rollback()
       throw err('BUSINESS_ERROR', '商品已下架或不可购买')
@@ -829,8 +880,9 @@ export async function createGroupBuyOrder(
     }
 
     const unitPrice = product.price || 0
-    const totalAmount = unitPrice * Number(quantity)
-    const orderNo = `G${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`
+    // M1: 团购下单金额精度统一——使用整数分计算后转回元，避免浮点误差
+    const totalAmount = Math.round(unitPrice * 100 * Number(quantity)) / 100
+    const orderNo = `G${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
     const order: OrderRecord = {
       orderNo,
@@ -848,6 +900,8 @@ export async function createGroupBuyOrder(
       sellerId: product.createdBy || '',
       status: 'pending_payment',
       type: 'group_buy',
+      // H6: 与其他服务一致，待支付订单初始化 paymentStatus='unpaid'
+      paymentStatus: 'unpaid',
       pendingReview: groupRisk.pendingReview,
       riskDecision: groupRisk.decision,
       riskReasons: groupRisk.reasons,
@@ -914,7 +968,9 @@ export async function createOrder(
   const transaction = await db.startTransaction()
 
   try {
-    const product = previewProduct
+    // H4: 事务内重新读取商品并校验，避免 TOCTOU 超卖竞态
+    const txProductRes = await transaction.collection('products').doc(productId).get()
+    const product = txProductRes.data as ProductRecord | null
     if (!product || product.status !== 'on_sale') {
       await transaction.rollback()
       throw err('BUSINESS_ERROR', '商品不可购买')
@@ -946,7 +1002,7 @@ export async function createOrder(
       }
     }
 
-    const orderNo = `M${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`
+    const orderNo = `M${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
     const order: OrderRecord = {
       orderNo,
@@ -957,7 +1013,8 @@ export async function createOrder(
       skuText,
       unitPrice,
       quantity: Number(quantity),
-      totalAmount: unitPrice * Number(quantity),
+      // P0-3: 使用整数分计算避免浮点精度
+      totalAmount: Math.round(unitPrice * 100 * Number(quantity)) / 100,
       receiverName: receiverName || '',
       receiverPhone: receiverPhone || '',
       receiverAddress,
@@ -965,6 +1022,8 @@ export async function createOrder(
       ownerName: auth.nickName || '',
       status: 'pending_payment',
       type: 'mall',
+      // H6: 与其他服务一致，待支付订单初始化 paymentStatus='unpaid'
+      paymentStatus: 'unpaid',
       pendingReview: orderRisk.pendingReview,
       riskDecision: orderRisk.decision,
       riskReasons: orderRisk.reasons,
@@ -1013,8 +1072,13 @@ export async function getMyOrders(
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
   const { status, page = 1, pageSize = 20 } = event
-  const where: Record<string, unknown> = { ownerId: openid, type: 'mall', status: _.neq('deleted') }
-  if (status && status !== 'all') { where.status = status }
+  // H5: 修复 where.status 冲突——原逻辑 _.neq('deleted') 会被传入的 status 覆盖，导致泄露已删除订单
+  const where: Record<string, unknown> = { ownerId: openid, type: 'mall' }
+  if (status && status !== 'all' && status !== 'deleted') {
+    where.status = status
+  } else {
+    where.status = _.neq('deleted')
+  }
 
   try {
     const result = await paginate(db, 'orders', {
@@ -1043,8 +1107,13 @@ export async function getGroupBuyOrders(
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
   const { status, page = 1, pageSize = 20 } = event
-  const where: Record<string, unknown> = { ownerId: openid, type: 'group_buy', status: _.neq('deleted') }
-  if (status && status !== 'all') { where.status = status }
+  // H5: 同 getMyOrders，防止已删除订单泄露
+  const where: Record<string, unknown> = { ownerId: openid, type: 'group_buy' }
+  if (status && status !== 'all' && status !== 'deleted') {
+    where.status = status
+  } else {
+    where.status = _.neq('deleted')
+  }
 
   try {
     const result = await paginate(db, 'orders', {
@@ -1087,42 +1156,69 @@ export async function cancelOrder(
       throw err('BUSINESS_ERROR', '当前订单状态不可取消')
     }
 
-    await db.collection('orders').doc(orderId).update({
-      data: { status: 'cancelled', cancelReason: '买家主动取消', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
-    })
-
-    // 取消佣金记录
-    try {
-      const { cancelCommissionRecord } = require('../../common/commission-utils')
-      await cancelCommissionRecord(orderId)
-    } catch (commissionErr) {
-      logger.warn('cancelCommissionRecord', { msg: (commissionErr as Error)?.message })
+    // H7: 校验 paymentStatus，防止取消已支付订单（与 feedingService M6 一致）
+    //   - unpaid：允许取消（待支付订单超时/主动取消）
+    //   - paid：拒绝取消（已支付订单须走退款流程，不可直接取消）
+    //   - 其他/缺失：拒绝并告警，需人工核对
+    const paymentStatus = String(orderData.paymentStatus || '').toLowerCase()
+    if (paymentStatus && paymentStatus !== 'unpaid') {
+      logger.warn('cancelOrder.invalid_payment_status', {
+        orderId, status: orderData.status, paymentStatus,
+      })
+      if (paymentStatus === 'paid') {
+        throw err('BUSINESS_ERROR', '订单已支付，无法直接取消，请走退款流程')
+      }
+      throw err('BUSINESS_ERROR', `订单支付状态异常：${paymentStatus || '(空)'}`)
     }
 
-    const qty = orderData.quantity || 1
-    const stockUpdateData: Record<string, unknown> = {
-      totalStock: _.inc(qty),
-      soldCount: _.inc(-qty),
-      stock: _.inc(qty),
-      updatedAt: db.serverDate(),
-    }
-
+    // 预查商品 SKU 索引（事务外预读，事务内仅做 update）
+    let skuIndex = -1
     if (orderData.skuId && orderData.productId) {
       const productRes = await db.collection('products').doc(orderData.productId).get()
       const productData = productRes.data as ProductRecord | null
       if (productData && productData.skus) {
-        const skuIndex = productData.skus.findIndex((s: SkuSpec) => s.skuId === orderData.skuId)
-        if (skuIndex >= 0) {
-          stockUpdateData[`skus.${skuIndex}.stock`] = _.inc(qty)
-          stockUpdateData[`skus.${skuIndex}.soldCount`] = _.inc(-qty)
-        }
+        skuIndex = productData.skus.findIndex((s: SkuSpec) => s.skuId === orderData.skuId)
       }
     }
 
-    if (orderData.productId) {
-      await db.collection('products').doc(orderData.productId).update({
-        data: stockUpdateData,
+    // 事务：订单状态更新 + 库存回退原子化，避免库存泄漏
+    const transaction = await db.startTransaction()
+    try {
+      await transaction.collection('orders').doc(orderId).update({
+        data: { status: 'cancelled', cancelReason: '买家主动取消', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
       })
+
+      if (orderData.productId) {
+        const qty = orderData.quantity || 1
+        const stockUpdateData: Record<string, unknown> = {
+          totalStock: _.inc(qty),
+          soldCount: _.inc(-qty),
+          stock: _.inc(qty),
+          updatedAt: db.serverDate(),
+        }
+
+        if (orderData.skuId && skuIndex >= 0) {
+          stockUpdateData[`skus.${skuIndex}.stock`] = _.inc(qty)
+          stockUpdateData[`skus.${skuIndex}.soldCount`] = _.inc(-qty)
+        }
+
+        await transaction.collection('products').doc(orderData.productId).update({
+          data: stockUpdateData,
+        })
+      }
+
+      await transaction.commit()
+    } catch (txError) {
+      await transaction.rollback()
+      throw txError
+    }
+
+    // 取消佣金记录（best-effort，独立于事务，失败不影响取消结果）
+    // 使用 common/commission-utils 共享实现（含幂等检查）
+    try {
+      await sharedCancelCommissionRecord(orderId)
+    } catch (commissionErr) {
+      logger.warn('cancelCommissionRecord', { msg: (commissionErr as Error)?.message })
     }
 
     return handleSuccess(null, '取消成功')
@@ -1187,8 +1283,7 @@ export async function confirmReceive(
     // 用户在小程序能进入这个流程意味着已经从 wx 端完成收货，强制同步一次。
     if (orderData.status === 'shipped' || orderData.status === 'paid' || orderData.status === 'confirmed') {
       try {
-        // @ts-ignore -- wxOrderSync.js 是 .js 写法
-        const { reconcileOrderWithWx } = await import('./common/wxOrderSync')
+        // M6: 改用顶部静态 require 的 reconcileOrderWithWx
         const sync = await reconcileOrderWithWx({ db, logger, order: orderData as any })
         if (sync.changed) {
           orderData = { ...orderData, status: sync.after } as OrderRecord
@@ -1279,21 +1374,27 @@ export async function getWxShippingStatus(
     throw err('INVALID_PARAMS', '单次最多查询 50 个订单')
   }
 
-  // @ts-ignore -- 编译产物 mallService/common/wxAccessToken.js 没有 .d.ts
-  const { getWxOrderStatus } = await import('./common/wxAccessToken')
-  // @ts-ignore -- 同上，wxOrderSync.js 是 .js 写法（被 orderReconcileService 复用）
-  const { reconcileOrderWithWx } = await import('./common/wxOrderSync')
+  // M11: orderType 白名单校验，防止注入任意字符串查询其他业务订单
+  //   - mallService 仅管理 'mall' 和 'group_buy' 两种订单类型
+  //   - 传入其他值（如 'boarding'/'feeding'）应拒绝，避免越权查询
+  const ALLOWED_ORDER_TYPES = ['mall', 'group_buy'] as const
+  if (orderType !== undefined && !(ALLOWED_ORDER_TYPES as readonly string[]).includes(orderType)) {
+    throw err('INVALID_PARAMS', `无效的 orderType，仅支持：${ALLOWED_ORDER_TYPES.join(', ')}`)
+  }
+
+  // M6: 改用顶部静态 require 的 getWxOrderStatus / reconcileOrderWithWx
   // 订单统一存在 orders 集合，通过 type 字段区分 mall / group_buy
   // （曾经误写为 'group_buy_orders'，但该集合不存在，订单都在 orders 里）
   const collection = 'orders'
-  const baseWhere: Record<string, any> = { _id: db.command.in(orderIds), ownerId: openid }
+  // L3: 严格化 baseWhere 类型，避免 any
+  const baseWhere: Record<string, unknown> = { _id: db.command.in(orderIds), ownerId: openid }
   if (orderType === 'group_buy' || orderType === 'mall') {
     baseWhere.type = orderType
   }
 
   try {
     // 批量查订单的 transaction_id（wx 支付订单号）
-    const _ = db
+    // M5: 删除冗余的 `const _ = db`，避免遮蔽顶部的 db.command
     const orderRes = await db.collection(collection)
       .where(baseWhere)
       .field({ _id: true, transactionId: true, wxTransactionId: true, paidAt: true, status: true, type: true, paymentStatus: true })
@@ -1377,15 +1478,17 @@ export async function main(
   }
 
   const WRITE_ACTIONS = [
-    'createProduct', 'updateProduct', 'deleteProduct', 'batchUpdateProducts',
     'createOrder', 'createGroupBuyOrder', 'cancelOrder', 'confirmReceive',
-    'deleteOrder', 'getGroupBuyOrders',
+    'deleteOrder',
   ]
-  const requireLogin = WRITE_ACTIONS.includes(action)
+  // H3: 商品管理操作需要 admin 权限，防止任意用户创建/修改/删除商品
+  const ADMIN_ACTIONS = ['createProduct', 'updateProduct', 'deleteProduct', 'batchUpdateProducts']
+  const requireLogin = WRITE_ACTIONS.includes(action) || ADMIN_ACTIONS.includes(action)
+  const requireAdmin = ADMIN_ACTIONS.includes(action)
 
   try {
-    const auth = await verifyAuth(event, { requireLogin })
-    logger.info(action, { openid: auth.openid })
+    const auth = await verifyAuth(event, { requireLogin, ...(requireAdmin ? { permission: 'admin' } : {}) })
+    logger.info(action, { openid: auth.openid, isAdmin: !!(auth as AuthLike & { isAdmin?: boolean }).isAdmin })
     return await handlers[action](event, context, auth)
   } catch (error) {
     logger.error(action, error)

@@ -24,13 +24,13 @@ exports.main = exports.handlers = void 0;
 // 内部模块初始化（require CommonJS 模块）
 // =====================================================================
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { initCloud, handleError, ERROR_CODES } = require('./common/utils');
+const { initCloud, maskOpenid } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { verifyAuth } = require('./common/auth-middleware');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { err, toResponse, isBusinessError } = require('./common/errors');
+const { err, toResponse, isBusinessError, wrapUnknown } = require('./common/errors');
 const { db } = initCloud();
 const logger = createLogger('userService');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -71,7 +71,8 @@ exports.handlers = {
     addressSetDefault: addressHandlers.setDefault,
 };
 // 不需要登录的 action（公共接口）
-const NO_AUTH_ACTIONS = new Set(['login', 'check']);
+// M8 修复：getConfig 返回静态空配置，首屏通常未登录拉取，免登录
+const NO_AUTH_ACTIONS = new Set(['login', 'check', 'getConfig']);
 // =====================================================================
 // 主入口
 // =====================================================================
@@ -83,16 +84,16 @@ const main = async (event, context) => {
     try {
         const requireLogin = !NO_AUTH_ACTIONS.has(action);
         const auth = await verifyAuth(event, { requireLogin });
-        logger.info(action, { openid: auth.openid });
+        logger.info(action, { openid: maskOpenid(auth.openid) });
         return await exports.handlers[action](event, context, auth);
     }
     catch (error) {
         logger.error(action, error);
         if (isBusinessError(error)) {
-            return toResponse(error);
+            return toResponse(error); // 受控：业务异常 message 安全回显
         }
-        const code = error?.code || ERROR_CODES.BUSINESS;
-        return handleError(error, error.message, code);
+        // H1 修复：未知异常经 wrapUnknown 脱敏，避免原始 message（含集合名/内部标识）透传客户端
+        return toResponse(wrapUnknown(error));
     }
 };
 exports.main = main;

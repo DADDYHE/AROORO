@@ -157,7 +157,9 @@ describe('Sprint 44: petService TypeScript 迁移', () => {
 
     ACTIONS.forEach(act => {
       test(`导出 ${act}`, () => {
-        expect(code).toMatch(new RegExp(`export\\s+async\\s+function\\s+${act}\\b`))
+        // Sprint 51: 兼容 withErrorHandling 包装风格（export const xxx = withErrorHandling）
+        const re = new RegExp(`export\\s+(async\\s+function|const)\\s+${act}\\b`)
+        expect(code).toMatch(re)
       })
     })
 
@@ -192,8 +194,10 @@ describe('Sprint 44: petService TypeScript 迁移', () => {
     })
 
     test('强类型化 6 个 action', () => {
-      const matches = code.match(/export\s+async\s+function\s+\w+/g) || []
-      expect(matches.length).toBeGreaterThanOrEqual(6)
+      // Sprint 51: 兼容 withErrorHandling 包装风格
+      const fnMatches = code.match(/export\s+async\s+function\s+\w+/g) || []
+      const constMatches = code.match(/export\s+const\s+(createPet|updatePet|deletePet|getPet|getPetList|getPetDetail)\b/g) || []
+      expect(fnMatches.length + constMatches.length).toBeGreaterThanOrEqual(6)
     })
 
     test('软删除（isActive=0）', () => {
@@ -251,8 +255,10 @@ describe('Sprint 44: petService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s44-pet-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s44-pet-service-ts:strict/)
+    test('ci:check 包含 audit:all:strict（统一审计入口）', () => {
+      // Sprint 48+: ci:check 改用 audit:all:strict 统一调用所有 audit 脚本
+      //   audit:s44-pet-service-ts:strict 仍注册在 package.json 中，由 audit-all.js 自动遍历调用
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
     })
   })
 

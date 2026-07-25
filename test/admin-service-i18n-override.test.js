@@ -20,6 +20,53 @@ let mockDocs = []
 function resetDocs(docs = []) { mockDocs = docs.slice() }
 function pushDoc(d) { mockDocs.push(d) }
 
+// M6：aggregate 简化 mock，覆盖 group({ _id, count: { $sum: 1 } }) 与 sort+limit 模式
+// 命名以 mock 前缀，允许 jest.mock() factory 引用
+function mockBuildAggregateChain(docs) {
+  let _sort = null
+  let _limit = null
+  const chain = {
+    group(spec) {
+      const idField = (spec && spec._id && typeof spec._id === 'string') ? spec._id.slice(1) : null
+      const buckets = {}
+      for (const d of docs) {
+        const k = idField ? d[idField] : null
+        if (!buckets[k === undefined ? null : k]) { buckets[k === undefined ? null : k] = 0 }
+        buckets[k === undefined ? null : k]++
+      }
+      const list = Object.entries(buckets).map(([_id, count]) => ({ _id: _id === 'null' ? null : _id, count }))
+      // group 是终点，返回新 chain 仅支持 end
+      return { end: async () => ({ list }) }
+    },
+    sort(spec) {
+      if (spec && typeof spec === 'object') {
+        const [field, dir] = Object.entries(spec)[0]
+        _sort = { field, dir }
+      }
+      return chain
+    },
+    limit(n) { _limit = n; return chain },
+    end: async () => {
+      let arr = docs.slice()
+      if (_sort) {
+        arr.sort((a, b) => {
+          const av = a[_sort.field]
+          const bv = b[_sort.field]
+          if (av === bv) { return 0 }
+          if (av === undefined || av === null) { return 1 }
+          if (bv === undefined || bv === null) { return -1 }
+          const at = av instanceof Date ? av.getTime() : av
+          const bt = bv instanceof Date ? bv.getTime() : bv
+          return _sort.dir === -1 ? (bt - at) : (at - bt)
+        })
+      }
+      if (_limit !== null) { arr = arr.slice(0, _limit) }
+      return { list: arr }
+    },
+  }
+  return chain
+}
+
 jest.mock('wx-server-sdk', () => {
   const collection = name => {
     const matchDoc = (doc, query) => {
@@ -77,12 +124,18 @@ jest.mock('wx-server-sdk', () => {
         mockDocs.push(newDoc)
         return { _id: newDoc._id }
       },
+      aggregate: () => mockBuildAggregateChain(mockDocs.slice()),
     }
   }
   return {
     init: jest.fn(),
     database: jest.fn(() => ({
       collection,
+      command: {
+        aggregate: {
+          sum: (n) => ({ $sum: n }),
+        },
+      },
       serverDate: jest.fn(() => new Date('2026-06-06T00:00:00Z')),
       RegExp: jest.fn(({ regexp, options }) => ({ regexp, options })),
     })),
@@ -150,12 +203,18 @@ function reloadService() {
           mockDocs.push(newDoc)
           return { _id: newDoc._id }
         },
+        aggregate: () => mockBuildAggregateChain(mockDocs.slice()),
       }
     }
     return {
       init: jest.fn(),
       database: jest.fn(() => ({
         collection,
+        command: {
+          aggregate: {
+            sum: (n) => ({ $sum: n }),
+          },
+        },
         serverDate: jest.fn(() => new Date('2026-06-06T00:00:00Z')),
         RegExp: jest.fn(({ regexp, options }) => ({ regexp, options })),
       })),

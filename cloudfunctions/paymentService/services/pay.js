@@ -19,16 +19,16 @@
  *   （运行时仍消费 .js 编译产物）
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.confirmPayment = exports.closePayment = exports.queryPayment = exports.createPayment = void 0;
+exports.confirmPayment = exports.closePayment = exports.queryPayment = exports.createPayment = exports.getOrderType = exports.ORDER_TYPE_AMOUNT_FIELD_MAP = exports.ORDER_TYPE_COLLECTION_MAP = exports.ORDER_TYPE_PREFIX_MAP = void 0;
 // Sprint 25 迁移说明：
 //   - 仍消费 .js 编译产物（tsc 输出到 cloudfunctions/paymentService/services/pay.js）
 //   - 对 .js 文件（wechatPayUtils / config / payment-state-machine）使用 require() 而非 import
 //   - 强类型仅作用于 common/*（已有 .d.ts 产物）
 //   - 业务错误码使用 err(...) 工厂，与 risk-rate-limit 共用同一个 BusinessError 类
-const errors_1 = require("../common/errors");
-const utils_1 = require("../common/utils");
-const logger_1 = require("../common/logger");
-const risk_rate_limit_1 = require("../common/risk-rate-limit");
+const errors_1 = require("../../common/errors");
+const utils_1 = require("../../common/utils");
+const logger_1 = require("../../common/logger");
+const risk_rate_limit_1 = require("../../common/risk-rate-limit");
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { WECHAT_PAY, ENDPOINTS } = require('../common/config');
@@ -36,10 +36,14 @@ const { WECHAT_PAY, ENDPOINTS } = require('../common/config');
 const { randomString, rsaSign, httpsRequest, generateAuthorization } = require('./wechatPayUtils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { paymentStateMachine, resolveOrderStatus, isKnownOrderType } = require('../common/payment-state-machine');
+// P0-6: 资金事务失败主动告警
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('../../common/alert');
 // =====================================================================
 // 模块初始化
 // =====================================================================
 const { db } = (0, utils_1.initCloud)();
+const _ = db.command;
 const logger = (0, logger_1.createLogger)('paymentService:pay');
 // =====================================================================
 // 订单类型元数据
@@ -72,21 +76,30 @@ const ORDER_TYPE_AMOUNT_FIELD = {
     activity: 'finalAmount',
     feeding: 'totalPrice',
 };
-const ORDER_TYPE_PREFIX_MAP = {
+// H4+M15: 导出供 refund.ts 复用，避免 orderType 推断逻辑双份漂移
+//   refund 旧实现 `outTradeNo.split('_')[0].toLowerCase()`：
+//   - ACT_xxx → act（不匹配 activity）；FD_xxx → fd（不匹配 feeding）
+//   - 导致 activity/feeding 退款时业务表同步全部跳过
+exports.ORDER_TYPE_PREFIX_MAP = {
     ORDER_: 'order',
     MALL_: 'mall',
     TUAN_: 'tuan',
     ACT_: 'activity',
     FD_: 'feeding',
 };
+// H4: 导出 collection 映射，refund 按 orderType 路由到正确集合
+exports.ORDER_TYPE_COLLECTION_MAP = ORDER_TYPE_COLLECTION;
+// H4+M12: 导出 amount 字段映射，commission 复用避免字段优先级不一致
+exports.ORDER_TYPE_AMOUNT_FIELD_MAP = ORDER_TYPE_AMOUNT_FIELD;
 function getOrderType(outTradeNo) {
-    for (const [prefix, type] of Object.entries(ORDER_TYPE_PREFIX_MAP)) {
+    for (const [prefix, type] of Object.entries(exports.ORDER_TYPE_PREFIX_MAP)) {
         if (outTradeNo.startsWith(prefix)) {
             return type;
         }
     }
     return null;
 }
+exports.getOrderType = getOrderType;
 // =====================================================================
 // createPayment：发起微信支付预付单
 // =====================================================================
@@ -112,8 +125,17 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
         throw (0, errors_1.err)('AUTH_REQUIRED', '未登录');
     }
     const { type, orderId, amount, description } = event;
-    if (!type || !orderId || !amount || amount <= 0) {
-        throw (0, errors_1.err)('INVALID_PARAMS', '参数不完整');
+    // H11: amount 类型严格校验——必须为有限正整数（分单位）
+    //   原仅 `!amount || amount <= 0`，字符串 "100"/NaN/Infinity/浮点数 99.99 均可绕过
+    //   Math.round("100")=100 / Math.round(99.99)=100 隐式转换导致单位混乱
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+        throw (0, errors_1.err)('INVALID_PARAMS', '支付金额必须为正数');
+    }
+    if (!Number.isInteger(amount)) {
+        throw (0, errors_1.err)('INVALID_PARAMS', '支付金额必须为整数（分单位）');
+    }
+    if (!type || !orderId) {
+        throw (0, errors_1.err)('INVALID_PARAMS', '缺少订单类型或订单号');
     }
     if (!ORDER_TYPE_PREFIX[type]) {
         throw (0, errors_1.err)('INVALID_PARAMS', '不支持的订单类型');
@@ -130,16 +152,24 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
         throw (0, errors_1.err)('ORDER_NOT_FOUND', '订单不存在', { orderId });
     }
     const orderData = orderRes.data;
+    // M16: ownership 校验——仅订单 owner 可发起支付
+    //   原无校验，任意登录用户凭 orderId 即可为他人订单发起支付，
+    //   虽然金额校验仍生效（不会造成直接资金损失），但会导致：
+    //   - 订单状态被推进到 paying，影响 owner 正常支付流程
+    //   - prepay_id 被滥用，违反微信支付用户身份一致性约定
+    if (orderData.ownerId && orderData.ownerId !== openid) {
+        throw (0, errors_1.err)('PERMISSION_DENIED', '无权操作他人订单');
+    }
     if (orderData.paymentStatus === 'paid') {
         throw (0, errors_1.err)('ORDER_ALREADY_PAID', '订单已支付', { orderId });
     }
-    if (amount && orderData.totalPrice && Math.round(amount) !== Math.round(orderData.totalPrice * 100)) {
-        throw (0, errors_1.err)('PAYMENT_AMOUNT_MISMATCH', '支付金额与订单金额不一致');
-    }
+    // H2: 旧逻辑 `if (amount && orderData.totalPrice && ...)` 在 totalPrice=0/缺失时跳过比对
+    //   该校验与下方 actualAmount 比对语义重复，统一在下方 actualAmount 校验中处理
+    //   避免 totalPrice 与 amountField 字段不一致时双重判断产生分歧
     // Sprint 25: 旧预付单回收（如果订单有 outTradeNo 且 paymentStatus=paying，先关掉）
     if (orderData.outTradeNo && orderData.paymentStatus === 'paying') {
         try {
-            await closePaymentInternal({ outTradeNo: orderData.outTradeNo }, context, auth, db, config);
+            await closePaymentInternal({ outTradeNo: orderData.outTradeNo }, context, auth, config);
             logger.info('createPayment: 关闭旧支付单', { outTradeNo: orderData.outTradeNo });
         }
         catch (closeErr) {
@@ -154,7 +184,18 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
     catch (e) {
         logger.warn('createPayment: 解析订单金额失败', { msg: e?.message });
     }
-    if (actualAmount > 0 && Math.round(amount) !== Math.round(actualAmount * 100)) {
+    // H2: 强制 actualAmount > 0——免费订单不应进入 createPayment 流程
+    //   原逻辑 `if (actualAmount > 0 && ...)` 在 actualAmount=0 时跳过比对，
+    //   客户端可传任意小额 amount（如 1 分）调起微信下单成功，造成资金损失
+    if (!Number.isFinite(actualAmount) || actualAmount <= 0) {
+        logger.error('createPayment: 订单金额异常', {
+            orderId, type, amountField: ORDER_TYPE_AMOUNT_FIELD[orderType] || 'totalPrice',
+            dbAmount: actualAmount,
+        });
+        throw (0, errors_1.err)('PAYMENT_AMOUNT_MISMATCH', '订单金额异常，无法发起支付', { dbAmount: actualAmount });
+    }
+    // H2: 客户端入参 amount 必须与 DB 订单金额一致（统一以分为单位比对）
+    if (Math.round(amount) !== Math.round(actualAmount * 100)) {
         logger.error('createPayment: 金额不符', {
             clientAmount: amount, dbAmount: actualAmount, dbAmountCents: Math.round(actualAmount * 100), type, orderId,
         });
@@ -201,22 +242,38 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
         throw (0, errors_1.err)('WECHAT_API_ERROR', '获取支付参数失败');
     }
     const orderCollection = ORDER_TYPE_COLLECTION[orderType];
-    await db.collection(orderCollection).doc(orderId).update({
-        data: { outTradeNo, paymentStatus: 'paying', updatedAt: db.serverDate() },
-    });
+    // H5: 条件更新——仅当 paymentStatus 仍为 unpaid/paying 时才推进到 paying
+    //   原 `doc(orderId).update(...)` 无条件写入，并发场景下：
+    //   - 已被并发流程置为 paid 的订单会被覆盖为 paying（资金与状态不一致）
+    //   - 同一订单两次 createPayment 同时进行，outTradeNo 被后写入覆盖，旧 prepay 单泄漏
+    //   新逻辑：where paymentStatus in ['unpaid','paying'] 条件更新，
+    //   更新失败说明订单已被其他流程推进，需回滚微信侧预付单
+    const updateRes = await db.collection(orderCollection)
+        .where({ _id: orderId, paymentStatus: _.in(['unpaid', 'paying']) })
+        .update({ data: { outTradeNo, paymentStatus: 'paying', updatedAt: db.serverDate() } });
+    // H5: 更新未命中（订单已被并发推进为 paid/cancelled 等）
+    //   此时微信侧 prepay_id 已生成，必须主动关闭避免泄漏
+    if (!updateRes.stats || updateRes.stats.updated === 0) {
+        logger.error('createPayment: 订单状态已变更，回滚微信侧预付单', {
+            orderId, outTradeNo, currentStatus: orderData.paymentStatus,
+        });
+        try {
+            await closePaymentInternal({ outTradeNo }, context, auth, config);
+        }
+        catch (closeErr) {
+            logger.error('createPayment: 回滚预付单失败', { outTradeNo, msg: closeErr?.message });
+        }
+        throw (0, errors_1.err)('ORDER_STATUS_CHANGED', '订单状态已变更，请刷新后重试', { orderId, currentStatus: orderData.paymentStatus });
+    }
     const timeStamp = String(Math.floor(Date.now() / 1000));
     const nonceStr = randomString(32);
     const packageStr = `prepay_id=${payResult.prepay_id}`;
     const payMessage = `${[config.appId, timeStamp, nonceStr, packageStr].join('\n')}\n`;
     const paySign = rsaSign(config.privateKey, payMessage);
     return {
-        code: 0,
-        message: '创建支付订单成功',
-        data: {
-            orderId: orderId,
-            outTradeNo,
-            paymentParams: { timeStamp, nonceStr, package: packageStr, signType: 'RSA', paySign },
-        },
+        orderId: orderId,
+        outTradeNo,
+        paymentParams: { timeStamp, nonceStr, package: packageStr, signType: 'RSA', paySign },
     };
 });
 // =====================================================================
@@ -245,7 +302,7 @@ exports.queryPayment = (0, errors_1.withErrorHandling)(async (event, _context, _
     }
     const authorization = generateAuthorization('GET', path, '', config.mchId, config.serialNo, config.privateKey);
     const result = (await httpsRequest(`${ENDPOINTS.WECHAT_PAY_API_BASE}${path}`, null, authorization, 'GET'));
-    return { code: 0, data: result };
+    return result;
 });
 // =====================================================================
 // closePayment：主动关闭预付单
@@ -260,17 +317,41 @@ exports.closePayment = (0, errors_1.withErrorHandling)(async (event, _context, _
     if (!outTradeNo) {
         throw (0, errors_1.err)('INVALID_PARAMS', '缺少订单号');
     }
+    // H9: ownership 校验——仅订单 owner 可关闭自己的 prepay 单
+    //   原无校验，任何登录用户凭 outTradeNo 即可关闭他人 prepay 单（拒绝服务）
+    //   通过 outTradeNo 前缀推断 orderType，路由到对应集合查询 ownerId
+    const orderType = getOrderType(outTradeNo);
+    if (orderType) {
+        const collection = ORDER_TYPE_COLLECTION[orderType];
+        try {
+            const orderRes = await db.collection(collection).where({ outTradeNo }).limit(1).get();
+            if (orderRes.data && orderRes.data.length > 0) {
+                const orderDoc = orderRes.data[0];
+                if (orderDoc.ownerId && orderDoc.ownerId !== _auth.openid) {
+                    throw (0, errors_1.err)('PERMISSION_DENIED', '无权操作他人订单');
+                }
+            }
+        }
+        catch (e) {
+            // 重新抛出 BusinessError
+            if (e && typeof e === 'object' && 'code' in e) {
+                throw e;
+            }
+            // 查询失败不阻断关闭流程（best-effort 校验）
+            logger.warn('closePayment.ownership_check.failed', { outTradeNo, msg: e?.message });
+        }
+    }
     const config = WECHAT_PAY;
     if (!config.mchId || !config.privateKey) {
         throw (0, errors_1.err)('BUSINESS_ERROR', '微信支付未配置');
     }
-    await closePaymentInternal({ outTradeNo }, _context, _auth, db, config);
-    return { code: 0, message: '支付单已关闭', data: null };
+    await closePaymentInternal({ outTradeNo }, _context, _auth, config);
+    return null;
 });
 /**
  * 内部复用：直接关闭预付单（无 withErrorHandling 包装），供 createPayment 回收旧单时调用
  */
-async function closePaymentInternal(event, _context, _auth, dbInstance, config) {
+async function closePaymentInternal(event, _context, _auth, config) {
     const { outTradeNo } = event;
     if (!outTradeNo) {
         throw (0, errors_1.err)('INVALID_PARAMS', '缺少订单号');
@@ -280,8 +361,6 @@ async function closePaymentInternal(event, _context, _auth, dbInstance, config) 
     const bodyStr = JSON.stringify(body);
     const authorization = generateAuthorization('POST', path, bodyStr, config.mchId, config.serialNo, config.privateKey);
     await httpsRequest(`${ENDPOINTS.WECHAT_PAY_API_BASE}${path}`, body, authorization);
-    // 引用 dbInstance 以避免 lint 报"未使用"
-    void dbInstance;
 }
 // =====================================================================
 // confirmPayment：确认支付（拉起 trade_state 后落库）
@@ -313,7 +392,7 @@ exports.confirmPayment = (0, errors_1.withErrorHandling)(async (event, _context,
     const authorization = generateAuthorization('GET', path, '', config.mchId, config.serialNo, config.privateKey);
     const result = (await httpsRequest(`${ENDPOINTS.WECHAT_PAY_API_BASE}${path}`, null, authorization, 'GET'));
     if (result.trade_state !== 'SUCCESS') {
-        return { code: 0, data: { paid: false, tradeState: result.trade_state || 'UNKNOWN' } };
+        return { paid: false, tradeState: result.trade_state || 'UNKNOWN' };
     }
     const orderType = getOrderType(outTradeNo);
     if (!orderType) {
@@ -325,8 +404,14 @@ exports.confirmPayment = (0, errors_1.withErrorHandling)(async (event, _context,
         throw (0, errors_1.err)('NOT_FOUND', '订单不存在');
     }
     const existingOrder = orderRes.data[0];
+    // H9+M9: ownership 校验——仅订单 owner 可触发他人订单的状态推进与佣金创建
+    //   原无校验，任何登录用户凭 outTradeNo 即可触发他人订单的状态推进
+    //   虽然需微信 trade_state=SUCCESS 才推进，但副作用如 alert/日志会污染
+    if (existingOrder.ownerId && existingOrder.ownerId !== _auth.openid) {
+        throw (0, errors_1.err)('PERMISSION_DENIED', '无权操作他人订单');
+    }
     if (existingOrder.paymentStatus === 'paid') {
-        return { code: 0, data: { paid: true, alreadyConfirmed: true } };
+        return { paid: true, alreadyConfirmed: true };
     }
     // 校验支付状态机：当前必须是 paying/unpaid → 目标 paid
     if (!paymentStateMachine.canTransition(existingOrder.paymentStatus || 'unpaid', 'paid')) {
@@ -347,17 +432,42 @@ exports.confirmPayment = (0, errors_1.withErrorHandling)(async (event, _context,
         logger.warn('confirmPayment.unknownOrderType', { orderType, outTradeNo });
     }
     // 跨集合状态同步：tuan 与 activity 类型还需同步到对应业务表
+    //   H6+M11: 原逻辑各步独立 try/catch，与 notify.ts 的事务路径不一致
+    //   导致 tuan_orders 已 paid 但 orders 仍 paying 的中间状态
+    //   修复：主订单更新改为条件更新（where paymentStatus != 'paid'），
+    //         仅当主订单实际推进时才触发 tuan_orders/activity 同步 + commission
+    //         避免与 notify.ts 并发执行时重复同步 + 重复创建佣金
+    const condUpdateRes = await db.collection(collection)
+        .where({
+        _id: existingOrder._id,
+        paymentStatus: _.neq('paid'), // H6: 仅当未 paid 时才推进
+    })
+        .update({ data: updateData });
+    // H6: 主订单未推进（已被 notify.ts 并发推进为 paid）
+    //   此时不应再触发 tuan_orders/activity 同步与 commission 创建，避免重复
+    if (!condUpdateRes.stats || condUpdateRes.stats.updated === 0) {
+        logger.info('confirmPayment.already_paid_skip_sync', {
+            outTradeNo, orderId: existingOrder._id, currentStatus: existingOrder.paymentStatus,
+        });
+        return { paid: true, alreadyConfirmed: true };
+    }
     if (orderType === 'tuan') {
         // 通过 tuanOrderId 关联更新 tuan_orders（而非 outTradeNo，因为 tuan_orders 中没有 outTradeNo 字段）
         const tuanOrderId = existingOrder.tuanOrderId;
         if (tuanOrderId) {
             try {
                 await db.collection('tuan_orders').doc(tuanOrderId).update({
-                    data: { status: 'paid', paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
+                    data: { status: 'paid', paymentStatus: 'paid', transactionId: result.transaction_id || '', paidAt: db.serverDate(), updatedAt: db.serverDate() },
                 });
             }
             catch (e) {
                 logger.warn('confirmPayment.tuan_orders.sync', { tuanOrderId, code: e?.errCode, msg: e?.message });
+                await recordAlert('critical', 'confirmPayment.tuan_sync.failed', '确认支付时 tuan_orders 状态同步失败，需人工核对', {
+                    outTradeNo,
+                    orderType,
+                    tuanOrderId,
+                    error: e?.message,
+                });
             }
         }
     }
@@ -368,25 +478,22 @@ exports.confirmPayment = (0, errors_1.withErrorHandling)(async (event, _context,
                 ownerId: existingOrder.openid,
                 orderType: 'activity',
             }).limit(1).update({
-                data: { status: 'confirmed', paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
+                data: { status: 'confirmed', paymentStatus: 'paid', transactionId: result.transaction_id || '', paidAt: db.serverDate(), updatedAt: db.serverDate() },
             });
         }
         catch (e) {
             logger.warn('confirmPayment.activity.sync', { outTradeNo, code: e?.errCode, msg: e?.message });
+            await recordAlert('critical', 'confirmPayment.activity_sync.failed', '确认支付时 activity 订单状态同步失败，需人工核对', {
+                outTradeNo,
+                orderType,
+                activityId: existingOrder.activityId,
+                openid: existingOrder.openid,
+                error: e?.message,
+            });
         }
     }
-    await db.collection(collection).doc(existingOrder._id).update({ data: updateData });
-    // 核销订单关联的优惠券（best-effort，不影响主流程）
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { consumeOrderCoupons } = require('./coupon-settlement');
-        await consumeOrderCoupons({ ...existingOrder, paymentStatus: 'paid' });
-    }
-    catch (couponErr) {
-        logger.error('confirmPayment.consumeOrderCoupons', {
-            orderId: existingOrder._id, orderType, msg: couponErr?.message,
-        });
-    }
+    // H6: 仅当主订单实际推进时才触发 commission 创建
+    //   原 notify.ts 与 confirmPayment 并发执行时可创建 2 条佣金记录
     if (orderType === 'mall' || orderType === 'tuan') {
         try {
             // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -395,9 +502,15 @@ exports.confirmPayment = (0, errors_1.withErrorHandling)(async (event, _context,
         }
         catch (commissionErr) {
             logger.error('confirmPayment commission', { msg: commissionErr?.message });
+            await recordAlert('warning', 'confirmPayment.commission.failed', '确认支付后佣金记录创建失败，需人工核查', {
+                outTradeNo,
+                orderType,
+                orderId: existingOrder._id,
+                error: commissionErr?.message,
+            });
         }
     }
-    return { code: 0, data: { paid: true } };
+    return { paid: true };
 });
 // =====================================================================
 // 默认导出（保持 CommonJS 兼容）

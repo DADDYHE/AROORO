@@ -8,7 +8,7 @@
  *     3) 查找邀请人（inviterId）
  *     4) 计算佣金金额 = 订单金额 × 佣金率 / 100
  *     5) 幂等检查（已存在则跳过）
- *     6) 写入 tuan_commissions 集合
+ *     6) 写入 commissions 集合
  *
  * 使用方式：
  *   - 各云函数通过 require('../../common/commission-utils').createCommissionRecord 调用
@@ -34,6 +34,7 @@ export interface CommissionConfig {
     mall?: number;
     tuan?: number;
     activity?: number;
+    boarding?: number;
     feeding?: number;
     [k: string]: number | undefined;
 }
@@ -76,7 +77,7 @@ export interface CommissionRecordPayload {
  *   6. 查询邀请人档案
  *   7. 计算佣金金额（orderAmount × rate / 100，保留 2 位小数）
  *   8. 幂等检查（orderId + inviterId 已存在 → 跳过）
- *   9. 写入 tuan_commissions
+ *   9. 写入 commissions
  *
  * 错误处理：
  *   - 任何异常都被吞掉，仅记录日志
@@ -87,4 +88,22 @@ export interface CommissionRecordPayload {
  * @returns 始终返回 void；失败仅记日志
  */
 export declare function createCommissionRecord(orderType: CommissionOrderType | string, order: CommissionOrderDoc): Promise<void>;
+/**
+ * 取消佣金记录（best-effort）
+ *
+ * 调用时机：
+ *   - 订单取消/退款时
+ *
+ * 流程：
+ *   1. 查找 commissions 中 orderId 对应的所有记录
+ *   2. 将 status 从 'pending' 更新为 'cancelled'
+ *
+ * 错误处理：
+ *   - 任何异常都被吞掉，仅记录日志
+ *   - 不影响主业务（订单取消）的响应
+ *
+ * @param orderId 订单ID
+ * @returns 始终返回 void；失败仅记日志
+ */
+export declare function cancelCommissionRecord(orderId: string): Promise<void>;
 export default createCommissionRecord;

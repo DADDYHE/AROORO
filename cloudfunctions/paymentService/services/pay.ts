@@ -36,6 +36,9 @@ const { WECHAT_PAY, ENDPOINTS } = require('../common/config')
 const { randomString, rsaSign, httpsRequest, generateAuthorization } = require('./wechatPayUtils')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { paymentStateMachine, resolveOrderStatus, isKnownOrderType } = require('../common/payment-state-machine')
+// P0-6: 资金事务失败主动告警
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('../../common/alert')
 
 // =====================================================================
 // 类型定义
@@ -121,6 +124,7 @@ interface WechatPayQueryResult {
 // =====================================================================
 
 const { db } = initCloud()
+const _ = db.command
 const logger = createLogger('paymentService:pay')
 
 // =====================================================================
@@ -159,7 +163,11 @@ const ORDER_TYPE_AMOUNT_FIELD: Record<OrderType, string> = {
   feeding: 'totalPrice',
 }
 
-const ORDER_TYPE_PREFIX_MAP: Record<string, OrderType> = {
+// H4+M15: 导出供 refund.ts 复用，避免 orderType 推断逻辑双份漂移
+//   refund 旧实现 `outTradeNo.split('_')[0].toLowerCase()`：
+//   - ACT_xxx → act（不匹配 activity）；FD_xxx → fd（不匹配 feeding）
+//   - 导致 activity/feeding 退款时业务表同步全部跳过
+export const ORDER_TYPE_PREFIX_MAP: Record<string, OrderType> = {
   ORDER_: 'order',
   MALL_: 'mall',
   TUAN_: 'tuan',
@@ -167,7 +175,12 @@ const ORDER_TYPE_PREFIX_MAP: Record<string, OrderType> = {
   FD_: 'feeding',
 }
 
-function getOrderType(outTradeNo: string): OrderType | null {
+// H4: 导出 collection 映射，refund 按 orderType 路由到正确集合
+export const ORDER_TYPE_COLLECTION_MAP = ORDER_TYPE_COLLECTION
+// H4+M12: 导出 amount 字段映射，commission 复用避免字段优先级不一致
+export const ORDER_TYPE_AMOUNT_FIELD_MAP = ORDER_TYPE_AMOUNT_FIELD
+
+export function getOrderType(outTradeNo: string): OrderType | null {
   for (const [prefix, type] of Object.entries(ORDER_TYPE_PREFIX_MAP)) {
     if (outTradeNo.startsWith(prefix)) {return type as OrderType}
   }
@@ -203,8 +216,17 @@ export const createPayment: WrappedHandler<CreatePaymentResult> = withErrorHandl
   if (!openid) {throw err('AUTH_REQUIRED', '未登录')}
 
   const { type, orderId, amount, description } = event as CreatePaymentEvent
-  if (!type || !orderId || !amount || amount <= 0) {
-    throw err('INVALID_PARAMS', '参数不完整')
+  // H11: amount 类型严格校验——必须为有限正整数（分单位）
+  //   原仅 `!amount || amount <= 0`，字符串 "100"/NaN/Infinity/浮点数 99.99 均可绕过
+  //   Math.round("100")=100 / Math.round(99.99)=100 隐式转换导致单位混乱
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+    throw err('INVALID_PARAMS', '支付金额必须为正数')
+  }
+  if (!Number.isInteger(amount)) {
+    throw err('INVALID_PARAMS', '支付金额必须为整数（分单位）')
+  }
+  if (!type || !orderId) {
+    throw err('INVALID_PARAMS', '缺少订单类型或订单号')
   }
   if (!ORDER_TYPE_PREFIX[type as OrderType]) {
     throw err('INVALID_PARAMS', '不支持的订单类型')
@@ -224,13 +246,22 @@ export const createPayment: WrappedHandler<CreatePaymentResult> = withErrorHandl
   }
   const orderData = orderRes.data as OrderDoc
 
+  // M16: ownership 校验——仅订单 owner 可发起支付
+  //   原无校验，任意登录用户凭 orderId 即可为他人订单发起支付，
+  //   虽然金额校验仍生效（不会造成直接资金损失），但会导致：
+  //   - 订单状态被推进到 paying，影响 owner 正常支付流程
+  //   - prepay_id 被滥用，违反微信支付用户身份一致性约定
+  if (orderData.ownerId && orderData.ownerId !== openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人订单')
+  }
+
   if (orderData.paymentStatus === 'paid') {
     throw err('ORDER_ALREADY_PAID', '订单已支付', { orderId })
   }
 
-  if (amount && orderData.totalPrice && Math.round(amount) !== Math.round(orderData.totalPrice * 100)) {
-    throw err('PAYMENT_AMOUNT_MISMATCH', '支付金额与订单金额不一致')
-  }
+  // H2: 旧逻辑 `if (amount && orderData.totalPrice && ...)` 在 totalPrice=0/缺失时跳过比对
+  //   该校验与下方 actualAmount 比对语义重复，统一在下方 actualAmount 校验中处理
+  //   避免 totalPrice 与 amountField 字段不一致时双重判断产生分歧
 
   // Sprint 25: 旧预付单回收（如果订单有 outTradeNo 且 paymentStatus=paying，先关掉）
   if (orderData.outTradeNo && orderData.paymentStatus === 'paying') {
@@ -249,7 +280,18 @@ export const createPayment: WrappedHandler<CreatePaymentResult> = withErrorHandl
   } catch (e) {
     logger.warn('createPayment: 解析订单金额失败', { msg: (e as Error)?.message })
   }
-  if (actualAmount > 0 && Math.round(amount) !== Math.round(actualAmount * 100)) {
+  // H2: 强制 actualAmount > 0——免费订单不应进入 createPayment 流程
+  //   原逻辑 `if (actualAmount > 0 && ...)` 在 actualAmount=0 时跳过比对，
+  //   客户端可传任意小额 amount（如 1 分）调起微信下单成功，造成资金损失
+  if (!Number.isFinite(actualAmount) || actualAmount <= 0) {
+    logger.error('createPayment: 订单金额异常', {
+      orderId, type, amountField: ORDER_TYPE_AMOUNT_FIELD[orderType] || 'totalPrice',
+      dbAmount: actualAmount,
+    })
+    throw err('PAYMENT_AMOUNT_MISMATCH', '订单金额异常，无法发起支付', { dbAmount: actualAmount })
+  }
+  // H2: 客户端入参 amount 必须与 DB 订单金额一致（统一以分为单位比对）
+  if (Math.round(amount) !== Math.round(actualAmount * 100)) {
     logger.error('createPayment: 金额不符', {
       clientAmount: amount, dbAmount: actualAmount, dbAmountCents: Math.round(actualAmount * 100), type, orderId,
     })
@@ -312,9 +354,29 @@ export const createPayment: WrappedHandler<CreatePaymentResult> = withErrorHandl
   }
 
   const orderCollection = ORDER_TYPE_COLLECTION[orderType]
-  await db.collection(orderCollection).doc(orderId as string).update({
-    data: { outTradeNo, paymentStatus: 'paying', updatedAt: db.serverDate() },
-  })
+  // H5: 条件更新——仅当 paymentStatus 仍为 unpaid/paying 时才推进到 paying
+  //   原 `doc(orderId).update(...)` 无条件写入，并发场景下：
+  //   - 已被并发流程置为 paid 的订单会被覆盖为 paying（资金与状态不一致）
+  //   - 同一订单两次 createPayment 同时进行，outTradeNo 被后写入覆盖，旧 prepay 单泄漏
+  //   新逻辑：where paymentStatus in ['unpaid','paying'] 条件更新，
+  //   更新失败说明订单已被其他流程推进，需回滚微信侧预付单
+  const updateRes = await db.collection(orderCollection)
+    .where({ _id: orderId as string, paymentStatus: _.in(['unpaid', 'paying']) })
+    .update({ data: { outTradeNo, paymentStatus: 'paying', updatedAt: db.serverDate() } })
+
+  // H5: 更新未命中（订单已被并发推进为 paid/cancelled 等）
+  //   此时微信侧 prepay_id 已生成，必须主动关闭避免泄漏
+  if (!updateRes.stats || updateRes.stats.updated === 0) {
+    logger.error('createPayment: 订单状态已变更，回滚微信侧预付单', {
+      orderId, outTradeNo, currentStatus: orderData.paymentStatus,
+    })
+    try {
+      await closePaymentInternal({ outTradeNo }, context, auth, config)
+    } catch (closeErr) {
+      logger.error('createPayment: 回滚预付单失败', { outTradeNo, msg: (closeErr as Error)?.message })
+    }
+    throw err('ORDER_STATUS_CHANGED', '订单状态已变更，请刷新后重试', { orderId, currentStatus: orderData.paymentStatus })
+  }
 
   const timeStamp = String(Math.floor(Date.now() / 1000))
   const nonceStr = randomString(32)
@@ -390,6 +452,28 @@ export const closePayment: WrappedHandler<null> = withErrorHandling<null>(async 
   const { outTradeNo } = event as ClosePaymentEvent
   if (!outTradeNo) {
     throw err('INVALID_PARAMS', '缺少订单号')
+  }
+
+  // H9: ownership 校验——仅订单 owner 可关闭自己的 prepay 单
+  //   原无校验，任何登录用户凭 outTradeNo 即可关闭他人 prepay 单（拒绝服务）
+  //   通过 outTradeNo 前缀推断 orderType，路由到对应集合查询 ownerId
+  const orderType = getOrderType(outTradeNo)
+  if (orderType) {
+    const collection = ORDER_TYPE_COLLECTION[orderType]
+    try {
+      const orderRes = await db.collection(collection).where({ outTradeNo }).limit(1).get()
+      if (orderRes.data && orderRes.data.length > 0) {
+        const orderDoc = orderRes.data[0] as OrderDoc
+        if (orderDoc.ownerId && orderDoc.ownerId !== _auth.openid) {
+          throw err('PERMISSION_DENIED', '无权操作他人订单')
+        }
+      }
+    } catch (e) {
+      // 重新抛出 BusinessError
+      if (e && typeof e === 'object' && 'code' in e) { throw e }
+      // 查询失败不阻断关闭流程（best-effort 校验）
+      logger.warn('closePayment.ownership_check.failed', { outTradeNo, msg: (e as Error)?.message })
+    }
   }
 
   const config = WECHAT_PAY
@@ -489,6 +573,13 @@ export const confirmPayment: WrappedHandler<ConfirmPaymentResult> = withErrorHan
 
   const existingOrder = orderRes.data[0] as OrderDoc
 
+  // H9+M9: ownership 校验——仅订单 owner 可触发他人订单的状态推进与佣金创建
+  //   原无校验，任何登录用户凭 outTradeNo 即可触发他人订单的状态推进
+  //   虽然需微信 trade_state=SUCCESS 才推进，但副作用如 alert/日志会污染
+  if (existingOrder.ownerId && existingOrder.ownerId !== _auth.openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人订单')
+  }
+
   if (existingOrder.paymentStatus === 'paid') {
     return { paid: true, alreadyConfirmed: true }
   }
@@ -516,16 +607,48 @@ export const confirmPayment: WrappedHandler<ConfirmPaymentResult> = withErrorHan
   }
 
   // 跨集合状态同步：tuan 与 activity 类型还需同步到对应业务表
+  //   H6+M11: 原逻辑各步独立 try/catch，与 notify.ts 的事务路径不一致
+  //   导致 tuan_orders 已 paid 但 orders 仍 paying 的中间状态
+  //   修复：主订单更新改为条件更新（where paymentStatus != 'paid'），
+  //         仅当主订单实际推进时才触发 tuan_orders/activity 同步 + commission
+  //         避免与 notify.ts 并发执行时重复同步 + 重复创建佣金
+  const condUpdateRes = await db.collection(collection)
+    .where({
+      _id: existingOrder._id,
+      paymentStatus: _.neq('paid'), // H6: 仅当未 paid 时才推进
+    })
+    .update({ data: updateData })
+
+  // H6: 主订单未推进（已被 notify.ts 并发推进为 paid）
+  //   此时不应再触发 tuan_orders/activity 同步与 commission 创建，避免重复
+  if (!condUpdateRes.stats || condUpdateRes.stats.updated === 0) {
+    logger.info('confirmPayment.already_paid_skip_sync', {
+      outTradeNo, orderId: existingOrder._id, currentStatus: existingOrder.paymentStatus,
+    })
+    return { paid: true, alreadyConfirmed: true }
+  }
+
   if (orderType === 'tuan') {
     // 通过 tuanOrderId 关联更新 tuan_orders（而非 outTradeNo，因为 tuan_orders 中没有 outTradeNo 字段）
     const tuanOrderId = (existingOrder as Record<string, unknown>).tuanOrderId as string
     if (tuanOrderId) {
       try {
         await db.collection('tuan_orders').doc(tuanOrderId).update({
-          data: { status: 'paid', paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
+          data: { status: 'paid', paymentStatus: 'paid', transactionId: result.transaction_id || '', paidAt: db.serverDate(), updatedAt: db.serverDate() },
         })
       } catch (e) {
         logger.warn('confirmPayment.tuan_orders.sync', { tuanOrderId, code: (e as { errCode?: string })?.errCode, msg: (e as Error)?.message })
+        await recordAlert(
+          'critical',
+          'confirmPayment.tuan_sync.failed',
+          '确认支付时 tuan_orders 状态同步失败，需人工核对',
+          {
+            outTradeNo,
+            orderType,
+            tuanOrderId,
+            error: (e as Error)?.message,
+          }
+        )
       }
     }
   } else if (orderType === 'activity') {
@@ -535,15 +658,27 @@ export const confirmPayment: WrappedHandler<ConfirmPaymentResult> = withErrorHan
         ownerId: existingOrder.openid,
         orderType: 'activity',
       }).limit(1).update({
-        data: { status: 'confirmed', paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
+        data: { status: 'confirmed', paymentStatus: 'paid', transactionId: result.transaction_id || '', paidAt: db.serverDate(), updatedAt: db.serverDate() },
       })
     } catch (e) {
       logger.warn('confirmPayment.activity.sync', { outTradeNo, code: (e as { errCode?: string })?.errCode, msg: (e as Error)?.message })
+      await recordAlert(
+        'critical',
+        'confirmPayment.activity_sync.failed',
+        '确认支付时 activity 订单状态同步失败，需人工核对',
+        {
+          outTradeNo,
+          orderType,
+          activityId: existingOrder.activityId,
+          openid: existingOrder.openid,
+          error: (e as Error)?.message,
+        }
+      )
     }
   }
 
-  await db.collection(collection).doc(existingOrder._id).update({ data: updateData })
-
+  // H6: 仅当主订单实际推进时才触发 commission 创建
+  //   原 notify.ts 与 confirmPayment 并发执行时可创建 2 条佣金记录
   if (orderType === 'mall' || orderType === 'tuan') {
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -551,6 +686,17 @@ export const confirmPayment: WrappedHandler<ConfirmPaymentResult> = withErrorHan
       await createCommissionRecord(orderType, existingOrder)
     } catch (commissionErr) {
       logger.error('confirmPayment commission', { msg: (commissionErr as Error)?.message })
+      await recordAlert(
+        'warning',
+        'confirmPayment.commission.failed',
+        '确认支付后佣金记录创建失败，需人工核查',
+        {
+          outTradeNo,
+          orderType,
+          orderId: existingOrder._id,
+          error: (commissionErr as Error)?.message,
+        }
+      )
     }
   }
 

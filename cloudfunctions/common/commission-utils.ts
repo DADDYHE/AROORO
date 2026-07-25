@@ -8,7 +8,7 @@
  *     3) 查找邀请人（inviterId）
  *     4) 计算佣金金额 = 订单金额 × 佣金率 / 100
  *     5) 幂等检查（已存在则跳过）
- *     6) 写入 tuan_commissions 集合
+ *     6) 写入 commissions 集合
  *
  * 使用方式：
  *   - 各云函数通过 require('../../common/commission-utils').createCommissionRecord 调用
@@ -142,7 +142,7 @@ async function hasExistingCommission(
   inviterId: string
 ): Promise<boolean> {
   try {
-    const existRes = await dbInstance.collection('tuan_commissions')
+    const existRes = await dbInstance.collection('commissions')
       .where({ orderId, inviterId })
       .count()
     return existRes.total > 0
@@ -180,7 +180,7 @@ function generateId(prefix: string, seed: string): string {
  *   6. 查询邀请人档案
  *   7. 计算佣金金额（orderAmount × rate / 100，保留 2 位小数）
  *   8. 幂等检查（orderId + inviterId 已存在 → 跳过）
- *   9. 写入 tuan_commissions
+ *   9. 写入 commissions
  *
  * 错误处理：
  *   - 任何异常都被吞掉，仅记录日志
@@ -205,6 +205,12 @@ export async function createCommissionRecord(
     const inviterId = buyerData.inviterId
     if (!inviterId) { return }
 
+    // P0-8: 自购订单不触发佣金（防止 inviterId === ownerId 时给自己发佣金）
+    if (inviterId === order.ownerId) {
+      logger.info('commission_skipped_self_purchase', { orderId: order._id, ownerId: order.ownerId })
+      return
+    }
+
     const inviterData = await loadInviter(db, inviterId)
     if (!inviterData) { return }
 
@@ -212,9 +218,10 @@ export async function createCommissionRecord(
     let rate = 0
     try {
       const adminRes = await db.collection('admins').doc(inviterId).get()
-      const admin = adminRes.data
-      if (admin && admin.commissionRates && admin.commissionRates[orderType as string] !== undefined) {
-        rate = Number(admin.commissionRates[orderType as string])
+      const admin = adminRes.data as Record<string, unknown> | null
+      const rates = (admin?.commissionRates as Record<string, number>) || {}
+      if (rates[orderType as string] !== undefined) {
+        rate = Number(rates[orderType as string])
       }
     } catch (e) {
       logger.warn('loadAdminCommissionRates', { inviterId, msg: (e as Error)?.message })
@@ -229,7 +236,10 @@ export async function createCommissionRecord(
     const orderAmount = resolveOrderAmount(order)
     if (orderAmount <= 0) { return }
 
-    const commissionAmount = Math.round((orderAmount * rate / 100) * 100) / 100
+    // P0-3: 使用整数分计算佣金，避免浮点精度误差
+    const orderAmountFen = Math.round(orderAmount * 100)
+    const commissionAmountFen = Math.round(orderAmountFen * rate / 100)
+    const commissionAmount = commissionAmountFen / 100
     if (commissionAmount <= 0) { return }
 
     // 5. 幂等检查
@@ -252,7 +262,7 @@ export async function createCommissionRecord(
       updatedAt: db.serverDate(),
     }
 
-    await db.collection('tuan_commissions').add({ data: payload })
+    await db.collection('commissions').add({ data: payload })
     logger.info('commission_created', { orderType, orderId: order._id, amount: orderAmount, rate, commission: commissionAmount })
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : '未知错误'
@@ -267,7 +277,7 @@ export async function createCommissionRecord(
  *   - 订单取消/退款时
  *
  * 流程：
- *   1. 查找 tuan_commissions 中 orderId 对应的所有记录
+ *   1. 查找 commissions 中 orderId 对应的所有记录
  *   2. 将 status 从 'pending' 更新为 'cancelled'
  *
  * 错误处理：
@@ -281,7 +291,7 @@ export async function cancelCommissionRecord(orderId: string): Promise<void> {
   try {
     if (!orderId) { return }
 
-    const result = await db.collection('tuan_commissions')
+    const result = await db.collection('commissions')
       .where({ orderId, status: 'pending' })
       .update({
         data: {

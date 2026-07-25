@@ -13,21 +13,7 @@
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.userService.json
  */
-export interface AuthLike {
-    openid?: string;
-    [k: string]: unknown;
-}
-export interface CloudEvent {
-    action?: string;
-    data?: Record<string, unknown>;
-    page?: number;
-    pageSize?: number;
-    notificationId?: string;
-    [k: string]: unknown;
-}
-export interface CloudContext {
-    [k: string]: unknown;
-}
+import type { AuthLike, CloudEvent, CloudContext } from './common/types';
 export type NotificationHandler = (event: CloudEvent, context: CloudContext, auth: AuthLike) => Promise<unknown>;
 export interface NotificationRecord {
     _id: string;

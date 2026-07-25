@@ -8,7 +8,7 @@
  *     3) 查找邀请人（inviterId）
  *     4) 计算佣金金额 = 订单金额 × 佣金率 / 100
  *     5) 幂等检查（已存在则跳过）
- *     6) 写入 tuan_commissions 集合
+ *     6) 写入 commissions 集合
  *
  * 与 pay.ts / refund.ts / notify.ts 的关键差异：
  *   - 工具函数（非 handler）：被 pay.ts / notify.ts 异步调用
@@ -26,7 +26,7 @@
  *   （运行时仍消费 .js 编译产物）
  */
 /** 订单类型（与 pay.ts / notify.ts 保持一致） */
-export type CommissionOrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'boarding' | 'feeding';
+export type CommissionOrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'feeding';
 /** 订单文档（最小子集） */
 export interface CommissionOrderDoc {
     _id: string;
@@ -44,7 +44,6 @@ export interface CommissionConfig {
     mall?: number;
     tuan?: number;
     activity?: number;
-    boarding?: number;
     feeding?: number;
     [k: string]: number | undefined;
 }
@@ -68,8 +67,8 @@ export interface CommissionRecordPayload {
     commissionRate: number;
     commissionAmount: number;
     status: 'pending';
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: unknown;
+    updatedAt: unknown;
     [k: string]: unknown;
 }
 /**
@@ -88,7 +87,7 @@ export interface CommissionRecordPayload {
  *   6. 查询邀请人档案
  *   7. 计算佣金金额（orderAmount × rate / 100，保留 2 位小数）
  *   8. 幂等检查（orderId + inviterId 已存在 → 跳过）
- *   9. 写入 tuan_commissions
+ *   9. 写入 commissions
  *
  * 错误处理：
  *   - 任何异常都被吞掉，仅记录日志

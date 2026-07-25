@@ -57,9 +57,27 @@ describe('Sprint 33: adminService TypeScript 迁移', () => {
   })
 
   describe('2. tsconfig.adminService.json 配置', () => {
-    let cfg
+    // tsconfig.adminService.json 已重构为 extends ./tsconfig.common.json：
+    // 子配置仅覆写 outDir/rootDir/include/exclude，strict/target/module/declaration
+    // 等编译选项继承自基础配置。因此需解析 extends 链后再校验有效配置。
+    let cfg          // 子配置原始内容
+    let effective    // 合并 extends 链后的有效 compilerOptions
     beforeAll(() => {
       cfg = JSON.parse(readFileSafe(path.join(ROOT, 'tsconfig.adminService.json')))
+      // 递归合并 extends 链的 compilerOptions（子覆盖父）
+      const mergeChain = (cfgPath, seen = new Set()) => {
+        const abs = path.resolve(ROOT, cfgPath)
+        if (seen.has(abs)) { return {} }
+        seen.add(abs)
+        const c = JSON.parse(readFileSafe(abs))
+        let base = {}
+        if (c.extends) {
+          const parentPath = path.resolve(path.dirname(abs), c.extends)
+          base = mergeChain(path.relative(ROOT, parentPath), seen)
+        }
+        return { ...base, ...(c.compilerOptions || {}) }
+      }
+      effective = mergeChain('tsconfig.adminService.json')
     })
 
     test('tsconfig 文件存在', () => {
@@ -74,20 +92,20 @@ describe('Sprint 33: adminService TypeScript 迁移', () => {
       expect(cfg.include).toContain('cloudfunctions/adminService/constants.ts')
     })
 
-    test('compilerOptions.strict = true', () => {
-      expect(cfg.compilerOptions.strict).toBe(true)
+    test('compilerOptions.strict = true（继承自 tsconfig.common.json）', () => {
+      expect(effective.strict).toBe(true)
     })
 
-    test('compilerOptions.target = ES2020', () => {
-      expect(cfg.compilerOptions.target).toBe('ES2020')
+    test('compilerOptions.target = ES2020（继承自 tsconfig.common.json）', () => {
+      expect(effective.target).toBe('ES2020')
     })
 
-    test('compilerOptions.module = CommonJS', () => {
-      expect(cfg.compilerOptions.module).toBe('CommonJS')
+    test('compilerOptions.module = CommonJS（继承自 tsconfig.common.json）', () => {
+      expect(effective.module).toBe('CommonJS')
     })
 
-    test('compilerOptions.declaration = true', () => {
-      expect(cfg.compilerOptions.declaration).toBe(true)
+    test('compilerOptions.declaration = true（继承自 tsconfig.common.json）', () => {
+      expect(effective.declaration).toBe(true)
     })
   })
 
@@ -184,8 +202,12 @@ describe('Sprint 33: adminService TypeScript 迁移', () => {
       expect(code).toMatch(/export\s+const\s+handlers\s*[:=]/)
     })
 
-    test('Runtime shim 修复 CommonJS 导出', () => {
-      expect(code).toMatch(/_mod\.exports\s*=\s*\{/)
+    test('CommonJS 导出兼容（export { main as default }）', () => {
+      // index.ts 已重构：通过编译产物 exports.main 暴露入口，
+      // 并以 export { main as default } 保持 ESM/CJS 双兼容，
+      // 不再重新赋值 module.exports（避免 runtime 加载 userFunction 时
+      // main.toString() 返回 undefined 的兼容问题）
+      expect(code).toMatch(/export\s*\{\s*main\s+as\s+default\s*\}/)
     })
   })
 
@@ -224,14 +246,15 @@ describe('Sprint 33: adminService TypeScript 迁移', () => {
     })
   })
 
-  describe('6. 18 services 子模块未破坏（16 handler + 2 utility）', () => {
+  describe('6. 17 services 子模块未破坏（16 handler + 1 utility）', () => {
+    // 注：原 commission utility service 已并入 commissionConfig（后者被 index.ts require）
     const EXPECTED_HANDLER_SERVICES = [
       'activity', 'adminManagement', 'application', 'auth', 'banner',
       'coupon', 'feeding', 'hosting', 'i18nOverride', 'mall',
       'tuan', 'upload', 'user', 'wallet', 'stats',
       'commissionConfig',
     ]
-    const EXPECTED_UTILITY_SERVICES = ['stateMachine', 'commission']
+    const EXPECTED_UTILITY_SERVICES = ['stateMachine']
     const EXPECTED_ALL_SERVICES = [...EXPECTED_HANDLER_SERVICES, ...EXPECTED_UTILITY_SERVICES]
 
     EXPECTED_ALL_SERVICES.forEach(svc => {
@@ -266,8 +289,13 @@ describe('Sprint 33: adminService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s33-admin-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s33-admin-service-ts:strict/)
+    test('ci:check 经 audit:all:strict 聚合执行 s33 审计', () => {
+      // ci:check 不再直接列出 audit:s33-admin-service-ts:strict，
+      // 而是通过 audit:all:strict（scripts/audit-all.js）按 /^audit-s3[3-9]-.*\.js$/
+      // 正则自动聚合执行 audit-s33-admin-service-ts.js
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
+      const auditAll = readFileSafe(path.join(ROOT, 'scripts', 'audit-all.js'))
+      expect(auditAll).toMatch(/audit-s3\[3-9\]|s3\[3-9\]-/)
     })
   })
 

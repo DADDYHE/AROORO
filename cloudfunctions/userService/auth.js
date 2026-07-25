@@ -25,7 +25,7 @@ exports.checkAdminStatus = exports.getConfig = exports.getAllUserInfo = exports.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { initCloud, handleSuccess, handleError, ERROR_CODES } = require('./common/utils');
+const { initCloud, handleSuccess, handleError, ERROR_CODES, maskOpenid } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -80,24 +80,48 @@ async function login(event, context, auth) {
             }
             if (!user) {
                 isNewUser = true;
-                const userData = {
-                    openid,
-                    role: 'user',
-                    inviterId: validInviterId,
-                    createdAt: db.serverDate(),
-                    updatedAt: db.serverDate(),
-                };
-                if (userInfo && typeof userInfo === 'object') {
-                    const filteredInfo = filterFields(FIELD_WHITELISTS.user, userInfo);
-                    // 微信号格式的昵称替换为默认昵称（微信在用户未设昵称时会返回 wxid_ 开头的微信号）
-                    if (filteredInfo.nickName && /^wxid_/i.test(filteredInfo.nickName)) {
-                        filteredInfo.nickName = '萌宠爱好者' + openid.slice(-4);
+                // M3 修复：并发 login 竞态保护。两个并发请求都读到 user 不存在时会各自 set，
+                // 后到的 set 会覆盖先到者的 inviterId/role。用事务 + 事务内重查避免覆盖。
+                const transaction = await db.startTransaction();
+                try {
+                    const existRes = await transaction.collection('users').doc(openid).get();
+                    if (existRes.data) {
+                        // 并发下被其他请求抢先创建，直接复用，不再覆盖
+                        user = existRes.data;
                     }
-                    Object.assign(userData, filteredInfo);
+                    else {
+                        const userData = {
+                            openid,
+                            role: 'user',
+                            inviterId: validInviterId,
+                            createdAt: db.serverDate(),
+                            updatedAt: db.serverDate(),
+                        };
+                        if (userInfo && typeof userInfo === 'object') {
+                            const filteredInfo = filterFields(FIELD_WHITELISTS.user, userInfo);
+                            // 微信号格式的昵称替换为默认昵称（微信在用户未设昵称时会返回 wxid_ 开头的微信号）
+                            if (filteredInfo.nickName && /^wxid_/i.test(filteredInfo.nickName)) {
+                                filteredInfo.nickName = '萌宠爱好者' + openid.slice(-4);
+                            }
+                            Object.assign(userData, filteredInfo);
+                        }
+                        await transaction.collection('users').doc(openid).set({ data: userData });
+                        user = { _id: openid, ...userData };
+                    }
+                    await transaction.commit();
                 }
-                // _id = openid，使用 doc(openid).set()
-                await db.collection('users').doc(openid).set({ data: userData });
-                user = { _id: openid, ...userData };
+                catch (txErr) {
+                    await transaction.rollback().catch(() => { });
+                    // 事务冲突等异常：降级为普通查询，若已被其他请求创建则复用
+                    logger.warn('login.create.txFailed', { openid: maskOpenid(openid), code: txErr.errCode });
+                    const retryRes = await db.collection('users').doc(openid).get().catch(() => null);
+                    if (retryRes && retryRes.data) {
+                        user = retryRes.data;
+                    }
+                    else {
+                        throw txErr;
+                    }
+                }
             }
             else {
                 const updateData = { lastLoginAt: db.serverDate(), updatedAt: db.serverDate() };
@@ -129,7 +153,7 @@ async function login(event, context, auth) {
             }
             catch (e) {
                 logger.warn('login.admins.fetch', {
-                    openid,
+                    openid: maskOpenid(openid),
                     code: e.errCode,
                     msg: e.message,
                 });
@@ -164,6 +188,12 @@ async function getIdentity(event, context, auth) {
     const { openid } = auth;
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
+    }
+    // M2 修复：启用缓存读取，让 300s TTL 的 identity 缓存真正生效（避免每次打库）
+    const cacheKey = `identity_${openid}`;
+    const cached = getCache(cacheKey);
+    if (cached) {
+        return handleSuccess(cached, '获取身份成功');
     }
     try {
         // users._id = openid，直接 doc 查询
@@ -227,7 +257,7 @@ async function checkUserInfo(event) {
         }
         catch (e) {
             logger.warn('checkUserInfo.users.fetch', {
-                openid,
+                openid: maskOpenid(openid),
                 code: e.errCode,
                 msg: e.message,
             });
@@ -274,7 +304,7 @@ async function updateUserInfo(event, context, auth) {
         }
         catch (e) {
             logger.warn('updateUserInfo.users.fetch', {
-                openid,
+                openid: maskOpenid(openid),
                 code: e.errCode,
                 msg: e.message,
             });
@@ -284,15 +314,13 @@ async function updateUserInfo(event, context, auth) {
             return handleSuccess(null, '更新用户信息成功');
         }
         else {
+            // L2 修复：复用已过滤+特殊处理的 safeUserInfo（430 行），避免重复 filterFields 且 bio 取值不一致
             const createData = {
                 openid,
                 createdAt: db.serverDate(),
                 updatedAt: db.serverDate(),
-                ...filterFields(FIELD_WHITELISTS.user, userInfo),
+                ...safeUserInfo,
             };
-            if (userInfo.bio !== undefined) {
-                createData.bio = userInfo.bio;
-            }
             await db.collection('users').doc(openid).set({ data: createData });
             return handleSuccess(null, '创建用户信息成功');
         }
@@ -307,25 +335,34 @@ async function getPhoneNumber(event) {
     if (!code) {
         throw err('INVALID_PARAMS', '缺少 code 参数');
     }
-    try {
-        const result = (await cloud.getOpenData({ list: [code] }));
-        if (result && result.list && result.list[0]) {
-            const phoneData = result.list[0];
-            return handleSuccess({
-                phoneNumber: phoneData.data?.phoneNumber || phoneData.purePhoneNumber || '未获取到手机号',
-            }, '获取手机号成功');
-        }
-        else {
-            // 区分微信侧返回错误码：errcode != 0 视为微信侧登录失败
-            if (result && result.errcode && result.errcode !== 0) {
-                throw err('WX_LOGIN_FAILED', `微信侧登录失败：${result.errmsg || result.errcode}`);
+    // H2 修复：从服务端上下文取 openid 作为限流 key（与 login / checkUserInfo 一致）
+    const wxContext = cloud.getWXContext();
+    const openid = wxContext.OPENID;
+    if (!openid) {
+        throw err('AUTH_REQUIRED', '未登录');
+    }
+    // H2 修复：按 openid 限流（每分钟最多 5 次），防刷微信手机号解密配额 / 触发微信风控
+    return withRateLimit({ userId: openid, type: 'getPhoneNumber' }, async () => {
+        try {
+            const result = (await cloud.getOpenData({ list: [code] }));
+            if (result && result.list && result.list[0]) {
+                const phoneData = result.list[0];
+                return handleSuccess({
+                    phoneNumber: phoneData.data?.phoneNumber || phoneData.purePhoneNumber || '未获取到手机号',
+                }, '获取手机号成功');
             }
-            throw err('BUSINESS_ERROR', '获取手机号失败');
+            else {
+                // 区分微信侧返回错误码：errcode != 0 视为微信侧登录失败
+                if (result && result.errcode && result.errcode !== 0) {
+                    throw err('WX_LOGIN_FAILED', `微信侧登录失败：${result.errmsg || result.errcode}`);
+                }
+                throw err('BUSINESS_ERROR', '获取手机号失败');
+            }
         }
-    }
-    catch (error) {
-        return handleError(error, '获取手机号失败', ERROR_CODES.DATA);
-    }
+        catch (error) {
+            return handleError(error, '获取手机号失败', ERROR_CODES.DATA);
+        }
+    }, { perUserPerMinute: 5, perUserPerTargetPerMinute: 5, windowMs: 60000 });
 }
 exports.getPhoneNumber = getPhoneNumber;
 async function getAllUserInfo(event, context, auth) {
@@ -334,16 +371,13 @@ async function getAllUserInfo(event, context, auth) {
         throw err('AUTH_REQUIRED', '未登录');
     }
     try {
-        const [allUserInfo, allPhoneData] = await Promise.all([
-            checkUserInfo(event),
-            getPhoneNumber(event).catch(() => null),
-        ]);
-        // handleSuccess 的返回是 { code, message, data, ... }
+        // L1 修复：原 getAllUserInfo 内调 getPhoneNumber(event) 是死调用——event 不含微信 button 的 code，
+        // 必抛后被 .catch 吞，phone 永远 null。删除该调用，手机号改由前端单独调 getPhoneNumber action。
+        const allUserInfo = await checkUserInfo(event);
         const userInfoData = allUserInfo?.data ?? null;
-        const phoneDataRaw = allPhoneData?.data ?? null;
         const result = {
             userInfo: userInfoData,
-            phone: phoneDataRaw,
+            phone: null,
         };
         return handleSuccess(result, '获取成功');
     }
@@ -369,7 +403,7 @@ async function checkAdminStatus(event, context, auth) {
         }
         catch (e) {
             logger.warn('checkAdminStatus.admins.fetch', {
-                openid,
+                openid: maskOpenid(openid),
                 code: e.errCode,
                 msg: e.message,
             });
@@ -416,5 +450,4 @@ exports.default = {
     getConfig,
     checkAdminStatus,
 };
-// 避免 unused 警告
-void getCache;
+// M2 已启用 getIdentity 缓存读取（auth.ts:299 调 getCache(cacheKey)），getCache 已被业务使用，无需 void 抑制

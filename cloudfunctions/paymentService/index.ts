@@ -44,7 +44,10 @@ import { err, toResponse, isBusinessError } from '../common/errors'
 const { verifyAuth } = require('./common/auth-middleware')
 // Sprint 50: 限流统一 bootstrap
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { bootstrapRateLimit } = require('../common/rate-limit-bootstrap')
+const { bootstrapRateLimit, BootstrapError } = require('../common/rate-limit-bootstrap')
+// H1: 引入 recordAlert 用于 bootstrap 失败持久化告警
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('../common/alert')
 
 // =====================================================================
 // 公共类型（与已迁移的 12 个服务保持一致）
@@ -155,16 +158,39 @@ export const handlers: HandlerMap = {
 // Sprint 50: 限流统一 bootstrap（rate_limits + rate_limit_configs 一次注入）
 //   - 跨云函数实例共享计数 + 业务类型差异化配置（payment/refund 走更严阈值）
 //   - 若 db 不可用则降级到内存
+//
+// H1（paymentService 审查）: 启用 strict 模式——注入失败时抛错而非降级
+//   - 项目硬约束：paymentService 必须开启 rate-limit-bootstrap strict: true
+//   - 资金类云函数若限流失效，将导致资金接口裸奔（无防御）
+//   - strict=true 时若 countStore/configStore 未注入成功，抛 BootstrapError
+//   - main 入口 try/catch 识别 BootstrapError 后 recordAlert('critical')
 // =====================================================================
 
+let _bootstrapFailed = false
 try {
   const { db } = initCloud() as { cloud: unknown, db: unknown }
   ;(bootstrapRateLimit as (db: unknown, opts?: object) => unknown)(db, {
     logger: createLogger('paymentService.rate-limit'),
+    strict: true,
+    service: 'paymentService',
   })
 } catch (e) {
-  // eslint-disable-next-line no-console
-  console.warn('[paymentService] bootstrapRateLimit failed, fallback to memory:', (e as Error)?.message)
+  _bootstrapFailed = true
+  // P2-002: 使用统一 logger 替代 console.warn
+  logger.error('bootstrapRateLimit strict failed', { msg: (e as Error)?.message })
+  // H1+M18: 持久化告警，运维主动感知
+  //   注意：recordAlert 是 async，但此处模块加载阶段无法 await
+  //   用 .catch 吞错避免 unhandledRejection
+  if (e instanceof Error && (e as { code?: string }).code === 'RATE_LIMIT_BOOTSTRAP_FAILED') {
+    recordAlert(
+      'critical',
+      'paymentService.rate_limit.bootstrap.failed',
+      `paymentService 限流 bootstrap 失败：${e.message}`,
+      { service: 'paymentService', stack: e.stack }
+    ).catch((alertErr: Error) => {
+      logger.error('recordAlert failed for bootstrap failure', { msg: alertErr.message })
+    })
+  }
 }
 
 // =====================================================================
@@ -183,6 +209,23 @@ try {
  * @throws BusinessError UNKNOWN_ACTION（未知 action）
  */
 export async function main(event: CloudEvent, context: CloudContext): Promise<unknown> {
+  // H1: strict 模式 bootstrap 失败时，资金接口直接拒绝服务
+  //   避免限流失效后资金接口裸奔
+  //   paymentNotify（微信回调）也拒绝，让微信重试，等运维修复
+  if (_bootstrapFailed) {
+    const msg = 'paymentService rate-limit bootstrap failed, service unavailable'
+    logger.error('main.blocked_by_bootstrap_failure', { action: event.action })
+    if (isHttpRequest(event)) {
+      // 微信回调返回 5xx，微信会重试
+      return {
+        statusCode: 503,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: 'FAIL', message: 'service_unavailable' }),
+      }
+    }
+    return toResponse(err('SERVICE_UNAVAILABLE', msg))
+  }
+
   // HTTP 触发（微信支付回调）走特殊分支
   if (isHttpRequest(event)) {
     return await handlers.paymentNotify(event, context, null)

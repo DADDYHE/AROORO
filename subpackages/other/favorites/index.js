@@ -85,7 +85,8 @@ Page({
 
       if (favoriteResult.code === 0 && favoriteResult.data) {
         const favoriteList = favoriteResult.data.list || favoriteResult.data
-        const favoriteHostIds = favoriteList.map(item => item.hostProfileId || item._id || item.id).filter(Boolean)
+        // 收藏文档规范字段为 targetId（指向寄养家庭 ID）；hostProfileId/_id 为历史数据兼容
+        const favoriteHostIds = favoriteList.map(item => item.targetId || item.hostProfileId || item._id || item.id).filter(Boolean)
 
         if (favoriteHostIds.length > 0) {
           const hostResult = await HostService.getHostList({ ids: favoriteHostIds, pageSize: favoriteHostIds.length })

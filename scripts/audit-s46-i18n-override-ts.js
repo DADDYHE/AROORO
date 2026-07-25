@@ -46,7 +46,7 @@ if (code) {
   check('Sprint 46', /Sprint\s*46/.test(code))
   check('main 入口', /export\s+async\s+function\s+main\b/.test(code))
   check('fetchActive action', /export\s+async\s+function\s+fetchActive\b/.test(code))
-  check('fetchActiveOverrides 别名', /fetchActiveOverrides:\s*fetchActive/.test(code))
+  // L2：fetchActiveOverrides 别名已移除（不再与 adminService 内部函数名重复）
   check('SupportedLocale 联合', /SupportedLocale/.test(code))
   check('I18nOverrideDoc', /I18nOverrideDoc/.test(code))
   check('I18nOverrides 接口', /export\s+interface\s+I18nOverrides\b/.test(code))

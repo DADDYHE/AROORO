@@ -34,7 +34,7 @@
  *  23. index.ts 导出 ActionHandler 类型
  *  24. index.ts 导出 main 函数
  *  25. index.ts 导出 handlers 聚合对象
- *  26. index.ts Runtime shim 修复 CommonJS 导出（module.exports = main）
+ *  26. index.ts CommonJS 导出兼容（export { main as default }）
  *  27. constants.ts 使用 as const 派生 OrderTypeKey
  *  28. constants.ts 包含 ORDER_TYPES / ORDER_TYPE_NAMES
  *  29. constants.ts Runtime shim 修复 CommonJS 导出
@@ -150,8 +150,11 @@ check('index.ts 导出 PermissionLevel 类型', /export\s+type\s+PermissionLevel
 check('index.ts 导出 ActionHandler 类型', /export\s+type\s+ActionHandler\b/.test(indexTs || ''))
 check('index.ts 导出 main 函数', /export\s+const\s+main\s*[:=]/.test(indexTs || ''))
 check('index.ts 导出 handlers 聚合对象', /export\s+const\s+handlers\s*[:=]/.test(indexTs || ''))
-check('index.ts Runtime shim 修复 CommonJS 导出',
-  /_mod\.exports\s*=\s*\{/.test(indexTs || ''))
+// index.ts 已重构为通过 `exports.main`（编译产物）暴露 main，
+// 并以 `export { main as default }` 保持 ESM/CJS 双兼容；
+// 不再重新赋值 module.exports（避免 runtime 加载 userFunction 时 main.toString() 返回 undefined）
+check('index.ts CommonJS 导出兼容（export { main as default }）',
+  /export\s*\{\s*main\s+as\s+default\s*\}/.test(indexTs || ''))
 
 // 6. constants.ts 内容
 check('constants.ts 注释包含 "Sprint 33"', /Sprint\s*33/.test(constantsTs || ''))
@@ -228,16 +231,17 @@ if (STRICT) {
     check('constants.js 导出 ORDER_TYPES', false, 'js 文件不存在')
   }
 
-  // 8.8 adminService services 模块检查（16 个 handler + 2 个 utility）
+  // 8.8 adminService services 模块检查（16 个 handler + 1 个 utility）
   //   - 16 个 handler service 被 index.ts require
-  //   - 2 个 utility service（stateMachine / commission）被其他 service 引用，index.ts 不直接 require
+  //   - 1 个 utility service（stateMachine）被其他 service 引用，index.ts 不直接 require
+  //   - 注：原 commission service 已并入 commissionConfig（后者在 handler 列表且被 index.ts require）
   const EXPECTED_HANDLER_SERVICES = [
     'activity', 'adminManagement', 'application', 'auth', 'banner',
     'coupon', 'feeding', 'hosting', 'i18nOverride', 'mall',
     'tuan', 'upload', 'user', 'wallet', 'stats',
     'commissionConfig',
   ]
-  const EXPECTED_UTILITY_SERVICES = ['stateMachine', 'commission']
+  const EXPECTED_UTILITY_SERVICES = ['stateMachine']
   const EXPECTED_ALL_SERVICES = [...EXPECTED_HANDLER_SERVICES, ...EXPECTED_UTILITY_SERVICES]
   const missing = []
   for (const svc of EXPECTED_ALL_SERVICES) {
@@ -246,7 +250,7 @@ if (STRICT) {
       missing.push(svc)
     }
   }
-  check(`adminService 18 services 模块全部存在（缺失：${missing.join(', ') || '无'}）`, missing.length === 0)
+  check(`adminService 17 services 模块全部存在（缺失：${missing.join(', ') || '无'}）`, missing.length === 0)
 
   // 8.9 index.ts 引入全部 16 handler services（不引入 utility services）
   if (indexTs) {

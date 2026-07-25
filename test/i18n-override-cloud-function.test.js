@@ -57,15 +57,19 @@ describe('i18nOverride cloud function', () => {
 
   it('未知 action 返回错误码 4001', async () => {
     const res = await fn.main({ action: 'unknown' })
-    // Sprint 39: 实际返回 string code 'UNKNOWN_ACTION'（BusinessError.code），
-    // 与 i18nOverride 的 handleError 调用保持一致（e.code 原样透传）
-    expect(res.code === 4001 || res.code === 'UNKNOWN_ACTION').toBe(true)
+    // Sprint 39+：BusinessError 经 toResponse 序列化后，
+    //   - res.code = ERROR_CODES[severity]（数字，UNKNOWN_ACTION → BUSINESS → 1006）
+    //   - res.error.type = BusinessError.code（语义字符串 'UNKNOWN_ACTION'）
+    // 兼容历史期望（4001 / 字符串 code）以避免回归。
+    expect([4001, 1006, 'UNKNOWN_ACTION']).toContain(res.code)
+    expect(res.error && res.error.type).toBe('UNKNOWN_ACTION')
   })
 
   it('缺少 action 返回错误码 4001', async () => {
     const res = await fn.main({})
-    // Sprint 39: 同上（参见上方说明）
-    expect(res.code === 4001 || res.code === 'UNKNOWN_ACTION').toBe(true)
+    // 同上（参见上方说明）
+    expect([4001, 1006, 'UNKNOWN_ACTION']).toContain(res.code)
+    expect(res.error && res.error.type).toBe('UNKNOWN_ACTION')
   })
 
   it('fetchActive 返回 overrides map', async () => {
@@ -97,11 +101,10 @@ describe('i18nOverride cloud function', () => {
     expect(res.data.count).toBe(0)
   })
 
-  it('fetchActiveOverrides 是 fetchActive 的别名', async () => {
-    wxServerSdk.database()._push({ _id: '1', key: 'A_TITLE', locale: 'zh-CN', value: 'A', status: 'active' })
-
-    const res = await fn.main({ action: 'fetchActiveOverrides' })
-    expect(res.code).toBe(0)
-    expect(res.data.overrides).toEqual({ A_TITLE: { 'zh-CN': 'A' } })
+  it('非法 locale 返回 INVALID_PARAMS', async () => {
+    const res = await fn.main({ action: 'fetchActive', locale: 'fr-FR' })
+    // M2：非法 locale 不再静默降级，抛 INVALID_PARAMS
+    expect([1001, 'INVALID_PARAMS']).toContain(res.code)
+    expect(res.error && res.error.type).toBe('INVALID_PARAMS')
   })
 })

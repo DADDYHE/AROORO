@@ -17,37 +17,7 @@
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.userService.json
  */
-export interface AuthLike {
-    openid?: string;
-    adminId?: string;
-    partnerId?: string;
-    isPartner?: boolean;
-    isSuperAdmin?: boolean;
-    roles?: string[];
-    permissions?: string[];
-    _isHttpAuth?: boolean;
-    [k: string]: unknown;
-}
-export interface CloudEvent {
-    action?: string;
-    data?: Record<string, unknown>;
-    body?: string | Record<string, unknown>;
-    headers?: Record<string, string | undefined>;
-    httpMethod?: string;
-    requestContext?: {
-        httpMethod?: string;
-        [k: string]: unknown;
-    };
-    accessToken?: string;
-    openid?: string;
-    [k: string]: unknown;
-}
-export interface CloudContext {
-    HTTP_CONTEXT?: {
-        headers: Record<string, string | undefined>;
-    };
-    [k: string]: unknown;
-}
+import type { AuthLike, CloudEvent, CloudContext } from './common/types';
 export type UserActionHandler = (event: CloudEvent, context: CloudContext, auth: AuthLike) => Promise<unknown>;
 export interface UserHandlers {
     login: UserActionHandler;

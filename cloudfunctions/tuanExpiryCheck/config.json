@@ -1,10 +1,14 @@
 {
   "timeout": 30,
+  "memorySize": 256,
   "triggers": [
     {
       "name": "tuanExpiryCheckTrigger",
       "type": "timer",
       "config": "0 30 2 * * * *"
     }
-  ]
+  ],
+  "permissions": {
+    "openapi": []
+  }
 }

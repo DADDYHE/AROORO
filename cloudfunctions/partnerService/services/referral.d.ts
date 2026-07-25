@@ -13,6 +13,14 @@
  *
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.partnerService.json
+ *
+ * 数据库索引建议（运维需在对应集合上创建）：
+ *   users: { inviterId: 1 }                                  - 覆盖 getReferralStats/getMyInvitedUsers 邀请人查询
+ *   commissions: { inviterId: 1, status: 1, createdAt: -1 } - 覆盖 getReferralOrders/Stats
+ *   orders: { ownerId: 1, status: 1, type: 1 }               - 覆盖 getReferralStats 邀请用户消费查询
+ *   feedingOrders: { ownerId: 1, status: 1 }                 - 覆盖 feeding 消费查询
+ *   tuan_orders: { ownerId: 1, status: 1 }                   - 覆盖 tuan 消费查询
+ *   activity_registrations: { ownerId: 1, status: 1 }        - 覆盖 activity 消费查询
  */
 export interface AuthLike {
     openid?: string;
@@ -21,6 +29,7 @@ export interface AuthLike {
     isPartner?: boolean;
     roles?: string[];
     permissions?: string[];
+    nickName?: string;
     [k: string]: unknown;
 }
 export interface CloudEvent {
