@@ -121,9 +121,13 @@ Page({
       receiverName: raw.receiverName || '',
       receiverPhone: raw.receiverPhone || '',
       receiverAddress: raw.receiverAddress || '',
-      // 微信支付订单号（确认收货组件必传）
+      // 微信支付订单号（确认收货 / 物流详情组件必传）
       transactionId: raw.transactionId || '',
       wxTransactionId: raw.wxTransactionId || '',
+      // 物流信息（透传给 logistics-card 组件）
+      expressCompany: raw.expressCompany || '',
+      expressNo: raw.expressNo || '',
+      shippedAt: this._formatDateTime(raw.shippedAt),
       status,
       statusText: STATUS_TEXT_MAP[status] || status,
       statusDesc: STATUS_DESC_MAP[status] || '',

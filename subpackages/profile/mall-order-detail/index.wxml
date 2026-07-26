@@ -51,6 +51,18 @@
       </view>
     </view>
 
+    <view class="section logistics-section" wx:if="{{order.status === 'shipped' || order.status === 'completed'}}">
+      <view class="section-title">物流信息</view>
+      <logistics-card
+        order-id="{{order._id}}"
+        express-company="{{order.expressCompany}}"
+        express-no="{{order.expressNo}}"
+        shipped-at="{{order.shippedAt}}"
+        transaction-id="{{order.transactionId}}"
+        wx-transaction-id="{{order.wxTransactionId}}"
+      />
+    </view>
+
     <view class="section info-section">
       <view class="section-title">订单信息</view>
       <view class="info-row">

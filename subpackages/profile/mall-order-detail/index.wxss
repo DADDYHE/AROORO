@@ -3,7 +3,7 @@
 @import '../../../styles/variables.wxss';
 
 .page {
-  background: #F5F5F7;
+  background: var(--background-color);
   min-height: 100vh;
   padding-bottom: 140rpx;
 }
@@ -24,7 +24,7 @@
 }
 
 .status-banner.status-pending_payment {
-  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
 }
 
 .status-banner.status-pending_shipment {
@@ -32,7 +32,7 @@
 }
 
 .status-banner.status-shipped {
-  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  background: linear-gradient(135deg, var(--feeding-primary) 0%, #1976D2 100%);
 }
 
 .status-banner.status-completed {
@@ -46,7 +46,7 @@
 .status-text {
   font-size: 36rpx;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--card-color);
   letter-spacing: 2rpx;
 }
 
@@ -58,7 +58,7 @@
 
 .section {
   margin: 16rpx 24rpx;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   padding: 28rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
@@ -67,7 +67,7 @@
 .section-title {
   font-size: 26rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   margin-bottom: 20rpx;
   letter-spacing: 1rpx;
 }
@@ -91,7 +91,7 @@
   height: 160rpx;
   border-radius: 16rpx;
   flex-shrink: 0;
-  background: #F5F5F7;
+  background: var(--background-color);
 }
 
 .product-img-placeholder {
@@ -99,7 +99,7 @@
   height: 160rpx;
   border-radius: 16rpx;
   flex-shrink: 0;
-  background: #F5F5F7;
+  background: var(--background-color);
 }
 
 .product-info {
@@ -114,7 +114,7 @@
 .product-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -125,8 +125,8 @@
 
 .product-sku {
   font-size: 22rpx;
-  color: #86868B;
-  background: #F2F2F7;
+  color: var(--text-secondary);
+  background: var(--divider-color);
   padding: 4rpx 12rpx;
   border-radius: 6rpx;
   align-self: flex-start;
@@ -143,19 +143,19 @@
 .product-price {
   font-size: 30rpx;
   font-weight: 700;
-  color: #9C27B0;
+  color: var(--mall-primary);
 }
 
 .product-qty {
   font-size: 24rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
 }
 
 .product-arrow {
   width: 16rpx;
   height: 16rpx;
-  border-top: 3rpx solid #C7C7CC;
-  border-right: 3rpx solid #C7C7CC;
+  border-top: 3rpx solid var(--text-tertiary);
+  border-right: 3rpx solid var(--text-tertiary);
   transform: rotate(45deg);
   flex-shrink: 0;
   margin-left: 8rpx;
@@ -190,17 +190,17 @@
 .receiver-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .receiver-phone {
   font-size: 26rpx;
-  color: #86868B;
+  color: var(--text-secondary);
 }
 
 .receiver-address {
   font-size: 24rpx;
-  color: #636366;
+  color: var(--gray-700);
   line-height: 1.5;
 }
 
@@ -209,7 +209,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16rpx 0;
-  border-bottom: 1rpx solid #F2F2F7;
+  border-bottom: 1rpx solid var(--divider-color);
 }
 
 .info-row:last-child {
@@ -218,12 +218,12 @@
 
 .info-label {
   font-size: 26rpx;
-  color: #86868B;
+  color: var(--text-secondary);
 }
 
 .info-value {
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -235,7 +235,7 @@
 
 .copy-btn {
   font-size: 22rpx;
-  color: #9C27B0;
+  color: var(--mall-primary);
   padding: 4rpx 16rpx;
   border: 1rpx solid rgba(156, 39, 176, 0.3);
   border-radius: 16rpx;
@@ -249,14 +249,14 @@
 .total-row {
   margin-top: 8rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid #E5E5EA;
+  border-top: 1rpx solid var(--gray-200);
   border-bottom: none;
 }
 
 .total-value {
   font-size: 32rpx;
   font-weight: 700;
-  color: #9C27B0;
+  color: var(--mall-primary);
 }
 
 .bottom-bar {
@@ -270,14 +270,14 @@
   gap: 16rpx;
   padding: 20rpx 32rpx;
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: #FFFFFF;
+  background: var(--card-color);
   box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
 }
 
 .btn-primary {
   padding: 18rpx 48rpx;
-  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
+  color: var(--card-color);
   font-size: 28rpx;
   font-weight: 600;
   border-radius: 36rpx;
@@ -292,8 +292,8 @@
 
 .btn-secondary {
   padding: 18rpx 48rpx;
-  background: #FFFFFF;
-  color: #636366;
+  background: var(--card-color);
+  color: var(--gray-700);
   font-size: 28rpx;
   font-weight: 500;
   border-radius: 36rpx;
@@ -303,14 +303,18 @@
 }
 
 .btn-secondary:active {
-  background: #F5F5F7;
+  background: var(--background-color);
 }
 
 .btn-secondary.danger {
-  color: #FF3B30;
+  color: var(--error-color);
   border-color: rgba(255, 59, 48, 0.3);
 }
 
 .btn-secondary.danger:active {
   background: rgba(255, 59, 48, 0.05);
+}
+
+.logistics-section {
+  margin-top: 16rpx;
 }
