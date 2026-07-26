@@ -730,6 +730,9 @@ export async function createTuanOrder(
       updatedAt: db.serverDate(),
     }
     unifiedOrder._id = generateId('order', openid)
+    // H7: idx_bookingKey_unique 唯一索引要求 orders 全文档 bookingKey 唯一
+    //   团购订单无寄养业务键,用 _id 占位保证唯一性,避免 null 冲突导致 -502001 DuplicateKey
+    unifiedOrder.bookingKey = `nb_${unifiedOrder._id}`
     const unifiedOrderRes = await transaction.collection('orders').add({ data: unifiedOrder })
 
     // 4) 扣减库存（L4: updatedAt 改用 db.serverDate() 保持一致）

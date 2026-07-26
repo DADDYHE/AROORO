@@ -191,6 +191,9 @@ export interface OrderRecord {
   paidAt?: Date
   createdAt?: Date
   updatedAt?: Date
+  // idx_bookingKey_unique 唯一索引要求 orders 全文档 bookingKey 唯一
+  // 寄养订单(orderService)写 booking_<hostId>_<start>_<end>;其他订单用 nb_<orderId> 占位
+  bookingKey?: string
   [k: string]: unknown
 }
 
@@ -834,6 +837,156 @@ export async function batchUpdateProducts(
 }
 
 // =====================================================================
+// 事务重试辅助：仅对「瞬时事务错误」重试，业务错误立即上抛，绝不遮蔽真因
+// =====================================================================
+
+function isTransientTransactionError(error: unknown): boolean {
+  // CloudBase SDK 抛出的事务错误对象是非标准结构：
+  //   - message/name/stack 均为 undefined
+  //   - JSON.stringify 输出 "{}"（属性可能是 getter 或原型链上的）
+  //   - 实际错误信息在 result.code / result.message 中
+  // 策略：穷举所有可能的属性访问路径
+  const e = error as any
+
+  // 1. 直接属性访问（含 result 嵌套）
+  const codes: string[] = []
+  const msgs: string[] = []
+
+  // 顶层 code/message
+  if (typeof e?.code === 'string') codes.push(e.code)
+  if (typeof e?.message === 'string') msgs.push(e.message)
+
+  // result.code / result.message（CloudBase SDK 常见结构）
+  if (typeof e?.result?.code === 'string') codes.push(e.result.code)
+  if (typeof e?.result?.message === 'string') msgs.push(e.result.message)
+
+  // error 字段（有时 SDK 用 error 而非 message）
+  if (typeof e?.error === 'string') msgs.push(e.error)
+  if (typeof e?.result?.error === 'string') msgs.push(e.result.error)
+
+  // 2. Object.getOwnPropertyNames 遍历（含不可枚举属性）
+  if (e && typeof e === 'object') {
+    try {
+      const names = Object.getOwnPropertyNames(e)
+      for (const name of names) {
+        const val = e[name]
+        if (typeof val === 'string') {
+          codes.push(val)
+          msgs.push(val)
+        } else if (val && typeof val === 'object') {
+          // 嵌套对象的属性也检查
+          try {
+            const subNames = Object.getOwnPropertyNames(val)
+            for (const subName of subNames) {
+              const subVal = val[subName]
+              if (typeof subVal === 'string') {
+                codes.push(subVal)
+                msgs.push(subVal)
+              }
+            }
+          } catch { /* ignore */ }
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  // 3. 原型链上的属性（Error 实例的 message 可能在原型上）
+  if (e && typeof e === 'object') {
+    try {
+      let proto = Object.getPrototypeOf(e)
+      let depth = 0
+      while (proto && proto !== Object.prototype && depth < 3) {
+        const protoNames = Object.getOwnPropertyNames(proto)
+        for (const name of protoNames) {
+          try {
+            const val = e[name]
+            if (typeof val === 'string') {
+              codes.push(val)
+              msgs.push(val)
+            }
+          } catch { /* getter 可能抛错 */ }
+        }
+        proto = Object.getPrototypeOf(proto)
+        depth++
+      }
+    } catch { /* ignore */ }
+  }
+
+  const allCodes = codes.join(' ')
+  const allMsgs = msgs.join(' ')
+  const combined = allCodes + ' ' + allMsgs
+
+  // 精确匹配 CloudBase SDK 事务错误码和消息
+  if (/DATABASE_TRANSACTION_FAIL|TransactionNotExist|Transaction does not exist/i.test(combined)) return true
+  // 宽泛匹配:事务过期/中止/写冲突
+  if (/transaction.*(expired|abort)|write conflict/i.test(combined)) return true
+
+  return false
+}
+
+async function withRetryableTransaction<T>(
+  body: (transaction: any) => Promise<T>,
+  label: string,
+  maxAttempts = 3,
+): Promise<T> {
+  let lastErr: unknown
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const transaction = await db.startTransaction()
+    try {
+      const res = await body(transaction)
+      // CloudBase SDK transaction.commit() 不抛异常，而是返回 { code: 'DATABASE_TRANSACTION_FAIL', ... }
+      // 必须主动检查 commit 响应，否则错误会作为正常结果返回给前端
+      const commitRes = await transaction.commit()
+      const commitCode = commitRes?.code || commitRes?.result?.code
+      if (commitCode && commitCode !== 0 && commitCode !== 'SUCCESS') {
+        const commitMsg = commitRes?.message || commitRes?.result?.message || commitRes?.error || JSON.stringify(commitRes)
+        const commitErr: any = new Error(commitMsg)
+        commitErr.code = commitCode
+        commitErr.result = commitRes
+        throw commitErr
+      }
+      return res
+    } catch (error) {
+      await transaction.rollback().catch(() => {})
+
+      // 详细调试日志:捕获错误对象的所有属性(含不可枚举)
+      const e = error as any
+      const debugInfo: Record<string, unknown> = {
+        attempt,
+        type: typeof error,
+        constructor: error?.constructor?.name,
+        // 直接属性
+        code: e?.code,
+        message: e?.message,
+        name: e?.name,
+        stack: e?.stack,
+        // 嵌套属性
+        resultCode: e?.result?.code,
+        resultMessage: e?.result?.message,
+        resultError: e?.result?.error,
+        errorField: e?.error,
+        // 所有自有属性名
+        ownKeys: e && typeof e === 'object' ? Object.getOwnPropertyNames(e) : [],
+      }
+      // 尝试序列化
+      try { debugInfo.jsonStringify = JSON.stringify(error) } catch { debugInfo.jsonStringify = 'FAILED' }
+
+      const transient = isTransientTransactionError(error)
+      debugInfo.transient = transient
+      logger.error(`${label}.transaction.debug`, debugInfo)
+
+      if (transient && attempt < maxAttempts) {
+        lastErr = error
+        await new Promise((r) => setTimeout(r, 60 * attempt)) // 轻微退避，降低瞬时冲突概率
+        continue
+      }
+      throw error
+    }
+  }
+  throw lastErr
+}
+
+// =====================================================================
 // Handler 10: createGroupBuyOrder（团购下单）
 // =====================================================================
 
@@ -865,20 +1018,16 @@ export async function createGroupBuyOrder(
     amountFen: previewTotalAmount,
   })
 
-  const transaction = await db.startTransaction()
-
-  try {
+  return withRetryableTransaction(async (transaction) => {
     // H4: 事务内重新读取商品并校验库存，避免 TOCTOU 超卖竞态
     const txProductRes = await transaction.collection('products').doc(productId).get()
     const product = txProductRes.data as ProductRecord | null
     if (!product || product.status !== 'on_sale') {
-      await transaction.rollback()
       throw err('BUSINESS_ERROR', '商品已下架或不可购买')
     }
 
     const availableStock = product.totalStock || product.stock || 0
     if (availableStock < Number(quantity)) {
-      await transaction.rollback()
       throw err('STOCK_INSUFFICIENT', `库存不足，仅剩${availableStock}件`)
     }
 
@@ -913,6 +1062,9 @@ export async function createGroupBuyOrder(
     }
 
     order._id = generateId('order', openid)
+    // H7: idx_bookingKey_unique 唯一索引要求 orders 全文档 bookingKey 唯一
+    //   团购商品订单无寄养业务键,用 _id 占位保证唯一性,避免 null 冲突导致 -502001 DuplicateKey
+    order.bookingKey = `nb_${order._id}`
     const addRes = await transaction.collection('orders').add({ data: order })
 
     await transaction.collection('products').doc(productId).update({
@@ -925,12 +1077,10 @@ export async function createGroupBuyOrder(
       },
     })
 
-    await transaction.commit()
+    // H8: commit 由 withRetryableTransaction 统一管理,body 内不能再调 transaction.commit()
+    //   否则会触发 double commit,第二次 commit 报 TransactionNotExist
     return handleSuccess({ orderId: addRes._id, ...order }, '下单成功')
-  } catch (error) {
-    await transaction.rollback()
-    return handleError(error, '下单失败', ERROR_CODES.DATA)
-  }
+  }, 'createGroupBuyOrder')
 }
 
 // =====================================================================
@@ -968,14 +1118,11 @@ export async function createOrder(
     amountFen: previewTotalAmount,
   })
 
-  const transaction = await db.startTransaction()
-
-  try {
+  return withRetryableTransaction(async (transaction) => {
     // H4: 事务内重新读取商品并校验，避免 TOCTOU 超卖竞态
     const txProductRes = await transaction.collection('products').doc(productId).get()
     const product = txProductRes.data as ProductRecord | null
     if (!product || product.status !== 'on_sale') {
-      await transaction.rollback()
       throw err('BUSINESS_ERROR', '商品不可购买')
     }
 
@@ -986,12 +1133,10 @@ export async function createOrder(
     if (product.skuType === 'multi' && skuId) {
       const skuIndex = product.skus ? product.skus.findIndex((s: SkuSpec) => s.skuId === skuId) : -1
       if (skuIndex < 0) {
-        await transaction.rollback()
         throw err('BUSINESS_ERROR', 'SKU不存在')
       }
       const sku = product.skus && product.skus[skuIndex]
       if (!sku || (sku.stock !== undefined && sku.stock < Number(quantity))) {
-        await transaction.rollback()
         throw err('BUSINESS_ERROR', '库存不足')
       }
       unitPrice = sku.price || 0
@@ -1000,7 +1145,6 @@ export async function createOrder(
     } else {
       const availableStock = product.totalStock || product.stock || 0
       if (availableStock < Number(quantity)) {
-        await transaction.rollback()
         throw err('BUSINESS_ERROR', '库存不足')
       }
     }
@@ -1035,6 +1179,9 @@ export async function createOrder(
     }
 
     order._id = generateId('order', openid)
+    // H7: idx_bookingKey_unique 唯一索引要求 orders 全文档 bookingKey 唯一
+    //   商城订单无寄养业务键,用 _id 占位保证唯一性,避免 null 冲突导致 -502001 DuplicateKey
+    order.bookingKey = `nb_${order._id}`
     const orderAddRes = await transaction.collection('orders').add({ data: order })
 
     const updateData: Record<string, unknown> = {
@@ -1054,12 +1201,10 @@ export async function createOrder(
     }
 
     await transaction.collection('products').doc(productId).update({ data: updateData })
-    await transaction.commit()
+    // H8: commit 由 withRetryableTransaction 统一管理,body 内不能再调 transaction.commit()
+    //   否则会触发 double commit,第二次 commit 报 TransactionNotExist
     return handleSuccess({ orderId: orderAddRes._id, orderNo }, '下单成功')
-  } catch (error) {
-    await transaction.rollback()
-    return handleError(error, '下单失败', ERROR_CODES.DATA)
-  }
+  }, 'createOrder')
 }
 
 // =====================================================================
@@ -1212,7 +1357,9 @@ export async function cancelOrder(
 
       await transaction.commit()
     } catch (txError) {
-      await transaction.rollback()
+      // 事务可能已被服务端 abort 终结，rollback 容错避免 TransactionNotExist 覆盖真实错误
+      logger.error('cancelOrder.transaction', txError)
+      await transaction.rollback().catch(() => {})
       throw txError
     }
 
@@ -1557,6 +1704,21 @@ export async function main(
     logger.info(action, { openid: auth.openid, isAdmin: !!(auth as AuthLike & { isAdmin?: boolean }).isAdmin })
     return await handlers[action](event, context, auth)
   } catch (error) {
+    // H8: CloudBase SDK 事务错误对象结构异常(message/name/stack 均为 undefined)
+    //   isTransientTransactionError 可能无法识别，在 main handler 层做兜底重试
+    const errStr = String(error)
+    const isTransactionError = /TransactionNotExist|Transaction does not exist|DATABASE_TRANSACTION_FAIL/i.test(errStr)
+    if (isTransactionError && WRITE_ACTIONS.includes(action)) {
+      logger.warn(`${action}.retry`, { reason: 'transaction_error', error: errStr })
+      try {
+        const auth = await verifyAuth(event, { requireLogin, ...(requireAdmin ? { permission: 'admin' } : {}) })
+        return await handlers[action](event, context, auth)
+      } catch (retryError) {
+        logger.error(`${action}.retry.failed`, { error: String(retryError) })
+        const code = (retryError as { code?: string }).code || ERROR_CODES.BUSINESS
+        return handleError(retryError, (retryError as Error).message, code)
+      }
+    }
     logger.error(action, error)
     const code = (error as { code?: string }).code || ERROR_CODES.BUSINESS
     return handleError(error, (error as Error).message, code)
