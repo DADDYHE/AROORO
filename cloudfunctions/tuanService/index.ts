@@ -191,6 +191,8 @@ const { verifyAuth } = require('./common/auth-middleware')
 const { withRateLimit } = require('./common/risk-rate-limit')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { uploadShippingInfo } = require('../common/wxLogistics')
 
 const { cloud, db } = initCloud()
 const logger = createLogger('tuanService')
@@ -779,9 +781,15 @@ export async function createTuanOrder(
 // Handler 4: shipTuanOrder（商家发货）
 // =====================================================================
 async function shipTuanOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown> {
-  const { orderId } = event.data || {}
+  const { orderId, expressCompany, expressNo } = event.data || {}
   if (!orderId) {
     throw err('INVALID_PARAMS', '缺少订单ID')
+  }
+  if (!expressNo) {
+    throw err('INVALID_PARAMS', '请填写快递单号')
+  }
+  if (!expressCompany) {
+    throw err('INVALID_PARAMS', '请选择快递公司')
   }
   // 权限：仅管理员或商家可发货
   if (!auth.isSuperAdmin && !auth.adminId) {
@@ -800,14 +808,27 @@ async function shipTuanOrder(event: CloudEvent, _context: CloudContext, auth: Au
     throw err('BUSINESS_ERROR', '当前状态不可发货')
   }
 
+  // 状态置为 shipped（与商城对齐，因为有 expressNo 就意味着已实际发货）
   await db.collection('orders').doc(orderId as string).update({
-    data: { status: 'pending_shipment', updatedAt: db.serverDate() },
+    data: {
+      status: 'shipped',
+      expressCompany,
+      expressNo,
+      shippedAt: db.serverDate(),
+      updatedAt: db.serverDate(),
+    },
   })
 
   if (order.tuanOrderId) {
     try {
       await db.collection('tuan_orders').doc(order.tuanOrderId).update({
-        data: { status: 'pending_shipment', updatedAt: db.serverDate() },
+        data: {
+          status: 'shipped',
+          expressCompany,
+          expressNo,
+          shippedAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+        },
       })
     } catch (e) {
       // M1: 跨表同步失败 → recordAlert + recordFailedOperation（供后台 worker 重试）
@@ -816,10 +837,35 @@ async function shipTuanOrder(event: CloudEvent, _context: CloudContext, auth: Au
         const { recordAlert } = require('./common/alert')
         await recordAlert('warning', 'tuan.ship.syncTuanOrder.failed',
           '发货后 tuan_orders 状态同步失败',
-          { orderId, tuanOrderId: order.tuanOrderId, targetStatus: 'pending_shipment', error: (e as Error).message })
+          { orderId, tuanOrderId: order.tuanOrderId, targetStatus: 'shipped', error: (e as Error).message })
       } catch { /* best-effort */ }
       await recordFailedOperation('sync_tuan_order_status',
-        { orderId, tuanOrderId: order.tuanOrderId, targetStatus: 'pending_shipment' }, e)
+        { orderId, tuanOrderId: order.tuanOrderId, targetStatus: 'shipped' }, e)
+    }
+  }
+
+  // 同步推送到微信「发货信息管理」，best-effort
+  const transactionId = (order as any).wxTransactionId || (order as any).transactionId || ''
+  if (transactionId) {
+    try {
+      const wxRes = await uploadShippingInfo({
+        transactionId,
+        merchantTradeNo: orderId as string,
+        shippingItem: {
+          expressCompany,
+          expressNo,
+          itemDesc: `${(order as any).productName || '团购商品'} ×${(order as any).quantity || 1}`,
+        },
+      })
+      if (!wxRes.ok) {
+        logger.warn('shipTuanOrder.uploadShippingInfo.fail', {
+          orderId, transactionId, expressNo, error: wxRes.error,
+        })
+      }
+    } catch (e) {
+      logger.warn('shipTuanOrder.uploadShippingInfo.exception', {
+        orderId, msg: (e as Error)?.message || String(e),
+      })
     }
   }
 
@@ -827,7 +873,7 @@ async function shipTuanOrder(event: CloudEvent, _context: CloudContext, auth: Au
   await writeOperationLog({
     module: 'tuan_order', action: 'ship', targetId: orderId as string,
     operatorId: auth.adminId || auth.openid,
-    afterData: { status: 'pending_shipment' },
+    afterData: { status: 'shipped', expressCompany, expressNo },
   }).catch(e => logger.warn('shipTuanOrder.auditLog', { msg: (e as Error)?.message }))
 
   return handleSuccess(null, '发货成功')
