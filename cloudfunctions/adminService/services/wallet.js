@@ -126,6 +126,7 @@ async function getMyIncomeDetails(event, context, auth) {
           amount: Number(c.commissionAmount) || 0,
           orderNo: c.orderNo || '', description: `带货佣金-${c.orderType || ''}`,
           status: c.status || 'pending', createdAt: c.createdAt,
+          buyerId: c.ownerId || '',
         })
       })
     }
@@ -138,6 +139,7 @@ async function getMyIncomeDetails(event, context, auth) {
           amount: Number(o.totalPrice) || 0,
           orderNo: o.orderNo || '', description: `活动报名-${o.activityTitle || ''}`,
           status: 'confirmed', createdAt: o.paidAt || o.updatedAt || o.createdAt,
+          buyerId: o.ownerId || '',
         })
       })
     }
@@ -150,6 +152,7 @@ async function getMyIncomeDetails(event, context, auth) {
           amount: Number(o.totalPrice) || Number(o.price) || 0,
           orderNo: o.orderNo || '', description: '寄养订单收入',
           status: 'completed', createdAt: o.completedAt || o.updatedAt || o.createdAt,
+          buyerId: o.ownerId || '',
         })
       })
     }
@@ -165,10 +168,30 @@ async function getMyIncomeDetails(event, context, auth) {
             amount: Number(o.totalPrice) || 0,
             orderNo: o.orderNo || '', description: '上门服务收入',
             status: 'completed', createdAt: o.completedAt || o.updatedAt || o.createdAt,
+            buyerId: o.ownerId || '',
           })
         })
       }
     }
+
+    // 批量查询下单用户昵称/头像，回填到明细项
+    const buyerIds = [...new Set(allItems.map(i => i.buyerId).filter(Boolean))]
+    let buyerMap = {}
+    if (buyerIds.length > 0) {
+      try {
+        const buyerRes = await db.collection('users').where({ _id: _.in(buyerIds) }).field({ _id: true, nickName: true, avatarUrl: true }).limit(500).get()
+        ;(buyerRes.data || []).forEach(u => {
+          buyerMap[u._id] = { nickName: u.nickName || '', avatarUrl: u.avatarUrl || '' }
+        })
+      } catch (e) {
+        logger.warn('getMyIncomeDetails.buyers.fetch', { msg: e.message, count: buyerIds.length })
+      }
+    }
+    allItems.forEach(item => {
+      const b = item.buyerId ? buyerMap[item.buyerId] : null
+      item.buyerNickName = b?.nickName || ''
+      item.buyerAvatarUrl = b?.avatarUrl || ''
+    })
 
     allItems.sort((a, b) => {
       const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0

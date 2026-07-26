@@ -43,6 +43,33 @@ function formatLogPrefix(service, action, level) {
     return `[${timestamp}] [${level}] [${service}] [${action}]`;
 }
 /**
+ * 序列化 error / 结构化对象为日志可读对象
+ *
+ * Sprint 52 新增：兼容非 Error 对象
+ *   - Error 实例：输出 { message, name, stack }
+ *   - 普通对象：保留原对象字段（如 { type, msg } / { errMsg, errCode }）
+ *   - 字符串/数字：包装为 { message }
+ *   - null/undefined：返回 { message: null }
+ */
+function _serializeLogPayload(error) {
+    if (error == null) {
+        return { message: String(error) };
+    }
+    if (error instanceof Error) {
+        return {
+            message: error.message,
+            name: error.name,
+            stack: error.stack,
+        };
+    }
+    // 普通对象：保留原字段（包括 errMsg/errCode 等 CloudBase SDK 非标准字段）
+    if (typeof error === 'object') {
+        return error;
+    }
+    // 字符串/数字/布尔
+    return { message: String(error) };
+}
+/**
  * 顶层 logger（不绑定 service，业务可直接使用）
  */
 exports.logger = {
@@ -67,22 +94,17 @@ exports.logger = {
     error: (service, action, error) => {
         if (CURRENT_LOG_LEVEL <= LOG_LEVELS.ERROR) {
             const prefix = formatLogPrefix(service, action, 'ERROR');
-            const e = error;
-            console.error(prefix, {
-                message: e && e.message,
-                name: e && e.name,
-                stack: e && e.stack,
-            });
+            // Sprint 52 修复：兼容非 Error 对象（字符串/数字/CloudBase SDK 错误）
+            //   - 旧实现只输出 message/name/stack，对 {errMsg} / 字符串 / null 全输出 undefined
+            //   - 新实现区分 Error 实例和结构化对象，避免日志信息丢失
+            console.error(prefix, _serializeLogPayload(error));
         }
     },
     errorWithContext: (service, action, error, context = {}) => {
         if (CURRENT_LOG_LEVEL <= LOG_LEVELS.ERROR) {
             const prefix = formatLogPrefix(service, action, 'ERROR');
-            const e = error;
             console.error(prefix, {
-                message: e && e.message,
-                name: e && e.name,
-                stack: e && e.stack,
+                ..._serializeLogPayload(error),
                 context,
             });
         }
@@ -106,6 +128,10 @@ exports.logger = {
             });
         }
     },
+    // F25：关键路径性能采样（按 PERF_SAMPLING_RATE 概率，绕过 LOG_LEVEL）
+    perf: (service, action, duration, metadata = {}) => {
+        _perfSample(service, action, duration, metadata || {});
+    },
 };
 /**
  * 创建服务专用的日志记录器
@@ -124,6 +150,8 @@ function createLogger(serviceName) {
         errorWithContext: (action, error, context) => exports.logger.errorWithContext(serviceName, action, error, context || {}),
         performance: (action, duration, metadata) => exports.logger.performance(serviceName, action, duration, metadata || {}),
         database: (action, collection, operation, result) => exports.logger.database(serviceName, action, collection, operation, result || {}),
+        // F25：关键路径性能采样（按 PERF_SAMPLING_RATE 概率，绕过 LOG_LEVEL）
+        perf: (action, duration, metadata) => exports.logger.perf(serviceName, action, duration, metadata || {}),
         // TS 接口要求实现 child，JS 时代可保持简单版本
         child: (subTag) => createLogger(`${serviceName}:${subTag}`),
     };

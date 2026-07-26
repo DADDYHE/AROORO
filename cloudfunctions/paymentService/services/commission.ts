@@ -32,9 +32,9 @@
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - 默认导出为函数本身（与原 CommonJS 行为一致），支持 `require('./commission')(orderType, order)`
 
-import { initCloud } from '../../common/utils'
-import { createLogger } from '../../common/logger'
-import type { CloudBaseDB } from '../../common/types'
+import { initCloud } from '../common/utils'
+import { createLogger } from '../common/logger'
+import type { CloudBaseDB } from '../common/types'
 
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -46,7 +46,7 @@ const { generateId } = require('../common/utils')
 const { ORDER_TYPE_AMOUNT_FIELD_MAP } = require('./pay')
 // H7: 引入 recordAlert 用于幂等写入失败告警
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { recordAlert } = require('../../common/alert')
+const { recordAlert } = require('../common/alert')
 
 // =====================================================================
 // 类型定义

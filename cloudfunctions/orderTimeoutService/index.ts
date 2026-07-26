@@ -442,6 +442,9 @@ export async function closeWechatOrder(outTradeNo: string): Promise<boolean> {
         'Authorization': authorization,
       },
       body,
+      // F18: 请求级超时。微信接口卡顿时 fetch 会无限挂起，占用整轮函数超时预算并阻塞同轮其余订单关闭。
+      // 设 3000ms 超时后，超时由下方 catch 捕获并按单笔返回 false，不抛、不阻塞整轮。
+      signal: AbortSignal.timeout(3000),
     })
     if (res.ok) {
       logger.info('closeWechatOrder.success', { outTradeNo })
@@ -451,7 +454,15 @@ export async function closeWechatOrder(outTradeNo: string): Promise<boolean> {
     logger.warn('closeWechatOrder.fail', { outTradeNo, statusCode: res.status, data })
     return false
   } catch (e) {
-    logger.warn('closeWechatOrder.exception', { outTradeNo, msg: (e as Error).message })
+    const err = e as Error
+    const cause = (err as { cause?: Error }).cause
+    const isAbort = err.name === 'AbortError' || err.name === 'TimeoutError' ||
+      (cause?.name === 'AbortError' || cause?.name === 'TimeoutError')
+    if (isAbort) {
+      logger.warn('closeWechatOrder.timeout', { outTradeNo, msg: err.message })
+    } else {
+      logger.warn('closeWechatOrder.exception', { outTradeNo, msg: err.message })
+    }
     return false
   }
 }
@@ -1026,13 +1037,24 @@ async function processFailedOperations(): Promise<{ scanned: number, success: nu
       success++
     } catch (e: unknown) {
       const next = (doc.retryCount || 0) + 1
-      const status = next >= FAILED_OP_MAX_RETRY ? 'failed' : 'pending'
-      if (status === 'failed') dead++
+      const isDead = next >= FAILED_OP_MAX_RETRY
+      const status = isDead ? 'dead' : 'pending'
+      if (isDead) {
+        dead++
+        // 死信明确日志：伙伴收入可能漏算，需人工介入
+        logger.error('failedOperations.dead_letter', {
+          id: doc._id,
+          type: doc.type,
+          retryCount: next,
+          lastError: (e as Error)?.message || String(e),
+        })
+      }
       await db.collection('failed_operations').doc(doc._id).update({
         data: {
           status,
           retryCount: next,
           lastError: { message: (e as Error)?.message || String(e), at: db.serverDate() },
+          deadAt: isDead ? db.serverDate() : (doc.deadAt || null),
           updatedAt: db.serverDate(),
         },
       })
@@ -1129,6 +1151,15 @@ export async function main(
           'warning',
           'failedOps.retry',
           `补偿队列重试存在 ${foResult.failed} 个失败（其中 ${foResult.dead} 个已达重试上限）`,
+          foResult,
+        )
+      }
+      // F7: 死信告警钩子——伙伴收入可能漏算，必须主动知会运维
+      if (foResult.dead > 0) {
+        await recordAlert(
+          'critical',
+          'failedOps.dead_letter',
+          `补偿队列出现 ${foResult.dead} 条死信（伙伴收入可能漏算），需人工介入`,
           foResult,
         )
       }

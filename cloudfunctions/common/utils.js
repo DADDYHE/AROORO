@@ -12,7 +12,7 @@
  *   - 与 errors.ts 双向兼容（handleError 返回的 shape 可与 err() 配对）
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.escapeRegExp = exports.revertCloudUrls = exports.convertCloudUrls = exports.batchProcess = exports.paginate = exports.handleSuccess = exports.handleError = exports.generateId = exports.ERROR_MESSAGES = exports.ERROR_CODES = exports.initCloud = void 0;
+exports.maskOpenid = exports.escapeRegExp = exports.revertCloudUrls = exports.convertCloudUrls = exports.batchProcess = exports.paginate = exports.handleSuccess = exports.handleError = exports.generateId = exports.ERROR_MESSAGES = exports.ERROR_CODES = exports.initCloud = void 0;
 const crypto_1 = require("crypto");
 // =====================================================================
 // 单例缓存
@@ -323,4 +323,13 @@ function escapeRegExp(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 exports.escapeRegExp = escapeRegExp;
+/**
+ * 脱敏 openid，仅保留前 6 位用于日志，避免明文泄露。
+ */
+function maskOpenid(openid) {
+    return typeof openid === 'string' && openid.length > 6
+        ? `${openid.slice(0, 6)}***`
+        : '***';
+}
+exports.maskOpenid = maskOpenid;
 // 注：上面"未使用"的导入仅用于类型导出

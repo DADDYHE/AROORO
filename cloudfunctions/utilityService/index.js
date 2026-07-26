@@ -26,17 +26,17 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 // P2-001: 使用项目统一日志模块（与其它 11 个服务保持一致）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createLogger } = require('../common/logger');
+const { createLogger } = require('./common/logger');
 const logger = createLogger('utilityService');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError } = require('../common/utils');
+const { handleSuccess, handleError } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { err } = require('../common/errors');
+const { err } = require('./common/errors');
 // M3: 引入限流（bootstrap + withRateLimit），对齐 mallService/tuanService 模式
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { withRateLimit } = require('../common/risk-rate-limit');
+const { withRateLimit } = require('./common/risk-rate-limit');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { bootstrapRateLimit } = require('../common/rate-limit-bootstrap');
+const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap');
 // M3: 注入全局限流存储（rate_limits + rate_limit_configs 一次注入）
 //   - 失败时 fallback 到内存存储（不阻断业务）
 try {
@@ -86,7 +86,7 @@ async function getBanners() {
         //   - 现在改为 recordAlert + 抛错，前端可按错误码降级（如显示占位图）
         logger.error('getBanners.failed', e);
         try {
-            const { recordAlert } = require('../common/alert');
+            const { recordAlert } = require('./common/alert');
             await recordAlert('warning', 'utility.banners.fetch.failed', '获取 banner 列表失败', { error: e?.message });
         }
         catch { /* best-effort */ }
@@ -135,7 +135,7 @@ async function getHostInfo(event) {
     catch (e) {
         logger.error('getHostInfo.db.failed', { hostId: hostIdStr, error: e?.message });
         try {
-            const { recordAlert } = require('../common/alert');
+            const { recordAlert } = require('./common/alert');
             await recordAlert('warning', 'utility.host_info.fetch.failed', '获取寄养家庭信息失败', { hostId: hostIdStr, error: e?.message });
         }
         catch { /* best-effort */ }

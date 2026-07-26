@@ -35,19 +35,19 @@
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - 不直接依赖子服务的内部 .ts（依赖 .js 编译产物，避免 tsconfig include 串扰）
 
-import { initCloud, handleError, ERROR_CODES } from '../common/utils'
-import { createLogger, type ServiceLogger } from '../common/logger'
-import { err, toResponse, isBusinessError } from '../common/errors'
+import { initCloud, handleError, ERROR_CODES } from './common/utils'
+import { createLogger, type ServiceLogger } from './common/logger'
+import { err, toResponse, isBusinessError } from './common/errors'
 
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { verifyAuth } = require('./common/auth-middleware')
 // Sprint 50: 限流统一 bootstrap
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { bootstrapRateLimit, BootstrapError } = require('../common/rate-limit-bootstrap')
+const { bootstrapRateLimit, BootstrapError } = require("./common/rate-limit-bootstrap")
 // H1: 引入 recordAlert 用于 bootstrap 失败持久化告警
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { recordAlert } = require('../common/alert')
+const { recordAlert } = require("./common/alert")
 
 // =====================================================================
 // 公共类型（与已迁移的 12 个服务保持一致）

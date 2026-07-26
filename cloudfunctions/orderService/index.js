@@ -38,15 +38,15 @@ exports.main = exports.handlers = exports.PUBLIC_ACTIONS = exports.SUPPORTED_ACT
 //   - 对 .js 文件（utils / errors / logger / auth-middleware / risk-rate-limit）使用 require() 而非 import
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - 不直接依赖 orders.ts / stats.ts 的子模块（依赖 .js 编译产物，避免 tsconfig include 串扰）
-const utils_1 = require("../common/utils");
-const logger_1 = require("../common/logger");
-const errors_1 = require("../common/errors");
+const utils_1 = require("./common/utils");
+const logger_1 = require("./common/logger");
+const errors_1 = require("./common/errors");
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { verifyAuth } = require('./common/auth-middleware');
 // Sprint 50: 限流统一 bootstrap（rate_limits + rate_limit_configs 一次注入）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { bootstrapRateLimit } = require('../common/rate-limit-bootstrap');
+const { bootstrapRateLimit } = require("./common/rate-limit-bootstrap");
 // =====================================================================
 // 常量
 // =====================================================================

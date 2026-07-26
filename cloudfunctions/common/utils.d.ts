@@ -153,4 +153,8 @@ export declare function revertCloudUrls<T = unknown>(event: T): T;
  * })
  */
 export declare function escapeRegExp(str: string): string;
+/**
+ * 脱敏 openid，仅保留前 6 位用于日志，避免明文泄露。
+ */
+export declare function maskOpenid(openid: unknown): string;
 export type { CloudBaseDB };

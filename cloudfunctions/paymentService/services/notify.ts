@@ -34,17 +34,17 @@
 //   - 不使用 withErrorHandling：保留 HTTP 响应结构
 
 import * as crypto from 'crypto'
-import { err } from '../../common/errors'
-import { initCloud } from '../../common/utils'
-import { createLogger } from '../../common/logger'
-import type { CloudBaseDB } from '../../common/types'
+import { err } from '../common/errors'
+import { initCloud } from '../common/utils'
+import { createLogger } from '../common/logger'
+import type { CloudBaseDB } from '../common/types'
 
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { WECHAT_PAY } = require('../common/config')
 // P0-6: 资金事务失败主动告警
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { recordAlert } = require('../../common/alert')
+const { recordAlert } = require('../common/alert')
 
 // =====================================================================
 // 类型定义
@@ -436,7 +436,7 @@ async function triggerFeedingCouponUse(order: NotifyOrderDoc): Promise<void> {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { initCloud } = require('../../common/utils')
+    const { initCloud } = require('../common/utils')
     const { cloud } = initCloud()
     const useResult = await cloud.callFunction({
       name: 'couponService',

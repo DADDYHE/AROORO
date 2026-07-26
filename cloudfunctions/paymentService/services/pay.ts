@@ -23,11 +23,11 @@
 //   - 强类型仅作用于 common/*（已有 .d.ts 产物）
 //   - 业务错误码使用 err(...) 工厂，与 risk-rate-limit 共用同一个 BusinessError 类
 
-import { err, isBusinessError, withErrorHandling, type WrappedHandler } from '../../common/errors'
-import { initCloud } from '../../common/utils'
-import { createLogger } from '../../common/logger'
-import { withRateLimit } from '../../common/risk-rate-limit'
-import type { CloudBaseDB } from '../../common/types'
+import { err, isBusinessError, withErrorHandling, type WrappedHandler } from '../common/errors'
+import { initCloud, handleSuccess } from '../common/utils'
+import { createLogger } from '../common/logger'
+import { withRateLimit } from '../common/risk-rate-limit'
+import type { CloudBaseDB } from '../common/types'
 
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -38,7 +38,7 @@ const { randomString, rsaSign, httpsRequest, generateAuthorization } = require('
 const { paymentStateMachine, resolveOrderStatus, isKnownOrderType } = require('../common/payment-state-machine')
 // P0-6: 资金事务失败主动告警
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { recordAlert } = require('../../common/alert')
+const { recordAlert } = require('../common/alert')
 
 // =====================================================================
 // 类型定义
@@ -384,11 +384,13 @@ export const createPayment: WrappedHandler<CreatePaymentResult> = withErrorHandl
   const payMessage = `${[config.appId, timeStamp, nonceStr, packageStr].join('\n')}\n`
   const paySign = rsaSign(config.privateKey, payMessage)
 
-  return {
+  // H7 修复：必须用 handleSuccess 包装返回值，否则客户端 CloudFunctionService.call
+  //   会因 result.code !== 0 走错误分支，抛出"云函数执行失败"（code 9999）
+  return handleSuccess({
     orderId: orderId as string,
     outTradeNo,
     paymentParams: { timeStamp, nonceStr, package: packageStr, signType: 'RSA', paySign },
-  }
+  }, '创建支付订单成功')
 })
 
 // =====================================================================

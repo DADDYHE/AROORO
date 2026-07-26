@@ -409,6 +409,15 @@ export function escapeRegExp(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+/**
+ * 脱敏 openid，仅保留前 6 位用于日志，避免明文泄露。
+ */
+export function maskOpenid(openid: unknown): string {
+  return typeof openid === 'string' && openid.length > 6
+    ? `${openid.slice(0, 6)}***`
+    : '***'
+}
+
 // 已用：避免 typescript 报 unused import
 export type { CloudBaseDB }
 // 注：上面"未使用"的导入仅用于类型导出

@@ -174,16 +174,15 @@ export async function getReferralStats(
             _id: null,
             total: $.sum('$totalPrice'),
             count: $.sum(1),
+            owners: ($ as any).addToSet('$ownerId'),
           })
           .end()
         if (aggRes.list && aggRes.list.length > 0) {
-          const r = aggRes.list[0] as { total?: number; count?: number }
-          // 仍需拉取订单列表用于统计 spenderOpenids，但用 aggregate 计算金额
-          const listRes = await db.collection(collection).where(match).field({ ownerId: true }).limit(5000).get()
+          const r = aggRes.list[0] as { total?: number; count?: number; owners?: string[] }
+          // F10 修复：原 limit(5000).get() 拉订单列表再 build Set，头部 KOL(消费>5000单) 的 consumingCount 系统性低估。
+          //   改为服务端 addToSet('$ownerId') 聚合，彻底消除截断。
           const openids = new Set<string>()
-          ;(listRes.data || []).forEach((o: OrderLike) => {
-            if (o.ownerId) { openids.add(o.ownerId) }
-          })
+          ;(r.owners || []).forEach((id) => { if (id) { openids.add(id) } })
           return { count: Number(r.count) || 0, sum: Number(r.total) || 0, openids }
         }
       } catch (e) {
@@ -232,13 +231,25 @@ export async function getReferralStats(
 }
 
 // M2: 缓存当前用户的被邀请人 openids 列表（同一次请求内复用）
+// F10 修复：原 limit(5000) 截断，受邀>5000 的头部 KOL 其受邀 openid 列表被截断，连带 consumingCount/totalSpent 低估。
+//   改为游标分页拉全量。
 async function getInvitedOpenids(inviterId: string): Promise<string[]> {
-  const res = await db.collection('users')
-    .where({ inviterId })
-    .field({ _id: true })
-    .limit(5000)
-    .get()
-  return (res.data || []).map((u: { _id?: string }) => u._id).filter((id: string | undefined): id is string => Boolean(id))
+  const ids: string[] = []
+  let skip = 0
+  const BATCH = 500
+  while (true) {
+    const res = await db.collection('users')
+      .where({ inviterId })
+      .field({ _id: true })
+      .skip(skip)
+      .limit(BATCH)
+      .get()
+    const batch = (res.data || []).map((u: { _id?: string }) => u._id).filter((id): id is string => Boolean(id))
+    ids.push(...batch)
+    if (batch.length < BATCH) { break }
+    skip += BATCH
+  }
+  return ids
 }
 
 export async function getMyInvitedUsers(

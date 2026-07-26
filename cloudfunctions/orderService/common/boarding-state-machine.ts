@@ -25,8 +25,8 @@
  *   （运行时仍消费 .js 编译产物）
  */
 
-import { createStateMachine } from '../../common/state-machine'
-import type { StateMachine } from '../../common/types'
+import { createStateMachine } from './state-machine'
+import type { StateMachine } from './types'
 
 /**
  * 寄养订单状态枚举

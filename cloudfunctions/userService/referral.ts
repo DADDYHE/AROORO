@@ -120,17 +120,24 @@ export async function getReferralStats(
     }
     if (!user) { throw err('NOT_FOUND', '用户不存在') }
 
-    // inviterId 现在存的是 openid，直接用 openid 查询
-    const invitedUsersRes = await db.collection('users')
-      .where({ inviterId: openid })
-      .field({ _id: true, nickName: true, avatarUrl: true, createdAt: true })
-      .limit(500)
-      .get()
-
-    const invitedUsers = (invitedUsersRes.data || []) as UserRecord[]
-    const totalInvited = invitedUsers.length
-
-    const invitedOpenids = invitedUsers.map((u) => u._id).filter((id): id is string => Boolean(id))
+    // F10 修复：原 limit(500).get() 再取 .length / .map，头部 KOL（受邀>500）统计系统性低估。
+    //   改为游标分页拉全量受邀 openid（避免大 limit 截断），totalInvited 用全量长度。
+    const invitedOpenids: string[] = []
+    let invitedSkip = 0
+    const INVITE_BATCH = 500
+    while (true) {
+      const res = await db.collection('users')
+        .where({ inviterId: openid })
+        .field({ _id: true })
+        .skip(invitedSkip)
+        .limit(INVITE_BATCH)
+        .get()
+      const batch = (res.data || []).map((u: { _id?: string }) => u._id).filter((id): id is string => Boolean(id))
+      invitedOpenids.push(...batch)
+      if (batch.length < INVITE_BATCH) { break }
+      invitedSkip += INVITE_BATCH
+    }
+    const totalInvited = invitedOpenids.length
     let consumingCount = 0
     let totalSpent = 0
 

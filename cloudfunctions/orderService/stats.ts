@@ -31,9 +31,9 @@
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - handler 在 module.exports 时统一用 withErrorHandling 包装
 
-import { initCloud, handleSuccess, handleError, ERROR_CODES } from '../common/utils'
-import { createLogger, type ServiceLogger } from '../common/logger'
-import type { CloudBaseDB, ApiResponse, Logger } from '../common/types'
+import { initCloud, handleSuccess, handleError, ERROR_CODES } from './common/utils'
+import { createLogger, type ServiceLogger } from './common/logger'
+import type { CloudBaseDB, ApiResponse, Logger } from './common/types'
 
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires

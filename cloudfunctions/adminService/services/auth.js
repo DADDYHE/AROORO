@@ -8,12 +8,15 @@ const { db } = initCloud()
 const logger = createLogger('adminService.auth')
 
 // 管理员权限数据库实例（绕过安全规则，用于 Web 端登录等场景）
+// 使用 wx-server-sdk（云函数运行时自动具备管理员权限，绕过集合安全规则）
+// 注：@cloudbase/node-sdk 不带 env 时为匿名身份，无法查询 PRIVATE 集合（如 admins）
 let _adminDb = null
 function getAdminDb() {
   if (!_adminDb) {
-    const cloudbase = require('@cloudbase/node-sdk')
-    const app = cloudbase.init()
-    _adminDb = app.database()
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const cloud = require('wx-server-sdk')
+    cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+    _adminDb = cloud.database()
   }
   return _adminDb
 }

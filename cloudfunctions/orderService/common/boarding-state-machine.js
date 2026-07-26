@@ -27,7 +27,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.canPerformOperation = exports.getTargetStatusByOperation = exports.BOARDING_OPERATION_TARGET = exports.boardingOrderStateMachine = void 0;
-const state_machine_1 = require("../../common/state-machine");
+const state_machine_1 = require("./state-machine");
 /**
  * 寄养订单状态机
  *   - pending_payment → paid / cancelled

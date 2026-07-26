@@ -38,17 +38,17 @@ cloudbase.init({ env: cloudbase.DYNAMIC_CURRENT_ENV });
 const db = cloudbase.database();
 const _ = db.command;
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError } = require('../common/utils');
+const { handleSuccess, handleError } = require("./common/utils");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { err, isBusinessError, toResponse } = require('../common/errors');
+const { err, isBusinessError, toResponse } = require("./common/errors");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createLogger } = require('../common/logger');
+const { createLogger } = require("./common/logger");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { recordAlert } = require('../common/alert');
+const { recordAlert } = require("./common/alert");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { bootstrapRateLimit } = require('../common/rate-limit-bootstrap');
+const { bootstrapRateLimit } = require("./common/rate-limit-bootstrap");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { cleanupExpiredRateLimits, getGlobalRateLimitStats } = require('../common/rate-limit-store');
+const { cleanupExpiredRateLimits, getGlobalRateLimitStats } = require("./common/rate-limit-store");
 const logger = createLogger('rateLimitCleanup');
 // 注入全局限流 store（Sprint 50：统一 bootstrap）
 // H3: 失败时降级到内存模式，记录标志供 main 入口告警

@@ -32,8 +32,8 @@ exports.getIncomeStats = exports.getStats = void 0;
 //   - 对 .js 文件（utils / errors）使用 require() 而非 import
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - handler 在 module.exports 时统一用 withErrorHandling 包装
-const utils_1 = require("../common/utils");
-const logger_1 = require("../common/logger");
+const utils_1 = require("./common/utils");
+const logger_1 = require("./common/logger");
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, isBusinessError, withErrorHandling } = require('./common/errors');

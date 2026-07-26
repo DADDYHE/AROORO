@@ -37,16 +37,16 @@
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - 不直接依赖 orders.ts / stats.ts 的子模块（依赖 .js 编译产物，避免 tsconfig include 串扰）
 
-import { initCloud, handleError, ERROR_CODES } from '../common/utils'
-import { createLogger, type ServiceLogger } from '../common/logger'
-import { err, toResponse, isBusinessError } from '../common/errors'
+import { initCloud, handleError, ERROR_CODES } from './common/utils'
+import { createLogger, type ServiceLogger } from './common/logger'
+import { err, toResponse, isBusinessError } from './common/errors'
 
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { verifyAuth } = require('./common/auth-middleware')
 // Sprint 50: 限流统一 bootstrap（rate_limits + rate_limit_configs 一次注入）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { bootstrapRateLimit } = require('../common/rate-limit-bootstrap')
+const { bootstrapRateLimit } = require("./common/rate-limit-bootstrap")
 
 // =====================================================================
 // 公共类型（与已迁移的 12 个服务保持一致）

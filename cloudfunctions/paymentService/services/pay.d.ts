@@ -16,7 +16,7 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.paymentService.json
  *   （运行时仍消费 .js 编译产物）
  */
-import { type WrappedHandler } from '../../common/errors';
+import { type WrappedHandler } from '../common/errors';
 type OrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'feeding';
 interface CreatePaymentResult {
     orderId: string;

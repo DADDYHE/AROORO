@@ -28,47 +28,39 @@ async function ensureWalletBalance(openid, amount, type = 'commission') {
     throw new Error(`ensureWalletBalance: invalid wallet type "${type}"`)
   }
 
-  // 先尝试原子更新（钱包已存在）
+  const now = db.serverDate()
+
+  // 1) 钱包已存在 -> 原子加款；每笔合法入账精确加一次（并发/重试安全）
   const updateRes = await db.collection('wallets').where({ openid, type }).update({
     data: {
       balance: _.inc(amountNum),
       totalIncome: _.inc(amountNum),
-      updatedAt: db.serverDate(),
+      updatedAt: now,
     },
   })
+  if (updateRes && updateRes.stats && updateRes.stats.updated > 0) return
 
-  // 如果更新命中 0 条，说明钱包不存在，需要初始化
-  if (updateRes.stats && updateRes.stats.updated === 0) {
-    // P1-C: 并发双入账修复 — add 设 balance: 0，统一通过 update(inc) 入账
-    // 旧实现 add 包含 balance: amount，失败后 retry update(inc) 导致金额翻倍
-    try {
-      await db.collection('wallets').add({
-        data: {
-          openid,
-          type,
-          balance: 0,
-          totalIncome: 0,
-          totalWithdrawn: 0,
-          frozenAmount: 0,
-          status: 'active',
-          createdAt: db.serverDate(),
-          updatedAt: db.serverDate(),
-        },
-      })
-    } catch (e) {
-      // 并发场景下其他请求已创建钱包，忽略 -502001 继续执行下面的 update
-      if (e && e.errCode !== -502001) {
-        throw e
-      }
-    }
-    // 钱包创建成功或已存在（-502001），统一通过 inc 入账（金额只增加一次）
-    await db.collection('wallets').where({ openid, type }).update({
+  // 2) 钱包不存在（本请求读取时）-> 尝试创建并直接以余额入账。
+  //    唯一索引 (openid,type) 兜底并发：至多一个请求 add 成功。
+  //    并发下其它请求 add 命中 -502001（已被创建并带余额入账）-> 直接返回，绝不再加款，杜绝重复入账。
+  try {
+    await db.collection('wallets').add({
       data: {
-        balance: _.inc(amountNum),
-        totalIncome: _.inc(amountNum),
-        updatedAt: db.serverDate(),
+        openid,
+        type,
+        balance: amountNum,
+        totalIncome: amountNum,
+        totalWithdrawn: 0,
+        frozenAmount: 0,
+        status: 'active',
+        createdAt: now,
+        updatedAt: now,
       },
     })
+  } catch (e) {
+    // 唯一索引冲突：并发场景下另一请求已创建并带余额入账，本请求不再加款
+    if (e && e.errCode === -502001) return
+    throw e
   }
 }
 

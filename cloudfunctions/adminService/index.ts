@@ -21,7 +21,7 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.adminService.json
  */
 
-import type { CloudBaseDB } from '../common/types'
+import type { CloudBaseDB } from './common/types'
 
 // =====================================================================
 // 公共类型
@@ -129,6 +129,13 @@ const { createLogger } = require('./common/logger')
 const { verifyAuth } = require('./common/auth-middleware')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, toResponse, isBusinessError } = require('./common/errors')
+// Sprint 50: 限流统一 bootstrap（admin 接口防御性限流）
+//   adminService 中 refund / upload / application 等敏感接口使用 withRateLimit，
+//   若未注入全局 store 则退化为实例内内存计数，多实例部署时限流被稀释。
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('./common/alert')
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const authHandlers: Record<string, ActionHandler> = require('./services/auth')
@@ -389,6 +396,31 @@ const logger = createLogger('adminService')
 const NO_AUTH_REQUIRED = new Set(['webLogin', 'createScanLogin', 'pollScanLogin', 'fetchActiveOverrides'])
 
 // =====================================================================
+// Sprint 50: 限流统一 bootstrap（全局计数 + 配置注入）
+//   admin 端使用非 strict 模式（best-effort）：权限体系已提供强保护，
+//   限流作为防御纵深。若 DB 不可用则降级到实例内内存计数，不阻断服务。
+// =====================================================================
+try {
+  const { initCloud } = require('./common/utils')
+  const { db } = initCloud() as { cloud: unknown, db: unknown }
+  bootstrapRateLimit(db, {
+    logger: createLogger('adminService.rate-limit'),
+    strict: false,
+    service: 'adminService',
+  })
+} catch (e) {
+  logger.warn('bootstrapRateLimit failed, fallback to in-memory', { msg: (e as Error)?.message })
+  recordAlert(
+    'warning',
+    'adminService.rate_limit.bootstrap.failed',
+    `adminService 限流 bootstrap 失败，已降级为内存模式：${(e as Error)?.message}`,
+    { service: 'adminService' }
+  ).catch((alertErr: Error) => {
+    logger.error('recordAlert failed for bootstrap failure', { msg: alertErr.message })
+  })
+}
+
+// =====================================================================
 // HTTP / JWT 路径工具
 // =====================================================================
 
@@ -471,10 +503,12 @@ export function checkEnrichedPermission(enrichment: EnrichmentResult | null, act
 let _enrichAdminDb: CloudBaseDB | null = null
 export function getEnrichAdminDb(): CloudBaseDB {
   if (_enrichAdminDb === null) {
+    // 使用 wx-server-sdk（云函数运行时自动具备管理员权限，绕过集合安全规则）
+    // 注：@cloudbase/node-sdk 不带 env 时为匿名身份，无法查询 PRIVATE 集合（如 admins）
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const cloudbase = require('@cloudbase/node-sdk')
-    const app = cloudbase.init()
-    _enrichAdminDb = app.database()
+    const cloud = require('wx-server-sdk')
+    cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+    _enrichAdminDb = cloud.database()
   }
   return _enrichAdminDb as CloudBaseDB
 }

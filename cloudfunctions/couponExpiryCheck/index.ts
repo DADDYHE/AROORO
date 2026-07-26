@@ -103,12 +103,12 @@ const db = cloud.database()
 const _ = db.command
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createLogger } = require('../common/logger')
+const { createLogger } = require("./common/logger")
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError } = require('../common/utils')
+const { handleSuccess, handleError } = require("./common/utils")
 // M3: 接入告警模块（cron 失败时主动通知，避免长期静默故障）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { recordAlert } = require('../common/alert')
+const { recordAlert } = require("./common/alert")
 
 const logger = createLogger('couponExpiryCheck')
 

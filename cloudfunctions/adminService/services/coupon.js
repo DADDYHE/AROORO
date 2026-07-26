@@ -878,8 +878,10 @@ async function initIndexes() {
     },
     // ===== 以下为非 coupon 业务索引，统一在此初始化（adminService 唯一索引入口）=====
     {
-      // H2 防超卖：createOrder 写入 bookingKey 唯一约束，并发重复预订触发 DUPLICATE_KEY
-      //   字段真名 bookingKey（orders.ts:819 bookingKey: `booking_${hostId}_${startDate}_${endDate}`）
+      // H2 防超卖:寄养订单 bookingKey 唯一约束,并发重复预订触发 DUPLICATE_KEY
+      //   字段真名 bookingKey,寄养订单写 booking_<hostId>_<start>_<end>(见 orderService/orders.ts)
+      //   H7 修复:非寄养订单(mall/group_buy/activity/tuan)写 nb_<orderId> 占位,避免 null 冲突
+      //   唯一索引要求 orders 全文档 bookingKey 非空且唯一,缺失会导致 -502001 DuplicateKey
       collection: 'orders',
       indexName: 'idx_bookingKey_unique',
       keys: [{ Name: 'bookingKey', Direction: '1' }],
@@ -897,6 +899,70 @@ async function initIndexes() {
       collection: 'addresses',
       indexName: 'idx_openid_isDefault',
       keys: [{ Name: 'openid', Direction: '1' }, { Name: 'isDefault', Direction: '1' }],
+      unique: false,
+    },
+    // ===== 钱包/佣金/提现/喂养订单索引（代码化；MCP 已确认 DB 已建，重建/迁移环境需此恢复）=====
+    {
+      // 钱包按 (openid, type) 查询（getOrCreateWallet / getMyWallet）；(openid, type) 为业务唯一键
+      collection: 'wallets',
+      indexName: 'idx_openid_type',
+      keys: [{ Name: 'openid', Direction: '1' }, { Name: 'type', Direction: '1' }],
+      unique: true,
+    },
+    {
+      // 提现记录按 openid 查询 + createdAt 倒序列表
+      collection: 'withdrawals',
+      indexName: 'idx_openid_createdAt',
+      keys: [{ Name: 'openid', Direction: '1' }, { Name: 'createdAt', Direction: '-1' }],
+      unique: false,
+    },
+    {
+      // 提现每日限额统计：where({ openid, walletType, createdAt: _.gte(today) })
+      collection: 'withdrawals',
+      indexName: 'idx_openid_walletType_createdAt',
+      keys: [{ Name: 'openid', Direction: '1' }, { Name: 'walletType', Direction: '1' }, { Name: 'createdAt', Direction: '1' }],
+      unique: false,
+    },
+    {
+      // 佣金退款冲销：where({ orderId, status })（pending / settled）
+      collection: 'commissions',
+      indexName: 'idx_orderId_status',
+      keys: [{ Name: 'orderId', Direction: '1' }, { Name: 'status', Direction: '1' }],
+      unique: false,
+    },
+    {
+      // 佣金列表按邀请人查询（wallet.js 钱包/收入统计）
+      collection: 'commissions',
+      indexName: 'idx_inviterId',
+      keys: [{ Name: 'inviterId', Direction: '1' }],
+      unique: false,
+    },
+    {
+      // 佣金幂等键（hasExistingCommission 按 orderId+inviterId 去重），防止重复计佣
+      collection: 'commissions',
+      indexName: 'idx_orderId_inviterId',
+      keys: [{ Name: 'orderId', Direction: '1' }, { Name: 'inviterId', Direction: '1' }],
+      unique: true,
+    },
+    {
+      // 喂养订单按喂养师 + 状态查询（钱包/收入统计）
+      collection: 'feedingOrders',
+      indexName: 'idx_feederId_status',
+      keys: [{ Name: 'feederId', Direction: '1' }, { Name: 'status', Direction: '1' }],
+      unique: false,
+    },
+    {
+      // 喂养订单按主人 + 状态查询（订单列表 / 邀请统计）
+      collection: 'feedingOrders',
+      indexName: 'idx_ownerId_status',
+      keys: [{ Name: 'ownerId', Direction: '1' }, { Name: 'status', Direction: '1' }],
+      unique: false,
+    },
+    {
+      // 喂养订单按主人 + createdAt 倒序（我的订单列表）
+      collection: 'feedingOrders',
+      indexName: 'idx_ownerId_createdAt',
+      keys: [{ Name: 'ownerId', Direction: '1' }, { Name: 'createdAt', Direction: '-1' }],
       unique: false,
     },
   ]

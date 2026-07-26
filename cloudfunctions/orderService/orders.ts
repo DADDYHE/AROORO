@@ -42,8 +42,8 @@
 //   - 强类型作用于 common/* 与本文件内部接口
 //   - handler 在 module.exports 时统一用 withErrorHandling 包装
 
-import { initCloud, handleSuccess, generateId, paginate, type PaginatedResult } from '../common/utils'
-import { createLogger, type ServiceLogger } from '../common/logger'
+import { initCloud, handleSuccess, generateId, paginate, type PaginatedResult } from './common/utils'
+import { createLogger, type ServiceLogger } from './common/logger'
 import type {
   CloudBaseDB,
   CloudBaseQuery,
@@ -55,7 +55,7 @@ import type {
   EvaluationDoc,
   ApiResponse,
   Logger,
-} from '../common/types'
+} from './common/types'
 
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -63,13 +63,13 @@ const { err, isBusinessError, withErrorHandling } = require('./common/errors')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { detectReviewSpam, detectBoardingAcceptRisk, mapActionToErrorCode } = require('./common/risk-control')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { withRateLimit } = require('../common/risk-rate-limit')
+const { withRateLimit } = require('./common/risk-rate-limit')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { normalizeDbError } = require('../common/normalize')
+const { normalizeDbError } = require('./common/normalize')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createServiceIncomeRecord } = require('../common/service-income-utils')
+const { createServiceIncomeRecord } = require('./common/service-income-utils')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createCommissionRecord, cancelCommissionRecord } = require('../common/commission-utils')
+const { createCommissionRecord, cancelCommissionRecord } = require('./common/commission-utils')
 
 // =====================================================================
 // 类型定义
@@ -236,13 +236,14 @@ async function checkDateAvailabilityInternal(hostId: string, startDate: string, 
       return false
     }
     // P2-006: 补充 'paid' 状态，避免已支付未确认的订单被重复预订
+    // F10 修复：去掉 .limit(100)。热门 host 订单>100 时截断会导致重叠校验漏判、被超卖。
+    //   该查询按状态过滤（活跃订单数量有界），去掉 limit 后仍能正确校验全部重叠订单。
     const existingOrders = await db.collection('orders')
       .where({
         hostId,
         status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'in_progress', 'paid']),
       })
       .field({ startDate: true, endDate: true })
-      .limit(100)
       .get()
     const hasOverlap = ((existingOrders.data || []) as Array<{ startDate: string, endDate: string }>).some(o => {
       const orderStart = new Date(o.startDate).getTime()
@@ -570,6 +571,23 @@ async function recalcHostRating(hostId: string): Promise<void> {
 // Handler 实现
 // =====================================================================
 
+// F21 辅助：手机号脱敏（仅保留末4位），其余打码
+function maskPhoneLast4(phone: string): string {
+  const s = String(phone || '').replace(/\s/g, '')
+  if (s.length <= 4) { return s }
+  return '****' + s.slice(-4)
+}
+
+// F21 辅助：host 视角下 ownerInfo 仅保留昵称/头像，剔除全部 PII（phone/notes/身份证/地址等）
+const SAFE_OWNER_FIELDS = ['nickName', 'avatarUrl']
+function sanitizeOwnerForHost(owner: Record<string, unknown>): Record<string, unknown> {
+  const safe: Record<string, unknown> = {}
+  for (const f of SAFE_OWNER_FIELDS) {
+    if (owner[f] !== undefined) { safe[f] = owner[f] }
+  }
+  return safe
+}
+
 /**
  * 1. getOrders - 订单列表（owner / host 双视角）
  */
@@ -577,7 +595,9 @@ export async function getOrders(event: EventLike, _context: ContextLike, auth: A
   const openid = auth?.openid
   if (!openid) {throw err('AUTH_REQUIRED', '未登录')}
 
-  const { role, status, page = 1, pageSize = 10, dateRange } = event as { role?: string, status?: string, page?: number, pageSize?: number, dateRange?: string }
+  const { role, status, page = 1, pageSize: rawPageSize = 10, dateRange } = event as { role?: string, status?: string, page?: number, pageSize?: number, dateRange?: string }
+  // F12: pageSize 无上限会让客户端传极大值触发重查询/超时，clam 到 [1,100]
+  const pageSize = Math.min(100, Math.max(1, Number(rawPageSize) || 10))
   const query: Record<string, unknown> = {}
 
   if (role === 'owner') {
@@ -605,17 +625,23 @@ export async function getOrders(event: EventLike, _context: ContextLike, auth: A
     }
   }
 
+  const isHost = role === 'host'
+
+  // F21: host 视角不可见 owner 的 notes（可能含身份证/地址）；phone 仍取以便脱敏为末4位
+  const orderFields: Record<string, unknown> = {
+    _id: true, ownerId: true, hostId: true, organizerId: true,
+    petIds: true, startDate: true, endDate: true, duration: true, totalPrice: true,
+    status: true, note: true, createdAt: true, updatedAt: true,
+    petsInfo: true, hostInfo: true, ownerInfo: true, paymentStatus: true, paidAt: true,
+    orderType: true, activityId: true, activityTitle: true, activityCoverUrl: true,
+    activityStartTime: true, activityEndTime: true, activityLocation: true,
+    phone: true, pricePerDay: true, petCount: true, basicPrice: true,
+    originalAmount: true, couponId: true, couponDiscount: true,
+  }
+  orderFields.notes = !isHost
+
   const result = await db.collection('orders').where(query as never)
-    .field({
-      _id: true, ownerId: true, hostId: true, organizerId: true,
-      petIds: true, startDate: true, endDate: true, duration: true, totalPrice: true,
-      status: true, note: true, createdAt: true, updatedAt: true,
-      petsInfo: true, hostInfo: true, ownerInfo: true, paymentStatus: true, paidAt: true,
-      orderType: true, activityId: true, activityTitle: true, activityCoverUrl: true,
-      activityStartTime: true, activityEndTime: true, activityLocation: true,
-      phone: true, notes: true, pricePerDay: true, petCount: true, basicPrice: true,
-      originalAmount: true, couponId: true, couponDiscount: true,
-    })
+    .field(orderFields as never)
     .orderBy('createdAt', 'desc')
     .skip((Number(page) - 1) * Number(pageSize))
     .limit(Number(pageSize))
@@ -623,10 +649,25 @@ export async function getOrders(event: EventLike, _context: ContextLike, auth: A
 
   const countResult = await db.collection('orders').where(query as never).count()
 
-  const enrichedOrders = await enrichOrders((result.data || []) as unknown[])
+  let list: unknown[] = await enrichOrders((result.data || []) as unknown[])
+
+  // F21: host 视角对 owner PII 脱敏——phone 末4位、剔除 notes、ownerInfo 仅留昵称/头像
+  if (isHost) {
+    list = (list as Array<Record<string, unknown>>).map((o) => {
+      const m: Record<string, unknown> = { ...o }
+      if (typeof m.phone === 'string' && m.phone) {
+        m.phone = maskPhoneLast4(m.phone)
+      }
+      delete m.notes
+      if (m.ownerInfo && typeof m.ownerInfo === 'object') {
+        m.ownerInfo = sanitizeOwnerForHost(m.ownerInfo as Record<string, unknown>)
+      }
+      return m
+    })
+  }
 
   return handleSuccess({
-    list: enrichedOrders,
+    list,
     total: countResult.total,
     page: Number(page),
     pageSize: Number(pageSize),
@@ -812,9 +853,9 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
     note: note || '',
     status: 'pending_payment',
     paymentStatus: 'unpaid',
-    // P1 修复（H2）：bookingKey 用于数据库唯一索引，防止并发预订超卖
+    // P1 修复（H2）：bookingKey 用于数据库唯一索引 idx_bookingKey_unique,防止并发预订超卖
     //   格式：booking_<hostId>_<startDate>_<endDate>
-    //   需在云控制台为 orders 集合的 bookingKey 字段建唯一索引
+    //   H7:非寄养订单(mall/group_buy/activity/tuan)写 nb_<orderId> 占位,见 mallService/tuanService/activityService
     //   未建索引时降级为 checkDateAvailabilityInternal 重叠检查（H1 已修复）
     bookingKey: `booking_${hostId}_${startDate}_${endDate}`,
     createdAt: db.serverDate(),
@@ -971,7 +1012,9 @@ export async function getActivityOrders(event: EventLike, _context: ContextLike,
   const openid = auth?.openid
   if (!openid) {throw err('AUTH_REQUIRED', '未登录')}
 
-  const { status, page = 1, pageSize = 20 } = event as { status?: string, page?: number, pageSize?: number }
+  const { status, page = 1, pageSize: rawPageSize = 20 } = event as { status?: string, page?: number, pageSize?: number }
+  // F12: pageSize 无上限会让客户端传极大值触发重查询/超时，clam 到 [1,100]
+  const pageSize = Math.min(100, Math.max(1, Number(rawPageSize) || 20))
   const query: Record<string, unknown> = {
     ownerId: openid,
     orderType: 'activity',
@@ -1111,13 +1154,13 @@ export async function checkDateAvailability(event: EventLike): HandlerResult {
   }
 
   try {
+    // F10 修复：去掉 .limit(100)，避免热门 host(>100 活跃订单) 重叠校验截断致超卖
     const existingOrders = await db.collection('orders')
       .where({
         hostId,
         status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'in_progress']),
       })
       .field({ startDate: true, endDate: true })
-      .limit(100)
       .get()
 
     const requestStart = new Date(startDate).getTime()
@@ -1420,7 +1463,7 @@ export async function handleBoardingOrder(event: EventLike, _context: ContextLik
       await recordFailedOperation('cancel_commission', { orderType: 'boarding', orderId }, e)
     }
     try {
-      const { cancelServiceIncomeRecord } = require('../common/service-income-utils')
+      const { cancelServiceIncomeRecord } = require('./common/service-income-utils')
       await cancelServiceIncomeRecord(orderId, 'boarding')
     } catch (e) {
       logger.warn('handleBoardingOrder.cancelServiceIncomeRecord', {

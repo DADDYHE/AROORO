@@ -438,7 +438,7 @@ async function settleTuanCommissions(event, context, auth) {
   // ★ 顺序更新替代 Promise.all：避免部分失败导致部分结算状态。
   // CloudBase 事务有 10s 超时限制，批量结算可能涉及大量记录，不适合单事务。
   // P0-1: 结算成功后调用 ensureWalletBalance 将佣金入账钱包（原子增 balance/totalIncome）
-  const { ensureWalletBalance } = require('../../common/wallet-utils')
+  const { ensureWalletBalance } = require('../common/wallet-utils')
   let successCount = 0
   let failedCount = 0
   const failedIds = []

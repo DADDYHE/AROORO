@@ -185,7 +185,7 @@ export async function consumeGlobalRateLimit(
       })
     }
   } catch (e: any) {
-    throw err('INTERNAL_ERROR', `全局限流写入失败：${(e && e.message) || 'unknown'}`)
+    throw err('INTERNAL_ERROR', `全局限流写入失败：${_serializeError(e)}`)
   }
 
   // 5. 写入 target（如有）
@@ -213,7 +213,7 @@ export async function consumeGlobalRateLimit(
       }
     } catch (e: unknown) {
       // target 写入失败不回滚 global（已记录即扣减），但要告知调用方
-      throw err('INTERNAL_ERROR', `目标限流写入失败：${(e as Error)?.message || 'unknown'}`)
+      throw err('INTERNAL_ERROR', `目标限流写入失败：${_serializeError(e)}`)
     }
   }
 
@@ -270,14 +270,40 @@ async function _readRecord(coll: any, key: string): Promise<GlobalRateLimitRecor
   }
 }
 
+/**
+ * 写入新记录（或重置过期窗口记录）
+ *
+ * 设计说明（Sprint 52 修复）：
+ *   - 原实现先 add 后 set，高并发下两个请求同时 add 同一 _id 会触发 DuplicateKey，
+ *     失败方再 set 覆盖胜出方，既浪费 DB 调用又可能在 set 二次失败时抛出非标准错误。
+ *   - 改为直接 set：CloudBase doc(_id).set() 是 upsert 语义（不存在则创建，存在则替换），
+ *     适用于"新窗口初始化"场景（count=1, windowStart=now）。
+ *   - 并发下两个请求同时 set 同一 _id：后者覆盖前者，count 仍为 1（丢失 1 次计数），
+ *     但这是 peek-then-consume 模式的已知取舍，不影响限流正确性（下个请求走 inc 原子自增）。
+ *
+ * H7 关键约束：CloudBase SDK 的 doc(_id).set({data}) 不允许 data 中包含 _id 字段，
+ *   否则会抛出 -501007 invalid parameters "不能更新_id的值" 错误。
+ *   必须从 data 中剥离 _id 字段，仅通过 doc(_id) 指定主键。
+ */
 async function _writeNewRecord(coll: any, record: GlobalRateLimitRecord): Promise<GlobalRateLimitRecord> {
-  try {
-    await coll.add({ data: record })
-  } catch (addErr) {
-    // 并发场景：记录已存在 → 强制 set
-    await coll.doc(record._id).set({ data: record })
-  }
+  // 剥离 _id 字段，避免 -501007 invalid parameters 错误
+  const { _id, ...dataWithoutId } = record
+  await coll.doc(record._id).set({ data: dataWithoutId })
   return record
+}
+
+/**
+ * 序列化错误对象为可读字符串
+ * CloudBase SDK 错误可能没有标准 message 字段，需兼容 errMsg/errCode/原始对象
+ */
+function _serializeError(e: any): string {
+  if (!e) return 'unknown'
+  if (typeof e === 'string') return e
+  if (e instanceof Error) return e.message
+  if (typeof e === 'object') {
+    return e.message || e.errMsg || e.errCode || JSON.stringify(e)
+  }
+  return String(e)
 }
 
 // ===== 工具：清理过期记录 =====

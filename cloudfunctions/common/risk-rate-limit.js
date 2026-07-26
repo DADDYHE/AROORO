@@ -236,17 +236,27 @@ async function consumeGlobalRateLimitWithFallback(input, config) {
                 throw e;
             }
             const log = (0, logger_1.createLogger)('risk-rate-limit');
+            // Sprint 52 修复：完整序列化错误对象（CloudBase SDK 错误可能没有 message 字段）
+            const errorInfo = {
+                type: input.type,
+                targetId: input.targetId,
+                userId: input.userId,
+                errorName: e?.name,
+                errorMessage: e?.message,
+                errorStack: e?.stack,
+                errorString: typeof e === 'object' ? JSON.stringify(e, Object.getOwnPropertyNames(e || {})) : String(e),
+            };
             // H2 安全修复：敏感类型（支付/退款/提现等）在权威存储异常时 fail-closed，
             // 绝不降级到空的实例内存（那等同于不限流）。
             if (exports.SENSITIVE_FAIL_CLOSED_TYPES.has(input.type)) {
-                log.error('global store failed on sensitive type, fail-closed', { type: input.type, msg: e?.message });
+                log.error('global store failed on sensitive type, fail-closed', errorInfo);
                 throw (0, errors_1.err)('RATE_LIMITED', `RATE_LIMIT_STORE_UNAVAILABLE:${input.type}`, {
                     remaining: 0,
                     resetAt: Date.now() + effectiveConfig.windowMs,
                 });
             }
             // 其他非敏感类型（db 不可用等）降级到内存（best-effort）
-            log.warn('global store failed, fallback to memory', { msg: e?.message });
+            log.warn('global store failed, fallback to memory', errorInfo);
         }
     }
     // 降级到内存

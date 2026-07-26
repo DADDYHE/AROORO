@@ -26,11 +26,11 @@ exports.main = exports.fetchActive = exports.FETCH_LIMIT = exports.SUPPORTED_LOC
 // =====================================================================
 // 合并 common 模块导入，减少冷启动 require 次数
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createLogger } = require('../common/logger');
+const { createLogger } = require("./common/logger");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError, ERROR_CODES } = require('../common/utils');
+const { handleSuccess, handleError, ERROR_CODES } = require("./common/utils");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { err, isBusinessError, toResponse } = require('../common/errors');
+const { err, isBusinessError, toResponse } = require("./common/errors");
 let cloudbase = null;
 try {
     cloudbase = require('wx-server-sdk');
