@@ -371,6 +371,15 @@ class OrderService {
     return this.cloud.call('mallService', { action: 'getWxShippingStatus', orderIds, orderType }, { useCache: false })
   }
 
+  /**
+   * 拉取订单物流轨迹（作为 wx.openBusinessView logisticsDetail 不可用时的降级方案）。
+   * @param {string} orderId
+   * @returns {Promise<{ code, data: { expressCompany, expressNo, track: Array<{time, desc}> } }>}
+   */
+  async getLogisticsTrack(orderId) {
+    return this.cloud.call('mallService', { action: 'getLogisticsTrack', orderId }, { useCache: false })
+  }
+
   async getGroupBuyOrders(data = {}) {
     return this.cloud.call('mallService', { action: 'getGroupBuyOrders', ...data }, { useCache: false })
   }
