@@ -6,6 +6,7 @@ const { MALL_ORDER_TRANSITIONS, MALL_STATUS_MAP, STATUS_LABELS, validateTransiti
 const { createCommissionRecord } = require('./commission')
 const { enrichBuyerFields } = require('./_enrichBuyers')
 const { err } = require('../common/errors')
+const { uploadShippingInfo } = require('../../common/wxLogistics')
 
 const { db } = initCloud()
 const _ = db.command
@@ -292,6 +293,7 @@ async function shipMallOrder(event, context, auth) {
   const { orderId, expressCompany, expressNo } = event
   if (!orderId) {throw err('INVALID_PARAMS', '缺少订单ID')}
   if (!expressNo) {throw err('INVALID_PARAMS', '请填写快递单号')}
+  if (!expressCompany) {throw err('INVALID_PARAMS', '请选择快递公司')}
 
   const orderRes = await db.collection('orders').doc(orderId).get()
   if (!orderRes.data) {throw err('NOT_FOUND', '订单不存在')}
@@ -311,6 +313,32 @@ async function shipMallOrder(event, context, auth) {
       updatedAt: db.serverDate(),
     },
   })
+
+  // 同步推送到微信「发货信息管理」，best-effort：失败只记日志，不阻断发货
+  const transactionId = orderRes.data.wxTransactionId || orderRes.data.transactionId || ''
+  if (transactionId) {
+    try {
+      const wxRes = await uploadShippingInfo({
+        transactionId,
+        merchantTradeNo: orderId,
+        shippingItem: {
+          expressCompany,
+          expressNo,
+          itemDesc: `${orderRes.data.productName || '商品'} ×${orderRes.data.quantity || 1}`,
+        },
+      })
+      if (!wxRes.ok) {
+        logger.warn('shipMallOrder.uploadShippingInfo.fail', {
+          orderId, transactionId, expressNo, error: wxRes.error,
+        })
+      }
+    } catch (e) {
+      logger.warn('shipMallOrder.uploadShippingInfo.exception', {
+        orderId, msg: (e && e.message) || String(e),
+      })
+    }
+  }
+
   return handleSuccess(null, '发货成功')
 }
 
