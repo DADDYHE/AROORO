@@ -172,3 +172,52 @@ function getLogLevel() {
     return CURRENT_LOG_LEVEL;
 }
 exports.getLogLevel = getLogLevel;
+// =====================================================================
+// 关键路径性能采样开关（F25）
+// =====================================================================
+// 读取环境变量 PERF_SAMPLING_RATE（0~1 的概率，默认 0 即关闭）。
+// 开启后，关键路径调用 perf() 会按概率记录耗时，且不受 LOG_LEVEL 限制。
+const PERF_SAMPLING_RATE = (function () {
+    const raw = process.env.PERF_SAMPLING_RATE;
+    if (raw === undefined || raw === '') return 0;
+    const n = Number(raw);
+    if (!isFinite(n) || n < 0 || n > 1) return 0;
+    return n;
+})();
+function _perfSample(service, action, duration, metadata) {
+    if (PERF_SAMPLING_RATE <= 0) return;
+    if (Math.random() < PERF_SAMPLING_RATE) {
+        const prefix = formatLogPrefix(service, action, 'PERF-SAMPLE');
+        console.log(prefix, {
+            durationMs: duration,
+            samplingRate: PERF_SAMPLING_RATE,
+            ...(metadata || {}),
+        });
+    }
+}
+exports.perfSample = _perfSample;
+// =====================================================================
+// 进程级终极兜底：未捕获异常 / 未处理的 Promise rejection（F25）
+// =====================================================================
+// - 捕获后写结构化 FATAL 日志，绝不重新抛出、绝不主动退出进程。
+// - 不依赖 DB / recordAlert，直接 console.error 作为终极通道。
+// - module-level 标志守卫，确保整个进程只注册一次（避免重复监听）。
+// - 测试环境（jest / NODE_ENV=test）不安装，避免污染测试进程。
+let _globalHandlersInstalled = false;
+function installGlobalExceptionHandlers() {
+    if (_globalHandlersInstalled) return;
+    if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined) {
+        return;
+    }
+    _globalHandlersInstalled = true;
+    const writeFatal = (kind, err) => {
+        const payload = _serializeLogPayload(err);
+        const line = "[" + new Date().toISOString() + "] [FATAL] [" + kind + "] " + JSON.stringify(payload);
+        console.error(line);
+    };
+    process.on('uncaughtException', (err) => writeFatal('uncaughtException', err));
+    process.on('unhandledRejection', (reason) => writeFatal('unhandledRejection', reason));
+}
+exports.installGlobalExceptionHandlers = installGlobalExceptionHandlers;
+// 统一入口：所有云函数入口均 require 本模块，模块加载时安装一次兜底监听
+installGlobalExceptionHandlers();

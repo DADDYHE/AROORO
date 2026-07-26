@@ -1155,6 +1155,10 @@ async function submitRegistration(event, context, auth) {
                 createdAt: now,
                 updatedAt: now,
             };
+            // H7: idx_bookingKey_unique 唯一索引要求 orders 全文档 bookingKey 唯一
+            //   活动订单无寄养业务键,用 _id 占位保证唯一性,避免 null 冲突导致 -502001 DuplicateKey
+            activityOrder._id = generateId('order', openid);
+            activityOrder.bookingKey = `nb_${activityOrder._id}`;
             await transaction.collection('orders').add({ data: activityOrder });
         }
         catch (orderErr) {
@@ -1520,6 +1524,10 @@ async function createActivityPaymentOrder(event, context, auth) {
             createdAt: now,
             updatedAt: now,
         };
+        // H7: idx_bookingKey_unique 唯一索引要求 orders 全文档 bookingKey 唯一
+        //   活动订单无寄养业务键,用 _id 占位保证唯一性,避免 null 冲突导致 -502001 DuplicateKey
+        orderDoc._id = generateId('order', openid);
+        orderDoc.bookingKey = `nb_${orderDoc._id}`;
         await db.collection('orders').add({ data: orderDoc });
         const paymentParams = await _createPaymentParams(openid, orderId || '', outTradeNo, finalAmount, activity.title || '活动报名');
         return handleSuccess({
