@@ -94,10 +94,7 @@ describe('adminService/services/mall 统计与详情聚焦', () => {
 
   describe('getMallOrderDetail', () => {
     test('缺 orderId 应抛 INVALID_PARAMS', async () => {
-      const r = await mall.getMallOrderDetail({}, {}, {})
-      expect(dataOf(r)).toBeUndefined()
-      // handleError 路径返回对象含错误信息
-      expect(r && (r.code || r.success === false || r.error)).toBeTruthy()
+      await expect(mall.getMallOrderDetail({}, {}, {})).rejects.toThrow(/INVALID_PARAMS|缺少订单ID/)
     })
 
     test('订单不存在应抛 NOT_FOUND', async () => {
@@ -105,8 +102,7 @@ describe('adminService/services/mall 统计与详情聚焦', () => {
       realDb.collection = () => ({
         doc: () => ({ get: async () => ({ data: null }) }),
       })
-      const r = await mall.getMallOrderDetail({ orderId: 'missing' }, {}, {})
-      expect(r && (r.code || r.error || r.message)).toBeTruthy()
+      await expect(mall.getMallOrderDetail({ orderId: 'missing' }, {}, {})).rejects.toThrow(/NOT_FOUND|订单不存在/)
     })
 
     test('非 mall 订单应抛 NOT_FOUND', async () => {
@@ -114,8 +110,7 @@ describe('adminService/services/mall 统计与详情聚焦', () => {
       realDb.collection = () => ({
         doc: () => ({ get: async () => ({ data: { _id: 'o1', type: 'boarding' } }) }),
       })
-      const r = await mall.getMallOrderDetail({ orderId: 'o1' }, {}, {})
-      expect(r && (r.code || r.error || r.message)).toBeTruthy()
+      await expect(mall.getMallOrderDetail({ orderId: 'o1' }, {}, {})).rejects.toThrow(/NOT_FOUND|订单不存在/)
     })
   })
 })

@@ -81,6 +81,7 @@ mockDb.command = {
   eq: v => ({ _op: 'eq', v }),
   neq: v => ({ _op: 'neq', v }),
 }
+mockDb.serverDate = () => 'MOCK_DATE'
 
 jest.mock('wx-server-sdk', () => ({
   init: jest.fn(),
@@ -112,7 +113,6 @@ describe('orderService/orders 退款/取消/超时/状态机聚焦', () => {
     test('已确认（非已支付）订单取消应置为 cancelled', async () => {
       putOrder({ _id: 'ord_c1', ownerId: OPENID, status: 'confirmed', paymentStatus: 'unpaid' })
       const r = await orders.cancelOrder({ orderId: 'ord_c1' }, {}, { openid: OPENID })
-      if (r.code !== 0) console.log('DEBUG cancel r=', JSON.stringify(r))
       expect(r.code).toBe(0)
       // 状态机推进：confirmed → cancelled，订单文档状态被改写
       expect(mockDb._collections.orders.docs[0].status).toBe('cancelled')

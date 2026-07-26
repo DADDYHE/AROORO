@@ -189,6 +189,8 @@ describe('paymentService/refund 金额正确 + 安全校验', () => {
   })
 
   test('重复调用同一 outTradeNo 生成唯一 out_refund_no（幂等由调用方保证）', async () => {
+    // 隔离限流：聚焦验证 createRefund 功能层不内置去重（幂等由 orders.js 调用方保证）
+    mockRateLimit.withRateLimit.mockImplementation(async (_input, fn) => fn())
     putOrder({ _id: 'ord_1', outTradeNo: 'T1', ownerId: 'oTest_openid', totalPrice: 5000, status: 'completed' })
     allowRisk()
     const r1 = await refund.createRefund({ outTradeNo: 'T1', refundAmount: 100, totalAmount: 5000 }, {}, { openid: 'oTest_openid' })
@@ -196,7 +198,7 @@ describe('paymentService/refund 金额正确 + 安全校验', () => {
     expect(r1.outRefundNo).toBeDefined()
     expect(r2.outRefundNo).toBeDefined()
     expect(r1.outRefundNo).not.toBe(r2.outRefundNo)
-    // 功能层不内置去重，每次都真实发起微信退款；幂等须由 orders.js 调用方保证
+    // 功能层不内置去重，每次都真实发起微信退款
     expect(mockWechatPayUtils.httpsRequest).toHaveBeenCalledTimes(2)
   })
 })
