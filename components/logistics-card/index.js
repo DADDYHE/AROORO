@@ -3,9 +3,14 @@
  *
  * 职责：
  *   1. 展示快递单号 + 发货时间
- *   2. 点击拉起 wx.openBusinessView({businessType:'logisticsDetail'}) 官方半屏组件
- *   3. 失败降级：调本服务 mallService.getLogisticsTrack 拉取轨迹并展示
- *   4. 支持展开/收起轨迹列表
+ *   2. 点击调本服务 mallService.getLogisticsTrack 拉取轨迹并展开展示
+ *   3. 支持展开/收起轨迹列表
+ *
+ * 设计说明：
+ *   - 微信官方 wx.openBusinessView 在「发货信息管理」场景下仅提供 weappOrderConfirm
+ *     （确认收货）一种 businessType，没有 logisticsDetail 半屏组件。
+ *   - 用户在微信「服务通知」点发货通知会跳到小程序指定页面（由 upload_shipping_info
+ *     的 path 参数配置），物流详情由小程序自建展示。
  *
  * 使用方式（父页面）：
  *   <logistics-card
@@ -13,13 +18,10 @@
  *     express-company="{{order.expressCompany}}"
  *     express-no="{{order.expressNo}}"
  *     shipped-at="{{order.shippedAt}}"
- *     transaction-id="{{order.transactionId}}"
- *     wx-transaction-id="{{order.wxTransactionId}}"
  *   />
  *
  * 依赖：
  *   - services/CloudFunctionService.js 中的 OrderService.getLogisticsTrack
- *   - wx.openBusinessView（基础库 ≥ 2.27）
  */
 const { OrderService } = require('../../services/CloudFunctionService')
 
@@ -38,9 +40,10 @@ Component({
     expressNo: { type: String, value: '' },
     // 发货时间（已格式化的字符串）
     shippedAt: { type: String, value: '' },
-    // 微信支付订单号（用于拉起 wx logisticsDetail 组件）
+    // 微信支付订单号（已废弃：原用于拉起 wx logisticsDetail 组件，但该 businessType 不存在）
+    // 保留属性定义避免父页面传参报错，后续可移除
     transactionId: { type: String, value: '' },
-    // wxTransactionId 优先级高于 transactionId
+    // wxTransactionId（已废弃，同上）
     wxTransactionId: { type: String, value: '' },
     // 是否默认展开轨迹列表
     defaultExpanded: { type: Boolean, value: false },
@@ -61,53 +64,25 @@ Component({
 
   methods: {
     /**
-     * 点击「查看物流」按钮：
-     * - 优先调 wx.openBusinessView({businessType:'logisticsDetail'}) 拉起官方半屏组件；
-     * - 失败（低版本基础库 / 用户取消 / 微信侧未生成物流卡）则降级调本服务 getLogisticsTrack 自建展示。
+     * 点击「查看物流」按钮：调本服务 getLogisticsTrack 拉取轨迹并展开自建展示。
+     *
+     * 设计说明：
+     *   - 微信官方 wx.openBusinessView 在「发货信息管理」场景下仅提供 weappOrderConfirm
+     *     （确认收货）一种 businessType，没有 logisticsDetail 半屏组件。
+     *   - 用户在微信「服务通知」点发货通知会跳到小程序指定页面（由 upload_shipping_info
+     *     的 path 参数配置），物流详情由小程序自建展示。
+     *   - 已拉过则只切换展开状态，不重复请求。
      */
     onViewLogistics() {
       if (!this.data.expressNo) {
         this._toast('该订单暂无快递单号')
         return
       }
-      this._openWxLogisticsView()
+      this._fallbackGetTrack()
     },
 
     /**
-     * 拉起微信官方物流详情半屏组件。
-     * - 文档：https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/order-shipping/order-shipping-half.html
-     * - 拉起前提：商家发货时已调 uploadShippingInfo 把快递信息推到微信侧。
-     */
-    _openWxLogisticsView() {
-      if (typeof wx.openBusinessView !== 'function') {
-        // 低版本基础库，直接降级
-        this._fallbackGetTrack()
-        return
-      }
-      const transactionId = this.data.wxTransactionId || this.data.transactionId || ''
-      if (!transactionId) {
-        // 无微信支付订单号，无法拉起官方组件，降级
-        this._fallbackGetTrack()
-        return
-      }
-      wx.openBusinessView({
-        businessType: 'logisticsDetail',
-        extraData: {
-          transaction_id: transactionId,
-        },
-        success: () => {
-          // 拉起成功即可，无需刷新
-        },
-        fail: (e) => {
-          console.warn('[logistics-card] wx.openBusinessView logisticsDetail fail', e)
-          // 降级到自建轨迹
-          this._fallbackGetTrack()
-        },
-      })
-    },
-
-    /**
-     * 降级方案：调本服务 getLogisticsTrack 拉取轨迹，本地展示。
+     * 拉取物流轨迹并展开本地展示。
      * 已拉过则只切换展开状态，不重复请求。
      */
     async _fallbackGetTrack() {

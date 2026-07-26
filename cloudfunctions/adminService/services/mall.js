@@ -6,7 +6,7 @@ const { MALL_ORDER_TRANSITIONS, MALL_STATUS_MAP, STATUS_LABELS, validateTransiti
 const { createCommissionRecord } = require('./commission')
 const { enrichBuyerFields } = require('./_enrichBuyers')
 const { err } = require('../common/errors')
-const { uploadShippingInfo } = require('../../common/wxLogistics')
+const { uploadShippingInfo } = require('../common/wxLogistics')
 
 const { db } = initCloud()
 const _ = db.command

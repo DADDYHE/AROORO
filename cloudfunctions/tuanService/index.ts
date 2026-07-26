@@ -192,7 +192,7 @@ const { withRateLimit } = require('./common/risk-rate-limit')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { uploadShippingInfo } = require('../common/wxLogistics')
+const { uploadShippingInfo } = require('./common/wxLogistics')
 
 const { cloud, db } = initCloud()
 const logger = createLogger('tuanService')
