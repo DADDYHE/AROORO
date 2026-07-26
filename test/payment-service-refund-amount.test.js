@@ -54,11 +54,13 @@ jest.mock('../cloudfunctions/common/risk-control', () => ({
   mapActionToErrorCode: (...args) => mockMapActionToErrorCode(...args),
 }))
 
-// ===== Mock risk-rate-limit（spy 真实模块，统计调用）=====
-jest.mock('../cloudfunctions/common/risk-rate-limit', () => {
-  const real = jest.requireActual('../cloudfunctions/common/risk-rate-limit')
+// ===== Mock risk-rate-limit（纯透传，隔离限流；限流行为由 payment-service-refund-risk.test.js 覆盖）=====
+// 注意：refund.js 实际 require 的是 paymentService/common/risk-rate-limit（相对 paymentService/services/），
+// 必须 mock 正确路径，否则会命中真实限流器的模块级 store，导致跨用例累积触发限流。
+jest.mock('../cloudfunctions/paymentService/common/risk-rate-limit', () => {
+  const real = jest.requireActual('../cloudfunctions/paymentService/common/risk-rate-limit')
   return {
-    withRateLimit: jest.fn(async (input, fn) => real.withRateLimit(input, fn)),
+    withRateLimit: jest.fn(async (_input, fn) => fn()),
     consumeRateLimit: jest.fn(input => real.consumeRateLimit(input)),
     peekRateLimit: jest.fn(input => real.peekRateLimit(input)),
     _resetStore: jest.fn(() => real._resetStore()),
@@ -128,7 +130,7 @@ jest.mock('wx-server-sdk', () => ({
 }))
 
 const refund = require('../cloudfunctions/paymentService/services/refund')
-const mockRateLimit = require('../cloudfunctions/common/risk-rate-limit')
+const mockRateLimit = require('../cloudfunctions/paymentService/common/risk-rate-limit')
 
 function putOrder(doc) {
   mockDb._collections.orders = { docs: [doc] }
@@ -189,8 +191,6 @@ describe('paymentService/refund 金额正确 + 安全校验', () => {
   })
 
   test('重复调用同一 outTradeNo 生成唯一 out_refund_no（幂等由调用方保证）', async () => {
-    // 隔离限流：聚焦验证 createRefund 功能层不内置去重（幂等由 orders.js 调用方保证）
-    mockRateLimit.withRateLimit.mockImplementation(async (_input, fn) => fn())
     putOrder({ _id: 'ord_1', outTradeNo: 'T1', ownerId: 'oTest_openid', totalPrice: 5000, status: 'completed' })
     allowRisk()
     const r1 = await refund.createRefund({ outTradeNo: 'T1', refundAmount: 100, totalAmount: 5000 }, {}, { openid: 'oTest_openid' })
