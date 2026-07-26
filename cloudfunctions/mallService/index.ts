@@ -252,6 +252,9 @@ const { createCommissionRecord: sharedCreateCommissionRecord, cancelCommissionRe
 const { reconcileOrderWithWx } = require('./common/wxOrderSync')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { getWxOrderStatus } = require('./common/wxAccessToken')
+// Task 5: 物流轨迹降级拉取（前端 wx.openBusinessView 不可用时使用）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { getLogisticsPath } = require('./common/wxLogistics')
 
 const { cloud, db } = initCloud()
 const logger = createLogger('mallService')
@@ -1440,6 +1443,68 @@ export async function getWxShippingStatus(
 }
 
 // =====================================================================
+// Handler 19: getLogisticsTrack - 获取订单物流轨迹（降级方案）
+// =====================================================================
+//
+// 用途：前端 wx.openBusinessView({businessType:'logisticsDetail'}) 不可用时，
+//      调本接口拉取轨迹自建展示。
+// 入参：{ orderId: string }
+// 返回：{ code, data: { expressCompany, expressNo, track: [{time, desc}] } }
+// 权限：仅订单所有者可查
+
+export async function getLogisticsTrack(
+  event: CloudEvent,
+  _context: CloudContext,
+  auth: AuthLike
+): Promise<unknown> {
+  const { openid } = auth
+  if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
+
+  const { orderId } = event
+  if (!orderId) { throw err('INVALID_PARAMS', '缺少订单ID') }
+
+  try {
+    const orderRes = await db.collection('orders').doc(orderId).get()
+    const orderData = orderRes.data as OrderRecord | null
+    if (!orderData || orderData.ownerId !== openid) {
+      throw err('PERMISSION_DENIED', '无权限查看此订单')
+    }
+
+    const expressCompany = (orderData as any).expressCompany || ''
+    const expressNo = (orderData as any).expressNo || ''
+    if (!expressCompany || !expressNo) {
+      return handleSuccess({
+        expressCompany: '',
+        expressNo: '',
+        track: [],
+      }, '该订单暂无物流信息')
+    }
+
+    const wxRes = await getLogisticsPath({ expressCompany, expressNo })
+    if (!wxRes.ok || !wxRes.data) {
+      // 降级：返回空轨迹，但 expressCompany / expressNo 仍透传给前端展示
+      logger.warn('getLogisticsTrack.getPathFail', {
+        orderId, expressCompany, expressNo, error: wxRes.error,
+      })
+      return handleSuccess({
+        expressCompany,
+        expressNo,
+        track: [],
+      }, wxRes.error || '暂无轨迹')
+    }
+
+    return handleSuccess({
+      expressCompany,
+      expressNo,
+      track: wxRes.data,
+    }, '获取成功')
+  } catch (error) {
+    logger.error('getLogisticsTrack', error)
+    return handleError(error, '获取物流轨迹失败', ERROR_CODES.SERVER)
+  }
+}
+
+// =====================================================================
 // 入口聚合：handlers 路由表
 // =====================================================================
 
@@ -1462,6 +1527,7 @@ export const handlers: Record<string, MallActionHandler> = {
   confirmReceive,
   deleteOrder,
   getWxShippingStatus,
+  getLogisticsTrack,
 }
 
 // =====================================================================
