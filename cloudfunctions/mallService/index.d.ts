@@ -168,6 +168,7 @@ export interface OrderRecord {
     paidAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
+    bookingKey?: string;
     [k: string]: unknown;
 }
 export interface RiskCheckResult {
@@ -212,6 +213,7 @@ export declare function getOrderDetail(event: CloudEvent, _context: CloudContext
 export declare function confirmReceive(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function deleteOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getWxShippingStatus(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
+export declare function getLogisticsTrack(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare const handlers: Record<string, MallActionHandler>;
 export declare function main(event: CloudEvent, context: CloudContext): Promise<unknown>;
 declare const _default: {
