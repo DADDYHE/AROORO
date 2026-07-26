@@ -641,7 +641,7 @@ async function createOrder(event, _context, auth) {
         couponSnapshot = validated.couponSnapshot;
         event._orderId = tempOrderId;
     }
-    const finalAmount = calculatedPrice - couponDiscount;
+    const finalAmount = Math.round((calculatedPrice - couponDiscount) * 100) / 100;
     // 修复：禁止 finalAmount 为负数或过小（原代码 finalAmount > 0 漏掉了负数场景）
     if (couponId && finalAmount < 0.1) {
         // 回滚刚刚的 lockCoupon

@@ -30,30 +30,35 @@ function calculateCouponDiscount(coupon, orderAmount) {
   const { type, rules } = coupon
   if (!rules) {return { eligible: false, message: '优惠券规则缺失' }}
 
-  if (rules.threshold && orderAmount < rules.threshold) {
+  // 统一转整数分计算，避免 `orderAmount * (1 - discountRate)` 浮点漂移，以及封顶比较的 epsilon 误差
+  const orderAmountInFen = Math.round(orderAmount * 100)
+
+  // R3: threshold 用分比较，与分计算口径一致（元比较可能与分计算结果错位）
+  if (rules.threshold && orderAmountInFen < Math.round(rules.threshold * 100)) {
     return { eligible: false, message: `订单金额未达到满${rules.threshold}元使用门槛` }
   }
 
-  let discountAmount = 0
+  let discountInFen = 0
   switch (type) {
   case 'fixed_amount':
   case 'full_reduction':
-    discountAmount = rules.reduceAmount || 0
+    discountInFen = Math.round((rules.reduceAmount || 0) * 100)
     break
-  case 'discount':
-    discountAmount = orderAmount * (1 - (rules.discountRate || 1))
+  case 'discount': {
+    const discountRate = Number(rules.discountRate) || 1
+    discountInFen = Math.round(orderAmountInFen * (1 - discountRate))
     if (rules.maxReduceAmount && rules.maxReduceAmount > 0) {
-      discountAmount = Math.min(discountAmount, rules.maxReduceAmount)
+      // 封顶也走分维度，避免浮点 epsilon 导致封顶被突破
+      discountInFen = Math.min(discountInFen, Math.round(rules.maxReduceAmount * 100))
     }
     break
+  }
   default:
     return { eligible: false, message: '未知优惠券类型' }
   }
 
-  discountAmount = Math.min(discountAmount, orderAmount)
-  discountAmount = Math.round(discountAmount * 100) / 100
-
-  return { eligible: true, discountAmount }
+  discountInFen = Math.min(discountInFen, orderAmountInFen)
+  return { eligible: true, discountAmount: discountInFen / 100 }
 }
 
 // 统一 best-effort 审计日志：直接走 common/operation-log，本文件不再持有独立实现

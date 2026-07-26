@@ -262,7 +262,7 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
         data: {
           status: 'refunded',
           paymentStatus: 'refunded',
-          refundAmount: Number(refundAmount) / 100,
+          refundAmount: Number((Number(refundAmount) / 100).toFixed(2)),
           refundedAt: db.serverDate(),
           updatedAt: db.serverDate(),
         },
@@ -318,7 +318,7 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
           orderType,
           outTradeNo,
           outRefundNo,
-          refundAmount: Number(refundAmount) / 100,
+          refundAmount: Number((Number(refundAmount) / 100).toFixed(2)),
           error: (txError as Error)?.message,
         }
       )

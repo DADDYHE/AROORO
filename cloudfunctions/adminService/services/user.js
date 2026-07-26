@@ -1181,14 +1181,14 @@ async function getReferralOrderStats(event, context, auth) {
         const amount = typeBreakdown[orderType]
         const rate = Number(commissionConfig[orderType]) || 0
         rates[orderType] = rate
-        estimatedCommission += amount * rate / 100
+        estimatedCommission += Math.round(Math.round(amount * 100) * rate / 100) / 100
       }
       // 计算加权平均佣金率（用于前端展示）
       commissionRate = totalAmount > 0 ? Math.round(estimatedCommission / totalAmount * 100 * 100) / 100 : 0
     } else {
       // 单一类型，使用对应的佣金率
       commissionRate = Number(commissionConfig[type]) || 0
-      estimatedCommission = totalAmount * commissionRate / 100
+      estimatedCommission = Math.round(Math.round(totalAmount * 100) * commissionRate / 100) / 100
     }
 
     estimatedCommission = Math.round(estimatedCommission * 100) / 100
