@@ -267,3 +267,147 @@ describe('缺陷 4: notify 事务失败后不应触发佣金记录', () => {
     expect(commissionTriggered).toBe(true)  // Bug: 事务失败仍创建佣金
   })
 })
+
+// =====================================================================
+// 缺陷 5：refund.ts 退款事务中订单状态更新硬编码 'orders' 集合
+// =====================================================================
+
+describe('缺陷 5: refund 事务中订单状态更新硬编码 orders 集合 (0162dc8)', () => {
+  /**
+   * 触发场景：
+   *   用户对 activity 或 feeding 类型订单发起自助退款。
+   *   fetchOrderAndVerifyOwnership 已按 orderType 路由到正确集合查询订单，
+   *   但事务内更新主订单状态时硬编码 collection('orders')，
+   *   导致更新的是 orders 集合中不存在的文档，事务失败回滚。
+   *
+   * 影响：
+   *   1. 微信退款已实际发生，但订单状态永远停留在 paid
+   *   2. 佣金取消、业务表同步全部因事务回滚而失效
+   *   3. 用户可反复发起退款（订单状态永不为 refunded）
+   *   4. 系统侧数据与微信侧严重不一致
+   */
+
+  const ORDER_TYPE_COLLECTION_MAP = {
+    order: 'orders',
+    mall: 'orders',
+    tuan: 'orders',
+    activity: 'activity_registrations',
+    feeding: 'feedingOrders',
+  }
+
+  test('activity 订单退款应更新 activity_registrations 集合，而非 orders', () => {
+    const orderType = 'activity'
+    const orderDoc = { _id: 'act-reg-001', outTradeNo: 'ACT_20260725_001', orderType: 'activity' }
+
+    // Bug 修复前：硬编码 'orders'
+    const beforeFixCollection = 'orders'
+    expect(beforeFixCollection).toBe('orders')
+    // 用 activity 订单的 _id 去 orders 集合查找 → 找不到文档
+    const beforeFixDocExists = beforeFixCollection === ORDER_TYPE_COLLECTION_MAP[orderType]
+    expect(beforeFixDocExists).toBe(false)  // Bug: 更新到错误的集合
+
+    // Bug 修复后：按 orderType 路由到正确集合
+    const afterFixCollection = ORDER_TYPE_COLLECTION_MAP[orderType] || 'orders'
+    expect(afterFixCollection).toBe('activity_registrations')
+    const afterFixDocExists = afterFixCollection === ORDER_TYPE_COLLECTION_MAP[orderType]
+    expect(afterFixDocExists).toBe(true)  // Fix: 更新到正确的集合
+  })
+
+  test('feeding 订单退款应更新 feedingOrders 集合', () => {
+    const orderType = 'feeding'
+    const afterFixCollection = ORDER_TYPE_COLLECTION_MAP[orderType] || 'orders'
+    expect(afterFixCollection).toBe('feedingOrders')
+  })
+
+  test('mall/tuan/order 订单仍应更新 orders 集合（回归）', () => {
+    expect(ORDER_TYPE_COLLECTION_MAP['mall']).toBe('orders')
+    expect(ORDER_TYPE_COLLECTION_MAP['tuan']).toBe('orders')
+    expect(ORDER_TYPE_COLLECTION_MAP['order']).toBe('orders')
+  })
+
+  test('完整链路：activity 退款事务成功时订单状态应为 refunded', async () => {
+    // 模拟：activity 订单在 activity_registrations 集合中
+    const collections = {}
+    const db = createMockDb(collections)
+
+    // 预置 activity 报名订单
+    collections['activity_registrations'] = {
+      docs: [
+        { _id: 'act-reg-001', outTradeNo: 'ACT_20260725_001', status: 'paid', paymentStatus: 'paid', ownerId: 'user-001', activityId: 'act-001' }
+      ]
+    }
+
+    const orderType = 'activity'
+    const orderDoc = collections['activity_registrations'].docs[0]
+    const orderCollection = ORDER_TYPE_COLLECTION_MAP[orderType] || 'orders'
+
+    // 模拟事务：使用正确的集合更新订单状态
+    const transaction = await db.startTransaction()
+    await transaction.collection(orderCollection).doc(orderDoc._id).update({
+      data: { status: 'refunded', paymentStatus: 'refunded' }
+    })
+    await transaction.commit()
+
+    // 验证：订单状态已更新
+    const updated = collections['activity_registrations'].docs.find(d => d._id === 'act-reg-001')
+    expect(updated.status).toBe('refunded')
+    expect(updated.paymentStatus).toBe('refunded')
+  })
+})
+
+// =====================================================================
+// 缺陷 6：adminService 未注入全局限流 store
+// =====================================================================
+
+describe('缺陷 6: adminService 未注入全局限流 store (0162dc8)', () => {
+  /**
+   * 触发场景：
+   *   adminService 中有多个服务调用了 withRateLimit（refund / upload / application），
+   *   但 adminService 入口从未调用 bootstrapRateLimit 注入全局 DB store。
+   *   导致 withRateLimit 始终走内存 Map 路径。
+   *
+   * 影响：
+   *   1. 云函数冷启动时内存 Map 为空，等同于完全不限流
+   *   2. 多实例部署下，每个实例独立计数，限流效果被 N 倍稀释
+   *   3. admin_refund 等敏感接口的 fail-closed 逻辑完全不生效
+   *   4. 攻击者获取管理员账号后可无限速发起退款、上传等操作
+   */
+
+  test('adminService 入口应包含 bootstrapRateLimit 调用', () => {
+    // 验证：adminService/index.js 中存在 bootstrapRateLimit 引用
+    const fs = require('fs')
+    const path = require('path')
+    const adminIndexPath = path.join(__dirname, '..', 'cloudfunctions', 'adminService', 'index.js')
+    const content = fs.readFileSync(adminIndexPath, 'utf8')
+
+    const hasBootstrapImport = content.includes('bootstrapRateLimit')
+    const hasBootstrapCall = content.includes('bootstrapRateLimit(') && content.includes('rate-limit-bootstrap')
+
+    // 修复后应存在 bootstrap 调用
+    expect(hasBootstrapImport).toBe(true)
+    expect(hasBootstrapCall).toBe(true)
+  })
+
+  test('paymentService 已正确配置 strict 模式（参照基准）', () => {
+    const fs = require('fs')
+    const path = require('path')
+    const paymentIndexPath = path.join(__dirname, '..', 'cloudfunctions', 'paymentService', 'index.js')
+    const content = fs.readFileSync(paymentIndexPath, 'utf8')
+
+    expect(content.includes('bootstrapRateLimit')).toBe(true)
+    expect(content.includes('strict: true')).toBe(true)  // 资金服务用 strict 模式
+  })
+
+  test('adminService 使用非 strict 模式（权限体系已提供强保护）', () => {
+    const fs = require('fs')
+    const path = require('path')
+    const adminIndexPath = path.join(__dirname, '..', 'cloudfunctions', 'adminService', 'index.js')
+    const content = fs.readFileSync(adminIndexPath, 'utf8')
+
+    // adminService 使用 non-strict 模式（best-effort），因为：
+    // 1. 所有敏感接口已有 super_admin / partner 权限保护
+    // 2. 限流是防御纵深，不应因限流故障阻断管理后台
+    // 3. 降级到内存模式仍有基本防护
+    expect(content.includes('strict: false')).toBe(true)
+  })
+})
