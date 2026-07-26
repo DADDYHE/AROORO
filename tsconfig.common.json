@@ -44,7 +44,9 @@
     "cloudfunctions/common/permissions.ts",
     "cloudfunctions/common/normalize.ts",
     "cloudfunctions/common/operation-log.ts",
-    "cloudfunctions/common/alert.ts"
+    "cloudfunctions/common/alert.ts",
+    "cloudfunctions/common/wxLogistics.ts",
+    "cloudfunctions/common/expressCompanyCodes.ts"
   ],
   "exclude": [
     "node_modules",
