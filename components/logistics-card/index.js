@@ -24,6 +24,7 @@
  *   - services/CloudFunctionService.js 中的 OrderService.getLogisticsTrack
  */
 const { OrderService } = require('../../services/CloudFunctionService')
+const { formatDateTime } = require('../../utils/dateUtils')
 
 Component({
   options: {
@@ -64,32 +65,33 @@ Component({
 
   methods: {
     /**
-     * 点击「查看物流」按钮：调本服务 getLogisticsTrack 拉取轨迹并展开自建展示。
+     * 点击「查看物流」按钮：
+     *   - 已拉过轨迹 → 切换展开/收起
+     *   - 未拉过 → 拉取轨迹并展开
      *
      * 设计说明：
      *   - 微信官方 wx.openBusinessView 在「发货信息管理」场景下仅提供 weappOrderConfirm
      *     （确认收货）一种 businessType，没有 logisticsDetail 半屏组件。
      *   - 用户在微信「服务通知」点发货通知会跳到小程序指定页面（由 upload_shipping_info
      *     的 path 参数配置），物流详情由小程序自建展示。
-     *   - 已拉过则只切换展开状态，不重复请求。
      */
     onViewLogistics() {
       if (!this.data.expressNo) {
         this._toast('该订单暂无快递单号')
         return
       }
-      this._fallbackGetTrack()
+      if (this.data.hasFetchedTrack) {
+        // 已拉取过，切换展开/收起
+        this.setData({ logisticsExpanded: !this.data.logisticsExpanded })
+        return
+      }
+      this._fetchTrack()
     },
 
     /**
      * 拉取物流轨迹并展开本地展示。
-     * 已拉过则只切换展开状态，不重复请求。
      */
-    async _fallbackGetTrack() {
-      if (this.data.hasFetchedTrack) {
-        this.setData({ logisticsExpanded: true })
-        return
-      }
+    async _fetchTrack() {
       const orderId = this.data.orderId
       if (!orderId) {
         this._toast('缺少订单ID')
@@ -99,12 +101,18 @@ Component({
       try {
         const res = await OrderService.getLogisticsTrack(orderId)
         if (res && res.code === 0 && res.data) {
+          // 后端返回 time 为秒级时间戳数字，需格式化为可读字符串展示
+          const rawTrack = Array.isArray(res.data.track) ? res.data.track : []
+          const track = rawTrack.map(it => ({
+            ...it,
+            time: formatDateTime(it.time ? Number(it.time) * 1000 : it.time),
+          }))
           this.setData({
-            logisticsTrack: Array.isArray(res.data.track) ? res.data.track : [],
+            logisticsTrack: track,
             logisticsLoading: false,
             hasFetchedTrack: true,
           })
-          if (!res.data.track || res.data.track.length === 0) {
+          if (track.length === 0) {
             this._toast('暂无轨迹')
           }
         } else {
@@ -115,10 +123,6 @@ Component({
         this.setData({ logisticsLoading: false })
         this._toast((e && e.message) || '获取轨迹失败')
       }
-    },
-
-    onToggleLogistics() {
-      this.setData({ logisticsExpanded: !this.data.logisticsExpanded })
     },
 
     _toast(text, icon = 'none') {

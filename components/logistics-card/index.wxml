@@ -25,7 +25,7 @@
       </view>
     </block>
   </view>
-  <view class="logistics-toggle" wx:if="{{logisticsTrack.length > 0}}" bindtap="onToggleLogistics">
+  <view class="logistics-toggle" wx:if="{{logisticsTrack.length > 0}}" bindtap="onViewLogistics">
     <text>{{logisticsExpanded ? '收起' : '展开'}}轨迹</text>
   </view>
 </view>
