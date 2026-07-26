@@ -78,7 +78,7 @@
   letter-spacing: 4rpx;
   margin-left: 12rpx;
   opacity: 0.8;
-  color: #ff6b00;
+  color: var(--boarding-primary);
 }
 
 .page-content {
@@ -155,7 +155,7 @@
 
 .empty-subtitle {
   font-size: 26rpx;
-  color: #666666;
+  color: var(--gray-700);
   line-height: 1.6;
   text-transform: uppercase;
   letter-spacing: 2rpx;
@@ -340,7 +340,7 @@
   align-items: center;
   gap: 10rpx;
   font-size: 24rpx;
-  color: #666666;
+  color: var(--gray-700);
   letter-spacing: 1rpx;
   text-transform: uppercase;
 }
@@ -383,7 +383,7 @@
 
 .price {
   font-size: 44rpx;
-  color: #ff6b00;
+  color: var(--boarding-primary);
   font-weight: 900;
   letter-spacing: 2rpx;
   white-space: nowrap;
@@ -392,7 +392,7 @@
 
 .price-unit {
   font-size: 24rpx;
-  color: #666666;
+  color: var(--gray-700);
   letter-spacing: 1rpx;
   margin-left: 6rpx;
   text-transform: uppercase;
@@ -407,7 +407,7 @@
 
 .book-button {
   background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #a8edea 100%);
-  color: #ffffff;
+  color: var(--card-color);
   font-size: 24rpx;
   font-weight: 900;
   padding: 20rpx 56rpx;
@@ -499,7 +499,7 @@
   justify-content: center;
   gap: 16rpx;
   background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #a8edea 100%);
-  color: #ffffff;
+  color: var(--card-color);
   font-size: 30rpx;
   font-weight: 900;
   letter-spacing: 6rpx;

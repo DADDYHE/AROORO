@@ -6,11 +6,11 @@
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
 }
 
 .income-accent {
-  background: linear-gradient(180deg, #4ECDC4 0%, #34C759 100%);
+  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--success-color) 100%);
 }
 
 .card-body {
@@ -21,14 +21,14 @@
 .pending-title {
   font-size: 32rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
   display: block;
   margin-bottom: 12rpx;
 }
 
 .pending-desc {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   display: block;
   margin-bottom: 28rpx;
 }
@@ -36,13 +36,13 @@
 .pending-btn {
   display: inline-flex;
   padding: 16rpx 40rpx;
-  background: linear-gradient(135deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   border-radius: 16rpx;
 }
 
 .pending-btn-text {
   font-size: 24rpx;
-  color: #FFFFFF;
+  color: var(--card-color);
   font-weight: 500;
 }
 
@@ -62,20 +62,20 @@
 .income-value {
   font-size: 40rpx;
   font-weight: 300;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 2rpx;
 }
 
 .income-label {
   font-size: 20rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 4rpx;
 }
 
 .income-divider {
   width: 1rpx;
   height: 60rpx;
-  background: #E5E5EA;
+  background: var(--gray-200);
 }
 
 .gallery-entrance {
@@ -88,12 +88,12 @@
 .entrance-line {
   width: 40rpx;
   height: 2rpx;
-  background: #C7C7CC;
+  background: var(--text-tertiary);
 }
 
 .entrance-label {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 8rpx;
 }
 
@@ -104,7 +104,7 @@
 }
 
 .module-card {
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   padding: 32rpx 28rpx;
   box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
@@ -123,7 +123,7 @@
   left: 0;
   right: 0;
   height: 3rpx;
-  background: linear-gradient(90deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -197,12 +197,12 @@
 .module-title {
   font-size: 28rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .module-desc {
   font-size: 20rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 /* 品牌呼吸环 — 双环交叠呼吸动画 */

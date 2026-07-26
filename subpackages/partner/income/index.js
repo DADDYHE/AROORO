@@ -53,6 +53,12 @@ Page({
       let commissionText = ''
       let hostingText = ''
       let feedingText = ''
+      // walletCardTotalIncome：钱包卡片"总收入"展示值
+      // 与"累计收入"卡片保持一致，避免 commissions 累加 vs wallets.totalIncome 历史记账口径不同导致数据不一致
+      let walletCardTotalIncome = ''
+      // 钱包卡片金额格式化到小数点后两位
+      let walletBalanceText = ''
+      let walletTotalWithdrawnText = ''
       if (overview) {
         const ct = overview.commission?.total || 0
         const at = overview.activity?.total || 0
@@ -63,10 +69,16 @@ Page({
         activityText = at.toFixed(2)
         hostingText = ht.toFixed(2)
         feedingText = ft.toFixed(2)
+        walletCardTotalIncome = totalIncomeText
+      }
+      if (wallet) {
+        walletBalanceText = (Number(wallet.balance) || 0).toFixed(2)
+        walletTotalWithdrawnText = (Number(wallet.totalWithdrawn) || 0).toFixed(2)
       }
 
       this.setData({
         overview, wallet, commissionRates, totalIncomeText, commissionText, activityText, hostingText, feedingText,
+        walletCardTotalIncome, walletBalanceText, walletTotalWithdrawnText,
         withdrawBalance: wallet ? Number(wallet.balance) || 0 : 0,
         isLoading: false,
       })
@@ -82,6 +94,23 @@ Page({
       const res = await AdminService.getMyIncomeDetails({ type: this.data.activeTab, page: this.data.page, pageSize: this.data.pageSize })
       if (res.code === 0 && res.data) {
         const list = res.data.list || []
+        // 转换 cloud:// 头像 URL 为可访问的临时 URL
+        const cloudAvatars = list.filter(it => it.buyerAvatarUrl && it.buyerAvatarUrl.startsWith('cloud://'))
+        if (cloudAvatars.length > 0) {
+          const uniqueFileIds = [...new Set(cloudAvatars.map(it => it.buyerAvatarUrl))]
+          try {
+            const urlRes = await wx.cloud.getTempFileURL({ fileList: uniqueFileIds })
+            const urlMap = {}
+            ;(urlRes.fileList || []).forEach(f => {
+              if (f.status === 0 && f.tempFileURL) {urlMap[f.fileID] = f.tempFileURL}
+            })
+            list.forEach(it => {
+              if (it.buyerAvatarUrl && urlMap[it.buyerAvatarUrl]) {it.buyerAvatarUrl = urlMap[it.buyerAvatarUrl]}
+            })
+          } catch (e) {
+            console.error('[partner/income] avatarUrl convert error:', e)
+          }
+        }
         this.setData({
           details: list,
           detailTotal: res.data.total || 0,

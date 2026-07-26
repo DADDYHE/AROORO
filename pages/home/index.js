@@ -28,6 +28,10 @@ Page({
     t: pageI18n.buildTMap('zh-CN'),
     isLoggedIn: false,
     userInfo: null,
+    locale: 'zh-CN',
+    todayDate: '',
+    weatherTemp: 14,
+    unreadCount: 0,
     featureItems: [
       { id: 'activity', name: '线下活动', desc: '精彩社区活动', icon: FEATURE_ICONS[0] },
       { id: 'mall', name: '宠物商城', desc: '精选好物推荐', icon: FEATURE_ICONS[1] },
@@ -39,8 +43,21 @@ Page({
 
   onLoad() {
     const locale = app && app.globalData ? app.globalData.locale : 'zh-CN'
-    this.setData({ t: pageI18n.buildTMap(locale) })
+    this.setData({ t: pageI18n.buildTMap(locale), locale })
+    this._initToday()
     this._initBanner()
+  },
+
+  _initToday() {
+    const now = new Date()
+    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+    const month = now.getMonth() + 1
+    const date = now.getDate()
+    const weekday = weekdays[now.getDay()]
+    this.setData({
+      todayDate: `${month}月${date}日 ${weekday}`,
+      weatherTemp: Math.floor(10 + Math.random() * 15),
+    })
   },
 
   onShow() {

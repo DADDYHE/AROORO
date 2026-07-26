@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<!--
+  设计系统：微信小程序「左右」宠物社交 / 活动 / 寄养
+  设计令牌来源：team-lead 提供的量化令牌（深青锚定 + 薄荷绿点缀，浅色通透 / 毛玻璃 / 大圆角 / 轻弥散阴影）
+  换算基准：1rpx ≈ 0.5px（750rpx 设计稿 → 视觉 px）
+  原型类型：mobile-app（iPhone 15 Pro 375×812 模拟）
+  说明：目标环境为微信小程序，本文件为浏览器可预览的高保真 HTML 还原（rpx 已换算为真实 px）。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>左右 · 宠物社交首页原型</title>
+<style>
+  /* ============ 设计令牌（Design Tokens） ============ */
+  :root{
+    /* 主色 深青 */
+    --c-900:#0A3D4F;
+    --c-700:#0B4F6C;
+    --c-500:#1A5F7A;
+    --c-100:#DCEAF0;
+    --grad-primary:linear-gradient(160deg,#1A5F7A,#0A3D4F);
+
+    /* 点缀 薄荷绿 */
+    --accent:#4ECDC4;
+    --accent-hover:#3DBDB4;
+    --accent-soft:#E6F7F5;
+
+    /* 中性 */
+    --bg:#EEF2F6;
+    --surface:#FFFFFF;
+    --border:#E2E8EF;
+    --text1:#16323F;
+    --text2:#5A7184;
+    --text3:#93A6B3;
+    --tab-gray:#9AA7AD; /* TabBar 未选中灰 */
+
+    /* 圆角 */
+    --r-lg:16px;
+    --r-2xl:24px;
+    --r-pill:999px;
+
+    /* 阴影 */
+    --shadow-card:0 4px 16px rgba(16,50,63,.06);
+    --shadow-float:0 8px 24px rgba(16,50,63,.08);
+
+    /* 字体 */
+    --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+
+    /* 安全区占位（桌面预览 34px） */
+    --safe:env(safe-area-inset-bottom,34px);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--font);
+    background:linear-gradient(135deg,#F4F7FA,#E3EAF1);
+    color:var(--text1);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:32px 16px;
+  }
+
+  /* ============ 设备外框 ============ */
+  .device{
+    position:relative;
+    width:375px;
+    height:812px;
+    background:var(--bg);
+    border-radius:44px;
+    border:1px solid rgba(16,50,63,.08);
+    box-shadow:0 30px 60px rgba(16,50,63,.18),0 4px 12px rgba(16,50,63,.08);
+    overflow:hidden;
+    flex:none;
+  }
+  /* 灵动岛 */
+  .island{
+    position:absolute;
+    top:9px;left:50%;transform:translateX(-50%);
+    width:112px;height:30px;
+    background:#0B1F26;
+    border-radius:16px;
+    z-index:40;
+  }
+
+  /* ============ 屏幕（滚动容器） ============ */
+  .screen{
+    position:absolute;inset:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    background:var(--bg);
+  }
+  .screen::-webkit-scrollbar{display:none;}
+
+  /* ============ 状态栏 ============ */
+  .status-bar{
+    height:44px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 26px;
+    padding-top:6px;
+    color:var(--text1);
+    position:relative;z-index:30;
+  }
+  .status-bar .time{font-size:14px;font-weight:600;letter-spacing:.3px;}
+  .status-bar .indicators{display:flex;align-items:center;gap:5px;color:var(--text1);}
+  .status-bar .indicators svg{display:block;}
+
+  /* ============ App 头部 ============ */
+  .app-header{
+    padding:6px 16px 4px;
+    position:relative;z-index:20;
+  }
+  .app-top{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .brand{
+    font-size:28px; /* display 56rpx */
+    font-weight:700;
+    letter-spacing:1px;
+    color:var(--c-700);
+  }
+  .brand .dot{color:var(--accent);}
+  .loc-chip{
+    display:flex;align-items:center;gap:4px;
+    height:30px;padding:0 12px;
+    background:var(--accent-soft);
+    border:none;border-radius:var(--r-pill);
+    color:var(--c-700);
+    font-size:13px;font-weight:600;
+    cursor:pointer;
+  }
+  .loc-chip svg{width:13px;height:13px;}
+  /* 搜索胶囊（毛玻璃） */
+  .search{
+    display:flex;align-items:center;gap:8px;
+    height:42px;padding:0 16px;
+    background:rgba(255,255,255,.62);
+    -webkit-backdrop-filter:blur(12px);
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.85);
+    border-radius:var(--r-pill);
+    box-shadow:var(--shadow-card);
+    color:var(--text2);
+    font-size:14px;
+  }
+  .search svg{flex:none;width:17px;height:17px;color:var(--text2);}
+  .search .ph{flex:1;}
+  .search .go{
+    font-size:12px;font-weight:600;color:var(--c-700);
+    background:var(--accent-soft);
+    padding:5px 12px;border-radius:var(--r-pill);
+  }
+
+  /* ============ 主内容 ============ */
+  .content{padding:8px 16px calc(84px + 24px);}
+
+  /* Hero 横幅 */
+  .hero{
+    position:relative;
+    border-radius:var(--r-2xl);
+    background:var(--grad-primary);
+    padding:22px 20px 22px;
+    color:#fff;
+    overflow:hidden;
+    box-shadow:0 10px 28px rgba(11,79,108,.22);
+    margin-bottom:22px;
+  }
+  .hero .eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:600;
+    background:rgba(255,255,255,.16);
+    padding:5px 11px;border-radius:var(--r-pill);
+    margin-bottom:13px;
+  }
+  .hero .eyebrow .ping{
+    width:6px;height:6px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 3px rgba(78,205,196,.3);
+  }
+  .hero h1{
+    font-size:22px; /* h1 44rpx */
+    font-weight:700;line-height:1.32;
+    letter-spacing:.5px;
+    margin-bottom:8px;
+  }
+  .hero p{
+    font-size:14px; /* body 28rpx */
+    color:rgba(255,255,255,.82);
+    line-height:1.5;
+    margin-bottom:16px;
+    max-width:230px;
+  }
+  .hero .hero-cta{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--accent);
+    color:#063B43;
+    font-size:14px;font-weight:700;
+    padding:10px 18px;border-radius:var(--r-pill);
+    border:none;cursor:pointer;
+    transition:transform .15s ease,background .15s ease;
+  }
+  .hero .hero-cta:hover{background:var(--accent-hover);}
+  .hero .hero-cta:active{transform:scale(.96);}
+  .hero .deco-paw{
+    position:absolute;right:-14px;bottom:-18px;
+    width:140px;height:140px;color:#fff;opacity:.10;
+    pointer-events:none;
+  }
+
+  /* 区块标题 */
+  .sec-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    margin:4px 2px 12px;
+  }
+  .sec-head h2{
+    font-size:18px; /* h2 36rpx */
+    font-weight:700;color:var(--text1);
+    letter-spacing:.3px;
+  }
+  .sec-head .more{
+    font-size:12px;font-weight:600;color:var(--c-700);
+    background:none;border:none;cursor:pointer;
+  }
+
+  /* 内容卡片 */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--r-lg);
+    box-shadow:var(--shadow-card);
+    padding:14px;
+    margin-bottom:12px;
+  }
+  /* 横向卡片：图文 */
+  .card.row{display:flex;align-items:center;gap:14px;}
+  .card.row .body{flex:1;min-width:0;}
+  .card .title{
+    font-size:16px; /* h3 32rpx */
+    font-weight:700;color:var(--text1);
+    margin-bottom:4px;
+  }
+  .card .desc{
+    font-size:13px;color:var(--text2);line-height:1.5;
+    margin-bottom:10px;
+  }
+  .tag{
+    display:inline-flex;align-items:center;
+    font-size:11px;font-weight:600;
+    color:var(--c-700);
+    background:var(--accent-soft);
+    padding:4px 10px;border-radius:var(--r-pill);
+  }
+  .card .btn{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:13px;font-weight:700;
+    color:#fff;background:var(--c-700);
+    border:none;border-radius:var(--r-pill);
+    padding:9px 16px;cursor:pointer;
+    transition:transform .15s ease,background .15s ease;
+  }
+  .card .btn:hover{background:var(--c-900);}
+  .card .btn:active{transform:scale(.96);}
+  .card .btn.accent{background:var(--accent);color:#063B43;}
+  .card .btn.accent:hover{background:var(--accent-hover);}
+
+  /* 缩略图（内联 SVG 占位，无外部资源） */
+  .thumb{
+    flex:none;width:88px;height:88px;
+    border-radius:var(--r-lg);
+    background:linear-gradient(150deg,var(--c-500),var(--c-900));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;position:relative;overflow:hidden;
+  }
+  .thumb.soft{background:linear-gradient(150deg,#EAF6F4,var(--accent-soft));color:var(--accent-hover);}
+  .thumb svg{width:42px;height:42px;}
+  .thumb .badge{
+    position:absolute;top:7px;right:7px;
+    width:18px;height:18px;border-radius:50%;
+    background:var(--accent);color:#063B43;
+    font-size:10px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .footer-note{
+    text-align:center;color:var(--text2);font-size:12px;
+    margin-top:8px;padding-bottom:4px;
+  }
+
+  /* 键盘聚焦反馈（P2-1 无障碍增强） */
+  .tab:focus-visible,
+  .tab-center:focus-visible,
+  .card .btn:focus-visible,
+  .hero-cta:focus-visible,
+  .loc-chip:focus-visible,
+  .sec-head .more:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  /* ============ TabBar（波浪形顶边 + 深青双态 + 中央凸起钮） ============ */
+  .tab-bar{
+    position:absolute;left:0;right:0;bottom:0;
+    z-index:50;
+    height:calc(50px + var(--safe));
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    align-items:start;
+    padding-top:7px;
+    /* 波浪形：去掉直边矩形背景，改为 ::before SVG 波浪顶边 */
+    background:transparent;
+    border-top:none;
+    /* 栏整体毛玻璃：凹槽透明区模糊下方页面，增强通透感 */
+    -webkit-backdrop-filter:blur(20px);
+    backdrop-filter:blur(20px);
+  }
+  /* 波浪顶边：纯白波浪 + 中央宽浅凹槽（留白给凸起圆钮） */
+  .tab-bar::before{
+    content:"";
+    position:absolute;left:0;right:0;bottom:0;
+    width:100%;height:100%;
+    z-index:-1;
+    pointer-events:none;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -8 375 58' preserveAspectRatio='none'%3E%3Cpath d='M0,58 L0,5 C18,1 28,-3 37,-3 C55,-1 80,6 112,12 C140,18 160,30 175,40 C181,44 185,44 187.5,44 C190,44 194,44 200,40 C215,30 235,18 263,12 C295,6 320,-1 337,-3 C346,-3 356,1 375,5 L375,58 Z' fill='%23FFFFFF' fill-opacity='0.92'/%3E%3C/svg%3E") no-repeat bottom/100% 100%;
+  }
+
+  /* 两侧 Tab */
+  .tab{
+    grid-row:1;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;cursor:pointer;
+    color:var(--tab-gray);
+    padding:2px 0;
+    transition:color .18s ease;
+  }
+  .tab[data-tab="home"]{grid-column:1;}
+  .tab[data-tab="foster"]{grid-column:2;}
+  .tab[data-tab="activity"]{grid-column:4;}
+  .tab[data-tab="mine"]{grid-column:5;}
+  .tab .ico{width:24px;height:24px;display:block;position:relative;}
+  .tab .ico svg{width:24px;height:24px;display:block;}
+  .tab .ico .ico-solid{display:none;}
+  .tab .label{font-size:11px;font-weight:500;line-height:1;}
+  .tab.active{color:var(--c-700);}
+  .tab.active .label{font-weight:600;}
+  .tab.active .ico .ico-line{display:none;}
+  .tab.active .ico .ico-solid{display:block;}
+
+  /* 中央凸起按钮 */
+  .tab-center{
+    position:absolute;
+    left:50%;bottom:calc(var(--safe) + 10px);
+    transform:translateX(-50%);
+    width:60px;height:60px;
+    border-radius:50%;
+    background:var(--grad-primary);
+    border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 12px 28px rgba(11,79,108,.35);
+    z-index:60;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s ease;
+  }
+  .tab-center svg{width:28px;height:28px;display:block;}
+  .tab-center:hover{box-shadow:0 14px 32px rgba(11,79,108,.42);}
+  .tab-center:active{transform:translateX(-50%) scale(.92);}
+  .tab-center.pulse{animation:pulse .28s ease;}
+  @keyframes pulse{
+    0%{transform:translateX(-50%) scale(1);}
+    45%{transform:translateX(-50%) scale(.88);}
+    100%{transform:translateX(-50%) scale(1);}
+  }
+
+  /* 动效降级（P2-2 无障碍增强） */
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;}
+  }
+</style>
+</head>
+<body>
+  <div class="device">
+    <!-- 灵动岛 -->
+    <div class="island"></div>
+
+    <!-- 屏幕滚动区 -->
+    <div class="screen">
+      <!-- 状态栏 -->
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="indicators">
+          <!-- 信号 -->
+          <svg viewBox="0 0 18 12" width="17" height="11" fill="currentColor" aria-hidden="true">
+            <rect x="0" y="8" width="3" height="4" rx="1"/>
+            <rect x="5" y="5" width="3" height="7" rx="1"/>
+            <rect x="10" y="2" width="3" height="10" rx="1"/>
+            <rect x="15" y="0" width="3" height="12" rx="1" opacity=".35"/>
+          </svg>
+          <!-- WiFi -->
+          <svg viewBox="0 0 16 12" width="16" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <path d="M1 4.6a10 10 0 0 1 14 0"/>
+            <path d="M3.6 7.1a6 6 0 0 1 8.8 0"/>
+            <path d="M6.1 9.6a2.6 2.6 0 0 1 3.8 0"/>
+            <circle cx="8" cy="11.6" r=".9" fill="currentColor" stroke="none"/>
+          </svg>
+          <!-- 电池 -->
+          <svg viewBox="0 0 26 12" width="25" height="12" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <rect x="1" y="1" width="21" height="10" rx="2.6"/>
+            <rect x="3" y="3" width="15" height="6" rx="1" fill="currentColor" stroke="none"/>
+            <rect x="23.4" y="4" width="2" height="4" rx="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- App 头部 -->
+      <header class="app-header">
+        <div class="app-top">
+          <div class="brand">左右<span class="dot">.</span></div>
+          <button class="loc-chip" type="button" aria-label="切换城市">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 21s-6.5-5.3-6.5-10A6.5 6.5 0 0 1 18.5 11C18.5 15.7 12 21 12 21Z"/>
+              <circle cx="12" cy="11" r="2.4"/>
+            </svg>
+            上海
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:11px;height:11px;">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+        </div>
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-3.2-3.2"/>
+          </svg>
+          <span class="ph">搜索寄养 / 活动 / 宠友</span>
+          <span class="go">搜索</span>
+        </div>
+      </header>
+
+      <!-- 主内容 -->
+      <main class="content">
+        <!-- Hero -->
+        <section class="hero">
+          <span class="eyebrow"><span class="ping"></span>宠物社交 · 同城活动</span>
+          <h1>和毛孩子，<br/>遇见同好</h1>
+          <p>附近 — 位宠友正在分享日常，今天也有新鲜活动开场。</p>
+          <button class="hero-cta" type="button">
+            逛逛动态
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </button>
+          <!-- 装饰爪印 -->
+          <svg class="deco-paw" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <ellipse cx="12" cy="15" rx="4.6" ry="4.2"/>
+            <circle cx="6.4" cy="11" r="1.9"/>
+            <circle cx="10" cy="7.8" r="1.9"/>
+            <circle cx="14" cy="7.8" r="1.9"/>
+            <circle cx="17.6" cy="11" r="1.9"/>
+          </svg>
+        </section>
+
+        <!-- 附近寄养 -->
+        <div class="sec-head">
+          <h2>附近寄养</h2>
+          <button class="more" type="button">查看全部 ›</button>
+        </div>
+        <section class="card row">
+          <div class="body">
+            <div class="title">认证寄养家庭</div>
+            <div class="desc">— 位寄养家庭在线 · 今日可约，含上门接送</div>
+            <span class="tag">今日可约</span>
+          </div>
+          <div class="thumb">
+            <span class="badge">4.9</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 10.5 12 3l9 7.5"/>
+              <path d="M5.2 9.6V19a1 1 0 0 0 1 1h11.6a1 1 0 0 0 1-1V9.6"/>
+              <circle cx="12" cy="14" r="2.2"/>
+            </svg>
+          </div>
+        </section>
+
+        <!-- 热门活动 -->
+        <div class="sec-head">
+          <h2>热门活动</h2>
+          <button class="more" type="button">更多 ›</button>
+        </div>
+        <section class="card row">
+          <div class="body">
+            <div class="title">周末宠物露营日</div>
+            <div class="desc">— 人已报名 · — 月 — 日 · 滨江草坪</div>
+            <span class="tag">报名中</span>
+          </div>
+          <div class="thumb soft">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3.5" y="5" width="17" height="15" rx="2.6"/>
+              <path d="M3.5 9.5h17M8 3v4M16 3v4"/>
+              <path d="M8 14.5l2.2 2.2L14 13"/>
+            </svg>
+          </div>
+        </section>
+
+        <!-- 宠团团团购 -->
+        <div class="sec-head">
+          <h2>宠团团团购</h2>
+          <button class="more" type="button">逛团购 ›</button>
+        </div>
+        <section class="card row">
+          <div class="body">
+            <div class="title">进口猫粮尝鲜团</div>
+            <div class="desc">— 人成团 · 已 — 人参团，距成团还差一点</div>
+            <button class="btn accent" type="button">立即参团</button>
+          </div>
+          <div class="thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 9h16l-1.4 9.4a1 1 0 0 1-1 .6H6.4a1 1 0 0 1-1-.6L4 9Z"/>
+              <path d="M8.5 9V7.2a3.5 3.5 0 0 1 7 0V9"/>
+            </svg>
+          </div>
+        </section>
+
+        <p class="footer-note">左右 · 让陪伴更近一点</p>
+      </main>
+    </div>
+
+    <!-- ============ TabBar ============ -->
+    <nav class="tab-bar" aria-label="底部导航">
+      <!-- 首页（选中） -->
+      <button class="tab active" data-tab="home" type="button" aria-label="首页">
+        <span class="ico">
+          <svg class="ico-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 10.5 12 3l9 7.5"/>
+            <path d="M5.2 9.6V19a1 1 0 0 0 1 1h11.6a1 1 0 0 0 1-1V9.6"/>
+            <path d="M9.5 20v-5.5h5V20"/>
+          </svg>
+          <svg class="ico-solid" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M11.3 2.2a1 1 0 0 1 1.4 0l8.5 8.1a1 1 0 0 1-.7 1.7H18v8.5a1 1 0 0 1-1 1h-3.4v-5.6h-3.2v5.6H7a1 1 0 0 1-1-1V12H3.5a1 1 0 0 1-.7-1.7l8.5-8.1Z"/>
+          </svg>
+        </span>
+        <span class="label">首页</span>
+      </button>
+
+      <!-- 寄养 -->
+      <button class="tab" data-tab="foster" type="button" aria-label="寄养">
+        <span class="ico">
+          <svg class="ico-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="6.5" cy="11" r="1.8"/>
+            <circle cx="10" cy="8" r="1.8"/>
+            <circle cx="14" cy="8" r="1.8"/>
+            <circle cx="17.5" cy="11" r="1.8"/>
+            <path d="M12 14.5c-2.6 0-4.6 1.9-4.6 4.1 0 1.2 1 2 2.2 2h5c1.2 0 2.2-.8 2.2-2 0-2.2-2-4.1-4.8-4.1Z"/>
+          </svg>
+          <svg class="ico-solid" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <circle cx="6.5" cy="10.5" r="2"/>
+            <circle cx="10" cy="7.5" r="2"/>
+            <circle cx="14" cy="7.5" r="2"/>
+            <circle cx="17.5" cy="10.5" r="2"/>
+            <path d="M12 13.8c-3 0-5.2 2-5.2 4.3 0 1.4 1.1 2.4 2.5 2.4h5.4c1.4 0 2.5-1 2.5-2.4 0-2.3-2.2-4.3-5.2-4.3Z"/>
+          </svg>
+        </span>
+        <span class="label">寄养</span>
+      </button>
+
+      <!-- 中央凸起按钮 -->
+      <button class="tab-center" type="button" aria-label="发布 / 发起">
+        <svg viewBox="0 0 28 28" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" aria-hidden="true">
+          <path d="M14 7.5v13M7.5 14h13"/>
+        </svg>
+      </button>
+
+      <!-- 活动 -->
+      <button class="tab" data-tab="activity" type="button" aria-label="活动">
+        <span class="ico">
+          <svg class="ico-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3.5" y="5" width="17" height="15" rx="2.6"/>
+            <path d="M3.5 9.5h17M8 3v4M16 3v4"/>
+          </svg>
+          <svg class="ico-solid" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="3.5" y="5.5" width="17" height="14.5" rx="2.6"/>
+            <rect x="8" y="2.8" width="2" height="4" rx="1"/>
+            <rect x="14" y="2.8" width="2" height="4" rx="1"/>
+          </svg>
+        </span>
+        <span class="label">活动</span>
+      </button>
+
+      <!-- 我的 -->
+      <button class="tab" data-tab="mine" type="button" aria-label="我的">
+        <span class="ico">
+          <svg class="ico-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="8" r="3.5"/>
+            <path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>
+          </svg>
+          <svg class="ico-solid" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <circle cx="12" cy="7.5" r="4"/>
+            <path d="M4.5 21a7.5 7.5 0 0 1 15 0Z"/>
+          </svg>
+        </span>
+        <span class="label">我的</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    // Tab 选中态切换
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(function(t){
+      t.addEventListener('click', function(){
+        tabs.forEach(function(x){ x.classList.remove('active'); });
+        t.classList.add('active');
+      });
+    });
+    // 中央按钮按压缩放反馈
+    const center = document.querySelector('.tab-center');
+    if (center){
+      center.addEventListener('click', function(){
+        center.classList.remove('pulse');
+        void center.offsetWidth; // 重置动画
+        center.classList.add('pulse');
+      });
+    }
+  </script>
+</body>
+</html>

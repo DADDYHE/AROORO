@@ -6,15 +6,15 @@
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
 }
 
 .approved-accent {
-  background: linear-gradient(180deg, #34C759 0%, #30D158 100%) !important;
+  background: linear-gradient(180deg, var(--success-color) 0%, #30D158 100%) !important;
 }
 
 .pending-accent {
-  background: linear-gradient(180deg, #FF9500 0%, #FF6B00 100%) !important;
+  background: linear-gradient(180deg, var(--warning-color) 0%, var(--boarding-primary) 100%) !important;
 }
 
 .card-body {
@@ -25,14 +25,14 @@
 .status-title {
   font-size: 36rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
   display: block;
   margin-bottom: 12rpx;
 }
 
 .status-desc {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   display: block;
   margin-bottom: 24rpx;
 }
@@ -47,14 +47,14 @@
   font-size: 20rpx;
   padding: 8rpx 20rpx;
   background: rgba(78, 205, 196, 0.12);
-  color: #2AB7A9;
+  color: var(--activity-primary-mid);
   border-radius: 8rpx;
 }
 
 .app-info {
   margin-top: 16rpx;
   padding-top: 16rpx;
-  border-top: 1rpx solid #F2F2F7;
+  border-top: 1rpx solid var(--divider-color);
 }
 
 .info-row {
@@ -66,27 +66,27 @@
 
 .info-key {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 2rpx;
 }
 
 .info-val {
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   text-align: right;
 }
 
 .apply-btn {
   display: inline-flex;
   padding: 20rpx 48rpx;
-  background: linear-gradient(135deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   border-radius: 16rpx;
   margin-top: 8rpx;
 }
 
 .apply-btn-text {
   font-size: 26rpx;
-  color: #FFFFFF;
+  color: var(--card-color);
   font-weight: 500;
 }
 
@@ -105,20 +105,20 @@
 
 .modal-content {
   width: 600rpx;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   overflow: hidden;
 }
 
 .modal-header {
   padding: 36rpx;
-  border-bottom: 1rpx solid #F2F2F7;
+  border-bottom: 1rpx solid var(--divider-color);
 }
 
 .modal-title {
   font-size: 32rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .modal-body {
@@ -131,7 +131,7 @@
 
 .form-label {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   display: block;
   margin-bottom: 12rpx;
 }
@@ -140,10 +140,10 @@
   width: 100%;
   height: 72rpx;
   padding: 0 24rpx;
-  border: 1rpx solid #E5E5EA;
+  border: 1rpx solid var(--gray-200);
   border-radius: 12rpx;
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   box-sizing: border-box;
 }
 
@@ -151,16 +151,16 @@
   width: 100%;
   height: 160rpx;
   padding: 20rpx 24rpx;
-  border: 1rpx solid #E5E5EA;
+  border: 1rpx solid var(--gray-200);
   border-radius: 12rpx;
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   box-sizing: border-box;
 }
 
 .modal-footer {
   display: flex;
-  border-top: 1rpx solid #F2F2F7;
+  border-top: 1rpx solid var(--divider-color);
 }
 
 .modal-btn {
@@ -170,15 +170,15 @@
 }
 
 .btn-cancel {
-  border-right: 1rpx solid #F2F2F7;
+  border-right: 1rpx solid var(--divider-color);
 }
 
 .btn-confirm .modal-btn-text {
-  color: #4ECDC4;
+  color: var(--activity-primary);
   font-weight: 500;
 }
 
 .modal-btn-text {
   font-size: 28rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }

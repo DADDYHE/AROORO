@@ -1,7 +1,16 @@
 .min-amount-tip {
   display: block;
   font-size: 22rpx;
-  color: #C4843D;
+  color: var(--text-gold);
   margin-top: 4rpx;
   font-style: italic;
+}
+
+/* 最小可点击区（WCAG 亲和点，2026-07-26 评审 P2-10） */
+.tap-target {
+  min-height: var(--tap-target-min);
+  min-width: var(--tap-target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

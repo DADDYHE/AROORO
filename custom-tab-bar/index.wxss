@@ -1,22 +1,47 @@
-/* custom-tab-bar/index.wxss */
+/* ================================================================
+   custom-tab-bar/index.wxss · Smart Home Dashboard 风格导航栏（1:1 复刻）
+   2026-07-26 基于 DADDY 智能家居仪表盘参考图
+   ----------------------------------------------------------------
+   参考图特征：
+     浮动白底 + 圆角顶部 + 极淡阴影
+     4 个标签：图标+文字，活跃=深蓝填充圆(白图标)
+     居中大型深蓝圆形按钮（浮动在栏上方）
+     无渐变、无光晕、无动画、极简克制
+   ================================================================ */
+
+/* ---- 浮动导航栏容器（海浪起伏顶边，SVG 波形） ---- */
 .tab-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 140rpx;
-  background: #ffffff;
+  height: 160rpx;
+  background: transparent;          /* 波浪形状由 ::before 的 SVG 提供 */
   display: flex;
   justify-content: space-around;
   align-items: center;
-  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.05);
   z-index: 1000;
-  padding-top: 0rpx;
-  padding-bottom: 30rpx;
+  padding-top: 12rpx;
+  padding-bottom: 34rpx; /* 安全区 */
   box-sizing: border-box;
   overflow: visible;
 }
 
+/* 海浪起伏顶边（参考图：中间凹弧凹槽 + 两侧隆起） */
+.tab-bar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 160rpx;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20750%20160'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter%20id='s'%20x='-20%25'%20y='-60%25'%20width='140%25'%20height='220%25'%3E%3CfeDropShadow%20dx='0'%20dy='-4'%20stdDeviation='8'%20flood-color='%231E3A4C'%20flood-opacity='0.10'/%3E%3C/filter%3E%3C/defs%3E%3Cpath%20filter='url(%23s)'%20fill='%23FFFFFF'%20d='M0,160%20L0,48%20Q0,5%2038,5%20C160,5%20250,8%20320,20%20C335,30%20347,55%20375,62%20C403,55%20415,30%20430,20%20C500,8%20590,5%20712,5%20Q750,5%20750,48%20L750,160%20Z'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
+
+/* ---- 标签项 ---- */
 .tab-bar-item {
   display: flex;
   flex-direction: column;
@@ -24,121 +49,64 @@
   justify-content: center;
   flex: 1;
   height: 100%;
-  border-radius: 24rpx;
   position: relative;
-  overflow: hidden;
-  touch-action: manipulation; /* 防止双击缩放 */
+  touch-action: manipulation;
 }
 
-.tab-bar-item::before {
-  content: '';
-  position: absolute;
-  top: 10rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  height: 0;
-  background: linear-gradient(135deg, #4ECDC4 0%, #26A69A 100%);
-  border-radius: 24rpx;
-  transition: height 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 0;
-  overflow: hidden;
+/* 图标容器 - 默认透明圆形占位 */
+.tab-bar-icon-wrap {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6rpx;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.tab-bar-item.active::before {
-  height: 90%;
-  box-shadow: 0 4rpx 16rpx rgba(78, 205, 196, 0.4), 0 0 20rpx rgba(78, 205, 196, 0.2);
-}
-
-.tab-bar-item.active::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 60%);
-  animation: shimmer 3s ease-in-out infinite;
-  z-index: 1;
-  pointer-events: none;
-}
-
-@keyframes shimmer {
-  0%, 100% {
-    transform: translate(-30%, -30%);
-    opacity: 0;
-  }
-  50% {
-    transform: translate(30%, 30%);
-    opacity: 1;
-  }
+/* 活跃态：深青绿填充圆（跟随主题令牌） */
+.tab-bar-item.active .tab-bar-icon-wrap {
+  background: var(--primary-color);
+  box-shadow: 0 4rpx 16rpx rgba(13, 90, 107, 0.3);
 }
 
 .tab-bar-icon {
-  width: 48rpx;
-  height: 48rpx;
-  margin-bottom: 8rpx;
-  position: relative;
-  z-index: 1;
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 44rpx;
+  height: 44rpx;
+  /* 未活跃：默认图标颜色；活跃时由组件反转或用白色图标 */
 }
 
 .tab-bar-text {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #666666;
+  font-size: 20rpx;
+  font-weight: 500;
+  color: var(--text-tertiary);               /* 浅灰未选中 */
   line-height: 1;
-  position: relative;
-  z-index: 1;
-  transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 活跃文字色 */
 .tab-bar-item.active .tab-bar-text {
-  color: #ffffff !important;
-  font-weight: 700;
-  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+  color: var(--primary-color);           /* 深青绿 */
+  font-weight: 600;
 }
 
-.tab-bar-item.active .tab-bar-icon {
-  transform: scale(1.1);
-  filter: drop-shadow(0 1rpx 2rpx rgba(0, 0, 0, 0.1));
-}
-
-/* 添加平滑的切换特效 */
+/* 平滑过渡 */
 .tab-bar-item {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 确保 active 状态的样式优先级更高，防止被其他样式覆盖 */
-.tab-bar-item.active {
-  /* 强制保持 active 状态的样式 */
-}
-
-/* 未读消息红点样式 */
-
-@keyframes badge-pop {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* 中间一键报名按钮样式 */
+/* ================================================================
+   中心按钮 — 大型深蓝浮动圆钮（参考图居中按钮 1:1）
+   这是全栏唯一的视觉锚点，浮动在 TabBar 上方
+   ================================================================ */
 .tab-bar-item-center {
   position: relative;
-  border-radius: 0 !important;
   overflow: visible !important;
   flex: 0 0 0 !important;
 }
 
-/* 禁用中间按钮的 ::before 和 ::after 伪元素（即绿色背景动画） */
+/* 禁用中心按钮的默认 ::before/::after */
 .tab-bar-item-center::before,
 .tab-bar-item-center::after {
   display: none !important;
@@ -149,99 +117,79 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 112rpx;
-  height: 112rpx;
+  width: 104rpx;
+  height: 104rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FFD93D 0%, #A8E063 50%, #56AB2F 100%);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: var(--primary-color);                    /* 深青绿（跟随主题） */
   position: relative;
   overflow: visible;
-  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow:
-    0 8rpx 32rpx rgba(168, 224, 99, 0.4),
-    0 16rpx 48rpx rgba(86, 171, 47, 0.2),
-    inset 0 2rpx 0 rgba(255, 255, 255, 0.4);
-  border: 1rpx solid rgba(255, 255, 255, 0.3);
-  margin-top: -56rpx;
+    0 8rpx 28rpx rgba(13, 90, 107, 0.35),
+    0 3rpx 10rpx rgba(13, 90, 107, 0.20);
+  margin-top: -56rpx;                        /* 向上浮出一半 */
+  border: none;
 }
 
-/* 外层光晕 */
+/* 外层柔光晕（静态） */
 .center-button::before {
   content: '';
   position: absolute;
-  top: -6rpx;
-  left: -6rpx;
-  right: -6rpx;
-  bottom: -6rpx;
+  top: -10rpx;
+  left: -10rpx;
+  right: -10rpx;
+  bottom: -10rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(255, 94, 154, 0.05) 100%);
+  background: radial-gradient(circle, rgba(13, 90, 107, 0.15) 0%, transparent 70%);
   z-index: -1;
-  animation: halo-pulse 3s ease-in-out infinite;
 }
 
-@keyframes halo-pulse {
-  0%, 100% {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.08);
-  }
-}
-
-/* 顶部高光 */
+/* 顶部微高光 */
 .center-button::after {
   content: '';
   position: absolute;
-  top: 4rpx;
+  top: 8rpx;
   left: 50%;
   transform: translateX(-50%);
-  width: 70%;
-  height: 40rpx;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+  width: 56%;
+  height: 28rpx;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 100%);
   border-radius: 50%;
   z-index: 1;
+  pointer-events: none;
 }
 
 .center-button:active {
-  transform: scale(0.95);
+  transform: scale(0.90);
   box-shadow:
-    0 4rpx 16rpx rgba(255, 107, 107, 0.25),
-    0 8rpx 24rpx rgba(255, 107, 107, 0.1),
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.3);
+    0 4rpx 16rpx rgba(13, 90, 107, 0.25),
+    0 2rpx 6rpx rgba(13, 90, 107, 0.15);
 }
 
 .center-button-icon {
-  width: 48rpx;
-  height: 48rpx;
-  filter: brightness(0) invert(1) drop-shadow(0 1rpx 1rpx rgba(0, 0, 0, 0.1));
+  width: 44rpx;
+  height: 44rpx;
+  filter: brightness(0) invert(1);         /* 白色图标 */
   position: relative;
   z-index: 2;
   margin-bottom: 0;
 }
 
 .center-button-text {
-  font-size: 16rpx;
+  font-size: 18rpx;
   font-weight: 600;
-  color: #ffffff;
+  color: #FFFFFF;
   line-height: 1;
   position: relative;
   z-index: 2;
-  letter-spacing: 1rpx;
-  margin-top: 4rpx;
-  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5rpx;
+  margin-top: 2rpx;
 }
 
+/* 活跃态中心按钮保持一致（它本身就是锚点） */
 .tab-bar-item-center.active .center-button {
-  background: linear-gradient(135deg, #4ECDC4 0%, #26A69A 50%, #2196F3 100%);
+  background: var(--primary-color);
   box-shadow:
-    0 8rpx 32rpx rgba(78, 205, 196, 0.4),
-    0 16rpx 48rpx rgba(78, 205, 196, 0.2),
-    inset 0 2rpx 0 rgba(255, 255, 255, 0.4);
-}
-
-.tab-bar-item-center.active .center-button::before {
-  background: linear-gradient(135deg, rgba(78, 205, 196, 0.35) 0%, rgba(33, 150, 243, 0.05) 100%);
+    0 10rpx 32rpx rgba(13, 90, 107, 0.40),
+    0 4rpx 14rpx rgba(13, 90, 107, 0.22);
 }

@@ -10,7 +10,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
 }
 
 .card-body {
@@ -21,7 +21,7 @@
 .form-section-title {
   font-size: 28rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
   margin-bottom: 24rpx;
   letter-spacing: 4rpx;
 }
@@ -36,38 +36,38 @@
 
 .form-label {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   display: block;
   margin-bottom: 12rpx;
   letter-spacing: 2rpx;
 }
 
 .required {
-  color: #FF3B30;
+  color: var(--error-color);
 }
 
 .form-input {
   width: 100%;
   height: 76rpx;
   padding: 0 24rpx;
-  border: 1rpx solid #E5E5EA;
+  border: 1rpx solid var(--gray-200);
   border-radius: 12rpx;
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   box-sizing: border-box;
-  background: #FAFAFA;
+  background: var(--surface-tint);
 }
 
 .form-textarea {
   width: 100%;
   height: 200rpx;
   padding: 20rpx 24rpx;
-  border: 1rpx solid #E5E5EA;
+  border: 1rpx solid var(--gray-200);
   border-radius: 12rpx;
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   box-sizing: border-box;
-  background: #FAFAFA;
+  background: var(--surface-tint);
 }
 
 .form-picker {
@@ -76,23 +76,23 @@
   justify-content: space-between;
   height: 76rpx;
   padding: 0 24rpx;
-  border: 1rpx solid #E5E5EA;
+  border: 1rpx solid var(--gray-200);
   border-radius: 12rpx;
-  background: #FAFAFA;
+  background: var(--surface-tint);
 }
 
 .form-picker-text {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .form-picker-text.placeholder {
-  color: #C7C7CC;
+  color: var(--text-tertiary);
 }
 
 .form-picker-arrow {
   font-size: 32rpx;
-  color: #C7C7CC;
+  color: var(--text-tertiary);
 }
 
 .form-row {
@@ -103,7 +103,7 @@
 .image-upload-area {
   width: 100%;
   height: 320rpx;
-  border: 2rpx dashed #E5E5EA;
+  border: 2rpx dashed var(--gray-200);
   border-radius: 16rpx;
   overflow: hidden;
   display: flex;
@@ -126,14 +126,14 @@
 
 .upload-icon {
   font-size: 56rpx;
-  color: #C7C7CC;
+  color: var(--text-tertiary);
   font-weight: 300;
   line-height: 1;
 }
 
 .upload-text {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 4rpx;
 }
 
@@ -166,7 +166,7 @@
   width: 40rpx;
   height: 40rpx;
   background: rgba(0, 0, 0, 0.5);
-  color: #FFFFFF;
+  color: var(--card-color);
   font-size: 24rpx;
   display: flex;
   align-items: center;
@@ -175,8 +175,8 @@
 }
 
 .image-add {
-  border: 2rpx dashed #E5E5EA;
-  background: #FAFAFA;
+  border: 2rpx dashed var(--gray-200);
+  background: var(--surface-tint);
 }
 
 .image-add .upload-icon-small {
@@ -188,7 +188,7 @@
 
 .upload-icon-small {
   font-size: 40rpx;
-  color: #C7C7CC;
+  color: var(--text-tertiary);
   font-weight: 300;
 }
 
@@ -198,20 +198,20 @@
   justify-content: space-between;
   min-height: 76rpx;
   padding: 16rpx 24rpx;
-  border: 1rpx solid #E5E5EA;
+  border: 1rpx solid var(--gray-200);
   border-radius: 12rpx;
-  background: #FAFAFA;
+  background: var(--surface-tint);
 }
 
 .location-picker-text {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   flex: 1;
   margin-right: 16rpx;
 }
 
 .location-picker-text.placeholder {
-  color: #C7C7CC;
+  color: var(--text-tertiary);
 }
 
 .location-picker-right {
@@ -225,7 +225,7 @@
   width: 36rpx;
   height: 36rpx;
   border-radius: 50%;
-  background: #E5E5EA;
+  background: var(--gray-200);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,7 +233,7 @@
 
 .clear-icon {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   line-height: 1;
 }
 
@@ -246,7 +246,7 @@
   gap: 20rpx;
   padding: 24rpx 32rpx;
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-  background: #FFFFFF;
+  background: var(--card-color);
   box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.06);
   z-index: 50;
 }
@@ -261,22 +261,22 @@
 }
 
 .action-btn-draft {
-  background: #F2F2F7;
+  background: var(--divider-color);
 }
 
 .action-btn-draft .action-btn-text {
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-size: 28rpx;
   font-weight: 500;
 }
 
 .action-btn-publish {
-  background: linear-gradient(135deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   box-shadow: 0 4rpx 16rpx rgba(78, 205, 196, 0.3);
 }
 
 .action-btn-publish .action-btn-text {
-  color: #FFFFFF;
+  color: var(--card-color);
   font-size: 28rpx;
   font-weight: 500;
 }
@@ -296,7 +296,7 @@
 
 .picker-sheet {
   width: 100%;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx 24rpx 0 0;
   overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom);
@@ -304,13 +304,13 @@
 
 .picker-sheet-header {
   padding: 32rpx 36rpx;
-  border-bottom: 1rpx solid #F2F2F7;
+  border-bottom: 1rpx solid var(--divider-color);
 }
 
 .picker-sheet-title {
   font-size: 30rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .picker-sheet-body {
@@ -330,15 +330,15 @@
 
 .picker-sheet-item-text {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .picker-item-active .picker-sheet-item-text {
-  color: #2AB7A9;
+  color: var(--activity-primary-mid);
   font-weight: 500;
 }
 
 .picker-check {
   font-size: 28rpx;
-  color: #4ECDC4;
+  color: var(--activity-primary);
 }

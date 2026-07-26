@@ -4,7 +4,7 @@
   "functions": [
     {
       "name": "userService",
-      "timeout": 10,
+      "timeout": 20,
       "envVariables": {},
       "runtime": "Nodejs18.15",
       "memorySize": 256
@@ -18,7 +18,7 @@
     },
     {
       "name": "orderService",
-      "timeout": 10,
+      "timeout": 20,
       "envVariables": {},
       "runtime": "Nodejs18.15",
       "memorySize": 256
@@ -60,7 +60,7 @@
     },
     {
       "name": "adminService",
-      "timeout": 10,
+      "timeout": 15,
       "envVariables": {},
       "runtime": "Nodejs18.15",
       "memorySize": 256
@@ -74,7 +74,7 @@
     },
     {
       "name": "orderTimeoutService",
-      "timeout": 30,
+      "timeout": 60,
       "envVariables": {},
       "runtime": "Nodejs18.15",
       "memorySize": 256
@@ -109,17 +109,17 @@
     },
     {
       "name": "paymentService",
-      "timeout": 10,
+      "timeout": 15,
       "envVariables": {},
       "runtime": "Nodejs18.15",
       "memorySize": 256
     },
     {
       "name": "partnerService",
-      "timeout": 10,
+      "timeout": 20,
       "envVariables": {},
       "runtime": "Nodejs18.15",
-      "memorySize": 256
+      "memorySize": 512
     },
     {
       "name": "i18nOverride",
@@ -146,7 +146,7 @@
             {
               "name": "userService",
               "path": "cloudfunctions/userService",
-              "timeout": 10
+              "timeout": 20
             },
             {
               "name": "hostService",
@@ -156,7 +156,7 @@
             {
               "name": "orderService",
               "path": "cloudfunctions/orderService",
-              "timeout": 10
+              "timeout": 20
             },
             {
               "name": "petService",
@@ -186,7 +186,7 @@
             {
               "name": "adminService",
               "path": "cloudfunctions/adminService",
-              "timeout": 10
+              "timeout": 15
             },
             {
               "name": "utilityService",
@@ -196,7 +196,7 @@
             {
               "name": "orderTimeoutService",
               "path": "cloudfunctions/orderTimeoutService",
-              "timeout": 30
+              "timeout": 60
             },
             {
               "name": "couponExpiryCheck",
@@ -221,12 +221,12 @@
             {
               "name": "paymentService",
               "path": "cloudfunctions/paymentService",
-              "timeout": 10
+              "timeout": 15
             },
             {
               "name": "partnerService",
               "path": "cloudfunctions/partnerService",
-              "timeout": 10
+              "timeout": 20
             },
             {
               "name": "i18nOverride",

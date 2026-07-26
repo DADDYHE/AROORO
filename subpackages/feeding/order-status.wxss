@@ -4,7 +4,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #F5F5F7;
+  background: var(--background-color);
   position: relative;
 }
 
@@ -12,7 +12,7 @@
   padding: 0;
   position: relative;
   overflow: hidden;
-  background: #FFFFFF;
+  background: var(--card-color);
   animation: fadeUp 0.6s ease-out;
   padding-bottom: 20rpx;
 }
@@ -39,7 +39,7 @@
   left: 48rpx;
   width: 48rpx;
   height: 6rpx;
-  background: linear-gradient(90deg, #2196F3 0%, #1976D2 100%);
+  background: linear-gradient(90deg, var(--feeding-primary) 0%, #1976D2 100%);
   border-radius: 0 0 4rpx 4rpx;
   animation: slideDown 0.5s ease-out;
 }
@@ -52,7 +52,7 @@
 .brand-text {
   font-size: 64rpx;
   font-weight: 300;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 12rpx;
   display: block;
   line-height: 1;
@@ -68,7 +68,7 @@
 .brand-meta-line {
   width: 40rpx;
   height: 2rpx;
-  background: #E5E5EA;
+  background: var(--gray-200);
   position: relative;
 }
 
@@ -81,12 +81,12 @@
   width: 6rpx;
   height: 6rpx;
   border-radius: 50%;
-  background: #2196F3;
+  background: var(--feeding-primary);
 }
 
 .brand-subtitle {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 8rpx;
   font-weight: 400;
 }
@@ -102,7 +102,7 @@
 .status-card {
   display: flex;
   align-items: center;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   padding: 32rpx;
   margin-bottom: 24rpx;
@@ -120,7 +120,7 @@
   left: 0;
   right: 0;
   height: 3rpx;
-  background: linear-gradient(90deg, #4ECDC4 0%, #26A69A 50%, transparent 100%);
+  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-secondary) 50%, transparent 100%);
   border-radius: 24rpx 24rpx 0 0;
 }
 
@@ -149,16 +149,16 @@
 .status-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .status-subtitle {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .info-card {
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   padding: 0;
   margin-bottom: 24rpx;
@@ -176,7 +176,7 @@
   left: 0;
   right: 0;
   height: 3rpx;
-  background: linear-gradient(90deg, #2196F3 0%, #1976D2 50%, transparent 100%);
+  background: linear-gradient(90deg, var(--feeding-primary) 0%, #1976D2 50%, transparent 100%);
   border-radius: 24rpx 24rpx 0 0;
 }
 
@@ -185,13 +185,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 28rpx 32rpx 20rpx;
-  border-bottom: 1rpx solid #F2F2F7;
+  border-bottom: 1rpx solid var(--divider-color);
 }
 
 .card-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .info-item {
@@ -199,7 +199,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 28rpx 32rpx;
-  border-bottom: 1rpx solid #F2F2F7;
+  border-bottom: 1rpx solid var(--divider-color);
 }
 
 .info-item:last-child {
@@ -209,13 +209,13 @@
 .info-item .label {
   font-size: 28rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
 .info-item .value {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   font-weight: 400;
   text-align: right;
   max-width: 460rpx;
@@ -263,7 +263,7 @@
 
 .order-no {
   font-size: 24rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
   font-weight: 400;
 }
 
@@ -275,13 +275,13 @@
 .brand-label {
   font-size: 28rpx;
   font-weight: 600;
-  color: #4ECDC4;
+  color: var(--activity-primary);
   flex-shrink: 0;
 }
 
 .brand-value {
   font-size: 26rpx;
-  color: #4ECDC4;
+  color: var(--activity-primary);
   font-weight: 500;
 }
 
@@ -290,7 +290,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 28rpx 32rpx;
-  border-bottom: 1rpx solid #F2F2F7;
+  border-bottom: 1rpx solid var(--divider-color);
 }
 
 .pet-item:last-child {
@@ -310,8 +310,8 @@
   border-radius: 20rpx;
   overflow: hidden;
   flex-shrink: 0;
-  border: 1rpx solid #E5E5EA;
-  background-color: #F5F5F7;
+  border: 1rpx solid var(--gray-200);
+  background-color: var(--background-color);
   margin-right: 24rpx;
 }
 
@@ -331,13 +331,13 @@
 .pet-name {
   font-size: 30rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 
 .pet-details {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .pet-right {
@@ -358,7 +358,7 @@
 
 .service-tag {
   font-size: 20rpx;
-  color: #2196F3;
+  color: var(--feeding-primary);
   background: rgba(33, 150, 243, 0.06);
   padding: 4rpx 12rpx;
   border-radius: 6rpx;
@@ -367,13 +367,13 @@
 }
 
 .walk-tag {
-  color: #4ECDC4;
+  color: var(--activity-primary);
   background: rgba(78, 205, 196, 0.06);
 }
 
 .pet-service-dates {
   font-size: 20rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
   line-height: 1.5;
   text-align: right;
   word-wrap: break-word;
@@ -389,9 +389,9 @@
   justify-content: center;
   align-items: center;
   padding: 60rpx 32rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
   font-size: 26rpx;
-  background-color: #F5F5F7;
+  background-color: var(--background-color);
   border-radius: 16rpx;
   margin: 24rpx 32rpx 32rpx;
 }
@@ -401,7 +401,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 32rpx;
-  border-bottom: 1rpx solid #F2F2F7;
+  border-bottom: 1rpx solid var(--divider-color);
 }
 
 .price-item:last-child {
@@ -410,12 +410,12 @@
 
 .price-item .label {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .price-item .value {
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -429,13 +429,13 @@
 
 .price-item.total .label {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .price-item.total .value {
   font-size: 36rpx;
-  color: #2196F3;
+  color: var(--feeding-primary);
   font-weight: 700;
 }
 
@@ -452,12 +452,12 @@
 
 .sub-label {
   font-size: 24rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
 }
 
 .sub-value {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .sub-value.discount {
@@ -465,12 +465,12 @@
 }
 
 .paid-status {
-  color: #4ECDC4;
+  color: var(--activity-primary);
   font-weight: 600;
 }
 
 .unpaid-status {
-  color: #FF9500;
+  color: var(--warning-color);
   font-weight: 600;
 }
 
@@ -488,19 +488,19 @@
 }
 
 .cancel-btn {
-  background: #FFFFFF;
-  color: #8E8E93;
-  border: 2rpx solid #E5E5EA;
+  background: var(--card-color);
+  color: var(--text-secondary);
+  border: 2rpx solid var(--gray-200);
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
 }
 
 .cancel-btn:active {
-  background: #F5F5F7;
+  background: var(--background-color);
 }
 
 .pay-btn {
-  background: linear-gradient(135deg, #4ECDC4 0%, #26A69A 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-secondary) 100%);
+  color: var(--card-color);
   border: none;
   box-shadow: 0 6rpx 16rpx rgba(78, 205, 196, 0.35);
   font-weight: 600;
@@ -538,15 +538,15 @@
 
 .empty-text {
   font-size: 28rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
   margin-bottom: 40rpx;
 }
 
 .retry-btn {
   padding: 20rpx 64rpx;
-  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  background: linear-gradient(135deg, var(--feeding-primary) 0%, #1976D2 100%);
   border-radius: 48rpx;
-  color: #FFFFFF;
+  color: var(--card-color);
   font-size: 28rpx;
   font-weight: 600;
   letter-spacing: 2rpx;

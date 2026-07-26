@@ -1,0 +1,109 @@
+{
+  "meta": {
+    "product": "微信小程序「左右」",
+    "direction": "Deep Teal × Modern Minimal（暮野 PET 高端宠物平台质感）",
+    "unit": "rpx",
+    "designWidth": 750,
+    "note": "backdrop-filter 的 blur 与 env() 安全区为 px，非 rpx"
+  },
+  "color": {
+    "primary": {
+      "900": "#083D4A",
+      "700": "#0D5A6B",
+      "500": "#2A7A89",
+      "300": "#7AB0BA",
+      "100": "#DDEAED",
+      "gradient": "linear-gradient(160deg, #2A7A89 0%, #0D5A6B 100%)"
+    },
+    "accent": {
+      "base": "#4ECDC4",
+      "hover": "#3DBDB4",
+      "soft": "#E6F7F5",
+      "glow": "rgba(78,205,196,0.35)"
+    },
+    "neutral": {
+      "bg": "#F4F9FA",
+      "surface": "#FFFFFF",
+      "surfaceGlass": "rgba(255,255,255,0.72)",
+      "surfaceGlassSolid": "#FFFFFF",
+      "surfaceGlassBorder": "rgba(255,255,255,0.55)",
+      "border": "#D2DEE1",
+      "borderStrong": "#B8C8CD",
+      "divider": "#E6EEF0",
+      "text1": "#152830",
+      "text2": "#4B5B60",
+      "text3": "#8A9AA0",
+      "textOnPrimary": "#F4F9FA"
+    }
+  },
+  "tabBar": {
+    "height": "100rpx",
+    "safeBottom": "env(safe-area-inset-bottom, 0px)",
+    "totalHeight": "calc(100rpx + env(safe-area-inset-bottom, 0px))",
+    "bg": "rgba(255,255,255,0.92)",
+    "bgGlass": "rgba(255,255,255,0.72)",
+    "blur": "20px",
+    "borderTop": "1rpx solid rgba(13,90,107,0.08)",
+    "itemActive": "#0D5A6B",
+    "itemInactive": "#8A9AA0",
+    "itemActiveBg": "rgba(13,90,107,0.08)",
+    "iconSize": "48rpx",
+    "iconStroke": "4rpx",
+    "labelSize": "22rpx",
+    "labelWeight": 500,
+    "labelWeightActive": 600,
+    "center": {
+      "diameter": "120rpx",
+      "protrusion": "40rpx",
+      "bottom": "calc(env(safe-area-inset-bottom, 0px) + 20rpx)",
+      "iconSize": "56rpx",
+      "gradient": "linear-gradient(160deg, #2A7A89 0%, #0D5A6B 100%)",
+      "iconColor": "#FFFFFF",
+      "shadow": "0 12rpx 28rpx rgba(13,90,107,0.35), 0 4rpx 10rpx rgba(13,90,107,0.20)"
+    }
+  },
+  "typography": {
+    "fontStack": "-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Helvetica Neue\", \"Microsoft YaHei\", \"Source Han Sans SC\", \"Noto Sans CJK SC\", sans-serif",
+    "scale": {
+      "display": { "size": "56rpx", "weight": 700, "lineHeight": 1.15 },
+      "h1": { "size": "44rpx", "weight": 700, "lineHeight": 1.2 },
+      "h2": { "size": "36rpx", "weight": 600, "lineHeight": 1.3 },
+      "h3": { "size": "32rpx", "weight": 600, "lineHeight": 1.4 },
+      "body": { "size": "28rpx", "weight": 400, "lineHeight": 1.6 },
+      "sm": { "size": "24rpx", "weight": 400, "lineHeight": 1.5 },
+      "xs": { "size": "20rpx", "weight": 500, "lineHeight": 1.4 },
+      "tab": { "size": "22rpx", "weight": 500, "lineHeight": 1 }
+    }
+  },
+  "spacing": {
+    "2xs": "4rpx", "xs": "8rpx", "sm": "16rpx", "md": "24rpx",
+    "lg": "32rpx", "xl": "48rpx", "2xl": "64rpx", "3xl": "96rpx"
+  },
+  "radius": {
+    "sm": "16rpx", "md": "24rpx", "lg": "32rpx", "xl": "40rpx",
+    "2xl": "48rpx", "3xl": "56rpx", "pill": "999rpx"
+  },
+  "shadow": {
+    "xs": "0 2rpx 8rpx rgba(13,90,107,0.04)",
+    "sm": "0 4rpx 16rpx rgba(13,90,107,0.06)",
+    "md": "0 8rpx 24rpx rgba(13,90,107,0.08)",
+    "lg": "0 16rpx 40rpx rgba(13,90,107,0.10)",
+    "fab": "0 12rpx 28rpx rgba(13,90,107,0.35), 0 4rpx 10rpx rgba(13,90,107,0.20)",
+    "floatTabBar": "0 -4rpx 32rpx rgba(13,90,107,0.10)"
+  },
+  "motion": {
+    "easeStandard": "cubic-bezier(0.4,0,0.2,1)",
+    "easeEmphasized": "cubic-bezier(0.2,0,0,1)",
+    "easeDecelerate": "cubic-bezier(0,0,0.2,1)",
+    "easeSpring": "cubic-bezier(0.34,1.56,0.64,1)",
+    "durationFast": "150ms",
+    "durationBase": "250ms",
+    "durationSlow": "350ms",
+    "durationFab": "200ms"
+  },
+  "glassFallback": {
+    "strategy": "基色 rgba(255,255,255,0.92) 始终生效；@supports backdrop-filter 时降 alpha 至 0.72 并加 blur(20px)",
+    "androidLowEnd": "不支持 backdrop-filter → 使用 0.92 半透明白（视觉接近磨砂，仅无实时模糊）",
+    "perfNote": "低端安卓滚动模糊可掉帧，建议 blur 降至 12-16px 或关闭 blur 仅用半透明白"
+  }
+}

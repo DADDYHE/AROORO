@@ -2,7 +2,7 @@
 
 .page-container {
   min-height: 100vh;
-  background-color: #F5F5F7;
+  background-color: var(--background-color);
   padding: 120rpx 24rpx 40rpx;
 }
 
@@ -13,7 +13,7 @@
 }
 
 .activity-card {
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 32rpx;
   overflow: hidden;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
@@ -73,7 +73,7 @@
 .activity-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -85,13 +85,13 @@
 .activity-price {
   font-size: 26rpx;
   font-weight: 700;
-  color: #1D1D1F;
+  color: var(--text-primary);
   flex-shrink: 0;
   margin-left: 16rpx;
 }
 
 .activity-price.free {
-  color: #4ECDC4;
+  color: var(--activity-primary);
 }
 
 .activity-meta {
@@ -117,7 +117,7 @@
 
 .meta-text {
   font-size: 22rpx;
-  color: #86868B;
+  color: var(--text-secondary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -149,7 +149,7 @@
 
 .organizer-name {
   font-size: 22rpx;
-  color: #86868B;
+  color: var(--text-secondary);
 }
 
 .joined-badge {
@@ -159,11 +159,11 @@
 }
 
 .joined-badge-text {
-  color: #FFFFFF;
+  color: var(--card-color);
 }
 
 .ended-badge {
-  background: #AEAEB2;
+  background: var(--gray-500);
 }
 
 .activity-accent {
@@ -172,7 +172,7 @@
   left: 0;
   right: 0;
   height: 4rpx;
-  background: linear-gradient(90deg, #4ECDC4, #26A69A);
+  background: linear-gradient(90deg, var(--activity-primary), var(--activity-secondary));
 }
 
 .empty-state {
@@ -191,13 +191,13 @@
 .empty-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   margin-bottom: 12rpx;
 }
 
 .empty-text {
   font-size: 26rpx;
-  color: #86868B;
+  color: var(--text-secondary);
 }
 
 .loading-more {
@@ -219,7 +219,7 @@
   width: 8rpx;
   height: 8rpx;
   border-radius: 50%;
-  background: #4ECDC4;
+  background: var(--activity-primary);
   animation: dotBounce 1.4s ease-in-out infinite;
 }
 
@@ -233,7 +233,7 @@
 
 .loading-more-text {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 4rpx;
 }
 
@@ -249,5 +249,5 @@
 
 .hint-text {
   font-size: 22rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
 }

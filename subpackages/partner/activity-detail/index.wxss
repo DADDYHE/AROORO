@@ -30,7 +30,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  background: #4ECDC4;
+  background: var(--activity-primary);
 }
 
 .card-body {
@@ -56,14 +56,14 @@
   font-size: 22rpx;
   padding: 6rpx 16rpx;
   border-radius: 8rpx;
-  background: #F2F2F7;
-  color: #8E8E93;
+  background: var(--divider-color);
+  color: var(--text-secondary);
 }
 
 .activity-title {
   font-size: 36rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
   display: block;
   margin-bottom: 12rpx;
   line-height: 1.4;
@@ -71,7 +71,7 @@
 
 .activity-desc {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   line-height: 1.6;
   display: block;
 }
@@ -92,20 +92,20 @@
 
 .info-label {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   display: block;
   margin-bottom: 8rpx;
 }
 
 .info-value {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   display: block;
   font-weight: 500;
 }
 
 .price-value {
-  color: #4ECDC4;
+  color: var(--activity-primary);
 }
 
 .section-title-row {
@@ -118,7 +118,7 @@
 .section-title {
   font-size: 28rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .view-reg-btn {
@@ -129,12 +129,12 @@
 
 .view-reg-text {
   font-size: 24rpx;
-  color: #4ECDC4;
+  color: var(--activity-primary);
 }
 
 .view-reg-arrow {
   font-size: 28rpx;
-  color: #4ECDC4;
+  color: var(--activity-primary);
 }
 
 .participant-section {
@@ -150,18 +150,18 @@
 
 .participant-label {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .participant-count {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .participant-bar {
   height: 8rpx;
-  background: #F2F2F7;
+  background: var(--divider-color);
   border-radius: 4rpx;
   overflow: hidden;
 }
@@ -181,7 +181,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12rpx 0;
-  border-bottom: 1rpx solid #F2F2F7;
+  border-bottom: 1rpx solid var(--divider-color);
 }
 
 .contact-row:last-child {
@@ -190,12 +190,12 @@
 
 .contact-label {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .contact-value {
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .image-grid {
@@ -234,7 +234,7 @@
   gap: 16rpx;
   padding: 20rpx 32rpx;
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: #FFFFFF;
+  background: var(--card-color);
   box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.06);
   z-index: 50;
 }
@@ -254,20 +254,20 @@
 }
 
 .action-btn-edit {
-  background: #F2F2F7;
+  background: var(--divider-color);
 }
 
 .action-btn-edit .action-btn-text {
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .action-btn-status {
-  background: linear-gradient(135deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   box-shadow: 0 4rpx 16rpx rgba(78, 205, 196, 0.3);
 }
 
 .action-btn-status .action-btn-text {
-  color: #FFFFFF;
+  color: var(--card-color);
 }
 
 .action-btn-full {
@@ -289,7 +289,7 @@
 
 .reg-list-sheet {
   width: 100%;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx 24rpx 0 0;
   max-height: 70vh;
   display: flex;
@@ -302,18 +302,18 @@
   align-items: center;
   justify-content: space-between;
   padding: 28rpx 32rpx;
-  border-bottom: 1rpx solid #F2F2F7;
+  border-bottom: 1rpx solid var(--divider-color);
 }
 
 .reg-list-title {
   font-size: 30rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .reg-list-close {
   font-size: 28rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   padding: 8rpx;
 }
 
@@ -336,14 +336,14 @@
 
 .reg-name {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
   display: block;
 }
 
 .reg-meta {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   margin-top: 4rpx;
   display: block;
 }
@@ -360,5 +360,5 @@
   padding: 80rpx 0;
   text-align: center;
   font-size: 28rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }

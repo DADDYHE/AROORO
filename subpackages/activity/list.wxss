@@ -1,13 +1,13 @@
 /* 全局样式 */
 :root {
-  --primary-color: #4ECDC4;
-  --primary-dark: #26A69A;
-  --text-primary: #1d1d1f;
-  --text-secondary: #86868b;
-  --text-light: #aeaeb2;
-  --background-light: #f5f5f7;
-  --background-white: #ffffff;
-  --accent-color: #FF6B6B;
+  --primary-color: var(--activity-primary);
+  --primary-dark: var(--activity-secondary);
+  --text-primary: var(--text-primary);
+  --text-secondary: var(--text-secondary);
+  --text-light: var(--gray-500);
+  --background-light: var(--background-color);
+  --background-white: var(--card-color);
+  --accent-color: var(--tuan-primary);
   --success-color: #4CAF50;
   --border-radius: 20rpx;
   --shadow-sm: 0 2rpx 8rpx rgba(0,0,0,0.04);
@@ -17,7 +17,7 @@
 
 .page-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8f9fa 0%, #f5f5f7 100%);
+  background: linear-gradient(135deg, #f8f9fa 0%, var(--background-color) 100%);
   position: relative;
   overflow-x: hidden;
 }
@@ -114,11 +114,11 @@
 }
 
 .category-tab.active {
-  background: linear-gradient(135deg, #26A69A, #00796B);
-  color: #ffffff !important;
+  background: linear-gradient(135deg, var(--activity-secondary), #00796B);
+  color: var(--card-color) !important;
   font-weight: 600;
   box-shadow: var(--shadow-md);
-  border-color: #26A69A;
+  border-color: var(--activity-secondary);
   transform: translateY(-2rpx);
   position: relative;
   z-index: 10;
@@ -128,7 +128,7 @@
 .category-tab.active .category-tab-text {
   position: relative;
   z-index: 20;
-  color: #ffffff !important;
+  color: var(--card-color) !important;
   display: inline-block;
   text-shadow: 0 1rpx 2rpx rgba(0,0,0,0.3);
   font-weight: 600;
@@ -421,13 +421,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #4ECDC4, #44a08d);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-primary-mid));
 }
 
 .organizer-avatar-letter {
   font-size: 22rpx;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--card-color);
   line-height: 1;
 }
 
@@ -440,7 +440,7 @@
 
 .join-button {
   padding: 12rpx 32rpx;
-  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
   border-radius: 24rpx;
   transition: all 0.4s ease;
   box-shadow: var(--shadow-sm);
@@ -456,7 +456,7 @@
 .join-button-text {
   font-size: 22rpx;
   font-weight: 600;
-  color: #ffffff !important;
+  color: var(--card-color) !important;
   text-shadow: 0 1rpx 2rpx rgba(0,0,0,0.2);
 }
 
@@ -499,7 +499,7 @@
 .joined-badge-text {
   font-size: 22rpx;
   font-weight: 600;
-  color: #ffffff !important;
+  color: var(--card-color) !important;
   text-shadow: 0 1rpx 2rpx rgba(0,0,0,0.2);
 }
 

@@ -1,0 +1,151 @@
+/* ============================================================
+   design-tokens.wxss · 微信小程序「左右」设计令牌
+   方向：Soft Warm × Modern Minimal（智能家居质感 · 暖通透）
+   ------------------------------------------------------------
+   单位约定：所有尺寸用 rpx（750rpx 设计稿基准，1rpx≈0.5pt）。
+   例外（非 rpx）：
+     · backdrop-filter 的 blur() 用 px（设备像素级模糊，rpx 无效）
+     · env(safe-area-inset-bottom) 返回 px，保留在 calc() 中
+   接线方式：在 app.wxss 中本文件须 import 于 variables.wxss 之后，
+   使同名语义变量覆盖旧值；新屏幕可直接引用 --zy-* 令牌。
+   ============================================================ */
+
+page {
+  /* ---------- 品牌主色：深青（结构锚点，替代旧 #0A1128 的大面积使用） ---------- */
+  --zy-primary-900: #0A3D4F;   /* 最深：按下态 / 深色卡片 */
+  --zy-primary-700: #0B4F6C;   /* 主锚点：TabBar 选中 / 主按钮 / 深色卡 */
+  --zy-primary-500: #1A5F7A;   /* 浅青：hover / 次级结构 / 中央钮渐变起 */
+  --zy-primary-300: #4A8AA3;   /* 柔青：禁用 / 插画 */
+  --zy-primary-100: #DCEAF0;   /* 青色浅底：选中态芯片底 */
+  --zy-primary-grad: linear-gradient(160deg, #1A5F7A 0%, #0A3D4F 100%);
+
+  /* ---------- 点缀色：薄荷绿（交互/强调，保留 #4ECDC4） ---------- */
+  --zy-accent: #4ECDC4;
+  --zy-accent-hover: #3DBDB4;
+  --zy-accent-soft: #E6F7F5;
+  --zy-accent-glow: rgba(78, 205, 196, 0.35);
+
+  /* ---------- 中性色：浅色通透、冷灰白、青调描边 ---------- */
+  --zy-bg: #EEF2F6;                              /* 页面背景（冷灰白，通透） */
+  --zy-surface: #FFFFFF;                        /* 卡片表面 */
+  --zy-surface-glass: rgba(255, 255, 255, 0.72); /* 毛玻璃底色（理想态） */
+  --zy-surface-glass-solid: #FFFFFF;             /* 安卓低端机兜底纯色 */
+  --zy-surface-glass-border: rgba(255, 255, 255, 0.55); /* 玻璃高光描边 */
+  --zy-border: #E2E8EF;                         /* 描边（青调极淡） */
+  --zy-border-strong: #CBD6DF;
+  --zy-divider: #F0F4F8;                        /* 分割线 */
+  --zy-text-1: #16323F;                         /* 主文字（深墨青，非纯黑） */
+  --zy-text-2: #5A7184;                         /* 次文字 */
+  --zy-text-3: #93A6B3;                         /* 三级 / 说明 */
+  --zy-text-on-primary: #FFFFFF;               /* 主色上的反白文字 */
+
+  /* ---------- TabBar 专用令牌（精度优先） ---------- */
+  --zy-tabbar-height: 100rpx;                               /* 内容区高度（不含安全区） */
+  --zy-tabbar-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --zy-tabbar-total-height: calc(100rpx + env(safe-area-inset-bottom, 0px));
+  --zy-tabbar-bg: rgba(255, 255, 255, 0.92);               /* 兜底基色（无 blur 也成立） */
+  --zy-tabbar-bg-glass: rgba(255, 255, 255, 0.72);         /* 支持 blur 时切换的真玻璃 */
+  --zy-tabbar-blur: 20px;                                  /* 模糊半径（用 px） */
+  --zy-tabbar-border-top: 1rpx solid rgba(11, 79, 108, 0.06); /* 顶部细线（极淡青） */
+
+  --zy-tabbar-item-active: #0B4F6C;                       /* 选中 图标+文字 深青 */
+  --zy-tabbar-item-inactive: #9AA7AD;                     /* 未选中 灰 */
+  --zy-tabbar-item-active-bg: rgba(11, 79, 108, 0.08);    /* 选中态图标芯片浅青底（可选） */
+  --zy-tabbar-icon-size: 48rpx;
+  --zy-tabbar-icon-stroke: 4rpx;                          /* ≈2px@1x 视觉描边（750rpx 2x 下） */
+  --zy-tabbar-label-size: 22rpx;
+  --zy-tabbar-label-weight: 500;
+  --zy-tabbar-label-weight-active: 600;
+
+  --zy-tabbar-center-d: 120rpx;                           /* 中央按钮直径 */
+  --zy-tabbar-center-protrusion: 40rpx;                   /* 上沿外露 ≈ 直径 1/3 */
+  --zy-tabbar-center-bottom: calc(env(safe-area-inset-bottom, 0px) + 20rpx); /* = 栏高-(d-外露) */
+  --zy-tabbar-center-icon-size: 56rpx;
+  --zy-tabbar-center-grad: linear-gradient(160deg, #1A5F7A 0%, #0A3D4F 100%);
+  --zy-tabbar-center-icon: #FFFFFF;
+  --zy-tabbar-center-shadow: 0 12rpx 28rpx rgba(11, 79, 108, 0.35), 0 4rpx 10rpx rgba(11, 79, 108, 0.20);
+
+  /* ---------- 字体栈（系统字体 + PingFang SC） ---------- */
+  --zy-font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", "Source Han Sans SC", "Noto Sans CJK SC", sans-serif;
+
+  /* ---------- 字号梯度（rpx） ---------- */
+  --zy-fs-display: 56rpx;  --zy-fs-display-w: 700; --zy-fs-display-lh: 1.15;
+  --zy-fs-h1: 44rpx;       --zy-fs-h1-w: 700;      --zy-fs-h1-lh: 1.2;
+  --zy-fs-h2: 36rpx;       --zy-fs-h2-w: 600;      --zy-fs-h2-lh: 1.3;
+  --zy-fs-h3: 32rpx;       --zy-fs-h3-w: 600;      --zy-fs-h3-lh: 1.4;
+  --zy-fs-body: 28rpx;     --zy-fs-body-w: 400;    --zy-fs-body-lh: 1.6;
+  --zy-fs-sm: 24rpx;       --zy-fs-sm-w: 400;      --zy-fs-sm-lh: 1.5;
+  --zy-fs-xs: 20rpx;       --zy-fs-xs-w: 500;      --zy-fs-xs-lh: 1.4;
+
+  /* ---------- 间距（8pt 网格 → rpx，1pt=2rpx） ---------- */
+  --zy-space-2xs: 4rpx;
+  --zy-space-xs: 8rpx;
+  --zy-space-sm: 16rpx;
+  --zy-space-md: 24rpx;
+  --zy-space-lg: 32rpx;
+  --zy-space-xl: 48rpx;
+  --zy-space-2xl: 64rpx;
+  --zy-space-3xl: 96rpx;
+
+  /* ---------- 圆角（大圆角） ---------- */
+  --zy-radius-sm: 16rpx;
+  --zy-radius-md: 24rpx;
+  --zy-radius-lg: 32rpx;
+  --zy-radius-xl: 40rpx;
+  --zy-radius-2xl: 48rpx;   /* 卡片默认 */
+  --zy-radius-3xl: 56rpx;
+  --zy-radius-pill: 999rpx;
+
+  /* ---------- 阴影（轻弥散，青调染） ---------- */
+  --zy-shadow-xs: 0 2rpx 8rpx rgba(16, 50, 63, 0.04);
+  --zy-shadow-sm: 0 4rpx 16rpx rgba(16, 50, 63, 0.06);   /* 卡片 */
+  --zy-shadow-md: 0 8rpx 24rpx rgba(16, 50, 63, 0.08);   /* 浮起卡 */
+  --zy-shadow-lg: 0 16rpx 40rpx rgba(16, 50, 63, 0.10);  /* 弹层/浮层 */
+  --zy-shadow-fab: var(--zy-tabbar-center-shadow);       /* 中央钮浮起 */
+  --zy-shadow-float-tabbar: 0 -4rpx 32rpx rgba(16, 50, 63, 0.10); /* TabBar 上沿浮影 */
+
+  /* ---------- 动效 ---------- */
+  --zy-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --zy-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --zy-ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --zy-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --zy-dur-fast: 150ms;    /* 按钮按压 */
+  --zy-dur-base: 250ms;    /* Tab 切换 */
+  --zy-dur-slow: 350ms;    /* 页面转场 */
+  --zy-dur-fab: 200ms;     /* 中央钮按压缩放 */
+
+  /* ---------- 兼容重映射（可选）：让既有组件直接换肤 ----------
+     若希望引用 --primary-color / --background-color 等的现有组件直接换深青主色，
+     取消下方注释即可（app.wxss 中本文件须 import 于 variables.wxss 之后）。 */
+  /*
+  --primary-color: var(--zy-primary-700);
+  --secondary-color: var(--zy-accent);
+  --background-color: var(--zy-bg);
+  --card-color: var(--zy-surface);
+  --text-primary: var(--zy-text-1);
+  --text-secondary: var(--zy-text-2);
+  --text-tertiary: var(--zy-text-3);
+  --border-color: var(--zy-border);
+  --divider-color: var(--zy-divider);
+  --gradient-primary: var(--zy-primary-grad);
+  --gradient-secondary: linear-gradient(135deg, #4ECDC4 0%, #26A69A 100%);
+  */
+}
+
+/* ============================================================
+   毛玻璃降级：安卓低端机不支持 backdrop-filter 时的兜底
+   策略：基色用半透明白 0.92（无 blur 也成立）
+        → 支持 blur 时降 alpha 至 0.72 并加模糊
+   ============================================================ */
+.zy-glass {
+  background: var(--zy-tabbar-bg);                 /* 0.92 兜底基色 */
+  border-top: var(--zy-tabbar-border-top);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .zy-glass {
+    background: var(--zy-tabbar-bg-glass);         /* 0.72 真玻璃 */
+    -webkit-backdrop-filter: blur(var(--zy-tabbar-blur));
+    backdrop-filter: blur(var(--zy-tabbar-blur));
+    border-top: 1rpx solid var(--zy-surface-glass-border);
+  }
+}

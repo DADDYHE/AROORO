@@ -1,13 +1,13 @@
 /* ====== 页面容器 ====== */
 .page {
-  background-color: #F5F5F7;
+  background-color: var(--background-color);
   min-height: 100vh;
 }
 
 /* ====== Tab栏 ====== */
 .tab-bar {
   display: flex;
-  background: #FFFFFF;
+  background: var(--card-color);
   padding: 0 24rpx;
   position: sticky;
   top: 0;
@@ -26,21 +26,21 @@
 
 .tab-text {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   font-weight: 500;
   letter-spacing: 1rpx;
   transition: all 0.3s ease;
 }
 
 .tab-item.active .tab-text {
-  color: #4ECDC4;
+  color: var(--activity-primary);
   font-weight: 600;
 }
 
 .tab-indicator {
   width: 40rpx;
   height: 4rpx;
-  background: linear-gradient(90deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   border-radius: 2rpx;
   margin-top: 12rpx;
 }
@@ -84,7 +84,7 @@
 .header-title {
   font-size: 40rpx;
   font-weight: 700;
-  color: #4ECDC4;
+  color: var(--activity-primary);
   display: block;
   margin-bottom: 12rpx;
   letter-spacing: 2rpx;
@@ -92,7 +92,7 @@
 
 .header-subtitle {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 4rpx;
 }
 
@@ -113,7 +113,7 @@
 /* ====== 服务标签 ====== */
 .service-tabs {
   display: flex;
-  background: #FFFFFF;
+  background: var(--card-color);
   margin: -20rpx 32rpx 24rpx;
   border-radius: 20rpx;
   padding: 8rpx;
@@ -132,7 +132,7 @@
 }
 
 .service-tab.active {
-  background: linear-gradient(135deg, #4ECDC4 0%, #3DB5AD 100%);
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
 }
 
 .service-tab-icon {
@@ -142,16 +142,16 @@
 .service-tab-text {
   font-size: 28rpx;
   font-weight: 500;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .service-tab.active .service-tab-text {
-  color: #FFFFFF;
+  color: var(--card-color);
 }
 
 /* ====== 区块卡片 ====== */
 .section-card {
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   padding: 32rpx;
   margin: 0 32rpx 24rpx;
@@ -173,7 +173,7 @@
 .section-title {
   font-size: 32rpx;
   font-weight: 700;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 2rpx;
 }
 
@@ -239,7 +239,7 @@
   position: absolute;
   width: 48rpx;
   height: 24rpx;
-  background: linear-gradient(180deg, #007AFF 0%, #0056CC 100%);
+  background: linear-gradient(180deg, var(--info-color) 0%, #0056CC 100%);
   border-radius: 0 0 24rpx 24rpx;
   top: 16rpx;
   left: 2rpx;
@@ -335,7 +335,7 @@
   position: absolute;
   width: 44rpx;
   height: 28rpx;
-  background: linear-gradient(180deg, #FFB347 0%, #FF9F0A 100%);
+  background: linear-gradient(180deg, #FFB347 0%, var(--warning-color) 100%);
   border-radius: 4rpx 4rpx 12rpx 12rpx;
   bottom: 8rpx;
   left: 4rpx;
@@ -398,7 +398,7 @@
   position: absolute;
   width: 32rpx;
   height: 28rpx;
-  background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+  background: linear-gradient(135deg, var(--tuan-primary) 0%, #FF4757 100%);
   top: 8rpx;
   left: 10rpx;
   clip-path: polygon(50% 100%, 0% 35%, 15% 0%, 50% 25%, 85% 0%, 100% 35%);
@@ -535,7 +535,7 @@
 
 .service-name {
   font-size: 24rpx;
-  color: #3A3A3C;
+  color: var(--gray-900);
   text-align: center;
   font-weight: 500;
 }
@@ -549,12 +549,12 @@
 
 .note-text {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 .note-text .highlight {
-  color: #FF6B6B;
+  color: var(--tuan-primary);
   font-weight: 600;
 }
 
@@ -587,17 +587,17 @@
 }
 
 .dog-icon.small {
-  background: #4ECDC4;
+  background: var(--activity-primary);
   clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 80% 100%, 20% 100%, 0% 30%);
 }
 
 .dog-icon.medium {
-  background: #4ECDC4;
+  background: var(--activity-primary);
   clip-path: polygon(25% 0%, 75% 0%, 100% 40%, 85% 100%, 15% 100%, 0% 40%);
 }
 
 .dog-icon.large {
-  background: #4ECDC4;
+  background: var(--activity-primary);
   clip-path: polygon(20% 0%, 80% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
 }
 
@@ -610,18 +610,18 @@
 .dog-type {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .dog-condition {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .dog-duration {
   font-size: 28rpx;
   font-weight: 700;
-  color: #4ECDC4;
+  color: var(--activity-primary);
   white-space: nowrap;
 }
 
@@ -632,12 +632,12 @@
 
 .fee-note-text {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 .fee-note-text .highlight {
-  color: #FF6B6B;
+  color: var(--tuan-primary);
   font-weight: 600;
 }
 
@@ -661,7 +661,7 @@
   flex: 1;
   padding: 24rpx 16rpx;
   font-size: 26rpx;
-  color: #3A3A3C;
+  color: var(--gray-900);
   text-align: center;
 }
 
@@ -689,7 +689,7 @@
 }
 
 .provider-icon.pudding {
-  background: linear-gradient(135deg, #007AFF 0%, #0066E6 100%);
+  background: linear-gradient(135deg, var(--info-color) 0%, #0066E6 100%);
 }
 
 .provider-icon.premium {
@@ -703,18 +703,18 @@
 .provider-name {
   font-size: 26rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .provider-note {
   font-size: 20rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
 }
 
 .table-cell.price {
   font-size: 32rpx;
   font-weight: 700;
-  color: #FF6B6B;
+  color: var(--tuan-primary);
 }
 
 /* ====== 额外服务 ====== */
@@ -745,18 +745,18 @@
 .extra-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .extra-desc {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .extra-price {
   font-size: 28rpx;
   font-weight: 700;
-  color: #FF6B6B;
+  color: var(--tuan-primary);
   white-space: nowrap;
 }
 
@@ -768,12 +768,12 @@
 
 .ps-text {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 .ps-text .highlight {
-  color: #FF6B6B;
+  color: var(--tuan-primary);
   font-weight: 600;
 }
 
@@ -804,8 +804,8 @@
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4ECDC4 0%, #3DB5AD 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  color: var(--card-color);
   font-size: 22rpx;
   font-weight: 600;
   display: flex;
@@ -838,15 +838,15 @@
 }
 
 .flow-icon.order {
-  background: #007AFF;
+  background: var(--info-color);
 }
 
 .flow-icon.accept {
-  background: #34C759;
+  background: var(--success-color);
 }
 
 .flow-icon.key {
-  background: #FF9F0A;
+  background: var(--warning-color);
 }
 
 .flow-icon.prepare {
@@ -854,7 +854,7 @@
 }
 
 .flow-icon.checkin {
-  background: #34C759;
+  background: var(--success-color);
 }
 
 .flow-icon.disinfection {
@@ -862,32 +862,32 @@
 }
 
 .flow-icon.comfort {
-  background: #FF6B6B;
+  background: var(--tuan-primary);
 }
 
 .flow-icon.start {
-  background: #34C759;
+  background: var(--success-color);
 }
 
 .flow-icon.complete {
-  background: #007AFF;
+  background: var(--info-color);
 }
 
 .flow-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .flow-desc {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 16rpx;
 }
 
 .flow-desc .highlight {
-  color: #FF6B6B;
+  color: var(--tuan-primary);
   font-weight: 600;
 }
 
@@ -903,7 +903,7 @@
 .flow-tip-text {
   flex: 1;
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -930,7 +930,7 @@
 
 .empty-text {
   font-size: 28rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 /* ====== 预约指引 ====== */
@@ -950,8 +950,8 @@
   width: 48rpx;
   height: 48rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4ECDC4 0%, #2AB7A9 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  color: var(--card-color);
   font-size: 24rpx;
   font-weight: 600;
   display: flex;
@@ -971,13 +971,13 @@
 .step-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 1rpx;
 }
 
 .step-desc {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 0.5rpx;
   line-height: 1.5;
 }
@@ -991,17 +991,17 @@
 
 /* ====== 画廊展陈风格 - 预约指引 ====== */
 .highlight-orange {
-  color: #FF9500;
+  color: var(--warning-color);
   font-weight: 600;
 }
 
 .highlight-red {
-  color: #FF6B6B;
+  color: var(--tuan-primary);
   font-weight: 600;
 }
 
 .gallery-entrance {
-  background: linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 100%);
+  background: linear-gradient(180deg, #F0F7FF 0%, var(--card-color) 100%);
   padding: 48rpx 32rpx 40rpx;
   position: relative;
   display: flex;
@@ -1014,7 +1014,7 @@
   top: 0;
   bottom: 0;
   width: 4rpx;
-  background: linear-gradient(180deg, #2196F3 0%, #64B5F6 50%, transparent 100%);
+  background: linear-gradient(180deg, var(--feeding-primary) 0%, #64B5F6 50%, transparent 100%);
 }
 
 .gallery-entrance-content {
@@ -1027,13 +1027,13 @@
 .gallery-entrance-title {
   font-size: 36rpx;
   font-weight: 700;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 2rpx;
 }
 
 .gallery-entrance-subtitle {
   font-size: 24rpx;
-  color: #86868B;
+  color: var(--text-secondary);
   letter-spacing: 4rpx;
 }
 
@@ -1043,7 +1043,7 @@
   left: 32rpx;
   right: 32rpx;
   height: 1rpx;
-  background: #E5E5EA;
+  background: var(--gray-200);
 }
 
 .gallery-hall {
@@ -1067,14 +1067,14 @@
 .gallery-hall-text {
   font-size: 32rpx;
   font-weight: 700;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 2rpx;
 }
 
 .gallery-hall-divider {
   width: 60%;
   height: 2rpx;
-  background: linear-gradient(90deg, #2196F3 0%, transparent 100%);
+  background: linear-gradient(90deg, var(--feeding-primary) 0%, transparent 100%);
   margin: 0 auto 32rpx;
 }
 
@@ -1088,12 +1088,12 @@
   content: '';
   width: 40rpx;
   height: 2rpx;
-  background: linear-gradient(90deg, transparent 0%, #2196F3 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--feeding-primary) 50%, transparent 100%);
 }
 
 .gallery-card {
   display: flex;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   overflow: hidden;
   margin-bottom: 24rpx;
@@ -1106,7 +1106,7 @@
 }
 
 .gallery-card-rail-blue {
-  background: #2196F3;
+  background: var(--feeding-primary);
 }
 
 .gallery-card-rail-light-blue {
@@ -1125,7 +1125,7 @@
 .gallery-card-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   display: block;
   margin-bottom: 16rpx;
 }
@@ -1138,13 +1138,13 @@
 
 .gallery-card-text {
   font-size: 24rpx;
-  color: #86868B;
+  color: var(--text-secondary);
   line-height: 1.8;
 }
 
 .gallery-card-note {
   font-size: 22rpx;
-  color: #86868B;
+  color: var(--text-secondary);
   line-height: 1.7;
   display: block;
   margin-bottom: 8rpx;
@@ -1176,7 +1176,7 @@
   flex: 1;
   padding: 18rpx 12rpx;
   font-size: 22rpx;
-  color: #3A3A3C;
+  color: var(--gray-900);
   text-align: center;
   border-bottom: 1rpx solid #E8F0FE;
   line-height: 1.6;
@@ -1226,7 +1226,7 @@
 
 .gallery-table-stack-text {
   font-size: 22rpx;
-  color: #3A3A3C;
+  color: var(--gray-900);
   line-height: 1.5;
 }
 
@@ -1278,7 +1278,7 @@
 .gallery-hexagon {
   width: 140rpx;
   height: 140rpx;
-  background: linear-gradient(135deg, #2196F3 0%, #64B5F6 100%);
+  background: linear-gradient(135deg, var(--feeding-primary) 0%, #64B5F6 100%);
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   display: flex;
   align-items: center;
@@ -1302,13 +1302,13 @@
 }
 
 .gallery-guarantee-badge {
-  background: #FFFFFF;
-  border: 1rpx solid #E5E5EA;
+  background: var(--card-color);
+  border: 1rpx solid var(--gray-200);
   border-radius: 12rpx;
   padding: 16rpx 8rpx;
   text-align: center;
   font-size: 22rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
   line-height: 1.4;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
@@ -1322,7 +1322,7 @@
 
 .gallery-guarantee-item {
   display: flex;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 20rpx;
   overflow: hidden;
   box-shadow: 0 2rpx 8rpx rgba(33, 150, 243, 0.05);
@@ -1331,7 +1331,7 @@
 .gallery-guarantee-rail {
   width: 4rpx;
   flex-shrink: 0;
-  background: linear-gradient(180deg, #2196F3 0%, #64B5F6 100%);
+  background: linear-gradient(180deg, var(--feeding-primary) 0%, #64B5F6 100%);
 }
 
 .gallery-guarantee-body {
@@ -1342,14 +1342,14 @@
 .gallery-guarantee-title {
   font-size: 26rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   display: block;
   margin-bottom: 8rpx;
 }
 
 .gallery-guarantee-desc {
   font-size: 22rpx;
-  color: #86868B;
+  color: var(--text-secondary);
   line-height: 1.7;
 }
 
@@ -1362,7 +1362,7 @@
 }
 
 .faq-item {
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 20rpx;
   overflow: hidden;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
@@ -1379,7 +1379,7 @@
 .faq-q-text {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 0.5rpx;
   flex: 1;
 }
@@ -1387,8 +1387,8 @@
 .faq-toggle {
   width: 16rpx;
   height: 16rpx;
-  border-top: 3rpx solid #C7C7CC;
-  border-right: 3rpx solid #C7C7CC;
+  border-top: 3rpx solid var(--text-tertiary);
+  border-right: 3rpx solid var(--text-tertiary);
   transform: rotate(45deg);
   transition: all 0.3s ease;
   flex-shrink: 0;
@@ -1405,7 +1405,7 @@
 
 .faq-a-text {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 0.5rpx;
   line-height: 1.7;
 }

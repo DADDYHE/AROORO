@@ -1,0 +1,140 @@
+/* ================================================================
+   theme-teal.wxss · 深青绿主题（暮野 PET 高端宠物平台）
+   2026-07-26 基于 .design 原型深青绿色配色方案确立
+   ----------------------------------------------------------------
+   设计语言：
+     冷调近白底 + 深青绿品牌色 + 纯白卡片 + 超大圆角
+     + 浅青药丸分类条 + 深色主卡+白卡网格
+     + 波浪 TabBar（毛玻璃白底 + 居中青绿圆钮）
+   ----------------------------------------------------------------
+   接线方式：在 app.wxss 中本文件须 import 于 variables.wxss 之后，
+   使同名语义变量覆盖旧值；同时覆盖 design-tokens.wxss 的 --zy-* 令牌。
+   ================================================================ */
+
+page {
+  /* ===== 品牌层：深青绿（.design 原型主色 #0D5A6B） ===== */
+  --primary-color: #0D5A6B;            /* 深青绿 — 主按钮 / 选中态 / 品牌锚点 */
+  --primary-light: #DDEAED;            /* 极浅青底 — 浅选中态芯片 */
+  --secondary-color: #2A7A89;          /* 浅青绿 — 次级强调 */
+  --accent-color: #7AB0BA;             /* 柔青 — 点缀 / 插画 */
+  --gradient-primary: linear-gradient(160deg, #2A7A89 0%, #0D5A6B 100%);
+  --gradient-secondary: linear-gradient(135deg, #7AB0BA 0%, #2A7A89 100%);
+
+  /* ===== --zy-* 深青绿令牌（覆盖 design-tokens.wxss） ===== */
+  --zy-primary-900: #083D4A;            /* 最深：按下态 / 深色卡片 */
+  --zy-primary-700: #0D5A6B;            /* 主锚点：TabBar 选中 / 主按钮 */
+  --zy-primary-500: #2A7A89;            /* 浅青：hover / 次级结构 */
+  --zy-primary-300: #7AB0BA;            /* 柔青：禁用 / 插画 */
+  --zy-primary-100: #DDEAED;            /* 青色浅底：选中态芯片底 */
+  --zy-primary-grad: linear-gradient(160deg, #2A7A89 0%, #0D5A6B 100%);
+
+  /* ===== 中性层：冷调近白（.design 原型 #F4F9FA） ===== */
+  --background-color: #F4F9FA;          /* 冷调近白页面底色 */
+  --card-color: #FFFFFF;                /* 纯白卡片 */
+  --surface-tint: #E6EEF0;             /* 次级表面 / 芯片底 */
+  --text-primary: #152830;              /* 深墨青主文字（非纯黑） */
+  --text-secondary: #4B5B60;            /* 中性次文字 */
+  --text-tertiary: #8A9AA0;             /* 浅灰提示文字 */
+  --border-color: #D2DEE1;              /* 极淡青调边框 */
+  --divider-color: #E6EEF0;             /* 分割线 */
+  --overlay-color: rgba(13, 90, 107, 0.35);
+
+  /* ===== --zy-* 中性令牌覆盖 ===== */
+  --zy-bg: #F4F9FA;
+  --zy-surface: #FFFFFF;
+  --zy-surface-glass: rgba(255, 255, 255, 0.72);
+  --zy-surface-glass-solid: #FFFFFF;
+  --zy-surface-glass-border: rgba(255, 255, 255, 0.55);
+  --zy-border: #D2DEE1;
+  --zy-border-strong: #B8C8CD;
+  --zy-divider: #E6EEF0;
+  --zy-text-1: #152830;
+  --zy-text-2: #4B5B60;
+  --zy-text-3: #8A9AA0;
+  --zy-text-on-primary: #F4F9FA;
+
+  /* ===== TabBar 专用令牌覆盖 ===== */
+  --zy-tabbar-item-active: #0D5A6B;                    /* 选中 图标+文字 深青绿 */
+  --zy-tabbar-item-inactive: #8A9AA0;                  /* 未选中 灰 */
+  --zy-tabbar-item-active-bg: rgba(13, 90, 107, 0.08); /* 选中态浅青底 */
+  --zy-tabbar-border-top: 1rpx solid rgba(13, 90, 107, 0.08);
+  --zy-tabbar-center-grad: linear-gradient(160deg, #2A7A89 0%, #0D5A6B 100%);
+  --zy-tabbar-center-shadow: 0 12rpx 28rpx rgba(13, 90, 107, 0.35), 0 4rpx 10rpx rgba(13, 90, 107, 0.20);
+
+  /* ===== 阴影（青调染，alpha 与原型一致） ===== */
+  --zy-shadow-xs: 0 2rpx 8rpx rgba(13, 90, 107, 0.04);
+  --zy-shadow-sm: 0 4rpx 16rpx rgba(13, 90, 107, 0.06);
+  --zy-shadow-md: 0 8rpx 24rpx rgba(13, 90, 107, 0.08);
+  --zy-shadow-lg: 0 16rpx 40rpx rgba(13, 90, 107, 0.10);
+  --zy-shadow-float-tabbar: 0 -4rpx 32rpx rgba(13, 90, 107, 0.10);
+
+  --shadow-soft: 0 8rpx 32rpx rgba(13, 90, 107, 0.06);
+  --shadow-md: 0 4rpx 16rpx rgba(13, 90, 107, 0.05);
+  --shadow-lg: 0 12rpx 40rpx rgba(13, 90, 107, 0.08);
+  --shadow-float: 0 -4rpx 32rpx rgba(13, 90, 107, 0.10);
+
+  /* ===== 发光阴影 ===== */
+  --shadow-glow-primary: 0 8rpx 24rpx rgba(13, 90, 107, 0.30);
+  --shadow-glow-primary-soft: 0 4rpx 12rpx rgba(13, 90, 107, 0.18);
+  --shadow-glow-primary-lg: 0 16rpx 40rpx rgba(13, 90, 107, 0.38);
+  --shadow-glow-primary-btn: 0 6rpx 16rpx rgba(13, 90, 107, 0.30);
+  --shadow-glow-primary-xs: 0 2rpx 6rpx rgba(13, 90, 107, 0.18);
+
+  /* ===== 功能色（青绿系微调） ===== */
+  --success-color: #2D8659;
+  --warning-color: #C77D2A;
+  --error-color: #B8423A;
+  --info-color: #0D5A6B;
+
+  /* ===== 语义补齐 ===== */
+  --gray-450: #8A9AA0;
+  --gray-350: #B8C8CD;
+  --activity-primary-mid: #2A7A89;
+  --text-gold: #B08840;
+
+  /* ===== 板块色（统一向青绿色温靠拢，降饱和） ===== */
+  --boarding-primary: #E07850;          /* 寄养 柔珊瑚 */
+  --boarding-secondary: #F09A78;
+  --boarding-accent: #FAD4C4;
+  --boarding-gradient: linear-gradient(135deg, #E07850 0%, #F09A78 100%);
+  --boarding-tint: rgba(224, 120, 80, 0.10);
+
+  --activity-primary: #2A7A89;           /* 活动 青绿 */
+  --activity-secondary: #7AB0BA;
+  --activity-accent: #DDEAED;
+  --activity-gradient: linear-gradient(135deg, #2A7A89 0%, #7AB0BA 100%);
+  --activity-tint: rgba(42, 122, 137, 0.10);
+
+  --mall-primary: #8B7BC8;              /* 商城 柔靛紫 */
+  --mall-secondary: #A99BD4;
+  --mall-accent: #E8E2F4;
+  --mall-gradient: linear-gradient(135deg, #8B7BC8 0%, #A99BD4 100%);
+  --mall-tint: rgba(139, 123, 200, 0.10);
+
+  --feeding-primary: #4AA8B8;           /* 服务 青绿 */
+  --feeding-secondary: #74C4D2;
+  --feeding-accent: #D4F0F4;
+  --feeding-gradient: linear-gradient(135deg, #4AA8B8 0%, #74C4D2 100%);
+  --feeding-tint: rgba(74, 168, 184, 0.10);
+
+  --tuan-primary: #D46B7A;               /* 团购 柔玫瑰 */
+  --tuan-secondary: #E094A0;
+  --tuan-accent: #F8DEE2;
+  --tuan-gradient: linear-gradient(135deg, #D46B7A 0%, #E094A0 100%);
+  --tuan-tint: rgba(212, 107, 122, 0.10);
+}
+
+/* ===== 暗色模式（手动切换 data-theme="dark"） ===== */
+[data-theme="dark"] {
+  --primary-color: #2A7A89;
+  --secondary-color: #4ECDC4;
+  --background-color: #0A1A1E;
+  --card-color: #152830;
+  --text-primary: #F4F9FA;
+  --text-secondary: #8A9AA0;
+  --text-tertiary: #5B6B70;
+  --border-color: #2A3F48;
+  --divider-color: #1A2A30;
+  --surface-tint: #152830;
+  --overlay-color: rgba(0, 0, 0, 0.7);
+}

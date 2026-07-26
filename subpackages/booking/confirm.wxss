@@ -130,7 +130,7 @@
 .info-item .label {
   font-size: 30rpx;
   font-weight: 500;
-  color: #666666;
+  color: var(--gray-700);
   letter-spacing: 1rpx;
 }
 
@@ -288,7 +288,7 @@
 
 .pet-details {
   font-size: 24rpx;
-  color: #666666;
+  color: var(--gray-700);
   font-weight: 400;
   letter-spacing: 1rpx;
   text-transform: uppercase;
@@ -382,7 +382,7 @@
 
 .price-label {
   font-size: 26rpx;
-  color: #666666;
+  color: var(--gray-700);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 2rpx;
@@ -411,7 +411,7 @@
   font-weight: 600;
   letter-spacing: 4rpx;
   background: linear-gradient(135deg, #ff9a9e, #fecfef, #a8edea, #fed6e3);
-  color: #ffffff;
+  color: var(--card-color);
   border-radius: 48rpx;
   display: flex;
   align-items: center;
@@ -476,7 +476,7 @@
 
 .loading-more-text {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 4rpx;
 }
 
@@ -647,7 +647,7 @@
 
 .service-tag {
   font-size: 22rpx;
-  color: #4ECDC4;
+  color: var(--activity-primary);
   background: rgba(78, 205, 196, 0.1);
   padding: 4rpx 12rpx;
   border-radius: 8rpx;
@@ -679,5 +679,5 @@
 
 .sub-value {
   font-size: 26rpx;
-  color: #666666;
+  color: var(--gray-700);
 }

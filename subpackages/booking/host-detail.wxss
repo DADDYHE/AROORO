@@ -38,7 +38,7 @@
 
 .loading-more-text {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 4rpx;
 }
 

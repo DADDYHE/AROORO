@@ -14,7 +14,7 @@
 
 .login-card {
   width: 600rpx;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   overflow: visible;
   position: relative;
@@ -24,7 +24,7 @@
 
 .card-top-bar {
   height: 3rpx;
-  background: linear-gradient(90deg, #4ECDC4 0%, #2AB7A9 50%, transparent 100%);
+  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-primary-mid) 50%, transparent 100%);
   border-radius: 24rpx 24rpx 0 0;
 }
 
@@ -44,7 +44,7 @@
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4ECDC4 0%, #45B7AA 100%);
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,13 +74,13 @@
 .card-title {
   font-size: 32rpx;
   font-weight: 700;
-  color: #1D1D1F;
+  color: var(--text-primary);
   text-align: center;
 }
 
 .card-subtitle {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   text-align: center;
   line-height: 1.5;
 }
@@ -89,7 +89,7 @@
   width: 100%;
   margin-top: 16rpx;
   padding: 24rpx 0;
-  background: linear-gradient(135deg, #4ECDC4 0%, #45B7AA 100%);
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   border-radius: 48rpx;
   box-shadow: 0 6rpx 16rpx rgba(78, 205, 196, 0.3);
   text-align: center;
@@ -102,7 +102,7 @@
 .btn-text {
   font-size: 28rpx;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--card-color);
 }
 
 .card-skip {
@@ -113,7 +113,7 @@
 
 .skip-text {
   font-size: 24rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
 }
 
 @keyframes fadeIn {

@@ -2,7 +2,7 @@
 
 .payment-page {
   min-height: 100vh;
-  background: #f5f5f7;
+  background: var(--background-color);
   padding-bottom: 100rpx;
 }
 
@@ -41,14 +41,14 @@
 .status-title {
   font-size: 36rpx;
   font-weight: 700;
-  color: #1d1d1f;
+  color: var(--text-primary);
   display: block;
   margin-bottom: 8rpx;
 }
 
 .status-subtitle {
   font-size: 26rpx;
-  color: #86868b;
+  color: var(--text-secondary);
   display: block;
 }
 
@@ -60,7 +60,7 @@
 .payment-title {
   font-size: 36rpx;
   font-weight: 700;
-  color: #1d1d1f;
+  color: var(--text-primary);
 }
 
 .order-card {
@@ -95,19 +95,19 @@
 .activity-name {
   font-size: 32rpx;
   font-weight: 600;
-  color: #1d1d1f;
+  color: var(--text-primary);
   margin-bottom: 8rpx;
 }
 
 .activity-time {
   font-size: 24rpx;
-  color: #86868b;
+  color: var(--text-secondary);
   margin-bottom: 4rpx;
 }
 
 .activity-location {
   font-size: 24rpx;
-  color: #86868b;
+  color: var(--text-secondary);
 }
 
 .order-details {
@@ -128,7 +128,7 @@
 
 .detail-value {
   font-size: 28rpx;
-  color: #1d1d1f;
+  color: var(--text-primary);
   font-weight: 500;
   max-width: 400rpx;
   text-align: right;
@@ -136,7 +136,7 @@
 }
 
 .detail-value.discount {
-  color: #4ECDC4;
+  color: var(--activity-primary);
 }
 
 .price-card {
@@ -168,16 +168,16 @@
 .price-value {
   font-size: 32rpx;
   font-weight: 600;
-  color: #1d1d1f;
+  color: var(--text-primary);
 }
 
 .price-value.discount {
-  color: #4ECDC4;
+  color: var(--activity-primary);
 }
 
 .price-value.final {
   font-size: 40rpx;
-  color: #4ECDC4;
+  color: var(--activity-primary);
 }
 
 .expired-tip {
@@ -209,7 +209,7 @@
 }
 
 .pay-btn {
-  background: linear-gradient(135deg, #4ECDC4 0%, #3db5ad 100%);
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   border: none;
   border-radius: 16rpx;
   padding: 24rpx 0;

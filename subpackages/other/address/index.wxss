@@ -1,10 +1,10 @@
 page {
-  background: #F5F5F7;
+  background: var(--background-color);
 }
 
 .page-container {
   min-height: 100vh;
-  background: #F5F5F7;
+  background: var(--background-color);
   padding-bottom: 180rpx;
   display: flex;
   flex-direction: column;
@@ -16,7 +16,7 @@ page {
 }
 
 .address-item {
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   padding: 32rpx;
   margin-bottom: 20rpx;
@@ -43,13 +43,13 @@ page {
   left: 0;
   right: 0;
   height: 3rpx;
-  background: linear-gradient(90deg, #9C27B0 0%, #7B1FA2 50%, transparent 100%);
+  background: linear-gradient(90deg, var(--mall-primary) 0%, var(--mall-secondary) 50%, transparent 100%);
   border-radius: 24rpx 24rpx 0 0;
 }
 
 .address-item-selected {
-  border-color: #9C27B0;
-  background: linear-gradient(135deg, rgba(156, 39, 176, 0.02) 0%, #FFFFFF 100%);
+  border-color: var(--mall-primary);
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.02) 0%, var(--card-color) 100%);
 }
 
 .address-header {
@@ -61,22 +61,22 @@ page {
 .address-name {
   font-size: 30rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   margin-right: 16rpx;
 }
 
 .address-phone {
   font-size: 26rpx;
   font-weight: 500;
-  color: #86868B;
+  color: var(--text-secondary);
   margin-right: 16rpx;
 }
 
 .address-default {
   font-size: 20rpx;
   font-weight: 600;
-  color: #FFFFFF;
-  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+  color: var(--card-color);
+  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
   padding: 6rpx 16rpx;
   border-radius: 20rpx;
   letter-spacing: 1rpx;
@@ -85,7 +85,7 @@ page {
 .address-detail {
   font-size: 26rpx;
   font-weight: 400;
-  color: #86868B;
+  color: var(--text-secondary);
   line-height: 1.5;
   margin-bottom: 20rpx;
 }
@@ -94,7 +94,7 @@ page {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  border-top: 1rpx solid #F2F2F7;
+  border-top: 1rpx solid var(--divider-color);
   padding-top: 16rpx;
   gap: 0;
 }
@@ -102,33 +102,33 @@ page {
 .address-action-edit {
   font-size: 24rpx;
   font-weight: 500;
-  color: #86868B;
+  color: var(--text-secondary);
   margin-right: 32rpx;
   padding: 4rpx 0;
   transition: color 0.2s ease;
 }
 
 .address-action-edit:active {
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .address-action-set-default {
   font-size: 24rpx;
   font-weight: 600;
-  color: #9C27B0;
+  color: var(--mall-primary);
   margin-right: 32rpx;
   padding: 4rpx 0;
   transition: color 0.2s ease;
 }
 
 .address-action-set-default:active {
-  color: #7B1FA2;
+  color: var(--mall-secondary);
 }
 
 .address-action-delete {
   font-size: 24rpx;
   font-weight: 500;
-  color: #FF3B30;
+  color: var(--error-color);
   padding: 4rpx 0;
   transition: color 0.2s ease;
 }
@@ -143,7 +143,7 @@ page {
   align-items: center;
   justify-content: center;
   height: 400rpx;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
 }
@@ -157,7 +157,7 @@ page {
 .address-empty-text {
   font-size: 28rpx;
   font-weight: 500;
-  color: #86868B;
+  color: var(--text-secondary);
   letter-spacing: 2rpx;
 }
 
@@ -178,8 +178,8 @@ page {
 .add-btn {
   width: 100%;
   height: 88rpx;
-  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
+  color: var(--card-color);
   font-size: 30rpx;
   font-weight: 600;
   border-radius: 24rpx;
@@ -226,7 +226,7 @@ page {
 
 .address-popup-content {
   width: 100%;
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 30rpx 30rpx 0 0;
   padding: 32rpx;
   box-sizing: border-box;
@@ -255,7 +255,7 @@ page {
   left: 0;
   right: 0;
   height: 3rpx;
-  background: linear-gradient(90deg, #9C27B0 0%, #7B1FA2 50%, transparent 100%);
+  background: linear-gradient(90deg, var(--mall-primary) 0%, var(--mall-secondary) 50%, transparent 100%);
   border-radius: 30rpx 30rpx 0 0;
 }
 
@@ -269,14 +269,14 @@ page {
 .address-popup-title {
   font-size: 34rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 1rpx;
 }
 
 .address-popup-close {
   font-size: 40rpx;
   font-weight: 600;
-  color: #86868B;
+  color: var(--text-secondary);
   width: 60rpx;
   height: 60rpx;
   display: flex;
@@ -287,8 +287,8 @@ page {
 }
 
 .address-popup-close:active {
-  background: #F2F2F7;
-  color: #1D1D1F;
+  background: var(--divider-color);
+  color: var(--text-primary);
 }
 
 .address-popup-form {
@@ -305,7 +305,7 @@ page {
   width: 140rpx;
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   padding-top: 20rpx;
   flex-shrink: 0;
   letter-spacing: 1rpx;
@@ -316,19 +316,19 @@ page {
   height: 80rpx;
   font-size: 26rpx;
   font-weight: 400;
-  color: #1D1D1F;
-  border: 1rpx solid #F2F2F7;
+  color: var(--text-primary);
+  border: 1rpx solid var(--divider-color);
   border-radius: 16rpx;
   padding: 0 20rpx;
   box-sizing: border-box;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #FAFAFA;
+  background: var(--surface-tint);
 }
 
 .form-input:focus {
-  border-color: #9C27B0;
+  border-color: var(--mall-primary);
   box-shadow: 0 0 0 4rpx rgba(156, 39, 176, 0.08);
-  background: #FFFFFF;
+  background: var(--card-color);
 }
 
 .form-region-picker-wrapper {
@@ -341,12 +341,12 @@ page {
   line-height: 80rpx;
   font-size: 26rpx;
   font-weight: 400;
-  color: #1D1D1F;
-  border: 1rpx solid #F2F2F7;
+  color: var(--text-primary);
+  border: 1rpx solid var(--divider-color);
   border-radius: 16rpx;
   padding: 0 20rpx;
   box-sizing: border-box;
-  background: #FAFAFA;
+  background: var(--surface-tint);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -354,12 +354,12 @@ page {
 }
 
 .form-region-picker:active {
-  border-color: #9C27B0;
-  background: #FFFFFF;
+  border-color: var(--mall-primary);
+  background: var(--card-color);
 }
 
 .form-region-picker.placeholder {
-  color: #C7C7CC;
+  color: var(--text-tertiary);
 }
 
 .form-textarea {
@@ -367,20 +367,20 @@ page {
   min-height: 140rpx;
   font-size: 26rpx;
   font-weight: 400;
-  color: #1D1D1F;
-  border: 1rpx solid #F2F2F7;
+  color: var(--text-primary);
+  border: 1rpx solid var(--divider-color);
   border-radius: 16rpx;
   padding: 20rpx;
   box-sizing: border-box;
   line-height: 1.5;
-  background: #FAFAFA;
+  background: var(--surface-tint);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-textarea:focus {
-  border-color: #9C27B0;
+  border-color: var(--mall-primary);
   box-shadow: 0 0 0 4rpx rgba(156, 39, 176, 0.08);
-  background: #FFFFFF;
+  background: var(--card-color);
 }
 
 .form-switch {
@@ -393,7 +393,7 @@ page {
   align-items: center;
   gap: 20rpx;
   padding-top: 24rpx;
-  border-top: 1rpx solid #F2F2F7;
+  border-top: 1rpx solid var(--divider-color);
 }
 
 .address-popup-button {
@@ -413,18 +413,18 @@ page {
 }
 
 .address-popup-button-cancel {
-  background: #F2F2F7;
-  color: #86868B;
+  background: var(--divider-color);
+  color: var(--text-secondary);
   border: none;
 }
 
 .address-popup-button-cancel:active {
-  background: #E5E5EA;
+  background: var(--gray-200);
 }
 
 .address-popup-button-save {
-  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
+  color: var(--card-color);
   border: none;
   box-shadow: 0 6rpx 16rpx rgba(156, 39, 176, 0.3);
 }

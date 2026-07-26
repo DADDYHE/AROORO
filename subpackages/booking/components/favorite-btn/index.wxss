@@ -81,7 +81,7 @@
   width: 8rpx;
   height: 8rpx;
   border-radius: 50%;
-  background: #4ECDC4;
+  background: var(--activity-primary);
   animation: dotBounce 1.4s ease-in-out infinite;
 }
 

@@ -1,5 +1,8 @@
 /* 导入设计系统变量 */
 @import './styles/variables.wxss';
+@import './styles/design-tokens.wxss';
+@import './styles/theme-teal.wxss';
+@import './styles/components.wxss';
 
 /* 全局样式 - 苹果风格美学增强版 */
 page {
@@ -471,5 +474,29 @@ h1, h2, h3, h4, h5, h6 {
   .card {
     padding: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
+  }
+}
+
+/* 无障碍：尊重「减少动态效果」系统偏好（2026-07-26 评审 P2-7）
+   注意：WXSS 编译器（lib 3.14.3）不接受裸 `*` 通用选择器，改用标签选择器列表覆盖常规元素及其伪元素。 */
+@media (prefers-reduced-motion: reduce) {
+  page,
+  view,
+  text,
+  image,
+  button,
+  navigator,
+  scroll-view,
+  swiper,
+  input,
+  textarea,
+  page::before,
+  page::after,
+  view::before,
+  view::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

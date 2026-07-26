@@ -41,7 +41,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
   z-index: -1;
 }
 
@@ -178,7 +178,7 @@
   left: 0;
   width: 100%;
   height: 4rpx;
-  background: linear-gradient(90deg, #4ECDC4, #26A69A);
+  background: linear-gradient(90deg, var(--activity-primary), var(--activity-secondary));
 }
 
 .section-title {
@@ -197,7 +197,7 @@
   left: 0;
   width: 60rpx;
   height: 4rpx;
-  background: linear-gradient(90deg, #4ECDC4, #26A69A);
+  background: linear-gradient(90deg, var(--activity-primary), var(--activity-secondary));
   border-radius: 2rpx;
 }
 
@@ -217,7 +217,7 @@
 }
 
 .add-more-pet-btn {
-  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
   color: white;
   border: none;
   padding: 20rpx 48rpx;
@@ -245,7 +245,7 @@
 }
 
 .quick-select-btn {
-  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
   color: white;
   border: none;
   padding: 20rpx 48rpx;
@@ -354,7 +354,7 @@
 
 .add-pet-btn {
   margin-top: 24rpx;
-  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
   color: white;
   border: none;
   padding: 20rpx 48rpx;
@@ -397,7 +397,7 @@
   width: 80rpx;
   height: 80rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -489,7 +489,7 @@
   left: 0;
   width: 80rpx;
   height: 3rpx;
-  background: linear-gradient(90deg, #4ECDC4, #26A69A);
+  background: linear-gradient(90deg, var(--activity-primary), var(--activity-secondary));
   border-radius: 2rpx;
 }
 
@@ -545,7 +545,7 @@
   padding: 28rpx 32rpx;
   border: none;
   font-size: 28rpx;
-  background-color: #f9f9f9;
+  background-color: var(--gray-50);
   z-index: 2;
   position: relative;
   transition: all 0.3s ease;
@@ -591,7 +591,7 @@
   padding: 28rpx 32rpx;
   border: none;
   font-size: 28rpx;
-  background-color: #f9f9f9;
+  background-color: var(--gray-50);
   z-index: 2;
   position: relative;
   transition: all 0.3s ease;
@@ -628,8 +628,8 @@
 }
 
 .gender-option.active {
-  border-color: #4ECDC4;
-  color: #4ECDC4;
+  border-color: var(--activity-primary);
+  color: var(--activity-primary);
   box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.2);
 }
 
@@ -653,7 +653,7 @@
 }
 
 .add-friend-btn {
-  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
   color: white;
   border: none;
   padding: 20rpx 48rpx;
@@ -744,7 +744,7 @@
   padding: 6rpx 12rpx;
   border-radius: 12rpx;
   background-color: rgba(78, 205, 196, 0.1);
-  color: #4ECDC4;
+  color: var(--activity-primary);
   font-weight: 500;
   flex-shrink: 0;
 }
@@ -810,8 +810,8 @@
 }
 
 .edit-btn {
-  color: #4ECDC4;
-  border-color: #4ECDC4;
+  color: var(--activity-primary);
+  border-color: var(--activity-primary);
   background-color: rgba(78, 205, 196, 0.05);
 }
 
@@ -861,7 +861,7 @@
 
 .submit-btn {
   position: relative;
-  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
   color: white;
   border: none;
   padding: 24rpx;
@@ -996,7 +996,7 @@
 .coupon-discount { font-size: 32rpx; color: #f5222d; font-weight: 700; }
 .remove-coupon { font-size: 28rpx; color: #ccc; padding: 8rpx; }
 .coupon-list { margin-top: 12rpx; }
-.coupon-item { display: flex; align-items: center; padding: 16rpx 12rpx; background: #fafafa; border-radius: 10rpx; margin-bottom: 12rpx; }
+.coupon-item { display: flex; align-items: center; padding: 16rpx 12rpx; background: var(--surface-tint); border-radius: 10rpx; margin-bottom: 12rpx; }
 .coupon-item-left { width: 120rpx; text-align: center; color: #f5222d; font-size: 22rpx; }
 .coupon-item-left .big { font-size: 40rpx; font-weight: 700; }
 .coupon-item-right { flex: 1; margin-left: 12rpx; }
@@ -1021,7 +1021,7 @@
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4ECDC4, #26A69A);
+  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1085,7 +1085,7 @@
   align-items: center;
   padding: 16rpx 0 0;
   margin-top: 8rpx;
-  border-top: 2rpx solid #4ECDC4;
+  border-top: 2rpx solid var(--activity-primary);
 }
 
 .fee-detail-total .fee-detail-label {

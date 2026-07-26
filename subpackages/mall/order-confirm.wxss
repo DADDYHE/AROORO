@@ -2,17 +2,17 @@
 
 @import '../../styles/components.wxss';
 page {
-  background: #F5F5F7;
+  background: var(--background-color);
 }
 .page-container {
   min-height: 100vh;
-  background: #F5F5F7;
+  background: var(--background-color);
   padding-bottom: 160rpx;
 }
 
 /* ── 通用卡片 ── */
 .info-card {
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   padding: 32rpx;
   margin-bottom: 24rpx;
@@ -29,7 +29,7 @@ page {
   left: 0;
   right: 0;
   height: 3rpx;
-  background: linear-gradient(90deg, #9C27B0 0%, #7B1FA2 50%, transparent 100%);
+  background: linear-gradient(90deg, var(--mall-primary) 0%, var(--mall-secondary) 50%, transparent 100%);
   border-radius: 24rpx 24rpx 0 0;
 }
 
@@ -74,23 +74,23 @@ page {
 .address-name {
   font-size: 30rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
 }
 
 .address-phone {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .address-text {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
 .address-arrow {
   font-size: 36rpx;
-  color: #C7C7CC;
+  color: var(--text-tertiary);
   margin-left: 16rpx;
   flex-shrink: 0;
 }
@@ -103,7 +103,7 @@ page {
 
 .address-empty-text {
   font-size: 28rpx;
-  color: #9C27B0;
+  color: var(--mall-primary);
   font-weight: 500;
 }
 
@@ -121,14 +121,14 @@ page {
 
 .product-row + .product-row {
   padding-top: 20rpx;
-  border-top: 1rpx solid #F2F2F7;
+  border-top: 1rpx solid var(--divider-color);
 }
 
 .product-img {
   width: 160rpx;
   height: 160rpx;
   border-radius: 16rpx;
-  background: #E5E5EA;
+  background: var(--gray-200);
   flex-shrink: 0;
 }
 
@@ -143,7 +143,7 @@ page {
 .product-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -153,7 +153,7 @@ page {
 
 .product-sku {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   margin-top: 4rpx;
 }
 
@@ -166,12 +166,12 @@ page {
 .product-price {
   font-size: 32rpx;
   font-weight: 700;
-  color: #9C27B0;
+  color: var(--mall-primary);
 }
 
 .product-qty {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 /* ── 数量选择器 ── */
@@ -180,12 +180,12 @@ page {
   align-items: center;
   justify-content: space-between;
   padding-top: 20rpx;
-  border-top: 1rpx solid #F2F2F7;
+  border-top: 1rpx solid var(--divider-color);
 }
 
 .quantity-label {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -205,8 +205,8 @@ page {
   align-items: center;
   justify-content: center;
   font-size: 32rpx;
-  color: #1D1D1F;
-  background: #FAFAFA;
+  color: var(--text-primary);
+  background: var(--surface-tint);
   transition: all 0.2s ease;
 }
 
@@ -215,7 +215,7 @@ page {
 }
 
 .stepper-btn.disabled {
-  color: #C7C7CC;
+  color: var(--text-tertiary);
 }
 
 .stepper-input {
@@ -224,7 +224,7 @@ page {
   text-align: center;
   font-size: 26rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   border-left: 1rpx solid rgba(134, 134, 139, 0.2);
   border-right: 1rpx solid rgba(134, 134, 139, 0.2);
 }
@@ -234,12 +234,12 @@ page {
   display: flex;
   align-items: center;
   padding-top: 20rpx;
-  border-top: 1rpx solid #F2F2F7;
+  border-top: 1rpx solid var(--divider-color);
 }
 
 .remark-label {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
   width: 80rpx;
   flex-shrink: 0;
@@ -248,7 +248,7 @@ page {
 .remark-input {
   flex: 1;
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   text-align: right;
 }
 
@@ -263,7 +263,7 @@ page {
 .section-label {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 1rpx;
 }
 
@@ -275,13 +275,13 @@ page {
 
 .coupon-hint {
   font-size: 24rpx;
-  color: #9C27B0;
+  color: var(--mall-primary);
   font-weight: 500;
 }
 
 .section-arrow {
   font-size: 20rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 /* ── 优惠券 ── */
@@ -303,19 +303,19 @@ page {
 
 .coupon-name {
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .coupon-desc {
   font-size: 28rpx;
-  color: #9C27B0;
+  color: var(--mall-primary);
   font-weight: 700;
 }
 
 .remove-coupon {
   font-size: 28rpx;
-  color: #C7C7CC;
+  color: var(--text-tertiary);
   padding: 8rpx 16rpx;
 }
 
@@ -327,7 +327,7 @@ page {
   display: flex;
   align-items: center;
   padding: 20rpx 16rpx;
-  background: linear-gradient(135deg, #FFFFFF 0%, #FAFAFA 100%);
+  background: linear-gradient(135deg, var(--card-color) 0%, var(--surface-tint) 100%);
   border-radius: 16rpx;
   margin-bottom: 12rpx;
   border: 1rpx solid rgba(134, 134, 139, 0.1);
@@ -344,7 +344,7 @@ page {
   display: flex;
   align-items: baseline;
   justify-content: center;
-  color: #9C27B0;
+  color: var(--mall-primary);
   flex-shrink: 0;
 }
 
@@ -368,23 +368,23 @@ page {
 
 .coupon-item-name {
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .coupon-item-rule {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .coupon-item-time {
   font-size: 20rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
 }
 
 .coupon-item-check {
   font-size: 28rpx;
-  color: #9C27B0;
+  color: var(--mall-primary);
   font-weight: 700;
   padding: 8rpx;
   flex-shrink: 0;
@@ -393,7 +393,7 @@ page {
 .no-data {
   text-align: center;
   padding: 32rpx;
-  color: #AEAEB2;
+  color: var(--gray-500);
   font-size: 26rpx;
 }
 
@@ -407,35 +407,35 @@ page {
 
 .price-label {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .price-value {
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .price-label.discount,
 .price-value.discount {
-  color: #9C27B0;
+  color: var(--mall-primary);
 }
 
 .price-row.final {
   padding-top: 20rpx;
   margin-top: 8rpx;
-  border-top: 1rpx solid #F2F2F7;
+  border-top: 1rpx solid var(--divider-color);
 }
 
 .price-label.final {
   font-size: 28rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .price-value.final {
   font-size: 36rpx;
-  color: #9C27B0;
+  color: var(--mall-primary);
   font-weight: 700;
 }
 
@@ -465,23 +465,23 @@ page {
 
 .bottom-total-label {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .bottom-total-price {
   font-size: 40rpx;
   font-weight: 700;
-  color: #9C27B0;
+  color: var(--mall-primary);
 }
 
 .submit-btn {
   padding: 22rpx 64rpx;
-  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
   border-radius: 48rpx;
   text-align: center;
   font-size: 28rpx;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--card-color);
   letter-spacing: 2rpx;
   box-shadow: 0 6rpx 16rpx rgba(156, 39, 176, 0.3);
   transition: all 0.3s ease;
@@ -513,30 +513,30 @@ page {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #F5F5F7;
+  background: var(--background-color);
   padding: 0 40rpx;
 }
 
 .error-icon {
   font-size: 80rpx;
   margin-bottom: 24rpx;
-  color: #C7C7CC;
+  color: var(--text-tertiary);
 }
 
 .error-text {
   font-size: 28rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   text-align: center;
   margin-bottom: 40rpx;
 }
 
 .retry-btn {
   padding: 18rpx 56rpx;
-  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
   border-radius: 48rpx;
   font-size: 24rpx;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--card-color);
   letter-spacing: 2rpx;
   box-shadow: 0 6rpx 16rpx rgba(156, 39, 176, 0.3);
 }

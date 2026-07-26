@@ -6,7 +6,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
 }
 
 .card-body {
@@ -23,13 +23,13 @@
 
 .info-key {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 2rpx;
 }
 
 .info-val {
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   text-align: right;
   max-width: 400rpx;
   overflow: hidden;
@@ -39,7 +39,7 @@
 
 .info-divider {
   height: 1rpx;
-  background: #F2F2F7;
+  background: var(--divider-color);
   margin: 4rpx 0;
 }
 
@@ -52,25 +52,25 @@
 
 .tag-active {
   background: rgba(78, 205, 196, 0.12);
-  color: #2AB7A9;
+  color: var(--activity-primary-mid);
 }
 
 .tag-inactive {
-  background: #F2F2F7;
-  color: #8E8E93;
+  background: var(--divider-color);
+  color: var(--text-secondary);
 }
 
 .pending-title {
   font-size: 32rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
   display: block;
   margin-bottom: 12rpx;
 }
 
 .pending-desc {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   display: block;
 }
 
@@ -78,8 +78,8 @@
   margin-top: 16rpx;
   padding: 12rpx 32rpx;
   font-size: 24rpx;
-  color: #FFFFFF;
-  background: #4ECDC4;
+  color: var(--card-color);
+  background: var(--activity-primary);
   border-radius: 32rpx;
   border: none;
   line-height: normal;
@@ -99,12 +99,12 @@
 .entrance-line {
   width: 40rpx;
   height: 2rpx;
-  background: #C7C7CC;
+  background: var(--text-tertiary);
 }
 
 .entrance-label {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 8rpx;
 }
 
@@ -118,7 +118,7 @@
 .card-title {
   font-size: 30rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -136,27 +136,27 @@
 
 .status-pending {
   background: rgba(255, 149, 0, 0.12);
-  color: #FF9500;
+  color: var(--warning-color);
 }
 
 .status-confirmed {
   background: rgba(0, 122, 255, 0.12);
-  color: #007AFF;
+  color: var(--info-color);
 }
 
 .status-checked_in {
   background: rgba(78, 205, 196, 0.12);
-  color: #2AB7A9;
+  color: var(--activity-primary-mid);
 }
 
 .status-completed {
   background: rgba(52, 199, 89, 0.12);
-  color: #34C759;
+  color: var(--success-color);
 }
 
 .status-cancelled {
   background: rgba(255, 59, 48, 0.12);
-  color: #FF3B30;
+  color: var(--error-color);
 }
 
 .card-info {
@@ -167,17 +167,17 @@
 
 .card-info-item {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 .empty-line {
   width: 60rpx;
   height: 2rpx;
-  background: #C7C7CC;
+  background: var(--text-tertiary);
   margin-bottom: 24rpx;
 }
 
 .empty-text {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 4rpx;
 }

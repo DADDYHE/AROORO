@@ -101,11 +101,11 @@
 }
 
 .price-paid {
-  color: #FF6B00;
+  color: var(--boarding-primary);
 }
 
 .price-free {
-  color: #4ECDC4;
+  color: var(--activity-primary);
 }
 
 .activity-time-row,

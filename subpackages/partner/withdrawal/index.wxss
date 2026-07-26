@@ -1,12 +1,12 @@
 @import '../common.wxss';
 .page-container {
   min-height: 100vh;
-  background-color: #F5F5F7;
+  background-color: var(--background-color);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 .page-header {
-  background: #FFFFFF;
+  background: var(--card-color);
   padding-bottom: 20rpx;
   animation: fadeUp 0.6s ease-out;
   position: relative;
@@ -18,7 +18,7 @@
 }
 
 .record-card {
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   padding: 32rpx 36rpx;
   margin-bottom: 20rpx;
@@ -51,12 +51,12 @@
 
 .record-time {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }
 
 .record-reason {
   font-size: 22rpx;
-  color: #FF3B30;
+  color: var(--error-color);
 }
 
 .empty-container {
@@ -68,7 +68,7 @@
 
 .empty-text {
   font-size: 26rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 4rpx;
 }
 .loading-more {
@@ -78,5 +78,5 @@
 
 .loading-more-text {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
 }

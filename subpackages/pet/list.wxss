@@ -11,13 +11,13 @@
 .entrance-line {
   width: 32rpx;
   height: 4rpx;
-  background: linear-gradient(90deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   border-radius: 2rpx;
 }
 
 .entrance-label {
   font-size: 26rpx;
-  color: #1D1D1F;
+  color: var(--text-primary);
   font-weight: 600;
   letter-spacing: 4rpx;
   flex: 1;
@@ -25,10 +25,10 @@
 
 .entrance-action {
   font-size: 24rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 2rpx;
   padding: 8rpx 20rpx;
-  border: 1rpx solid #E5E5EA;
+  border: 1rpx solid var(--gray-200);
   border-radius: 8rpx;
   transition: all 0.3s ease;
 }
@@ -38,8 +38,8 @@
 }
 
 .entrance-action--cancel {
-  color: #8E8E93;
-  border-color: #E5E5EA;
+  color: var(--text-secondary);
+  border-color: var(--gray-200);
 }
 
 .entrance-action--delete {
@@ -59,7 +59,7 @@
 
 .card-accent {
   width: 4rpx;
-  background: linear-gradient(180deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   flex-shrink: 0;
 }
 
@@ -84,7 +84,7 @@
   left: 36rpx;
   right: 36rpx;
   height: 1rpx;
-  background: #F2F2F7;
+  background: var(--divider-color);
 }
 
 .pet-item:active {
@@ -100,7 +100,7 @@
   height: 96rpx;
   border-radius: 16rpx;
   overflow: hidden;
-  background: #F5F5F7;
+  background: var(--background-color);
   flex-shrink: 0;
   margin-right: 28rpx;
   border: 1rpx solid rgba(134, 134, 139, 0.1);
@@ -120,7 +120,7 @@
 .pet-name {
   font-size: 30rpx;
   font-weight: 500;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 2rpx;
   margin-bottom: 8rpx;
   display: block;
@@ -138,16 +138,16 @@
 
 .pet-meta-tag {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 1rpx;
-  background: #F5F5F7;
+  background: var(--background-color);
   padding: 4rpx 12rpx;
   border-radius: 6rpx;
 }
 
 .pet-meta-tag--light {
   background: transparent;
-  color: #C7C7CC;
+  color: var(--text-tertiary);
 }
 
 .pet-arrow {
@@ -163,7 +163,7 @@
 .arrow-line {
   width: 20rpx;
   height: 2rpx;
-  background: #C7C7CC;
+  background: var(--text-tertiary);
   position: relative;
 }
 
@@ -174,7 +174,7 @@
   right: 0;
   width: 10rpx;
   height: 2rpx;
-  background: #C7C7CC;
+  background: var(--text-tertiary);
   transform: rotate(45deg);
   transform-origin: right center;
 }
@@ -186,7 +186,7 @@
   right: 0;
   width: 10rpx;
   height: 2rpx;
-  background: #C7C7CC;
+  background: var(--text-tertiary);
   transform: rotate(-45deg);
   transform-origin: right center;
 }
@@ -206,7 +206,7 @@
   height: 40rpx;
   border-radius: 50%;
   border: 2rpx solid #D1D1D6;
-  background: #FFFFFF;
+  background: var(--card-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,15 +214,15 @@
 }
 
 .selector-circle--active {
-  background: #4ECDC4;
-  border-color: #4ECDC4;
+  background: var(--activity-primary);
+  border-color: var(--activity-primary);
 }
 
 .selector-check {
   width: 16rpx;
   height: 10rpx;
-  border-left: 3rpx solid #FFFFFF;
-  border-bottom: 3rpx solid #FFFFFF;
+  border-left: 3rpx solid var(--card-color);
+  border-bottom: 3rpx solid var(--card-color);
   transform: rotate(-45deg);
   margin-top: -3rpx;
 }
@@ -231,7 +231,7 @@
   width: 240rpx;
   height: 240rpx;
   position: relative;
-  background: #FAFAFA;
+  background: var(--surface-tint);
   border-radius: 24rpx;
   border: 1rpx solid rgba(134, 134, 139, 0.1);
   margin-bottom: 32rpx;
@@ -261,7 +261,7 @@
   position: absolute;
   width: 32rpx;
   height: 32rpx;
-  border-color: #C7C7CC;
+  border-color: var(--text-tertiary);
   border-style: solid;
   border-width: 0;
 }
@@ -307,7 +307,7 @@
 
 .empty-hint {
   font-size: 24rpx;
-  color: #C7C7CC;
+  color: var(--text-tertiary);
   letter-spacing: 2rpx;
 }
 
@@ -326,8 +326,8 @@
 }
 
 .action-active {
-  background: linear-gradient(135deg, #4ECDC4 0%, #2AB7A9 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  color: var(--card-color);
   box-shadow: 0 6rpx 20rpx rgba(78, 205, 196, 0.3);
 }
 

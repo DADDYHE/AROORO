@@ -67,15 +67,15 @@
         <view class="card-body">
           <view class="wallet-row">
             <view class="wallet-stat">
-              <text class="wallet-value">¥{{wallet.balance}}</text>
+              <text class="wallet-value">¥{{walletBalanceText}}</text>
               <text class="wallet-label">可提现</text>
             </view>
             <view class="wallet-stat">
-              <text class="wallet-value">¥{{wallet.totalIncome}}</text>
+              <text class="wallet-value">¥{{walletCardTotalIncome}}</text>
               <text class="wallet-label">总收入</text>
             </view>
             <view class="wallet-stat">
-              <text class="wallet-value">¥{{wallet.totalWithdrawn}}</text>
+              <text class="wallet-value">¥{{walletTotalWithdrawnText}}</text>
               <text class="wallet-label">已提现</text>
             </view>
           </view>
@@ -127,6 +127,10 @@
             <view class="detail-left">
               <text class="detail-type">{{item.typeName || (item.type === 'tuan' ? '团购' : (item.type === 'mall' ? '商城' : (item.type === 'activity' ? '活动' : (item.type === 'hosting' ? '寄养' : '服务'))))}}</text>
               <text class="detail-desc">{{item.description}}</text>
+              <view wx:if="{{item.buyerNickName}}" class="detail-buyer">
+                <image wx:if="{{item.buyerAvatarUrl}}" class="detail-buyer-avatar" src="{{item.buyerAvatarUrl}}" mode="aspectFill" />
+                <text class="detail-buyer-name">{{item.buyerNickName}}</text>
+              </view>
             </view>
             <text class="detail-amount">+¥{{item.amount}}</text>
           </view>

@@ -2,7 +2,7 @@
 
 .gallery-container {
   min-height: 100vh;
-  background-color: #F5F5F7;
+  background-color: var(--background-color);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -10,7 +10,7 @@
   padding: 0;
   position: relative;
   overflow: hidden;
-  background: #FFFFFF;
+  background: var(--card-color);
   animation: fadeUp 0.6s ease-out;
   padding-bottom: 20rpx;
 }
@@ -37,7 +37,7 @@
   left: 48rpx;
   width: 48rpx;
   height: 6rpx;
-  background: linear-gradient(90deg, #4ECDC4 0%, #2AB7A9 100%);
+  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   border-radius: 0 0 4rpx 4rpx;
   animation: slideDown 0.5s ease-out;
 }
@@ -50,7 +50,7 @@
 .brand-text {
   font-size: 64rpx;
   font-weight: 300;
-  color: #1D1D1F;
+  color: var(--text-primary);
   letter-spacing: 12rpx;
   display: block;
   line-height: 1;
@@ -65,7 +65,7 @@
 .brand-meta-line {
   width: 40rpx;
   height: 2rpx;
-  background: #E5E5EA;
+  background: var(--gray-200);
   position: relative;
 }
 
@@ -78,12 +78,12 @@
   width: 6rpx;
   height: 6rpx;
   border-radius: 50%;
-  background: #4ECDC4;
+  background: var(--activity-primary);
 }
 
 .brand-subtitle {
   font-size: 22rpx;
-  color: #8E8E93;
+  color: var(--text-secondary);
   letter-spacing: 8rpx;
   font-weight: 400;
 }
@@ -94,7 +94,7 @@
 }
 
 .gallery-card {
-  background: #FFFFFF;
+  background: var(--card-color);
   border-radius: 24rpx;
   overflow: hidden;
   margin-bottom: 24rpx;

@@ -11,45 +11,35 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "AROORO",
+    "navigationBarTitleText": "左右",
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
     "custom": true,
     "color": "#666666",
-    "selectedColor": "#FF6B00",
+    "selectedColor": "#0D5A6B",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/home/index",
-        "text": "首页",
-        "iconPath": "images/tabBar/home_normal.png",
-        "selectedIconPath": "images/tabBar/home_white.png"
+        "text": "首页"
       },
       {
         "pagePath": "pages/quick-register/index",
-        "text": "一键报名",
-        "iconPath": "images/tabBar/booking_normal.png",
-        "selectedIconPath": "images/tabBar/booking_white.png"
+        "text": "一键报名"
       },
       {
         "pagePath": "pages/discover/index",
-        "text": "宠团团",
-        "iconPath": "images/tabBar/booking_normal.png",
-        "selectedIconPath": "images/tabBar/booking_white.png"
+        "text": "宠团团"
       },
       {
         "pagePath": "pages/service/index",
-        "text": "宠物服务",
-        "iconPath": "images/tabBar/messages_normal.png",
-        "selectedIconPath": "images/tabBar/messages_white.png"
+        "text": "宠物服务"
       },
       {
         "pagePath": "pages/profile/index",
-        "text": "我的",
-        "iconPath": "images/tabBar/profile_normal.png",
-        "selectedIconPath": "images/tabBar/profile_white.png"
+        "text": "我的"
       }
     ]
   },

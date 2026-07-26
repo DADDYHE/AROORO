@@ -9,7 +9,7 @@
 /* 功能按钮 */
 .function-tabs {
   display: flex;
-  background-color: #ffffff;
+  background-color: var(--card-color);
   border-bottom: 1rpx solid #e9ecef;
   position: relative;
   z-index: 99;
@@ -30,7 +30,7 @@
 }
 
 .tab-button.active {
-  color: #FF6B00;
+  color: var(--boarding-primary);
   font-weight: 600;
 }
 
@@ -42,7 +42,7 @@
   transform: translateX(-50%);
   width: 60rpx;
   height: 6rpx;
-  background-color: #FF6B00;
+  background-color: var(--boarding-primary);
   border-radius: 3rpx;
   transition: all 0.3s ease;
   box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.3);
@@ -92,7 +92,7 @@
 
 /* 视频数量指示器 */
 .video-count-indicator {
-  color: #FF6B00;
+  color: var(--boarding-primary);
   font-size: 28rpx;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -120,7 +120,7 @@
 }
 
 .video-swiper ::deep .wx-swiper-dot-active {
-  background-color: #FF6B00;
+  background-color: var(--boarding-primary);
   width: 12rpx;
   border-radius: 3rpx;
 }
@@ -182,7 +182,7 @@
   transform: translate(-50%, -50%);
   width: 16rpx;
   height: 16rpx;
-  background-color: #FF6B00;
+  background-color: var(--boarding-primary);
   border-radius: 50%;
   box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.5);
   transition: all 0.2s ease;
@@ -191,7 +191,7 @@
 /* 进度条填充 */
 .progress-track {
   height: 100%;
-  background-color: #FF6B00;
+  background-color: var(--boarding-primary);
   border-radius: 2rpx;
   transition: width 0.3s ease;
   position: absolute;
@@ -301,7 +301,7 @@
 .grid-item {
   width: 100%;
   height: 100%;
-  background-color: #FF6B00;
+  background-color: var(--boarding-primary);
   border-radius: 2rpx;
 }
 
@@ -330,7 +330,7 @@
   transform: translateX(-50%);
   width: 6rpx;
   height: 20rpx;
-  background-color: #FF6B00;
+  background-color: var(--boarding-primary);
   border-radius: 3rpx;
   animation: scrollAnimation 1.5s infinite;
 }

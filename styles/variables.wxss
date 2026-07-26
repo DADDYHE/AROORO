@@ -68,6 +68,19 @@ page {
   --feeding-secondary: #1976D2;   /* 深蓝色 */
   --feeding-accent: #BBDEFB;       /* 浅蓝色 */
   --feeding-gradient: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+
+  /* 团购板块（2026-07-26 评审补齐：原缺失 token，页面硬编码 #FF6B6B 且与寄养橙 #FF6B00 撞色，故拉开色值） */
+  --tuan-primary: #FF6F91;        /* 暖玫瑰 - 与寄养橙区分 */
+  --tuan-secondary: #FF95A8;       /* 浅玫瑰 */
+  --tuan-accent: #FFD3DC;           /* 浅粉 */
+  --tuan-gradient: linear-gradient(135deg, #FF6F91 0%, #FF95A8 100%);
+
+  /* 板块色低透明度浅底（用于图标芯片 / 标签底，2026-07-26 评审补充） */
+  --boarding-tint: rgba(255, 107, 0, 0.12);
+  --activity-tint: rgba(78, 205, 196, 0.12);
+  --mall-tint: rgba(156, 39, 176, 0.12);
+  --feeding-tint: rgba(33, 150, 243, 0.12);
+  --tuan-tint: rgba(255, 111, 145, 0.12);
   
   /* 渐变色 - 苹果风格优化 */
   --gradient-primary: linear-gradient(135deg, #0A1128 0%, #1A237E 100%);
@@ -76,13 +89,14 @@ page {
   --gradient-light: linear-gradient(135deg, #F5F5F7 0%, #FFFFFF 100%);
   --gradient-dark: linear-gradient(135deg, #1D1D1F 0%, #0A1128 100%);
   
-  /* 字体 - 苹果风格 */
-  --font-bold: 'SF Pro Display Medium';
-  --font-regular: 'SF Pro Text Regular';
-  --font-light: 'SF Pro Text Light';
-  --font-thin: 'SF Pro Text Thin';
-  --font-semibold: 'SF Pro Display Semibold';
-  --font-heavy: 'SF Pro Display Bold';
+  /* 字体 - 系统字体栈（含中文，跨端稳定，2026-07-26 评审修正：原 SF Pro 为 iOS 私有且无法加载中文字形） */
+  --font-stack: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --font-bold: var(--font-stack);
+  --font-regular: var(--font-stack);
+  --font-light: var(--font-stack);
+  --font-thin: var(--font-stack);
+  --font-semibold: var(--font-stack);
+  --font-heavy: var(--font-stack);
   
   /* 字号 */
   --font-size-xxxl: 28px;
@@ -106,30 +120,30 @@ page {
   --letter-spacing-wide: 0.01em;
   --letter-spacing-wider: 0.02em;
   
-  /* 间距 - 苹果风格更大留白 */
-  --spacing-xxxxs: 1px;
-  --spacing-xxxs: 2px;
-  --spacing-xxs: 4px;
-  --spacing-xs: 8px;
-  --spacing-sm: 12px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-xxl: 40px;
-  --spacing-xxxl: 48px;
-  --spacing-xxxxl: 64px;
-  --spacing-xxxxxl: 80px;
+  /* 间距 - 统一 rpx（750 视口基准，1px≈2rpx，2026-07-26 评审修正：原 px 与页面 rpx 割裂） */
+  --spacing-xxxxs: 2rpx;
+  --spacing-xxxs: 4rpx;
+  --spacing-xxs: 8rpx;
+  --spacing-xs: 16rpx;
+  --spacing-sm: 24rpx;
+  --spacing-md: 32rpx;
+  --spacing-lg: 48rpx;
+  --spacing-xl: 64rpx;
+  --spacing-xxl: 80rpx;
+  --spacing-xxxl: 96rpx;
+  --spacing-xxxxl: 128rpx;
+  --spacing-xxxxxl: 160rpx;
   
-  /* 圆角 - 苹果风格柔和圆角 */
-  --border-radius-xs: 4px;
-  --border-radius-sm: 8px;
-  --border-radius-md: 12px;
-  --border-radius-lg: 16px;
-  --border-radius-xl: 20px;
-  --border-radius-2xl: 24px;
-  --border-radius-3xl: 28px;
-  --border-radius-4xl: 32px;
-  --border-radius-full: 9999px;
+  /* 圆角 - 统一 rpx（2026-07-26 评审修正） */
+  --border-radius-xs: 8rpx;
+  --border-radius-sm: 16rpx;
+  --border-radius-md: 24rpx;
+  --border-radius-lg: 32rpx;
+  --border-radius-xl: 40rpx;
+  --border-radius-2xl: 48rpx;
+  --border-radius-3xl: 56rpx;
+  --border-radius-4xl: 64rpx;
+  --border-radius-full: 9999rpx;
   
   /* 阴影 - 苹果风格自然阴影 */
   --shadow-xs: 0 1px 2px rgba(0,0,0,0.02);
@@ -155,7 +169,7 @@ page {
   --tabbar-height: 50px;
   --list-item-height: 56px;
   --card-padding: var(--spacing-lg);
-  --container-max-width: 414px;
+  --container-max-width: 750rpx;
   
   /* 安全区域 */
   --safe-area-top: env(safe-area-inset-top, 0px);
@@ -170,4 +184,101 @@ page {
   --z-index-popover: 1060;
   --z-index-tooltip: 1070;
   --z-index-toast: 1080;
+
+  /* ================================================================
+     补充设计令牌（2026-07-26 评审补齐）
+     供 styles/motion.wxss 与各组件使用。
+     原 motion.wxss 引用了以下变量但本文件未定义，导致 stagger / glass / btn 等类静默失效。
+     ================================================================ */
+
+  /* 入场偏移 / 缓动 / 时长 */
+  --entrance-offset: 24rpx;
+  --entrance-offset-sm: 12rpx;
+  --entrance-offset-lg: 40rpx;
+  --ease-velvet: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-maison: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-elegant: 0.7s;
+  --duration-normal: 0.4s;
+  --stagger-delay: 0.08s;
+  --stagger-delay-lg: 0.12s;
+
+  /* 金属 / 玻璃质感 */
+  --metallic-gold-dark: #A88030;
+  --glass-card-bg: rgba(255, 255, 255, 0.72);
+  --glass-card-border: rgba(255, 255, 255, 0.5);
+  --glass-blur-light: blur(12rpx);
+  --shine-gradient: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+
+  /* 发光阴影（品牌 / 板块 / 券） */
+  --shadow-glow-primary: 0 8rpx 24rpx rgba(78, 205, 196, 0.35);
+  --shadow-glow-primary-soft: 0 4rpx 12rpx rgba(78, 205, 196, 0.2);
+  --shadow-glow-primary-lg: 0 16rpx 40rpx rgba(78, 205, 196, 0.45);
+  --shadow-glow-primary-btn: 0 6rpx 16rpx rgba(78, 205, 196, 0.3);
+  --shadow-glow-primary-xs: 0 2rpx 6rpx rgba(78, 205, 196, 0.18);
+  --shadow-glow-mall: 0 8rpx 24rpx rgba(156, 39, 176, 0.35);
+  --shadow-glow-coupon: 0 8rpx 24rpx rgba(227, 24, 87, 0.35);
+
+  /* 珍珠卡 / 浮雕 */
+  --shadow-pearl-card: 0 4rpx 18rpx rgba(0, 0, 0, 0.05);
+  --shadow-pearl-card-hover: 0 12rpx 32rpx rgba(0, 0, 0, 0.1);
+  --shadow-emboss: inset 0 1rpx 0 rgba(255, 255, 255, 0.6);
+  --shadow-emboss-btn: 0 4rpx 12rpx rgba(0, 0, 0, 0.12);
+  --shadow-emboss-btn-hover: 0 8rpx 20rpx rgba(0, 0, 0, 0.16);
+
+  /* 过渡 / 按压 */
+  --transition-card: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-switch: 0.25s ease;
+  --transition-shimmer: 0.6s ease;
+  --press-lift: -4rpx;
+  --press-lift-lg: -8rpx;
+  --press-scale: 0.96;
+  --radius-lg: 32rpx;
+
+  /* 文本反向色 / 券渐变 */
+  --text-inverse: #FFFFFF;
+  --coupon-gradient: linear-gradient(135deg, #E31857 0%, #FF6B6B 100%);
+
+  /* 骨架屏 / 呼吸 */
+  --skeleton-base: #EAEAEF;
+  --skeleton-duration: 1.4s;
+  --breathe-scale-min: 0.9;
+  --breathe-scale-max: 1.05;
+  --breathe-duration: 2.4s;
+
+  /* 页面转场 / 抽屉 / 开关 */
+  --page-enter-offset: 24rpx;
+  --page-enter-offset-back: 16rpx;
+  --page-enter-fade: 0.4;
+  --page-exit-fade: 0.5;
+  --transition-page: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --drawer-enter-offset: 100%;
+  --toggle-track-width: 80rpx;
+  --toggle-knob-size: 32rpx;
+
+  /* 新增语义 token（2026-07-26 评审补齐，供 lint 收敛残留 hex） */
+  --surface-tint: #FAFAFA;          /* 近白卡片底，替代散落的 #FAFAFA */
+  --gray-450: #A0A0A0;              /* 替代 #a0a0a0 */
+  --gray-350: #C0C0C0;              /* 替代 #c0c0c0 */
+  --activity-primary-mid: #2AB7A9;  /* 活动渐变深停，替代 #2AB7A9/#3DB5AD/#45B7AA/#44a08d */
+  --text-gold: #C4843D;             /* 金色提示文案 */
+  --tap-target-min: 80rpx;          /* 最小可点击区（WCAG 亲和点） */
+}
+
+/* 暗色模式（手动切换 data-theme="dark"，2026-07-26 评审补充 P2-10） */
+[data-theme="dark"] {
+  --primary-color: #1A237E;
+  --secondary-color: #4ECDC4;
+  --background-color: #0A0A0A;
+  --card-color: #1C1C1E;
+  --text-primary: #F5F5F7;
+  --text-secondary: #AEAEB2;
+  --text-tertiary: #636366;
+  --border-color: #38383A;
+  --divider-color: #2C2C2E;
+  --gray-50: #1C1C1E;
+  --gray-100: #0A0A0A;
+  --gray-200: #2C2C2E;
+  --gray-900: #F5F5F7;
+  --surface-tint: #1C1C1E;
+  --overlay-color: rgba(0, 0, 0, 0.7);
 }
