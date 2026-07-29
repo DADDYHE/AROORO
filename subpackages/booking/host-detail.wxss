@@ -20,11 +20,9 @@
 /* 加载中状态 */
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }
 
 .loading-more {
@@ -119,7 +117,7 @@
   width: 100%;
   height: 100%;
   border-radius: 0;
-  background-color: #f0f0f0;
+  background-color: var(--divider-color);
   display: block;
   object-fit: cover; /* 确保图片填满容器 */
 }
@@ -150,7 +148,7 @@
   width: 100%;
   height: 100%;
   border-radius: 0;
-  background-color: #f0f0f0;
+  background-color: var(--divider-color);
   position: relative;
   z-index: 1; /* 确保视频在标签下方 */
   display: block;
@@ -175,7 +173,6 @@
   font-size: 20rpx;
   padding: 6rpx 12rpx;
   border-radius: 16rpx;
-  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,10 +180,6 @@
 
 .media-type-btn.active {
   background-color: rgba(255, 255, 255, 0.3);
-}
-
-.media-type-btn:active {
-  transform: scale(0.95);
 }
 
 /* 相册按钮特殊样式 */
@@ -273,7 +266,7 @@
 
 .container {
   padding: 0;
-  background-color: #f5f5f5;
+  background-color: var(--background-color);
   min-height: 100vh;
 }
 
@@ -318,13 +311,13 @@
 .host-name {
   font-size: 40rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 15rpx;
 }
 
 .host-location {
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 /* 价格信息 */
@@ -365,13 +358,13 @@
 
 .price-unit {
   font-size: 28rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .booking-btn {
   width: 200rpx;
   height: 80rpx;
-  background-color: #000;
+  background-color: var(--overlay-color);
   color: white;
   font-size: 32rpx;
   font-weight: bold;
@@ -395,8 +388,8 @@
 }
 
 .tag {
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--divider-color);
+  color: var(--text-secondary);
   font-size: 26rpx;
   padding: 15rpx 25rpx;
   border-radius: 40rpx;
@@ -420,7 +413,7 @@
 .section-title {
   font-size: 36rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 30rpx;
   padding-bottom: 20rpx;
   border-bottom: 2rpx solid #f0f0f0;
@@ -428,7 +421,7 @@
 
 .section-content {
   font-size: 30rpx;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -442,19 +435,19 @@
 .service-icon {
   width: 60rpx;
   height: 60rpx;
-  background-color: #f0f0f0;
+  background-color: var(--divider-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 30rpx;
   margin-right: 20rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .service-text {
   font-size: 30rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 /* 环境设施 */
@@ -467,37 +460,37 @@
 .facility-icon {
   width: 60rpx;
   height: 60rpx;
-  background-color: #f0f0f0;
+  background-color: var(--divider-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 30rpx;
   margin-right: 20rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .facility-text {
   font-size: 30rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 /* 暂停接单状态样式 */
 .price-section.disabled {
   opacity: 0.5;
   pointer-events: none;
-  background-color: #f5f5f5;
+  background-color: var(--background-color);
 }
 
 .price-section.disabled .price-symbol,
 .price-section.disabled .price-number,
 .price-section.disabled .price-unit {
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .booking-btn.disabled {
-  background-color: #999;
-  color: #ccc;
+  background-color: var(--text-tertiary);
+  color: var(--text-tertiary);
   pointer-events: none;
 }
 

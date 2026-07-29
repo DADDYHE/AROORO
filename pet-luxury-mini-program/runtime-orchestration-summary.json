@@ -1,0 +1,1798 @@
+{
+  "skillProvenance": {
+    "name": "solo-design",
+    "version": "2026.07.06.8",
+    "version_source": "skill-release-manifest.json",
+    "read_status": "ok"
+  },
+  "project": {
+    "resolvedLane": "free_exploration",
+    "deviceType": "mobile",
+    "intentProfile": {
+      "caseFamily": "free_exploration",
+      "operatingMode": "free-explore",
+      "complexityLane": "stateful-free-fast",
+      "routingReason": "Open-ended multi-page mobile mini-program creation with no Design Library, no restore target, no high-fidelity replication. 5 business modules with shared bottom navigation + 1 design spec documentation page. Fits stateful-free-fast lane (multi-page with shared nav).",
+      "sourceType": "image-reference-analysis",
+      "sourceDescription": "4-screen olive-green light-luxury fresh-food App UI used as visual style reference for migration to pet services domain"
+    },
+    "selectedIntentWorkflowRead": true,
+    "contextRequirementsLoaded": [
+      {
+        "path": "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/page-rendering-quality-gate.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/design-artifact-validation.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/delivery-evidence-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "visual-experience/visual-experience-guidelines.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      }
+    ],
+    "contextReadScope": {
+      "mainAgent": {
+        "forbiddenReads": [
+          "other intent-workflows/**",
+          "Sub-Agent implementation files before dispatch"
+        ]
+      },
+      "pageSubAgent": {
+        "allowedReads": [
+          "current lane page runtime guide",
+          "current lane dispatch contract excerpt",
+          "current Page Packet",
+          "supplementaryReads[] only"
+        ],
+        "forbiddenReads": [
+          "SKILL.md full re-read",
+          "other intent-workflows/**",
+          "full runtime-orchestration-summary.json unless explicitly sliced"
+        ]
+      },
+      "readScopeLedgerWriter": "shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs"
+    },
+    "cssPreflightEvidence": {
+      "applies": true,
+      "status": "passed",
+      "command": "node /Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs /Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css /Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/.preflight/preflight.html --title=\"Preflight\" --lang=zh-CN --prefix=petlux --replace-head",
+      "brandPrefix": "petlux",
+      "checks": {
+        "themeVars": "present",
+        "semanticTokenFallback": "present",
+        "themeInline": "present",
+        "tailwindCdn": "present",
+        "htmlClass": "present",
+        "semanticMappings": "resolved"
+      },
+      "retryCount": 0,
+      "blockingReason": null
+    },
+    "fillHtmlHeadCommand": "node /Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs /Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css {htmlFilePath} --title=\"{pageTitle}\" --lang=zh-CN --prefix=petlux",
+    "creativeRecipe": {
+      "businessTone": "治愈轻奢 · 自然有机 · 高端精品",
+      "layoutArchetype": "editorial-card-stack with generous whitespace and restrained visual density",
+      "visualSignature": "warm olive-green (#4F5E35) primary on olive-tinted (#EDF0E2) surfaces, realistic HD pet photography, Lucide line icons, soft subtle shadows, 8/12/16px radius",
+      "densityTarget": "balanced",
+      "avoidOneThing": "avoid cheap influencer feel — no aggressive promo popups, no neon gradients, no cartoon elements, no dense coupon walls, no emoji icons"
+    },
+    "styleContinuityAnchors": [
+      "minimalist top bar: avatar/title left + actions right, 56px height",
+      "olive-green filled CTA buttons with 12px radius, single primary hue",
+      "surface layering: olive-tinted bg → white card → olive hover (3-step depth)",
+      "type rhythm: PingFang SC sans-serif, weights 400/500/600 only",
+      "bottom nav: 5-tab pill, 64px height, flow-bottom, Lucide icons + labels",
+      "card radius 12px, shadow-1 subtle (alpha ≤ 0.04), no border+shadow stacking"
+    ],
+    "sharedProjectShellContract": {
+      "mobileNavigation": {
+        "type": "bottom-tab",
+        "items": [
+          {
+            "key": "home",
+            "label": "首页",
+            "icon": "home"
+          },
+          {
+            "key": "activities",
+            "label": "活动报名",
+            "icon": "calendar-days"
+          },
+          {
+            "key": "tuan",
+            "label": "宠团团",
+            "icon": "users"
+          },
+          {
+            "key": "door",
+            "label": "上门服务",
+            "icon": "paw-print"
+          },
+          {
+            "key": "me",
+            "label": "我的",
+            "icon": "user"
+          }
+        ],
+        "heightPx": 64,
+        "position": "flow-bottom",
+        "activeState": "per-page",
+        "structure": {
+          "navTag": "nav",
+          "navClass": "w-full max-w-md mx-auto bg-card/95 backdrop-blur-sm border-t border-border",
+          "innerClass": "grid grid-cols-5 h-16",
+          "itemTag": "a",
+          "itemClass": "flex flex-col items-center justify-center gap-1 px-1 h-full transition-colors",
+          "iconClass": "w-5 h-5 shrink-0",
+          "labelClass": "text-[11px] leading-none whitespace-nowrap",
+          "activeRule": "only color/font-weight/data-active may change; no class changes that affect layout",
+          "markerAttr": "data-mobile-nav=\"global\"",
+          "canonicalHtmlByKey": {
+            "home": "<nav data-mobile-nav=\"global\" class=\"w-full max-w-md mx-auto bg-card/95 backdrop-blur-sm border-t border-border sticky bottom-0\"><div class=\"grid grid-cols-5 h-16\"><a data-nav-key=\"home\" data-active=\"true\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"home\" class=\"w-5 h-5 shrink-0 text-primary\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-primary font-medium\">首页</span></a><a data-nav-key=\"activities\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"calendar-days\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">活动报名</span></a><a data-nav-key=\"tuan\" class=\"relative flex flex-col items-center justify-center gap-1 px-1 h-full\"><span class=\"absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-[0_0_0_4px_var(--petlux-card),0_6px_16px_-4px_rgba(79,94,53,0.5)]\"><i data-lucide=\"users\" class=\"w-5 h-5 shrink-0\"></i></span><span class=\"block w-5 h-5 shrink-0\" aria-hidden=\"true\"></span><span class=\"text-[11px] leading-none whitespace-nowrap text-primary font-medium\">宠团团</span></a><a data-nav-key=\"door\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"paw-print\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">上门服务</span></a><a data-nav-key=\"me\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"user\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">我的</span></a></div></nav>",
+            "activities": "<nav data-mobile-nav=\"global\" class=\"w-full max-w-md mx-auto bg-card/95 backdrop-blur-sm border-t border-border sticky bottom-0\"><div class=\"grid grid-cols-5 h-16\"><a data-nav-key=\"home\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"home\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">首页</span></a><a data-nav-key=\"activities\" data-active=\"true\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"calendar-days\" class=\"w-5 h-5 shrink-0 text-primary\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-primary font-medium\">活动报名</span></a><a data-nav-key=\"tuan\" class=\"relative flex flex-col items-center justify-center gap-1 px-1 h-full\"><span class=\"absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-[0_0_0_4px_var(--petlux-card),0_6px_16px_-4px_rgba(79,94,53,0.5)]\"><i data-lucide=\"users\" class=\"w-5 h-5 shrink-0\"></i></span><span class=\"block w-5 h-5 shrink-0\" aria-hidden=\"true\"></span><span class=\"text-[11px] leading-none whitespace-nowrap text-primary font-medium\">宠团团</span></a><a data-nav-key=\"door\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"paw-print\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">上门服务</span></a><a data-nav-key=\"me\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"user\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">我的</span></a></div></nav>",
+            "tuan": "<nav data-mobile-nav=\"global\" class=\"w-full max-w-md mx-auto bg-card/95 backdrop-blur-sm border-t border-border sticky bottom-0\"><div class=\"grid grid-cols-5 h-16\"><a data-nav-key=\"home\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"home\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">首页</span></a><a data-nav-key=\"activities\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"calendar-days\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">活动报名</span></a><a data-nav-key=\"tuan\" data-active=\"true\" class=\"relative flex flex-col items-center justify-center gap-1 px-1 h-full\"><span class=\"absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-[0_0_0_4px_var(--petlux-card),0_8px_18px_-4px_rgba(79,94,53,0.6)]\"><i data-lucide=\"users\" class=\"w-5 h-5 shrink-0\"></i></span><span class=\"block w-5 h-5 shrink-0\" aria-hidden=\"true\"></span><span class=\"text-[11px] leading-none whitespace-nowrap text-primary font-semibold\">宠团团</span></a><a data-nav-key=\"door\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"paw-print\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">上门服务</span></a><a data-nav-key=\"me\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"user\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">我的</span></a></div></nav>",
+            "door": "<nav data-mobile-nav=\"global\" class=\"w-full max-w-md mx-auto bg-card/95 backdrop-blur-sm border-t border-border sticky bottom-0\"><div class=\"grid grid-cols-5 h-16\"><a data-nav-key=\"home\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"home\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">首页</span></a><a data-nav-key=\"activities\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"calendar-days\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">活动报名</span></a><a data-nav-key=\"tuan\" class=\"relative flex flex-col items-center justify-center gap-1 px-1 h-full\"><span class=\"absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-[0_0_0_4px_var(--petlux-card),0_6px_16px_-4px_rgba(79,94,53,0.5)]\"><i data-lucide=\"users\" class=\"w-5 h-5 shrink-0\"></i></span><span class=\"block w-5 h-5 shrink-0\" aria-hidden=\"true\"></span><span class=\"text-[11px] leading-none whitespace-nowrap text-primary font-medium\">宠团团</span></a><a data-nav-key=\"door\" data-active=\"true\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"paw-print\" class=\"w-5 h-5 shrink-0 text-primary\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-primary font-medium\">上门服务</span></a><a data-nav-key=\"me\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"user\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">我的</span></a></div></nav>",
+            "me": "<nav data-mobile-nav=\"global\" class=\"w-full max-w-md mx-auto bg-card/95 backdrop-blur-sm border-t border-border sticky bottom-0\"><div class=\"grid grid-cols-5 h-16\"><a data-nav-key=\"home\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"home\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">首页</span></a><a data-nav-key=\"activities\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"calendar-days\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">活动报名</span></a><a data-nav-key=\"tuan\" class=\"relative flex flex-col items-center justify-center gap-1 px-1 h-full\"><span class=\"absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-[0_0_0_4px_var(--petlux-card),0_6px_16px_-4px_rgba(79,94,53,0.5)]\"><i data-lucide=\"users\" class=\"w-5 h-5 shrink-0\"></i></span><span class=\"block w-5 h-5 shrink-0\" aria-hidden=\"true\"></span><span class=\"text-[11px] leading-none whitespace-nowrap text-primary font-medium\">宠团团</span></a><a data-nav-key=\"door\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"paw-print\" class=\"w-5 h-5 shrink-0 text-muted-foreground\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-muted-foreground\">上门服务</span></a><a data-nav-key=\"me\" data-active=\"true\" class=\"flex flex-col items-center justify-center gap-1 px-1 h-full\"><i data-lucide=\"user\" class=\"w-5 h-5 shrink-0 text-primary\"></i><span class=\"text-[11px] leading-none whitespace-nowrap text-primary font-medium\">我的</span></a></div></nav>"
+          },
+          "emphasizedKey": "tuan"
+        }
+      }
+    },
+    "pageCompletenessGate": {
+      "expectedPages": [
+        "home",
+        "services",
+        "mall",
+        "groupbuy",
+        "me",
+        "design-spec",
+        "shop"
+      ],
+      "requiredStates": [],
+      "requiredInteractions": [
+        "bottom-nav-switch"
+      ],
+      "requiredNavigation": [
+        "bottom-nav"
+      ],
+      "missingAllowed": []
+    },
+    "validationRunDiscipline": {
+      "maxFullValidationRuns": 2,
+      "softWarningsTriggerRepair": false,
+      "blockingRepairMode": "targeted-once",
+      "forbiddenRepairTriggers": [
+        "soft-warning-only",
+        "provenance-warning-only",
+        "style-warning-only"
+      ]
+    },
+    "lowValueCallWatchdog": {
+      "applies": true,
+      "noProgressSignals": [
+        "no_tool_call",
+        "no_artifact_diff",
+        "no_structured_decision"
+      ],
+      "noProgressNextAction": "enter_readiness_or_blocked_summary"
+    },
+    "dispatchPreflightManifest": [
+      {
+        "recorded_at": "2026-07-27T14:32:23.236Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "FreePagePacket",
+        "laneContract": {
+          "resolvedLane": "free_exploration",
+          "packetType": "FreePagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-page-free-exploration/dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "nodeId": "page-home",
+        "htmlSrc": "pages/home.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/home.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/home.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+          "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+            "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+            "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program' --node-id='page-home' --html-src='pages/home.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css",
+        "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/home.html",
+        "brandPrefix": "petlux",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/home.html' --title='首页' --lang='zh-CN' --prefix='petlux' --replace-head",
+        "headFillMode": "replace-head-after-body",
+        "viewportMode": null,
+        "completionSchemaExpected": "compact",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          ".design": "c86ef96663a0117e3b38c43186d47703e98a2941d0e880d7755dc01b7a041bdf"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-page-free-exploration/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md",
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "optionalContextFiles": [],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": true,
+          "appliesToThisPage": true,
+          "activeKey": "home",
+          "contractPresent": true,
+          "structurePresent": true,
+          "canonicalHtmlIncluded": true,
+          "canonicalHtmlSource": "sharedProjectShellContract.mobileNavigation.structure.canonicalHtmlByKey.home",
+          "structureHash": "7f2852a70b136440895022c485f44b57de0ac59522d8a5fff30f7b78b827f448",
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      },
+      {
+        "recorded_at": "2026-07-27T14:32:23.236Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "FreePagePacket",
+        "laneContract": {
+          "resolvedLane": "free_exploration",
+          "packetType": "FreePagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-page-free-exploration/dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "nodeId": "page-services",
+        "htmlSrc": "pages/services.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/services.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/services.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+          "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+            "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+            "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program' --node-id='page-services' --html-src='pages/services.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css",
+        "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/services.html",
+        "brandPrefix": "petlux",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/services.html' --title='上门服务' --lang='zh-CN' --prefix='petlux' --replace-head",
+        "headFillMode": "replace-head-after-body",
+        "viewportMode": null,
+        "completionSchemaExpected": "compact",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          ".design": "c86ef96663a0117e3b38c43186d47703e98a2941d0e880d7755dc01b7a041bdf"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-page-free-exploration/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md",
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "optionalContextFiles": [],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": true,
+          "appliesToThisPage": true,
+          "activeKey": "door",
+          "contractPresent": true,
+          "structurePresent": true,
+          "canonicalHtmlIncluded": true,
+          "canonicalHtmlSource": "sharedProjectShellContract.mobileNavigation.structure.canonicalHtmlByKey.door",
+          "structureHash": "7f2852a70b136440895022c485f44b57de0ac59522d8a5fff30f7b78b827f448",
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      },
+      {
+        "recorded_at": "2026-07-27T14:32:23.236Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "FreePagePacket",
+        "laneContract": {
+          "resolvedLane": "free_exploration",
+          "packetType": "FreePagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-page-free-exploration/dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "nodeId": "page-mall",
+        "htmlSrc": "pages/mall.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/mall.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/mall.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+          "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+            "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+            "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program' --node-id='page-mall' --html-src='pages/mall.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css",
+        "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/mall.html",
+        "brandPrefix": "petlux",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/mall.html' --title='活动报名' --lang='zh-CN' --prefix='petlux' --replace-head",
+        "headFillMode": "replace-head-after-body",
+        "viewportMode": null,
+        "completionSchemaExpected": "compact",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          ".design": "c86ef96663a0117e3b38c43186d47703e98a2941d0e880d7755dc01b7a041bdf"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-page-free-exploration/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md",
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "optionalContextFiles": [],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": true,
+          "appliesToThisPage": true,
+          "activeKey": "activities",
+          "contractPresent": true,
+          "structurePresent": true,
+          "canonicalHtmlIncluded": true,
+          "canonicalHtmlSource": "sharedProjectShellContract.mobileNavigation.structure.canonicalHtmlByKey.activities",
+          "structureHash": "7f2852a70b136440895022c485f44b57de0ac59522d8a5fff30f7b78b827f448",
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      },
+      {
+        "recorded_at": "2026-07-27T14:32:23.236Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "FreePagePacket",
+        "laneContract": {
+          "resolvedLane": "free_exploration",
+          "packetType": "FreePagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-page-free-exploration/dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "nodeId": "page-groupbuy",
+        "htmlSrc": "pages/groupbuy.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/groupbuy.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/groupbuy.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+          "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+            "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+            "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program' --node-id='page-groupbuy' --html-src='pages/groupbuy.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css",
+        "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/groupbuy.html",
+        "brandPrefix": "petlux",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/groupbuy.html' --title='宠团团' --lang='zh-CN' --prefix='petlux' --replace-head",
+        "headFillMode": "replace-head-after-body",
+        "viewportMode": null,
+        "completionSchemaExpected": "compact",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          ".design": "c86ef96663a0117e3b38c43186d47703e98a2941d0e880d7755dc01b7a041bdf"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-page-free-exploration/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md",
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "optionalContextFiles": [],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": true,
+          "appliesToThisPage": true,
+          "activeKey": "tuan",
+          "contractPresent": true,
+          "structurePresent": true,
+          "canonicalHtmlIncluded": true,
+          "canonicalHtmlSource": "sharedProjectShellContract.mobileNavigation.structure.canonicalHtmlByKey.tuan",
+          "structureHash": "7f2852a70b136440895022c485f44b57de0ac59522d8a5fff30f7b78b827f448",
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      },
+      {
+        "recorded_at": "2026-07-27T14:32:23.236Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "FreePagePacket",
+        "laneContract": {
+          "resolvedLane": "free_exploration",
+          "packetType": "FreePagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-page-free-exploration/dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "nodeId": "page-me",
+        "htmlSrc": "pages/me.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/me.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/me.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+          "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+            "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+            "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program' --node-id='page-me' --html-src='pages/me.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css",
+        "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/me.html",
+        "brandPrefix": "petlux",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/me.html' --title='我的' --lang='zh-CN' --prefix='petlux' --replace-head",
+        "headFillMode": "replace-head-after-body",
+        "viewportMode": null,
+        "completionSchemaExpected": "compact",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          ".design": "c86ef96663a0117e3b38c43186d47703e98a2941d0e880d7755dc01b7a041bdf"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-page-free-exploration/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md",
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "optionalContextFiles": [],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": true,
+          "appliesToThisPage": true,
+          "activeKey": "me",
+          "contractPresent": true,
+          "structurePresent": true,
+          "canonicalHtmlIncluded": true,
+          "canonicalHtmlSource": "sharedProjectShellContract.mobileNavigation.structure.canonicalHtmlByKey.me",
+          "structureHash": "7f2852a70b136440895022c485f44b57de0ac59522d8a5fff30f7b78b827f448",
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      },
+      {
+        "recorded_at": "2026-07-27T14:32:23.236Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "FreePagePacket",
+        "laneContract": {
+          "resolvedLane": "free_exploration",
+          "packetType": "FreePagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-page-free-exploration/dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "nodeId": "page-design-spec",
+        "htmlSrc": "pages/design-spec.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/design-spec.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/design-spec.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+          "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+            "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+            "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program' --node-id='page-design-spec' --html-src='pages/design-spec.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css",
+        "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/design-spec.html",
+        "brandPrefix": "petlux",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/design-spec.html' --title='设计规范' --lang='zh-CN' --prefix='petlux' --replace-head",
+        "headFillMode": "replace-head-after-body",
+        "viewportMode": null,
+        "completionSchemaExpected": "compact",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          ".design": "c86ef96663a0117e3b38c43186d47703e98a2941d0e880d7755dc01b7a041bdf"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-page-free-exploration/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md",
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "optionalContextFiles": [],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": true,
+          "appliesToThisPage": true,
+          "activeKey": "home",
+          "contractPresent": true,
+          "structurePresent": true,
+          "canonicalHtmlIncluded": true,
+          "canonicalHtmlSource": "sharedProjectShellContract.mobileNavigation.structure.canonicalHtmlByKey.home",
+          "structureHash": "7f2852a70b136440895022c485f44b57de0ac59522d8a5fff30f7b78b827f448",
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      },
+      {
+        "recorded_at": "2026-07-27T14:32:23.236Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "FreePagePacket",
+        "laneContract": {
+          "resolvedLane": "free_exploration",
+          "packetType": "FreePagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-page-free-exploration/dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "nodeId": "page-shop",
+        "htmlSrc": "pages/shop.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/shop.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/shop.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+          "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+            "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+            "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program' --node-id='page-shop' --html-src='pages/shop.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css",
+        "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/shop.html",
+        "brandPrefix": "petlux",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/colors_and_type.css' '/Users/yy/Documents/trae_projects/zuoyou/pet-luxury-mini-program/pages/shop.html' --title='宠物商城' --lang='zh-CN' --prefix='petlux' --replace-head",
+        "headFillMode": "replace-head-after-body",
+        "viewportMode": null,
+        "completionSchemaExpected": "compact",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          ".design": "c86ef96663a0117e3b38c43186d47703e98a2941d0e880d7755dc01b7a041bdf"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-page-free-exploration/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md",
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "optionalContextFiles": [],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": false,
+          "appliesToThisPage": false,
+          "omitReason": "subpackage-page-no-tab-bar",
+          "canonicalHtmlIncluded": false,
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      }
+    ],
+    "readScopeLedger": [
+      {
+        "actor": "page-sub-agent",
+        "lane": "free_exploration",
+        "path": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "reason": "page runtime guide",
+        "scopeClass": "page-runtime",
+        "declaredBeforeRead": true,
+        "recordedAt": "2026-07-27T07:03:15.853Z",
+        "nodeId": "page-home",
+        "htmlSrc": "pages/home.html"
+      },
+      {
+        "actor": "page-sub-agent",
+        "lane": "free_exploration",
+        "path": "intent-workflows/intent-page-free-exploration/dispatch-contract.md",
+        "reason": "dispatch contract",
+        "scopeClass": "dispatch-contract",
+        "declaredBeforeRead": true,
+        "recordedAt": "2026-07-27T07:03:15.853Z",
+        "nodeId": "page-home",
+        "htmlSrc": "pages/home.html"
+      }
+    ],
+    "mainAgentPostDispatchMutations": [
+      {
+        "path": ".design",
+        "reason": "image-node registration and page node metadata update",
+        "owner": "main-agent",
+        "recordedAt": "2026-07-27T07:41:22.469Z",
+        "source": "record-dispatch-completion.mjs"
+      }
+    ],
+    "validationHistory": [],
+    "validationRepairLedger": [],
+    "repairEntryEvidence": [],
+    "expectedDispatches": [
+      {
+        "nodeId": "page-home",
+        "pageId": "page-home",
+        "targetPageId": "page-home",
+        "htmlSrc": "pages/home.html",
+        "packetType": "FreePagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/home.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "home-complete-20260727",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-07-27T14:34:26.537Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-services",
+        "pageId": "page-services",
+        "targetPageId": "page-services",
+        "htmlSrc": "pages/services.html",
+        "packetType": "FreePagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/services.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "services-complete-20260727",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-07-27T14:34:26.613Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-mall",
+        "pageId": "page-mall",
+        "targetPageId": "page-mall",
+        "htmlSrc": "pages/mall.html",
+        "packetType": "FreePagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/mall.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "mall-complete-20260727",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-07-27T14:34:26.678Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-groupbuy",
+        "pageId": "page-groupbuy",
+        "targetPageId": "page-groupbuy",
+        "htmlSrc": "pages/groupbuy.html",
+        "packetType": "FreePagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/groupbuy.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "groupbuy-complete-20260727",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-07-27T14:34:26.740Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-me",
+        "pageId": "page-me",
+        "targetPageId": "page-me",
+        "htmlSrc": "pages/me.html",
+        "packetType": "FreePagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/me.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "me-complete-20260727",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-07-27T14:34:26.804Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-shop",
+        "pageId": "page-shop",
+        "targetPageId": "page-shop",
+        "htmlSrc": "pages/shop.html",
+        "packetType": "FreePagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/shop.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "shop-complete-20260727",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-07-27T14:34:26.893Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-design-spec",
+        "pageId": "page-design-spec",
+        "targetPageId": "page-design-spec",
+        "htmlSrc": "pages/design-spec.html",
+        "packetType": "FreePagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/design-spec.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "designspec-complete-20260727",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-07-27T14:34:26.986Z",
+        "source": "record-dispatch-completion.mjs"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "nodeId": "page-home",
+      "htmlSrc": "pages/home.html",
+      "title": "首页",
+      "mobileNavigationActiveKey": "home",
+      "pageType": "showcase",
+      "qualityRisks": [
+        "mobile-first-screen-density",
+        "hero-image-integrity"
+      ],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-services",
+      "htmlSrc": "pages/services.html",
+      "title": "上门服务",
+      "mobileNavigationActiveKey": "door",
+      "pageType": "information-dense",
+      "qualityRisks": [
+        "service-card-density",
+        "booking-flow-clarity"
+      ],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-mall",
+      "htmlSrc": "pages/mall.html",
+      "title": "活动报名",
+      "mobileNavigationActiveKey": "activities",
+      "pageType": "showcase",
+      "qualityRisks": [
+        "product-grid-density",
+        "image-loading"
+      ],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-groupbuy",
+      "htmlSrc": "pages/groupbuy.html",
+      "title": "宠团团",
+      "mobileNavigationActiveKey": "tuan",
+      "pageType": "information-dense",
+      "qualityRisks": [
+        "deal-card-density",
+        "price-hierarchy"
+      ],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-me",
+      "htmlSrc": "pages/me.html",
+      "title": "我的",
+      "mobileNavigationActiveKey": "me",
+      "pageType": "information-dense",
+      "qualityRisks": [
+        "profile-card-density",
+        "pet-profile-layout"
+      ],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-design-spec",
+      "htmlSrc": "pages/design-spec.html",
+      "title": "设计规范",
+      "mobileNavigationActiveKey": "home",
+      "pageType": "showcase",
+      "qualityRisks": [
+        "token-display-accuracy"
+      ],
+      "miniProgramStyle": false
+    },
+    {
+      "nodeId": "page-shop",
+      "htmlSrc": "pages/shop.html",
+      "title": "宠物商城",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "showcase",
+      "qualityRisks": [
+        "product-grid-density",
+        "category-sidebar-clarity"
+      ],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-activity-list",
+      "htmlSrc": "pages/activity-list.html",
+      "title": "活动列表",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-activity-my-registered",
+      "htmlSrc": "pages/activity-my-registered.html",
+      "title": "我的报名",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-activity-detail",
+      "htmlSrc": "pages/activity-detail.html",
+      "title": "活动详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-activity-payment",
+      "htmlSrc": "pages/activity-payment.html",
+      "title": "活动支付",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-activity-register",
+      "htmlSrc": "pages/activity-register.html",
+      "title": "活动报名",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-activity-map-view",
+      "htmlSrc": "pages/activity-map-view.html",
+      "title": "地图视图",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-activity-friend",
+      "htmlSrc": "pages/activity-friend.html",
+      "title": "宠友列表",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-mall-product-list",
+      "htmlSrc": "pages/mall-product-list.html",
+      "title": "商品列表",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-mall-order-confirm",
+      "htmlSrc": "pages/mall-order-confirm.html",
+      "title": "确认订单",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-mall-cart",
+      "htmlSrc": "pages/mall-cart.html",
+      "title": "购物车",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-mall-group-detail",
+      "htmlSrc": "pages/mall-group-detail.html",
+      "title": "团购详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-mall-product-detail",
+      "htmlSrc": "pages/mall-product-detail.html",
+      "title": "商品详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-booking-pet-select",
+      "htmlSrc": "pages/booking-pet-select.html",
+      "title": "选择宠物",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-booking-confirm",
+      "htmlSrc": "pages/booking-confirm.html",
+      "title": "确认寄养",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-booking-host-list-all",
+      "htmlSrc": "pages/booking-host-list-all.html",
+      "title": "寄养家庭列表",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-booking-host-detail",
+      "htmlSrc": "pages/booking-host-detail.html",
+      "title": "寄养家庭详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-feeding-groomer-list",
+      "htmlSrc": "pages/feeding-groomer-list.html",
+      "title": "美容师列表",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-feeding-groomer-detail",
+      "htmlSrc": "pages/feeding-groomer-detail.html",
+      "title": "美容师详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-feeding-order-confirm",
+      "htmlSrc": "pages/feeding-order-confirm.html",
+      "title": "确认服务订单",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-feeding-feeder-detail",
+      "htmlSrc": "pages/feeding-feeder-detail.html",
+      "title": "上门服务人员详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-feeding-service-detail",
+      "htmlSrc": "pages/feeding-service-detail.html",
+      "title": "服务详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-feeding-order-status",
+      "htmlSrc": "pages/feeding-order-status.html",
+      "title": "订单状态",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-feeding-confirm-service",
+      "htmlSrc": "pages/feeding-confirm-service.html",
+      "title": "确认服务",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-pet-list",
+      "htmlSrc": "pages/pet-list.html",
+      "title": "宠物列表",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-pet-detail",
+      "htmlSrc": "pages/pet-detail.html",
+      "title": "宠物详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-pet-create-step1",
+      "htmlSrc": "pages/pet-create-step1.html",
+      "title": "创建宠物",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-pet-update-profile",
+      "htmlSrc": "pages/pet-update-profile.html",
+      "title": "编辑宠物",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-edit",
+      "htmlSrc": "pages/profile-edit.html",
+      "title": "编辑资料",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-login",
+      "htmlSrc": "pages/profile-login.html",
+      "title": "登录",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-agreement",
+      "htmlSrc": "pages/profile-agreement.html",
+      "title": "用户协议",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-about",
+      "htmlSrc": "pages/profile-about.html",
+      "title": "关于我们",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-notification-detail",
+      "htmlSrc": "pages/profile-notification-detail.html",
+      "title": "通知详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-notification-list",
+      "htmlSrc": "pages/profile-notification-list.html",
+      "title": "通知列表",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-referral",
+      "htmlSrc": "pages/profile-referral.html",
+      "title": "推荐有礼",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-privacy",
+      "htmlSrc": "pages/profile-privacy.html",
+      "title": "隐私政策",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-mall-order-detail",
+      "htmlSrc": "pages/profile-mall-order-detail.html",
+      "title": "商城订单详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-order-detail",
+      "htmlSrc": "pages/profile-order-detail.html",
+      "title": "订单详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-profile-order-stats",
+      "htmlSrc": "pages/profile-order-stats.html",
+      "title": "订单统计",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-other-favorites",
+      "htmlSrc": "pages/other-favorites.html",
+      "title": "收藏",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-other-address",
+      "htmlSrc": "pages/other-address.html",
+      "title": "地址管理",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-other-video-list",
+      "htmlSrc": "pages/other-video-list.html",
+      "title": "视频列表",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-other-album",
+      "htmlSrc": "pages/other-album.html",
+      "title": "相册",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-coupon-claim-center",
+      "htmlSrc": "pages/coupon-claim-center.html",
+      "title": "领券中心",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-coupon-my-coupons",
+      "htmlSrc": "pages/coupon-my-coupons.html",
+      "title": "我的优惠券",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-home",
+      "htmlSrc": "pages/partner-home.html",
+      "title": "合作伙伴管理中心",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-application",
+      "htmlSrc": "pages/partner-application.html",
+      "title": "合作伙伴申请",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-hosting-profile",
+      "htmlSrc": "pages/partner-hosting-profile.html",
+      "title": "寄养档案",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-feeding",
+      "htmlSrc": "pages/partner-feeding.html",
+      "title": "上门服务管理",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-income",
+      "htmlSrc": "pages/partner-income.html",
+      "title": "收入概览",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-withdrawal",
+      "htmlSrc": "pages/partner-withdrawal.html",
+      "title": "提现记录",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-service-income",
+      "htmlSrc": "pages/partner-service-income.html",
+      "title": "服务收入",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-referral",
+      "htmlSrc": "pages/partner-referral.html",
+      "title": "推荐用户",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-activity-list",
+      "htmlSrc": "pages/partner-activity-list.html",
+      "title": "活动管理",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-activity-detail",
+      "htmlSrc": "pages/partner-activity-detail.html",
+      "title": "活动详情",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-activity-create",
+      "htmlSrc": "pages/partner-activity-create.html",
+      "title": "创建活动",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    },
+    {
+      "nodeId": "page-partner-i18n-override",
+      "htmlSrc": "pages/partner-i18n-override.html",
+      "title": "i18n覆盖管理",
+      "mobileNavigationApplies": false,
+      "mobileNavigationOmitReason": "subpackage-page-no-tab-bar",
+      "pageType": "information-dense",
+      "qualityRisks": [],
+      "miniProgramStyle": true
+    }
+  ]
+}

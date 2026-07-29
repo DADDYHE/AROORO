@@ -4,7 +4,7 @@ Component({
   data: {
     selected: 0,
     color: '#666666',
-    selectedColor: '#0D5A6B',
+    selectedColor: '#4F5E35',
     list: [
       {
         pagePath: '/pages/home/index',
@@ -39,6 +39,8 @@ Component({
     ],
     tabBarPadding: 20,
     _isAttached: false,
+    showSplash: false,
+    splashFading: false,
   },
   attached() {
     this._isAttached = true
@@ -55,11 +57,34 @@ Component({
       }
     }
     this._syncTabBarFromPages()
+
+    // AROORO 启动屏：冷启动仅首次显示，覆盖全屏（含 tabBar）
+    if (!app.splashShown) {
+      app.splashShown = true
+      this.setData({ showSplash: true })
+      this._splashTimer = setTimeout(() => {
+        this.dismissSplash()
+      }, 2800)
+    }
   },
   detached() {
     this._isAttached = false
+    if (this._splashTimer) {
+      clearTimeout(this._splashTimer)
+      this._splashTimer = null
+    }
   },
   methods: {
+    dismissSplash() {
+      if (this._splashTimer) {
+        clearTimeout(this._splashTimer)
+        this._splashTimer = null
+      }
+      this.setData({ splashFading: true })
+      setTimeout(() => {
+        this.setData({ showSplash: false, splashFading: false })
+      }, 500)
+    },
     switchTab(e) {
       const data = e.currentTarget.dataset
       const url = data.path

@@ -188,7 +188,7 @@ describe('risk-control.js (Sprint 22 大额风控)', () => {
         },
       })
       const r = await detectOrderRisk({
-        db, userId: 'u1', amountFen: ORDER_RISK_CONFIG.NEW_USER_LARGE_FEN + 1000, type: 'mall_order',
+        db, userId: 'u1', amountFen: ORDER_RISK_CONFIG.NEW_USER_LARGE_FEN + 1000, type: 'mall_order', now: NOW,
       })
       expect(r.reasons.some(s => s.startsWith('NEW_USER_LARGE'))).toBe(true)
     })

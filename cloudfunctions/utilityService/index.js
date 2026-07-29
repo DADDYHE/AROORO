@@ -68,12 +68,12 @@ async function getBanners() {
             .get();
         const list = (res.data || []).map(b => ({
             id: b._id,
-            image: b.imageUrl || '',
+            imageUrl: b.imageUrl || '',
             title: b.title || '',
             subtitle: b.subtitle || '',
             tag: b.tag || '',
             ctaText: b.ctaText || '',
-            action: b.actionType || '',
+            actionType: b.actionType || '',
             actionTarget: b.actionTarget || '',
         }));
         _bannersCache = { list };

@@ -1,39 +1,42 @@
+/* ================================================================
+   login-prompt · PETLUX 橄榄绿治愈轻奢视觉语言
+   2026-07-28 按新设计系统重写 — 令牌化颜色/圆角/阴影
+   ================================================================ */
+
 .login-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-color);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
-  animation: fadeIn 0.25s ease-out;
 }
 
 .login-card {
   width: 600rpx;
   background: var(--card-color);
-  border-radius: 24rpx;
+  border-radius: var(--border-radius-md);
   overflow: visible;
   position: relative;
-  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.12);
-  animation: slideUp 0.3s ease-out;
+  box-shadow: var(--zy-shadow-md);
 }
 
 .card-top-bar {
   height: 3rpx;
-  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-primary-mid) 50%, transparent 100%);
-  border-radius: 24rpx 24rpx 0 0;
+  background: var(--gradient-primary);
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
 }
 
 .card-content {
-  padding: 56rpx 48rpx 40rpx;
+  padding: 48rpx 40rpx 32rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .card-icon {
@@ -41,14 +44,14 @@
 }
 
 .icon-circle {
-  width: 120rpx;
-  height: 120rpx;
+  width: 112rpx;
+  height: 112rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  background: var(--gradient-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(78, 205, 196, 0.3);
+  box-shadow: var(--shadow-glow-primary-soft);
   position: relative;
 }
 
@@ -56,7 +59,7 @@
   width: 160rpx;
   height: 160rpx;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(78, 205, 196, 0.2) 0%, rgba(78, 205, 196, 0) 70%);
+  background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
   position: absolute;
   top: 50%;
   left: 50%;
@@ -73,55 +76,42 @@
 
 .card-title {
   font-size: 32rpx;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   text-align: center;
+  letter-spacing: -0.01em;
 }
 
 .card-subtitle {
   font-size: 24rpx;
   color: var(--text-secondary);
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .card-btn {
   width: 100%;
   margin-top: 16rpx;
-  padding: 24rpx 0;
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  border-radius: 48rpx;
-  box-shadow: 0 6rpx 16rpx rgba(78, 205, 196, 0.3);
+  padding: 22rpx 0;
+  background: var(--gradient-primary);
+  border-radius: var(--border-radius-pill);
+  box-shadow: var(--shadow-glow-primary-btn);
   text-align: center;
-}
-
-.card-btn:active {
-  opacity: 0.85;
 }
 
 .btn-text {
   font-size: 28rpx;
   font-weight: 600;
-  color: var(--card-color);
+  color: #FAFAF6;
 }
 
 .card-skip {
-  margin-top: 12rpx;
+  margin-top: 8rpx;
   padding: 12rpx 0;
   text-align: center;
 }
 
 .skip-text {
   font-size: 24rpx;
-  color: var(--gray-500);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(40rpx); }
-  to { opacity: 1; transform: translateY(0); }
+  color: var(--text-tertiary);
 }

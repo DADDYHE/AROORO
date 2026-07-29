@@ -25,7 +25,6 @@
   font-weight: 400;
   color: #6c757d;
   position: relative;
-  transition: all 0.3s ease;
   letter-spacing: 0.5rpx;
 }
 
@@ -44,19 +43,13 @@
   height: 6rpx;
   background-color: var(--boarding-primary);
   border-radius: 3rpx;
-  transition: all 0.3s ease;
   box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.3);
-}
-
-.tab-button:active {
-  background-color: #f8f9fa;
 }
 
 /* 内容区域 */
 .content-area {
   min-height: calc(100vh - 100rpx); /* 减去切换栏高度 */
   position: relative;
-  transition: all 0.3s ease;
   padding-top: 0rpx; /* 恢复默认内边距，使用小程序默认导航栏 */
   overflow: auto; /* 允许内容滚动 */
 }
@@ -73,7 +66,7 @@
 /* 视频功能区 */
 .video-section {
   padding: 0rpx; /* 移除内边距，让视频播放器占满屏幕 */
-  background-color: #fff;
+  background-color: #FAFAF6;
   position: relative;
 }
 
@@ -95,7 +88,6 @@
   color: var(--boarding-primary);
   font-size: 28rpx;
   font-weight: 600;
-  transition: all 0.3s ease;
   text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
   background-color: rgba(255, 255, 255, 0.9);
   padding: 8rpx 16rpx;
@@ -128,7 +120,7 @@
 .video-item {
   width: 100%; /* 占满整个屏幕宽度 */
   height: 100%; /* 占满整个屏幕高度 */
-  background-color: #000;
+  background-color: var(--overlay-color);
   position: relative;
   overflow: hidden;
   border-radius: 0rpx; /* 去掉圆角，让视频占满整个屏幕 */
@@ -144,7 +136,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background-color: #000;
+  background-color: var(--overlay-color);
   position: absolute;
   top: 0;
   left: 0;
@@ -171,7 +163,6 @@
   margin-bottom: 12rpx;
   position: relative;
   overflow: hidden;
-  cursor: pointer;
 }
 
 /* 进度条滑块 */
@@ -185,7 +176,6 @@
   background-color: var(--boarding-primary);
   border-radius: 50%;
   box-shadow: 0 2rpx 8rpx rgba(255, 107, 0, 0.5);
-  transition: all 0.2s ease;
 }
 
 /* 进度条填充 */
@@ -193,7 +183,6 @@
   height: 100%;
   background-color: var(--boarding-primary);
   border-radius: 2rpx;
-  transition: width 0.3s ease;
   position: absolute;
   left: 0;
   top: 0;
@@ -279,14 +268,7 @@
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 20rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
   backdrop-filter: blur(10rpx);
-}
-
-.grid-button:active {
-  transform: scale(0.95);
-  background-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .grid-container {
@@ -316,7 +298,6 @@
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 3rpx;
   opacity: 0;
-  transition: opacity 0.3s ease;
 }
 
 .scroll-indicator.active {
@@ -332,22 +313,6 @@
   height: 20rpx;
   background-color: var(--boarding-primary);
   border-radius: 3rpx;
-  animation: scrollAnimation 1.5s infinite;
-}
-
-@keyframes scrollAnimation {
-  0% {
-    top: 0;
-    opacity: 0.5;
-  }
-  50% {
-    top: 40rpx;
-    opacity: 1;
-  }
-  100% {
-    top: 0;
-    opacity: 0.5;
-  }
 }
 
 /* 相册功能区 */
@@ -371,15 +336,8 @@
   overflow: hidden;
   margin-bottom: 28rpx;
   box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
   position: relative;
   z-index: 2;
-  cursor: pointer;
-}
-
-.main-photo:active {
-  transform: scale(0.98);
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
 .main-image {
@@ -402,15 +360,8 @@
   border-radius: 20rpx;
   overflow: hidden;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
   position: relative;
   z-index: 2;
-  cursor: pointer;
-}
-
-.thumbnail-item:active {
-  transform: scale(0.98);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .thumbnail-image {
@@ -426,7 +377,7 @@
   align-items: center;
   justify-content: center;
   min-height: 400rpx;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 32rpx;
   background-color: white;
   border-radius: 20rpx;
@@ -435,7 +386,7 @@
 
 .empty-text {
   font-size: 32rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* 响应式设计 */
@@ -534,17 +485,6 @@
 }
 
 /* 动画效果 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 .content-area.active {
-  animation: fadeIn 0.3s ease;
 }

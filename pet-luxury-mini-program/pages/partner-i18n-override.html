@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>i18n 覆盖管理</title>
+    <style id="theme-vars">
+:root {
+  --petlux-brand: #4F5E35;
+  --petlux-brand-deep: #3A4626;
+  --petlux-brand-soft: #EAEDDF;
+  --petlux-brand-ink: #FAFAF6;
+  --petlux-bg: #EDF0E2;
+  --petlux-surface: #FFFFFF;
+  --petlux-surface-2: #E2E6D3;
+  --petlux-surface-3: #D6DBC5;
+  --petlux-ink: #2A2823;
+  --petlux-ink-2: #635E54;
+  --petlux-ink-3: #9A9489;
+  --petlux-line: #D8DCCE;
+  --petlux-line-strong: #C9CFBA;
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+  --petlux-radius-xs: 4px; --petlux-radius-sm: 8px; --petlux-radius-md: 12px; --petlux-radius-lg: 16px; --petlux-radius-pill: 999px;
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+  --petlux-s-1: 4px; --petlux-s-2: 8px; --petlux-s-3: 12px; --petlux-s-4: 16px; --petlux-s-5: 24px; --petlux-s-6: 32px; --petlux-s-7: 48px;
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+  --petlux-text-display: 32px; --petlux-text-h1: 24px; --petlux-text-h2: 20px; --petlux-text-h3: 17px; --petlux-text-body: 15px; --petlux-text-body-sm: 13px; --petlux-text-caption: 12px;
+  --petlux-weight-regular: 400; --petlux-weight-medium: 500; --petlux-weight-semibold: 600;
+  --petlux-background: var(--petlux-bg);
+  --petlux-foreground: var(--petlux-ink);
+  --petlux-card: var(--petlux-surface);
+  --petlux-card-foreground: var(--petlux-ink);
+  --petlux-popover: var(--petlux-surface);
+  --petlux-popover-foreground: var(--petlux-ink);
+  --petlux-primary: var(--petlux-brand);
+  --petlux-primary-foreground: var(--petlux-brand-ink);
+  --petlux-secondary: var(--petlux-surface-2);
+  --petlux-secondary-foreground: var(--petlux-ink-2);
+  --petlux-muted: var(--petlux-surface-2);
+  --petlux-muted-foreground: var(--petlux-ink-2);
+  --petlux-accent: var(--petlux-brand-soft);
+  --petlux-accent-foreground: var(--petlux-brand);
+  --petlux-destructive: var(--petlux-state-error);
+  --petlux-destructive-foreground: #FAFAF6;
+  --petlux-border: var(--petlux-line);
+  --petlux-input: var(--petlux-line-strong);
+  --petlux-ring: var(--petlux-brand);
+  --petlux-radius-small: var(--petlux-radius-sm);
+  --petlux-radius-medium: var(--petlux-radius-md);
+  --petlux-radius-large: var(--petlux-radius-lg);
+}
+.dark {
+  --petlux-background: #161612; --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A; --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A; --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A; --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924; --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C; --petlux-input: #34322C; --petlux-ring: #7A8C5A;
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme inline {
+        --color-background: var(--petlux-background); --color-foreground: var(--petlux-foreground);
+        --color-card: var(--petlux-card); --color-card-foreground: var(--petlux-card-foreground);
+        --color-popover: var(--petlux-popover); --color-popover-foreground: var(--petlux-popover-foreground);
+        --color-primary: var(--petlux-primary); --color-primary-foreground: var(--petlux-primary-foreground);
+        --color-secondary: var(--petlux-secondary); --color-secondary-foreground: var(--petlux-secondary-foreground);
+        --color-muted: var(--petlux-muted); --color-muted-foreground: var(--petlux-muted-foreground);
+        --color-accent: var(--petlux-accent); --color-accent-foreground: var(--petlux-accent-foreground);
+        --color-destructive: var(--petlux-destructive); --color-destructive-foreground: var(--petlux-destructive-foreground);
+        --color-border: var(--petlux-border); --color-input: var(--petlux-input); --color-ring: var(--petlux-ring);
+        --radius-sm: var(--petlux-radius-sm); --radius-md: var(--petlux-radius-md); --radius-lg: var(--petlux-radius-lg);
+      }
+      @layer base { body { background: var(--petlux-background); color: var(--petlux-foreground); } }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--petlux-background); } .text-foreground { color: var(--petlux-foreground); }
+      .bg-card { background-color: var(--petlux-card); } .text-card-foreground { color: var(--petlux-card-foreground); }
+      .bg-popover { background-color: var(--petlux-popover); } .text-popover-foreground { color: var(--petlux-popover-foreground); }
+      .bg-primary { background-color: var(--petlux-primary); } .text-primary { color: var(--petlux-primary); }
+      .bg-primary-foreground { background-color: var(--petlux-primary-foreground); } .text-primary-foreground { color: var(--petlux-primary-foreground); }
+      .bg-secondary { background-color: var(--petlux-secondary); } .text-secondary-foreground { color: var(--petlux-secondary-foreground); }
+      .bg-muted { background-color: var(--petlux-muted); } .text-muted-foreground { color: var(--petlux-muted-foreground); }
+      .bg-accent { background-color: var(--petlux-accent); } .text-accent-foreground { color: var(--petlux-accent-foreground); }
+      .bg-destructive { background-color: var(--petlux-destructive); } .text-destructive { color: var(--petlux-destructive); }
+      .text-destructive-foreground { color: var(--petlux-destructive-foreground); }
+      .border-border { border-color: var(--petlux-border); } .border-input { border-color: var(--petlux-input); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .text-ink { color: var(--petlux-ink); } .text-ink-2 { color: var(--petlux-ink-2); } .text-ink-3 { color: var(--petlux-ink-3); }
+      .font-mono { font-family: var(--petlux-font-mono); }
+      .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
+      .modal { background: var(--petlux-card); border-radius: var(--petlux-radius-lg); width: 100%; max-width: 28rem; max-height: 85vh; display: flex; flex-direction: column; }
+      .modal-large { max-height: 90vh; }
+      .modal-mask.hidden { display: none; }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<style id="critical-layout">
+html, body { max-width: 100%; overflow-x: hidden; }
+body { margin: 0; background-color: var(--petlux-background); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+main > .petlux-shell { width: 100%; max-width: 28rem; margin-left: auto; margin-right: auto; }
+header[data-topbar] { min-height: 56px; }
+</style>
+<style id="petlux-utilities">
+  .petlux-card { box-shadow: var(--petlux-shadow-1); transition: transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s ease; }
+  .petlux-card:hover { transform: translateY(-2px); box-shadow: var(--petlux-shadow-2); }
+  .petlux-tap { transition: background-color .2s ease, opacity .2s ease; }
+  .petlux-tap:hover { background-color: var(--petlux-muted); }
+  .petlux-tap:active { opacity: .65; }
+  .petlux-btn-press { transition: transform .15s ease, box-shadow .25s ease, background-color .2s ease; }
+  .petlux-btn-press:hover { box-shadow: var(--petlux-shadow-2); }
+  .petlux-btn-press:active { transform: scale(.98); }
+  .seg { display: inline-flex; background: var(--petlux-muted); border-radius: var(--petlux-radius-sm); padding: 3px; gap: 2px; }
+  .seg-item { padding: 6px 14px; border-radius: var(--petlux-radius-xs); font-size: 13px; color: var(--petlux-ink-2); cursor: pointer; transition: all .2s ease; }
+  .seg-item.active { background: var(--petlux-primary); color: var(--petlux-primary-foreground); font-weight: 500; }
+</style>
+<main>
+  <div class="fixed top-0 right-3 z-50 flex items-center w-[88px] h-8 rounded-full border border-black/10 shrink-0" style="top: calc(env(safe-area-inset-top, 0px) + 12px);">
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="更多">
+        <i data-lucide="more-horizontal" class="w-4 h-4 text-foreground"></i>
+      </button>
+      <span class="w-px h-3 bg-black/10 block"></span>
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="关闭">
+        <i data-lucide="x" class="w-4 h-4 text-foreground"></i>
+      </button>
+    </div>
+
+<div class="petlux-shell max-w-md mx-auto bg-background min-h-screen pb-12 relative">
+
+  <!-- Sticky Topbar -->
+  <header data-topbar class="sticky top-0 z-30 h-14 px-4 flex items-center justify-between bg-background/95 backdrop-blur-sm border-b border-border">
+<button class="flex items-center justify-center w-8 h-8 -ml-1 petlux-tap rounded-full" aria-label="返回">
+      <i data-lucide="arrow-left" class="w-5 h-5 text-foreground"></i>
+    </button>
+    <span class="text-base font-medium text-foreground">i18n 覆盖管理</span>
+    <div class="w-8 h-8 gap-2">
+      </div>
+  </header>
+
+  <!-- Page -->
+  <div class="page">
+
+    <!-- Stats Bar -->
+    <div class="stats-bar grid grid-cols-4 px-4 pt-4 gap-2">
+      <div class="stat-item bg-card rounded-lg p-2.5 text-center petlux-card">
+        <div class="stat-num text-lg font-semibold text-ink leading-tight">12</div>
+        <div class="stat-label text-[10px] text-ink-2 mt-0.5">已启用</div>
+      </div>
+      <div class="stat-item bg-card rounded-lg p-2.5 text-center petlux-card">
+        <div class="stat-num text-lg font-semibold text-ink leading-tight">3</div>
+        <div class="stat-label text-[10px] text-ink-2 mt-0.5">已禁用</div>
+      </div>
+      <div class="stat-item bg-card rounded-lg p-2.5 text-center petlux-card">
+        <div class="stat-num text-lg font-semibold text-ink leading-tight">15</div>
+        <div class="stat-label text-[10px] text-ink-2 mt-0.5">唯一 key</div>
+      </div>
+      <div class="stat-item bg-card rounded-lg p-2.5 text-center petlux-card">
+        <div class="stat-num text-lg font-semibold text-ink leading-tight">15</div>
+        <div class="stat-label text-[10px] text-ink-2 mt-0.5">总条目</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar px-4 pt-3">
+      <!-- Search + New -->
+      <div class="toolbar-row flex items-center gap-2">
+        <div class="search-box flex-1 flex items-center bg-card border border-input rounded-sm h-9 px-3 gap-2">
+          <i data-lucide="search" class="w-4 h-4 text-ink-3 shrink-0"></i>
+          <input type="text" class="search-input flex-1 bg-transparent text-sm text-foreground placeholder:text-ink-3 outline-none border-0" placeholder="按 key 前缀过滤" />
+          <button class="search-clear w-5 h-5 flex items-center justify-center rounded-full bg-muted text-ink-2 text-xs shrink-0" aria-label="清除">×</button>
+        </div>
+        <button class="btn btn-primary h-9 px-4 bg-primary rounded-sm text-xs font-medium text-primary-foreground petlux-btn-press shrink-0">新建</button>
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="filter-row flex items-center gap-2 mt-3">
+        <div class="filter-pill px-3 py-1.5 rounded-pill text-xs font-medium bg-primary text-primary-foreground active">全部 (15)</div>
+        <div class="filter-pill px-3 py-1.5 rounded-pill text-xs font-medium bg-card text-ink-2 border border-border petlux-tap cursor-pointer">已启用</div>
+        <div class="filter-pill px-3 py-1.5 rounded-pill text-xs font-medium bg-card text-ink-2 border border-border petlux-tap cursor-pointer">已禁用</div>
+      </div>
+
+      <!-- Action Row -->
+      <div class="action-row flex items-center gap-2 mt-3">
+        <button class="action-btn flex-1 h-9 flex items-center justify-center gap-1.5 bg-card border border-border rounded-sm text-xs font-medium text-ink-2 petlux-btn-press">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          导出 JSON
+        </button>
+        <button class="action-btn flex-1 h-9 flex items-center justify-center gap-1.5 bg-card border border-border rounded-sm text-xs font-medium text-ink-2 petlux-btn-press">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+          缺失翻译
+        </button>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div class="list px-4 pt-4">
+
+      <!-- Card 1 -->
+      <div class="card bg-card rounded-lg p-4 mb-3 petlux-card">
+        <div class="card-header flex items-center justify-between mb-2">
+          <div class="card-key font-mono text-sm font-medium text-ink">HOME_TITLE</div>
+          <div class="card-locale text-[11px] px-2 py-0.5 rounded font-medium" style="background: rgba(91,124,74,0.12); color: var(--petlux-state-success);">zh-CN</div>
+        </div>
+        <div class="card-value text-sm text-ink-2 mb-3 leading-relaxed">宠爱如初</div>
+        <div class="card-meta flex items-center gap-3 mb-3 text-xs text-ink-3">
+          <span>状态: <span style="color: var(--petlux-state-success);">已启用</span></span>
+          <span class="card-note">备注: 首页主标题</span>
+        </div>
+        <div class="card-actions flex items-center gap-1">
+          <button class="action flex-1 h-8 text-xs font-medium text-primary bg-accent rounded-sm petlux-tap">编辑</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">预览</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">禁用</button>
+          <button class="action danger flex-1 h-8 text-xs font-medium text-destructive rounded-sm petlux-tap" style="background: rgba(168,91,74,0.08);">删除</button>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card bg-card rounded-lg p-4 mb-3 petlux-card">
+        <div class="card-header flex items-center justify-between mb-2">
+          <div class="card-key font-mono text-sm font-medium text-ink">HOME_SUBTITLE</div>
+          <div class="card-locale text-[11px] px-2 py-0.5 rounded font-medium" style="background: rgba(91,124,74,0.12); color: var(--petlux-state-success);">zh-CN</div>
+        </div>
+        <div class="card-value text-sm text-ink-2 mb-3 leading-relaxed">为爱宠开启精致生活</div>
+        <div class="card-meta flex items-center gap-3 mb-3 text-xs text-ink-3">
+          <span>状态: <span style="color: var(--petlux-state-success);">已启用</span></span>
+          <span class="card-note">备注: 首页副标题</span>
+        </div>
+        <div class="card-actions flex items-center gap-1">
+          <button class="action flex-1 h-8 text-xs font-medium text-primary bg-accent rounded-sm petlux-tap">编辑</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">预览</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">禁用</button>
+          <button class="action danger flex-1 h-8 text-xs font-medium text-destructive rounded-sm petlux-tap" style="background: rgba(168,91,74,0.08);">删除</button>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="card bg-card rounded-lg p-4 mb-3 petlux-card">
+        <div class="card-header flex items-center justify-between mb-2">
+          <div class="card-key font-mono text-sm font-medium text-ink">MALL_CART_EMPTY</div>
+          <div class="card-locale text-[11px] px-2 py-0.5 rounded font-medium" style="background: rgba(154,148,137,0.15); color: var(--petlux-ink-2);">zh-CN</div>
+        </div>
+        <div class="card-value text-sm text-ink-2 mb-3 leading-relaxed">购物车空空如也，去逛逛吧</div>
+        <div class="card-meta flex items-center gap-3 mb-3 text-xs text-ink-3">
+          <span>状态: <span style="color: var(--petlux-ink-2);">已禁用</span></span>
+          <span class="card-note">备注: 暂停使用</span>
+        </div>
+        <div class="card-actions flex items-center gap-1">
+          <button class="action flex-1 h-8 text-xs font-medium text-primary bg-accent rounded-sm petlux-tap">编辑</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">预览</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">启用</button>
+          <button class="action danger flex-1 h-8 text-xs font-medium text-destructive rounded-sm petlux-tap" style="background: rgba(168,91,74,0.08);">删除</button>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="card bg-card rounded-lg p-4 mb-3 petlux-card">
+        <div class="card-header flex items-center justify-between mb-2">
+          <div class="card-key font-mono text-sm font-medium text-ink">COMMON_CONFIRM</div>
+          <div class="card-locale text-[11px] px-2 py-0.5 rounded font-medium" style="background: rgba(91,124,74,0.12); color: var(--petlux-state-success);">en-US</div>
+        </div>
+        <div class="card-value text-sm text-ink-2 mb-3 leading-relaxed">Confirm</div>
+        <div class="card-meta flex items-center gap-3 mb-3 text-xs text-ink-3">
+          <span>状态: <span style="color: var(--petlux-state-success);">已启用</span></span>
+        </div>
+        <div class="card-actions flex items-center gap-1">
+          <button class="action flex-1 h-8 text-xs font-medium text-primary bg-accent rounded-sm petlux-tap">编辑</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">预览</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">禁用</button>
+          <button class="action danger flex-1 h-8 text-xs font-medium text-destructive rounded-sm petlux-tap" style="background: rgba(168,91,74,0.08);">删除</button>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="card bg-card rounded-lg p-4 mb-3 petlux-card">
+        <div class="card-header flex items-center justify-between mb-2">
+          <div class="card-key font-mono text-sm font-medium text-ink">SERVICE_BOOKING_TITLE</div>
+          <div class="card-locale text-[11px] px-2 py-0.5 rounded font-medium" style="background: rgba(91,124,74,0.12); color: var(--petlux-state-success);">zh-CN</div>
+        </div>
+        <div class="card-value text-sm text-ink-2 mb-3 leading-relaxed">预约上门服务</div>
+        <div class="card-meta flex items-center gap-3 mb-3 text-xs text-ink-3">
+          <span>状态: <span style="color: var(--petlux-state-success);">已启用</span></span>
+          <span class="card-note">备注: 服务页标题</span>
+        </div>
+        <div class="card-actions flex items-center gap-1">
+          <button class="action flex-1 h-8 text-xs font-medium text-primary bg-accent rounded-sm petlux-tap">编辑</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">预览</button>
+          <button class="action flex-1 h-8 text-xs font-medium text-ink-2 bg-muted rounded-sm petlux-tap">禁用</button>
+          <button class="action danger flex-1 h-8 text-xs font-medium text-destructive rounded-sm petlux-tap" style="background: rgba(168,91,74,0.08);">删除</button>
+        </div>
+      </div>
+
+      <!-- Load More -->
+      <div class="load-more text-center py-4 text-xs text-ink-3">— 已加载全部 (15) —</div>
+
+    </div>
+
+  </div>
+
+  <!-- Editor Modal -->
+  <div class="modal-mask hidden" id="editorModal">
+    <div class="modal">
+      <div class="modal-title text-base font-semibold text-ink px-4 pt-4 pb-3 border-b border-border">编辑 i18n 覆盖</div>
+      <div class="flex-1 overflow-y-auto no-scrollbar px-4 py-4 space-y-4">
+        <div class="form-row">
+          <label class="form-label block text-xs text-ink-2 mb-1.5">Key</label>
+          <input type="text" class="w-full bg-surface border border-input rounded-sm px-3 py-2 text-sm text-ink-3 outline-none" placeholder="例：HOME_TITLE" value="HOME_TITLE" disabled style="background: var(--petlux-muted);" />
+        </div>
+        <div class="form-row">
+          <label class="form-label block text-xs text-ink-2 mb-1.5">Locale</label>
+          <div class="seg flex">
+            <div class="seg-item active">zh-CN</div>
+            <div class="seg-item">en-US</div>
+            <div class="seg-item">ja-JP</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label block text-xs text-ink-2 mb-1.5">文案</label>
+          <textarea class="w-full bg-surface border border-input rounded-sm px-3 py-2 text-sm text-ink outline-none resize-none" rows="3" placeholder="覆盖后的文案">宠爱如初</textarea>
+        </div>
+        <div class="form-row">
+          <label class="form-label block text-xs text-ink-2 mb-1.5">状态</label>
+          <div class="seg flex">
+            <div class="seg-item active">启用</div>
+            <div class="seg-item">禁用</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label block text-xs text-ink-2 mb-1.5">备注</label>
+          <input type="text" class="w-full bg-surface border border-input rounded-sm px-3 py-2 text-sm text-ink outline-none" placeholder="可选" value="首页主标题" />
+        </div>
+      </div>
+      <div class="modal-actions flex gap-3 px-4 py-3 border-t border-border">
+        <button class="btn flex-1 h-10 rounded-sm border border-border bg-card text-sm font-medium text-ink petlux-btn-press">取消</button>
+        <button class="btn btn-primary flex-1 h-10 rounded-sm bg-primary text-sm font-medium text-primary-foreground petlux-btn-press">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="modal-mask hidden" id="previewModal">
+    <div class="modal">
+      <div class="modal-title font-mono text-base font-semibold text-ink px-4 pt-4 pb-3 border-b border-border">HOME_TITLE</div>
+      <div class="flex-1 overflow-y-auto no-scrollbar px-4 py-3 space-y-3">
+        <div class="preview-row flex items-start justify-between gap-3 py-2 border-b border-border">
+          <span class="preview-locale text-xs font-medium text-ink-2 shrink-0 w-12">zh-CN</span>
+          <div class="preview-value flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-ink">宠爱如初</span>
+              <span class="preview-status text-[10px] px-1.5 py-0.5 rounded" style="background: rgba(91,124,74,0.12); color: var(--petlux-state-success);">已启用</span>
+            </div>
+          </div>
+        </div>
+        <div class="preview-row flex items-start justify-between gap-3 py-2 border-b border-border">
+          <span class="preview-locale text-xs font-medium text-ink-2 shrink-0 w-12">en-US</span>
+          <div class="preview-value flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-ink">Love Anew</span>
+              <span class="preview-status text-[10px] px-1.5 py-0.5 rounded" style="background: rgba(91,124,74,0.12); color: var(--petlux-state-success);">已启用</span>
+            </div>
+          </div>
+        </div>
+        <div class="preview-row flex items-start justify-between gap-3 py-2 border-b border-border">
+          <span class="preview-locale text-xs font-medium text-ink-2 shrink-0 w-12">ja-JP</span>
+          <div class="preview-value empty flex-1 min-w-0">
+            <span class="text-sm text-ink-3">未配置</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions flex gap-3 px-4 py-3 border-t border-border">
+        <button class="btn btn-primary flex-1 h-10 rounded-sm bg-primary text-sm font-medium text-primary-foreground petlux-btn-press">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Missing Modal -->
+  <div class="modal-mask hidden" id="missingModal">
+    <div class="modal modal-large">
+      <div class="modal-title text-base font-semibold text-ink px-4 pt-4 pb-3 border-b border-border">缺失翻译概览</div>
+      <div class="missing-summary flex items-center gap-6 px-4 py-3 bg-muted/50">
+        <span class="text-xs text-ink-2">总 key: <span class="font-semibold text-ink">15</span></span>
+        <span class="text-xs text-ink-2">缺失: <span class="font-semibold" style="color: var(--petlux-state-warning);">4</span></span>
+      </div>
+      <div class="missing-scroll flex-1 overflow-y-auto no-scrollbar px-4 py-3 space-y-4">
+        <!-- Locale: zh-CN -->
+        <div class="missing-locale">
+          <div class="missing-locale-head flex items-center justify-between mb-2">
+            <span class="missing-locale-name text-sm font-medium text-ink">zh-CN</span>
+            <span class="missing-locale-count text-xs text-ink-3">0 处缺失</span>
+          </div>
+          <div class="missing-empty text-xs flex items-center gap-1" style="color: var(--petlux-state-success);">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+            全部翻译齐
+          </div>
+        </div>
+        <!-- Locale: en-US -->
+        <div class="missing-locale">
+          <div class="missing-locale-head flex items-center justify-between mb-2">
+            <span class="missing-locale-name text-sm font-medium text-ink">en-US</span>
+            <span class="missing-locale-count text-xs" style="color: var(--petlux-state-warning);">2 处缺失</span>
+          </div>
+          <div class="space-y-2">
+            <div class="missing-item flex items-center gap-2 p-2 rounded-sm bg-muted/50">
+              <span class="missing-key font-mono text-xs font-medium text-ink flex-1 truncate">SERVICE_BOOKING_TITLE</span>
+              <span class="missing-avail text-[10px] text-ink-3 shrink-0">已在: zh-CN</span>
+              <button class="missing-fill px-2 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground petlux-tap shrink-0">补</button>
+            </div>
+            <div class="missing-item flex items-center gap-2 p-2 rounded-sm bg-muted/50">
+              <span class="missing-key font-mono text-xs font-medium text-ink flex-1 truncate">MALL_CART_EMPTY</span>
+              <span class="missing-avail text-[10px] text-ink-3 shrink-0">已在: zh-CN</span>
+              <button class="missing-fill px-2 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground petlux-tap shrink-0">补</button>
+            </div>
+          </div>
+        </div>
+        <!-- Locale: ja-JP -->
+        <div class="missing-locale">
+          <div class="missing-locale-head flex items-center justify-between mb-2">
+            <span class="missing-locale-name text-sm font-medium text-ink">ja-JP</span>
+            <span class="missing-locale-count text-xs" style="color: var(--petlux-state-warning);">2 处缺失</span>
+          </div>
+          <div class="space-y-2">
+            <div class="missing-item flex items-center gap-2 p-2 rounded-sm bg-muted/50">
+              <span class="missing-key font-mono text-xs font-medium text-ink flex-1 truncate">HOME_TITLE</span>
+              <span class="missing-avail text-[10px] text-ink-3 shrink-0">已在: zh-CN, en-US</span>
+              <button class="missing-fill px-2 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground petlux-tap shrink-0">补</button>
+            </div>
+            <div class="missing-item flex items-center gap-2 p-2 rounded-sm bg-muted/50">
+              <span class="missing-key font-mono text-xs font-medium text-ink flex-1 truncate">HOME_SUBTITLE</span>
+              <span class="missing-avail text-[10px] text-ink-3 shrink-0">已在: zh-CN, en-US</span>
+              <button class="missing-fill px-2 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground petlux-tap shrink-0">补</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions flex gap-3 px-4 py-3 border-t border-border">
+        <button class="btn btn-primary flex-1 h-10 rounded-sm bg-primary text-sm font-medium text-primary-foreground petlux-btn-press">关闭</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+<script>lucide.createIcons();</script>
+</body>
+</html>

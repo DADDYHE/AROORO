@@ -994,6 +994,7 @@ interface FailedOpDoc {
   status: 'pending' | 'done' | 'failed'
   retryCount: number
   lastError?: { message?: string, at?: unknown }
+  deadAt?: unknown
   createdAt?: unknown
   updatedAt?: unknown
 }

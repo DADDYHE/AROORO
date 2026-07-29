@@ -26,7 +26,6 @@
   color: var(--text-secondary);
   background: var(--card-color);
   position: relative;
-  transition: all 0.3s;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
   flex: 1;
 }
@@ -34,7 +33,7 @@
 .tab-active {
   background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   color: var(--card-color);
-  box-shadow: 0 4rpx 16rpx rgba(78, 205, 196, 0.3);
+  box-shadow: 0 4rpx 16rpx rgba(79, 94, 53, 0.3);
 }
 
 .tab-text {
@@ -48,12 +47,10 @@
   border-radius: 50%;
   background: var(--card-color);
   margin-top: 8rpx;
-  animation: dotPulse 1.5s ease-in-out infinite;
 }
 
 .search-bar {
   padding: 0 32rpx 20rpx;
-  transition: all 0.3s;
 }
 
 .search-focused {
@@ -70,12 +67,11 @@
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
   gap: 12rpx;
   border: 2rpx solid transparent;
-  transition: all 0.3s;
 }
 
 .search-focused .search-input-wrap {
-  border-color: rgba(78, 205, 196, 0.4);
-  box-shadow: 0 4rpx 20rpx rgba(78, 205, 196, 0.12);
+  border-color: rgba(79, 94, 53, 0.4);
+  box-shadow: 0 4rpx 20rpx rgba(79, 94, 53, 0.12);
 }
 
 .search-icon-wrap {
@@ -153,11 +149,6 @@
   letter-spacing: 2rpx;
 }
 
-.card-hover {
-  transform: scale(0.98);
-  box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
-}
-
 .card-accent {
   width: 4rpx;
   height: 100%;
@@ -225,7 +216,7 @@
 }
 
 .status-published {
-  background: rgba(78, 205, 196, 0.12);
+  background: rgba(79, 94, 53, 0.12);
   color: var(--activity-primary-mid);
 }
 
@@ -403,17 +394,11 @@
   height: 108rpx;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  box-shadow: 0 8rpx 32rpx rgba(78, 205, 196, 0.4);
+  box-shadow: 0 8rpx 32rpx rgba(79, 94, 53, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
-  transition: all 0.2s;
-}
-
-.fab-hover {
-  transform: scale(0.9) rotate(90deg);
-  box-shadow: 0 4rpx 16rpx rgba(78, 205, 196, 0.3);
 }
 
 .fab-icon-line {
@@ -426,21 +411,6 @@
 
 .fab-icon-vertical {
   transform: rotate(90deg);
-}
-
-@keyframes dotPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.hall-refreshing {
-  position: relative;
-}
-
-.card-fading {
-  opacity: 0.35;
-  transition: opacity 0.2s ease-out;
-  pointer-events: none;
 }
 
 .refresh-indicator {
@@ -456,13 +426,10 @@
   height: 10rpx;
   border-radius: 50%;
   background: var(--activity-primary);
-  animation: dotBounce 1.4s ease-in-out infinite;
 }
 
 .refresh-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .refresh-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }

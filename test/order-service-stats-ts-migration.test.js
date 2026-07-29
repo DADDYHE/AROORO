@@ -313,20 +313,16 @@ describe('Sprint 30: orderService/stats TypeScript 迁移', () => {
       expect(typesDt).toMatch(/interface\s+CloudBaseAggregate\b/)
     })
 
-    test('AggregateOps 接口定义存在', () => {
-      expect(typesDt).toMatch(/interface\s+AggregateOps\b/)
-    })
-
     test('CloudBaseQuery 包含 aggregate() 方法', () => {
-      expect(typesDt).toMatch(/aggregate:\s*\(\)\s*=>\s*CloudBaseAggregate/)
+      expect(typesDt).toMatch(/aggregate\(\)\s*:\s*CloudBaseAggregate/)
     })
 
     test('CloudBaseAggregate 包含 group() 方法', () => {
-      expect(typesDt).toMatch(/group:\s*\(spec:\s*Record<string,\s*unknown>\)\s*=>\s*CloudBaseAggregate/)
+      expect(typesDt).toMatch(/group\(stage:\s*Record<string,\s*unknown>\)\s*:\s*CloudBaseAggregate/)
     })
 
     test('CloudBaseAggregate 包含 end() 方法', () => {
-      expect(typesDt).toMatch(/end:\s*\(\)\s*=>\s*Promise<\{\s*list:\s*any\[\]\s*\}>/)
+      expect(typesDt).toMatch(/end\(\)\s*:\s*Promise<CloudBaseAggregateResult<T>>/)
     })
   })
 

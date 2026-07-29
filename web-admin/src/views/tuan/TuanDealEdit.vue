@@ -81,13 +81,13 @@
             <el-input v-model="form.description" type="textarea" :rows="4" placeholder="请输入团购描述" />
           </el-form-item>
           <el-form-item label="封面图">
-            <el-upload class="cover-uploader" :action="uploadUrl" :headers="uploadHeaders" :show-file-list="false" :on-success="onCoverUpload" :before-upload="beforeUpload" accept="image/*">
+            <el-upload class="cover-uploader" :http-request="customUpload" :show-file-list="false" :on-success="onCoverUpload" :before-upload="beforeUpload" accept="image/*">
               <el-image v-if="form.coverUrlPreview || form.coverUrl" :src="form.coverUrlPreview || form.coverUrl" fit="cover" class="cover-preview" />
               <el-icon v-else class="cover-uploader-icon"><Plus /></el-icon>
             </el-upload>
           </el-form-item>
           <el-form-item label="详情图">
-            <el-upload :action="uploadUrl" :headers="uploadHeaders" list-type="picture-card" :file-list="imageFileList" :on-success="onImageUpload" :on-remove="onImageRemove" :before-upload="beforeUpload" accept="image/*">
+            <el-upload :http-request="customUpload" list-type="picture-card" :file-list="imageFileList" :on-success="onImageUpload" :on-remove="onImageRemove" :before-upload="beforeUpload" accept="image/*">
               <el-icon><Plus /></el-icon>
             </el-upload>
           </el-form-item>
@@ -152,6 +152,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { getTuanDealDetail, createTuanDeal, updateTuanDeal, publishTuanDeal } from '@/api/tuan'
 import { getProductList } from '@/api/product'
 import { listCategories } from '@/api/product'
+import { uploadFile } from '@/api/upload'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
@@ -176,12 +177,6 @@ const form = reactive({
 
 const batchTuanPrice = reactive({})
 const batchTuanStock = reactive({})
-
-const uploadUrl = '/api'
-const uploadHeaders = computed(() => {
-  const token = localStorage.getItem('token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
-})
 
 const imageFileList = computed(() => form.imagePreviews.map((url, i) => ({ name: `img_${i}`, url })))
 
@@ -353,6 +348,17 @@ function beforeUpload(file) {
   if (!file.type.startsWith('image/')) { ElMessage.error('只能上传图片'); return false }
   if (file.size > 5 * 1024 * 1024) { ElMessage.error('图片不能超过5MB'); return false }
   return true
+}
+
+async function customUpload(options) {
+  const { file } = options
+  try {
+    const result = await uploadFile(file, `tuan/${Date.now()}_${file.name}`)
+    return { code: 0, data: result }
+  } catch (err) {
+    ElMessage.error(err?.message || '上传失败')
+    throw err
+  }
 }
 
 function validateForm() {

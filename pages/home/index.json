@@ -3,7 +3,7 @@
     "activity-card": "../../components/activity-card/activity-card",
     "login-prompt": "../../components/login-prompt/login-prompt"
   },
-  "navigationBarTitleText": "左右",
+  "navigationBarTitleText": "AROORO",
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "light"
 }

@@ -19,8 +19,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 20% 80%, rgba(78, 205, 196, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(38, 166, 154, 0.1) 0%, transparent 50%);
+  background: radial-gradient(circle at 20% 80%, rgba(79, 94, 53, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(58, 70, 38, 0.1) 0%, transparent 50%);
   z-index: 0;
 }
 
@@ -72,14 +72,12 @@
   display: block;
   text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
   letter-spacing: 2rpx;
-  animation: titleFadeIn 1s ease-out;
 }
 
 .activity-meta {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
-  animation: metaFadeIn 1.2s ease-out;
   margin-bottom: 24rpx;
 }
 
@@ -117,7 +115,6 @@
   display: flex;
   align-items: baseline;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-  animation: priceFadeIn 1.4s ease-out;
 }
 
 .free-tag .price-value {
@@ -148,16 +145,6 @@
 }
 
 /* 价格标签动画 */
-@keyframes priceFadeIn {
-  from {
-    opacity: 0;
-    transform: translate(20rpx, 20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translate(0, 0);
-  }
-}
 
 /* 表单区域 */
 .form-section {
@@ -169,7 +156,6 @@
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
   z-index: 1;
   overflow: hidden;
-  animation: sectionFadeIn 1.4s ease-out;
 }
 
 .section-decoration {
@@ -184,7 +170,7 @@
 .section-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 32rpx;
   position: relative;
   display: inline-block;
@@ -228,13 +214,7 @@
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.3);
-  transition: all 0.3s ease;
-}
-
-.add-more-pet-btn:hover {
-  box-shadow: 0 6rpx 16rpx rgba(78, 205, 196, 0.4);
-  transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(79, 94, 53, 0.3);
 }
 
 /* 快速选择按钮 */
@@ -256,22 +236,12 @@
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.3);
-  transition: all 0.3s ease;
-}
-
-.quick-select-btn:hover {
-  box-shadow: 0 6rpx 16rpx rgba(78, 205, 196, 0.4);
-  transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(79, 94, 53, 0.3);
 }
 
 .my-pets-btn {
   background: linear-gradient(135deg, #FFA726, #FB8C00);
   box-shadow: 0 4rpx 12rpx rgba(255, 167, 38, 0.3);
-}
-
-.my-pets-btn:hover {
-  box-shadow: 0 6rpx 16rpx rgba(255, 167, 38, 0.4);
 }
 
 /* 宠物档案选择弹窗 */
@@ -286,7 +256,6 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  animation: maskFadeIn 0.2s ease;
 }
 
 .pet-picker-panel {
@@ -296,7 +265,6 @@
   border-radius: 32rpx 32rpx 0 0;
   display: flex;
   flex-direction: column;
-  animation: slideUp 0.3s ease;
 }
 
 .pet-picker-header {
@@ -310,12 +278,12 @@
 .pet-picker-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .pet-picker-close {
   font-size: 48rpx;
-  color: #999;
+  color: var(--text-tertiary);
   line-height: 1;
   padding: 0 8rpx;
 }
@@ -343,13 +311,13 @@
 
 .pet-picker-empty .empty-text {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-primary);
   font-weight: bold;
 }
 
 .pet-picker-empty .empty-hint {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .add-pet-btn {
@@ -364,7 +332,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(79, 94, 53, 0.3);
 }
 
 .pet-picker-list {
@@ -378,11 +346,6 @@
   border-radius: 16rpx;
   background: #f8f9fa;
   margin-bottom: 16rpx;
-  transition: all 0.2s ease;
-}
-
-.pet-picker-item:active {
-  background: #e8f5f3;
 }
 
 .pet-picker-avatar {
@@ -419,7 +382,7 @@
 .pet-picker-name {
   font-size: 28rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   display: block;
   margin-bottom: 8rpx;
   overflow: hidden;
@@ -429,7 +392,7 @@
 
 .pet-picker-detail {
   font-size: 22rpx;
-  color: #888;
+  color: var(--text-tertiary);
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -438,27 +401,18 @@
 
 .pet-picker-arrow {
   font-size: 40rpx;
-  color: #ccc;
+  color: var(--text-tertiary);
   margin-left: 16rpx;
   flex-shrink: 0;
 }
 
-@keyframes maskFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
 
 /* 宠物信息区域 */
 .pet-section {
   margin-bottom: 32rpx;
   padding-bottom: 32rpx;
   border-bottom: 2rpx dashed #f0f0f0;
-  animation: sectionFadeIn 1.4s ease-out;
 }
 
 .pet-section:last-child {
@@ -477,7 +431,7 @@
 .pet-title {
   font-size: 28rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   position: relative;
   display: inline-block;
 }
@@ -503,12 +457,6 @@
   background-color: rgba(255, 77, 79, 0.1);
   color: #ff4d4f;
   font-size: 20rpx;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.remove-pet-btn:hover {
-  background-color: rgba(255, 77, 79, 0.2);
 }
 
 .remove-icon {
@@ -526,7 +474,7 @@
 .label {
   display: block;
   font-size: 24rpx;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 16rpx;
   font-weight: 500;
 }
@@ -548,17 +496,9 @@
   background-color: var(--gray-50);
   z-index: 2;
   position: relative;
-  transition: all 0.3s ease;
   line-height: 1.5;
   min-height: 88rpx;
   box-sizing: border-box;
-}
-
-.input:focus {
-  outline: none;
-  background-color: white;
-  transform: translateY(-2rpx);
-  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.1);
 }
 
 .input-decoration {
@@ -567,14 +507,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(38, 166, 154, 0.1));
+  background: linear-gradient(135deg, rgba(79, 94, 53, 0.1), rgba(58, 70, 38, 0.1));
   z-index: 1;
   opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.input-container:focus-within .input-decoration {
-  opacity: 1;
 }
 
 .textarea-container {
@@ -594,17 +529,9 @@
   background-color: var(--gray-50);
   z-index: 2;
   position: relative;
-  transition: all 0.3s ease;
-  resize: none;
   line-height: 1.6;
   min-height: 160rpx;
   box-sizing: border-box;
-}
-
-.textarea:focus {
-  outline: none;
-  background-color: white;
-  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.1);
 }
 
 /* 性别选择 */
@@ -616,21 +543,19 @@
 .gender-option {
   flex: 1;
   padding: 20rpx;
-  border: 2rpx solid #e0e0e0;
+  border: 2rpx solid var(--border-color);
   border-radius: 12rpx;
   text-align: center;
   font-size: 24rpx;
-  color: #666;
-  transition: all 0.3s ease;
+  color: var(--text-secondary);
   position: relative;
   overflow: hidden;
-  cursor: pointer;
 }
 
 .gender-option.active {
   border-color: var(--activity-primary);
   color: var(--activity-primary);
-  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.2);
+  box-shadow: 0 4rpx 12rpx rgba(79, 94, 53, 0.2);
 }
 
 .gender-decoration {
@@ -639,8 +564,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(78, 205, 196, 0.1), transparent);
-  transition: left 0.6s ease;
+  background: linear-gradient(90deg, transparent, rgba(79, 94, 53, 0.1), transparent);
 }
 
 .gender-option.active .gender-decoration {
@@ -664,13 +588,7 @@
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.3);
-  transition: all 0.3s ease;
-}
-
-.add-friend-btn:hover {
-  box-shadow: 0 6rpx 16rpx rgba(78, 205, 196, 0.4);
-  transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(79, 94, 53, 0.3);
 }
 
 .add-icon {
@@ -694,12 +612,6 @@
   overflow: hidden;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
   background-color: white;
-  transition: all 0.3s ease;
-}
-
-.friend-item:hover {
-  transform: translateY(-2rpx);
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
 }
 
 .friend-bg {
@@ -708,7 +620,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(78, 205, 196, 0.05), rgba(38, 166, 154, 0.05));
+  background: linear-gradient(135deg, rgba(79, 94, 53, 0.05), rgba(58, 70, 38, 0.05));
   z-index: 1;
 }
 
@@ -731,7 +643,7 @@
 .friend-name {
   font-size: 28rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   flex: 0 1 auto;
   min-width: 0;
   white-space: nowrap;
@@ -743,7 +655,7 @@
   font-size: 20rpx;
   padding: 6rpx 12rpx;
   border-radius: 12rpx;
-  background-color: rgba(78, 205, 196, 0.1);
+  background-color: rgba(79, 94, 53, 0.1);
   color: var(--activity-primary);
   font-weight: 500;
   flex-shrink: 0;
@@ -758,7 +670,7 @@
 
 .friend-breed, .friend-phone {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
@@ -768,14 +680,14 @@
   padding-top: 12rpx;
   border-top: 1rpx solid #f0f0f0;
   font-size: 20rpx;
-  color: #888;
+  color: var(--text-tertiary);
   line-height: 1.4;
 }
 
 .notes-label {
   font-weight: 500;
   margin-right: 8rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .notes-content {
@@ -795,7 +707,7 @@
 
 .action-btn {
   padding: 10rpx 16rpx !important;
-  border: 2rpx solid #e0e0e0 !important;
+  border: 2rpx solid var(--border-color) !important;
   border-radius: 8rpx !important;
   font-size: 18rpx !important;
   height: 52rpx !important;
@@ -803,7 +715,6 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: all 0.3s ease !important;
   min-width: 120rpx !important;
   max-width: 120rpx !important;
   flex-shrink: 0 !important;
@@ -812,11 +723,7 @@
 .edit-btn {
   color: var(--activity-primary);
   border-color: var(--activity-primary);
-  background-color: rgba(78, 205, 196, 0.05);
-}
-
-.edit-btn:hover {
-  background-color: rgba(78, 205, 196, 0.1);
+  background-color: rgba(79, 94, 53, 0.05);
 }
 
 .delete-btn {
@@ -825,13 +732,9 @@
   background-color: rgba(255, 77, 79, 0.05);
 }
 
-.delete-btn:hover {
-  background-color: rgba(255, 77, 79, 0.1);
-}
-
 .empty-friends {
   text-align: center;
-  color: #999;
+  color: var(--text-tertiary);
   padding: 80rpx 0;
   font-size: 24rpx;
   display: flex;
@@ -848,7 +751,7 @@
 
 .empty-hint {
   font-size: 20rpx;
-  color: #bbb;
+  color: var(--text-tertiary);
   margin-top: 8rpx;
 }
 
@@ -873,15 +776,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6rpx 20rpx rgba(78, 205, 196, 0.4);
-  transition: all 0.3s ease;
+  box-shadow: 0 6rpx 20rpx rgba(79, 94, 53, 0.4);
   overflow: hidden;
-  animation: submitBtnFadeIn 1.6s ease-out;
-}
-
-.submit-btn:hover {
-  box-shadow: 0 8rpx 24rpx rgba(78, 205, 196, 0.5);
-  transform: translateY(-4rpx);
 }
 
 .submit-text {
@@ -897,57 +793,12 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s ease;
-}
-
-.submit-btn:hover .submit-decoration {
-  left: 100%;
 }
 
 /* 动画效果 */
-@keyframes titleFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes metaFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes sectionFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(30rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes submitBtnFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(40rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 /* 响应式调整 */
 @media (max-width: 375px) {
@@ -988,20 +839,20 @@
 }
 
 .coupon-section { padding: 24rpx; }
-.section-title-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.section-title-row { display: flex; justify-content: space-between; align-items: center; }
 .coupon-hint { font-size: 24rpx; color: #f5222d; }
 .selected-coupon { display: flex; justify-content: space-between; align-items: center; padding: 16rpx; background: #fff7e6; border-radius: 12rpx; margin-top: 12rpx; }
 .coupon-info { display: flex; flex-direction: column; }
-.coupon-name { font-size: 26rpx; color: #333; }
+.coupon-name { font-size: 26rpx; color: var(--text-primary); }
 .coupon-discount { font-size: 32rpx; color: #f5222d; font-weight: 700; }
-.remove-coupon { font-size: 28rpx; color: #ccc; padding: 8rpx; }
+.remove-coupon { font-size: 28rpx; color: var(--text-tertiary); padding: 8rpx; }
 .coupon-list { margin-top: 12rpx; }
 .coupon-item { display: flex; align-items: center; padding: 16rpx 12rpx; background: var(--surface-tint); border-radius: 10rpx; margin-bottom: 12rpx; }
 .coupon-item-left { width: 120rpx; text-align: center; color: #f5222d; font-size: 22rpx; }
 .coupon-item-left .big { font-size: 40rpx; font-weight: 700; }
 .coupon-item-right { flex: 1; margin-left: 12rpx; }
-.coupon-item-name { font-size: 26rpx; color: #333; font-weight: 500; }
-.coupon-item-rule { font-size: 22rpx; color: #999; margin-top: 4rpx; }
+.coupon-item-name { font-size: 26rpx; color: var(--text-primary); font-weight: 500; }
+.coupon-item-rule { font-size: 22rpx; color: var(--text-tertiary); margin-top: 4rpx; }
 
 /* 已报名状态 */
 .registered-status {
@@ -1014,7 +865,6 @@
   background: white;
   border-radius: 24rpx;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
-  animation: sectionFadeIn 1.4s ease-out;
 }
 
 .registered-icon {
@@ -1028,19 +878,19 @@
   font-size: 60rpx;
   color: white;
   margin-bottom: 32rpx;
-  box-shadow: 0 8rpx 24rpx rgba(78, 205, 196, 0.3);
+  box-shadow: 0 8rpx 24rpx rgba(79, 94, 53, 0.3);
 }
 
 .registered-text {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 16rpx;
 }
 
 .registered-hint {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .fee-detail {
@@ -1053,7 +903,7 @@
 .fee-detail-title {
   font-size: 26rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 16rpx;
 }
 
@@ -1071,12 +921,12 @@
 
 .fee-detail-label {
   font-size: 24rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .fee-detail-value {
   font-size: 24rpx;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .fee-detail-total {
@@ -1090,7 +940,7 @@
 
 .fee-detail-total .fee-detail-label {
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .fee-detail-total .fee-detail-value {

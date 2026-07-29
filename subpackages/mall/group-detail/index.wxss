@@ -7,11 +7,9 @@
 }
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }
 
 .empty-page {
@@ -27,7 +25,6 @@
 .detail-title-area {
   background: var(--card-color);
   padding: 32rpx 32rpx 24rpx;
-  animation: fadeUp var(--duration-elegant) var(--ease-velvet);
 }
 
 .detail-title {
@@ -43,7 +40,6 @@
   background: var(--card-color);
   padding: 24rpx 32rpx;
   margin-top: 16rpx;
-  animation: fadeUp var(--duration-elegant) var(--ease-velvet) 0.2s both;
 }
 
 .detail-desc {
@@ -56,7 +52,6 @@
 
 .detail-section {
   padding: 32rpx 32rpx 16rpx;
-  animation: fadeUp var(--duration-elegant) var(--ease-velvet) 0.1s both;
 }
 
 .section-title {
@@ -80,13 +75,6 @@
   gap: 20rpx;
   box-shadow: var(--shadow-md);
   border: 1rpx solid rgba(74, 69, 67, 0.1);
-  transition: all var(--transition-normal);
-  animation: fadeUp var(--duration-elegant) var(--ease-velvet) both;
-}
-
-.product-card:active {
-  transform: scale(0.98);
-  box-shadow: var(--shadow-lg);
 }
 
 .product-img {
@@ -154,7 +142,6 @@
   font-weight: 700;
   letter-spacing: 1rpx;
   box-shadow: var(--shadow-glow-groupbuy), var(--shadow-emboss);
-  transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
 }
@@ -182,16 +169,8 @@
   width: 60%;
   height: 100%;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
-  transform: skewX(-20deg);
-  animation: btn-sheen var(--transition-shimmer) infinite;
   pointer-events: none;
   z-index: 1;
-}
-
-.product-buy-btn:active {
-  background: var(--groupbuy-gradient-dark);
-  box-shadow: var(--shadow-glow-groupbuy-dark), var(--shadow-emboss);
-  transform: scale(0.96);
 }
 
 .product-stock {
@@ -210,7 +189,6 @@
 
 .detail-images {
   padding: 24rpx 32rpx;
-  animation: fadeUp var(--duration-elegant) var(--ease-velvet) 0.2s both;
 }
 
 .detail-img {
@@ -317,7 +295,6 @@
   box-shadow: var(--shadow-glow-groupbuy-dark), var(--shadow-emboss);
   position: relative;
   overflow: hidden;
-  transition: all var(--transition-fast);
 }
 
 /* 顶部玻璃高光 */
@@ -343,16 +320,8 @@
   width: 60%;
   height: 100%;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
-  transform: skewX(-20deg);
-  animation: btn-sheen var(--transition-shimmer) infinite;
   pointer-events: none;
   z-index: 1;
-}
-
-.footer-btn:active {
-  background: var(--groupbuy-gradient-dark);
-  box-shadow: var(--shadow-glow-groupbuy-dark), var(--shadow-emboss);
-  transform: scale(0.98);
 }
 
 .sku-popup-mask {
@@ -365,7 +334,6 @@
   z-index: 200;
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-normal);
 }
 
 .sku-popup-mask.show {
@@ -382,8 +350,6 @@
   background: var(--glass-border);
   border-top: 1rpx solid var(--border-inverse-35);
   border-radius: 32rpx 32rpx 0 0;
-  transform: translateY(100%);
-  transition: transform var(--transition-normal);
   max-height: 75vh;
   display: flex;
   flex-direction: column;
@@ -391,7 +357,6 @@
 }
 
 .sku-popup.show {
-  transform: translateY(0);
 }
 
 .sku-popup-inner {
@@ -494,7 +459,6 @@
   border-radius: 40rpx;
   background: var(--divider-color);
   border: 2rpx solid transparent;
-  transition: all var(--transition-fast);
 }
 
 .sku-option.selected {
@@ -548,7 +512,6 @@
   justify-content: center;
   font-size: 32rpx;
   color: var(--text-primary);
-  transition: all var(--transition-fast);
 }
 
 .quantity-btn.disabled {
@@ -582,7 +545,6 @@
   color: var(--text-inverse);
   letter-spacing: 3rpx;
   box-shadow: var(--shadow-glow-groupbuy-dark), var(--shadow-emboss);
-  transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
 }
@@ -610,8 +572,6 @@
   width: 60%;
   height: 100%;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%);
-  transform: skewX(-20deg);
-  animation: btn-sheen var(--transition-shimmer) infinite;
   pointer-events: none;
   z-index: 1;
 }
@@ -622,21 +582,4 @@
   pointer-events: none;
 }
 
-.sku-confirm-btn:active {
-  background: var(--groupbuy-gradient-dark);
-  box-shadow: var(--shadow-glow-groupbuy-dark), var(--shadow-emboss);
-  transform: scale(0.98);
-}
-
 /* ── Sakura 光泽扫过动画 ── */
-@keyframes btn-sheen {
-  0% {
-    left: -100%;
-  }
-  35% {
-    left: 200%;
-  }
-  100% {
-    left: 200%;
-  }
-}

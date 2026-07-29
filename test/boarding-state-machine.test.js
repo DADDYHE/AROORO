@@ -12,20 +12,20 @@ const {
 
 describe('orderService/common/boarding-state-machine', () => {
   describe('boardingOrderStateMachine', () => {
-    test('initial 应为 pending', () => {
-      expect(boardingOrderStateMachine.initial).toBe('pending')
+    test('initial 应为 pending_payment', () => {
+      expect(boardingOrderStateMachine.initial).toBe('pending_payment')
     })
 
-    test('应包含 7 个状态', () => {
+    test('应包含 9 个状态', () => {
       expect(boardingOrderStateMachine.states.sort()).toEqual(
-        ['cancelled', 'completed', 'confirmed', 'in_progress', 'paid', 'pending', 'rejected']
+        ['cancelled', 'completed', 'confirmed', 'deleted', 'in_progress', 'paid', 'pending_payment', 'refunded', 'rejected']
       )
     })
 
-    test('pending → confirmed / rejected / cancelled 应合法', () => {
-      expect(boardingOrderStateMachine.canTransition('pending', 'confirmed')).toBe(true)
-      expect(boardingOrderStateMachine.canTransition('pending', 'rejected')).toBe(true)
-      expect(boardingOrderStateMachine.canTransition('pending', 'cancelled')).toBe(true)
+    test('pending_payment → paid / cancelled 应合法', () => {
+      expect(boardingOrderStateMachine.canTransition('pending_payment', 'paid')).toBe(true)
+      expect(boardingOrderStateMachine.canTransition('pending_payment', 'cancelled')).toBe(true)
+      expect(boardingOrderStateMachine.canTransition('pending_payment', 'confirmed')).toBe(false)
     })
 
     test('paid → confirmed / rejected / cancelled 应合法', () => {
@@ -51,11 +51,11 @@ describe('orderService/common/boarding-state-machine', () => {
     })
 
     test('pending → in_progress 应非法（需先 confirmed）', () => {
-      expect(boardingOrderStateMachine.canTransition('pending', 'in_progress')).toBe(false)
+      expect(boardingOrderStateMachine.canTransition('pending_payment', 'in_progress')).toBe(false)
     })
 
     test('pending → completed 应非法（需先 confirmed/in_progress）', () => {
-      expect(boardingOrderStateMachine.canTransition('pending', 'completed')).toBe(false)
+      expect(boardingOrderStateMachine.canTransition('pending_payment', 'completed')).toBe(false)
     })
 
     test('completed → cancelled 应非法（终态）', () => {
@@ -94,12 +94,12 @@ describe('orderService/common/boarding-state-machine', () => {
   })
 
   describe('canPerformOperation', () => {
-    test('pending + confirm 应合法', () => {
-      expect(canPerformOperation('pending', 'confirm')).toBe(true)
+    test('pending_payment + confirm 应非法（需先 paid）', () => {
+      expect(canPerformOperation('pending_payment', 'confirm')).toBe(false)
     })
 
-    test('pending + complete 应非法（需先 confirmed）', () => {
-      expect(canPerformOperation('pending', 'complete')).toBe(false)
+    test('pending_payment + complete 应非法（需先 confirmed）', () => {
+      expect(canPerformOperation('pending_payment', 'complete')).toBe(false)
     })
 
     test('confirmed + complete 应合法', () => {
@@ -122,7 +122,7 @@ describe('orderService/common/boarding-state-machine', () => {
   describe('集成场景：商家操作寄养订单', () => {
     // 寄养订单状态机只管商家操作（confirm/reject/complete/cancel），
     // pending → paid 由 paymentService 状态机处理
-    const merchantFlow = ['pending', 'confirmed', 'in_progress', 'completed']
+    const merchantFlow = ['pending_payment', 'paid', 'confirmed', 'in_progress', 'completed']
     test('完整流程应全部合法', () => {
       for (let i = 0; i < merchantFlow.length - 1; i++) {
         expect(boardingOrderStateMachine.canTransition(merchantFlow[i], merchantFlow[i + 1])).toBe(true)

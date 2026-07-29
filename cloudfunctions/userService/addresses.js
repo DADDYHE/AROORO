@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * addresses.ts - 地址服务（TypeScript 源文件 - Sprint 37 迁移）

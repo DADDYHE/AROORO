@@ -48,15 +48,18 @@ export interface BannerDoc {
   [k: string]: unknown
 }
 
-/** Banner 列表项（投影） */
+/** Banner 列表项（投影）
+ * 字段名与数据库 banners 集合、首页 wxml 绑定保持一致，
+ * 避免无意义的字段重命名导致前后端错配。
+ */
 export interface BannerItem {
   id: string
-  image: string
+  imageUrl: string
   title: string
   subtitle: string
   tag: string
   ctaText: string
-  action: string
+  actionType: string
   actionTarget: string
 }
 
@@ -162,12 +165,12 @@ export async function getBanners(): Promise<BannerListResult> {
 
     const list: BannerItem[] = (res.data || []).map(b => ({
       id: b._id,
-      image: b.imageUrl || '',
+      imageUrl: b.imageUrl || '',
       title: b.title || '',
       subtitle: b.subtitle || '',
       tag: b.tag || '',
       ctaText: b.ctaText || '',
-      action: b.actionType || '',
+      actionType: b.actionType || '',
       actionTarget: b.actionTarget || '',
     }))
 

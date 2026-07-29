@@ -192,16 +192,19 @@ describe('paymentService/pay', () => {
         {},
         { openid: 'oTest' }
       )
-      // Sprint 25: WrappedHandler 成功路径直接返回 CreatePaymentResult 原始数据
+      // Sprint 25 + H7 修复：createPayment 经 handleSuccess 包装为 { code, message, data }
       expect(result).toMatchObject({
-        orderId: 'o1',
-        paymentParams: {
-          package: 'prepay_id=PREPAY_X',
-          signType: 'RSA',
-          paySign: 'MOCK_SIGN',
+        code: 0,
+        data: {
+          orderId: 'o1',
+          paymentParams: {
+            package: 'prepay_id=PREPAY_X',
+            signType: 'RSA',
+            paySign: 'MOCK_SIGN',
+          },
         },
       })
-      expect(result.outTradeNo.startsWith('ORDER_')).toBe(true)
+      expect(result.data.outTradeNo.startsWith('ORDER_')).toBe(true)
       // 订单状态应更新为 paying
       const updated = mockDb._collections.orders.docs[0]
       expect(updated.paymentStatus).toBe('paying')

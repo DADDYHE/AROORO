@@ -101,9 +101,18 @@ describe('Sprint 50: rate-limit-config 配置中心', () => {
   })
 
   describe('BUSINESS_TYPE_DEFAULT_CONFIG 完整性', () => {
-    test('包含 6 个已知业务类型', () => {
+    test('包含 8 个已知业务类型', () => {
       const keys = Object.keys(BUSINESS_TYPE_DEFAULT_CONFIG).sort()
-      expect(keys).toEqual(['activity_apply', 'evaluation', 'mall_order', 'order', 'payment', 'refund'])
+      expect(keys).toEqual([
+        'activity_apply',
+        'boarding_accept',
+        'evaluation',
+        'feeding_order',
+        'mall_order',
+        'order',
+        'payment',
+        'refund',
+      ])
     })
     test('payment 配 5 次/分钟（防滥用）', () => {
       expect(BUSINESS_TYPE_DEFAULT_CONFIG.payment.perUserPerMinute).toBe(5)
@@ -222,15 +231,17 @@ describe('Sprint 50: rate-limit-config 配置中心', () => {
   })
 
   describe('listKnownBusinessTypes', () => {
-    test('返回 6 个类型', () => {
+    test('返回 8 个类型', () => {
       const list = listKnownBusinessTypes()
-      expect(list.length).toBe(6)
+      expect(list.length).toBe(8)
       expect(list).toContain('payment')
       expect(list).toContain('refund')
       expect(list).toContain('order')
       expect(list).toContain('evaluation')
       expect(list).toContain('mall_order')
       expect(list).toContain('activity_apply')
+      expect(list).toContain('boarding_accept')
+      expect(list).toContain('feeding_order')
     })
   })
 

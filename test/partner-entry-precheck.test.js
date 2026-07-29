@@ -2,7 +2,8 @@
  * Sprint 41: partner 入口同步预检查测试
  *
  * 验证 subpackages/partner/home 与 application 的 onLoad：
- *   - home: 未登录 / 已登录但非 partner → 立即 toast + navigateBack，不调 _loadData
+ *   - home: 未登录（userInfo=null）→ 立即 toast + navigateBack，不调 _loadData；
+ *           已登录（userInfo 存在）→ 同步调 _loadData（partner 态由异步 _loadData 判断）
  *   - application: 未登录 → 立即 toast + navigateBack；已登录 → 调 _loadData
  */
 
@@ -83,23 +84,22 @@ describe('partner/home onLoad 同步预检查', () => {
     globalData.userInfo = null
   })
 
-  test('未登录（identity=null）→ 弹 AUTH_REQUIRED + navigateBack，不调 _loadData', () => {
+  test('未登录（userInfo=null）→ 弹 AUTH_REQUIRED + navigateBack，不调 _loadData', () => {
     const pageOpts = loadHome()
     pageOpts.onLoad()
     expect(pageOpts.error).toHaveBeenCalledWith('AUTH_REQUIRED')
     expect(pageOpts._loadData).not.toHaveBeenCalled()
   })
 
-  test('已登录但非 partner（identity.isPartner=false）→ toast + 不调 _loadData', () => {
-    globalData.identity = { _id: 'u1', isPartner: false }
+  test('已登录（userInfo 存在，非 partner 业务态）→ 调 _loadData（partner 态交异步 _loadData 判断）', () => {
+    globalData.userInfo = { _id: 'u1', nickName: 'test' }
     const pageOpts = loadHome()
     pageOpts.onLoad()
-    expect(pageOpts.error).toHaveBeenCalledWith('BIZ_1YDPGC')
-    expect(pageOpts._loadData).not.toHaveBeenCalled()
+    expect(pageOpts._loadData).toHaveBeenCalled()
   })
 
-  test('已登录且 isPartner=true → 调 _loadData', () => {
-    globalData.identity = { _id: 'u1', isPartner: true }
+  test('已登录（userInfo 存在，isPartner=true）→ 同步放行调 _loadData', () => {
+    globalData.userInfo = { _id: 'u1', nickName: 'test', isPartner: true }
     const pageOpts = loadHome()
     pageOpts.onLoad()
     expect(pageOpts._loadData).toHaveBeenCalled()

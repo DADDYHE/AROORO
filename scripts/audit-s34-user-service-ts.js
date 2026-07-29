@@ -79,9 +79,9 @@ if (buildScript) {
 const indexTs = readSafe(path.join(USER_DIR, 'index.ts'))
 if (indexTs) {
   check('index.ts 注释含 "Sprint 34"', /Sprint\s*34/.test(indexTs))
-  check('index.ts 含 AuthLike 接口', /export\s+interface\s+AuthLike\b/.test(indexTs))
-  check('index.ts 含 CloudEvent 接口', /export\s+interface\s+CloudEvent\b/.test(indexTs))
-  check('index.ts 含 CloudContext 接口', /export\s+interface\s+CloudContext\b/.test(indexTs))
+  check('index.ts 从 common/types 引入 AuthLike', /import\s+type\s*\{[^}]*AuthLike[^}]*\}\s*from\s*['"]\.\/common\/types['"]/.test(indexTs))
+  check('index.ts 从 common/types 引入 CloudEvent', /import\s+type\s*\{[^}]*CloudEvent[^}]*\}\s*from\s*['"]\.\/common\/types['"]/.test(indexTs))
+  check('index.ts 从 common/types 引入 CloudContext', /import\s+type\s*\{[^}]*CloudContext[^}]*\}\s*from\s*['"]\.\/common\/types['"]/.test(indexTs))
   check('index.ts 含 UserActionHandler 类型', /export\s+type\s+UserActionHandler\b/.test(indexTs))
   check('index.ts 含 UserHandlers 接口', /export\s+interface\s+UserHandlers\b/.test(indexTs))
   check('index.ts 强类型化 handlers 聚合对象', /export\s+const\s+handlers\s*[:=]/.test(indexTs))

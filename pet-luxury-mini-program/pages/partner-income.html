@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收入概览</title>
+    <style id="theme-vars">
+:root {
+  --petlux-brand: #4F5E35;
+  --petlux-brand-deep: #3A4626;
+  --petlux-brand-soft: #EAEDDF;
+  --petlux-brand-ink: #FAFAF6;
+  --petlux-bg: #EDF0E2;
+  --petlux-surface: #FFFFFF;
+  --petlux-surface-2: #E2E6D3;
+  --petlux-surface-3: #D6DBC5;
+  --petlux-ink: #2A2823;
+  --petlux-ink-2: #635E54;
+  --petlux-ink-3: #9A9489;
+  --petlux-line: #D8DCCE;
+  --petlux-line-strong: #C9CFBA;
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+  --petlux-radius-xs: 4px;
+  --petlux-radius-sm: 8px;
+  --petlux-radius-md: 12px;
+  --petlux-radius-lg: 16px;
+  --petlux-radius-pill: 999px;
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+  --petlux-s-1: 4px; --petlux-s-2: 8px; --petlux-s-3: 12px; --petlux-s-4: 16px;
+  --petlux-s-5: 24px; --petlux-s-6: 32px; --petlux-s-7: 48px;
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-text-display: 32px; --petlux-text-h1: 24px; --petlux-text-h2: 20px;
+  --petlux-text-h3: 17px; --petlux-text-body: 15px; --petlux-text-body-sm: 13px; --petlux-text-caption: 12px;
+  --petlux-weight-regular: 400; --petlux-weight-medium: 500; --petlux-weight-semibold: 600;
+  --petlux-background: var(--petlux-bg); --petlux-foreground: var(--petlux-ink);
+  --petlux-card: var(--petlux-surface); --petlux-card-foreground: var(--petlux-ink);
+  --petlux-popover: var(--petlux-surface); --petlux-popover-foreground: var(--petlux-ink);
+  --petlux-primary: var(--petlux-brand); --petlux-primary-foreground: var(--petlux-brand-ink);
+  --petlux-secondary: var(--petlux-surface-2); --petlux-secondary-foreground: var(--petlux-ink-2);
+  --petlux-muted: var(--petlux-surface-2); --petlux-muted-foreground: var(--petlux-ink-2);
+  --petlux-accent: var(--petlux-brand-soft); --petlux-accent-foreground: var(--petlux-brand);
+  --petlux-destructive: var(--petlux-state-error); --petlux-destructive-foreground: #FAFAF6;
+  --petlux-border: var(--petlux-line); --petlux-input: var(--petlux-line-strong); --petlux-ring: var(--petlux-brand);
+  --petlux-radius-small: var(--petlux-radius-sm); --petlux-radius-medium: var(--petlux-radius-md); --petlux-radius-large: var(--petlux-radius-lg);
+}
+.dark {
+  --petlux-background: #161612; --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A; --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A; --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A; --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924; --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C; --petlux-input: #34322C; --petlux-ring: #7A8C5A;
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme inline {
+        --color-background: var(--petlux-background); --color-foreground: var(--petlux-foreground);
+        --color-card: var(--petlux-card); --color-card-foreground: var(--petlux-card-foreground);
+        --color-popover: var(--petlux-popover); --color-popover-foreground: var(--petlux-popover-foreground);
+        --color-primary: var(--petlux-primary); --color-primary-foreground: var(--petlux-primary-foreground);
+        --color-secondary: var(--petlux-secondary); --color-secondary-foreground: var(--petlux-secondary-foreground);
+        --color-muted: var(--petlux-muted); --color-muted-foreground: var(--petlux-muted-foreground);
+        --color-accent: var(--petlux-accent); --color-accent-foreground: var(--petlux-accent-foreground);
+        --color-destructive: var(--petlux-destructive); --color-destructive-foreground: var(--petlux-destructive-foreground);
+        --color-border: var(--petlux-border); --color-input: var(--petlux-input); --color-ring: var(--petlux-ring);
+        --radius-sm: var(--petlux-radius-sm); --radius-md: var(--petlux-radius-md); --radius-lg: var(--petlux-radius-lg);
+      }
+      @layer base { body { background: var(--petlux-background); color: var(--petlux-foreground); } }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--petlux-background); }
+      .text-foreground { color: var(--petlux-foreground); }
+      .bg-card { background-color: var(--petlux-card); }
+      .text-card-foreground { color: var(--petlux-card-foreground); }
+      .bg-card-foreground { background-color: var(--petlux-card-foreground); }
+      .bg-primary { background-color: var(--petlux-primary); }
+      .text-primary { color: var(--petlux-primary); }
+      .text-primary-foreground { color: var(--petlux-primary-foreground); }
+      .bg-primary-foreground { background-color: var(--petlux-primary-foreground); }
+      .bg-secondary { background-color: var(--petlux-secondary); }
+      .text-secondary-foreground { color: var(--petlux-secondary-foreground); }
+      .bg-muted { background-color: var(--petlux-muted); }
+      .text-muted-foreground { color: var(--petlux-muted-foreground); }
+      .bg-accent { background-color: var(--petlux-accent); }
+      .text-accent-foreground { color: var(--petlux-accent-foreground); }
+      .bg-destructive { background-color: var(--petlux-destructive); }
+      .text-destructive { color: var(--petlux-destructive); }
+      .text-destructive-foreground { color: var(--petlux-destructive-foreground); }
+      .border-border { border-color: var(--petlux-border); }
+      .border-input { border-color: var(--petlux-input); }
+      .ring-primary { --tw-ring-color: var(--petlux-primary); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .text-ink { color: var(--petlux-ink); } .text-ink-2 { color: var(--petlux-ink-2); } .text-ink-3 { color: var(--petlux-ink-3); }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<style id="critical-layout">
+html, body { max-width: 100%; overflow-x: hidden; }
+body { margin: 0; background-color: var(--petlux-background); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+main > .petlux-shell { width: 100%; max-width: 28rem; margin-left: auto; margin-right: auto; }
+</style>
+<style id="petlux-utilities">
+  .petlux-card { box-shadow: var(--petlux-shadow-1); transition: transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s ease; }
+  .petlux-card:hover { transform: translateY(-2px); box-shadow: var(--petlux-shadow-2); }
+  .petlux-tap { transition: background-color .2s ease, opacity .2s ease; }
+  .petlux-tap:hover { background-color: var(--petlux-muted); }
+  .petlux-tap:active { opacity: .65; }
+  .petlux-btn-press { transition: transform .15s ease, box-shadow .25s ease, background-color .2s ease; }
+  .petlux-btn-press:hover { box-shadow: var(--petlux-shadow-2); }
+  .petlux-btn-press:active { transform: scale(.98); }
+</style>
+<main>
+  <div class="fixed top-0 right-3 z-50 flex items-center w-[88px] h-8 rounded-full border border-black/10 shrink-0" style="top: calc(env(safe-area-inset-top, 0px) + 12px);">
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="更多">
+        <i data-lucide="more-horizontal" class="w-4 h-4 text-foreground"></i>
+      </button>
+      <span class="w-px h-3 bg-black/10 block"></span>
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="关闭">
+        <i data-lucide="x" class="w-4 h-4 text-foreground"></i>
+      </button>
+    </div>
+
+<div class="petlux-shell max-w-md mx-auto bg-background min-h-screen pb-28">
+
+  <!-- sticky topbar -->
+  <header data-topbar class="sticky top-0 z-20 h-14 flex items-center px-4 gap-3 bg-background/95 backdrop-blur-sm border-b border-border">
+<button type="button" aria-label="返回" class="flex items-center justify-center w-8 h-8 text-foreground shrink-0">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <span class="text-foreground" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">收入概览</span>
+  </header>
+
+  <!-- gallery-container -->
+  <div class="gallery-container">
+
+    <!-- gallery-header > brand-block -->
+    <header class="gallery-header px-5 pt-8 pb-6">
+      <div class="brand-block flex flex-col gap-3">
+        <div class="flex items-center gap-2">
+          <span class="brand-accent-bar w-1 h-6 bg-primary block rounded-sm"></span>
+          <span class="text-[11px] tracking-[0.2em] text-muted-foreground font-mono uppercase">AROORO</span>
+        </div>
+        <h1 class="brand-text text-3xl font-light tracking-widest text-foreground">收入概览</h1>
+        <div class="brand-meta flex items-center gap-2">
+          <span class="w-4 h-px bg-muted-foreground/50 block"></span>
+          <span class="text-[13px] text-muted-foreground tracking-wide">财务数据</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- gallery-hall -->
+    <div class="gallery-hall px-4">
+
+      <!-- income-overview-card -->
+      <div class="gallery-card income-overview-card petlux-card bg-card relative overflow-hidden mb-4" style="border-radius: var(--petlux-radius-lg);">
+        <div class="card-accent income-accent absolute left-0 top-0 h-full" style="width: 3px; background: linear-gradient(180deg, var(--petlux-brand) 0%, var(--petlux-state-success) 100%);"></div>
+        <div class="card-body relative" style="padding: 20px 22px;">
+          <div class="overview-total flex flex-col items-center gap-1 mb-5">
+            <span class="overview-label text-[11px] text-ink-2" style="letter-spacing: 0.2em;">累计收入</span>
+            <span class="overview-value text-[28px] font-light text-ink font-mono" style="letter-spacing: 1px;">¥12,580</span>
+          </div>
+          <div class="overview-divider h-px bg-border mb-5"></div>
+          <div class="overview-row overview-row-top flex justify-around">
+            <div class="overview-stat flex flex-col items-center gap-1">
+              <span class="overview-stat-value text-base font-light text-ink font-mono">¥3,200</span>
+              <span class="overview-stat-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">带货</span>
+              <span class="overview-stat-sub text-[8px] text-ink-3" style="letter-spacing: 0.1em;">（团购+商城）</span>
+            </div>
+            <div class="overview-stat flex flex-col items-center gap-1">
+              <span class="overview-stat-value text-base font-light text-ink font-mono">¥2,100</span>
+              <span class="overview-stat-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">活动</span>
+            </div>
+          </div>
+          <div class="overview-row overview-row-bottom flex justify-around mt-5 pt-5 border-t border-border">
+            <div class="overview-stat flex flex-col items-center gap-1">
+              <span class="overview-stat-value text-base font-light text-ink font-mono">¥4,800</span>
+              <span class="overview-stat-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">寄养</span>
+            </div>
+            <div class="overview-stat flex flex-col items-center gap-1">
+              <span class="overview-stat-value text-base font-light text-ink font-mono">¥2,480</span>
+              <span class="overview-stat-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">服务</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- wallet-card -->
+      <div class="gallery-card wallet-card petlux-card bg-card relative overflow-hidden mb-4" style="border-radius: var(--petlux-radius-lg);">
+        <div class="card-accent wallet-accent absolute left-0 top-0 h-full" style="width: 3px; background: linear-gradient(180deg, #8B7CB6 0%, #6B7D8C 100%);"></div>
+        <div class="card-body relative" style="padding: 20px 22px;">
+          <div class="wallet-row flex justify-around">
+            <div class="wallet-stat flex flex-col items-center gap-1">
+              <span class="wallet-value text-base font-light text-ink font-mono">¥8,350</span>
+              <span class="wallet-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">可提现</span>
+            </div>
+            <div class="wallet-stat flex flex-col items-center gap-1">
+              <span class="wallet-value text-base font-light text-ink font-mono">¥12,580</span>
+              <span class="wallet-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">总收入</span>
+            </div>
+            <div class="wallet-stat flex flex-col items-center gap-1">
+              <span class="wallet-value text-base font-light text-ink font-mono">¥4,230</span>
+              <span class="wallet-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">已提现</span>
+            </div>
+          </div>
+          <div class="wallet-actions flex justify-between items-center mt-5 pt-5 border-t border-border">
+            <button type="button" class="withdraw-btn petlux-btn-press text-primary-foreground text-[13px] font-medium px-12 py-2 rounded-md" style="background: linear-gradient(135deg, var(--petlux-brand) 0%, var(--petlux-brand-deep) 100%); letter-spacing: 0.2em;">提现</button>
+            <button type="button" class="withdraw-records-link text-[12px] text-primary flex items-center gap-1" style="letter-spacing: 0.1em;">
+              提现记录
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- rates-card -->
+      <div class="gallery-card rates-card petlux-card bg-card relative overflow-hidden mb-5" style="border-radius: var(--petlux-radius-lg);">
+        <div class="card-accent rates-accent absolute left-0 top-0 h-full" style="width: 3px; background: linear-gradient(180deg, var(--petlux-state-warning) 0%, var(--petlux-state-info) 100%);"></div>
+        <div class="card-body relative" style="padding: 20px 22px;">
+          <div class="rates-title mb-5">
+            <span class="rates-title-text text-[13px] font-medium text-ink" style="letter-spacing: 0.2em;">分成比例</span>
+          </div>
+          <div class="rates-grid flex justify-around">
+            <div class="rates-item flex flex-col items-center gap-1">
+              <span class="rates-item-value text-base font-light text-ink font-mono">15%</span>
+              <span class="rates-item-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">团购</span>
+            </div>
+            <div class="rates-item flex flex-col items-center gap-1">
+              <span class="rates-item-value text-base font-light text-ink font-mono">10%</span>
+              <span class="rates-item-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">商城</span>
+            </div>
+            <div class="rates-item flex flex-col items-center gap-1">
+              <span class="rates-item-value text-base font-light text-ink font-mono">8%</span>
+              <span class="rates-item-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">活动</span>
+            </div>
+            <div class="rates-item flex flex-col items-center gap-1">
+              <span class="rates-item-value text-base font-light text-ink font-mono">12%</span>
+              <span class="rates-item-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">寄养</span>
+            </div>
+            <div class="rates-item flex flex-col items-center gap-1">
+              <span class="rates-item-value text-base font-light text-ink font-mono">15%</span>
+              <span class="rates-item-label text-[10px] text-ink-2" style="letter-spacing: 0.2em;">服务</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- gallery-entrance -->
+      <div class="gallery-entrance flex items-center gap-4 mb-5 mt-6">
+        <div class="entrance-line w-10 h-px bg-ink-3"></div>
+        <span class="entrance-label text-[11px] text-ink-2" style="letter-spacing: 0.4em;">收入明细</span>
+      </div>
+
+      <!-- tab-bar -->
+      <div class="tab-bar flex gap-2.5 mb-5 overflow-x-auto no-scrollbar">
+        <div class="tab-item tab-active whitespace-nowrap px-6 py-2.5 rounded-md text-[11px] font-medium text-primary-foreground" style="background: linear-gradient(135deg, var(--petlux-brand) 0%, var(--petlux-brand-deep) 100%); letter-spacing: 0.1em;">全部</div>
+        <div class="tab-item petlux-tap whitespace-nowrap px-6 py-2.5 rounded-md text-[11px] text-ink-2 bg-card" style="letter-spacing: 0.1em;">团购</div>
+        <div class="tab-item petlux-tap whitespace-nowrap px-6 py-2.5 rounded-md text-[11px] text-ink-2 bg-card" style="letter-spacing: 0.1em;">商城</div>
+        <div class="tab-item petlux-tap whitespace-nowrap px-6 py-2.5 rounded-md text-[11px] text-ink-2 bg-card" style="letter-spacing: 0.1em;">活动</div>
+        <div class="tab-item petlux-tap whitespace-nowrap px-6 py-2.5 rounded-md text-[11px] text-ink-2 bg-card" style="letter-spacing: 0.1em;">寄养</div>
+        <div class="tab-item petlux-tap whitespace-nowrap px-6 py-2.5 rounded-md text-[11px] text-ink-2 bg-card" style="letter-spacing: 0.1em;">服务</div>
+      </div>
+
+      <!-- detail-card list -->
+      <div class="gallery-card detail-card petlux-card bg-card relative overflow-hidden mb-3" style="border-radius: var(--petlux-radius-lg);">
+        <div class="card-accent absolute left-0 top-0 h-full" style="width: 3px; background: linear-gradient(180deg, var(--petlux-brand) 0%, var(--petlux-brand-deep) 100%);"></div>
+        <div class="card-body relative" style="padding: 16px 20px;">
+          <div class="detail-row flex justify-between items-center">
+            <div class="detail-left flex flex-col gap-1">
+              <span class="detail-type text-[13px] font-medium text-ink">团购</span>
+              <span class="detail-desc text-[10px] text-ink-2">高端猫粮团购订单分成</span>
+              <div class="detail-buyer flex items-center gap-1.5 mt-0.5">
+                <img class="detail-buyer-avatar w-4 h-4 rounded-full object-cover bg-muted" src="../assets/avatar1.jpg" alt="买家" />
+                <span class="detail-buyer-name text-[10px] text-ink-2 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">小确幸</span>
+              </div>
+            </div>
+            <span class="detail-amount text-base font-light font-mono" style="color: var(--petlux-state-success);">+¥480</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-card detail-card petlux-card bg-card relative overflow-hidden mb-3" style="border-radius: var(--petlux-radius-lg);">
+        <div class="card-accent absolute left-0 top-0 h-full" style="width: 3px; background: linear-gradient(180deg, var(--petlux-state-warning) 0%, #9A7330 100%);"></div>
+        <div class="card-body relative" style="padding: 16px 20px;">
+          <div class="detail-row flex justify-between items-center">
+            <div class="detail-left flex flex-col gap-1">
+              <span class="detail-type text-[13px] font-medium text-ink">活动</span>
+              <span class="detail-desc text-[10px] text-ink-2">宠物社交派对报名分成</span>
+              <div class="detail-buyer flex items-center gap-1.5 mt-0.5">
+                <img class="detail-buyer-avatar w-4 h-4 rounded-full object-cover bg-muted" src="../assets/avatar2.jpg" alt="买家" />
+                <span class="detail-buyer-name text-[10px] text-ink-2 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">猫薄荷</span>
+              </div>
+            </div>
+            <span class="detail-amount text-base font-light font-mono" style="color: var(--petlux-state-success);">+¥320</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-card detail-card petlux-card bg-card relative overflow-hidden mb-3" style="border-radius: var(--petlux-radius-lg);">
+        <div class="card-accent absolute left-0 top-0 h-full" style="width: 3px; background: linear-gradient(180deg, var(--petlux-state-info) 0%, #4A5A66 100%);"></div>
+        <div class="card-body relative" style="padding: 16px 20px;">
+          <div class="detail-row flex justify-between items-center">
+            <div class="detail-left flex flex-col gap-1">
+              <span class="detail-type text-[13px] font-medium text-ink">寄养</span>
+              <span class="detail-desc text-[10px] text-ink-2">周末家庭寄养服务分成</span>
+              <div class="detail-buyer flex items-center gap-1.5 mt-0.5">
+                <img class="detail-buyer-avatar w-4 h-4 rounded-full object-cover bg-muted" src="../assets/avatar3.jpg" alt="买家" />
+                <span class="detail-buyer-name text-[10px] text-ink-2 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">柴犬控</span>
+              </div>
+            </div>
+            <span class="detail-amount text-base font-light font-mono" style="color: var(--petlux-state-success);">+¥960</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-card detail-card petlux-card bg-card relative overflow-hidden mb-3" style="border-radius: var(--petlux-radius-lg);">
+        <div class="card-accent absolute left-0 top-0 h-full" style="width: 3px; background: linear-gradient(180deg, var(--petlux-state-success) 0%, #3F5733 100%);"></div>
+        <div class="card-body relative" style="padding: 16px 20px;">
+          <div class="detail-row flex justify-between items-center">
+            <div class="detail-left flex flex-col gap-1">
+              <span class="detail-type text-[13px] font-medium text-ink">服务</span>
+              <span class="detail-desc text-[10px] text-ink-2">上门喂养服务分成</span>
+              <div class="detail-buyer flex items-center gap-1.5 mt-0.5">
+                <img class="detail-buyer-avatar w-4 h-4 rounded-full object-cover bg-muted" src="../assets/host-avatar.jpg" alt="买家" />
+                <span class="detail-buyer-name text-[10px] text-ink-2 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">布丁麻麻</span>
+              </div>
+            </div>
+            <span class="detail-amount text-base font-light font-mono" style="color: var(--petlux-state-success);">+¥186</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-card detail-card petlux-card bg-card relative overflow-hidden mb-3" style="border-radius: var(--petlux-radius-lg);">
+        <div class="card-accent absolute left-0 top-0 h-full" style="width: 3px; background: linear-gradient(180deg, var(--petlux-brand) 0%, var(--petlux-brand-deep) 100%);"></div>
+        <div class="card-body relative" style="padding: 16px 20px;">
+          <div class="detail-row flex justify-between items-center">
+            <div class="detail-left flex flex-col gap-1">
+              <span class="detail-type text-[13px] font-medium text-ink">商城</span>
+              <span class="detail-desc text-[10px] text-ink-2">宠物玩具礼盒订单分成</span>
+              <div class="detail-buyer flex items-center gap-1.5 mt-0.5">
+                <img class="detail-buyer-avatar w-4 h-4 rounded-full object-cover bg-muted" src="../assets/avatar1.jpg" alt="买家" />
+                <span class="detail-buyer-name text-[10px] text-ink-2 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">金毛控</span>
+              </div>
+            </div>
+            <span class="detail-amount text-base font-light font-mono" style="color: var(--petlux-state-success);">+¥128</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 提现弹窗 (hidden by default) -->
+  <div class="modal-mask fixed inset-0 z-50 items-center justify-center hidden" style="background: rgba(0,0,0,0.5);" id="withdrawModal">
+    <div class="modal-content bg-card mx-6" style="border-radius: var(--petlux-radius-lg); padding: 30px 26px; max-width: 18rem; width: calc(100% - 3rem);">
+      <div class="modal-title text-center text-[17px] font-medium text-ink mb-5">申请提现</div>
+      <div class="modal-balance text-center text-[13px] text-ink-2 mb-5">可提现余额：¥8,350</div>
+      <div class="modal-input-row flex items-center border-2 border-input rounded-lg px-3 py-2.5 mb-3">
+        <span class="modal-input-prefix text-xl font-light text-ink mr-2">¥</span>
+        <input class="modal-input flex-1 text-xl font-light text-ink bg-transparent outline-none w-full" type="text" inputmode="decimal" placeholder="请输入提现金额" />
+      </div>
+      <div class="modal-tips flex justify-between items-center mb-6">
+        <span class="text-[11px] text-ink-2">最低10元，单笔最高500元，每日限提1次</span>
+        <span class="modal-all-btn text-[12px] text-primary font-medium">全部提现</span>
+      </div>
+      <div class="modal-btns flex gap-3">
+        <button type="button" class="modal-btn modal-btn-cancel flex-1 text-center py-3 rounded-md text-sm font-medium bg-muted text-ink-2" style="letter-spacing: 0.2em;">取消</button>
+        <button type="button" class="modal-btn modal-btn-confirm petlux-btn-press flex-1 text-center py-3 rounded-md text-sm font-medium text-primary-foreground" style="background: linear-gradient(135deg, var(--petlux-brand) 0%, var(--petlux-brand-deep) 100%); letter-spacing: 0.2em;">确认提现</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+<script>
+  lucide.createIcons();
+  // 提现弹窗交互
+  (function(){
+    var openBtn = document.querySelector('.withdraw-btn');
+    var modal = document.getElementById('withdrawModal');
+    var cancelBtn = modal && modal.querySelector('.modal-btn-cancel');
+    function open(){ modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    function close(){ modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    if(openBtn){ openBtn.addEventListener('click', open); }
+    if(cancelBtn){ cancelBtn.addEventListener('click', close); }
+    if(modal){ modal.addEventListener('click', function(e){ if(e.target === modal) close(); }); }
+    // tab 切换
+    var tabs = document.querySelectorAll('.tab-item');
+    tabs.forEach(function(t){
+      t.addEventListener('click', function(){
+        tabs.forEach(function(x){
+          x.classList.remove('tab-active');
+          x.classList.remove('text-primary-foreground');
+          x.classList.add('text-ink-2');
+          x.classList.add('petlux-tap');
+          x.style.background = '';
+        });
+        t.classList.add('tab-active');
+        t.classList.add('text-primary-foreground');
+        t.classList.remove('text-ink-2');
+        t.classList.remove('petlux-tap');
+        t.style.background = 'linear-gradient(135deg, var(--petlux-brand) 0%, var(--petlux-brand-deep) 100%)';
+      });
+    });
+})();
+</script>
+</body>
+</html>

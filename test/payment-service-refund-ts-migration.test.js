@@ -244,8 +244,8 @@ describe('Sprint 24: paymentService/refund TypeScript 迁移', () => {
       expect(pkg.scripts['build:all']).toMatch(/build-all-services\.js/)
     })
 
-    test('ci:check 包含 audit:s24-payment-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s24-payment-service-ts:strict/)
+    test('ci:check 包含 audit:all:strict', () => {
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
     })
   })
 

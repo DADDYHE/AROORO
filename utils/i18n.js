@@ -302,7 +302,7 @@ const BIZ_I18N = {
   },
   FROM: {
     'zh-CN': '起',
-    'en-US': '',
+    'en-US': 'From',
     'ja-JP': 'から',
   },
   IMMEDIATELY_EXPERIENCE: {
@@ -2433,7 +2433,7 @@ const DEFAULT_LOCALE = 'zh-CN'
 // =====================================================================
 
 /**
- * 把 wx.getSystemInfoSync().language 映射到受支持 locale
+ * 把 wx.getAppBaseInfo().language 映射到受支持 locale
  *  - 'zh_CN' / 'zh-CN' → 'zh-CN'
  *  - 'en' / 'en_US' / 'en-US' → 'en-US'
  *  - 'ja' / 'ja_JP' / 'ja-JP' → 'ja-JP'
@@ -2450,8 +2450,10 @@ function _mapSystemLanguage(lang) {
 
 function _detectSystemLocale() {
   try {
-    if (typeof wx !== 'undefined' && wx.getSystemInfoSync) {
-      const info = wx.getSystemInfoSync()
+    if (typeof wx !== 'undefined') {
+      const info = wx.getAppBaseInfo
+        ? wx.getAppBaseInfo()
+        : (wx.getSystemInfoSync ? wx.getSystemInfoSync() : {})
       return _mapSystemLanguage(info.language)
     }
   } catch (e) { /* ignore */ }

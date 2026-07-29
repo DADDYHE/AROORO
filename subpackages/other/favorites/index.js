@@ -19,7 +19,6 @@ Page({
     showAllHosts: false,
     isLoggedIn: false,
     touchedBookButton: false,
-    animationComplete: false,
     _touchStartX: 0,
     _touchStartY: 0,
     _isSwiping: false,
@@ -37,7 +36,6 @@ Page({
       hostList: [],
       showAllHosts: false,
       isLoading: true,
-      animationComplete: false,
     })
 
     setTimeout(() => {
@@ -108,14 +106,12 @@ Page({
       this.setData({
         favoriteFamilies: processedFavorites,
         hostList: [],
-        animationComplete: true,
         isLoading: false,
       })
     } catch (error) {
       console.error('[APP] 加载数据失败:', error)
       this.setData({
         errorMessage: '加载数据失败，请重试',
-        animationComplete: true,
         isLoading: false,
       })
     }
@@ -164,12 +160,6 @@ Page({
     }
 
     try {
-      // 添加动画效果
-      const animation = wx.createAnimation({
-        duration: 300,
-        timingFunction: 'ease-in-out',
-      })
-
       // 先在本地更新数据，实现实时效果
       if (isFavorited) {
         // 取消收藏：从收藏列表中移除

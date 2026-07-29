@@ -1,0 +1,1650 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-26T15:17:02.460Z",
+  "source": "build-page-dispatch-manifest.mjs",
+  "mode": "restore",
+  "summary_path": "runtime-orchestration-summary.json",
+  "skillProvenance": {
+    "name": "solo-design",
+    "version": "2026.07.22.00.00.00"
+  },
+  "dispatchPreflightManifest": [
+    {
+      "recorded_at": "2026-07-26T15:17:02.440Z",
+      "generatedBy": "build-page-dispatch-manifest.mjs",
+      "packetType": "RestorePagePacket",
+      "laneContract": {
+        "resolvedLane": "restore_1to1",
+        "packetType": "RestorePagePacket",
+        "pageRuntimeGuide": "intent-workflows/intent-page-restore-1to1/restore-1to1-page-runtime.md",
+        "dispatchContract": "intent-workflows/intent-page-restore-1to1/dispatch-contract.md"
+      },
+      "taskLinePresent": true,
+      "outputPathPresent": true,
+      "sharedTemplate": "intent-workflows/intent-page-restore-1to1/restore-1to1-page-runtime.md",
+      "nodeId": "page-onboarding",
+      "htmlSrc": "pages/onboarding.html",
+      "supplementaryReads": [],
+      "allowedWritePaths": [
+        "pages/onboarding.html",
+        "assets/"
+      ],
+      "forbiddenWriteRoots": [
+        "*.design",
+        "runtime-orchestration-summary.json",
+        "validation-report.json",
+        "finish-readiness-report.json",
+        "restore-contract-report.json",
+        "page-generation-summary.json"
+      ],
+      "toolPolicy": {
+        "todoWriteAllowed": false,
+        "validationScriptsAllowed": false,
+        "previewAllowed": false,
+        "helperScriptsAllowed": false,
+        "designFileWriteAllowed": false,
+        "allowedWritePaths": [
+          "pages/onboarding.html",
+          "assets/"
+        ]
+      },
+      "skillRuntime": {
+        "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+        "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+        "toolPaths": {
+          "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+          "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+          "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+          "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+          "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+          "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+        },
+        "requiredForPageSubAgent": [
+          "applyHtmlHeadContract",
+          "recordDispatchCompletion"
+        ],
+        "pathInjection": "absolute",
+        "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+        "commandTemplates": {
+          "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --node-id='page-onboarding' --html-src='pages/onboarding.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+        }
+      },
+      "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+      "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/pages/onboarding.html",
+      "brandPrefix": "pa",
+      "aestheticsMode": "high-fidelity",
+      "toolDisciplineBlockPresent": true,
+      "fillHtmlHeadCommand": null,
+      "headFillMode": "skeleton-first",
+      "viewportMode": null,
+      "completionSchemaExpected": "restore",
+      "restoreFields": {
+        "sourceType": "image",
+        "referenceCaptureEvidencePresent": true,
+        "measuredSourceFactsCount": 15,
+        "highPriorityMeasuredSourceFactsCount": 10,
+        "restoreVisualCheckpointsCount": 12,
+        "highPriorityCheckpointCount": 8,
+        "sourceTypeEvidenceConsistent": true
+      },
+      "restoreContractStatus": {
+        "reportPath": "restore-contract-report.json",
+        "reportHash": "b52bcc1d0b72ebf776d1b0f113fa8129009515e5fa296e45a56b006272395c5d",
+        "success": true,
+        "checkedAt": "2026-07-26T15:16:07.168Z",
+        "evidence": {
+          "sourceType": "image",
+          "measuredSourceFactsCount": 15,
+          "highPriorityMeasuredSourceFactsCount": 10,
+          "highPriorityFactsWithMeasurementBasis": 10,
+          "restoreVisualCheckpointsCount": 12,
+          "highPriorityCheckpointCount": 8,
+          "sourceRegionCoverageSource": "project.sourceRegionCoverage",
+          "sourceRegionCoverageCount": 8,
+          "requiredRegionGroups": [
+            "outer-frame",
+            "device-shell",
+            "inner-screen",
+            "primary-object"
+          ],
+          "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+          "brandPrefix": "pa",
+          "cssHash": "e5646c945228880a3723eee341b4242a68e53abe35a231e1323f2d9ac3f25960"
+        },
+        "errorCount": 0,
+        "warningCount": 0
+      },
+      "restoreCompactPacket": {
+        "schema": "restoreCompactPacket.v1",
+        "sourceType": "image",
+        "sourceIdentity": {
+          "businessType": "pet-adoption-marketplace-mobile-app",
+          "coreObjects": [
+            "onboarding-hero-card",
+            "sign-in-form",
+            "home-product-circular-cards",
+            "paw-print-branding",
+            "pill-cta-buttons",
+            "category-filter-pills"
+          ],
+          "deviceType": "mobile",
+          "pageTitle": "Pet Adoption App — Onboarding / Sign In / Home (3-screen mockup)"
+        },
+        "pageStateLock": {
+          "currentState": "Three distinct mobile app screens shown side-by-side on a deep magenta presentation backdrop: (1) Onboarding welcome wi…",
+          "forbiddenDeviations": [
+            "do not merge the three screens into a single scrolling page",
+            "do not convert mobile screens to desktop layout",
+            "do not change deep magenta primary color to another hue",
+            "do not replace circular product cards with rectangular cards",
+            "do not remove Dynamic Island / iOS status bar"
+          ]
+        },
+        "sourceDocumentProfile": {
+          "sourceType": "image",
+          "documentLengthClass": "short",
+          "viewportScrollRatio": 1,
+          "deviceFramePresent": true,
+          "requiredRegionGroups": [
+            "outer-frame",
+            "device-shell",
+            "inner-screen",
+            "primary-object"
+          ]
+        },
+        "measuredSourceFacts": [
+          {
+            "id": "msf-01",
+            "cat": "viewport",
+            "reg": "device-shell",
+            "p": "high",
+            "fact": "Each of the 3 screens is an iPhone 14 Pro style mobile frame with Dynamic Island notch; p…",
+            "basis": "visual estimation from screenshot device frames",
+            "vc": [
+              "vc-01"
+            ]
+          },
+          {
+            "id": "msf-02",
+            "cat": "layout-region",
+            "reg": "hero",
+            "p": "high",
+            "fact": "Onboarding screen split: full-bleed hero photo (woman hugging brown dog) occupies top ~58…",
+            "basis": "visual estimation from onboarding screen region",
+            "vc": [
+              "vc-02"
+            ]
+          },
+          {
+            "id": "msf-03",
+            "cat": "color-surface",
+            "reg": "card",
+            "p": "high",
+            "fact": "Primary brand magenta fills all CTA buttons (Next, Get Started, With Google) and the Sign…",
+            "basis": "sampled from CTA buttons and Sign in header region",
+            "vc": [
+              "vc-03"
+            ]
+          },
+          {
+            "id": "msf-04",
+            "cat": "color-surface",
+            "reg": "card",
+            "p": "high",
+            "fact": "Paw print branding icons are red ≈ #E53935; onboarding card paw icon carries a small noti…",
+            "basis": "sampled from paw icons across screens",
+            "vc": [
+              "vc-09"
+            ]
+          },
+          {
+            "id": "msf-05",
+            "cat": "component-proportion",
+            "reg": "card",
+            "p": "high",
+            "fact": "Primary CTA buttons are pill-shaped: full content width minus ~32px horizontal padding, h…",
+            "basis": "visual estimation from CTA button regions",
+            "vc": [
+              "vc-04"
+            ]
+          },
+          {
+            "id": "msf-06",
+            "cat": "typography-scale",
+            "reg": "card",
+            "p": "high",
+            "fact": "Onboarding headline 'Proud to Be a Pet Adopter' ≈ 26px bold near-black; subtext 'Looking …",
+            "basis": "visual estimation from headline and header regions",
+            "vc": [
+              "vc-05"
+            ]
+          },
+          {
+            "id": "msf-07",
+            "cat": "density-spacing",
+            "reg": "card",
+            "p": "high",
+            "fact": "Onboarding bottom-sheet card inner padding ≈ 24px; vertical gap between headline and subt…",
+            "basis": "visual estimation from card content spacing",
+            "vc": [
+              "vc-06"
+            ]
+          },
+          {
+            "id": "msf-08",
+            "cat": "layout-region",
+            "reg": "header",
+            "p": "high",
+            "fact": "Home header row: hamburger icon far-left, two-line greeting ('Hi Taban 🙌' bold + 'Good M…",
+            "basis": "visual estimation from home header region",
+            "vc": [
+              "vc-07"
+            ]
+          },
+          {
+            "id": "msf-09",
+            "cat": "component-proportion",
+            "reg": "card",
+            "p": "high",
+            "fact": "Home category filter pills: 'All' selected = black #1A1A1A fill with white text; 'Cat','D…",
+            "basis": "visual estimation from category pill row",
+            "vc": [
+              "vc-04"
+            ]
+          },
+          {
+            "id": "msf-10",
+            "cat": "color-surface",
+            "reg": "card",
+            "p": "high",
+            "fact": "Home featured product cards are circular with a coral/red tinted background ≈ #FF7A7A / #…",
+            "basis": "sampled from circular product card regions",
+            "vc": [
+              "vc-08"
+            ]
+          },
+          {
+            "id": "msf-11",
+            "cat": "component-proportion",
+            "reg": "card",
+            "p": "medium",
+            "fact": "Sign-in social auth: 'With Google' full-width pill (magenta bg, white 'G' icon + label); …",
+            "basis": "visual estimation from sign-in social auth region",
+            "vc": [
+              "vc-04"
+            ]
+          },
+          {
+            "id": "msf-12",
+            "cat": "density-spacing",
+            "reg": "form",
+            "p": "medium",
+            "fact": "Sign-in email & password inputs are rounded rectangles ~52px height, border-radius ~16px,…",
+            "basis": "visual estimation from sign-in form fields",
+            "vc": [
+              "vc-06"
+            ]
+          },
+          {
+            "id": "msf-13",
+            "cat": "layout-region",
+            "reg": "list",
+            "p": "medium",
+            "fact": "Home featured section: two circular cards in a row with a 'See more' paw button centered …",
+            "basis": "visual estimation from home lower content region",
+            "vc": [
+              "vc-07",
+              "vc-11"
+            ]
+          },
+          {
+            "id": "msf-14",
+            "cat": "color-surface",
+            "reg": "form",
+            "p": "medium",
+            "fact": "Sign-in divider 'Or with Email' uses thin gray lines ≈ #E0E0E0 on both sides with gray te…",
+            "basis": "sampled from sign-in divider and footer region",
+            "vc": [
+              "vc-10"
+            ]
+          },
+          {
+            "id": "msf-15",
+            "cat": "component-proportion",
+            "reg": "bottom-nav",
+            "p": "medium",
+            "fact": "Home bottom navigation bar shows 3 icons (home, heart, profile) with the heart appearing …",
+            "basis": "visual estimation from home bottom nav region",
+            "vc": [
+              "vc-11"
+            ]
+          }
+        ],
+        "restoreVisualCheckpoints": [
+          {
+            "id": "vc-01",
+            "p": "high",
+            "dim": "layout",
+            "reg": "device-shell",
+            "src": "3 mobile app screens in iPhone 14 Pro frames with Dynamic Island notch and 9:41…",
+            "exp": "Build 3 separate mobile pages (onboarding, sign-in, home) each at 390x844 viewp…",
+            "dev": null
+          },
+          {
+            "id": "vc-02",
+            "p": "high",
+            "dim": "layout",
+            "reg": "hero",
+            "src": "Onboarding screen: full-bleed hero photo (woman + brown dog) fills top ~58%, wh…",
+            "exp": "onboarding.html = absolutely-positioned hero img (object-fit cover, top 0, heig…",
+            "dev": null
+          },
+          {
+            "id": "vc-03",
+            "p": "high",
+            "dim": "color-rhythm",
+            "reg": "card",
+            "src": "Deep magenta #C2185B is the singular primary accent: fills Next CTA, Get Starte…",
+            "exp": "Define --pa-primary:#C2185B; apply to all CTA backgrounds (white text) and the …",
+            "dev": null
+          },
+          {
+            "id": "vc-04",
+            "p": "high",
+            "dim": "component-proportion",
+            "reg": "card",
+            "src": "Pill CTA buttons radius ~30px height ~56px; category pills radius ~20px height …",
+            "exp": "CTA: border-radius 30px, height 56px, full width minus 32px side padding. Categ…",
+            "dev": null
+          },
+          {
+            "id": "vc-05",
+            "p": "high",
+            "dim": "typography",
+            "reg": "card",
+            "src": "Onboarding headline 'Proud to Be a Pet Adopter' ~26px bold near-black; subtext …",
+            "exp": "Headline 26px/32px 700 #1A1A1A; subtext 14px/20px 400 #9E9E9E; Sign in header 2…",
+            "dev": null
+          },
+          {
+            "id": "vc-06",
+            "p": "high",
+            "dim": "density",
+            "reg": "form",
+            "src": "Card padding ~24px; headline-subtext gap ~12px; sign-in input height ~52px radi…",
+            "exp": "Card padding 24px; vertical rhythm 12px/24px. Inputs: height 52px, radius 16px,…",
+            "dev": null
+          },
+          {
+            "id": "vc-07",
+            "p": "high",
+            "dim": "layout",
+            "reg": "header",
+            "src": "Home header row = hamburger | 2-line greeting (Hi Taban 🙌 bold + Good Morning!…",
+            "exp": "home.html header flex row: hamburger (24px), greeting column (2 lines), avatar …",
+            "dev": null
+          },
+          {
+            "id": "vc-08",
+            "p": "medium",
+            "dim": "color-rhythm",
+            "reg": "card",
+            "src": "Home featured circular product cards have coral/red tinted background with whit…",
+            "exp": "Circular card: 150px diameter, background #FF8A80, pet image centered (object-f…",
+            "dev": null
+          },
+          {
+            "id": "vc-09",
+            "p": "high",
+            "dim": "fine-detail",
+            "reg": "card",
+            "src": "Red paw print icon #E53935 used as branding; onboarding card has paw icon with …",
+            "exp": "Paw icon SVG in #E53935 with a 16px circular '1' badge (magenta bg white text) …",
+            "dev": null
+          },
+          {
+            "id": "vc-10",
+            "p": "medium",
+            "dim": "fine-detail",
+            "reg": "form",
+            "src": "Sign-in 'Or with Email' divider with thin gray lines on both sides; email field…",
+            "exp": "Divider: flex row with 1px #E0E0E0 line, 'Or with Email' text #9E9E9E 12px, lin…",
+            "dev": null
+          },
+          {
+            "id": "vc-11",
+            "p": "medium",
+            "dim": "component-proportion",
+            "reg": "bottom-nav",
+            "src": "Home has 'See more' paw button under featured cards; 'Expensive Cat' section he…",
+            "exp": "'See more' = small pill with paw icon. Section header row: 'Expensive Cat' 18px…",
+            "dev": null
+          },
+          {
+            "id": "vc-12",
+            "p": "medium",
+            "dim": "typography",
+            "reg": "card",
+            "src": "Price text on home product cards is bold; category labels ~14px; greeting 'Hi T…",
+            "exp": "Price: 16px 700 #1A1A1A. Category labels: 14px 500. Greeting name: 20px 700 #1A…",
+            "dev": null
+          }
+        ],
+        "sourceRegionCoverage": [
+          {
+            "id": null,
+            "reg": "presentation-backdrop",
+            "group": "outer-frame",
+            "p": null,
+            "status": "intentionally-deviated"
+          },
+          {
+            "id": null,
+            "reg": "iphone-frame-dynamic-island-status-bar",
+            "group": "device-shell",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "onboarding-hero-and-card",
+            "group": "inner-screen",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "signin-form-and-social-auth",
+            "group": "inner-screen",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "home-header-categories-featured-expensive-cat",
+            "group": "inner-screen",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "pill-cta-buttons",
+            "group": "primary-object",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "paw-print-branding-icons",
+            "group": "primary-object",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "circular-product-cards",
+            "group": "primary-object",
+            "p": null,
+            "status": "mapped"
+          }
+        ],
+        "contentToPreserve": [],
+        "byteLength": 8606
+      },
+      "deterministicCommands": {
+        "restorePreflight": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight",
+        "restorePreflightApplySafeFixes": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight --apply-safe-fixes",
+        "buildManifest": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=restore",
+        "workspaceValidation": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --report-json='/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/validation-report.json'",
+        "finishReadinessAll": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+        "finishReadinessAllWithResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+        "finishReadinessRepairLedger": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=repair-ledger",
+        "finishReadinessArtifact": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=artifact",
+        "finishReadinessResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=response --final-response-file='<final-response-draft.md>'"
+      },
+      "sourceAuthorityLock": {
+        "visualAuthority": "provided-image",
+        "contentSupplement": "none",
+        "browserObservationRole": "targeted-verification-only",
+        "mayOverrideVisualAuthority": false,
+        "lockedBeforeDispatch": true
+      },
+      "preDispatchFileHashes": {
+        ".design": "d7b68b0f7b22f548c3fa188655592d97ae7778da4da971b09c29e3f065688a19"
+      },
+      "contextPreflight": {
+        "workflowPath": "intent-workflows/intent-page-restore-1to1/INTENT_WORKFLOW.md",
+        "requiredContextFiles": [
+          "intent-workflows/intent-page-restore-1to1/start-restore-1to1-project.md",
+          "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+          "intent-workflows/intent-page-restore-1to1/dispatch-contract.md",
+          "intent-workflows/intent-page-restore-1to1/restore-dispatch-packet-format.md"
+        ],
+        "optionalContextFiles": [
+          "delivery-quality/page-rendering-quality-gate.md",
+          "delivery-quality/design-artifact-validation.md",
+          "intent-workflows/intent-page-restore-1to1/restore-evidence-contract.md",
+          "shared-runtime/runtime-boundaries/lane-runtime-contracts.md"
+        ],
+        "passed": true
+      },
+      "pageSliceOnly": true,
+      "requiredFieldsPresent": true,
+      "missingFields": [],
+      "fillHtmlHeadCommandValid": true,
+      "mobileNavigation": {
+        "required": false,
+        "appliesToThisPage": false,
+        "canonicalHtmlIncluded": false,
+        "missingFields": []
+      },
+      "persistedToSummary": true,
+      "taskQueryAudited": false,
+      "proofSource": "summary-only",
+      "largeWorkflowFilesInTaskQuery": null
+    },
+    {
+      "recorded_at": "2026-07-26T15:17:02.440Z",
+      "generatedBy": "build-page-dispatch-manifest.mjs",
+      "packetType": "RestorePagePacket",
+      "laneContract": {
+        "resolvedLane": "restore_1to1",
+        "packetType": "RestorePagePacket",
+        "pageRuntimeGuide": "intent-workflows/intent-page-restore-1to1/restore-1to1-page-runtime.md",
+        "dispatchContract": "intent-workflows/intent-page-restore-1to1/dispatch-contract.md"
+      },
+      "taskLinePresent": true,
+      "outputPathPresent": true,
+      "sharedTemplate": "intent-workflows/intent-page-restore-1to1/restore-1to1-page-runtime.md",
+      "nodeId": "page-signin",
+      "htmlSrc": "pages/sign-in.html",
+      "supplementaryReads": [],
+      "allowedWritePaths": [
+        "pages/sign-in.html",
+        "assets/"
+      ],
+      "forbiddenWriteRoots": [
+        "*.design",
+        "runtime-orchestration-summary.json",
+        "validation-report.json",
+        "finish-readiness-report.json",
+        "restore-contract-report.json",
+        "page-generation-summary.json"
+      ],
+      "toolPolicy": {
+        "todoWriteAllowed": false,
+        "validationScriptsAllowed": false,
+        "previewAllowed": false,
+        "helperScriptsAllowed": false,
+        "designFileWriteAllowed": false,
+        "allowedWritePaths": [
+          "pages/sign-in.html",
+          "assets/"
+        ]
+      },
+      "skillRuntime": {
+        "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+        "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+        "toolPaths": {
+          "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+          "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+          "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+          "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+          "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+          "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+        },
+        "requiredForPageSubAgent": [
+          "applyHtmlHeadContract",
+          "recordDispatchCompletion"
+        ],
+        "pathInjection": "absolute",
+        "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+        "commandTemplates": {
+          "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --node-id='page-signin' --html-src='pages/sign-in.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+        }
+      },
+      "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+      "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/pages/sign-in.html",
+      "brandPrefix": "pa",
+      "aestheticsMode": "high-fidelity",
+      "toolDisciplineBlockPresent": true,
+      "fillHtmlHeadCommand": null,
+      "headFillMode": "skeleton-first",
+      "viewportMode": null,
+      "completionSchemaExpected": "restore",
+      "restoreFields": {
+        "sourceType": "image",
+        "referenceCaptureEvidencePresent": true,
+        "measuredSourceFactsCount": 15,
+        "highPriorityMeasuredSourceFactsCount": 10,
+        "restoreVisualCheckpointsCount": 12,
+        "highPriorityCheckpointCount": 8,
+        "sourceTypeEvidenceConsistent": true
+      },
+      "restoreContractStatus": {
+        "reportPath": "restore-contract-report.json",
+        "reportHash": "b52bcc1d0b72ebf776d1b0f113fa8129009515e5fa296e45a56b006272395c5d",
+        "success": true,
+        "checkedAt": "2026-07-26T15:16:07.168Z",
+        "evidence": {
+          "sourceType": "image",
+          "measuredSourceFactsCount": 15,
+          "highPriorityMeasuredSourceFactsCount": 10,
+          "highPriorityFactsWithMeasurementBasis": 10,
+          "restoreVisualCheckpointsCount": 12,
+          "highPriorityCheckpointCount": 8,
+          "sourceRegionCoverageSource": "project.sourceRegionCoverage",
+          "sourceRegionCoverageCount": 8,
+          "requiredRegionGroups": [
+            "outer-frame",
+            "device-shell",
+            "inner-screen",
+            "primary-object"
+          ],
+          "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+          "brandPrefix": "pa",
+          "cssHash": "e5646c945228880a3723eee341b4242a68e53abe35a231e1323f2d9ac3f25960"
+        },
+        "errorCount": 0,
+        "warningCount": 0
+      },
+      "restoreCompactPacket": {
+        "schema": "restoreCompactPacket.v1",
+        "sourceType": "image",
+        "sourceIdentity": {
+          "businessType": "pet-adoption-marketplace-mobile-app",
+          "coreObjects": [
+            "onboarding-hero-card",
+            "sign-in-form",
+            "home-product-circular-cards",
+            "paw-print-branding",
+            "pill-cta-buttons",
+            "category-filter-pills"
+          ],
+          "deviceType": "mobile",
+          "pageTitle": "Pet Adoption App — Onboarding / Sign In / Home (3-screen mockup)"
+        },
+        "pageStateLock": {
+          "currentState": "Three distinct mobile app screens shown side-by-side on a deep magenta presentation backdrop: (1) Onboarding welcome wi…",
+          "forbiddenDeviations": [
+            "do not merge the three screens into a single scrolling page",
+            "do not convert mobile screens to desktop layout",
+            "do not change deep magenta primary color to another hue",
+            "do not replace circular product cards with rectangular cards",
+            "do not remove Dynamic Island / iOS status bar"
+          ]
+        },
+        "sourceDocumentProfile": {
+          "sourceType": "image",
+          "documentLengthClass": "short",
+          "viewportScrollRatio": 1,
+          "deviceFramePresent": true,
+          "requiredRegionGroups": [
+            "outer-frame",
+            "device-shell",
+            "inner-screen",
+            "primary-object"
+          ]
+        },
+        "measuredSourceFacts": [
+          {
+            "id": "msf-01",
+            "cat": "viewport",
+            "reg": "device-shell",
+            "p": "high",
+            "fact": "Each of the 3 screens is an iPhone 14 Pro style mobile frame with Dynamic Island notch; p…",
+            "basis": "visual estimation from screenshot device frames",
+            "vc": [
+              "vc-01"
+            ]
+          },
+          {
+            "id": "msf-02",
+            "cat": "layout-region",
+            "reg": "hero",
+            "p": "high",
+            "fact": "Onboarding screen split: full-bleed hero photo (woman hugging brown dog) occupies top ~58…",
+            "basis": "visual estimation from onboarding screen region",
+            "vc": [
+              "vc-02"
+            ]
+          },
+          {
+            "id": "msf-03",
+            "cat": "color-surface",
+            "reg": "card",
+            "p": "high",
+            "fact": "Primary brand magenta fills all CTA buttons (Next, Get Started, With Google) and the Sign…",
+            "basis": "sampled from CTA buttons and Sign in header region",
+            "vc": [
+              "vc-03"
+            ]
+          },
+          {
+            "id": "msf-04",
+            "cat": "color-surface",
+            "reg": "card",
+            "p": "high",
+            "fact": "Paw print branding icons are red ≈ #E53935; onboarding card paw icon carries a small noti…",
+            "basis": "sampled from paw icons across screens",
+            "vc": [
+              "vc-09"
+            ]
+          },
+          {
+            "id": "msf-05",
+            "cat": "component-proportion",
+            "reg": "card",
+            "p": "high",
+            "fact": "Primary CTA buttons are pill-shaped: full content width minus ~32px horizontal padding, h…",
+            "basis": "visual estimation from CTA button regions",
+            "vc": [
+              "vc-04"
+            ]
+          },
+          {
+            "id": "msf-06",
+            "cat": "typography-scale",
+            "reg": "card",
+            "p": "high",
+            "fact": "Onboarding headline 'Proud to Be a Pet Adopter' ≈ 26px bold near-black; subtext 'Looking …",
+            "basis": "visual estimation from headline and header regions",
+            "vc": [
+              "vc-05"
+            ]
+          },
+          {
+            "id": "msf-07",
+            "cat": "density-spacing",
+            "reg": "card",
+            "p": "high",
+            "fact": "Onboarding bottom-sheet card inner padding ≈ 24px; vertical gap between headline and subt…",
+            "basis": "visual estimation from card content spacing",
+            "vc": [
+              "vc-06"
+            ]
+          },
+          {
+            "id": "msf-08",
+            "cat": "layout-region",
+            "reg": "header",
+            "p": "high",
+            "fact": "Home header row: hamburger icon far-left, two-line greeting ('Hi Taban 🙌' bold + 'Good M…",
+            "basis": "visual estimation from home header region",
+            "vc": [
+              "vc-07"
+            ]
+          },
+          {
+            "id": "msf-09",
+            "cat": "component-proportion",
+            "reg": "card",
+            "p": "high",
+            "fact": "Home category filter pills: 'All' selected = black #1A1A1A fill with white text; 'Cat','D…",
+            "basis": "visual estimation from category pill row",
+            "vc": [
+              "vc-04"
+            ]
+          },
+          {
+            "id": "msf-10",
+            "cat": "color-surface",
+            "reg": "card",
+            "p": "high",
+            "fact": "Home featured product cards are circular with a coral/red tinted background ≈ #FF7A7A / #…",
+            "basis": "sampled from circular product card regions",
+            "vc": [
+              "vc-08"
+            ]
+          },
+          {
+            "id": "msf-11",
+            "cat": "component-proportion",
+            "reg": "card",
+            "p": "medium",
+            "fact": "Sign-in social auth: 'With Google' full-width pill (magenta bg, white 'G' icon + label); …",
+            "basis": "visual estimation from sign-in social auth region",
+            "vc": [
+              "vc-04"
+            ]
+          },
+          {
+            "id": "msf-12",
+            "cat": "density-spacing",
+            "reg": "form",
+            "p": "medium",
+            "fact": "Sign-in email & password inputs are rounded rectangles ~52px height, border-radius ~16px,…",
+            "basis": "visual estimation from sign-in form fields",
+            "vc": [
+              "vc-06"
+            ]
+          },
+          {
+            "id": "msf-13",
+            "cat": "layout-region",
+            "reg": "list",
+            "p": "medium",
+            "fact": "Home featured section: two circular cards in a row with a 'See more' paw button centered …",
+            "basis": "visual estimation from home lower content region",
+            "vc": [
+              "vc-07",
+              "vc-11"
+            ]
+          },
+          {
+            "id": "msf-14",
+            "cat": "color-surface",
+            "reg": "form",
+            "p": "medium",
+            "fact": "Sign-in divider 'Or with Email' uses thin gray lines ≈ #E0E0E0 on both sides with gray te…",
+            "basis": "sampled from sign-in divider and footer region",
+            "vc": [
+              "vc-10"
+            ]
+          },
+          {
+            "id": "msf-15",
+            "cat": "component-proportion",
+            "reg": "bottom-nav",
+            "p": "medium",
+            "fact": "Home bottom navigation bar shows 3 icons (home, heart, profile) with the heart appearing …",
+            "basis": "visual estimation from home bottom nav region",
+            "vc": [
+              "vc-11"
+            ]
+          }
+        ],
+        "restoreVisualCheckpoints": [
+          {
+            "id": "vc-01",
+            "p": "high",
+            "dim": "layout",
+            "reg": "device-shell",
+            "src": "3 mobile app screens in iPhone 14 Pro frames with Dynamic Island notch and 9:41…",
+            "exp": "Build 3 separate mobile pages (onboarding, sign-in, home) each at 390x844 viewp…",
+            "dev": null
+          },
+          {
+            "id": "vc-02",
+            "p": "high",
+            "dim": "layout",
+            "reg": "hero",
+            "src": "Onboarding screen: full-bleed hero photo (woman + brown dog) fills top ~58%, wh…",
+            "exp": "onboarding.html = absolutely-positioned hero img (object-fit cover, top 0, heig…",
+            "dev": null
+          },
+          {
+            "id": "vc-03",
+            "p": "high",
+            "dim": "color-rhythm",
+            "reg": "card",
+            "src": "Deep magenta #C2185B is the singular primary accent: fills Next CTA, Get Starte…",
+            "exp": "Define --pa-primary:#C2185B; apply to all CTA backgrounds (white text) and the …",
+            "dev": null
+          },
+          {
+            "id": "vc-04",
+            "p": "high",
+            "dim": "component-proportion",
+            "reg": "card",
+            "src": "Pill CTA buttons radius ~30px height ~56px; category pills radius ~20px height …",
+            "exp": "CTA: border-radius 30px, height 56px, full width minus 32px side padding. Categ…",
+            "dev": null
+          },
+          {
+            "id": "vc-05",
+            "p": "high",
+            "dim": "typography",
+            "reg": "card",
+            "src": "Onboarding headline 'Proud to Be a Pet Adopter' ~26px bold near-black; subtext …",
+            "exp": "Headline 26px/32px 700 #1A1A1A; subtext 14px/20px 400 #9E9E9E; Sign in header 2…",
+            "dev": null
+          },
+          {
+            "id": "vc-06",
+            "p": "high",
+            "dim": "density",
+            "reg": "form",
+            "src": "Card padding ~24px; headline-subtext gap ~12px; sign-in input height ~52px radi…",
+            "exp": "Card padding 24px; vertical rhythm 12px/24px. Inputs: height 52px, radius 16px,…",
+            "dev": null
+          },
+          {
+            "id": "vc-07",
+            "p": "high",
+            "dim": "layout",
+            "reg": "header",
+            "src": "Home header row = hamburger | 2-line greeting (Hi Taban 🙌 bold + Good Morning!…",
+            "exp": "home.html header flex row: hamburger (24px), greeting column (2 lines), avatar …",
+            "dev": null
+          },
+          {
+            "id": "vc-08",
+            "p": "medium",
+            "dim": "color-rhythm",
+            "reg": "card",
+            "src": "Home featured circular product cards have coral/red tinted background with whit…",
+            "exp": "Circular card: 150px diameter, background #FF8A80, pet image centered (object-f…",
+            "dev": null
+          },
+          {
+            "id": "vc-09",
+            "p": "high",
+            "dim": "fine-detail",
+            "reg": "card",
+            "src": "Red paw print icon #E53935 used as branding; onboarding card has paw icon with …",
+            "exp": "Paw icon SVG in #E53935 with a 16px circular '1' badge (magenta bg white text) …",
+            "dev": null
+          },
+          {
+            "id": "vc-10",
+            "p": "medium",
+            "dim": "fine-detail",
+            "reg": "form",
+            "src": "Sign-in 'Or with Email' divider with thin gray lines on both sides; email field…",
+            "exp": "Divider: flex row with 1px #E0E0E0 line, 'Or with Email' text #9E9E9E 12px, lin…",
+            "dev": null
+          },
+          {
+            "id": "vc-11",
+            "p": "medium",
+            "dim": "component-proportion",
+            "reg": "bottom-nav",
+            "src": "Home has 'See more' paw button under featured cards; 'Expensive Cat' section he…",
+            "exp": "'See more' = small pill with paw icon. Section header row: 'Expensive Cat' 18px…",
+            "dev": null
+          },
+          {
+            "id": "vc-12",
+            "p": "medium",
+            "dim": "typography",
+            "reg": "card",
+            "src": "Price text on home product cards is bold; category labels ~14px; greeting 'Hi T…",
+            "exp": "Price: 16px 700 #1A1A1A. Category labels: 14px 500. Greeting name: 20px 700 #1A…",
+            "dev": null
+          }
+        ],
+        "sourceRegionCoverage": [
+          {
+            "id": null,
+            "reg": "presentation-backdrop",
+            "group": "outer-frame",
+            "p": null,
+            "status": "intentionally-deviated"
+          },
+          {
+            "id": null,
+            "reg": "iphone-frame-dynamic-island-status-bar",
+            "group": "device-shell",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "onboarding-hero-and-card",
+            "group": "inner-screen",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "signin-form-and-social-auth",
+            "group": "inner-screen",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "home-header-categories-featured-expensive-cat",
+            "group": "inner-screen",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "pill-cta-buttons",
+            "group": "primary-object",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "paw-print-branding-icons",
+            "group": "primary-object",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "circular-product-cards",
+            "group": "primary-object",
+            "p": null,
+            "status": "mapped"
+          }
+        ],
+        "contentToPreserve": [],
+        "byteLength": 8606
+      },
+      "deterministicCommands": {
+        "restorePreflight": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight",
+        "restorePreflightApplySafeFixes": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight --apply-safe-fixes",
+        "buildManifest": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=restore",
+        "workspaceValidation": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --report-json='/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/validation-report.json'",
+        "finishReadinessAll": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+        "finishReadinessAllWithResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+        "finishReadinessRepairLedger": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=repair-ledger",
+        "finishReadinessArtifact": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=artifact",
+        "finishReadinessResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=response --final-response-file='<final-response-draft.md>'"
+      },
+      "sourceAuthorityLock": {
+        "visualAuthority": "provided-image",
+        "contentSupplement": "none",
+        "browserObservationRole": "targeted-verification-only",
+        "mayOverrideVisualAuthority": false,
+        "lockedBeforeDispatch": true
+      },
+      "preDispatchFileHashes": {
+        ".design": "d7b68b0f7b22f548c3fa188655592d97ae7778da4da971b09c29e3f065688a19"
+      },
+      "contextPreflight": {
+        "workflowPath": "intent-workflows/intent-page-restore-1to1/INTENT_WORKFLOW.md",
+        "requiredContextFiles": [
+          "intent-workflows/intent-page-restore-1to1/start-restore-1to1-project.md",
+          "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+          "intent-workflows/intent-page-restore-1to1/dispatch-contract.md",
+          "intent-workflows/intent-page-restore-1to1/restore-dispatch-packet-format.md"
+        ],
+        "optionalContextFiles": [
+          "delivery-quality/page-rendering-quality-gate.md",
+          "delivery-quality/design-artifact-validation.md",
+          "intent-workflows/intent-page-restore-1to1/restore-evidence-contract.md",
+          "shared-runtime/runtime-boundaries/lane-runtime-contracts.md"
+        ],
+        "passed": true
+      },
+      "pageSliceOnly": true,
+      "requiredFieldsPresent": true,
+      "missingFields": [],
+      "fillHtmlHeadCommandValid": true,
+      "mobileNavigation": {
+        "required": false,
+        "appliesToThisPage": false,
+        "canonicalHtmlIncluded": false,
+        "missingFields": []
+      },
+      "persistedToSummary": true,
+      "taskQueryAudited": false,
+      "proofSource": "summary-only",
+      "largeWorkflowFilesInTaskQuery": null
+    },
+    {
+      "recorded_at": "2026-07-26T15:17:02.440Z",
+      "generatedBy": "build-page-dispatch-manifest.mjs",
+      "packetType": "RestorePagePacket",
+      "laneContract": {
+        "resolvedLane": "restore_1to1",
+        "packetType": "RestorePagePacket",
+        "pageRuntimeGuide": "intent-workflows/intent-page-restore-1to1/restore-1to1-page-runtime.md",
+        "dispatchContract": "intent-workflows/intent-page-restore-1to1/dispatch-contract.md"
+      },
+      "taskLinePresent": true,
+      "outputPathPresent": true,
+      "sharedTemplate": "intent-workflows/intent-page-restore-1to1/restore-1to1-page-runtime.md",
+      "nodeId": "page-home",
+      "htmlSrc": "pages/home.html",
+      "supplementaryReads": [],
+      "allowedWritePaths": [
+        "pages/home.html",
+        "assets/"
+      ],
+      "forbiddenWriteRoots": [
+        "*.design",
+        "runtime-orchestration-summary.json",
+        "validation-report.json",
+        "finish-readiness-report.json",
+        "restore-contract-report.json",
+        "page-generation-summary.json"
+      ],
+      "toolPolicy": {
+        "todoWriteAllowed": false,
+        "validationScriptsAllowed": false,
+        "previewAllowed": false,
+        "helperScriptsAllowed": false,
+        "designFileWriteAllowed": false,
+        "allowedWritePaths": [
+          "pages/home.html",
+          "assets/"
+        ]
+      },
+      "skillRuntime": {
+        "skillDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+        "deterministicToolDir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling",
+        "toolPaths": {
+          "applyHtmlHeadContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+          "recordDispatchCompletion": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+          "buildPageDispatchManifest": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+          "validateDesignWorkspace": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+          "validateFinishReadiness": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+          "validateRestoreContract": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+        },
+        "requiredForPageSubAgent": [
+          "applyHtmlHeadContract",
+          "recordDispatchCompletion"
+        ],
+        "pathInjection": "absolute",
+        "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+        "commandTemplates": {
+          "recordDispatchCompletion": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --node-id='page-home' --html-src='pages/home.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+        }
+      },
+      "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+      "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/pages/home.html",
+      "brandPrefix": "pa",
+      "aestheticsMode": "high-fidelity",
+      "toolDisciplineBlockPresent": true,
+      "fillHtmlHeadCommand": null,
+      "headFillMode": "skeleton-first",
+      "viewportMode": null,
+      "completionSchemaExpected": "restore",
+      "restoreFields": {
+        "sourceType": "image",
+        "referenceCaptureEvidencePresent": true,
+        "measuredSourceFactsCount": 15,
+        "highPriorityMeasuredSourceFactsCount": 10,
+        "restoreVisualCheckpointsCount": 12,
+        "highPriorityCheckpointCount": 8,
+        "sourceTypeEvidenceConsistent": true
+      },
+      "restoreContractStatus": {
+        "reportPath": "restore-contract-report.json",
+        "reportHash": "b52bcc1d0b72ebf776d1b0f113fa8129009515e5fa296e45a56b006272395c5d",
+        "success": true,
+        "checkedAt": "2026-07-26T15:16:07.168Z",
+        "evidence": {
+          "sourceType": "image",
+          "measuredSourceFactsCount": 15,
+          "highPriorityMeasuredSourceFactsCount": 10,
+          "highPriorityFactsWithMeasurementBasis": 10,
+          "restoreVisualCheckpointsCount": 12,
+          "highPriorityCheckpointCount": 8,
+          "sourceRegionCoverageSource": "project.sourceRegionCoverage",
+          "sourceRegionCoverageCount": 8,
+          "requiredRegionGroups": [
+            "outer-frame",
+            "device-shell",
+            "inner-screen",
+            "primary-object"
+          ],
+          "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+          "brandPrefix": "pa",
+          "cssHash": "e5646c945228880a3723eee341b4242a68e53abe35a231e1323f2d9ac3f25960"
+        },
+        "errorCount": 0,
+        "warningCount": 0
+      },
+      "restoreCompactPacket": {
+        "schema": "restoreCompactPacket.v1",
+        "sourceType": "image",
+        "sourceIdentity": {
+          "businessType": "pet-adoption-marketplace-mobile-app",
+          "coreObjects": [
+            "onboarding-hero-card",
+            "sign-in-form",
+            "home-product-circular-cards",
+            "paw-print-branding",
+            "pill-cta-buttons",
+            "category-filter-pills"
+          ],
+          "deviceType": "mobile",
+          "pageTitle": "Pet Adoption App — Onboarding / Sign In / Home (3-screen mockup)"
+        },
+        "pageStateLock": {
+          "currentState": "Three distinct mobile app screens shown side-by-side on a deep magenta presentation backdrop: (1) Onboarding welcome wi…",
+          "forbiddenDeviations": [
+            "do not merge the three screens into a single scrolling page",
+            "do not convert mobile screens to desktop layout",
+            "do not change deep magenta primary color to another hue",
+            "do not replace circular product cards with rectangular cards",
+            "do not remove Dynamic Island / iOS status bar"
+          ]
+        },
+        "sourceDocumentProfile": {
+          "sourceType": "image",
+          "documentLengthClass": "short",
+          "viewportScrollRatio": 1,
+          "deviceFramePresent": true,
+          "requiredRegionGroups": [
+            "outer-frame",
+            "device-shell",
+            "inner-screen",
+            "primary-object"
+          ]
+        },
+        "measuredSourceFacts": [
+          {
+            "id": "msf-01",
+            "cat": "viewport",
+            "reg": "device-shell",
+            "p": "high",
+            "fact": "Each of the 3 screens is an iPhone 14 Pro style mobile frame with Dynamic Island notch; p…",
+            "basis": "visual estimation from screenshot device frames",
+            "vc": [
+              "vc-01"
+            ]
+          },
+          {
+            "id": "msf-02",
+            "cat": "layout-region",
+            "reg": "hero",
+            "p": "high",
+            "fact": "Onboarding screen split: full-bleed hero photo (woman hugging brown dog) occupies top ~58…",
+            "basis": "visual estimation from onboarding screen region",
+            "vc": [
+              "vc-02"
+            ]
+          },
+          {
+            "id": "msf-03",
+            "cat": "color-surface",
+            "reg": "card",
+            "p": "high",
+            "fact": "Primary brand magenta fills all CTA buttons (Next, Get Started, With Google) and the Sign…",
+            "basis": "sampled from CTA buttons and Sign in header region",
+            "vc": [
+              "vc-03"
+            ]
+          },
+          {
+            "id": "msf-04",
+            "cat": "color-surface",
+            "reg": "card",
+            "p": "high",
+            "fact": "Paw print branding icons are red ≈ #E53935; onboarding card paw icon carries a small noti…",
+            "basis": "sampled from paw icons across screens",
+            "vc": [
+              "vc-09"
+            ]
+          },
+          {
+            "id": "msf-05",
+            "cat": "component-proportion",
+            "reg": "card",
+            "p": "high",
+            "fact": "Primary CTA buttons are pill-shaped: full content width minus ~32px horizontal padding, h…",
+            "basis": "visual estimation from CTA button regions",
+            "vc": [
+              "vc-04"
+            ]
+          },
+          {
+            "id": "msf-06",
+            "cat": "typography-scale",
+            "reg": "card",
+            "p": "high",
+            "fact": "Onboarding headline 'Proud to Be a Pet Adopter' ≈ 26px bold near-black; subtext 'Looking …",
+            "basis": "visual estimation from headline and header regions",
+            "vc": [
+              "vc-05"
+            ]
+          },
+          {
+            "id": "msf-07",
+            "cat": "density-spacing",
+            "reg": "card",
+            "p": "high",
+            "fact": "Onboarding bottom-sheet card inner padding ≈ 24px; vertical gap between headline and subt…",
+            "basis": "visual estimation from card content spacing",
+            "vc": [
+              "vc-06"
+            ]
+          },
+          {
+            "id": "msf-08",
+            "cat": "layout-region",
+            "reg": "header",
+            "p": "high",
+            "fact": "Home header row: hamburger icon far-left, two-line greeting ('Hi Taban 🙌' bold + 'Good M…",
+            "basis": "visual estimation from home header region",
+            "vc": [
+              "vc-07"
+            ]
+          },
+          {
+            "id": "msf-09",
+            "cat": "component-proportion",
+            "reg": "card",
+            "p": "high",
+            "fact": "Home category filter pills: 'All' selected = black #1A1A1A fill with white text; 'Cat','D…",
+            "basis": "visual estimation from category pill row",
+            "vc": [
+              "vc-04"
+            ]
+          },
+          {
+            "id": "msf-10",
+            "cat": "color-surface",
+            "reg": "card",
+            "p": "high",
+            "fact": "Home featured product cards are circular with a coral/red tinted background ≈ #FF7A7A / #…",
+            "basis": "sampled from circular product card regions",
+            "vc": [
+              "vc-08"
+            ]
+          },
+          {
+            "id": "msf-11",
+            "cat": "component-proportion",
+            "reg": "card",
+            "p": "medium",
+            "fact": "Sign-in social auth: 'With Google' full-width pill (magenta bg, white 'G' icon + label); …",
+            "basis": "visual estimation from sign-in social auth region",
+            "vc": [
+              "vc-04"
+            ]
+          },
+          {
+            "id": "msf-12",
+            "cat": "density-spacing",
+            "reg": "form",
+            "p": "medium",
+            "fact": "Sign-in email & password inputs are rounded rectangles ~52px height, border-radius ~16px,…",
+            "basis": "visual estimation from sign-in form fields",
+            "vc": [
+              "vc-06"
+            ]
+          },
+          {
+            "id": "msf-13",
+            "cat": "layout-region",
+            "reg": "list",
+            "p": "medium",
+            "fact": "Home featured section: two circular cards in a row with a 'See more' paw button centered …",
+            "basis": "visual estimation from home lower content region",
+            "vc": [
+              "vc-07",
+              "vc-11"
+            ]
+          },
+          {
+            "id": "msf-14",
+            "cat": "color-surface",
+            "reg": "form",
+            "p": "medium",
+            "fact": "Sign-in divider 'Or with Email' uses thin gray lines ≈ #E0E0E0 on both sides with gray te…",
+            "basis": "sampled from sign-in divider and footer region",
+            "vc": [
+              "vc-10"
+            ]
+          },
+          {
+            "id": "msf-15",
+            "cat": "component-proportion",
+            "reg": "bottom-nav",
+            "p": "medium",
+            "fact": "Home bottom navigation bar shows 3 icons (home, heart, profile) with the heart appearing …",
+            "basis": "visual estimation from home bottom nav region",
+            "vc": [
+              "vc-11"
+            ]
+          }
+        ],
+        "restoreVisualCheckpoints": [
+          {
+            "id": "vc-01",
+            "p": "high",
+            "dim": "layout",
+            "reg": "device-shell",
+            "src": "3 mobile app screens in iPhone 14 Pro frames with Dynamic Island notch and 9:41…",
+            "exp": "Build 3 separate mobile pages (onboarding, sign-in, home) each at 390x844 viewp…",
+            "dev": null
+          },
+          {
+            "id": "vc-02",
+            "p": "high",
+            "dim": "layout",
+            "reg": "hero",
+            "src": "Onboarding screen: full-bleed hero photo (woman + brown dog) fills top ~58%, wh…",
+            "exp": "onboarding.html = absolutely-positioned hero img (object-fit cover, top 0, heig…",
+            "dev": null
+          },
+          {
+            "id": "vc-03",
+            "p": "high",
+            "dim": "color-rhythm",
+            "reg": "card",
+            "src": "Deep magenta #C2185B is the singular primary accent: fills Next CTA, Get Starte…",
+            "exp": "Define --pa-primary:#C2185B; apply to all CTA backgrounds (white text) and the …",
+            "dev": null
+          },
+          {
+            "id": "vc-04",
+            "p": "high",
+            "dim": "component-proportion",
+            "reg": "card",
+            "src": "Pill CTA buttons radius ~30px height ~56px; category pills radius ~20px height …",
+            "exp": "CTA: border-radius 30px, height 56px, full width minus 32px side padding. Categ…",
+            "dev": null
+          },
+          {
+            "id": "vc-05",
+            "p": "high",
+            "dim": "typography",
+            "reg": "card",
+            "src": "Onboarding headline 'Proud to Be a Pet Adopter' ~26px bold near-black; subtext …",
+            "exp": "Headline 26px/32px 700 #1A1A1A; subtext 14px/20px 400 #9E9E9E; Sign in header 2…",
+            "dev": null
+          },
+          {
+            "id": "vc-06",
+            "p": "high",
+            "dim": "density",
+            "reg": "form",
+            "src": "Card padding ~24px; headline-subtext gap ~12px; sign-in input height ~52px radi…",
+            "exp": "Card padding 24px; vertical rhythm 12px/24px. Inputs: height 52px, radius 16px,…",
+            "dev": null
+          },
+          {
+            "id": "vc-07",
+            "p": "high",
+            "dim": "layout",
+            "reg": "header",
+            "src": "Home header row = hamburger | 2-line greeting (Hi Taban 🙌 bold + Good Morning!…",
+            "exp": "home.html header flex row: hamburger (24px), greeting column (2 lines), avatar …",
+            "dev": null
+          },
+          {
+            "id": "vc-08",
+            "p": "medium",
+            "dim": "color-rhythm",
+            "reg": "card",
+            "src": "Home featured circular product cards have coral/red tinted background with whit…",
+            "exp": "Circular card: 150px diameter, background #FF8A80, pet image centered (object-f…",
+            "dev": null
+          },
+          {
+            "id": "vc-09",
+            "p": "high",
+            "dim": "fine-detail",
+            "reg": "card",
+            "src": "Red paw print icon #E53935 used as branding; onboarding card has paw icon with …",
+            "exp": "Paw icon SVG in #E53935 with a 16px circular '1' badge (magenta bg white text) …",
+            "dev": null
+          },
+          {
+            "id": "vc-10",
+            "p": "medium",
+            "dim": "fine-detail",
+            "reg": "form",
+            "src": "Sign-in 'Or with Email' divider with thin gray lines on both sides; email field…",
+            "exp": "Divider: flex row with 1px #E0E0E0 line, 'Or with Email' text #9E9E9E 12px, lin…",
+            "dev": null
+          },
+          {
+            "id": "vc-11",
+            "p": "medium",
+            "dim": "component-proportion",
+            "reg": "bottom-nav",
+            "src": "Home has 'See more' paw button under featured cards; 'Expensive Cat' section he…",
+            "exp": "'See more' = small pill with paw icon. Section header row: 'Expensive Cat' 18px…",
+            "dev": null
+          },
+          {
+            "id": "vc-12",
+            "p": "medium",
+            "dim": "typography",
+            "reg": "card",
+            "src": "Price text on home product cards is bold; category labels ~14px; greeting 'Hi T…",
+            "exp": "Price: 16px 700 #1A1A1A. Category labels: 14px 500. Greeting name: 20px 700 #1A…",
+            "dev": null
+          }
+        ],
+        "sourceRegionCoverage": [
+          {
+            "id": null,
+            "reg": "presentation-backdrop",
+            "group": "outer-frame",
+            "p": null,
+            "status": "intentionally-deviated"
+          },
+          {
+            "id": null,
+            "reg": "iphone-frame-dynamic-island-status-bar",
+            "group": "device-shell",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "onboarding-hero-and-card",
+            "group": "inner-screen",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "signin-form-and-social-auth",
+            "group": "inner-screen",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "home-header-categories-featured-expensive-cat",
+            "group": "inner-screen",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "pill-cta-buttons",
+            "group": "primary-object",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "paw-print-branding-icons",
+            "group": "primary-object",
+            "p": null,
+            "status": "mapped"
+          },
+          {
+            "id": null,
+            "reg": "circular-product-cards",
+            "group": "primary-object",
+            "p": null,
+            "status": "mapped"
+          }
+        ],
+        "contentToPreserve": [],
+        "byteLength": 8606
+      },
+      "deterministicCommands": {
+        "restorePreflight": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight",
+        "restorePreflightApplySafeFixes": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight --apply-safe-fixes",
+        "buildManifest": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=restore",
+        "workspaceValidation": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --report-json='/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/validation-report.json'",
+        "finishReadinessAll": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+        "finishReadinessAllWithResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+        "finishReadinessRepairLedger": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=repair-ledger",
+        "finishReadinessArtifact": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=artifact",
+        "finishReadinessResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=response --final-response-file='<final-response-draft.md>'"
+      },
+      "sourceAuthorityLock": {
+        "visualAuthority": "provided-image",
+        "contentSupplement": "none",
+        "browserObservationRole": "targeted-verification-only",
+        "mayOverrideVisualAuthority": false,
+        "lockedBeforeDispatch": true
+      },
+      "preDispatchFileHashes": {
+        ".design": "d7b68b0f7b22f548c3fa188655592d97ae7778da4da971b09c29e3f065688a19"
+      },
+      "contextPreflight": {
+        "workflowPath": "intent-workflows/intent-page-restore-1to1/INTENT_WORKFLOW.md",
+        "requiredContextFiles": [
+          "intent-workflows/intent-page-restore-1to1/start-restore-1to1-project.md",
+          "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+          "intent-workflows/intent-page-restore-1to1/dispatch-contract.md",
+          "intent-workflows/intent-page-restore-1to1/restore-dispatch-packet-format.md"
+        ],
+        "optionalContextFiles": [
+          "delivery-quality/page-rendering-quality-gate.md",
+          "delivery-quality/design-artifact-validation.md",
+          "intent-workflows/intent-page-restore-1to1/restore-evidence-contract.md",
+          "shared-runtime/runtime-boundaries/lane-runtime-contracts.md"
+        ],
+        "passed": true
+      },
+      "pageSliceOnly": true,
+      "requiredFieldsPresent": true,
+      "missingFields": [],
+      "fillHtmlHeadCommandValid": true,
+      "mobileNavigation": {
+        "required": false,
+        "appliesToThisPage": false,
+        "canonicalHtmlIncluded": false,
+        "missingFields": []
+      },
+      "persistedToSummary": true,
+      "taskQueryAudited": false,
+      "proofSource": "summary-only",
+      "largeWorkflowFilesInTaskQuery": null
+    }
+  ],
+  "deterministicCommandsByPage": {
+    "pages/onboarding.html": {
+      "restorePreflight": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight",
+      "restorePreflightApplySafeFixes": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight --apply-safe-fixes",
+      "buildManifest": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=restore",
+      "workspaceValidation": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --report-json='/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/validation-report.json'",
+      "finishReadinessAll": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+      "finishReadinessAllWithResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+      "finishReadinessRepairLedger": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=repair-ledger",
+      "finishReadinessArtifact": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=artifact",
+      "finishReadinessResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=response --final-response-file='<final-response-draft.md>'"
+    },
+    "pages/sign-in.html": {
+      "restorePreflight": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight",
+      "restorePreflightApplySafeFixes": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight --apply-safe-fixes",
+      "buildManifest": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=restore",
+      "workspaceValidation": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --report-json='/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/validation-report.json'",
+      "finishReadinessAll": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+      "finishReadinessAllWithResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+      "finishReadinessRepairLedger": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=repair-ledger",
+      "finishReadinessArtifact": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=artifact",
+      "finishReadinessResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=response --final-response-file='<final-response-draft.md>'"
+    },
+    "pages/home.html": {
+      "restorePreflight": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight",
+      "restorePreflightApplySafeFixes": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=preflight --apply-safe-fixes",
+      "buildManifest": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --mode=restore",
+      "workspaceValidation": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --report-json='/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/validation-report.json'",
+      "finishReadinessAll": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+      "finishReadinessAllWithResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=all --final-response-file='<final-response-draft.md>'",
+      "finishReadinessRepairLedger": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=repair-ledger",
+      "finishReadinessArtifact": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=artifact",
+      "finishReadinessResponse": "node '/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs' '/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore' --check=response --final-response-file='<final-response-draft.md>'"
+    }
+  }
+}

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活动详情</title>
+    <style id="theme-vars">
+:root {
+  --petlux-brand: #4F5E35;
+  --petlux-brand-deep: #3A4626;
+  --petlux-brand-soft: #EAEDDF;
+  --petlux-brand-ink: #FAFAF6;
+  --petlux-bg: #EDF0E2;
+  --petlux-surface: #FFFFFF;
+  --petlux-surface-2: #E2E6D3;
+  --petlux-surface-3: #D6DBC5;
+  --petlux-ink: #2A2823;
+  --petlux-ink-2: #635E54;
+  --petlux-ink-3: #9A9489;
+  --petlux-line: #D8DCCE;
+  --petlux-line-strong: #C9CFBA;
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+  --petlux-radius-xs: 4px; --petlux-radius-sm: 8px; --petlux-radius-md: 12px; --petlux-radius-lg: 16px; --petlux-radius-pill: 999px;
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+  --petlux-s-1: 4px; --petlux-s-2: 8px; --petlux-s-3: 12px; --petlux-s-4: 16px; --petlux-s-5: 24px; --petlux-s-6: 32px; --petlux-s-7: 48px;
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-text-display: 32px; --petlux-text-h1: 24px; --petlux-text-h2: 20px; --petlux-text-h3: 17px; --petlux-text-body: 15px; --petlux-text-body-sm: 13px; --petlux-text-caption: 12px;
+  --petlux-weight-regular: 400; --petlux-weight-medium: 500; --petlux-weight-semibold: 600;
+  --petlux-background: var(--petlux-bg);
+  --petlux-foreground: var(--petlux-ink);
+  --petlux-card: var(--petlux-surface);
+  --petlux-card-foreground: var(--petlux-ink);
+  --petlux-popover: var(--petlux-surface);
+  --petlux-popover-foreground: var(--petlux-ink);
+  --petlux-primary: var(--petlux-brand);
+  --petlux-primary-foreground: var(--petlux-brand-ink);
+  --petlux-secondary: var(--petlux-surface-2);
+  --petlux-secondary-foreground: var(--petlux-ink-2);
+  --petlux-muted: var(--petlux-surface-2);
+  --petlux-muted-foreground: var(--petlux-ink-2);
+  --petlux-accent: var(--petlux-brand-soft);
+  --petlux-accent-foreground: var(--petlux-brand);
+  --petlux-destructive: var(--petlux-state-error);
+  --petlux-destructive-foreground: #FAFAF6;
+  --petlux-border: var(--petlux-line);
+  --petlux-input: var(--petlux-line-strong);
+  --petlux-ring: var(--petlux-brand);
+  --petlux-radius-small: var(--petlux-radius-sm);
+  --petlux-radius-medium: var(--petlux-radius-md);
+  --petlux-radius-large: var(--petlux-radius-lg);
+}
+.dark {
+  --petlux-background: #161612; --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A; --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A; --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A; --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924; --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C; --petlux-input: #34322C; --petlux-ring: #7A8C5A;
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme inline {
+        --color-background: var(--petlux-background); --color-foreground: var(--petlux-foreground);
+        --color-card: var(--petlux-card); --color-card-foreground: var(--petlux-card-foreground);
+        --color-popover: var(--petlux-popover); --color-popover-foreground: var(--petlux-popover-foreground);
+        --color-primary: var(--petlux-primary); --color-primary-foreground: var(--petlux-primary-foreground);
+        --color-secondary: var(--petlux-secondary); --color-secondary-foreground: var(--petlux-secondary-foreground);
+        --color-muted: var(--petlux-muted); --color-muted-foreground: var(--petlux-muted-foreground);
+        --color-accent: var(--petlux-accent); --color-accent-foreground: var(--petlux-accent-foreground);
+        --color-destructive: var(--petlux-destructive); --color-destructive-foreground: var(--petlux-destructive-foreground);
+        --color-border: var(--petlux-border); --color-input: var(--petlux-input); --color-ring: var(--petlux-ring);
+        --radius-sm: var(--petlux-radius-sm); --radius-md: var(--petlux-radius-md); --radius-lg: var(--petlux-radius-lg);
+      }
+      @layer base { body { background: var(--petlux-background); color: var(--petlux-foreground); } }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--petlux-background); } .text-foreground { color: var(--petlux-foreground); }
+      .bg-card { background-color: var(--petlux-card); } .text-card-foreground { color: var(--petlux-card-foreground); }
+      .bg-popover { background-color: var(--petlux-popover); } .text-popover-foreground { color: var(--petlux-popover-foreground); }
+      .bg-primary { background-color: var(--petlux-primary); } .text-primary { color: var(--petlux-primary); }
+      .bg-primary-foreground { background-color: var(--petlux-primary-foreground); } .text-primary-foreground { color: var(--petlux-primary-foreground); }
+      .bg-secondary { background-color: var(--petlux-secondary); } .text-secondary-foreground { color: var(--petlux-secondary-foreground); }
+      .bg-muted { background-color: var(--petlux-muted); } .text-muted-foreground { color: var(--petlux-muted-foreground); }
+      .bg-accent { background-color: var(--petlux-accent); } .text-accent-foreground { color: var(--petlux-accent-foreground); }
+      .bg-destructive { background-color: var(--petlux-destructive); } .text-destructive { color: var(--petlux-destructive); }
+      .text-destructive-foreground { color: var(--petlux-destructive-foreground); }
+      .border-border { border-color: var(--petlux-border); } .border-input { border-color: var(--petlux-input); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .text-ink { color: var(--petlux-ink); } .text-ink-2 { color: var(--petlux-ink-2); } .text-ink-3 { color: var(--petlux-ink-3); }
+      .card-accent-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0 3px 3px 0; }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<style id="critical-layout">
+html, body { max-width: 100%; overflow-x: hidden; }
+body { margin: 0; background-color: var(--petlux-background); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+main > .petlux-shell { width: 100%; max-width: 28rem; margin-left: auto; margin-right: auto; }
+header[data-topbar] { min-height: 56px; }
+</style>
+<style id="petlux-utilities">
+  .petlux-card { box-shadow: var(--petlux-shadow-1); transition: transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s ease; }
+  .petlux-card:hover { transform: translateY(-2px); box-shadow: var(--petlux-shadow-2); }
+  .petlux-tap { transition: background-color .2s ease, opacity .2s ease; }
+  .petlux-tap:hover { background-color: var(--petlux-muted); }
+  .petlux-tap:active { opacity: .65; }
+  .petlux-btn-press { transition: transform .15s ease, box-shadow .25s ease, background-color .2s ease; }
+  .petlux-btn-press:hover { box-shadow: var(--petlux-shadow-2); }
+  .petlux-btn-press:active { transform: scale(.98); }
+  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+  .modal-sheet { background: var(--petlux-card); border-radius: var(--petlux-radius-lg) var(--petlux-radius-lg) 0 0; width: 100%; max-width: 28rem; }
+</style>
+<main>
+  <div class="fixed top-0 right-3 z-50 flex items-center w-[88px] h-8 rounded-full border border-black/10 shrink-0" style="top: calc(env(safe-area-inset-top, 0px) + 12px);">
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="更多">
+        <i data-lucide="more-horizontal" class="w-4 h-4 text-foreground"></i>
+      </button>
+      <span class="w-px h-3 bg-black/10 block"></span>
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="关闭">
+        <i data-lucide="x" class="w-4 h-4 text-foreground"></i>
+      </button>
+    </div>
+
+<div class="petlux-shell max-w-md mx-auto bg-background min-h-screen pb-24 relative">
+
+  <!-- Gallery Container -->
+  <div class="gallery-container">
+
+    <!-- Scroll Container -->
+    <div class="scroll-container">
+
+      <!-- Sticky Topbar -->
+      <header data-topbar class="sticky top-0 z-30 h-14 px-4 flex items-center justify-between bg-background/95 backdrop-blur-sm border-b border-border">
+<button class="flex items-center justify-center w-8 h-8 -ml-1 petlux-tap rounded-full" aria-label="返回">
+          <i data-lucide="arrow-left" class="w-5 h-5 text-foreground"></i>
+        </button>
+        <span class="text-base font-medium text-foreground">活动详情</span>
+        <button class="flex items-center justify-center w-8 h-8 -mr-1 petlux-tap rounded-full" aria-label="更多">
+          <i data-lucide="more-horizontal" class="w-5 h-5 text-foreground"></i>
+        </button>
+  </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+
+        <!-- Hero Section -->
+        <section class="hero-section relative w-full h-[200px] overflow-hidden">
+          <img src="../assets/pet-activity.jpg" alt="周末宠物公园聚会" class="hero-cover absolute inset-0 w-full h-full object-cover" />
+          <div class="hero-overlay absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"></div>
+        </section>
+
+        <!-- Gallery Hall -->
+        <div class="gallery-hall p-4 pt-4">
+
+          <!-- Card 1: Status + Title + Description -->
+          <div class="gallery-card bg-card rounded-lg overflow-hidden mb-3 petlux-card relative">
+            <div class="card-accent-bar" style="background: var(--petlux-state-info);"></div>
+            <div class="card-body p-4 pl-5">
+              <div class="status-row flex items-center gap-2 mb-3">
+                <div class="status-badge text-[11px] px-2 py-0.5 rounded font-medium" style="background: rgba(107,125,140,0.12); color: var(--petlux-state-info);">
+                  <span>进行中</span>
+                </div>
+                <div class="category-badge text-[11px] px-2 py-0.5 rounded font-medium bg-accent text-accent-foreground">
+                  <span>户外聚会</span>
+                </div>
+              </div>
+              <h1 class="activity-title text-xl font-semibold text-ink leading-snug mb-2">周末宠物公园聚会</h1>
+              <p class="activity-desc text-[13px] text-ink-2 leading-relaxed">周末带上毛孩子来滨江绿地撒欢吧！本次活动为宠物社交主题，提供专属活动区域、狗狗互动游戏、宠物零食试吃等环节。名额有限，报名从速。</p>
+            </div>
+          </div>
+
+          <!-- Card 2: Info Grid -->
+          <div class="gallery-card bg-card rounded-lg overflow-hidden mb-3 petlux-card relative">
+            <div class="card-accent-bar" style="background: var(--petlux-brand);"></div>
+            <div class="card-body p-4 pl-5">
+              <div class="info-grid grid grid-cols-2 gap-x-3 gap-y-4">
+                <div class="info-cell">
+                  <div class="info-label text-xs text-ink-3 mb-1">活动日期</div>
+                  <div class="info-value text-sm font-medium text-ink">07月27日 (周六)</div>
+                </div>
+                <div class="info-cell">
+                  <div class="info-label text-xs text-ink-3 mb-1">活动时间</div>
+                  <div class="info-value text-sm font-medium text-ink">14:00 - 17:00</div>
+                </div>
+              </div>
+              <div class="info-grid grid grid-cols-2 gap-x-3 gap-y-4 mt-4 pt-4 border-t border-border">
+                <div class="info-cell">
+                  <div class="info-label text-xs text-ink-3 mb-1">活动地点</div>
+                  <div class="info-value text-sm font-medium text-ink">徐汇滨江绿地·宠物乐园</div>
+                </div>
+                <div class="info-cell">
+                  <div class="info-label text-xs text-ink-3 mb-1">活动费用</div>
+                  <div class="info-value price-value text-sm font-semibold text-primary">¥88/人 · ¥38/宠</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Registration -->
+          <div class="gallery-card bg-card rounded-lg overflow-hidden mb-3 petlux-card relative">
+            <div class="card-accent-bar" style="background: var(--petlux-brand);"></div>
+            <div class="card-body p-4 pl-5">
+              <div class="section-title-row flex items-center justify-between mb-3">
+                <span class="section-title text-sm font-semibold text-ink">报名情况</span>
+                <button class="view-reg-btn flex items-center gap-0.5 text-xs text-primary petlux-tap px-1 py-0.5 rounded">
+                  <span class="view-reg-text">查看名单</span>
+                  <span class="view-reg-arrow text-sm">›</span>
+                </button>
+              </div>
+              <div class="participant-section">
+                <div class="participant-row flex items-center justify-between mb-2">
+                  <span class="participant-label text-xs text-ink-2">已报名</span>
+                  <span class="participant-count text-sm font-semibold text-ink">12/20</span>
+                </div>
+                <div class="participant-bar w-full h-2 bg-muted rounded-full overflow-hidden">
+                  <div class="participant-fill h-full rounded-full" style="width: 60%; background: var(--petlux-brand);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Creator Info -->
+          <div class="gallery-card bg-card rounded-lg overflow-hidden mb-3 petlux-card relative">
+            <div class="card-accent-bar" style="background: var(--petlux-brand);"></div>
+            <div class="card-body p-4 pl-5">
+              <span class="section-title block text-sm font-semibold text-ink mb-3">创建者信息</span>
+              <div class="contact-info flex flex-col gap-2.5">
+                <div class="contact-row flex items-center justify-between">
+                  <span class="contact-label text-xs text-ink-3">联系人</span>
+                  <span class="contact-value text-sm text-ink">王小明</span>
+                </div>
+                <div class="contact-row flex items-center justify-between">
+                  <span class="contact-label text-xs text-ink-3">联系电话</span>
+                  <span class="contact-value text-sm text-ink flex items-center gap-1.5">
+                    138****8888
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-primary"></i>
+                  </span>
+                </div>
+                <div class="contact-row flex items-center justify-between">
+                  <span class="contact-label text-xs text-ink-3">微信号</span>
+                  <span class="contact-value text-sm text-ink">arooro_wx</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5: Activity Images -->
+          <div class="gallery-card bg-card rounded-lg overflow-hidden mb-3 petlux-card relative">
+            <div class="card-accent-bar" style="background: var(--petlux-brand);"></div>
+            <div class="card-body p-4 pl-5">
+              <span class="section-title block text-sm font-semibold text-ink mb-3">活动图片 (4张)</span>
+              <div class="image-grid grid grid-cols-3 gap-2">
+                <div class="image-grid-item aspect-square rounded-md overflow-hidden bg-muted">
+                  <img src="../assets/pet-dog.jpg" alt="活动图片1" class="grid-image w-full h-full object-cover" />
+                </div>
+                <div class="image-grid-item aspect-square rounded-md overflow-hidden bg-muted">
+                  <img src="../assets/pet-cat.jpg" alt="活动图片2" class="grid-image w-full h-full object-cover" />
+                </div>
+                <div class="image-grid-item aspect-square rounded-md overflow-hidden bg-muted">
+                  <img src="../assets/pet-activity.jpg" alt="活动图片3" class="grid-image w-full h-full object-cover" />
+                </div>
+                <div class="image-grid-item aspect-square rounded-md overflow-hidden bg-muted">
+                  <img src="../assets/pet-rabbit.jpg" alt="活动图片4" class="grid-image w-full h-full object-cover" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bottom-spacer h-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar (Fixed) -->
+    <div class="action-bar fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-sm border-t border-border">
+      <div class="max-w-md mx-auto flex items-center gap-3 px-4 py-3">
+        <button class="action-btn action-btn-edit flex-1 h-11 rounded-lg border border-border bg-card text-sm font-medium text-ink petlux-btn-press">
+          <span class="action-btn-text">编辑</span>
+        </button>
+        <button class="action-btn action-btn-status flex-1 h-11 rounded-lg bg-primary text-sm font-medium text-primary-foreground petlux-btn-press" style="box-shadow: 0 4px 12px -4px rgba(79,94,53,0.3);">
+          <span class="action-btn-text">结束报名</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Registration List Modal -->
+  <div class="reg-list-mask modal-mask">
+    <div class="reg-list-sheet modal-sheet max-h-[70vh] flex flex-col">
+      <div class="reg-list-header flex items-center justify-between px-4 py-3 border-b border-border">
+        <span class="reg-list-title text-base font-semibold text-ink">报名名单 (12人)</span>
+        <button class="reg-list-close w-8 h-8 flex items-center justify-center rounded-full petlux-tap" aria-label="关闭">
+          <i data-lucide="x" class="w-5 h-5 text-ink-2"></i>
+        </button>
+      </div>
+      <div class="reg-list-body flex-1 overflow-y-auto no-scrollbar px-4 py-2">
+        <div class="reg-item flex items-center justify-between py-3 border-b border-border">
+          <div class="reg-info flex flex-col gap-0.5">
+            <span class="reg-name text-sm font-medium text-ink">张萌萌</span>
+            <span class="reg-meta text-xs text-ink-3">138****2233</span>
+          </div>
+          <button class="reg-action w-9 h-9 flex items-center justify-center rounded-full bg-accent petlux-tap">
+            <i data-lucide="phone" class="w-4 h-4 text-accent-foreground"></i>
+          </button>
+        </div>
+        <div class="reg-item flex items-center justify-between py-3 border-b border-border">
+          <div class="reg-info flex flex-col gap-0.5">
+            <span class="reg-name text-sm font-medium text-ink">李雨晴</span>
+            <span class="reg-meta text-xs text-ink-3">139****5566</span>
+          </div>
+          <button class="reg-action w-9 h-9 flex items-center justify-center rounded-full bg-accent petlux-tap">
+            <i data-lucide="phone" class="w-4 h-4 text-accent-foreground"></i>
+          </button>
+        </div>
+        <div class="reg-item flex items-center justify-between py-3 border-b border-border">
+          <div class="reg-info flex flex-col gap-0.5">
+            <span class="reg-name text-sm font-medium text-ink">陈思远</span>
+            <span class="reg-meta text-xs text-ink-3">137****7788</span>
+          </div>
+          <button class="reg-action w-9 h-9 flex items-center justify-center rounded-full bg-accent petlux-tap">
+            <i data-lucide="phone" class="w-4 h-4 text-accent-foreground"></i>
+          </button>
+        </div>
+        <div class="reg-item flex items-center justify-between py-3 border-b border-border">
+          <div class="reg-info flex flex-col gap-0.5">
+            <span class="reg-name text-sm font-medium text-ink">王浩然</span>
+            <span class="reg-meta text-xs text-ink-3">135****1122</span>
+          </div>
+          <button class="reg-action w-9 h-9 flex items-center justify-center rounded-full bg-accent petlux-tap">
+            <i data-lucide="phone" class="w-4 h-4 text-accent-foreground"></i>
+          </button>
+        </div>
+        <div class="reg-item flex items-center justify-between py-3 border-b border-border">
+          <div class="reg-info flex flex-col gap-0.5">
+            <span class="reg-name text-sm font-medium text-ink">刘佳怡</span>
+            <span class="reg-meta text-xs text-ink-3">136****3344</span>
+          </div>
+          <button class="reg-action w-9 h-9 flex items-center justify-center rounded-full bg-accent petlux-tap">
+            <i data-lucide="phone" class="w-4 h-4 text-accent-foreground"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+<script>lucide.createIcons();</script>
+</body>
+</html>

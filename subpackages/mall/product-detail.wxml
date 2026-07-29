@@ -24,7 +24,7 @@
 
   <view class="page-content">
     <!-- 商品信息卡片 -->
-    <view class="info-card card-animate card-animate-1">
+    <view class="info-card">
       <text class="product-name">{{product.name}}</text>
       <text class="product-subtitle" wx:if="{{product.subTitle}}">{{product.subTitle}}</text>
       <view class="price-section">
@@ -39,7 +39,7 @@
     </view>
 
     <!-- 商品详情卡片 -->
-    <view class="info-card card-animate card-animate-2">
+    <view class="info-card">
       <text class="section-label">商品详情</text>
       <text class="description-text" wx:if="{{product.description}}">{{product.description}}</text>
       <text class="description-text" wx:else>暂无详细描述</text>
@@ -72,40 +72,48 @@
 
 <!-- 规格选择弹窗 -->
 <view class="sku-popup-mask {{skuPopupVisible ? 'show' : ''}}" bindtap="onCloseSkuPopup"></view>
-<view class="sku-popup {{skuPopupVisible ? 'show' : ''}}">
-  <view class="sku-popup-header">
-    <image class="sku-popup-thumb" src="{{skuPopupImage || product.coverUrl || product.coverImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage || product.coverUrl || product.coverImage}}" data-path="product.coverUrl" />
-    <view class="sku-popup-info">
-      <text class="sku-popup-price">{{skuPopupPrice}}</text>
-      <text class="sku-popup-stock">库存: {{skuPopupStock}}件</text>
-      <text class="sku-popup-selected" wx:if="{{selectedSkuText}}">已选: {{selectedSkuText}}</text>
-    </view>
-    <view class="sku-popup-close" bindtap="onCloseSkuPopup">✕</view>
+<view class="sku-popup {{skuPopupVisible ? 'show' : ''}}" hidden="{{!skuPopupVisible}}">
+  <view class="sku-popup-brand-bar">
+    <text class="sku-popup-brand-text">AROORO · 安心呼噜 放心托付</text>
+  </view>
+  <view class="sku-popup-close-btn" bindtap="onCloseSkuPopup">✕</view>
+
+  <view class="sku-popup-image-wrap">
+    <image class="sku-popup-image" src="{{skuPopupImage || product.coverUrl || product.coverImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage || product.coverUrl || product.coverImage}}" data-path="product.coverUrl" />
   </view>
 
-  <view class="sku-popup-body">
+  <scroll-view class="sku-popup-body" scroll-y enhanced show-scrollbar="{{false}}">
     <view class="sku-popup-body-inner">
-      <view class="sku-group" wx:for="{{popupSpecGroups}}" wx:key="specId">
-        <text class="sku-group-label">{{item.name}}</text>
-        <view class="sku-options">
+      <view class="sku-product-info">
+        <text class="sku-product-name">{{product.name}}</text>
+        <view class="sku-product-meta">
+          <text class="sku-product-price">{{skuPopupPrice}}</text>
+          <text class="sku-product-stock">库存 {{skuPopupStock}}件</text>
+        </view>
+        <text class="sku-product-selected" wx:if="{{selectedSkuText}}">已选: {{selectedSkuText}}</text>
+      </view>
+
+      <view class="sku-spec-section" wx:for="{{popupSpecGroups}}" wx:key="specId">
+        <text class="sku-spec-label">{{item.name}}</text>
+        <view class="sku-spec-options">
           <view wx:for="{{item.values}}" wx:for-item="val" wx:key="*this"
-            class="sku-option {{item.selectedValue === val ? 'selected' : ''}} {{item.disabledValues && item.disabledValues[val] ? 'disabled' : ''}}"
+            class="sku-spec-option {{item.selectedValue === val ? 'selected' : ''}} {{item.disabledValues && item.disabledValues[val] ? 'disabled' : ''}}"
             data-spec-id="{{item.specId}}" data-value="{{val}}" bindtap="onPopupSelectSpec">
-            <text class="sku-option-name">{{val}}</text>
+            <text class="sku-spec-option-text">{{val}}</text>
           </view>
         </view>
       </view>
 
-      <view class="sku-quantity">
-        <text class="sku-group-label">数量</text>
-        <view class="quantity-control">
-          <view class="quantity-btn {{quantity <= 1 ? 'disabled' : ''}}" bindtap="onChangeQuantity" data-type="minus">−</view>
-          <text class="quantity-value">{{quantity}}</text>
-          <view class="quantity-btn" bindtap="onChangeQuantity" data-type="plus">+</view>
+      <view class="sku-quantity-section">
+        <text class="sku-spec-label">数量</text>
+        <view class="sku-quantity-row">
+          <view class="sku-qty-btn {{quantity <= 1 ? 'disabled' : ''}}" bindtap="onChangeQuantity" data-type="minus">−</view>
+          <text class="sku-qty-value">{{quantity}}</text>
+          <view class="sku-qty-btn" bindtap="onChangeQuantity" data-type="plus">+</view>
         </view>
       </view>
     </view>
-  </view>
+  </scroll-view>
 
   <view class="sku-popup-footer">
     <view class="sku-confirm-btn {{!allSpecsSelected ? 'disabled' : ''}}" bindtap="onSkuConfirm">

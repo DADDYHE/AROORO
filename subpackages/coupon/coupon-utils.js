@@ -1,11 +1,11 @@
 const ACCENT_COLORS = {
-  fixed_amount: '#C4956A',
-  discount: '#8BA4B8',
-  full_reduction: '#D4A853',
+  fixed_amount: '#B8893A',
+  discount: '#6B7D8C',
+  full_reduction: '#D4A858',
 }
 
 function getAccentColor(type) {
-  return ACCENT_COLORS[type] || '#C4956A'
+  return ACCENT_COLORS[type] || '#B8893A'
 }
 
 const SCOPE_MAP = {

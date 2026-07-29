@@ -1,11 +1,11 @@
 const { AdminService } = require('../../../services/CloudFunctionService')
 
 const STATUS_MAP = {
-  draft: { text: '待发布', color: '#8E8E93' },
-  published: { text: '报名中', color: '#4ECDC4' },
-  registration_stopped: { text: '报名截止', color: '#FF9500' },
-  ended: { text: '已结束', color: '#8E8E93' },
-  cancelled: { text: '已取消', color: '#FF3B30' },
+  draft: { text: '待发布', color: '#9A9489' },
+  published: { text: '报名中', color: '#4F5E35' },
+  registration_stopped: { text: '报名截止', color: '#B8893A' },
+  ended: { text: '已结束', color: '#9A9489' },
+  cancelled: { text: '已取消', color: '#A85B4A' },
 }
 
 const CATEGORY_MAP = {
@@ -57,7 +57,7 @@ Page({
       const res = await AdminService.getActivityDetail(activityId)
       if (res.code === 0 && res.data) {
         const activity = res.data
-        const status = STATUS_MAP[activity.status] || { text: activity.status, color: '#8E8E93' }
+        const status = STATUS_MAP[activity.status] || { text: activity.status, color: '#9A9489' }
         const categoryText = CATEGORY_MAP[activity.category] || ''
 
         let statusActionText = '发布'

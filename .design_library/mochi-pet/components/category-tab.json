@@ -1,0 +1,56 @@
+{
+  "slug": "category-tab",
+  "schemaVersion": 2,
+  "name": "Category Tab",
+  "category": "navigation",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["tab", "segmented-control", "filter-chip-group"],
+  "variantDimensions": [
+    {"axis": "state", "values": ["selected", "unselected", "disabled"]},
+    {"axis": "layout", "values": ["scrollable-row", "fixed-segment"]}
+  ],
+  "representativeVariants": [
+    {
+      "id": "row-mixed",
+      "name": "Scrollable row (mixed states)",
+      "whySelected": "Reference browse screen filter row 'All / Headphones / Speakers'; pet categories need horizontal scroll.",
+      "traits": {"radius": "--radius-pill", "height": "36px", "padding": "var(--space-2) var(--space-4)", "selectedBackground": "--color-primary", "selectedForeground": "#FFFFFF", "unselectedBackground": "--color-card", "unselectedForeground": "--color-foreground", "unselectedBorder": "1px solid var(--color-border)", "fontWeight": "600", "fontSize": "14px"},
+      "childrenDigest": "horizontally scrollable pill row; first pill '全部' filled coral with white text; remaining pills '主粮/零食/玩具/洗护美容/健康医疗' soft cream with thin warm border."
+    },
+    {
+      "id": "unselected-set",
+      "name": "Unselected pill set",
+      "whySelected": "Isolates the resting chip style for documentation.",
+      "traits": {"radius": "--radius-pill", "background": "--color-card", "foreground": "--color-foreground", "border": "1px solid var(--color-border)"},
+      "childrenDigest": "three cream outlined pills '主粮' '零食' '玩具'."
+    },
+    {
+      "id": "selected-single",
+      "name": "Selected single",
+      "whySelected": "Isolates the active coral fill.",
+      "traits": {"radius": "--radius-pill", "background": "--color-primary", "foreground": "#FFFFFF", "shadow": "--shadow-1"},
+      "childrenDigest": "one coral filled pill '洗护美容' with white 600 text and whisper shadow."
+    }
+  ],
+  "anatomy": [
+    {"part": "scroll-container", "role": "horizontal overflow row with hidden scrollbar"},
+    {"part": "tab-pill", "role": "selectable filter chip"},
+    {"part": "label", "role": "category name text"}
+  ],
+  "structurePatterns": ["flex row gap-2 overflow-x-auto", "pill whitespace-nowrap"],
+  "usageHints": {"priorityHint": "high", "where": "above product grid on browse/category screens"},
+  "doNotInvent": ["dropdown menus", "icon-only tabs", "multi-select checkboxes"],
+  "unknowns": ["exact category list per region — use provided samples"],
+  "keyInsightSeed": "分类标签：选中珊瑚实色胶囊 + 未选柔奶油描边，横向滚动",
+  "sourceSignals": {"uiCopySamples": ["全部", "主粮", "零食", "玩具", "洗护美容", "健康医疗"]},
+  "visualSpecs": {
+    "primary": {"radius": "--radius-pill", "height": "36px", "padding": "8px 16px", "fontSize": "14px", "fontWeight": "600"},
+    "states": [
+      {"state": "selected", "background": "--color-primary", "foreground": "#FFFFFF", "shadow": "--shadow-1"},
+      {"state": "unselected", "background": "--color-card", "foreground": "--color-foreground", "border": "1px solid var(--color-border)"},
+      {"state": "disabled", "opacity": "0.4"}
+    ]
+  },
+  "renderPlan": {"samples": ["row-mixed", "unselected-set", "selected-single"]}
+}

@@ -1,562 +1,845 @@
-/* 首页样式 - Smart Home Dashboard 风格（参考图 1:1 还原，2026-07-26） */
-/* 视觉 token 由 ../../styles/theme-warm.wxss 覆写提供（仅本页生效） */
-
-@import '../../styles/theme-warm.wxss';
+/* ================================================================
+   首页样式 · PETLUX 橄榄绿治愈轻奢
+   2026-07-28 按 pet-luxury-mini-program 设计稿重写全部结构
+   ----------------------------------------------------------------
+   设计稿 7 区域：
+     1. 顶部栏 — 头像+问候+位置+更多按钮组
+     2. 英雄区 — 220px 大图 banner + 渐变遮罩 + 标题
+     3. 搜索栏 — 圆角搜索框
+     4. 快捷服务 — 5列网格圆形图标
+     5. 精选好物 — 横滑商品卡
+     6. 近期活动 — 左图右文横向卡
+     7. 宠友团购 — 左图右文+进度条
+   ================================================================ */
 
 .home-container {
   min-height: 100vh;
   background: var(--background-color);
-  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
-  padding: 0 28rpx;
+  font-family: -apple-system, "PingFang SC", "HarmonyOS Sans SC", "Helvetica Neue", sans-serif;
+  padding: 0 0 200rpx;
+  margin-top: 0;
   box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ===== 顶部状态栏（参考图：时间/天气/通知） ===== */
-.top-bar {
+/* 确保页面无默认间距 */
+page {
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== Section 1: 顶部栏 ===== */
+.topbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 28rpx 4rpx 20rpx;
+  height: 112rpx;
+  padding: 0 32rpx;
+  background: #FFFFFF;
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 
-.top-bar-left {
-  display: flex;
-  flex-direction: column;
-}
-
-.top-greeting {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.top-date {
-  font-size: 22rpx;
-  color: var(--text-secondary);
-  margin-top: 6rpx;
-}
-
-.top-bar-right {
+.topbar-left {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-}
-
-.top-weather {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-}
-
-.top-bell {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 50%;
-  background: var(--card-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-md);
-  position: relative;
-}
-
-.bell-icon { font-size: 28rpx; }
-
-.bell-dot {
-  position: absolute;
-  top: 10rpx;
-  right: 12rpx;
-  width: 14rpx;
-  height: 14rpx;
-  background: #E74C3C;
-  border-radius: 50%;
-  border: 2rpx solid #FFFFFF;
-}
-
-/* ===== 快捷操作卡片（参考图：3 个圆角白卡 + 图标圆） ===== */
-.quick-grid {
-  display: flex;
   gap: 20rpx;
-  margin-top: 24rpx;
-}
-
-.quick-card {
+  min-width: 0;
   flex: 1;
-  background: var(--card-color);
-  border-radius: var(--border-radius-xl);
-  padding: 28rpx 20rpx 24rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: var(--shadow-md);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.quick-card:active {
-  transform: scale(0.96);
-}
-
-/* 选中态：深色填充（参考图 Movie Night 同款） */
-.quick-active {
-  background: var(--primary-color);
-  box-shadow: var(--shadow-glow-primary);
-}
-
-.quick-active .quick-label,
-.quick-active .quick-desc { color: #FFFFFF; }
-
-.quick-icon-wrap {
+.topbar-avatar {
   width: 64rpx;
   height: 64rpx;
   border-radius: 50%;
-  background: var(--surface-tint);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16rpx;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
-.quick-active .quick-icon-wrap {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.quick-icon-text {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--primary-color);
-}
-
-.quick-active .quick-icon-text { color: #FFFFFF; }
-
-.quick-label {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4rpx;
-}
-
-.quick-desc {
-  font-size: 20rpx;
-  color: var(--text-tertiary);
-}
-
-/* ===== 分页指示点 ===== */
-.page-dots {
-  display: flex;
-  justify-content: center;
-  gap: 10rpx;
-  margin-top: 28rpx;
-}
-
-.page-dot {
-  width: 12rpx;
-  height: 12rpx;
-  border-radius: 50%;
-  background: #D0DAE4;
-}
-
-.page-dot-active {
-  width: 32rpx;
-  border-radius: 6rpx;
+.topbar-avatar-ph {
   background: var(--primary-color);
-}
-
-/* ===== 通用区块 ===== */
-.section-block {
-  margin-top: 40rpx;
-}
-
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20rpx;
-}
-
-.section-title-row {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.section-title {
-  font-size: 34rpx;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.section-badge {
-  background: #E74C3C;
-  color: #FFFFFF;
-  font-size: 20rpx;
-  font-weight: 600;
-  padding: 2rpx 14rpx;
-  border-radius: 999rpx;
-  line-height: 1.6;
-}
-
-.section-more {
-  font-size: 24rpx;
-  color: var(--primary-color);
-  font-weight: 500;
-}
-
-/* ===== 分类芯片条（参考图：Living Room / Kitchen 药丸） ===== */
-.chip-strip {
-  white-space: nowrap;
-  margin-bottom: 24rpx;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 14rpx 24rpx;
-  border-radius: 999rpx;
-  background: var(--card-color);
-  border: 0.5rpx solid var(--border-color);
-  margin-right: 16rpx;
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  box-shadow: var(--shadow-sm);
-}
-
-.chip-icon { font-size: 22rpx; }
-
-.chip-active {
-  background: var(--primary-light);
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  font-weight: 500;
-}
-
-/* ===== 卡片网格（参考图：大深色主卡 + 小白卡布局） ===== */
-.card-grid {
-  display: flex;
-  gap: 20rpx;
-}
-
-.card-grid-sm {
-  margin-top: 20rpx;
-}
-
-/* ---- 主卡片：深色大卡（参考图 Apple Air Conditioner 同款） ---- */
-.card-main {
-  flex: 55%;
-  min-height: 320rpx;
-  background: var(--primary-color);
-  border-radius: var(--border-radius-2xl);
-  padding: 28rpx;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-shadow: var(--shadow-glow-primary-lg);
-  position: relative;
-  overflow: hidden;
-}
-
-.card-main::before {
-  content: '';
-  position: absolute;
-  top: -40rpx;
-  right: -30rpx;
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.card-main-header {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  position: relative;
-  z-index: 1;
-}
-
-.card-main-avatar,
-.card-main-avatar-ph {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26rpx;
-  color: #FFF;
-  font-weight: 600;
-}
-
-.card-main-info {
-  flex: 1;
-}
-
-.card-main-name {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #FFFFFF;
-  display: block;
-}
-
-.card-main-breed {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.7);
-  display: block;
-  margin-top: 2rpx;
-}
-
-.card-main-tag {
-  background: rgba(255, 255, 255, 0.18);
-  color: #FFFFFF;
-  font-size: 20rpx;
-  padding: 4rpx 14rpx;
-  border-radius: 999rpx;
-  font-weight: 500;
-}
-
-.card-main-body {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: baseline;
-  gap: 6rpx;
-}
-
-.card-main-big-num {
-  font-size: 72rpx;
-  font-weight: 700;
-  color: #FFFFFF;
-  line-height: 1;
-}
-
-.card-main-unit {
-  font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.card-main-footer {
-  display: flex;
-  gap: 20rpx;
-  position: relative;
-  z-index: 1;
-}
-
-.card-main-stat {
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.stat-icon { font-size: 22rpx; }
-
-/* ---- 侧边小白卡（参考图 PHILO Bed Lamp 同款） ---- */
-.card-side {
-  flex: 45%;
-  min-height: 320rpx;
-  background: var(--card-color);
-  border-radius: var(--border-radius-2xl);
-  padding: 24rpx;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-md);
-  border: 0.5rpx solid var(--border-color);
-}
-
-.card-side-icon-wrap {
-  margin-bottom: auto;
-}
-
-.card-side-avatar,
-.card-side-avatar-ph {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 50%;
-  background: var(--surface-tint);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26rpx;
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-.card-side-info { margin-top: 16rpx; }
-
-.card-side-name {
+.topbar-avatar-text {
   font-size: 28rpx;
   font-weight: 600;
-  color: var(--text-primary);
-  display: block;
+  color: #FAFAF6;
 }
 
-.card-side-breed {
-  font-size: 22rpx;
-  color: var(--text-tertiary);
-  display: block;
-  margin-top: 4rpx;
-}
-
-.card-side-tag {
-  display: inline-flex;
-  align-self: flex-start;
-  margin-top: 16rpx;
-  background: var(--primary-light);
-  color: var(--primary-color);
-  font-size: 20rpx;
-  padding: 4rpx 14rpx;
-  border-radius: 999rpx;
-  font-weight: 500;
-}
-
-/* ---- 迷你卡（参考图 LUNO / Sony 同款） ---- */
-.card-mini {
-  flex: 1;
-  min-height: 140rpx;
-  background: var(--card-color);
-  border-radius: var(--border-radius-xl);
-  padding: 20rpx;
+.topbar-greeting {
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-md);
-  border: 0.5rpx solid var(--border-color);
+  min-width: 0;
+  gap: 4rpx;
 }
 
-.card-mini-icon {
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
-  background: var(--surface-tint);
-  margin-bottom: 12rpx;
-}
-
-.card-mini-name {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.card-mini-breed {
-  font-size: 20rpx;
-  color: var(--text-tertiary);
-  margin-top: 2rpx;
-}
-
-.card-mini-tag {
-  display: inline-flex;
-  align-self: flex-start;
-  margin-top: auto;
-  padding-top: 8rpx;
-  font-size: 20rpx;
-  color: var(--text-tertiary);
-}
-
-/* ===== 未登录提示卡 ===== */
-.login-card {
-  background: var(--card-color);
-  border-radius: var(--border-radius-2xl);
-  padding: 36rpx;
-  box-shadow: var(--shadow-md);
-  border: 0.5rpx solid var(--border-color);
-}
-
-.login-card-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: block;
-}
-
-.login-card-sub {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  display: block;
-  margin-top: 8rpx;
-}
-
-.login-card-btn {
-  display: inline-flex;
-  margin-top: 24rpx;
-  background: var(--primary-color);
-  color: #FFFFFF;
-  font-size: 26rpx;
-  font-weight: 500;
-  padding: 18rpx 40rpx;
-  border-radius: 999rpx;
-  align-self: flex-start;
-}
-
-/* ===== 团购横滑卡 ===== */
-.deal-strip {
-  white-space: nowrap;
-}
-
-.deal-card {
-  display: inline-flex;
-  flex-direction: column;
-  width: 280rpx;
-  margin-right: 20rpx;
-  vertical-align: top;
-  background: var(--card-color);
-  border-radius: var(--border-radius-xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  border: 0.5rpx solid var(--border-color);
-}
-
-.deal-cover,
-.deal-cover-ph {
-  width: 280rpx;
-  height: 180rpx;
-  background: var(--surface-tint);
-}
-
-.deal-info {
-  padding: 16rpx 20rpx 20rpx;
-}
-
-.deal-name {
-  font-size: 26rpx;
+.topbar-name {
+  font-size: 28rpx;
   font-weight: 500;
   color: var(--text-primary);
-  display: block;
-}
-
-.deal-meta {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-top: 8rpx;
-}
-
-.deal-price {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: var(--tuan-primary);
-}
-
-.deal-orders {
-  font-size: 22rpx;
-  color: var(--text-tertiary);
-}
-
-/* ===== 活动列表 ===== */
-.act-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-
-/* 通用省略 */
-.truncate {
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.topbar-loc {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  line-height: 1.2;
+}
+
+.topbar-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  height: 64rpx;
+  padding: 0 24rpx;
+  margin-left: 20rpx;
+  background: var(--background-color, #F8FAF3);
+  border-radius: var(--border-radius-pill);
+  flex-shrink: 0;
+}
+
+.topbar-search-icon {
+  width: 26rpx;
+  height: 26rpx;
+  border: 3rpx solid var(--text-secondary);
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.topbar-search-icon::after {
+  content: '';
+  position: absolute;
+  right: -6rpx;
+  bottom: -6rpx;
+  width: 12rpx;
+  height: 3rpx;
+  background: var(--text-secondary);
+  border-radius: 2rpx;
+  transform: rotate(45deg);
+}
+
+.topbar-search-text {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+/* ===== Section 2: 英雄区 ===== */
+.hero-section {
+  padding: 0;
+  margin-top: 0;
+  position: fixed;
+  top: 112rpx;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.hero-swiper {
+  width: 100%;
+}
+
+.hero-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-img-ph {
+  background: var(--primary-light);
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgba(42, 40, 35, 0.5) 0%, transparent 60%);
+}
+
+.hero-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 40rpx;
+}
+
+.hero-title {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  display: block;
+  line-height: 1.2;
+}
+
+.hero-sub {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 8rpx;
+  display: block;
+  line-height: 1.55;
+}
+
+/* ===== 内容卡片：整体上移覆盖 banner，顶部 96rpx 圆角 ===== */
+.home-content-sheet {
+  position: sticky;
+  top: 112rpx;
+  z-index: 2;
+  margin: 0;
+  background: var(--card-color);
+  border-radius: 96rpx 96rpx 0 0;
+  padding-top: 20rpx;
+  box-shadow: 0 -8rpx 32rpx rgba(42, 40, 35, 0.06);
+}
+
+/* ===== Section 3: 搜索栏 ===== */
+.search-section {
+  padding: 0 32rpx;
+  margin-top: 24rpx;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  border: 2rpx solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--border-radius-pill);
+  padding: 20rpx 32rpx;
+}
+
+.search-icon {
+  width: 32rpx;
+  height: 32rpx;
+  border: 3rpx solid var(--text-secondary);
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.search-icon::after {
+  content: '';
+  position: absolute;
+  right: -7rpx;
+  bottom: -7rpx;
+  width: 14rpx;
+  height: 3rpx;
+  background: var(--text-secondary);
+  border-radius: 2rpx;
+  transform: rotate(45deg);
+}
+
+.search-placeholder {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+/* ===== 未登录：搜索位置登录按钮（沿用搜索栏胶囊外形，主色填充） ===== */
+.home-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin: 0 auto;
+  background: var(--primary-color);
+  color: #FAFAF6;
+  font-size: 28rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+  padding: 20rpx 56rpx;
+  border-radius: 36rpx;
+  box-shadow: var(--zy-shadow-sm);
+}
+
+.home-login-text {
+  font-size: 28rpx;
+  color: inherit;
+}
+
+/* ===== Section 4: 快捷服务入口（2x2 四宫格，参考设计稿） ===== */
+.quick-services-wrapper {
+  margin-top: 0;
+  border-radius: 0 0 32rpx 32rpx;
+  overflow: hidden;
+}
+
+.quick-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24rpx;
+  background: #FFFFFF;
+  padding: 42rpx 24rpx 40rpx;
+}
+
+.qs-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: calc((100% - 24rpx) / 2);
+  box-sizing: border-box;
+  padding: 32rpx 16rpx 24rpx;
+  background: var(--background-color);
+  border-radius: 24rpx;
+}
+
+.qs-icon {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20rpx;
+  position: relative;
+}
+
+.qs-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 28rpx;
+  opacity: 0.35;
+  filter: blur(16rpx);
+}
+
+.qs-icon-activity::before,
+.qs-icon-mall::before {
+  background: #AED581;
+}
+
+.qs-emoji {
+  font-size: 44rpx;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.qs-emoji-img {
+  width: 52rpx;
+  height: 52rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.qs-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333333;
+  line-height: 1.3;
+  margin-bottom: 6rpx;
+}
+
+.qs-subtitle {
+  font-size: 22rpx;
+  color: #999999;
+  line-height: 1.3;
+  margin-bottom: 12rpx;
+}
+
+.qs-accent {
+  width: 40rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+}
+
+.qs-accent-activity,
+.qs-accent-mall {
+  background: #AED581;
+}
+
+/* ===== 通用区块 ===== */
+.section {
+  margin-top: 48rpx;
+  padding: 0 32rpx;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.section-link {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+}
+
+/* ===== Section 5: 精选好物（横滑卡） ===== */
+.featured-scroll {
+  white-space: nowrap;
+}
+
+.featured-card {
+  display: inline-flex;
+  flex-direction: column;
+  width: 288rpx;
+  background: var(--card-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--zy-shadow-xs);
+  flex-shrink: 0;
+  margin-right: 24rpx;
+  vertical-align: top;
+}
+
+.featured-img {
+  width: 288rpx;
+  height: 256rpx;
+  object-fit: cover;
+  display: block;
+}
+
+.featured-img-ph {
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.featured-img-ph-text {
+  font-size: 48rpx;
+  color: var(--text-tertiary);
+}
+
+.featured-body {
+  padding: 24rpx;
+}
+
+.featured-name {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.featured-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+
+.featured-price {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--primary-color);
+  line-height: 1.2;
+}
+
+.featured-price-orig {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+}
+
+/* ===== Section 5.5: 商城好物（图片占满 + 底部渐变标题） ===== */
+.mall-card {
+  display: inline-block;
+  width: 288rpx;
+  height: 360rpx;
+  position: relative;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+  vertical-align: top;
+  box-shadow: var(--zy-shadow-xs);
+}
+
+.mall-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mall-card-img-ph {
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mall-card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(to top, rgba(79, 94, 53, 1) 0%, rgba(79, 94, 53, 0.85) 35%, rgba(79, 94, 53, 0.3) 70%, transparent 100%);
+  pointer-events: none;
+}
+
+.mall-card-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 24rpx 20rpx;
+}
+
+.mall-card-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.mall-card-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+  margin-top: 8rpx;
+}
+
+.mall-card-price {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+
+.mall-card-original {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: line-through;
+}
+
+.mall-card-sold {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: auto;
+}
+
+/* ===== Section 6: 近期活动（左图右文横向卡） ===== */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.activity-h-card {
+  display: flex;
+  background: var(--card-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--zy-shadow-xs);
+}
+
+.activity-h-img {
+  width: 224rpx;
+  height: 224rpx;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.activity-h-img-ph {
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-h-img-ph-text {
+  font-size: 32rpx;
+  color: var(--text-tertiary);
+}
+
+.activity-h-body {
+  flex: 1;
+  padding: 32rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12rpx;
+  min-width: 0;
+}
+
+.activity-h-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-h-info {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  line-height: 1.55;
+}
+
+.activity-h-meta {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.activity-h-loc {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+}
+
+.activity-h-people {
+  font-size: 24rpx;
+  color: var(--primary-color);
+}
+
+/* ===== 未登录提示卡 ===== */
+.login-card {
+  background: var(--card-color);
+  border-radius: var(--border-radius-lg);
+  padding: 48rpx 32rpx;
+  box-shadow: var(--zy-shadow-xs);
+  border: 2rpx solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.login-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+  letter-spacing: -0.01em;
+}
+
+.login-sub {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 8rpx;
+}
+
+.login-btn {
+  display: inline-flex;
+  margin-top: 24rpx;
+  background: var(--primary-color);
+  color: #FAFAF6;
+  font-size: 28rpx;
+  font-weight: 600;
+  padding: 20rpx 48rpx;
+  border-radius: var(--border-radius-pill);
+  align-self: flex-start;
+  box-shadow: var(--zy-shadow-sm);
+}
+
+/* ===== 底部留白 ===== */
 .bottom-spacer {
-  height: 200rpx;
+  height: 48rpx;
+}
+
+/* ===== Section 2.5: 我的宠物（大圆角胶囊卡片） ===== */
+.my-pets-section {
+  margin: 8rpx 20rpx 24rpx;
+  padding: 32rpx 32rpx 64rpx;
+  background: var(--background-color, #F8FAF3);
+  border-radius: 96rpx;
+}
+
+.my-pets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+  padding: 0 16rpx;
+}
+
+.my-pets-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.pet-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 8rpx 20rpx;
+  border-radius: var(--border-radius-pill);
+  background: var(--primary-color, #4F5E35);
+}
+
+.pet-view-all {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.pet-add-icon {
+  font-size: 28rpx;
+  color: #FFFFFF;
+  line-height: 1;
+  margin-top: -2rpx;
+}
+
+.pet-add-text {
+  font-size: 24rpx;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+.pets-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.pet-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: calc((100% - 20rpx) / 2);
+  padding: 24rpx;
+  background: #FFFFFF;
+  border-radius: 36rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.pet-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: var(--primary-light, #F5F5F5);
+  flex-shrink: 0;
+  margin-right: 16rpx;
+  box-sizing: border-box;
+}
+
+.pet-avatar-male {
+  border: 4rpx solid #4FB6E8;
+}
+
+.pet-avatar-female {
+  border: 4rpx solid #FF8FB1;
+}
+
+.pet-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.pet-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.pet-gender-tag {
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 1;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pet-gender-male {
+  color: #4FB6E8;
+  background: rgba(79, 182, 232, 0.12);
+}
+
+.pet-gender-female {
+  color: #FF8FB1;
+  background: rgba(255, 143, 177, 0.12);
+}
+
+.pet-gender-unknown {
+  display: none;
+}
+
+.pet-card-male {
+  border-left: 6rpx solid #4FB6E8;
+}
+
+.pet-card-female {
+  border-left: 6rpx solid #FF8FB1;
+}
+
+.pet-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-breed {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  margin-top: 4rpx;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-card-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160rpx;
+  background: #FFFFFF;
+  border-radius: 36rpx;
+  border: 2rpx dashed var(--border-color, #E5E5E5);
+  box-shadow: none;
+}
+
+.pet-empty-text {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  text-align: center;
 }

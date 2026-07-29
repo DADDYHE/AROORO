@@ -11,13 +11,13 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "左右",
+    "navigationBarTitleText": "AROORO",
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
     "custom": true,
     "color": "#666666",
-    "selectedColor": "#0D5A6B",
+    "selectedColor": "#4F5E35",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
@@ -171,6 +171,13 @@
         "referral/index",
         "withdrawal/index",
         "i18n-override/index"
+      ]
+    },
+    {
+      "root": "subpackages/search",
+      "name": "search",
+      "pages": [
+        "index"
       ]
     }
   ]

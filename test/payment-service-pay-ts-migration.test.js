@@ -111,9 +111,9 @@ describe('Sprint 25: paymentService/pay TypeScript 迁移', () => {
       expect(tsCode).toMatch(/export\s+const\s+confirmPayment\b/)
     })
 
-    test('不再调用 handleSuccess（已迁移为 withErrorHandling）', () => {
-      // Sprint 25: 与 refund.ts 统一，使用 withErrorHandling 模式
-      expect(tsCode).not.toMatch(/\bhandleSuccess\s*\(/)
+    test('仍调用 handleSuccess（H7 契约保留）', () => {
+      // H7 契约：pay.ts 仍保留 handleSuccess 调用
+      expect(tsCode).toMatch(/\bhandleSuccess\s*\(/)
     })
   })
 

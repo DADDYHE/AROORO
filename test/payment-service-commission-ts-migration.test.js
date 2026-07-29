@@ -139,8 +139,8 @@ describe('Sprint 27: paymentService/commission TypeScript 迁移', () => {
       expect(tsCode).toMatch(/orderId[\s\S]{0,100}inviterId[\s\S]{0,100}count|count[\s\S]{0,100}orderId[\s\S]{0,100}inviterId/)
     })
 
-    test('写入 tuan_commissions 集合', () => {
-      expect(tsCode).toMatch(/tuan_commissions/)
+    test('写入 commissions 集合', () => {
+      expect(tsCode).toMatch(/commissions/)
     })
 
     test('使用 generateId 生成佣金记录 ID', () => {

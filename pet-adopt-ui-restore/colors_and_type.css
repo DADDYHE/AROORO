@@ -1,0 +1,54 @@
+/* ============================================================
+   Pet Adoption App — Restore 1:1 Design Tokens
+   Brand prefix: pa  |  Source: user-provided 3-screen mockup
+   ============================================================ */
+
+:root {
+  /* ---- Surfaces ---- */
+  --pa-background: #FFFFFF;       /* sampled: app screen background */
+  --pa-foreground: #1A1A1A;       /* sampled: primary text / selected pill fill */
+  --pa-card: #FFFFFF;             /* sampled: onboarding bottom-sheet, cards */
+  --pa-border: #E0E0E0;           /* sampled: input borders, divider lines */
+
+  /* ---- Brand ---- */
+  --pa-primary: #C2185B;          /* sampled: CTA buttons + Sign in header (deep magenta) */
+  --pa-primary-soft: rgba(194, 24, 91, 0.25); /* derived: CTA glow shadow */
+
+  /* ---- Accents ---- */
+  --pa-paw-red: #E53935;          /* sampled: red paw print branding icons */
+  --pa-card-coral: #FF8A80;       /* sampled: home circular product card bg */
+  --pa-card-coral-deep: #FF6B6B;  /* sampled: deeper coral ring on product cards */
+  --pa-success: #4CAF50;          /* sampled: email validation checkmark */
+
+  /* ---- Text ---- */
+  --pa-muted: #9E9E9E;            /* sampled: subtext, placeholder, divider label */
+  --pa-on-primary: #FFFFFF;       /* sampled: text on magenta / black fills */
+
+  /* ---- Radii ---- */
+  --pa-radius-sm: 12px;
+  --pa-radius-md: 16px;           /* input fields */
+  --pa-radius-lg: 24px;           /* large cards */
+  --pa-radius-pill: 30px;         /* CTA buttons */
+  --pa-radius-card-top: 32px;     /* onboarding bottom-sheet top corners */
+  --pa-radius-circle: 50%;        /* avatars, circular product cards */
+
+  /* ---- Shadows ---- */
+  --pa-shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --pa-shadow-sheet: 0 -8px 24px rgba(0, 0, 0, 0.08);
+  --pa-shadow-cta: 0 8px 20px rgba(194, 24, 91, 0.25);
+  --pa-shadow-float: 0 6px 18px rgba(0, 0, 0, 0.12);
+
+  /* ---- Typography ---- */
+  --pa-font-sans: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --pa-fs-signin-header: 28px;
+  --pa-fs-headline: 26px;
+  --pa-fs-greeting-name: 20px;
+  --pa-fs-section-title: 18px;
+  --pa-fs-price: 16px;
+  --pa-fs-body: 14px;
+  --pa-fs-greeting-sub: 13px;
+  --pa-fs-link: 14px;
+  --pa-fs-divider: 12px;
+  --pa-fs-badge: 10px;
+}

@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * notifications.ts - 通知服务（TypeScript 源文件 - Sprint 37 迁移）

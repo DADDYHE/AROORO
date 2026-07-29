@@ -1,6 +1,6 @@
 .page-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--background-color);
 }
 
 .page-content {
@@ -23,11 +23,11 @@
 .app-name {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .info-section {
-  background-color: #fff;
+  background-color: #FAFAF6;
   border-radius: 16rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
@@ -46,22 +46,22 @@
 
 .info-label {
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .info-value {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .description {
-  background-color: #fff;
+  background-color: #FAFAF6;
   border-radius: 16rpx;
   padding: 30rpx;
 }
 
 .description-text {
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 40rpx;
 }

@@ -161,7 +161,7 @@ if (refTs) {
   check('referral.ts 包含 InvitedUserView 接口', /export\s+interface\s+InvitedUserView\b/.test(refTs))
   check('referral.ts 包含 ReferralStatsResult 接口', /export\s+interface\s+ReferralStatsResult\b/.test(refTs))
   check('referral.ts 包含 InvitedUsersResult 接口', /export\s+interface\s+InvitedUsersResult\b/.test(refTs))
-  check('referral.ts 包含 sumOrderTotal 函数（强类型化）', /function\s+sumOrderTotal\s*\(\s*orders\s*:\s*OrderLike\s*\[\s*\]\s*\)/.test(refTs))
+  // NOTE: sumOrderTotal 已从 referral.ts 移除（Sprint 37 重构），不再断言
   const ACTIONS = ['getReferralStats', 'getInvitedUsers']
   ACTIONS.forEach(act => {
     check(`referral.ts 导出 ${act}`, new RegExp(`export\\s+async\\s+function\\s+${act}\\b`).test(refTs))
@@ -174,7 +174,7 @@ const addTs = readSafe(ADD_TS)
 if (addTs) {
   check('addresses.ts 注释包含 Sprint 37', /Sprint\s*37/.test(addTs))
   check('addresses.ts 包含 AddressHandler 类型', /export\s+type\s+AddressHandler\b/.test(addTs))
-  check('addresses.ts 包含 AddressInput 接口', /export\s+interface\s+AddressInput\b/.test(addTs))
+  check('addresses.ts 从 common/types 引入 AddressInput', /import\s+type\s*\{[^}]*AddressInput[^}]*\}\s*from\s*['"]\.\/common\/types['"]/.test(addTs))
   check('addresses.ts 包含 AddressRecord 接口', /export\s+interface\s+AddressRecord\b/.test(addTs))
   check('addresses.ts 包含 filterAddressFields 函数（强类型化）',
     /function\s+filterAddressFields\s*\(\s*data\s*:\s*AddressInput\s*\)/.test(addTs))

@@ -1,0 +1,56 @@
+{
+  "slug": "option-selector",
+  "schemaVersion": 2,
+  "name": "Option Selector",
+  "category": "input",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["color-swatch-group", "segmented-picker", "chip-group"],
+  "variantDimensions": [
+    {"axis": "type", "values": ["color-dots", "spec-chips"]},
+    {"axis": "state", "values": ["selected", "unselected", "disabled"]}
+  ],
+  "representativeVariants": [
+    {
+      "id": "color-dots",
+      "name": "Color dot selector",
+      "whySelected": "Reference detail screen color dots (navy/mint/pink/coral).",
+      "traits": {"dotSize": "28px", "dotRadius": "--radius-pill", "selectedRing": "2px solid var(--color-primary)", "selectedRingOffset": "3px", "gap": "var(--space-3)", "labelColor": "--color-muted-foreground", "labelFont": "500 13px"},
+      "childrenDigest": "row of 4 color dots (sage / honey / rose / coral); coral dot selected with coral ring offset; tiny label '颜色' above."
+    },
+    {
+      "id": "spec-chips",
+      "name": "Spec / flavor chips",
+      "whySelected": "Pet food flavors and package sizes need chip pickers.",
+      "traits": {"chipRadius": "--radius-md", "chipPadding": "var(--space-2) var(--space-4)", "selectedBackground": "rgba(210,98,67,0.12)", "selectedBorder": "1px solid var(--color-primary)", "selectedForeground": "--color-primary", "unselectedBackground": "--color-card", "unselectedBorder": "1px solid var(--color-border)", "fontSize": "14px"},
+      "childrenDigest": "wrap row of chips '鸡肉味' '鱼肉味' '1.5kg' '3kg'; '鸡肉味' selected with coral tint + coral border; label '口味 / 规格' above."
+    },
+    {
+      "id": "combined",
+      "name": "Color + spec combined",
+      "whySelected": "Detail page often stacks both selectors.",
+      "traits": {"sectionGap": "var(--space-6)"},
+      "childrenDigest": "color dot row on top, spec chip row below, separated by 24px."
+    }
+  ],
+  "anatomy": [
+    {"part": "label", "role": "small muted section label e.g. 颜色 / 规格"},
+    {"part": "option", "role": "selectable dot or chip"},
+    {"part": "selected-indicator", "role": "ring for dots, tint+border for chips"}
+  ],
+  "structurePatterns": ["flex row gap-3 wrap", "label caption above"],
+  "usageHints": {"priorityHint": "medium", "where": "product/service detail page above CTA"},
+  "doNotInvent": ["dropdown select", "stepper", "modal picker"],
+  "unknowns": ["exact color set per product — use sage/honey/rose/coral swatches"],
+  "keyInsightSeed": "规格选择器：颜色圆点（选中描边环）+ 规格/口味胶囊",
+  "sourceSignals": {"uiCopySamples": ["颜色", "口味", "规格", "鸡肉味", "鱼肉味", "1.5kg", "3kg", "/袋"]},
+  "visualSpecs": {
+    "primary": {"dotSize": "28px", "chipRadius": "--radius-md"},
+    "states": [
+      {"state": "selected-dot", "ring": "2px solid var(--color-primary)", "offset": "3px"},
+      {"state": "selected-chip", "background": "rgba(210,98,67,0.12)", "border": "1px solid var(--color-primary)", "foreground": "--color-primary"},
+      {"state": "unselected-chip", "background": "--color-card", "border": "1px solid var(--color-border)"}
+    ]
+  },
+  "renderPlan": {"samples": ["color-dots", "spec-chips", "combined"]}
+}

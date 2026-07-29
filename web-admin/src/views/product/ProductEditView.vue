@@ -48,6 +48,13 @@
       <template v-if="form.skuType === 'multi'">
         <el-form-item label="销售规格">
           <div class="spec-section">
+            <div class="spec-toolbar">
+              <el-button v-if="form.specGroups.length < 3" type="primary" plain size="small" @click="addSpecGroup"><el-icon><Plus /></el-icon>添加规格项</el-button>
+              <span v-else class="form-tip">最多3个规格项</span>
+              <el-button type="success" plain size="small" @click="onImportCsvClick"><el-icon><Upload /></el-icon>导入CSV</el-button>
+              <el-button type="info" link size="small" @click="onDownloadTemplate">下载模板</el-button>
+              <input ref="csvFileInput" type="file" accept=".csv" style="display:none" @change="onCsvFileChange" />
+            </div>
             <div v-for="(group, gi) in form.specGroups" :key="gi" class="spec-group">
               <div class="spec-group-header">
                 <span class="spec-group-label">规格{{ gi + 1 }}</span>
@@ -60,8 +67,6 @@
                 <el-button size="small" type="primary" plain @click="addSpecValue(gi)">添加</el-button>
               </div>
             </div>
-            <el-button v-if="form.specGroups.length < 3" type="primary" plain @click="addSpecGroup"><el-icon><Plus /></el-icon>添加规格项</el-button>
-            <span v-else class="form-tip">最多3个规格项</span>
           </div>
         </el-form-item>
 
@@ -81,7 +86,7 @@
               <el-table-column width="80" align="center">
                 <template #header><span class="required-star">*</span>图片</template>
                 <template #default="{ row, $index }">
-                  <el-upload class="sku-img-uploader" :action="uploadUrl" :headers="uploadHeaders" :show-file-list="false" :on-success="(res) => onSkuImgSuccess(res, $index)" :before-upload="beforeUpload" accept="image/*">
+                  <el-upload class="sku-img-uploader" :http-request="customUpload" :show-file-list="false" :on-success="(res) => onSkuImgSuccess(res, $index)" :before-upload="beforeUpload" accept="image/*">
                     <el-image v-if="row.imagePreview || row.image" :src="row.imagePreview || row.image" fit="cover" class="sku-img-preview" />
                     <el-icon v-else class="sku-img-icon"><Plus /></el-icon>
                   </el-upload>
@@ -114,6 +119,11 @@
                   <el-switch v-model="row.enabled" size="small" />
                 </template>
               </el-table-column>
+              <el-table-column label="操作" width="60" align="center" fixed="right">
+                <template #default="{ $index }">
+                  <el-button type="danger" link size="small" @click="removeSkuRow($index)"><el-icon><Delete /></el-icon></el-button>
+                </template>
+              </el-table-column>
             </el-table>
           </div>
         </el-form-item>
@@ -124,19 +134,19 @@
 
       <el-divider content-position="left">图片管理</el-divider>
       <el-form-item label="封面图" prop="coverImage">
-        <el-upload class="cover-uploader" :action="uploadUrl" :headers="uploadHeaders" :show-file-list="false" :on-success="onCoverSuccess" :before-upload="beforeUpload" accept="image/*">
+        <el-upload class="cover-uploader" :http-request="customUpload" :show-file-list="false" :on-success="onCoverSuccess" :before-upload="beforeUpload" accept="image/*">
           <el-image v-if="form.coverImagePreview" :src="form.coverImagePreview" fit="cover" class="cover-preview" />
           <el-icon v-else class="cover-uploader-icon"><Plus /></el-icon>
         </el-upload>
       </el-form-item>
       <el-form-item label="轮播图">
-        <el-upload :action="uploadUrl" :headers="uploadHeaders" :file-list="bannerFileList" list-type="picture-card" :limit="5" :on-success="onBannerSuccess" :on-remove="onBannerRemove" :before-upload="beforeUpload" accept="image/*">
+        <el-upload :http-request="customUpload" :file-list="bannerFileList" list-type="picture-card" :limit="5" :on-success="onBannerSuccess" :on-remove="onBannerRemove" :before-upload="beforeUpload" accept="image/*">
           <el-icon><Plus /></el-icon>
         </el-upload>
         <div class="form-tip">最多5张</div>
       </el-form-item>
       <el-form-item label="详情图">
-        <el-upload :action="uploadUrl" :headers="uploadHeaders" :file-list="detailFileList" list-type="picture-card" :limit="9" :on-success="onDetailSuccess" :on-remove="onDetailRemove" :before-upload="beforeUpload" accept="image/*">
+        <el-upload :http-request="customUpload" :file-list="detailFileList" list-type="picture-card" :limit="9" :on-success="onDetailSuccess" :on-remove="onDetailRemove" :before-upload="beforeUpload" accept="image/*">
           <el-icon><Plus /></el-icon>
         </el-upload>
         <div class="form-tip">最多9张</div>
@@ -161,6 +171,42 @@
         <el-button @click="$router.back()">取消</el-button>
       </el-form-item>
     </el-form>
+
+    <!-- CSV 导入规则配置弹窗 -->
+    <el-dialog v-model="csvImportVisible" title="CSV 导入预览" width="800px" :close-on-click-modal="false">
+      <template v-if="csvParseResult">
+        <el-form label-width="100px" style="margin-bottom:16px">
+          <el-form-item label="拆分分隔符">
+            <el-input v-model="csvSplitDelimiter" style="width:120px" placeholder="如 +" @input="updateSplitPreview" />
+            <span class="form-tip">将 SKU名称 按此分隔符拆分为多个规格维度</span>
+          </el-form-item>
+          <el-form-item label="数据行数">
+            <span>{{ csvParseResult.rawRows.length }} 行</span>
+          </el-form-item>
+        </el-form>
+        <el-table :data="csvSplitPreview" border size="small" max-height="360" style="width:100%">
+          <el-table-column label="原 SKU名称" min-width="260">
+            <template #default="{ row }">{{ row.skuName }}</template>
+          </el-table-column>
+          <el-table-column v-for="(_, i) in (csvSplitPreview[0]?.parts || [])" :key="i" :label="`规格${i + 1}`" min-width="140">
+            <template #default="{ row }">{{ row.parts[i] || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="售价" width="90" align="center">
+            <template #default="{ $index }">¥{{ csvParseResult.rawRows[$index].price.toFixed(2) }}</template>
+          </el-table-column>
+          <el-table-column label="原价" width="90" align="center">
+            <template #default="{ $index }">¥{{ csvParseResult.rawRows[$index].originalPrice.toFixed(2) }}</template>
+          </el-table-column>
+          <el-table-column label="库存" width="80" align="center">
+            <template #default="{ $index }">{{ csvParseResult.rawRows[$index].stock }}</template>
+          </el-table-column>
+        </el-table>
+      </template>
+      <template #footer>
+        <el-button @click="cancelCsvImport">取消</el-button>
+        <el-button type="primary" @click="confirmCsvImport">确认导入</el-button>
+      </template>
+    </el-dialog>
   </el-card>
 </template>
 
@@ -168,20 +214,18 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getProductDetail, createProduct, updateProduct, listCategories } from '@/api/product'
+import { uploadFile } from '@/api/upload'
 import { PRODUCT_TAGS } from '@/constants/product'
-import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
-import { Plus, Delete } from '@element-plus/icons-vue'
+import { Plus, Delete, Upload } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 const formRef = ref()
 const saving = ref(false)
+const csvFileInput = ref()
 const isEdit = computed(() => !!route.params.id)
-
-const authStore = useAuthStore()
-const uploadUrl = '/api/upload'
-const uploadHeaders = computed(() => ({ Authorization: `Bearer ${authStore.token}` }))
+const isCsvImporting = ref(false)
 
 const categoryValue = ref([])
 const categoryCascaderOptions = ref([])
@@ -278,7 +322,7 @@ function onSkuTypeChange() {
 }
 
 watch(validSpecGroups, () => {
-  if (form.skuType === 'multi') generateSkus()
+  if (form.skuType === 'multi' && !isCsvImporting.value) generateSkus()
 }, { deep: true })
 
 function addSpecGroup() {
@@ -302,6 +346,10 @@ function addSpecValue(gi) {
 function removeSpecValue(gi, vi) {
   form.specGroups[gi].values.splice(vi, 1)
   generateSkus()
+}
+
+function removeSkuRow(index) {
+  form.skus.splice(index, 1)
 }
 
 function generateSkus() {
@@ -359,6 +407,254 @@ function beforeUpload(file) {
   if (!isImage) ElMessage.error('只能上传图片文件')
   if (!isLt5M) ElMessage.error('图片大小不能超过5MB')
   return isImage && isLt5M
+}
+
+async function customUpload(options) {
+  const { file } = options
+  try {
+    const result = await uploadFile(file, `products/${Date.now()}_${file.name}`)
+    return { code: 0, data: result }
+  } catch (err) {
+    ElMessage.error(err?.message || '上传失败')
+    throw err
+  }
+}
+
+/* ============================================================
+ * CSV 导入 SKU（支持 1688 / 商品平台导出格式）
+ *
+ * 流程：上传文件 → 配置规格拆分规则 → 预览 → 确认导入
+ *
+ * CSV 表头示例（1688 导出）：
+ *   商品标题,商品ID,SKU ID,SKU名称,SKU图链接,原价（元）,计算价格,库存
+ *   宠物磨牙牛皮鸡鸭肉甜甜圈中小型犬,936058055887,58289998796410,1包+鸡肉白芝麻甜甜圈40g±2g,https://...,4.5,4.5,9716
+ *
+ * 规格拆分：默认按 "+" 拆分 SKU名称 为多个规格维度
+ *   例如 "1包+鸡肉白芝麻甜甜圈40g±2g" → 规格1="1包", 规格2="鸡肉白芝麻甜甜圈40g±2g"
+ *
+ * 多列名匹配：getCell 支持候选列名数组，跳过空值继续匹配
+ *   price 候选: 计算价格、计算价格（元）、原价（元）、原价、price
+ *   originalPrice 候选: 划线价、划线价（元）、originalPrice
+ * ============================================================ */
+
+// CSV 导入状态
+const csvImportVisible = ref(false)
+const csvParseResult = ref(null)      // 解析后的临时结果 { specGroups, skus, rawRows, headers }
+const csvSplitDelimiter = ref('+')    // SKU名称 拆分分隔符，默认 +
+const csvSplitPreview = ref([])       // 拆分预览：[{ skuName, parts: [] }]
+
+function onImportCsvClick() {
+  csvFileInput.value?.click()
+}
+
+function onCsvFileChange(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  isCsvImporting.value = true
+  parseCsvFile(file).then(result => {
+    csvParseResult.value = result
+    // 默认按 + 拆分，生成预览
+    updateSplitPreview()
+    csvImportVisible.value = true
+  }).catch(err => {
+    ElMessage.error(err?.message || 'CSV 解析失败')
+  }).finally(() => {
+    setTimeout(() => { isCsvImporting.value = false }, 100)
+  })
+  e.target.value = ''
+}
+
+// 更新拆分预览
+function updateSplitPreview() {
+  if (!csvParseResult.value) return
+  const delim = csvSplitDelimiter.value || '+'
+  csvSplitPreview.value = csvParseResult.value.rawRows.map(row => {
+    const skuName = row.skuName || ''
+    const parts = skuName.split(delim).map(p => p.trim()).filter(Boolean)
+    return { skuName, parts }
+  })
+}
+
+// 确认拆分规则并应用导入
+function confirmCsvImport() {
+  if (!csvParseResult.value) return
+  const delim = csvSplitDelimiter.value || '+'
+  const { rawRows, headers, colMap } = csvParseResult.value
+
+  // 根据拆分结果构建 specGroups 和 skus
+  const specGroups = []
+  const skuList = []
+
+  // 第一遍：确定规格维度数量和名称
+  let maxParts = 0
+  rawRows.forEach(row => {
+    const parts = (row.skuName || '').split(delim).map(p => p.trim()).filter(Boolean)
+    if (parts.length > maxParts) maxParts = parts.length
+  })
+  if (maxParts === 0) {
+    ElMessage.error('未识别到有效的 SKU 名称')
+    return
+  }
+  // 生成规格组名（规格1、规格2...）
+  for (let i = 0; i < maxParts; i++) {
+    specGroups.push({ name: `规格${i + 1}`, values: [], _input: '' })
+  }
+
+  // 第二遍：解析每一行
+  rawRows.forEach(row => {
+    const parts = (row.skuName || '').split(delim).map(p => p.trim()).filter(Boolean)
+    const specIds = {}
+    parts.forEach((val, i) => {
+      if (i < specGroups.length) {
+        specIds[specGroups[i].name] = val
+        if (!specGroups[i].values.includes(val)) {
+          specGroups[i].values.push(val)
+        }
+      }
+    })
+    const specText = parts.join(' / ')
+    skuList.push({
+      skuId: row.skuCode || `sku_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+      specIds,
+      specText,
+      image: row.imageUrl || '',
+      imagePreview: row.imageUrl || '',
+      price: row.price || 0,
+      originalPrice: row.originalPrice || 0,
+      stock: row.stock || 0,
+      soldCount: 0,
+      skuCode: row.skuCode || '',
+      enabled: true,
+    })
+  })
+
+  // 自动切换到多规格模式
+  if (form.skuType !== 'multi') {
+    form.skuType = 'multi'
+  }
+  form.specGroups = specGroups
+  form.skus = skuList
+  csvImportVisible.value = false
+  csvParseResult.value = null
+  ElMessage.success(`已导入 ${skuList.length} 个 SKU`)
+}
+
+function cancelCsvImport() {
+  csvImportVisible.value = false
+  csvParseResult.value = null
+}
+
+function parseCsvFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        let text = String(reader.result || '')
+        // 处理 BOM 头（1688 导出的 CSV 通常带 BOM）
+        if (text.charCodeAt(0) === 0xFEFF) {
+          text = text.slice(1)
+        }
+        const lines = text.split(/\r?\n/).filter(l => l.trim())
+        if (lines.length < 2) {
+          throw new Error('CSV 内容至少需要表头 + 1 行数据')
+        }
+        const headers = parseCsvLine(lines[0])
+        const colMap = {}
+        headers.forEach((h, i) => { colMap[h] = i })
+
+        console.log('[CSV Debug] headers =', headers)
+        console.log('[CSV Debug] colMap =', colMap)
+
+        // 多列名匹配函数：跳过空值继续匹配
+        const getCell = (cells, candidates) => {
+          for (const name of candidates) {
+            const idx = colMap[name]
+            if (idx === undefined) continue
+            const val = (cells[idx] || '').trim()
+            if (val !== '') return val
+          }
+          return ''
+        }
+
+        // 列名匹配
+        const skuNameCandidates = ['SKU名称', 'SKU名', 'sku名称', 'skuName', 'name']
+        const skuIdCandidates = ['SKU ID', 'SKU编号', 'SKU编码', 'skuId', 'skuCode']
+        const imageCandidates = ['SKU图链接', 'SKU图', '图片', '图片链接', 'image', 'imageUrl']
+        const priceCandidates = ['计算价格', '计算价格（元）', '原价（元）', '原价', 'price', '售价']
+        const originalPriceCandidates = ['划线价', '划线价（元）', 'originalPrice', '原价（元）']
+        const stockCandidates = ['库存', 'stock', '可售库存']
+
+        // 解析数据行
+        const rawRows = lines.slice(1).map(line => parseCsvLine(line)).map(cells => {
+          const skuName = getCell(cells, skuNameCandidates)
+          const skuCode = getCell(cells, skuIdCandidates)
+          const imageUrl = getCell(cells, imageCandidates)
+          const priceStr = getCell(cells, priceCandidates)
+          const originalPriceStr = getCell(cells, originalPriceCandidates)
+          const stockStr = getCell(cells, stockCandidates)
+          const price = parseFloat(priceStr) || 0
+          const originalPrice = parseFloat(originalPriceStr) || 0
+          const stock = parseInt(stockStr, 10) || 0
+          return { skuName, skuCode, imageUrl, price, originalPrice, stock }
+        })
+
+        // 调试日志
+        console.log('[CSV Debug] first row =', rawRows[0])
+        console.log('[CSV Debug] total rows =', rawRows.length)
+        console.log('[CSV Debug] prices =', rawRows.slice(0, 3).map(r => r.price))
+        console.log('[CSV Debug] originalPrices =', rawRows.slice(0, 3).map(r => r.originalPrice))
+        console.log('[CSV Debug] stocks =', rawRows.slice(0, 3).map(r => r.stock))
+
+        if (rawRows.length === 0) throw new Error('未解析到有效数据行')
+        if (!rawRows[0].skuName) throw new Error('未识别到 SKU名称 列，请检查表头')
+
+        resolve({ rawRows, headers, colMap })
+      } catch (e) {
+        reject(e)
+      }
+    }
+    reader.onerror = () => reject(new Error('文件读取失败'))
+    reader.readAsText(file, 'UTF-8')
+  })
+}
+
+function parseCsvLine(line) {
+  const cells = []
+  let cur = ''
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++ }
+        else { inQuotes = false }
+      } else { cur += ch }
+    } else {
+      if (ch === '"') { inQuotes = true }
+      else if (ch === ',') { cells.push(cur); cur = '' }
+      else { cur += ch }
+    }
+  }
+  cells.push(cur)
+  return cells
+}
+
+function onDownloadTemplate() {
+  const bom = '\uFEFF'
+  const headers = ['商品标题', '商品ID', 'SKU ID', 'SKU名称', 'SKU图链接', '原价（元）', '计算价格', '库存']
+  const sample = [
+    ['宠物磨牙牛皮鸡鸭肉甜甜圈中小型犬', '936058055887', '58289998796410', '1包+鸡肉白芝麻甜甜圈40g±2g', 'https://cbu01.alicdn.com/xxx.jpg', '4.5', '4.5', '9716'],
+    ['宠物磨牙牛皮鸡鸭肉甜甜圈中小型犬', '936058055887', '58289998796411', '1包+大号鸡肉甜甜圈1支装【11cm中大型犬适用】', 'https://cbu01.alicdn.com/xxx.jpg', '4.5', '4.5', '0'],
+    ['宠物磨牙牛皮鸡鸭肉甜甜圈中小型犬', '936058055887', '58289998796412', '2包+鸭肉白芝麻甜甜圈40g±2g', 'https://cbu01.alicdn.com/xxx.jpg', '8.5', '8.5', '500'],
+  ]
+  const csv = bom + [headers, ...sample].map(r => r.map(c => `"${c}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'sku_template.csv'
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 function onCoverSuccess(res) {
@@ -506,6 +802,15 @@ onMounted(async () => {
 <style scoped>
 .form-tip { font-size: 12px; color: var(--text-tertiary); margin-left: 8px; }
 .spec-section { width: 100%; }
+.spec-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--border-color);
+}
 .spec-group {
   border: 1px solid var(--border-color-strong);
   border-radius: var(--radius-md);

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务收入</title>
+    <style id="theme-vars">
+:root {
+  --petlux-brand: #4F5E35;
+  --petlux-brand-deep: #3A4626;
+  --petlux-brand-soft: #EAEDDF;
+  --petlux-brand-ink: #FAFAF6;
+  --petlux-bg: #EDF0E2;
+  --petlux-surface: #FFFFFF;
+  --petlux-surface-2: #E2E6D3;
+  --petlux-surface-3: #D6DBC5;
+  --petlux-ink: #2A2823;
+  --petlux-ink-2: #635E54;
+  --petlux-ink-3: #9A9489;
+  --petlux-line: #D8DCCE;
+  --petlux-line-strong: #C9CFBA;
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+  --petlux-radius-xs: 4px;
+  --petlux-radius-sm: 8px;
+  --petlux-radius-md: 12px;
+  --petlux-radius-lg: 16px;
+  --petlux-radius-pill: 999px;
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+  --petlux-s-1: 4px; --petlux-s-2: 8px; --petlux-s-3: 12px; --petlux-s-4: 16px;
+  --petlux-s-5: 24px; --petlux-s-6: 32px; --petlux-s-7: 48px;
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-text-display: 32px; --petlux-text-h1: 24px; --petlux-text-h2: 20px;
+  --petlux-text-h3: 17px; --petlux-text-body: 15px; --petlux-text-body-sm: 13px; --petlux-text-caption: 12px;
+  --petlux-weight-regular: 400; --petlux-weight-medium: 500; --petlux-weight-semibold: 600;
+  --petlux-background: var(--petlux-bg); --petlux-foreground: var(--petlux-ink);
+  --petlux-card: var(--petlux-surface); --petlux-card-foreground: var(--petlux-ink);
+  --petlux-popover: var(--petlux-surface); --petlux-popover-foreground: var(--petlux-ink);
+  --petlux-primary: var(--petlux-brand); --petlux-primary-foreground: var(--petlux-brand-ink);
+  --petlux-secondary: var(--petlux-surface-2); --petlux-secondary-foreground: var(--petlux-ink-2);
+  --petlux-muted: var(--petlux-surface-2); --petlux-muted-foreground: var(--petlux-ink-2);
+  --petlux-accent: var(--petlux-brand-soft); --petlux-accent-foreground: var(--petlux-brand);
+  --petlux-destructive: var(--petlux-state-error); --petlux-destructive-foreground: #FAFAF6;
+  --petlux-border: var(--petlux-line); --petlux-input: var(--petlux-line-strong); --petlux-ring: var(--petlux-brand);
+  --petlux-radius-small: var(--petlux-radius-sm); --petlux-radius-medium: var(--petlux-radius-md); --petlux-radius-large: var(--petlux-radius-lg);
+}
+.dark {
+  --petlux-background: #161612; --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A; --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A; --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A; --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924; --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C; --petlux-input: #34322C; --petlux-ring: #7A8C5A;
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme inline {
+        --color-background: var(--petlux-background); --color-foreground: var(--petlux-foreground);
+        --color-card: var(--petlux-card); --color-card-foreground: var(--petlux-card-foreground);
+        --color-popover: var(--petlux-popover); --color-popover-foreground: var(--petlux-popover-foreground);
+        --color-primary: var(--petlux-primary); --color-primary-foreground: var(--petlux-primary-foreground);
+        --color-secondary: var(--petlux-secondary); --color-secondary-foreground: var(--petlux-secondary-foreground);
+        --color-muted: var(--petlux-muted); --color-muted-foreground: var(--petlux-muted-foreground);
+        --color-accent: var(--petlux-accent); --color-accent-foreground: var(--petlux-accent-foreground);
+        --color-destructive: var(--petlux-destructive); --color-destructive-foreground: var(--petlux-destructive-foreground);
+        --color-border: var(--petlux-border); --color-input: var(--petlux-input); --color-ring: var(--petlux-ring);
+        --radius-sm: var(--petlux-radius-sm); --radius-md: var(--petlux-radius-md); --radius-lg: var(--petlux-radius-lg);
+      }
+      @layer base { body { background: var(--petlux-background); color: var(--petlux-foreground); } }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--petlux-background); }
+      .text-foreground { color: var(--petlux-foreground); }
+      .bg-card { background-color: var(--petlux-card); }
+      .text-card-foreground { color: var(--petlux-card-foreground); }
+      .bg-card-foreground { background-color: var(--petlux-card-foreground); }
+      .bg-primary { background-color: var(--petlux-primary); }
+      .text-primary { color: var(--petlux-primary); }
+      .text-primary-foreground { color: var(--petlux-primary-foreground); }
+      .bg-primary-foreground { background-color: var(--petlux-primary-foreground); }
+      .bg-secondary { background-color: var(--petlux-secondary); }
+      .text-secondary-foreground { color: var(--petlux-secondary-foreground); }
+      .bg-muted { background-color: var(--petlux-muted); }
+      .text-muted-foreground { color: var(--petlux-muted-foreground); }
+      .bg-accent { background-color: var(--petlux-accent); }
+      .text-accent-foreground { color: var(--petlux-accent-foreground); }
+      .bg-destructive { background-color: var(--petlux-destructive); }
+      .text-destructive { color: var(--petlux-destructive); }
+      .text-destructive-foreground { color: var(--petlux-destructive-foreground); }
+      .border-border { border-color: var(--petlux-border); }
+      .border-input { border-color: var(--petlux-input); }
+      .ring-primary { --tw-ring-color: var(--petlux-primary); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .text-ink { color: var(--petlux-ink); } .text-ink-2 { color: var(--petlux-ink-2); } .text-ink-3 { color: var(--petlux-ink-3); }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<style id="critical-layout">
+html, body { max-width: 100%; overflow-x: hidden; }
+body { margin: 0; background-color: var(--petlux-background); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+main > .petlux-shell { width: 100%; max-width: 28rem; margin-left: auto; margin-right: auto; }
+</style>
+<style id="petlux-utilities">
+  .petlux-card { box-shadow: var(--petlux-shadow-1); transition: transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s ease; }
+  .petlux-card:hover { transform: translateY(-2px); box-shadow: var(--petlux-shadow-2); }
+  .petlux-tap { transition: background-color .2s ease, opacity .2s ease; }
+  .petlux-tap:hover { background-color: var(--petlux-muted); }
+  .petlux-tap:active { opacity: .65; }
+  .petlux-btn-press { transition: transform .15s ease, box-shadow .25s ease, background-color .2s ease; }
+  .petlux-btn-press:hover { box-shadow: var(--petlux-shadow-2); }
+  .petlux-btn-press:active { transform: scale(.98); }
+</style>
+<style id="service-income-styles">
+  .icon-dot { width: 24px; height: 24px; border-radius: 50%; position: relative; display: inline-block; }
+  .icon-dot::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 12px; height: 12px; border-radius: 50%; background: var(--petlux-card); }
+  .activity-dot { background: var(--petlux-state-warning); box-shadow: 0 2px 8px rgba(184,137,58,0.30); }
+  .boarding-dot { background: var(--petlux-state-info); box-shadow: 0 2px 8px rgba(107,125,140,0.30); }
+  .feeding-dot { background: var(--petlux-state-success); box-shadow: 0 2px 8px rgba(91,124,74,0.30); }
+  .timeline-list { position: relative; }
+  .timeline-list::before { content: ''; position: absolute; left: 11px; top: 4px; bottom: 4px; width: 1px; background: var(--petlux-line); }
+  .marker-dot { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--petlux-card); margin-left: 7px; margin-top: 4px; position: relative; z-index: 1; }
+  .activity-marker { background: var(--petlux-state-warning); box-shadow: 0 0 0 1px var(--petlux-state-warning); }
+  .boarding-marker { background: var(--petlux-state-info); box-shadow: 0 0 0 1px var(--petlux-state-info); }
+  .feeding-marker { background: var(--petlux-state-success); box-shadow: 0 0 0 1px var(--petlux-state-success); }
+</style>
+<main>
+  <div class="fixed top-0 right-3 z-50 flex items-center w-[88px] h-8 rounded-full border border-black/10 shrink-0" style="top: calc(env(safe-area-inset-top, 0px) + 12px);">
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="更多">
+        <i data-lucide="more-horizontal" class="w-4 h-4 text-foreground"></i>
+      </button>
+      <span class="w-px h-3 bg-black/10 block"></span>
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="关闭">
+        <i data-lucide="x" class="w-4 h-4 text-foreground"></i>
+      </button>
+    </div>
+
+<div class="petlux-shell max-w-md mx-auto bg-background min-h-screen pb-12">
+
+  <!-- sticky topbar -->
+  <header data-topbar class="sticky top-0 z-20 h-14 flex items-center px-4 gap-3 bg-background/95 backdrop-blur-sm border-b border-border">
+<button type="button" aria-label="返回" class="flex items-center justify-center w-8 h-8 text-foreground shrink-0">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <span class="text-foreground" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">服务收入</span>
+  </header>
+
+  <!-- service-income-page > gallery-container -->
+  <div class="service-income-page">
+    <div class="gallery-container px-4 py-5">
+
+      <!-- hero-exhibit: 主展品 总收入概览 -->
+      <div class="hero-exhibit bg-card relative overflow-hidden text-center mb-5" style="border-radius: var(--petlux-radius-lg); padding: 28px 24px; box-shadow: var(--petlux-shadow-1);">
+        <div class="absolute top-0 left-0 right-0 h-0.5" style="background: linear-gradient(90deg, var(--petlux-state-warning), var(--petlux-state-info), var(--petlux-state-success));"></div>
+        <div class="exhibit-label text-[11px] text-ink-2 uppercase mb-2" style="letter-spacing: 0.3em;">累计收入</div>
+        <div class="exhibit-amount flex items-baseline justify-center gap-1 mb-5">
+          <span class="currency text-lg font-light text-ink">¥</span>
+          <span class="value text-[36px] font-light text-ink font-mono" style="letter-spacing: -1px; line-height: 1;">18,650</span>
+        </div>
+        <div class="exhibit-meta flex items-center justify-center gap-6 pt-4 border-t border-border">
+          <div class="meta-item flex flex-col items-center gap-0.5">
+            <span class="meta-label text-[11px] text-ink-3" style="letter-spacing: 0.1em;">本月</span>
+            <span class="meta-value text-sm font-normal text-ink font-mono">¥3,200</span>
+          </div>
+          <div class="meta-divider w-px h-7 bg-border"></div>
+          <div class="meta-item flex flex-col items-center gap-0.5">
+            <span class="meta-label text-[11px] text-ink-3" style="letter-spacing: 0.1em;">今日</span>
+            <span class="meta-value text-sm font-normal text-ink font-mono">¥280</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- category-gallery: 分类展区 -->
+      <div class="category-gallery flex flex-col gap-3 mb-5">
+
+        <!-- activity-frame -->
+        <div class="category-frame activity-frame petlux-card bg-card relative overflow-hidden" style="border-radius: var(--petlux-radius-md); padding: 16px;">
+          <div class="frame-accent absolute left-0 top-0 bottom-0" style="width: 4px; border-radius: 4px 0 0 4px; background: linear-gradient(180deg, var(--petlux-state-warning), #9A7330);"></div>
+          <div class="frame-content flex items-center gap-4 pl-1.5">
+            <div class="frame-icon w-8 h-8 flex items-center justify-center shrink-0">
+              <span class="icon-dot activity-dot"></span>
+            </div>
+            <div class="frame-info flex-1 flex flex-col gap-0.5">
+              <span class="frame-title text-[13px] text-ink-2" style="letter-spacing: 0.05em;">活动收入</span>
+              <span class="frame-amount text-lg font-normal text-ink font-mono">¥2,100</span>
+            </div>
+            <div class="frame-stat shrink-0">
+              <span class="stat-text text-[11px] text-ink-3">8 笔</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- boarding-frame -->
+        <div class="category-frame boarding-frame petlux-card bg-card relative overflow-hidden" style="border-radius: var(--petlux-radius-md); padding: 16px;">
+          <div class="frame-accent absolute left-0 top-0 bottom-0" style="width: 4px; border-radius: 4px 0 0 4px; background: linear-gradient(180deg, var(--petlux-state-info), #4A5A66);"></div>
+          <div class="frame-content flex items-center gap-4 pl-1.5">
+            <div class="frame-icon w-8 h-8 flex items-center justify-center shrink-0">
+              <span class="icon-dot boarding-dot"></span>
+            </div>
+            <div class="frame-info flex-1 flex flex-col gap-0.5">
+              <span class="frame-title text-[13px] text-ink-2" style="letter-spacing: 0.05em;">寄养收入</span>
+              <span class="frame-amount text-lg font-normal text-ink font-mono">¥12,800</span>
+            </div>
+            <div class="frame-stat shrink-0">
+              <span class="stat-text text-[11px] text-ink-3">15 笔</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- feeding-frame -->
+        <div class="category-frame feeding-frame petlux-card bg-card relative overflow-hidden" style="border-radius: var(--petlux-radius-md); padding: 16px;">
+          <div class="frame-accent absolute left-0 top-0 bottom-0" style="width: 4px; border-radius: 4px 0 0 4px; background: linear-gradient(180deg, var(--petlux-state-success), #3F5733);"></div>
+          <div class="frame-content flex items-center gap-4 pl-1.5">
+            <div class="frame-icon w-8 h-8 flex items-center justify-center shrink-0">
+              <span class="icon-dot feeding-dot"></span>
+            </div>
+            <div class="frame-info flex-1 flex flex-col gap-0.5">
+              <span class="frame-title text-[13px] text-ink-2" style="letter-spacing: 0.05em;">上门服务</span>
+              <span class="frame-amount text-lg font-normal text-ink font-mono">¥3,750</span>
+            </div>
+            <div class="frame-stat shrink-0">
+              <span class="stat-text text-[11px] text-ink-3">12 笔</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- timeline-exhibit: 明细展区 -->
+      <div class="timeline-exhibit bg-card" style="border-radius: var(--petlux-radius-lg); padding: 20px 18px; box-shadow: var(--petlux-shadow-1);">
+
+        <div class="exhibit-header mb-4">
+          <span class="exhibit-title text-[15px] font-medium text-ink" style="letter-spacing: 0.05em;">收入明细</span>
+        </div>
+
+        <!-- filter-nav -->
+        <div class="filter-nav flex gap-2 mb-5 pb-3 border-b border-border">
+          <div class="nav-pill active px-4 py-1.5 rounded-full text-[11px] font-medium text-primary-foreground whitespace-nowrap" style="background: var(--petlux-primary); letter-spacing: 0.1em;">全部</div>
+          <div class="nav-pill petlux-tap px-4 py-1.5 rounded-full text-[11px] text-ink-2 whitespace-nowrap" style="background: var(--petlux-surface-2); letter-spacing: 0.1em;">活动</div>
+          <div class="nav-pill petlux-tap px-4 py-1.5 rounded-full text-[11px] text-ink-2 whitespace-nowrap" style="background: var(--petlux-surface-2); letter-spacing: 0.1em;">寄养</div>
+          <div class="nav-pill petlux-tap px-4 py-1.5 rounded-full text-[11px] text-ink-2 whitespace-nowrap" style="background: var(--petlux-surface-2); letter-spacing: 0.1em;">上门</div>
+        </div>
+
+        <!-- timeline-list -->
+        <div class="timeline-list">
+
+          <!-- timeline-item: activity -->
+          <div class="timeline-item flex gap-3 py-3 border-b border-border">
+            <div class="timeline-marker shrink-0">
+              <div class="marker-dot activity-marker"></div>
+            </div>
+            <div class="timeline-content flex-1 flex flex-col gap-1.5">
+              <div class="content-header flex items-start justify-between gap-3">
+                <span class="content-title flex-1 text-[13px] text-ink leading-snug">宠物社交派对报名分成</span>
+                <span class="content-amount text-[14px] font-medium font-mono shrink-0" style="color: var(--petlux-state-success);">+¥320</span>
+              </div>
+              <div class="content-footer flex items-center gap-2">
+                <span class="content-time text-[11px] text-ink-3" style="letter-spacing: 0.05em;">2026-07-26 15:30</span>
+                <span class="content-status text-[10px] text-ink-2 px-1.5 py-0.5 rounded bg-muted" style="letter-spacing: 0.05em;">已完成</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- timeline-item: boarding -->
+          <div class="timeline-item flex gap-3 py-3 border-b border-border">
+            <div class="timeline-marker shrink-0">
+              <div class="marker-dot boarding-marker"></div>
+            </div>
+            <div class="timeline-content flex-1 flex flex-col gap-1.5">
+              <div class="content-header flex items-start justify-between gap-3">
+                <span class="content-title flex-1 text-[13px] text-ink leading-snug">周末家庭寄养服务分成</span>
+                <span class="content-amount text-[14px] font-medium font-mono shrink-0" style="color: var(--petlux-state-success);">+¥960</span>
+              </div>
+              <div class="content-footer flex items-center gap-2">
+                <span class="content-time text-[11px] text-ink-3" style="letter-spacing: 0.05em;">2026-07-25 19:12</span>
+                <span class="content-status text-[10px] text-ink-2 px-1.5 py-0.5 rounded bg-muted" style="letter-spacing: 0.05em;">已完成</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- timeline-item: feeding -->
+          <div class="timeline-item flex gap-3 py-3 border-b border-border">
+            <div class="timeline-marker shrink-0">
+              <div class="marker-dot feeding-marker"></div>
+            </div>
+            <div class="timeline-content flex-1 flex flex-col gap-1.5">
+              <div class="content-header flex items-start justify-between gap-3">
+                <span class="content-title flex-1 text-[13px] text-ink leading-snug">上门喂养服务分成</span>
+                <span class="content-amount text-[14px] font-medium font-mono shrink-0" style="color: var(--petlux-state-success);">+¥186</span>
+              </div>
+              <div class="content-footer flex items-center gap-2">
+                <span class="content-time text-[11px] text-ink-3" style="letter-spacing: 0.05em;">2026-07-25 11:08</span>
+                <span class="content-status text-[10px] px-1.5 py-0.5 rounded" style="color: var(--petlux-state-warning); background: rgba(184,137,58,0.10); letter-spacing: 0.05em;">待结算</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- timeline-item: activity -->
+          <div class="timeline-item flex gap-3 py-3 border-b border-border">
+            <div class="timeline-marker shrink-0">
+              <div class="marker-dot activity-marker"></div>
+            </div>
+            <div class="timeline-content flex-1 flex flex-col gap-1.5">
+              <div class="content-header flex items-start justify-between gap-3">
+                <span class="content-title flex-1 text-[13px] text-ink leading-snug">宠物运动会报名分成</span>
+                <span class="content-amount text-[14px] font-medium font-mono shrink-0" style="color: var(--petlux-state-success);">+¥240</span>
+              </div>
+              <div class="content-footer flex items-center gap-2">
+                <span class="content-time text-[11px] text-ink-3" style="letter-spacing: 0.05em;">2026-07-24 10:20</span>
+                <span class="content-status text-[10px] px-1.5 py-0.5 rounded" style="color: var(--petlux-state-warning); background: rgba(184,137,58,0.10); letter-spacing: 0.05em;">待结算</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- timeline-item: boarding -->
+          <div class="timeline-item flex gap-3 py-3 border-b border-border">
+            <div class="timeline-marker shrink-0">
+              <div class="marker-dot boarding-marker"></div>
+            </div>
+            <div class="timeline-content flex-1 flex flex-col gap-1.5">
+              <div class="content-header flex items-start justify-between gap-3">
+                <span class="content-title flex-1 text-[13px] text-ink leading-snug">长假寄养服务分成</span>
+                <span class="content-amount text-[14px] font-medium font-mono shrink-0" style="color: var(--petlux-state-success);">+¥1,280</span>
+              </div>
+              <div class="content-footer flex items-center gap-2">
+                <span class="content-time text-[11px] text-ink-3" style="letter-spacing: 0.05em;">2026-07-22 16:45</span>
+                <span class="content-status text-[10px] text-ink-2 px-1.5 py-0.5 rounded bg-muted" style="letter-spacing: 0.05em;">已完成</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- timeline-item: feeding -->
+          <div class="timeline-item flex gap-3 py-3">
+            <div class="timeline-marker shrink-0">
+              <div class="marker-dot feeding-marker"></div>
+            </div>
+            <div class="timeline-content flex-1 flex flex-col gap-1.5">
+              <div class="content-header flex items-start justify-between gap-3">
+                <span class="content-title flex-1 text-[13px] text-ink leading-snug">上门美容服务分成</span>
+                <span class="content-amount text-[14px] font-medium font-mono shrink-0" style="color: var(--petlux-state-success);">+¥150</span>
+              </div>
+              <div class="content-footer flex items-center gap-2">
+                <span class="content-time text-[11px] text-ink-3" style="letter-spacing: 0.05em;">2026-07-21 14:00</span>
+                <span class="content-status text-[10px] text-ink-2 px-1.5 py-0.5 rounded bg-muted" style="letter-spacing: 0.05em;">已完成</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- end-mark -->
+          <div class="end-mark flex justify-center py-5">
+            <div class="end-dot w-2 h-2 rounded-full bg-ink-3/40"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</main>
+<script>
+  lucide.createIcons();
+  // filter-nav 切换
+  (function(){
+    var pills = document.querySelectorAll('.nav-pill');
+    pills.forEach(function(p){
+      p.addEventListener('click', function(){
+        pills.forEach(function(x){
+          x.classList.remove('active');
+          x.classList.remove('text-primary-foreground');
+          x.classList.add('text-ink-2');
+          x.classList.add('petlux-tap');
+          x.style.background = 'var(--petlux-surface-2)';
+        });
+        p.classList.add('active');
+        p.classList.add('text-primary-foreground');
+        p.classList.remove('text-ink-2');
+        p.classList.remove('petlux-tap');
+        p.style.background = 'var(--petlux-primary)';
+      });
+    });
+  })();
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@
 .stat-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8rpx; }
 .stat-value { font-size: 40rpx; font-weight: 800; color: var(--text-primary); }
 .stat-label { font-size: 22rpx; color: var(--text-secondary); }
-.stat-divider { width: 2rpx; height: 48rpx; background: #f0f0f0; }
+.stat-divider { width: 2rpx; height: 48rpx; background: var(--divider-color); }
 
 .section-title { font-size: 28rpx; font-weight: 700; color: var(--text-primary); padding: 0 24rpx 16rpx; }
 
@@ -66,20 +66,12 @@
   height: 8rpx;
   border-radius: 50%;
   background: var(--activity-primary);
-  animation: dotBounce 1.4s ease-in-out infinite;
 }
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes dotBounce {
-  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
-  40% { opacity: 1; transform: translateY(-12rpx); }
 }
 
 .empty-state { display: flex; flex-direction: column; align-items: center; padding: 80rpx 0; }

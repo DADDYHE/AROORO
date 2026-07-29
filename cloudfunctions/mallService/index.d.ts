@@ -24,8 +24,13 @@
  *  14. getOrderDetail - 订单详情
  *  15. cancelOrder - 取消订单
  *  16. confirmReceive - 确认收货
- *  17. deleteOrder - 删除订单
+ *   17. deleteOrder - 删除订单
  *  18. getWxShippingStatus - 查询微信发货状态
+ *
+ * 注：物流轨迹查询已迁移到「微信物流查询插件」官方方案。
+ *     发货时由 adminService.shipMallOrder / tuanService.shipTuanOrder 调
+ *     wxLogistics.traceWaybill 拿 waybillToken 存到订单，
+ *     前端 logistics-card 组件调 plugin.openWaybillTracking({waybillToken}) 拉起原生物流详情页。
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
@@ -213,7 +218,6 @@ export declare function getOrderDetail(event: CloudEvent, _context: CloudContext
 export declare function confirmReceive(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function deleteOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getWxShippingStatus(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function getLogisticsTrack(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare const handlers: Record<string, MallActionHandler>;
 export declare function main(event: CloudEvent, context: CloudContext): Promise<unknown>;
 declare const _default: {

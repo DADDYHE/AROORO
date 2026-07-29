@@ -298,7 +298,7 @@ export interface ActivityDetailResult extends ActivityRecord {
 // =====================================================================
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES, paginate } = require('./common/utils')
+const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES, paginate, escapeRegExp } = require('./common/utils')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -996,9 +996,9 @@ export async function getActivityList(
   context: CloudContext,
   auth: AuthLike
 ): Promise<unknown> {
-  const { page = 1, pageSize = 10, status, category } = event
+  const { page = 1, pageSize = 10, status, category, keyword } = event
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 10), 100)
-  logger.info('getActivityList.query', { page, pageSize: safePageSize, status, category })
+  logger.info('getActivityList.query', { page, pageSize: safePageSize, status, category, keyword })
 
   // M4 修复：状态自动更新迁移至定时触发器（见 main 入口 Timer 分支），列表接口只读
 
@@ -1010,6 +1010,13 @@ export async function getActivityList(
   }
   if (category && category !== 'all') {
     where.category = category
+  }
+  if (keyword) {
+    const safeKeyword = escapeRegExp(String(keyword).slice(0, 50))
+    where.$or = [
+      { title: db.RegExp({ regexp: safeKeyword, options: 'i' }) },
+      { location: db.RegExp({ regexp: safeKeyword, options: 'i' }) },
+    ]
   }
 
   const result = await paginate(db, 'activities', {

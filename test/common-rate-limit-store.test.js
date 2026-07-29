@@ -38,8 +38,38 @@ function createMockCollection() {
   const _ = {
     inc(n = 1) { return { __op: 'inc', value: n } },
     lt(v) { return { __op: 'lt', value: v } },
+    in(arr) { return { __op: 'in', value: arr } },
   }
   const records = () => Array.from(data.values())
+  // 通用 where 过滤：支持简单相等、__op 操作符（lt/in）与真实 SDK 的 $in/$lt 形态
+  const matchQuery = (rec, query) => {
+    for (const [k, v] of Object.entries(query)) {
+      if (v && typeof v === 'object' && v.__op) {
+        if (v.__op === 'lt') { if (!(rec[k] < v.value)) return false }
+        else if (v.__op === 'in') { if (!Array.isArray(v.value) || !v.value.includes(rec[k])) return false }
+        else if (v.__op === 'gt') { if (!(rec[k] > v.value)) return false }
+        continue
+      }
+      if (v && typeof v === 'object' && Array.isArray(v.$in)) {
+        if (!v.$in.includes(rec[k])) return false
+        continue
+      }
+      if (rec[k] !== v) return false
+    }
+    return true
+  }
+  const buildWhereResult = (matched) => ({
+    async get() { return { data: matched } },
+    limit(n) { return { async get() { return { data: matched.slice(0, n) } } } },
+    async count() { return { total: matched.length } },
+    async remove() {
+      let removed = 0
+      for (const r of matched) {
+        if (data.has(r._id)) { data.delete(r._id); removed++ }
+      }
+      return { stats: { removed } }
+    },
+  })
   return {
     _,
     _data: data,
@@ -79,43 +109,31 @@ function createMockCollection() {
       return { _id: d._id }
     },
     where(query) {
-      return {
-        async get() {
-          const list = records().filter(r => {
-            for (const [k, v] of Object.entries(query)) {
-              if (v && typeof v === 'object' && v.__op === 'lt') {
-                if (!(r[k] < v.value)) {return false}
-              } else {
-                if (r[k] !== v) {return false}
-              }
-            }
-            return true
-          })
-          return { data: list }
-        },
-        limit(n) {
-          return {
-            async get() {
-              const list = records().filter(r => {
-                for (const [k, v] of Object.entries(query)) {
-                  if (v && typeof v === 'object' && v.__op === 'lt') {
-                    if (!(r[k] < v.value)) {return false}
-                  } else {
-                    if (r[k] !== v) {return false}
-                  }
-                }
-                return true
-              }).slice(0, n)
-              return { data: list }
-            },
-          }
-        },
-      }
+      const matched = records().filter(r => matchQuery(r, query))
+      return buildWhereResult(matched)
     },
     limit(n) {
       return {
         async get() {
           return { data: records().slice(0, n) }
+        },
+      }
+    },
+    // 顶层 count()：供 getGlobalRateLimitStats 使用（coll.count()）
+    async count() {
+      return { total: records().length }
+    },
+    // orderBy(field, dir).limit(n).get()：供 getGlobalRateLimitStats 取最旧记录
+    orderBy(field, dir = 'asc') {
+      const sorted = records().slice().sort((a, b) => {
+        const av = a[field]; const bv = b[field]
+        if (av < bv) return dir === 'asc' ? -1 : 1
+        if (av > bv) return dir === 'asc' ? 1 : -1
+        return 0
+      })
+      return {
+        limit(n) {
+          return { async get() { return { data: sorted.slice(0, n) } } }
         },
       }
     },

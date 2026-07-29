@@ -72,26 +72,27 @@ describe('Sprint 49: boarding-state-machine.js → .ts 迁移', () => {
     expect(api.BOARDING_OPERATION_TARGET).toBeDefined()
   })
 
-  test('boardingOrderStateMachine 应保持原有 7 个状态', () => {
+  test('boardingOrderStateMachine 应保持 9 个状态（Sprint 49 迁移）', () => {
     const { boardingOrderStateMachine } = require(JS)
-    expect(boardingOrderStateMachine.initial).toBe('pending')
+    expect(boardingOrderStateMachine.initial).toBe('pending_payment')
     expect(boardingOrderStateMachine.states.sort()).toEqual(
-      ['cancelled', 'completed', 'confirmed', 'in_progress', 'paid', 'pending', 'rejected']
+      ['cancelled', 'completed', 'confirmed', 'deleted', 'in_progress', 'paid', 'pending_payment', 'refunded', 'rejected']
     )
   })
 
-  test('boardingOrderStateMachine 转移表应保持原行为', () => {
+  test('boardingOrderStateMachine 转移表应保持新行为（Sprint 49 迁移）', () => {
     const { boardingOrderStateMachine } = require(JS)
-    expect(boardingOrderStateMachine.canTransition('pending', 'confirmed')).toBe(true)
-    expect(boardingOrderStateMachine.canTransition('pending', 'rejected')).toBe(true)
-    expect(boardingOrderStateMachine.canTransition('pending', 'cancelled')).toBe(true)
+    expect(boardingOrderStateMachine.canTransition('pending_payment', 'paid')).toBe(true)
+    expect(boardingOrderStateMachine.canTransition('pending_payment', 'cancelled')).toBe(true)
     expect(boardingOrderStateMachine.canTransition('paid', 'confirmed')).toBe(true)
+    expect(boardingOrderStateMachine.canTransition('paid', 'rejected')).toBe(true)
     expect(boardingOrderStateMachine.canTransition('confirmed', 'in_progress')).toBe(true)
     expect(boardingOrderStateMachine.canTransition('in_progress', 'completed')).toBe(true)
     expect(boardingOrderStateMachine.isTerminal('completed')).toBe(true)
     expect(boardingOrderStateMachine.isTerminal('rejected')).toBe(true)
     expect(boardingOrderStateMachine.isTerminal('cancelled')).toBe(true)
-    expect(boardingOrderStateMachine.canTransition('pending', 'in_progress')).toBe(false)
+    expect(boardingOrderStateMachine.isTerminal('refunded')).toBe(true)
+    expect(boardingOrderStateMachine.canTransition('pending_payment', 'confirmed')).toBe(false)
   })
 
   test('BOARDING_OPERATION_TARGET 应保持原映射', () => {
@@ -116,15 +117,16 @@ describe('Sprint 49: boarding-state-machine.js → .ts 迁移', () => {
     expect(getTargetStatusByOperation(null)).toBeNull()
   })
 
-  test('canPerformOperation 行为应保持不变', () => {
+  test('canPerformOperation 行为应匹配新状态机（Sprint 49 迁移）', () => {
     const { canPerformOperation } = require(JS)
-    expect(canPerformOperation('pending', 'confirm')).toBe(true)
-    expect(canPerformOperation('pending', 'complete')).toBe(false)
+    expect(canPerformOperation('pending_payment', 'confirm')).toBe(false) // 需先 paid 再 confirm
+    expect(canPerformOperation('paid', 'confirm')).toBe(true) // paid → confirmed 合法
+    expect(canPerformOperation('pending_payment', 'complete')).toBe(false)
     expect(canPerformOperation('confirmed', 'complete')).toBe(true)
     expect(canPerformOperation('in_progress', 'confirm')).toBe(false)
     expect(canPerformOperation('completed', 'cancel')).toBe(false)
-    expect(canPerformOperation('pending', 'unknown')).toBe(false)
+    expect(canPerformOperation('pending_payment', 'unknown')).toBe(false)
     expect(canPerformOperation(null, 'confirm')).toBe(false)
-    expect(canPerformOperation('pending', null)).toBe(false)
+    expect(canPerformOperation('pending_payment', null)).toBe(false)
   })
 })

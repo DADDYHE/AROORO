@@ -1,7 +1,7 @@
 <view class="page-container" wx:if="{{!isLoading && !error}}">
 
   <!-- 收货地址 -->
-  <view class="info-card card-animate card-animate-1 address-card" bindtap="onGoAddressEdit">
+  <view class="info-card address-card" bindtap="onGoAddressEdit">
     <view wx:if="{{address}}" class="address-info">
       <view class="address-left">
         <text class="address-location-icon">📍</text>
@@ -23,7 +23,7 @@
 
   <view class="page-content">
     <!-- 商品信息 -->
-    <view class="info-card card-animate card-animate-2">
+    <view class="info-card">
       <!-- 团购模式 -->
       <block wx:if="{{fromTuan && tuanData}}">
         <view class="product-row">
@@ -81,7 +81,7 @@
     </view>
 
     <!-- 优惠券 -->
-    <view class="info-card card-animate card-animate-3" wx:if="{{totalAmount > 0}}">
+    <view class="info-card" wx:if="{{totalAmount > 0}}">
       <view class="section-header" bindtap="onToggleCouponSelector">
         <text class="section-label">优惠券</text>
         <view class="section-right">
@@ -120,7 +120,7 @@
     </view>
 
     <!-- 价格明细 -->
-    <view class="info-card card-animate card-animate-4">
+    <view class="info-card">
       <text class="section-label">价格明细</text>
       <view class="price-row">
         <text class="price-label">{{fromTuan ? '团购价' : '商品总额'}}</text>

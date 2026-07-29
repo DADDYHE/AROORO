@@ -16,7 +16,6 @@ page {
   width: 100%;
   height: 600rpx;
   background: var(--gray-200);
-  animation: fadeUp 0.6s ease-out;
 }
 
 .gallery-swiper {
@@ -43,7 +42,6 @@ page {
   height: 10rpx;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.4);
-  transition: all 0.3s;
 }
 
 .indicator-dot.active {
@@ -100,11 +98,6 @@ page {
   -webkit-backdrop-filter: blur(8px);
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-}
-
-.gallery-action-btn:active {
-  transform: scale(0.96);
 }
 
 .gallery-action-icon {
@@ -304,7 +297,7 @@ page {
   line-height: 28rpx;
   text-align: center;
   background: var(--error-color);
-  color: #fff;
+  color: #FAFAF6;
   font-size: 18rpx;
   border-radius: 14rpx;
   padding: 0 6rpx;
@@ -327,12 +320,6 @@ page {
   color: var(--mall-primary);
   letter-spacing: 2rpx;
   background: linear-gradient(135deg, var(--card-color) 0%, #FAF5FC 100%);
-  transition: all 0.3s ease;
-}
-
-.cart-btn:active {
-  transform: scale(0.98);
-  background: rgba(156, 39, 176, 0.08);
 }
 
 .buy-btn {
@@ -346,15 +333,9 @@ page {
   color: var(--card-color);
   letter-spacing: 2rpx;
   box-shadow: 0 6rpx 16rpx rgba(156, 39, 176, 0.3);
-  transition: all 0.3s ease;
 }
 
-.buy-btn:active {
-  transform: scale(0.98);
-  box-shadow: 0 4rpx 12rpx rgba(156, 39, 176, 0.3);
-}
-
-/* ── 规格选择弹窗 ── */
+/* ── 规格选择弹窗（参考设计稿风格） ── */
 .sku-popup-mask {
   position: fixed;
   top: 0;
@@ -365,7 +346,6 @@ page {
   z-index: 200;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
 }
 
 .sku-popup-mask.show {
@@ -380,153 +360,194 @@ page {
   bottom: 0;
   z-index: 201;
   background: var(--card-color);
-  border-radius: 32rpx 32rpx 0 0;
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-  max-height: 75vh;
+  border-radius: 48rpx 48rpx 0 0;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
+  overflow: visible;
+  padding-top: 28rpx;
+}
+
+.sku-popup::before {
+  content: '';
+  position: absolute;
+  top: -28rpx;
+  left: 0;
+  right: 0;
+  height: 76rpx;
+  background: #9ED44A;
+  border-radius: 48rpx 48rpx 0 0;
+  z-index: -1;
 }
 
 .sku-popup.show {
-  transform: translateY(0);
 }
 
-.sku-popup-header {
-  display: flex;
-  padding: 32rpx;
-  border-bottom: 1rpx solid var(--divider-color);
-  position: relative;
-  flex-shrink: 0;
-}
-
-.sku-popup-thumb {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 16rpx;
-  background: var(--divider-color);
-  flex-shrink: 0;
-}
-
-.sku-popup-info {
-  flex: 1;
-  margin-left: 24rpx;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.sku-popup-price {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: var(--mall-primary);
-  margin-bottom: 8rpx;
-}
-
-.sku-popup-stock {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  margin-bottom: 4rpx;
-}
-
-.sku-popup-selected {
-  font-size: 24rpx;
-  color: var(--text-primary);
-}
-
-.sku-popup-close {
+.sku-popup-brand-bar {
   position: absolute;
-  top: 24rpx;
+  top: -28rpx;
+  left: 0;
+  right: 0;
+  height: 76rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.sku-popup-brand-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 1rpx;
+  line-height: 1;
+  position: relative;
+  top: -7rpx;
+}
+
+.sku-popup-close-btn {
+  position: absolute;
+  top: 20rpx;
   right: 24rpx;
+  z-index: 10;
   width: 56rpx;
   height: 56rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
-  color: var(--text-tertiary);
+  font-size: 28rpx;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 50%;
+  backdrop-filter: blur(4px);
+}
+
+.sku-popup-image-wrap {
+  width: 100%;
+  height: 420rpx;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sku-popup-image {
+  width: 100%;
+  height: 100%;
 }
 
 .sku-popup-body {
   flex: 1;
-  overflow-y: auto;
-  min-width: 0;
-  -webkit-overflow-scrolling: touch;
+  min-height: 0;
 }
 
 .sku-popup-body-inner {
-  padding: 24rpx 32rpx;
+  padding: 28rpx 32rpx 16rpx;
 }
 
-.sku-group {
-  margin-bottom: 32rpx;
+/* 商品信息 */
+.sku-product-info {
+  margin-bottom: 28rpx;
 }
 
-.sku-group-label {
+.sku-product-name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+  line-height: 1.3;
+  margin-bottom: 12rpx;
+}
+
+.sku-product-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+  margin-bottom: 8rpx;
+}
+
+.sku-product-price {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--mall-primary);
+}
+
+.sku-product-stock {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.sku-product-selected {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+/* 规格分组 */
+.sku-spec-section {
+  margin-bottom: 28rpx;
+}
+
+.sku-spec-label {
   font-size: 28rpx;
   font-weight: 600;
   color: var(--text-primary);
   display: block;
-  margin-bottom: 20rpx;
+  margin-bottom: 16rpx;
+  letter-spacing: 1rpx;
 }
 
-.sku-options {
+.sku-spec-options {
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
 }
 
-.sku-option {
-  padding: 16rpx 32rpx;
+.sku-spec-option {
+  padding: 14rpx 36rpx;
   border-radius: 40rpx;
   background: var(--divider-color);
   border: 2rpx solid transparent;
-  transition: all 0.2s ease;
 }
 
-.sku-option.selected {
-  background: rgba(156, 39, 176, 0.08);
-  border-color: var(--mall-primary);
+.sku-spec-option.selected {
+  background: rgba(79, 94, 53, 0.1);
+  border-color: var(--primary-color);
 }
 
-.sku-option.disabled {
-  opacity: 0.4;
+.sku-spec-option.disabled {
+  opacity: 0.35;
   pointer-events: none;
 }
 
-.sku-option-name {
+.sku-spec-option-text {
   font-size: 26rpx;
   color: var(--text-primary);
   font-weight: 500;
 }
 
-.sku-option.selected .sku-option-name {
-  color: var(--mall-primary);
+.sku-spec-option.selected .sku-spec-option-text {
+  color: var(--primary-color);
   font-weight: 600;
 }
 
-.sku-quantity {
+/* 数量 */
+.sku-quantity-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 24rpx;
+  padding: 20rpx 0;
   border-top: 1rpx solid var(--divider-color);
-  overflow: hidden;
 }
 
-.sku-quantity .sku-group-label {
+.sku-quantity-section .sku-spec-label {
   margin-bottom: 0;
-  flex-shrink: 0;
 }
 
-.quantity-control {
+.sku-quantity-row {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  flex-shrink: 0;
+  gap: 20rpx;
 }
 
-.quantity-btn {
+.sku-qty-btn {
   width: 56rpx;
   height: 56rpx;
   border-radius: 50%;
@@ -537,18 +558,13 @@ page {
   font-size: 32rpx;
   color: var(--text-primary);
   font-weight: 500;
-  transition: all 0.2s ease;
 }
 
-.quantity-btn.disabled {
+.sku-qty-btn.disabled {
   opacity: 0.35;
 }
 
-.quantity-btn:active {
-  background: var(--gray-200);
-}
-
-.quantity-value {
+.sku-qty-value {
   font-size: 30rpx;
   font-weight: 600;
   color: var(--text-primary);
@@ -556,28 +572,24 @@ page {
   text-align: center;
 }
 
+/* 底部按钮 */
 .sku-popup-footer {
-  padding: 24rpx 32rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-  border-top: 1rpx solid var(--divider-color);
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   flex-shrink: 0;
 }
 
 .sku-confirm-btn {
   width: 100%;
-  padding: 24rpx 0;
-  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
+  padding: 26rpx 0;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #3d4a29 100%);
   border-radius: 48rpx;
   text-align: center;
   font-size: 30rpx;
   font-weight: 600;
-  color: var(--card-color);
+  color: #fff;
   letter-spacing: 2rpx;
-  box-shadow: 0 6rpx 16rpx rgba(156, 39, 176, 0.3);
-}
-
-.sku-confirm-btn:active {
-  transform: scale(0.98);
+  box-shadow: 0 8rpx 24rpx rgba(79, 94, 53, 0.3);
 }
 
 .sku-confirm-btn.disabled {
@@ -589,11 +601,9 @@ page {
 /* ── 加载状态 ── */
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }
 
 /* ── 错误状态 ── */
@@ -631,16 +641,4 @@ page {
   box-shadow: 0 6rpx 16rpx rgba(156, 39, 176, 0.3);
 }
 
-.retry-btn:active {
-  transform: scale(0.98);
-}
 
-/* ── 动画 ── */
-
-.card-animate {
-  animation: fadeUp 0.5s ease-out both;
-}
-
-.card-animate-1 { animation-delay: 0.1s; }
-.card-animate-2 { animation-delay: 0.2s; }
-.card-animate-3 { animation-delay: 0.3s; }

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私政策</title>
+    <style id="theme-vars">
+/* ============================================================
+   Pet Luxury Mini-Program — Design Token System
+   Migrated from olive-green fresh-food app to healing light-luxury pet brand
+   Brand prefix: petlux
+   ============================================================ */
+
+:root {
+  /* ---------- Brand Primary (single hue: warm olive green) ---------- */
+  --petlux-brand: #4F5E35;           /* primary olive — CTAs, active states */
+  --petlux-brand-deep: #3A4626;      /* hover / pressed step */
+  --petlux-brand-soft: #EAEDDF;      /* 8% brand tint for tags, soft fills */
+  --petlux-brand-ink: #FAFAF6;       /* text on brand fills */
+
+  /* ---------- Surfaces (olive-tinted — brand primary light variant) ---------- */
+  --petlux-bg: #EDF0E2;              /* olive-tinted page base — brand light variant */
+  --petlux-surface: #FFFFFF;         /* white card */
+  --petlux-surface-2: #E2E6D3;       /* olive hover / selected */
+  --petlux-surface-3: #D6DBC5;       /* deeper olive fill */
+
+  /* ---------- Ink (text) ---------- */
+  --petlux-ink: #2A2823;             /* primary text — warm near-black */
+  --petlux-ink-2: #635E54;           /* secondary text */
+  --petlux-ink-3: #9A9489;           /* tertiary / placeholder */
+
+  /* ---------- Lines & Dividers ---------- */
+  --petlux-line: #D8DCCE;            /* hairline divider — olive tint */
+  --petlux-line-strong: #C9CFBA;     /* emphasized border */
+
+  /* ---------- State Colors (semantic only, never brand) ---------- */
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+
+  /* ---------- Radius Scale (2 / 8 / 12 / 16) ---------- */
+  --petlux-radius-xs: 4px;
+  --petlux-radius-sm: 8px;
+  --petlux-radius-md: 12px;
+  --petlux-radius-lg: 16px;
+  --petlux-radius-pill: 999px;
+
+  /* ---------- Shadow (subtle, alpha <= 0.05 for static) ---------- */
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+
+  /* ---------- Spacing (8pt grid) ---------- */
+  --petlux-s-1: 4px;
+  --petlux-s-2: 8px;
+  --petlux-s-3: 12px;
+  --petlux-s-4: 16px;
+  --petlux-s-5: 24px;
+  --petlux-s-6: 32px;
+  --petlux-s-7: 48px;
+
+  /* ---------- Typography ---------- */
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-font-latin: "Inter", system-ui, sans-serif;
+  --petlux-font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --petlux-text-display: 32px;
+  --petlux-text-h1: 24px;
+  --petlux-text-h2: 20px;
+  --petlux-text-h3: 17px;
+  --petlux-text-body: 15px;
+  --petlux-text-body-sm: 13px;
+  --petlux-text-caption: 12px;
+
+  --petlux-leading-tight: 1.2;
+  --petlux-leading-normal: 1.55;
+  --petlux-leading-relaxed: 1.7;
+
+  --petlux-weight-regular: 400;
+  --petlux-weight-medium: 500;
+  --petlux-weight-semibold: 600;
+
+  --petlux-tracking-tight: -0.02em;
+  --petlux-tracking-normal: 0;
+  --petlux-tracking-wide: 0.01em;
+
+  /* ============================================================
+     Semantic Aliases — required by apply-html-head-contract.mjs
+     ============================================================ */
+
+  --petlux-background: var(--petlux-bg);
+  --petlux-foreground: var(--petlux-ink);
+
+  --petlux-card: var(--petlux-surface);
+  --petlux-card-foreground: var(--petlux-ink);
+
+  --petlux-popover: var(--petlux-surface);
+  --petlux-popover-foreground: var(--petlux-ink);
+
+  --petlux-primary: var(--petlux-brand);
+  --petlux-primary-foreground: var(--petlux-brand-ink);
+
+  --petlux-secondary: var(--petlux-surface-2);
+  --petlux-secondary-foreground: var(--petlux-ink-2);
+
+  --petlux-muted: var(--petlux-surface-2);
+  --petlux-muted-foreground: var(--petlux-ink-2);
+
+  --petlux-accent: var(--petlux-brand-soft);
+  --petlux-accent-foreground: var(--petlux-brand);
+
+  --petlux-destructive: var(--petlux-state-error);
+  --petlux-destructive-foreground: #FAFAF6;
+
+  --petlux-border: var(--petlux-line);
+  --petlux-input: var(--petlux-line-strong);
+  --petlux-ring: var(--petlux-brand);
+
+  --petlux-radius-small: var(--petlux-radius-sm);
+  --petlux-radius-medium: var(--petlux-radius-md);
+  --petlux-radius-large: var(--petlux-radius-lg);
+}
+
+/* ---------- Dark mode stub (project is light-only; reserved) ---------- */
+.dark {
+  --petlux-background: #161612;
+  --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A;
+  --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A;
+  --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A;
+  --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924;
+  --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C;
+  --petlux-input: #34322C;
+  --petlux-ring: #7A8C5A;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--petlux-background);
+    --color-foreground: var(--petlux-foreground);
+    --color-card: var(--petlux-card);
+    --color-card-foreground: var(--petlux-card-foreground);
+    --color-popover: var(--petlux-popover);
+    --color-popover-foreground: var(--petlux-popover-foreground);
+    --color-primary: var(--petlux-primary);
+    --color-primary-foreground: var(--petlux-primary-foreground);
+    --color-secondary: var(--petlux-secondary);
+    --color-secondary-foreground: var(--petlux-secondary-foreground);
+    --color-muted: var(--petlux-muted);
+    --color-muted-foreground: var(--petlux-muted-foreground);
+    --color-accent: var(--petlux-accent);
+    --color-accent-foreground: var(--petlux-accent-foreground);
+    --color-destructive: var(--petlux-destructive);
+    --color-destructive-foreground: var(--petlux-destructive-foreground);
+    --color-border: var(--petlux-border);
+    --color-input: var(--petlux-input);
+    --color-ring: var(--petlux-ring);
+    --radius-sm: var(--petlux-radius-sm);
+    --radius-md: var(--petlux-radius-md);
+    --radius-lg: var(--petlux-radius-lg);
+  }
+  @layer base {
+    body { background: var(--petlux-background); color: var(--petlux-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--petlux-background); }
+      .text-background { color: var(--petlux-background); }
+      .border-background { border-color: var(--petlux-background); }
+      .ring-background { --tw-ring-color: var(--petlux-background); }
+      .bg-foreground { background-color: var(--petlux-foreground); }
+      .text-foreground { color: var(--petlux-foreground); }
+      .border-foreground { border-color: var(--petlux-foreground); }
+      .ring-foreground { --tw-ring-color: var(--petlux-foreground); }
+      .bg-card { background-color: var(--petlux-card); }
+      .text-card { color: var(--petlux-card); }
+      .border-card { border-color: var(--petlux-card); }
+      .ring-card { --tw-ring-color: var(--petlux-card); }
+      .bg-card-foreground { background-color: var(--petlux-card-foreground); }
+      .text-card-foreground { color: var(--petlux-card-foreground); }
+      .border-card-foreground { border-color: var(--petlux-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--petlux-card-foreground); }
+      .bg-popover { background-color: var(--petlux-popover); }
+      .text-popover { color: var(--petlux-popover); }
+      .border-popover { border-color: var(--petlux-popover); }
+      .ring-popover { --tw-ring-color: var(--petlux-popover); }
+      .bg-popover-foreground { background-color: var(--petlux-popover-foreground); }
+      .text-popover-foreground { color: var(--petlux-popover-foreground); }
+      .border-popover-foreground { border-color: var(--petlux-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--petlux-popover-foreground); }
+      .bg-primary { background-color: var(--petlux-primary); }
+      .text-primary { color: var(--petlux-primary); }
+      .border-primary { border-color: var(--petlux-primary); }
+      .ring-primary { --tw-ring-color: var(--petlux-primary); }
+      .bg-primary-foreground { background-color: var(--petlux-primary-foreground); }
+      .text-primary-foreground { color: var(--petlux-primary-foreground); }
+      .border-primary-foreground { border-color: var(--petlux-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--petlux-primary-foreground); }
+      .bg-secondary { background-color: var(--petlux-secondary); }
+      .text-secondary { color: var(--petlux-secondary); }
+      .border-secondary { border-color: var(--petlux-secondary); }
+      .ring-secondary { --tw-ring-color: var(--petlux-secondary); }
+      .bg-secondary-foreground { background-color: var(--petlux-secondary-foreground); }
+      .text-secondary-foreground { color: var(--petlux-secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--petlux-secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--petlux-secondary-foreground); }
+      .bg-muted { background-color: var(--petlux-muted); }
+      .text-muted { color: var(--petlux-muted); }
+      .border-muted { border-color: var(--petlux-muted); }
+      .ring-muted { --tw-ring-color: var(--petlux-muted); }
+      .bg-muted-foreground { background-color: var(--petlux-muted-foreground); }
+      .text-muted-foreground { color: var(--petlux-muted-foreground); }
+      .border-muted-foreground { border-color: var(--petlux-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--petlux-muted-foreground); }
+      .bg-accent { background-color: var(--petlux-accent); }
+      .text-accent { color: var(--petlux-accent); }
+      .border-accent { border-color: var(--petlux-accent); }
+      .ring-accent { --tw-ring-color: var(--petlux-accent); }
+      .bg-accent-foreground { background-color: var(--petlux-accent-foreground); }
+      .text-accent-foreground { color: var(--petlux-accent-foreground); }
+      .border-accent-foreground { border-color: var(--petlux-accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--petlux-accent-foreground); }
+      .bg-destructive { background-color: var(--petlux-destructive); }
+      .text-destructive { color: var(--petlux-destructive); }
+      .border-destructive { border-color: var(--petlux-destructive); }
+      .ring-destructive { --tw-ring-color: var(--petlux-destructive); }
+      .bg-destructive-foreground { background-color: var(--petlux-destructive-foreground); }
+      .text-destructive-foreground { color: var(--petlux-destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--petlux-destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--petlux-destructive-foreground); }
+      .bg-border { background-color: var(--petlux-border); }
+      .text-border { color: var(--petlux-border); }
+      .border-border { border-color: var(--petlux-border); }
+      .ring-border { --tw-ring-color: var(--petlux-border); }
+      .bg-input { background-color: var(--petlux-input); }
+      .text-input { color: var(--petlux-input); }
+      .border-input { border-color: var(--petlux-input); }
+      .ring-input { --tw-ring-color: var(--petlux-input); }
+      .bg-ring { background-color: var(--petlux-ring); }
+      .text-ring { color: var(--petlux-ring); }
+      .border-ring { border-color: var(--petlux-ring); }
+      .ring-ring { --tw-ring-color: var(--petlux-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+      .text-ink-2 { color: var(--petlux-ink-2); }
+      .text-ink-3 { color: var(--petlux-ink-3); }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<style id="critical-layout">
+html, body { max-width: 100%; overflow-x: hidden; }
+body { margin: 0; background-color: var(--petlux-background); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+main > .petlux-shell { width: 100%; max-width: 28rem; margin-left: auto; margin-right: auto; }
+header[data-topbar] { min-height: 56px; }
+nav[data-mobile-nav="global"] { position: sticky; bottom: 0; z-index: 30; min-height: 64px; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
+<main>
+  <div class="fixed top-0 right-3 z-50 flex items-center w-[88px] h-8 rounded-full border border-black/10 shrink-0" style="top: calc(env(safe-area-inset-top, 0px) + 12px);">
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="更多">
+        <i data-lucide="more-horizontal" class="w-4 h-4 text-foreground"></i>
+      </button>
+      <span class="w-px h-3 bg-black/10 block"></span>
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="关闭">
+        <i data-lucide="x" class="w-4 h-4 text-foreground"></i>
+      </button>
+    </div>
+
+<div class="petlux-shell max-w-md mx-auto bg-background min-h-screen pb-16">
+
+  <!-- page-header: sticky 顶部导航栏（返回 + 标题） -->
+  <header data-topbar class="sticky top-0 z-20 h-14 flex items-center px-4 gap-3 bg-background/95 backdrop-blur-sm border-b border-border">
+<button type="button" aria-label="返回" class="flex items-center justify-center w-8 h-8 text-foreground shrink-0">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <span class="text-foreground" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">隐私政策</span>
+  </header>
+
+  <!-- page-content -->
+  <div class="page-content">
+
+    <!-- 画廊 header：竖条 + AROORO 小字 + 大标题 + 副标题 -->
+    <header class="px-5 pt-8 pb-6">
+      <div class="brand-block flex flex-col gap-3">
+        <div class="flex items-center gap-2">
+          <span class="brand-accent-bar w-1 h-6 bg-primary block"></span>
+          <span class="text-[11px] tracking-[0.2em] text-muted-foreground font-mono uppercase">AROORO</span>
+        </div>
+        <h1 class="brand-text text-2xl font-semibold tracking-wide text-foreground">隐私政策</h1>
+        <div class="brand-meta flex items-center gap-2">
+          <span class="w-4 h-px bg-muted-foreground/50 block"></span>
+          <span class="text-[13px] text-muted-foreground tracking-wide">请仔细阅读</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 日期 section：白卡内显示更新/生效日期 -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <div class="flex flex-col gap-2">
+          <p class="text-[12px] text-muted-foreground">更新日期：2026年7月27日</p>
+          <p class="text-[12px] text-muted-foreground">生效日期：2026年7月27日</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 引言 section：section-title + section-content -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <h3 class="section-title text-base font-semibold text-foreground mb-3">引言</h3>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2">
+          <p>AROORO（以下简称"我们"）深知个人信息对您的重要性，我们将严格按照相关法律法规的规定，采取相应的安全保护措施，尽力保护您的个人信息安全可靠。本隐私政策适用于您通过AROORO小程序使用宠物寄养、上门喂养与美容、社区活动及宠物商城等服务。</p>
+          <p>请您在使用本服务前，仔细阅读并充分理解本隐私政策的全部内容，尤其是以加粗形式提示的条款。一旦您开始使用本服务，即视为您已同意本隐私政策的约定。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. 信息收集 -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <h3 class="section-subtitle text-sm font-semibold text-primary mb-3">1. 信息收集</h3>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2">
+          <p>为了向您提供宠物相关服务，我们可能收集以下信息：</p>
+        </div>
+        <ul class="section-content text-sm text-ink-2 leading-relaxed space-y-2 mt-2">
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">账户信息</span>：您注册账号时提供的手机号码、昵称、头像及登录凭证等。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">联系方式</span>：您的姓名、联系电话、收货地址等，用于服务对接与商品配送。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">宠物信息</span>：您添加的宠物名称、品种、年龄、性别、健康状况及性格特点等。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">订单信息</span>：您下单时产生的服务类型、时间、地点、金额及支付记录等。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">位置信息</span>：在您授权后获取的地理位置，用于上门服务定位与活动推荐。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">设备信息</span>：设备型号、操作系统版本、唯一设备标识符及日志信息等，用于安全与优化。</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 2. 信息使用 -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <h3 class="section-subtitle text-sm font-semibold text-primary mb-3">2. 信息使用</h3>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2">
+          <p>我们收集的信息将用于以下用途：</p>
+        </div>
+        <ul class="section-content text-sm text-ink-2 leading-relaxed space-y-2 mt-2">
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">为您提供宠物寄养、上门喂养、美容及商城购物等核心服务。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">处理您的订单、安排服务人员并保障服务顺利履约。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">向您发送服务通知、订单状态更新及重要提醒。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">提供个性化内容推荐，持续优化您的使用体验。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">保障账号与交易安全，防范欺诈、刷单等风险行为。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">改进产品功能与服务质量，开发更贴合需求的新服务。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">在您同意的情况下，向您推送活动资讯与优惠信息。</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 3. 信息存储与保护 -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <h3 class="section-subtitle text-sm font-semibold text-primary mb-3">3. 信息存储与保护</h3>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2">
+          <p>我们采取严格的措施保护您的个人信息安全：</p>
+        </div>
+        <ul class="section-content text-sm text-ink-2 leading-relaxed space-y-2 mt-2">
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">信息存储于中华人民共和国境内，存储期限以实现服务目的所必需的合理时间为准。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">采用加密传输、访问控制与身份验证等技术手段，防止信息泄露、损毁或丢失。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">建立内部安全管理制度，对接触个人信息的员工进行权限管控与保密约束。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">定期开展安全评估与审计，及时识别并修复潜在安全漏洞。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">一旦发生个人信息安全事件，我们将及时启动应急预案并依法告知您。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">超出存储期限的信息，我们将予以删除或匿名化处理。</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 4. 信息共享与披露 -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <h3 class="section-subtitle text-sm font-semibold text-primary mb-3">4. 信息共享与披露</h3>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2">
+          <p>未经您同意，我们不会向第三方共享您的个人信息，但以下情形除外：</p>
+        </div>
+        <ul class="section-content text-sm text-ink-2 leading-relaxed space-y-2 mt-2">
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">与服务提供者（如寄养师、美容师）共享必要信息，以完成您预订的服务。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">与物流合作伙伴共享收货信息，用于宠物用品与商品的配送。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">与支付机构共享订单信息，以完成支付结算与资金对账。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">根据法律法规要求，或应行政机关、司法机关的合法请求而披露。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">为维护我们及他人的合法权益，在涉及诉讼、仲裁等情形下必要披露。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">在合并、收购等交易中作为资产转移的一部分，我们将要求接收方继续承担保密义务。</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 5. 您的权利 -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <h3 class="section-subtitle text-sm font-semibold text-primary mb-3">5. 您的权利</h3>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2">
+          <p>根据相关法律法规，您对个人信息享有以下权利：</p>
+        </div>
+        <ul class="section-content text-sm text-ink-2 leading-relaxed space-y-2 mt-2">
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">查询、复制权</span>：您可在小程序内查询并获取您的个人信息。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">更正、补充权</span>：您可更正或补充不准确、不完整的个人信息。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">删除权</span>：在法定情形下，您可要求我们删除您的个人信息。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">撤回同意权</span>：您可撤回此前对信息处理的同意，但不影响已进行的处理。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">账号注销权</span>：您可申请注销账号，我们将在合理期限内删除相关信息。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">投诉举报权</span>：您可就个人信息处理事宜向我们或有关部门投诉举报。</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 6. 未成年人保护 -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <h3 class="section-subtitle text-sm font-semibold text-primary mb-3">6. 未成年人保护</h3>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2">
+          <p>我们高度重视未成年人个人信息保护。本服务主要面向成年人，不建议未成年人单独使用，我们将采取以下保护措施：</p>
+        </div>
+        <ul class="section-content text-sm text-ink-2 leading-relaxed space-y-2 mt-2">
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">未成年人应在法定监护人同意并陪同下阅读本隐私政策并使用本服务。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">我们不会主动收集未成年人个人信息，如发现将尽快删除。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">监护人有权随时联系我们，要求查询、更正或删除未成年人的相关信息。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">我们将通过技术与管理手段，限制对未成年人信息的处理范围。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">监护人如发现未成年人未经同意使用本服务，请及时与我们联系。</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 7. 政策更新 -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <h3 class="section-subtitle text-sm font-semibold text-primary mb-3">7. 政策更新</h3>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2">
+          <p>我们可能根据法律法规或业务发展需要适时修订本隐私政策，更新方式如下：</p>
+        </div>
+        <ul class="section-content text-sm text-ink-2 leading-relaxed space-y-2 mt-2">
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">政策修订后，我们将在小程序内显著位置或通过推送通知您。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">对于重大变更，我们将再次征求您的明确同意。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">您继续使用本服务，即视为您同意修订后的隐私政策。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">如您不同意修订内容，可停止使用本服务或申请注销账号。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1">您可随时在本页面查看隐私政策的最新版本与生效日期。</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 8. 联系我们 -->
+    <section class="px-4 mb-3">
+      <div class="bg-card p-4" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);">
+        <h3 class="section-subtitle text-sm font-semibold text-primary mb-3">8. 联系我们</h3>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2">
+          <p>如您对本隐私政策有任何疑问、意见或建议，可通过以下方式联系我们：</p>
+        </div>
+        <ul class="section-content text-sm text-ink-2 leading-relaxed space-y-2 mt-2">
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">客服邮箱</span>：support@arooro.com</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">客服电话</span>：400-888-0000（工作时间为 9:00–18:00）</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">小程序入口</span>：进入"我的 — 帮助与反馈"提交您的问题。</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary/60 mt-[7px] shrink-0"></span>
+            <span class="flex-1"><span class="font-medium text-foreground">公司地址</span>：AROORO 宠物服务有限公司。</span>
+          </li>
+        </ul>
+        <div class="section-content text-sm text-ink-2 leading-relaxed space-y-2 mt-3">
+          <p>我们将在收到您的反馈后 15 个工作日内予以回复。</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+</main>
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -82,7 +82,7 @@
                   <text class="participant-count">{{participantText}}</text>
                 </view>
                 <view class="participant-bar" wx:if="{{activity.maxParticipants}}">
-                  <view class="participant-fill" style="width: {{participantPct}}%; background: {{participantPct >= 100 ? '#FF9500' : '#4ECDC4'}}"></view>
+                  <view class="participant-fill" style="width: {{participantPct}}%; background: {{participantPct >= 100 ? '#B8893A' : '#4F5E35'}}"></view>
                 </view>
               </view>
             </view>

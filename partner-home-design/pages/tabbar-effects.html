@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AROORO TabBar 效果设计</title>
+    <style id="theme-vars">
+/* ================================================================
+   colors_and_type.css · AROORO 设计系统令牌
+   Olive Green × Healing Light-Luxury
+   ================================================================ */
+
+:root {
+  /* 品牌主色：橄榄绿 */
+  --color-primary: #4F5E35;
+  --color-primary-dark: #3A4626;
+  --color-primary-light: #6B7D5A;
+  --color-primary-100: #EAEDDF;
+
+  /* 点缀色：暖金 */
+  --color-accent: #B8893A;
+  --color-accent-soft: #F2E8D4;
+
+  /* 中性色 */
+  --color-background: #F8FAF3;
+  --color-surface: #FFFFFF;
+  --color-border: #D8DCCE;
+  --color-divider: #EAEDDF;
+
+  /* 文字色 */
+  --color-foreground: #2A2823;
+  --color-text-primary: #2A2823;
+  --color-text-secondary: #635E54;
+  --color-text-tertiary: #9A9489;
+  --color-text-on-primary: #FAFAF6;
+
+  /* 语义别名 */
+  --color-card: #FFFFFF;
+  --color-muted: #9A9489;
+  --color-muted-foreground: #9A9489;
+
+  /* 圆角 */
+  --color-radius-sm: 8px;
+  --color-radius-md: 12px;
+  --color-radius-lg: 16px;
+
+  /* 字体 */
+  --color-font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--color-background);
+    --color-foreground: var(--color-foreground);
+    --color-card: var(--color-card);
+    --color-primary: var(--color-primary);
+    --color-muted: var(--color-muted);
+    --color-muted-foreground: var(--color-muted-foreground);
+    --color-accent: var(--color-accent);
+    --color-border: var(--color-border);
+    --radius-sm: var(--color-radius-sm);
+    --radius-md: var(--color-radius-md);
+    --radius-lg: var(--color-radius-lg);
+  }
+  @layer base {
+    body { background: var(--color-background); color: var(--color-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--color-background); }
+      .text-background { color: var(--color-background); }
+      .border-background { border-color: var(--color-background); }
+      .ring-background { --tw-ring-color: var(--color-background); }
+      .bg-foreground { background-color: var(--color-foreground); }
+      .text-foreground { color: var(--color-foreground); }
+      .border-foreground { border-color: var(--color-foreground); }
+      .ring-foreground { --tw-ring-color: var(--color-foreground); }
+      .bg-card { background-color: var(--color-card); }
+      .text-card { color: var(--color-card); }
+      .border-card { border-color: var(--color-card); }
+      .ring-card { --tw-ring-color: var(--color-card); }
+      .bg-primary { background-color: var(--color-primary); }
+      .text-primary { color: var(--color-primary); }
+      .border-primary { border-color: var(--color-primary); }
+      .ring-primary { --tw-ring-color: var(--color-primary); }
+      .bg-muted { background-color: var(--color-muted); }
+      .text-muted { color: var(--color-muted); }
+      .border-muted { border-color: var(--color-muted); }
+      .ring-muted { --tw-ring-color: var(--color-muted); }
+      .bg-muted-foreground { background-color: var(--color-muted-foreground); }
+      .text-muted-foreground { color: var(--color-muted-foreground); }
+      .border-muted-foreground { border-color: var(--color-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--color-muted-foreground); }
+      .bg-accent { background-color: var(--color-accent); }
+      .text-accent { color: var(--color-accent); }
+      .border-accent { border-color: var(--color-accent); }
+      .ring-accent { --tw-ring-color: var(--color-accent); }
+      .bg-border { background-color: var(--color-border); }
+      .text-border { color: var(--color-border); }
+      .border-border { border-color: var(--color-border); }
+      .ring-border { --tw-ring-color: var(--color-border); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+
+  <!-- Page Title -->
+  <h1 class="page-title">AROORO TabBar 效果设计</h1>
+
+  <!-- Mockups -->
+  <div class="mockups">
+
+    <!-- Mockup 1: 首页 Selected -->
+    <div>
+      <div class="mockup-label">首页 选中</div>
+      <div class="phone">
+        <!-- Status Bar -->
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <div class="right-icons">
+            <svg viewBox="0 0 18 12" width="17" height="11" fill="#2A2823">
+              <rect x="0" y="8" width="3" height="4" rx="1"/>
+              <rect x="5" y="5" width="3" height="7" rx="1"/>
+              <rect x="10" y="2" width="3" height="10" rx="1"/>
+              <rect x="15" y="0" width="3" height="12" rx="1" opacity="0.35"/>
+            </svg>
+            <svg viewBox="0 0 16 12" width="16" height="12" fill="none" stroke="#2A2823" stroke-width="1.6" stroke-linecap="round">
+              <path d="M1 4.6a10 10 0 0 1 14 0"/>
+              <path d="M3.6 7.1a6 6 0 0 1 8.8 0"/>
+              <path d="M6.1 9.6a2.6 2.6 0 0 1 3.8 0"/>
+              <circle cx="8" cy="11.6" r="0.9" fill="#2A2823" stroke="none"/>
+            </svg>
+            <svg viewBox="0 0 26 12" width="25" height="12" fill="none" stroke="#2A2823" stroke-width="1.2">
+              <rect x="1" y="1" width="21" height="10" rx="2.6"/>
+              <rect x="3" y="3" width="15" height="6" rx="1" fill="#2A2823" stroke="none"/>
+              <rect x="23.4" y="4" width="2" height="4" rx="1" fill="#2A2823" stroke="none"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-area">
+          <div class="content-deco">
+            <div class="block"></div>
+            <div class="block"></div>
+            <div class="block"></div>
+          </div>
+          <span class="content-placeholder">页面内容</span>
+        </div>
+
+        <!-- TabBar -->
+        <nav class="tab-bar">
+          <!-- 首页 (active) -->
+          <div class="tab-item active">
+            <div class="icon-wrap">
+              <div class="tab-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path class="icon-fill" d="M6 19H18V9.15745L12 3.7029L6 9.15745V19ZM19 21H5C4.44772 21 4 20.5523 4 20V11L1 11L11.3273 1.6115C11.7087 1.26475 12.2913 1.26475 12.6727 1.6115L23 11L20 11V20C20 20.5523 19.5523 21 19 21ZM7.5 13H9.5C9.5 14.3807 10.6193 15.5 12 15.5C13.3807 15.5 14.5 14.3807 14.5 13H16.5C16.5 15.4853 14.4853 17.5 12 17.5C9.51472 17.5 7.5 15.4853 7.5 13Z"/>
+                </svg>
+              </div>
+            </div>
+            <span class="tab-text">首页</span>
+          </div>
+
+          <!-- 一键报名 -->
+          <div class="tab-item">
+            <div class="icon-wrap">
+              <div class="tab-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path class="icon-fill" d="M9 1V3H15V1H17V3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H7V1H9ZM20 11H4V19H20V11ZM8 13V15H6V13H8ZM13 13V15H11V13H13ZM18 13V15H16V13H18ZM7 5H4V9H20V5H17V7H15V5H9V7H7V5Z"/>
+                </svg>
+              </div>
+            </div>
+            <span class="tab-text">一键报名</span>
+          </div>
+
+          <!-- 宠团团 (center) -->
+          <div class="tab-item-center">
+            <div class="center-button">
+              <div class="center-button-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                </svg>
+              </div>
+              <span class="center-button-text">宠团团</span>
+            </div>
+          </div>
+
+          <!-- 上门服务 -->
+          <div class="tab-item">
+            <div class="icon-wrap">
+              <div class="tab-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path class="icon-fill" d="M7.56331 19.2798C7.73337 19.2876 7.92984 19.2906 8.14727 19.2863C8.77279 19.2739 9.4239 19.2047 10.059 19.0626C11.0716 18.838 12.0771 18.8143 13.0395 18.9318C13.5864 18.9986 14.0247 19.0969 14.3275 19.1891C15.4052 19.4638 16.9386 19.4119 17.3331 18.7782C17.6238 18.3113 17.5856 17.9916 17.3071 17.5803C17.2466 17.4909 17.1809 17.4105 17.1185 17.3445C17.1097 17.3351 17.1016 17.3269 17.0945 17.3197C17.0282 17.267 16.9917 17.2377 16.9302 17.1878C16.7544 17.0449 16.5599 16.8823 16.3513 16.702C15.7559 16.1875 15.1602 15.6296 14.5987 15.0426C13.9929 14.4095 13.461 13.7777 13.0219 13.1489L12.9861 13.0958C12.2441 11.9571 11.428 12.029 10.9837 12.7785C10.7019 13.254 10.3821 13.696 10.029 14.1105C9.61853 14.5924 9.19882 15.0001 8.72348 15.4067C8.60056 15.5119 8.22086 15.8269 8.31171 15.751C8.30802 15.7541 8.29484 15.7661 8.36265 15.6797C8.26441 15.8004 7.41258 16.5574 7.16177 16.8417C6.64726 17.4248 6.44014 17.9224 6.51725 18.3224C6.58965 18.6978 6.73623 18.9089 6.96754 19.0667C7.08515 19.1469 7.22108 19.2086 7.35634 19.2494C7.39091 19.2598 7.42153 19.2677 7.44674 19.2732C7.48007 19.2755 7.51904 19.2777 7.56331 19.2798ZM14.6617 12.0039C16.0373 13.9739 18.3933 15.7967 18.3933 15.7967C18.3933 15.7967 20.4569 17.5447 19.031 19.8352C17.605 22.1257 13.778 21.1127 13.778 21.1127C13.778 21.1127 12.2578 20.6236 10.492 21.0152C8.72706 21.4102 7.20561 21.2604 7.20561 21.2604C7.20561 21.2604 4.99964 21.0152 4.55343 18.701C4.10721 16.3869 6.61326 14.6608 6.81143 14.4173C7.00657 14.1699 8.32336 13.3442 9.26328 11.7587C10.2032 10.1731 12.8471 9.21909 14.6617 12.0039ZM20.2002 10.5846C20.2002 11.0415 20.391 12.9772 18.6478 13.0158C16.9053 13.0544 16.8317 11.8378 16.8317 10.9662C16.8317 10.053 17.0192 8.76113 18.422 8.76113C19.8225 8.76113 20.2002 10.13 20.2002 10.5846ZM14.7711 7.80669C13.591 7.65486 13.3238 6.58499 13.4378 5.51446C13.5333 4.63866 14.5804 3.2953 15.419 3.48769C16.2559 3.6784 17.0188 4.78748 16.8646 5.74238C16.7134 6.69862 15.9533 7.9602 14.7711 7.80669ZM9.75498 7.43996C8.89373 7.43996 8.19433 6.44695 8.19433 5.21916C8.19433 3.99269 8.8934 3 9.75498 3C10.6179 3 11.3153 3.99269 11.3153 5.21916C11.3153 6.44695 10.6179 7.43996 9.75498 7.43996ZM5.96186 12.0061C4.26673 12.3714 3.63542 10.4091 3.82144 9.49078C3.82144 9.49078 4.02239 7.50401 5.39776 7.38059C6.49074 7.28599 7.29562 8.4821 7.37884 9.16641C7.42971 9.61029 7.66125 11.6412 5.96186 12.0061Z"/>
+                </svg>
+              </div>
+            </div>
+            <span class="tab-text">上门服务</span>
+          </div>
+
+          <!-- 我的 -->
+          <div class="tab-item">
+            <div class="icon-wrap">
+              <div class="tab-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path class="icon-fill" d="M20 22H18V20C18 18.3431 16.6569 17 15 17H9C7.34315 17 6 18.3431 6 20V22H4V20C4 17.2386 6.23858 15 9 15H15C17.7614 15 20 17.2386 20 20V22ZM12 13C8.68629 13 6 10.3137 6 7C6 3.68629 8.68629 1 12 1C15.3137 1 18 3.68629 18 7C18 10.3137 15.3137 13 12 13ZM12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"/>
+                </svg>
+              </div>
+            </div>
+            <span class="tab-text">我的</span>
+          </div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Mockup 2: 我的 Selected -->
+    <div>
+      <div class="mockup-label">我的 选中</div>
+      <div class="phone">
+        <!-- Status Bar -->
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <div class="right-icons">
+            <svg viewBox="0 0 18 12" width="17" height="11" fill="#2A2823">
+              <rect x="0" y="8" width="3" height="4" rx="1"/>
+              <rect x="5" y="5" width="3" height="7" rx="1"/>
+              <rect x="10" y="2" width="3" height="10" rx="1"/>
+              <rect x="15" y="0" width="3" height="12" rx="1" opacity="0.35"/>
+            </svg>
+            <svg viewBox="0 0 16 12" width="16" height="12" fill="none" stroke="#2A2823" stroke-width="1.6" stroke-linecap="round">
+              <path d="M1 4.6a10 10 0 0 1 14 0"/>
+              <path d="M3.6 7.1a6 6 0 0 1 8.8 0"/>
+              <path d="M6.1 9.6a2.6 2.6 0 0 1 3.8 0"/>
+              <circle cx="8" cy="11.6" r="0.9" fill="#2A2823" stroke="none"/>
+            </svg>
+            <svg viewBox="0 0 26 12" width="25" height="12" fill="none" stroke="#2A2823" stroke-width="1.2">
+              <rect x="1" y="1" width="21" height="10" rx="2.6"/>
+              <rect x="3" y="3" width="15" height="6" rx="1" fill="#2A2823" stroke="none"/>
+              <rect x="23.4" y="4" width="2" height="4" rx="1" fill="#2A2823" stroke="none"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-area">
+          <div class="content-deco">
+            <div class="block"></div>
+            <div class="block"></div>
+            <div class="block"></div>
+          </div>
+          <span class="content-placeholder">页面内容</span>
+        </div>
+
+        <!-- TabBar -->
+        <nav class="tab-bar">
+          <!-- 首页 -->
+          <div class="tab-item">
+            <div class="icon-wrap">
+              <div class="tab-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path class="icon-fill" d="M6 19H18V9.15745L12 3.7029L6 9.15745V19ZM19 21H5C4.44772 21 4 20.5523 4 20V11L1 11L11.3273 1.6115C11.7087 1.26475 12.2913 1.26475 12.6727 1.6115L23 11L20 11V20C20 20.5523 19.5523 21 19 21ZM7.5 13H9.5C9.5 14.3807 10.6193 15.5 12 15.5C13.3807 15.5 14.5 14.3807 14.5 13H16.5C16.5 15.4853 14.4853 17.5 12 17.5C9.51472 17.5 7.5 15.4853 7.5 13Z"/>
+                </svg>
+              </div>
+            </div>
+            <span class="tab-text">首页</span>
+          </div>
+
+          <!-- 一键报名 -->
+          <div class="tab-item">
+            <div class="icon-wrap">
+              <div class="tab-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path class="icon-fill" d="M9 1V3H15V1H17V3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H7V1H9ZM20 11H4V19H20V11ZM8 13V15H6V13H8ZM13 13V15H11V13H13ZM18 13V15H16V13H18ZM7 5H4V9H20V5H17V7H15V5H9V7H7V5Z"/>
+                </svg>
+              </div>
+            </div>
+            <span class="tab-text">一键报名</span>
+          </div>
+
+          <!-- 宠团团 (center) -->
+          <div class="tab-item-center">
+            <div class="center-button">
+              <div class="center-button-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                </svg>
+              </div>
+              <span class="center-button-text">宠团团</span>
+            </div>
+          </div>
+
+          <!-- 上门服务 -->
+          <div class="tab-item">
+            <div class="icon-wrap">
+              <div class="tab-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path class="icon-fill" d="M7.56331 19.2798C7.73337 19.2876 7.92984 19.2906 8.14727 19.2863C8.77279 19.2739 9.4239 19.2047 10.059 19.0626C11.0716 18.838 12.0771 18.8143 13.0395 18.9318C13.5864 18.9986 14.0247 19.0969 14.3275 19.1891C15.4052 19.4638 16.9386 19.4119 17.3331 18.7782C17.6238 18.3113 17.5856 17.9916 17.3071 17.5803C17.2466 17.4909 17.1809 17.4105 17.1185 17.3445C17.1097 17.3351 17.1016 17.3269 17.0945 17.3197C17.0282 17.267 16.9917 17.2377 16.9302 17.1878C16.7544 17.0449 16.5599 16.8823 16.3513 16.702C15.7559 16.1875 15.1602 15.6296 14.5987 15.0426C13.9929 14.4095 13.461 13.7777 13.0219 13.1489L12.9861 13.0958C12.2441 11.9571 11.428 12.029 10.9837 12.7785C10.7019 13.254 10.3821 13.696 10.029 14.1105C9.61853 14.5924 9.19882 15.0001 8.72348 15.4067C8.60056 15.5119 8.22086 15.8269 8.31171 15.751C8.30802 15.7541 8.29484 15.7661 8.36265 15.6797C8.26441 15.8004 7.41258 16.5574 7.16177 16.8417C6.64726 17.4248 6.44014 17.9224 6.51725 18.3224C6.58965 18.6978 6.73623 18.9089 6.96754 19.0667C7.08515 19.1469 7.22108 19.2086 7.35634 19.2494C7.39091 19.2598 7.42153 19.2677 7.44674 19.2732C7.48007 19.2755 7.51904 19.2777 7.56331 19.2798ZM14.6617 12.0039C16.0373 13.9739 18.3933 15.7967 18.3933 15.7967C18.3933 15.7967 20.4569 17.5447 19.031 19.8352C17.605 22.1257 13.778 21.1127 13.778 21.1127C13.778 21.1127 12.2578 20.6236 10.492 21.0152C8.72706 21.4102 7.20561 21.2604 7.20561 21.2604C7.20561 21.2604 4.99964 21.0152 4.55343 18.701C4.10721 16.3869 6.61326 14.6608 6.81143 14.4173C7.00657 14.1699 8.32336 13.3442 9.26328 11.7587C10.2032 10.1731 12.8471 9.21909 14.6617 12.0039ZM20.2002 10.5846C20.2002 11.0415 20.391 12.9772 18.6478 13.0158C16.9053 13.0544 16.8317 11.8378 16.8317 10.9662C16.8317 10.053 17.0192 8.76113 18.422 8.76113C19.8225 8.76113 20.2002 10.13 20.2002 10.5846ZM14.7711 7.80669C13.591 7.65486 13.3238 6.58499 13.4378 5.51446C13.5333 4.63866 14.5804 3.2953 15.419 3.48769C16.2559 3.6784 17.0188 4.78748 16.8646 5.74238C16.7134 6.69862 15.9533 7.9602 14.7711 7.80669ZM9.75498 7.43996C8.89373 7.43996 8.19433 6.44695 8.19433 5.21916C8.19433 3.99269 8.8934 3 9.75498 3C10.6179 3 11.3153 3.99269 11.3153 5.21916C11.3153 6.44695 10.6179 7.43996 9.75498 7.43996ZM5.96186 12.0061C4.26673 12.3714 3.63542 10.4091 3.82144 9.49078C3.82144 9.49078 4.02239 7.50401 5.39776 7.38059C6.49074 7.28599 7.29562 8.4821 7.37884 9.16641C7.42971 9.61029 7.66125 11.6412 5.96186 12.0061Z"/>
+                </svg>
+              </div>
+            </div>
+            <span class="tab-text">上门服务</span>
+          </div>
+
+          <!-- 我的 (active) -->
+          <div class="tab-item active">
+            <div class="icon-wrap">
+              <div class="tab-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path class="icon-fill" d="M20 22H18V20C18 18.3431 16.6569 17 15 17H9C7.34315 17 6 18.3431 6 20V22H4V20C4 17.2386 6.23858 15 9 15H15C17.7614 15 20 17.2386 20 20V22ZM12 13C8.68629 13 6 10.3137 6 7C6 3.68629 8.68629 1 12 1C15.3137 1 18 3.68629 18 7C18 10.3137 15.3137 13 12 13ZM12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"/>
+                </svg>
+              </div>
+            </div>
+            <span class="tab-text">我的</span>
+          </div>
+        </nav>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ Design Specification Section ============ -->
+  <section class="spec-section">
+
+    <h2 class="spec-title">设计规范</h2>
+
+    <!-- Color Palette -->
+    <h3 class="spec-subtitle">色彩面板</h3>
+    <div class="color-palette">
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #4F5E35;"></div>
+        <span class="swatch-hex">#4F5E35</span>
+        <span class="swatch-label">橄榄绿（选中色）</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #9A9489;"></div>
+        <span class="swatch-hex">#9A9489</span>
+        <span class="swatch-label">暖灰（未选中色）</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #B8893A;"></div>
+        <span class="swatch-hex">#B8893A</span>
+        <span class="swatch-label">暖金（指示点）</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #F8FAF3; border: 1px solid #E0E0D8;"></div>
+        <span class="swatch-hex">#F8FAF3</span>
+        <span class="swatch-label">橄榄调暖白（背景）</span>
+      </div>
+    </div>
+
+    <!-- Design Tokens -->
+    <h3 class="spec-subtitle">设计令牌</h3>
+    <div class="token-list">
+      <div class="token-row">
+        <span class="token-name">--zy-tabbar-item-active</span>
+        <span class="token-value">#4F5E35</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">--zy-tabbar-item-inactive</span>
+        <span class="token-value">#9A9489</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">--zy-tabbar-item-active-bg</span>
+        <span class="token-value">rgba(79, 94, 53, 0.08)</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">--zy-accent</span>
+        <span class="token-value">#B8893A</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">transition</span>
+        <span class="token-value">250ms cubic-bezier(0.4, 0, 0.2, 1)</span>
+      </div>
+    </div>
+
+    <!-- Effect Description -->
+    <h3 class="spec-subtitle">效果说明</h3>
+    <div class="effect-list">
+      <div class="effect-item selected">
+        <span class="effect-label">选中态</span>
+        <span class="effect-desc">橄榄绿图标 + 浅橄榄绿芯片底（rgba(79,94,53,0.08)） + 金色指示点 + 加粗文字</span>
+      </div>
+      <div class="effect-item unselected">
+        <span class="effect-label">未选中态</span>
+        <span class="effect-desc">暖灰半透明图标（opacity 0.45） + 常规文字（font-weight 500）</span>
+      </div>
+      <div class="effect-item center">
+        <span class="effect-label">中心按钮</span>
+        <span class="effect-desc">橄榄绿渐变圆钮（linear-gradient(160deg, #4F5E35, #3A4626)） + 白色图标 + 浮起阴影（margin-top: -28px 凸出于 TabBar 之上）</span>
+      </div>
+    </div>
+
+  </section>
+
+
+    <style>
+  /* ============ Design Tokens ============ */
+  :root {
+    --zy-tabbar-item-active: #4F5E35;
+    --zy-tabbar-item-inactive: #9A9489;
+    --zy-tabbar-item-active-bg: rgba(79, 94, 53, 0.08);
+    --zy-accent: #B8893A;
+    --zy-bg-warm: #F8FAF3;
+    --zy-border: #D8DCCE;
+    --zy-dur-base: 250ms;
+    --zy-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --font: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: var(--font);
+    background: #F0F0F0;
+    color: #2A2823;
+    padding: 0 0 60px;
+    min-height: 100vh;
+  }
+
+  /* ============ Page Title ============ */
+  .page-title {
+    font-size: 24px;
+    color: #2A2823;
+    text-align: center;
+    padding: 40px 0;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  /* ============ Mockups Container ============ */
+  .mockups {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+    padding: 0 24px;
+  }
+
+  .mockup-label {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4F5E35;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ============ Phone Mockup ============ */
+  .phone {
+    width: 375px;
+    height: 720px;
+    background: var(--zy-bg-warm);
+    border-radius: 32px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 8px solid #2A2823;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    height: 44px;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .status-bar .time {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2A2823;
+  }
+
+  .status-bar .right-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Content Area */
+  .content-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--zy-bg-warm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .content-placeholder {
+    color: #C8C8C0;
+    font-size: 16px;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  .content-deco {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .content-deco .block {
+    height: 80px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(216, 220, 206, 0.5);
+  }
+
+  .content-deco .block:first-child {
+    height: 120px;
+    background: linear-gradient(135deg, rgba(79, 94, 53, 0.08), rgba(79, 94, 53, 0.03));
+  }
+
+  /* ============ TabBar ============ */
+  .tab-bar {
+    height: 64px;
+    background: #FFFFFF;
+    border-top: 1px solid #D8DCCE;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 20;
+    overflow: visible;
+  }
+
+  .tab-item {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: all var(--zy-dur-base) var(--zy-ease-standard);
+  }
+
+  /* Selected indicator dot */
+  .tab-item.active::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--zy-accent);
+    transition: opacity var(--zy-dur-base) var(--zy-ease-standard);
+  }
+
+  /* Icon wrapper */
+  .icon-wrap {
+    width: 36px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 3px;
+    background: transparent;
+    transition: background var(--zy-dur-base) var(--zy-ease-standard);
+  }
+
+  .tab-item.active .icon-wrap {
+    background: var(--zy-tabbar-item-active-bg);
+  }
+
+  /* Icons */
+  .tab-icon {
+    width: 24px;
+    height: 24px;
+    opacity: 0.45;
+    transition: opacity var(--zy-dur-base) var(--zy-ease-standard), filter var(--zy-dur-base) var(--zy-ease-standard);
+  }
+
+  .tab-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+
+  /* Unselected: dark gray */
+  .tab-icon .icon-fill {
+    fill: #2A2823;
+    transition: fill var(--zy-dur-base) var(--zy-ease-standard);
+  }
+
+  /* Selected: olive green */
+  .tab-item.active .tab-icon {
+    opacity: 1;
+  }
+
+  .tab-item.active .tab-icon .icon-fill {
+    fill: var(--zy-tabbar-item-active);
+  }
+
+  /* Tab text */
+  .tab-text {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--zy-tabbar-item-inactive);
+    line-height: 1;
+    transition: color var(--zy-dur-base) var(--zy-ease-standard), font-weight var(--zy-dur-base) var(--zy-ease-standard);
+  }
+
+  .tab-item.active .tab-text {
+    color: var(--zy-tabbar-item-active);
+    font-weight: 600;
+  }
+
+  /* ============ Center Button ============ */
+  .tab-item-center {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .tab-item-center::after {
+    display: none !important;
+  }
+
+  .center-button {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(160deg, #4F5E35 0%, #3A4626 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-top: -28px;
+    box-shadow: 0 4px 12px rgba(79, 94, 53, 0.30), 0 1.5px 5px rgba(79, 94, 53, 0.18);
+    transition: box-shadow var(--zy-dur-base) var(--zy-ease-standard);
+    overflow: visible;
+  }
+
+  /* Top highlight pseudo-element */
+  .center-button::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 14px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 100%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .center-button-icon {
+    width: 24px;
+    height: 24px;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .center-button-icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+
+  .center-button-text {
+    font-size: 9px;
+    font-weight: 600;
+    color: #FAFAF6;
+    line-height: 1;
+    margin-top: 1px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Center selected: deeper shadow */
+  .tab-item-center.active .center-button {
+    box-shadow: 0 5px 14px rgba(79, 94, 53, 0.38), 0 2px 7px rgba(79, 94, 53, 0.22);
+  }
+
+  /* ============ Specification Section ============ */
+  .spec-section {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 32px;
+    margin: 40px auto;
+    max-width: 900px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  .spec-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2A2823;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #EDEDE8;
+  }
+
+  .spec-subtitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #4F5E35;
+    margin: 24px 0 12px;
+  }
+
+  /* Color Palette */
+  .color-palette {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .color-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .swatch-block {
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .swatch-hex {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2A2823;
+    font-family: "SF Mono", "Fira Code", monospace;
+  }
+
+  .swatch-label {
+    font-size: 11px;
+    color: #9A9489;
+    text-align: center;
+    max-width: 90px;
+  }
+
+  /* Design Tokens */
+  .token-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #FAFAF6;
+    border-radius: 8px;
+    border: 1px solid #F0F0EB;
+  }
+
+  .token-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4F5E35;
+    font-family: "SF Mono", "Fira Code", monospace;
+    white-space: nowrap;
+  }
+
+  .token-value {
+    font-size: 13px;
+    color: #2A2823;
+    font-family: "SF Mono", "Fira Code", monospace;
+    margin-left: auto;
+  }
+
+  /* Effect Description */
+  .effect-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .effect-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border-left: 3px solid;
+  }
+
+  .effect-item.selected {
+    background: rgba(79, 94, 53, 0.05);
+    border-left-color: #4F5E35;
+  }
+
+  .effect-item.unselected {
+    background: rgba(154, 148, 137, 0.05);
+    border-left-color: #9A9489;
+  }
+
+  .effect-item.center {
+    background: rgba(184, 137, 58, 0.05);
+    border-left-color: #B8893A;
+  }
+
+  .effect-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2A2823;
+    white-space: nowrap;
+    min-width: 64px;
+  }
+
+  .effect-desc {
+    font-size: 13px;
+    color: #5A5853;
+    line-height: 1.6;
+  }
+</style>
+</body>
+</html>

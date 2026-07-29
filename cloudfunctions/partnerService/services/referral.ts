@@ -244,7 +244,7 @@ async function getInvitedOpenids(inviterId: string): Promise<string[]> {
       .skip(skip)
       .limit(BATCH)
       .get()
-    const batch = (res.data || []).map((u: { _id?: string }) => u._id).filter((id): id is string => Boolean(id))
+    const batch = (res.data || []).map((u: { _id?: string }) => u._id).filter((id: string | undefined): id is string => Boolean(id))
     ids.push(...batch)
     if (batch.length < BATCH) { break }
     skip += BATCH

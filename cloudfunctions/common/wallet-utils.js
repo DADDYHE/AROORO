@@ -40,16 +40,16 @@ async function ensureWalletBalance(openid, amount, type = 'commission') {
   })
   if (updateRes && updateRes.stats && updateRes.stats.updated > 0) return
 
-  // 2) 钱包不存在（本请求读取时）-> 尝试创建并直接以余额入账。
-  //    唯一索引 (openid,type) 兜底并发：至多一个请求 add 成功。
-  //    并发下其它请求 add 命中 -502001（已被创建并带余额入账）-> 直接返回，绝不再加款，杜绝重复入账。
+  // 2) 钱包不存在（本请求读取时）-> 创建空钱包，再用 inc 入账。
+  //    并发下唯一索引 (openid,type) 兜底：add 命中 -502001 说明已创建，直接走 inc。
+  //    add 成功后也走 inc —— 保证无论哪条路径，金额都通过原子 inc 入账，不丢不重。
   try {
     await db.collection('wallets').add({
       data: {
         openid,
         type,
-        balance: amountNum,
-        totalIncome: amountNum,
+        balance: 0,
+        totalIncome: 0,
         totalWithdrawn: 0,
         frozenAmount: 0,
         status: 'active',
@@ -58,10 +58,17 @@ async function ensureWalletBalance(openid, amount, type = 'commission') {
       },
     })
   } catch (e) {
-    // 唯一索引冲突：并发场景下另一请求已创建并带余额入账，本请求不再加款
-    if (e && e.errCode === -502001) return
-    throw e
+    // 唯一索引冲突：并发场景下另一请求已创建钱包，非致命错误
+    if (e && e.errCode === -502001) { /* fall through to inc */ } else { throw e }
   }
+  // 3) 无论 add 成功还是 -502001 冲突，统一通过原子 inc 入账
+  await db.collection('wallets').where({ openid, type }).update({
+    data: {
+      balance: _.inc(amountNum),
+      totalIncome: _.inc(amountNum),
+      updatedAt: now,
+    },
+  })
 }
 
 module.exports = { ensureWalletBalance, WALLET_TYPES }

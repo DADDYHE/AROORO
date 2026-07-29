@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * auth.ts - 用户身份服务（TypeScript 源文件 - Sprint 37 迁移）

@@ -23,11 +23,6 @@
   border: 2rpx solid var(--gray-200);
   border-top-color: var(--primary-color);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .loading-text {
@@ -144,12 +139,6 @@
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.category-frame:active {
-  transform: scale(0.98);
-  box-shadow: var(--shadow-md);
 }
 
 .frame-accent {
@@ -210,7 +199,7 @@
 
 .activity-dot {
   background: var(--activity-primary);
-  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(79, 94, 53, 0.3);
 }
 
 .boarding-dot {
@@ -288,7 +277,6 @@
   color: var(--text-secondary);
   background: var(--gray-100);
   letter-spacing: var(--letter-spacing-wide);
-  transition: all var(--transition-fast);
 }
 
 .nav-pill.active {
@@ -461,10 +449,6 @@
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
   letter-spacing: var(--letter-spacing-wide);
-}
-
-.load-more:active {
-  color: var(--primary-color);
 }
 
 .end-mark {

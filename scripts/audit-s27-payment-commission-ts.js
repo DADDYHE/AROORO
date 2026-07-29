@@ -103,7 +103,7 @@ check('commission.ts 强类型化 CommissionRecordPayload', /export\s+interface\
 check('commission.ts 包含 createCommissionRecord handler', /export\s+(async\s+)?function\s+createCommissionRecord\b/.test(tsCode || ''))
 check('commission.ts 默认导出 createCommissionRecord', /export\s+default\s+createCommissionRecord/.test(tsCode || ''))
 check('commission.ts 引用 generateId 工具', /generateId/.test(tsCode || ''))
-check('commission.ts 写入 tuan_commissions 集合', /tuan_commissions/.test(tsCode || ''))
+check('commission.ts 写入 commissions 集合', /commissions/.test(tsCode || ''))
 check('commission.ts 读取 system_config.commission_rates', /system_config.*commission_rates|commission_rates.*system_config/s.test(tsCode || ''))
 check('commission.ts 幂等检查（orderId + inviterId）', /orderId[\s\S]{0,80}inviterId[\s\S]{0,80}count|count[\s\S]{0,80}orderId[\s\S]{0,80}inviterId/.test(tsCode || ''))
 check('commission.ts 错误处理使用 catch (error: unknown)', /catch\s*\(\s*\w+\s*:\s*unknown\s*\)/.test(tsCode || ''))

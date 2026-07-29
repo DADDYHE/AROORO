@@ -1,47 +1,72 @@
 /* ================================================================
-   custom-tab-bar/index.wxss · Smart Home Dashboard 风格导航栏（1:1 复刻）
-   2026-07-26 基于 DADDY 智能家居仪表盘参考图
+   custom-tab-bar/index.wxss · AROORO TabBar 选中/未选中效果
+   2026-07-29 基于设计系统令牌重新设计
    ----------------------------------------------------------------
-   参考图特征：
-     浮动白底 + 圆角顶部 + 极淡阴影
-     4 个标签：图标+文字，活跃=深蓝填充圆(白图标)
-     居中大型深蓝圆形按钮（浮动在栏上方）
-     无渐变、无光晕、无动画、极简克制
+   设计系统令牌：
+     选中色 --zy-tabbar-item-active: #4F5E35（橄榄绿）
+     未选中色 --zy-tabbar-item-inactive: #9A9489（暖灰）
+     选中底 --zy-tabbar-item-active-bg: rgba(79, 94, 53, 0.08)
+     点缀金 --zy-accent: #B8893A
+     动效 --zy-dur-base: 250ms / --zy-ease-standard: cubic-bezier(0.4,0,0.2,1)
    ================================================================ */
 
-/* ---- 浮动导航栏容器（海浪起伏顶边，SVG 波形） ---- */
+/* ================================================================
+   AROORO 启动屏覆盖层 — 覆盖全屏（含 tabBar 本身）
+   ================================================================ */
+.splash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 99999;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+}
+
+.splash-overlay.splash-fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash-image {
+  width: 100%;
+  height: 100%;
+}
+
+/* ================================================================
+   导航栏容器 — 纯白底 + 顶部细线
+   ================================================================ */
 .tab-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 160rpx;
-  background: transparent;          /* 波浪形状由 ::before 的 SVG 提供 */
+  height: 128rpx;
+  background: #FFFFFF;
+  border-top: 2rpx solid var(--border-color, #D8DCCE);
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
   padding-top: 12rpx;
-  padding-bottom: 34rpx; /* 安全区 */
+  padding-bottom: env(safe-area-inset-bottom, 0);
   box-sizing: border-box;
   overflow: visible;
 }
 
-/* 海浪起伏顶边（参考图：中间凹弧凹槽 + 两侧隆起） */
 .tab-bar::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 160rpx;
-  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20750%20160'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter%20id='s'%20x='-20%25'%20y='-60%25'%20width='140%25'%20height='220%25'%3E%3CfeDropShadow%20dx='0'%20dy='-4'%20stdDeviation='8'%20flood-color='%231E3A4C'%20flood-opacity='0.10'/%3E%3C/filter%3E%3C/defs%3E%3Cpath%20filter='url(%23s)'%20fill='%23FFFFFF'%20d='M0,160%20L0,48%20Q0,5%2038,5%20C160,5%20250,8%20320,20%20C335,30%20347,55%20375,62%20C403,55%20415,30%20430,20%20C500,8%20590,5%20712,5%20Q750,5%20750,48%20L750,160%20Z'/%3E%3C/svg%3E");
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  z-index: -1;
+  display: none;
 }
 
-/* ---- 标签项 ---- */
+/* ================================================================
+   标签项 — 基础结构
+   ================================================================ */
 .tab-bar-item {
   display: flex;
   flex-direction: column;
@@ -50,55 +75,78 @@
   flex: 1;
   height: 100%;
   position: relative;
-  touch-action: manipulation;
 }
 
-/* 图标容器 - 默认透明圆形占位 */
-.tab-bar-icon-wrap {
-  width: 52rpx;
-  height: 52rpx;
+/* ---- 选中态：顶部金色指示点 ---- */
+.tab-bar-item.active::after {
+  content: '';
+  position: absolute;
+  top: 2rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8rpx;
+  height: 8rpx;
   border-radius: 50%;
+  background: #B8893A;
+  opacity: 1;
+}
+
+/* ================================================================
+   图标包裹层 — 选中态芯片背景
+   ================================================================ */
+.tab-bar-icon-wrap {
+  width: 72rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 6rpx;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
 }
 
-/* 活跃态：深青绿填充圆（跟随主题令牌） */
+/* 选中态：浅橄榄绿芯片底 */
 .tab-bar-item.active .tab-bar-icon-wrap {
-  background: var(--primary-color);
-  box-shadow: 0 4rpx 16rpx rgba(13, 90, 107, 0.3);
-}
-
-.tab-bar-icon {
-  width: 44rpx;
-  height: 44rpx;
-  /* 未活跃：默认图标颜色；活跃时由组件反转或用白色图标 */
-}
-
-.tab-bar-text {
-  font-size: 20rpx;
-  font-weight: 500;
-  color: var(--text-tertiary);               /* 浅灰未选中 */
-  line-height: 1;
-  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 活跃文字色 */
-.tab-bar-item.active .tab-bar-text {
-  color: var(--primary-color);           /* 深青绿 */
-  font-weight: 600;
-}
-
-/* 平滑过渡 */
-.tab-bar-item {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(79, 94, 53, 0.08);
 }
 
 /* ================================================================
-   中心按钮 — 大型深蓝浮动圆钮（参考图居中按钮 1:1）
-   这是全栏唯一的视觉锚点，浮动在 TabBar 上方
+   图标 — 选中/未选中色彩区分
+   ================================================================ */
+.tab-bar-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+/* 未选中：暖灰半透明 */
+.tab-bar-icon {
+  opacity: 0.45;
+}
+
+/* 选中：橄榄绿色调滤镜 */
+.tab-bar-item.active .tab-bar-icon {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(31%) sepia(14%) saturate(647%) hue-rotate(41deg) brightness(94%) contrast(93%);
+}
+
+/* ================================================================
+   文字 — 选中/未选中色彩区分
+   ================================================================ */
+.tab-bar-text {
+  font-size: 20rpx;
+  font-weight: 500;
+  color: #9A9489;
+  line-height: 1;
+}
+
+/* 选中态文字：橄榄绿 + 加粗 */
+.tab-bar-item.active .tab-bar-text {
+  color: #4F5E35;
+  font-weight: 600;
+}
+
+/* ================================================================
+   中心按钮 — 橄榄绿渐变浮动圆钮
    ================================================================ */
 .tab-bar-item-center {
   position: relative;
@@ -106,7 +154,6 @@
   flex: 0 0 0 !important;
 }
 
-/* 禁用中心按钮的默认 ::before/::after */
 .tab-bar-item-center::before,
 .tab-bar-item-center::after {
   display: none !important;
@@ -120,28 +167,14 @@
   width: 104rpx;
   height: 104rpx;
   border-radius: 50%;
-  background: var(--primary-color);                    /* 深青绿（跟随主题） */
+  background: linear-gradient(160deg, #4F5E35 0%, #3A4626 100%);
   position: relative;
   overflow: visible;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow:
-    0 8rpx 28rpx rgba(13, 90, 107, 0.35),
-    0 3rpx 10rpx rgba(13, 90, 107, 0.20);
-  margin-top: -56rpx;                        /* 向上浮出一半 */
+    0 8rpx 24rpx rgba(79, 94, 53, 0.30),
+    0 3rpx 10rpx rgba(79, 94, 53, 0.18);
+  margin-top: -56rpx;
   border: none;
-}
-
-/* 外层柔光晕（静态） */
-.center-button::before {
-  content: '';
-  position: absolute;
-  top: -10rpx;
-  left: -10rpx;
-  right: -10rpx;
-  bottom: -10rpx;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(13, 90, 107, 0.15) 0%, transparent 70%);
-  z-index: -1;
 }
 
 /* 顶部微高光 */
@@ -159,17 +192,9 @@
   pointer-events: none;
 }
 
-.center-button:active {
-  transform: scale(0.90);
-  box-shadow:
-    0 4rpx 16rpx rgba(13, 90, 107, 0.25),
-    0 2rpx 6rpx rgba(13, 90, 107, 0.15);
-}
-
 .center-button-icon {
-  width: 44rpx;
-  height: 44rpx;
-  filter: brightness(0) invert(1);         /* 白色图标 */
+  width: 48rpx;
+  height: 48rpx;
   position: relative;
   z-index: 2;
   margin-bottom: 0;
@@ -178,7 +203,7 @@
 .center-button-text {
   font-size: 18rpx;
   font-weight: 600;
-  color: #FFFFFF;
+  color: #FAFAF6;
   line-height: 1;
   position: relative;
   z-index: 2;
@@ -186,10 +211,9 @@
   margin-top: 2rpx;
 }
 
-/* 活跃态中心按钮保持一致（它本身就是锚点） */
+/* 选中态中心按钮：加深阴影 */
 .tab-bar-item-center.active .center-button {
-  background: var(--primary-color);
   box-shadow:
-    0 10rpx 32rpx rgba(13, 90, 107, 0.40),
-    0 4rpx 14rpx rgba(13, 90, 107, 0.22);
+    0 10rpx 28rpx rgba(79, 94, 53, 0.38),
+    0 4rpx 14rpx rgba(79, 94, 53, 0.22);
 }

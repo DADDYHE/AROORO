@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * paymentService/notify.ts - 微信支付回调服务（TypeScript 源文件 - Sprint 26 迁移）

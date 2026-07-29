@@ -7,16 +7,14 @@
 }
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }
 
 .status-header {
   padding: 48rpx 32rpx 32rpx;
-  background: #fff;
+  background: var(--card-color);
   text-align: center;
 }
 
@@ -54,7 +52,7 @@
 
 .payment-header {
   padding: 32rpx;
-  background: #fff;
+  background: var(--card-color);
 }
 
 .payment-title {
@@ -65,7 +63,7 @@
 
 .order-card {
   margin: 24rpx 32rpx;
-  background: #fff;
+  background: var(--card-color);
   border-radius: 24rpx;
   overflow: hidden;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
@@ -82,7 +80,7 @@
   height: 120rpx;
   border-radius: 16rpx;
   margin-right: 24rpx;
-  background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+  background: linear-gradient(135deg, #e0f2f1 0%, #EAEDDF 100%);
 }
 
 .activity-details {
@@ -123,7 +121,7 @@
 
 .detail-label {
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .detail-value {
@@ -141,7 +139,7 @@
 
 .price-card {
   margin: 24rpx 32rpx;
-  background: #fff;
+  background: var(--card-color);
   border-radius: 24rpx;
   padding: 24rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
@@ -162,7 +160,7 @@
 
 .price-label {
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .price-value {
@@ -187,14 +185,14 @@
   right: 0;
   padding: 24rpx 32rpx;
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-  background: #fff;
+  background: var(--card-color);
   box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.05);
   text-align: center;
 }
 
 .expired-text {
   font-size: 28rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .pay-section {
@@ -204,7 +202,7 @@
   right: 0;
   padding: 24rpx 32rpx;
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-  background: #fff;
+  background: var(--card-color);
   box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.05);
 }
 
@@ -213,7 +211,7 @@
   border: none;
   border-radius: 16rpx;
   padding: 24rpx 0;
-  box-shadow: 0 4rpx 12rpx rgba(78, 205, 196, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(79, 94, 53, 0.3);
 }
 
 .pay-btn::after {
@@ -221,12 +219,12 @@
 }
 
 .pay-btn[disabled] {
-  background: #ccc;
+  background: var(--border-color);
   box-shadow: none;
 }
 
 .pay-btn-text {
   font-size: 32rpx;
   font-weight: 600;
-  color: #fff;
+  color: #FAFAF6;
 }

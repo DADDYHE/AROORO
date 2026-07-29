@@ -25,8 +25,13 @@
  *  14. getOrderDetail - 订单详情
  *  15. cancelOrder - 取消订单
  *  16. confirmReceive - 确认收货
- *  17. deleteOrder - 删除订单
+ *   17. deleteOrder - 删除订单
  *  18. getWxShippingStatus - 查询微信发货状态
+ *
+ * 注：物流轨迹查询已迁移到「微信物流查询插件」官方方案。
+ *     发货时由 adminService.shipMallOrder / tuanService.shipTuanOrder 调
+ *     wxLogistics.traceWaybill 拿 waybillToken 存到订单，
+ *     前端 logistics-card 组件调 plugin.openWaybillTracking({waybillToken}) 拉起原生物流详情页。
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
@@ -45,12 +50,12 @@
  *     - { orderNo: 1 }                              - 覆盖佣金记录查询
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.handlers = exports.getLogisticsTrack = exports.getWxShippingStatus = exports.deleteOrder = exports.confirmReceive = exports.getOrderDetail = exports.cancelOrder = exports.getGroupBuyOrders = exports.getMyOrders = exports.createOrder = exports.createGroupBuyOrder = exports.batchUpdateProducts = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductDetail = exports.checkCartItems = exports.listCategories = exports.getCategoryStats = exports.getProductList = void 0;
+exports.main = exports.handlers = exports.getWxShippingStatus = exports.deleteOrder = exports.confirmReceive = exports.getOrderDetail = exports.cancelOrder = exports.getGroupBuyOrders = exports.getMyOrders = exports.createOrder = exports.createGroupBuyOrder = exports.batchUpdateProducts = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductDetail = exports.checkCartItems = exports.listCategories = exports.getCategoryStats = exports.getProductList = void 0;
 // =====================================================================
 // 内部模块初始化（require CommonJS 模块）
 // =====================================================================
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES, paginate } = require('./common/utils');
+const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES, paginate, escapeRegExp } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -74,9 +79,6 @@ const { createCommissionRecord: sharedCreateCommissionRecord, cancelCommissionRe
 const { reconcileOrderWithWx } = require('./common/wxOrderSync');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { getWxOrderStatus } = require('./common/wxAccessToken');
-// Task 5: 物流轨迹降级拉取（前端 wx.openBusinessView 不可用时使用）
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { getLogisticsPath } = require('./common/wxLogistics');
 const { cloud, db } = initCloud();
 const logger = createLogger('mallService');
 const _ = db.command;
@@ -185,7 +187,7 @@ const PRODUCT_LIST_FIELDS = {
 // Handler 1: getProductList
 // =====================================================================
 async function getProductList(event, _context, _auth) {
-    const { page = 1, pageSize = 10, category, categoryId, status = 'on_sale', isFeatured } = event;
+    const { page = 1, pageSize = 10, category, categoryId, status = 'on_sale', isFeatured, keyword } = event;
     const where = { status };
     if (categoryId) {
         where.categoryId = categoryId;
@@ -195,6 +197,14 @@ async function getProductList(event, _context, _auth) {
     }
     if (isFeatured !== undefined) {
         where.isFeatured = isFeatured;
+    }
+    if (keyword) {
+        const safeKeyword = escapeRegExp(String(keyword).slice(0, 50));
+        where.$or = [
+            { name: db.RegExp({ regexp: safeKeyword, options: 'i' }) },
+            { subTitle: db.RegExp({ regexp: safeKeyword, options: 'i' }) },
+            { category: db.RegExp({ regexp: safeKeyword, options: 'i' }) },
+        ];
     }
     const result = await paginate(db, 'products', {
         page, pageSize, where, projection: PRODUCT_LIST_FIELDS,
@@ -1307,63 +1317,6 @@ async function getWxShippingStatus(event, _context, auth) {
 }
 exports.getWxShippingStatus = getWxShippingStatus;
 // =====================================================================
-// Handler 19: getLogisticsTrack - 获取订单物流轨迹（降级方案）
-// =====================================================================
-//
-// 用途：前端 wx.openBusinessView({businessType:'logisticsDetail'}) 不可用时，
-//      调本接口拉取轨迹自建展示。
-// 入参：{ orderId: string }
-// 返回：{ code, data: { expressCompany, expressNo, track: [{time, desc}] } }
-// 权限：仅订单所有者可查
-async function getLogisticsTrack(event, _context, auth) {
-    const { openid } = auth;
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const { orderId } = event;
-    if (!orderId) {
-        throw err('INVALID_PARAMS', '缺少订单ID');
-    }
-    try {
-        const orderRes = await db.collection('orders').doc(orderId).get();
-        const orderData = orderRes.data;
-        if (!orderData || orderData.ownerId !== openid) {
-            throw err('PERMISSION_DENIED', '无权限查看此订单');
-        }
-        const expressCompany = orderData.expressCompany || '';
-        const expressNo = orderData.expressNo || '';
-        if (!expressCompany || !expressNo) {
-            return handleSuccess({
-                expressCompany: '',
-                expressNo: '',
-                track: [],
-            }, '该订单暂无物流信息');
-        }
-        const wxRes = await getLogisticsPath({ expressCompany, expressNo });
-        if (!wxRes.ok || !wxRes.data) {
-            // 降级：返回空轨迹，但 expressCompany / expressNo 仍透传给前端展示
-            logger.warn('getLogisticsTrack.getPathFail', {
-                orderId, expressCompany, expressNo, error: wxRes.error,
-            });
-            return handleSuccess({
-                expressCompany,
-                expressNo,
-                track: [],
-            }, wxRes.error || '暂无轨迹');
-        }
-        return handleSuccess({
-            expressCompany,
-            expressNo,
-            track: wxRes.data,
-        }, '获取成功');
-    }
-    catch (error) {
-        logger.error('getLogisticsTrack', error);
-        return handleError(error, '获取物流轨迹失败', ERROR_CODES.SERVER);
-    }
-}
-exports.getLogisticsTrack = getLogisticsTrack;
-// =====================================================================
 // 入口聚合：handlers 路由表
 // =====================================================================
 exports.handlers = {
@@ -1385,7 +1338,6 @@ exports.handlers = {
     confirmReceive,
     deleteOrder,
     getWxShippingStatus,
-    getLogisticsTrack,
 };
 // =====================================================================
 // Main 入口（云函数调用）

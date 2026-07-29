@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * paymentService/refund.ts - 退款服务（TypeScript 源文件 - Sprint 24 迁移）

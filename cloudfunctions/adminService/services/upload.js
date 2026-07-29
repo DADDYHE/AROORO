@@ -106,5 +106,10 @@ const getTempFileUrls = async (event, _context, _auth) => {
 
 /* ============================================================
  * 默认导出（CommonJS 兼容）
+ *   与其他 service 保持一致：module.exports 直接指向 handlers 对象，
+ *   这样 index.js 中 `...require('./services/upload')` 才能正确展开。
  * ============================================================ */
-exports.default = { uploadFile, getTempFileUrls };
+const _handlers = { uploadFile, getTempFileUrls };
+module.exports = _handlers;
+module.exports.default = _handlers;
+exports.default = _handlers;

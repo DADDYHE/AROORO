@@ -1,0 +1,55 @@
+{
+  "slug": "search-bar",
+  "schemaVersion": 2,
+  "name": "Search Bar",
+  "category": "input",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["search-input", "app-bar-top", "combobox-trigger"],
+  "variantDimensions": [
+    {"axis": "state", "values": ["default", "focused", "with-notification"]},
+    {"axis": "layout", "values": ["search-with-avatar", "search-only"]}
+  ],
+  "representativeVariants": [
+    {
+      "id": "default",
+      "name": "Default search + avatar",
+      "whySelected": "Most frequent top-of-page pattern across browse and home screens.",
+      "traits": {"radius": "--radius-pill", "height": "--size-input", "background": "--color-card", "shadow": "--shadow-2", "border": "none", "placeholderColor": "--color-muted-foreground", "iconColor": "--color-muted-foreground", "avatarSize": "--size-avatar-md", "avatarRadius": "--radius-pill", "padding": "var(--space-2) var(--space-4)"},
+      "childrenDigest": "pill search input (icon + placeholder) on left expanding; circular avatar 40px on right; warm cream card surface with soft diffuse shadow."
+    },
+    {
+      "id": "with-notification",
+      "name": "Search + avatar with notification badge",
+      "whySelected": "Mirrors reference hero screen '20 new arrivals' badge; used on home/landing.",
+      "traits": {"radius": "--radius-pill", "height": "--size-input", "background": "--color-card", "shadow": "--shadow-2", "badgeBackground": "--color-primary", "badgeForeground": "#FFFFFF", "badgeRadius": "--radius-pill", "badgePadding": "var(--space-1) var(--space-3)"},
+      "childrenDigest": "same search + avatar; a coral pill notification badge floats over the avatar top-right showing '20款新品'."
+    },
+    {
+      "id": "focused",
+      "name": "Focused search",
+      "whySelected": "Shows input active state with ring.",
+      "traits": {"radius": "--radius-pill", "height": "--size-input", "background": "--color-surface", "ring": "var(--primary-600)", "shadow": "--shadow-1", "iconColor": "--color-primary"},
+      "childrenDigest": "search input highlighted with coral ring + coral-tinted icon; avatar hidden to give input full width."
+    }
+  ],
+  "anatomy": [
+    {"part": "container", "role": "horizontal app bar row, generous side padding"},
+    {"part": "search-input", "role": "pill input with leading search icon + placeholder"},
+    {"part": "avatar", "role": "circular user/pet avatar, right-aligned"},
+    {"part": "notification-badge", "role": "optional coral pill badge over avatar"}
+  ],
+  "structurePatterns": ["flex row align-center gap-3", "input flex-1", "avatar fixed 40px"],
+  "usageHints": {"priorityHint": "high", "where": "page top on home, browse, category screens"},
+  "doNotInvent": ["dropdown results", "voice search", "filter sheet"],
+  "unknowns": ["exact avatar image asset — use warm gradient placeholder"],
+  "keyInsightSeed": "顶部搜索栏：蜜桃软阴影胶囊输入框 + 圆形头像槽 + 通知徽标",
+  "sourceSignals": {"uiCopySamples": ["搜索 主粮、玩具、洗护…", "20款新品", "主粮", "玩具"]},
+  "visualSpecs": {
+    "primary": {"radius": "--radius-pill", "height": "48px", "background": "--color-card", "shadow": "--shadow-2", "placeholder": "--color-muted-foreground", "iconSize": "--size-icon-md"},
+    "sizes": [{"label": "md", "height": "--size-input", "avatar": "--size-avatar-md"}],
+    "states": [{"state": "default", "shadow": "--shadow-2"}, {"state": "focused", "ring": "var(--primary-600)", "shadow": "--shadow-1"}],
+    "variants": [{"variant": "with-notification", "badge": "coral pill"}]
+  },
+  "renderPlan": {"samples": ["default", "with-notification", "focused"]}
+}

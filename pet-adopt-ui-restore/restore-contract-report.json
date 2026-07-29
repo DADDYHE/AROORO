@@ -1,0 +1,87 @@
+{
+  "success": true,
+  "mode": "preflight",
+  "errors": [],
+  "warnings": [],
+  "evidence": {
+    "sourceType": "image",
+    "measuredSourceFactsCount": 15,
+    "highPriorityMeasuredSourceFactsCount": 10,
+    "highPriorityFactsWithMeasurementBasis": 10,
+    "restoreVisualCheckpointsCount": 12,
+    "highPriorityCheckpointCount": 8,
+    "sourceRegionCoverageSource": "project.sourceRegionCoverage",
+    "sourceRegionCoverageCount": 8,
+    "requiredRegionGroups": [
+      "outer-frame",
+      "device-shell",
+      "inner-screen",
+      "primary-object"
+    ],
+    "cssFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+    "brandPrefix": "pa",
+    "cssHash": "e5646c945228880a3723eee341b4242a68e53abe35a231e1323f2d9ac3f25960"
+  },
+  "checkedAt": "2026-07-26T15:16:07.168Z",
+  "designDir": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore",
+  "summaryPath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/runtime-orchestration-summary.json",
+  "fixPlan": [
+    {
+      "safe": true,
+      "field": "project.sourceRegionCoverage[0].mappedStatus",
+      "action": "set-if-missing",
+      "value": "intentionally-deviated",
+      "reason": "mappedStatus can be normalized from status alias"
+    },
+    {
+      "safe": true,
+      "field": "project.sourceRegionCoverage[1].mappedStatus",
+      "action": "set-if-missing",
+      "value": "mapped",
+      "reason": "mappedStatus can be normalized from status alias"
+    },
+    {
+      "safe": true,
+      "field": "project.sourceRegionCoverage[2].mappedStatus",
+      "action": "set-if-missing",
+      "value": "mapped",
+      "reason": "mappedStatus can be normalized from status alias"
+    },
+    {
+      "safe": true,
+      "field": "project.sourceRegionCoverage[3].mappedStatus",
+      "action": "set-if-missing",
+      "value": "mapped",
+      "reason": "mappedStatus can be normalized from status alias"
+    },
+    {
+      "safe": true,
+      "field": "project.sourceRegionCoverage[4].mappedStatus",
+      "action": "set-if-missing",
+      "value": "mapped",
+      "reason": "mappedStatus can be normalized from status alias"
+    },
+    {
+      "safe": true,
+      "field": "project.sourceRegionCoverage[5].mappedStatus",
+      "action": "set-if-missing",
+      "value": "mapped",
+      "reason": "mappedStatus can be normalized from status alias"
+    },
+    {
+      "safe": true,
+      "field": "project.sourceRegionCoverage[6].mappedStatus",
+      "action": "set-if-missing",
+      "value": "mapped",
+      "reason": "mappedStatus can be normalized from status alias"
+    },
+    {
+      "safe": true,
+      "field": "project.sourceRegionCoverage[7].mappedStatus",
+      "action": "set-if-missing",
+      "value": "mapped",
+      "reason": "mappedStatus can be normalized from status alias"
+    }
+  ],
+  "appliedFixes": []
+}

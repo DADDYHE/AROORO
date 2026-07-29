@@ -87,7 +87,7 @@ describe('Sprint 46: couponExpiryCheck TypeScript 迁移', () => {
     })
     // M3: 接入告警
     test('M3: recordAlert 接入', () => {
-      expect(code).toMatch(/require\(['"]\.\.\/common\/alert['"]\)/)
+      expect(code).toMatch(/require\(['"]\.\/common\/alert['"]\)/)
       expect(code).toMatch(/recordAlert\(['"]critical['"]/)
     })
     // L2: 并发保护
@@ -108,7 +108,7 @@ describe('Sprint 46: couponExpiryCheck TypeScript 迁移', () => {
     let pkg
     beforeAll(() => { pkg = JSON.parse(readFileSafe(path.join(ROOT, 'package.json'))) })
     test('audit', () => { expect(pkg.scripts['audit:s46-coupon-expiry-check-ts']).toBe('node scripts/audit-s46-coupon-expiry-check-ts.js') })
-    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:s46-batch-services-ts:strict/) })
+    test('ci:check', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/) })
   })
 
   describe('8. audit 脚本', () => {

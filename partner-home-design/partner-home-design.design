@@ -1,16 +1,38 @@
 {
-  "data": [],
+  "data": [
+    {
+      "id": "image-001",
+      "title": "AROORO 小程序开屏图",
+      "type": "image",
+      "version": 5,
+      "createdAt": 1785254336000,
+      "canvasData": {
+        "x": 0,
+        "y": 289
+      },
+      "devMetadata": {
+        "imageSrc": "assets/arooro-splash-gucci-style.jpg"
+      }
+    },
+    {
+      "id": "page-tabbar-effects",
+      "title": "TabBar 选中/未选中效果设计",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785772800000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/tabbar-effects.html"
+      }
+    }
+  ],
   "config": {
     "autoLayout": true,
-    "deviceType": "mobile",
-    "projectName": "合作伙伴管理中心",
-    "designLibrary": {
-      "name": "苹果",
-      "id": "dl_builtin_apple",
-      "version": null,
-      "scope": "built-in-global",
-      "path": "/Users/yy/.trae-cn/design_libraries/dl_builtin_apple",
-      "versionSource": "metadata.json"
-    }
+    "deviceType": "freeSize",
+    "projectName": "AROORO 开屏设计"
   }
 }

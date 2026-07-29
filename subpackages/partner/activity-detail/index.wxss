@@ -169,7 +169,6 @@
 .participant-fill {
   height: 100%;
   border-radius: 4rpx;
-  transition: width 0.3s;
 }
 
 .contact-info {
@@ -263,7 +262,7 @@
 
 .action-btn-status {
   background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  box-shadow: 0 4rpx 16rpx rgba(78, 205, 196, 0.3);
+  box-shadow: 0 4rpx 16rpx rgba(79, 94, 53, 0.3);
 }
 
 .action-btn-status .action-btn-text {

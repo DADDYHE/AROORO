@@ -19,6 +19,6 @@ export type OrderTypeKey = typeof ORDER_TYPES[number];
 export declare const ORDER_TYPE_NAMES: Record<OrderTypeKey, string>;
 declare const _default: {
     ORDER_TYPES: readonly ["mall", "boarding", "feeding", "tuan", "activity"];
-    ORDER_TYPE_NAMES: Record<"mall" | "boarding" | "feeding" | "tuan" | "activity", string>;
+    ORDER_TYPE_NAMES: Record<"activity" | "tuan" | "boarding" | "feeding" | "mall", string>;
 };
 export default _default;

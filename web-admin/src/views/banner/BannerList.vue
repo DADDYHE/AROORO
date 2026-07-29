@@ -161,12 +161,13 @@ function onUploadError() {
 }
 
 async function customUpload(options) {
-  const { file, onSuccess, onError } = options
+  const { file } = options
   try {
     const result = await uploadFile(file, `banners/${Date.now()}_${file.name}`)
-    onSuccess({ code: 0, data: result })
+    return { code: 0, data: result }
   } catch (err) {
-    onError(err)
+    ElMessage.error(err?.message || '上传失败')
+    throw err
   }
 }
 

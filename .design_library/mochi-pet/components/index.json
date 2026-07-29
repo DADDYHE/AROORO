@@ -1,0 +1,10 @@
+{
+  "components": [
+    {"slug":"search-bar","name":"Search Bar","category":"input","sourceKind":"from-scratch","confidence":"medium","variantCount":3,"priorityHint":"high","keyInsightSeed":"顶部搜索栏：蜜桃软阴影胶囊输入框 + 圆形头像槽 + 通知徽标"},
+    {"slug":"category-tab","name":"Category Tab","category":"navigation","sourceKind":"from-scratch","confidence":"medium","variantCount":3,"priorityHint":"high","keyInsightSeed":"分类标签：选中珊瑚实色胶囊 + 未选柔奶油描边，横向滚动"},
+    {"slug":"product-card","name":"Product Card","category":"card","sourceKind":"from-scratch","confidence":"medium","variantCount":4,"priorityHint":"high","keyInsightSeed":"商品卡片：大图优先 + 超大圆角 24px + 软弥散阴影 + 悬浮标签"},
+    {"slug":"option-selector","name":"Option Selector","category":"input","sourceKind":"from-scratch","confidence":"medium","variantCount":3,"priorityHint":"medium","keyInsightSeed":"规格选择器：颜色圆点（选中描边环）+ 规格/口味胶囊"},
+    {"slug":"cart-button","name":"Cart Button","category":"button","sourceKind":"from-scratch","confidence":"medium","variantCount":4,"priorityHint":"high","keyInsightSeed":"加入购物车：主珊瑚实色 CTA + 悬浮价签胶囊 + 图标按钮"},
+    {"slug":"price-display","name":"Price Display","category":"display","sourceKind":"from-scratch","confidence":"medium","variantCount":4,"priorityHint":"high","keyInsightSeed":"价格组件：珊瑚强调 + 划线原价 + 单位说明文字"}
+  ]
+}

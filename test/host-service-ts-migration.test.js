@@ -258,8 +258,8 @@ describe('Sprint 42: hostService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s42-host-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s42-host-service-ts:strict/)
+    test('ci:check 包含 audit:all:strict', () => {
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
     })
   })
 

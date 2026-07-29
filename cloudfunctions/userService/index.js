@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * userService/index.ts - 用户服务主入口（TypeScript 源文件 - Sprint 34 迁移）

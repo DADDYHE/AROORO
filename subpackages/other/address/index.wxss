@@ -24,12 +24,6 @@ page {
   border: 1rpx solid rgba(134, 134, 139, 0.1);
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.address-item:active {
-  transform: translateY(2rpx);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
 }
 
 .address-item-default {
@@ -105,11 +99,6 @@ page {
   color: var(--text-secondary);
   margin-right: 32rpx;
   padding: 4rpx 0;
-  transition: color 0.2s ease;
-}
-
-.address-action-edit:active {
-  color: var(--text-primary);
 }
 
 .address-action-set-default {
@@ -118,11 +107,6 @@ page {
   color: var(--mall-primary);
   margin-right: 32rpx;
   padding: 4rpx 0;
-  transition: color 0.2s ease;
-}
-
-.address-action-set-default:active {
-  color: var(--mall-secondary);
 }
 
 .address-action-delete {
@@ -130,11 +114,6 @@ page {
   font-weight: 500;
   color: var(--error-color);
   padding: 4rpx 0;
-  transition: color 0.2s ease;
-}
-
-.address-action-delete:active {
-  color: #D32F2F;
 }
 
 .address-empty {
@@ -189,12 +168,6 @@ page {
   justify-content: center;
   letter-spacing: 2rpx;
   box-shadow: 0 6rpx 16rpx rgba(156, 39, 176, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.add-btn:active {
-  transform: scale(0.98);
-  box-shadow: 0 4rpx 12rpx rgba(156, 39, 176, 0.3);
 }
 
 .add-btn-icon {
@@ -234,18 +207,6 @@ page {
   overflow-y: auto;
   position: relative;
   z-index: 210;
-  animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
 }
 
 .address-popup-content::before {
@@ -283,12 +244,6 @@ page {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.address-popup-close:active {
-  background: var(--divider-color);
-  color: var(--text-primary);
 }
 
 .address-popup-form {
@@ -321,14 +276,7 @@ page {
   border-radius: 16rpx;
   padding: 0 20rpx;
   box-sizing: border-box;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--surface-tint);
-}
-
-.form-input:focus {
-  border-color: var(--mall-primary);
-  box-shadow: 0 0 0 4rpx rgba(156, 39, 176, 0.08);
-  background: var(--card-color);
 }
 
 .form-region-picker-wrapper {
@@ -350,12 +298,6 @@ page {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.form-region-picker:active {
-  border-color: var(--mall-primary);
-  background: var(--card-color);
 }
 
 .form-region-picker.placeholder {
@@ -374,13 +316,6 @@ page {
   box-sizing: border-box;
   line-height: 1.5;
   background: var(--surface-tint);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.form-textarea:focus {
-  border-color: var(--mall-primary);
-  box-shadow: 0 0 0 4rpx rgba(156, 39, 176, 0.08);
-  background: var(--card-color);
 }
 
 .form-switch {
@@ -403,7 +338,6 @@ page {
   font-weight: 600;
   border-radius: 20rpx;
   letter-spacing: 2rpx;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -418,10 +352,6 @@ page {
   border: none;
 }
 
-.address-popup-button-cancel:active {
-  background: var(--gray-200);
-}
-
 .address-popup-button-save {
   background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
   color: var(--card-color);
@@ -429,27 +359,14 @@ page {
   box-shadow: 0 6rpx 16rpx rgba(156, 39, 176, 0.3);
 }
 
-.address-popup-button-save:active {
-  transform: scale(0.98);
-  box-shadow: 0 4rpx 12rpx rgba(156, 39, 176, 0.3);
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(24rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .address-item {
-  animation: fadeUp 0.5s ease-out both;
 }
 
-.address-item:nth-child(1) { animation-delay: 0.1s; }
-.address-item:nth-child(2) { animation-delay: 0.2s; }
-.address-item:nth-child(3) { animation-delay: 0.3s; }
-.address-item:nth-child(4) { animation-delay: 0.4s; }
+.address-item:nth-child(1) {
+}
+.address-item:nth-child(2) {
+}
+.address-item:nth-child(3) {
+}
+.address-item:nth-child(4) {
+}

@@ -25,7 +25,7 @@ const orderCancelBehavior = Behavior({
       wx.showModal({
         title: '确认取消',
         content: '确定要取消该订单吗？取消后不可恢复。',
-        confirmColor: '#FF3B30',
+        confirmColor: '#A85B4A',
         success: async (res) => {
           if (!res.confirm) {return}
           try {

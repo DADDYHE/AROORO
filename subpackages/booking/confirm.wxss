@@ -42,7 +42,6 @@
   font-family: 'Arial Black', 'Arial Bold', sans-serif;
   line-height: 1;
   text-shadow: 2rpx 2rpx 4rpx rgba(0, 0, 0, 0.1);
-  animation: fade-in 0.8s ease-out;
 }
 
 /* 页面标题 */
@@ -54,7 +53,6 @@
   line-height: 1.2;
   text-transform: uppercase;
   text-shadow: 1rpx 1rpx 2rpx rgba(0, 0, 0, 0.1);
-  animation: slide-up 0.8s ease-out 0.2s both;
 }
 
 .page-content {
@@ -74,10 +72,8 @@
   padding: 0;
   margin-bottom: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  animation: sectionSlideIn 0.8s ease-out both;
 }
 
 .info-card::before {
@@ -114,13 +110,6 @@
   align-items: center;
   padding: 36rpx 32rpx;
   border-bottom: 1rpx solid #f5f7fa;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.info-item:active {
-  background-color: rgba(0, 0, 0, 0.02);
-  transform: translateX(10rpx);
 }
 
 .info-item:last-child {
@@ -157,12 +146,6 @@
   background: linear-gradient(135deg, #ff9a9e, #fecfef, #a8edea, #fed6e3);
   border-radius: 50%;
   opacity: 0;
-  transition: all 0.3s ease;
-}
-
-.interaction-item:active::after {
-  opacity: 0.1;
-  transform: translateY(-50%) scale(1.2);
 }
 
 /* 带箭头的值 */
@@ -173,12 +156,6 @@
   padding: 12rpx 16rpx;
   background-color: #f5f7fa;
   border-radius: 12rpx;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.value-with-arrow:active {
-  background-color: #e6e8eb;
-  transform: scale(0.98);
 }
 
 .value-with-arrow .arrow {
@@ -186,23 +163,18 @@
   color: #c8c9cc;
   margin-left: 8rpx;
   font-weight: 300;
-  transition: transform 0.3s ease;
-}
-
-.value-with-arrow:active .arrow {
-  transform: translateX(4rpx);
 }
 
 .value-weekday {
   font-size: 26rpx;
-  color: #999999;
+  color: var(--text-tertiary);
   margin-left: 4rpx;
   font-weight: 400;
 }
 
 .value-empty {
   font-size: 30rpx;
-  color: #cccccc;
+  color: var(--text-tertiary);
   font-weight: 400;
 }
 
@@ -212,7 +184,7 @@
   justify-content: center;
   align-items: center;
   padding: 60rpx 32rpx;
-  color: #999999;
+  color: var(--text-tertiary);
   font-size: 28rpx;
   background-color: #f5f7fa;
   border-radius: 16rpx;
@@ -227,12 +199,6 @@
   align-items: center;
   padding: 28rpx 32rpx;
   border-bottom: 1rpx solid #f5f7fa;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.pet-item:active {
-  background-color: #f5f7fa;
-  transform: translateX(10rpx);
 }
 
 .pet-item:last-child {
@@ -247,27 +213,16 @@
   overflow: hidden;
   flex-shrink: 0;
   border: 3rpx solid #f0f0f0;
-  background-color: #f5f5f5;
+  background-color: var(--background-color);
   box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.1);
   position: relative;
-  transition: all 0.3s ease;
   margin-right: 28rpx;
-}
-
-.avatar-container:hover {
-  transform: scale(1.02);
-  box-shadow: 0 12rpx 35rpx rgba(0, 0, 0, 0.15);
 }
 
 .pet-image {
   width: 100%;
   height: 100%;
   display: block;
-  transition: transform 0.5s ease;
-}
-
-.avatar-container:hover .pet-image {
-  transform: scale(1.05);
 }
 
 .pet-info {
@@ -301,11 +256,6 @@
   align-items: center;
   padding: 32rpx;
   border-bottom: 1rpx solid #f5f7fa;
-  transition: all 0.3s ease;
-}
-
-.price-item:active {
-  background-color: #f5f7fa;
 }
 
 .price-item:last-child {
@@ -322,7 +272,7 @@
 /* 天数提示 */
 .days-hint {
   font-size: 24rpx;
-  color: #999999;
+  color: var(--text-tertiary);
   font-weight: 400;
   letter-spacing: 1rpx;
 }
@@ -333,11 +283,6 @@
   margin: 16rpx 32rpx 24rpx;
   padding: 40rpx 32rpx;
   border: 1rpx solid rgba(255, 154, 158, 0.1);
-  transition: all 0.3s ease;
-}
-
-.price-item.total:active {
-  transform: scale(0.98);
 }
 
 .price-item.total .label {
@@ -371,7 +316,6 @@
   align-items: center;
   z-index: 100;
   box-shadow: 0 -8rpx 32rpx rgba(0, 0, 0, 0.08);
-  animation: slide-up 0.8s ease-out 0.4s both;
 }
 
 .price-info {
@@ -417,12 +361,9 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 8rpx 24rpx rgba(255, 154, 158, 0.3);
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
   text-transform: uppercase;
-  cursor: pointer;
-  user-select: none;
 }
 
 .confirm-btn::before {
@@ -433,21 +374,6 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s;
-}
-
-.confirm-btn:hover::before {
-  left: 100%;
-}
-
-.confirm-btn:hover {
-  transform: translateY(-2rpx);
-  box-shadow: 0 12rpx 32rpx rgba(255, 154, 158, 0.4);
-}
-
-.confirm-btn:active {
-  transform: translateY(2rpx);
-  box-shadow: 0 4rpx 12rpx rgba(255, 154, 158, 0.4);
 }
 
 /* 页面内容底部预留空间 */
@@ -458,11 +384,9 @@
 /* 加载动画 */
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }
 
 .loading-more {
@@ -481,38 +405,8 @@
 }
 
 /* 动画效果 */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes sectionSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 /* 响应式设计 */
 @media screen and (max-width: 750rpx) {
@@ -648,7 +542,7 @@
 .service-tag {
   font-size: 22rpx;
   color: var(--activity-primary);
-  background: rgba(78, 205, 196, 0.1);
+  background: rgba(79, 94, 53, 0.1);
   padding: 4rpx 12rpx;
   border-radius: 8rpx;
   font-weight: 500;
@@ -656,7 +550,7 @@
 
 .pet-service-dates {
   font-size: 22rpx;
-  color: #999999;
+  color: var(--text-tertiary);
   margin-top: 4rpx;
   line-height: 1.4;
 }
@@ -674,7 +568,7 @@
 
 .sub-label {
   font-size: 26rpx;
-  color: #999999;
+  color: var(--text-tertiary);
 }
 
 .sub-value {

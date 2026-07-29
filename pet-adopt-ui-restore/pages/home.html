@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home — Hi Taban</title>
+    <style id="theme-vars">
+/* ============================================================
+   Pet Adoption App — Restore 1:1 Design Tokens
+   Brand prefix: pa  |  Source: user-provided 3-screen mockup
+   ============================================================ */
+
+:root {
+  /* ---- Surfaces ---- */
+  --pa-background: #FFFFFF;       /* sampled: app screen background */
+  --pa-foreground: #1A1A1A;       /* sampled: primary text / selected pill fill */
+  --pa-card: #FFFFFF;             /* sampled: onboarding bottom-sheet, cards */
+  --pa-border: #E0E0E0;           /* sampled: input borders, divider lines */
+
+  /* ---- Brand ---- */
+  --pa-primary: #C2185B;          /* sampled: CTA buttons + Sign in header (deep magenta) */
+  --pa-primary-soft: rgba(194, 24, 91, 0.25); /* derived: CTA glow shadow */
+
+  /* ---- Accents ---- */
+  --pa-paw-red: #E53935;          /* sampled: red paw print branding icons */
+  --pa-card-coral: #FF8A80;       /* sampled: home circular product card bg */
+  --pa-card-coral-deep: #FF6B6B;  /* sampled: deeper coral ring on product cards */
+  --pa-success: #4CAF50;          /* sampled: email validation checkmark */
+
+  /* ---- Text ---- */
+  --pa-muted: #9E9E9E;            /* sampled: subtext, placeholder, divider label */
+  --pa-on-primary: #FFFFFF;       /* sampled: text on magenta / black fills */
+
+  /* ---- Radii ---- */
+  --pa-radius-sm: 12px;
+  --pa-radius-md: 16px;           /* input fields */
+  --pa-radius-lg: 24px;           /* large cards */
+  --pa-radius-pill: 30px;         /* CTA buttons */
+  --pa-radius-card-top: 32px;     /* onboarding bottom-sheet top corners */
+  --pa-radius-circle: 50%;        /* avatars, circular product cards */
+
+  /* ---- Shadows ---- */
+  --pa-shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --pa-shadow-sheet: 0 -8px 24px rgba(0, 0, 0, 0.08);
+  --pa-shadow-cta: 0 8px 20px rgba(194, 24, 91, 0.25);
+  --pa-shadow-float: 0 6px 18px rgba(0, 0, 0, 0.12);
+
+  /* ---- Typography ---- */
+  --pa-font-sans: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --pa-fs-signin-header: 28px;
+  --pa-fs-headline: 26px;
+  --pa-fs-greeting-name: 20px;
+  --pa-fs-section-title: 18px;
+  --pa-fs-price: 16px;
+  --pa-fs-body: 14px;
+  --pa-fs-greeting-sub: 13px;
+  --pa-fs-link: 14px;
+  --pa-fs-divider: 12px;
+  --pa-fs-badge: 10px;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--pa-background);
+    --color-foreground: var(--pa-foreground);
+    --color-card: var(--pa-card);
+    --color-primary: var(--pa-primary);
+    --color-muted: var(--pa-muted);
+    --color-border: var(--pa-border);
+    --radius-sm: var(--pa-radius-sm);
+    --radius-md: var(--pa-radius-md);
+    --radius-lg: var(--pa-radius-lg);
+  }
+  @layer base {
+    body { background: var(--pa-background); color: var(--pa-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--pa-background); }
+      .text-background { color: var(--pa-background); }
+      .border-background { border-color: var(--pa-background); }
+      .ring-background { --tw-ring-color: var(--pa-background); }
+      .bg-foreground { background-color: var(--pa-foreground); }
+      .text-foreground { color: var(--pa-foreground); }
+      .border-foreground { border-color: var(--pa-foreground); }
+      .ring-foreground { --tw-ring-color: var(--pa-foreground); }
+      .bg-card { background-color: var(--pa-card); }
+      .text-card { color: var(--pa-card); }
+      .border-card { border-color: var(--pa-card); }
+      .ring-card { --tw-ring-color: var(--pa-card); }
+      .bg-primary { background-color: var(--pa-primary); }
+      .text-primary { color: var(--pa-primary); }
+      .border-primary { border-color: var(--pa-primary); }
+      .ring-primary { --tw-ring-color: var(--pa-primary); }
+      .bg-muted { background-color: var(--pa-muted); }
+      .text-muted { color: var(--pa-muted); }
+      .border-muted { border-color: var(--pa-muted); }
+      .ring-muted { --tw-ring-color: var(--pa-muted); }
+      .bg-border { background-color: var(--pa-border); }
+      .text-border { color: var(--pa-border); }
+      .border-border { border-color: var(--pa-border); }
+      .ring-border { --tw-ring-color: var(--pa-border); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+      <div class="phone">
+        <!-- Status bar -->
+        <div id="status-bar">
+          <span class="sb-time">9:41</span>
+          <div class="sb-icons">
+            <!-- cellular signal -->
+            <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor" aria-hidden="true">
+              <rect x="0" y="8" width="3" height="4" rx="0.6"/>
+              <rect x="5" y="6" width="3" height="6" rx="0.6"/>
+              <rect x="10" y="3" width="3" height="9" rx="0.6"/>
+              <rect x="15" y="0" width="3" height="12" rx="0.6"/>
+            </svg>
+            <!-- wifi -->
+            <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" aria-hidden="true">
+              <path d="M8.5 0C5.5 0 2.7 1.15 0.6 3.05l1.4 1.5C3.9 2.8 6.1 1.9 8.5 1.9s4.6.9 6.5 2.65l1.4-1.5C14.3 1.15 11.5 0 8.5 0z"/>
+              <path d="M8.5 3.9c-2 0-3.9.8-5.3 2.1l1.4 1.5c1.1-1 2.5-1.6 3.9-1.6s2.8.6 3.9 1.6l1.4-1.5C12.4 4.7 10.5 3.9 8.5 3.9z"/>
+              <path d="M8.5 7.7c-1 0-2 .4-2.7 1.1L8.5 11.5l2.7-2.7c-.7-.7-1.7-1.1-2.7-1.1z"/>
+            </svg>
+            <!-- battery -->
+            <svg width="27" height="13" viewBox="0 0 27 13" fill="none" aria-hidden="true">
+              <rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="currentColor" stroke-opacity="0.4"/>
+              <rect x="2" y="2" width="19" height="9" rx="2" fill="currentColor"/>
+              <rect x="24" y="4.5" width="2" height="4" rx="1" fill="currentColor" fill-opacity="0.4"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Dynamic Island -->
+        <div id="dynamic-island"></div>
+
+        <!-- Header -->
+        <div id="header">
+          <div id="hamburger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </div>
+          <div id="greeting">
+            <span class="g-name">Hi Taban 🙌</span>
+            <span class="g-sub">Good Morning!!</span>
+          </div>
+          <img id="avatar" src="../assets/avatar-taban.jpg" alt="Taban avatar">
+          <div id="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+        </div>
+
+        <!-- Category row -->
+        <div id="category-row">
+          <div class="pill all">All</div>
+          <div class="pill outline">Cat</div>
+          <div class="pill outline">Dog</div>
+          <div class="pill outline">Bird</div>
+        </div>
+
+        <!-- Featured section -->
+        <div id="featured-section">
+          <div class="cards-row">
+            <div id="card-familiar" class="feat-card">
+              <div class="feat-circle">
+                <img src="../assets/dog-familiar.jpg" alt="Familiar Dog">
+              </div>
+              <span class="feat-label">Familiar Dog</span>
+              <span class="feat-sub">Half white Color</span>
+              <span class="feat-price">$140.00</span>
+            </div>
+            <div id="card-soft" class="feat-card">
+              <div class="feat-circle">
+                <img src="../assets/dog-soft.jpg" alt="Soft Dog">
+              </div>
+              <span class="feat-label">Soft Dog</span>
+              <span class="feat-sub">White Color</span>
+              <span class="feat-price">$241.99</span>
+            </div>
+          </div>
+          <div id="see-more">
+            <div class="see-more-pill">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="9" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9" r="2.2"/><path d="M12 11c-3 0-5 2.5-5 5 0 2 1.5 3 3 3 .8 0 1.3-.3 2-.3s1.2.3 2 .3c1.5 0 3-1 3-3 0-2.5-2-5-5-5z"/></svg>
+              <span>See more</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expensive Cat section -->
+        <div id="expensive-section">
+          <div class="exp-header">
+            <span class="exp-title">Expensive Cat</span>
+            <span class="exp-link">See All</span>
+          </div>
+          <div class="exp-cards">
+            <div id="cat-card-1" class="cat-card">
+              <img src="../assets/cat-1.jpg" alt="Persian Cat">
+              <div class="cat-body">
+                <div class="col">
+                  <span class="cat-name">Persian Cat</span>
+                  <span class="cat-price">$320.00</span>
+                </div>
+                <div class="cat-heart">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5 6 5c2 0 3.5 1 4 2 .5-1 2-2 4-2 3.5 0 5 4 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                </div>
+              </div>
+            </div>
+            <div id="cat-card-2" class="cat-card">
+              <img src="../assets/cat-2.jpg" alt="Gray Cat">
+              <div class="cat-body">
+                <div class="col">
+                  <span class="cat-name">Gray Cat</span>
+                  <span class="cat-price">$280.00</span>
+                </div>
+                <div class="cat-heart">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5 6 5c2 0 3.5 1 4 2 .5-1 2-2 4-2 3.5 0 5 4 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Likes chip -->
+        <div id="likes-chip">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5 6 5c2 0 3.5 1 4 2 .5-1 2-2 4-2 3.5 0 5 4 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+          <span>1,327</span>
+        </div>
+
+        <!-- Bottom nav -->
+        <div id="bottom-nav">
+          <div class="nav-item muted">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+          </div>
+          <div class="nav-item heart">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5 6 5c2 0 3.5 1 4 2 .5-1 2-2 4-2 3.5 0 5 4 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+          </div>
+          <div class="nav-item muted">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          </div>
+        </div>
+      </div>
+    </main>
+    <style>
+      /* Page-specific styles (Free-Explore mode: placed in <body>, not <head>) */
+      * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+      html, body { font-family: var(--pa-font-sans); }
+      body {
+        background: #ECECF1;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 28px 0;
+      }
+
+      /* Device frame (single-screen restore, 390x844) */
+      .phone {
+        position: relative;
+        width: 390px;
+        height: 844px;
+        background: var(--pa-background);
+        border-radius: 48px;
+        overflow: hidden;
+        border: 11px solid #1A1A1A;
+        box-shadow: 0 24px 70px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.12);
+      }
+
+      /* Status bar */
+      #status-bar {
+        position: relative;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 26px 0 30px;
+        color: var(--pa-foreground);
+        z-index: 5;
+      }
+      #status-bar .sb-time {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.2px;
+      }
+      #status-bar .sb-icons {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      #status-bar .sb-icons svg { display: block; }
+
+      /* Dynamic Island */
+      #dynamic-island {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 34px;
+        background: #000000;
+        border-radius: 20px;
+        z-index: 10;
+      }
+
+      /* Header */
+      #header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        position: relative;
+        z-index: 2;
+      }
+      #hamburger { color: var(--pa-foreground); display: flex; align-items: center; }
+      #hamburger svg { width: 24px; height: 24px; display: block; }
+      #greeting { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+      #greeting .g-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--pa-foreground);
+        line-height: 1.25;
+      }
+      #greeting .g-sub {
+        font-size: 13px;
+        font-weight: 400;
+        color: var(--pa-muted);
+        line-height: 1.25;
+        margin-top: 2px;
+      }
+      #avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--pa-radius-circle);
+        border: 2px solid #FFFFFF;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        object-fit: cover;
+        flex-shrink: 0;
+        display: block;
+      }
+      #search { color: var(--pa-foreground); display: flex; align-items: center; }
+      #search svg { width: 24px; height: 24px; display: block; }
+
+      /* Category row */
+      #category-row {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        padding: 12px 20px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      #category-row::-webkit-scrollbar { display: none; }
+      .pill {
+        height: 36px;
+        padding: 0 18px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border: 1px solid transparent;
+        line-height: 1;
+      }
+      .pill.all {
+        background: var(--pa-foreground);
+        color: var(--pa-on-primary);
+      }
+      .pill.outline {
+        background: var(--pa-background);
+        border: 1px solid var(--pa-border);
+        color: var(--pa-foreground);
+      }
+
+      /* Featured section */
+      #featured-section { padding: 16px 20px; }
+      .cards-row {
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+        justify-content: center;
+      }
+      .feat-card {
+        width: 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .feat-circle {
+        width: 150px;
+        height: 150px;
+        border-radius: var(--pa-radius-circle);
+        background: var(--pa-card-coral);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .feat-circle img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: var(--pa-radius-circle);
+        display: block;
+      }
+      .feat-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--pa-foreground);
+        margin-top: 8px;
+        line-height: 1.2;
+      }
+      .feat-sub {
+        font-size: 12px;
+        color: var(--pa-muted);
+        line-height: 1.2;
+        margin-top: 2px;
+      }
+      .feat-price {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--pa-foreground);
+        margin-top: 4px;
+        line-height: 1.2;
+      }
+      #see-more {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        margin-top: 16px;
+      }
+      .see-more-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+      }
+      .see-more-pill svg {
+        width: 16px;
+        height: 16px;
+        color: var(--pa-primary);
+        display: block;
+      }
+      .see-more-pill span {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--pa-primary);
+      }
+
+      /* Expensive Cat section */
+      #expensive-section { padding: 16px 20px; }
+      .exp-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .exp-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--pa-foreground);
+        line-height: 1.2;
+      }
+      .exp-link {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--pa-primary);
+      }
+      .exp-cards {
+        display: flex;
+        flex-direction: row;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .cat-card {
+        width: 140px;
+        border-radius: 16px;
+        background: var(--pa-card);
+        box-shadow: var(--pa-shadow-card);
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .cat-card img {
+        width: 140px;
+        height: 110px;
+        object-fit: cover;
+        display: block;
+      }
+      .cat-body {
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .cat-body .col {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .cat-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--pa-foreground);
+        line-height: 1.2;
+      }
+      .cat-price {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--pa-foreground);
+        line-height: 1.2;
+        margin-top: 2px;
+      }
+      .cat-heart svg {
+        width: 18px;
+        height: 18px;
+        color: var(--pa-paw-red);
+        display: block;
+      }
+
+      /* Likes chip */
+      #likes-chip {
+        position: absolute;
+        bottom: 96px;
+        right: 20px;
+        background: var(--pa-background);
+        box-shadow: var(--pa-shadow-float);
+        padding: 8px 14px;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        z-index: 6;
+      }
+      #likes-chip svg {
+        width: 16px;
+        height: 16px;
+        color: var(--pa-paw-red);
+        display: block;
+      }
+      #likes-chip span {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--pa-foreground);
+        line-height: 1;
+      }
+
+      /* Bottom nav */
+      #bottom-nav {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 64px;
+        background: var(--pa-background);
+        border-top: 1px solid var(--pa-border);
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+        z-index: 6;
+      }
+      #bottom-nav .nav-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #bottom-nav .nav-item svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+      }
+      #bottom-nav .nav-item.muted svg { color: var(--pa-muted); }
+      #bottom-nav .nav-item.heart svg {
+        width: 26px;
+        height: 26px;
+        color: var(--pa-primary);
+      }
+    </style>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+{
+  "nodeId": "page-signin",
+  "htmlSrc": "pages/sign-in.html",
+  "cssPath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+  "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/pages/sign-in.html",
+  "brandPrefix": "pa",
+  "packetType": "RestorePagePacket",
+  "laneContract": {
+    "resolvedLane": "restore_1to1",
+    "packetType": "RestorePagePacket",
+    "pageRuntimeGuide": "intent-workflows/intent-page-restore-1to1/restore-1to1-page-runtime.md",
+    "dispatchContract": "intent-workflows/intent-page-restore-1to1/dispatch-contract.md"
+  },
+  "restoreContractStatus": { "reportPath": "restore-contract-report.json", "success": true },
+  "fillHtmlHeadCommand": "node /Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs /Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css /Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/pages/sign-in.html --title=\"Sign in\" --lang=en --prefix=pa",
+  "allowedWritePaths": ["pages/sign-in.html", "assets/"],
+  "forbiddenWriteRoots": ["*.design", "runtime-orchestration-summary.json", "validation-report.json", "finish-readiness-report.json", "restore-contract-report.json"],
+  "toolPolicy": { "todoWriteAllowed": false, "validationScriptsAllowed": false, "previewAllowed": false, "helperScriptsAllowed": false, "designFileWriteAllowed": false, "allowedWritePaths": ["pages/sign-in.html", "assets/"] },
+  "sourceType": "image",
+  "referenceCaptureEvidence": {
+    "sourceType": "image",
+    "filePath": "reference/source-screenshot.png",
+    "visualAuthority": "provided-image",
+    "screenToRestore": "CENTER screen — sign in"
+  },
+  "sourceAuthorityLock": {
+    "visualAuthority": "provided-image",
+    "contentSupplement": "none",
+    "browserObservationRole": "targeted-verification-only",
+    "mayOverrideVisualAuthority": false,
+    "lockedBeforeDispatch": true
+  },
+  "sourceIdentity": {
+    "businessType": "pet-adoption-marketplace-mobile-app",
+    "deviceType": "mobile",
+    "pageTitle": "Sign in"
+  },
+  "pageStateLock": {
+    "currentState": "Sign in screen: clean white centered column with paw logo at top, magenta 'Sign in' header, 'With Google' magenta pill button, two circular outlined Facebook/Twitter buttons, 'Or with Email' divider, email input (with green checkmark), password input (masked dots + 'Forgot?' link), full-width 'Get Started' magenta CTA, and 'New User? Sign Up' footer.",
+    "forbiddenDeviations": ["do not change magenta primary", "do not remove social auth buttons", "do not reorder form fields"]
+  },
+  "sourceDocumentProfile": { "sourceType": "image", "documentLengthClass": "single-screen", "viewportScrollRatio": 1.0, "deviceFramePresent": true },
+  "restorationContractLite": {
+    "allowedDeviationList": [
+      { "ref": "copy-localization", "note": "Preserve exact copy: 'Sign in', 'With Google', 'Or with Email', 'Forgot?', 'Get Started', 'New User? Sign Up'" },
+      { "ref": "icon-substitution", "note": "Google 'G', Facebook 'f', Twitter bird, mail, lock, checkmark rebuilt as inline SVG matching brand colors" }
+    ]
+  },
+  "visualSpecExcerpt": "=== SIGN IN PAGE SPEC (viewport 390x844, iOS) ===\n[LAYOUT]\nstatus-bar: top 0, height 54px (9:41 + icons), Dynamic Island pill center\ncontainer: white bg, padding 24px, flex column, items center\npaw-logo: top, margin-top 24px, paw svg 36px (#C2185B or dark)\nsignin-header: 'Sign in' 28px 700 #C2185B, margin-top 16px, text-center\ngoogle-btn: full width, height 52px, border-radius 26px, bg #C2185B, color #FFFFFF, flex row centered, 'G' svg 20px + 'With Google' 15px 600, margin-top 32px\nsocial-row: flex row centered, gap 16px, margin-top 16px; two circular buttons 56x56, border 1px #E0E0E0, radius 50%, bg #FFFFFF, centered 'f' (Facebook #1877F2) and bird (Twitter #1DA1F2) svg 24px\ndivider: flex row items center, margin-top 28px; line 1px #E0E0E0 flex 1, 'Or with Email' 12px #9E9E9E padding 0 12px, line 1px #E0E0E0 flex 1\nemail-input: width 100%, height 52px, border-radius 16px, border 1px #E0E0E0, padding 0 16px, flex row, leading mail svg 20px #9E9E9E, input flex 1 (placeholder 'Email'), trailing green check svg 20px #4CAF50, margin-top 24px\npassword-input: same shape, leading lock svg 20px, input type password value '••••••••', trailing 'Forgot?' 12px 600 #C2185B, margin-top 16px\ncta: 'Get Started' full width, height 56px, border-radius 30px, bg #C2185B, color #FFFFFF, 16px 600, margin-top 28px, box-shadow 0 8px 20px rgba(194,24,91,0.25)\nfooter: 'New User? Sign Up' 14px center, margin-top 20px; 'New User? ' #9E9E9E + 'Sign Up' #C2185B 600\n[COLORS]\nprimary: #C2185B\nborder: #E0E0E0\nmuted: #9E9E9E\nsuccess: #4CAF50\nfacebook: #1877F2\ntwitter: #1DA1F2\n[RADII]\ncta-pill: 30px\ngoogle-pill: 26px\ninput: 16px\nsocial-circle: 50%\n=== END SPEC ===",
+  "contentToPreserve": [
+    "Paw logo at top",
+    "Header: 'Sign in' (magenta #C2185B, 28px bold)",
+    "Google button: 'With Google' (magenta pill, white G icon)",
+    "Facebook (f) + Twitter (bird) circular outlined buttons",
+    "Divider: 'Or with Email'",
+    "Email input with green checkmark validation",
+    "Password input with masked dots + 'Forgot?' link",
+    "CTA: 'Get Started' (full-width magenta pill)",
+    "Footer: 'New User? Sign Up' ('Sign Up' magenta link)"
+  ],
+  "restoreVisualCheckpoints": [
+    { "id": "vc-01", "priority": "high", "dimension": "layout", "sourceObservation": "iPhone frame, Dynamic Island, 9:41", "targetImplementation": "iOS status bar + Dynamic Island", "region": "device-shell" },
+    { "id": "vc-03", "priority": "high", "dimension": "color-rhythm", "sourceObservation": "Sign in header + Google btn + Get Started all magenta #C2185B", "targetImplementation": "#C2185B for header text and all CTA/button fills", "region": "form" },
+    { "id": "vc-04", "priority": "high", "dimension": "component-proportion", "sourceObservation": "Google pill 52px h / social circles 56px / CTA 56px pill 30px", "targetImplementation": "google 52px r26, circles 56px r50%, cta 56px r30", "region": "form" },
+    { "id": "vc-05", "priority": "high", "dimension": "typography", "sourceObservation": "Sign in 28px bold magenta", "targetImplementation": "28px 700 #C2185B", "region": "form" },
+    { "id": "vc-06", "priority": "high", "dimension": "density", "sourceObservation": "Inputs 52px h, radius 16px, 1px border, leading icon + trailing affordance", "targetImplementation": "input h52 r16 border #E0E0E0, 16px pad, leading icon 20px, trailing check/Forgot", "region": "form" },
+    { "id": "vc-10", "priority": "medium", "dimension": "fine-detail", "sourceObservation": "Or with Email divider gray lines; email green check; password Forgot link; footer Sign Up magenta", "targetImplementation": "divider #E0E0E0 + #9E9E9E text; check #4CAF50; Forgot #C2185B 12px; Sign Up #C2185B 600", "region": "form" }
+  ],
+  "pageSpecificSpec": "Sign in screen. White centered column. Paw logo top. 'Sign in' header (28px bold magenta). 'With Google' full-width magenta pill (white G icon). Two circular outlined Facebook/Twitter buttons (56px). 'Or with Email' divider. Email input (52px, 16px radius, mail icon + green check). Password input (lock icon, masked dots, 'Forgot?' magenta link). 'Get Started' full-width magenta CTA (56px, 30px radius). Footer 'New User? Sign Up' with magenta 'Sign Up' link."
+}

@@ -14,7 +14,7 @@
 }
 
 .wallet-accent {
-  background: linear-gradient(180deg, #AF52DE 0%, #5856D6 100%) !important;
+  background: linear-gradient(180deg, #6B7D5A 0%, #3A4626 100%) !important;
 }
 
 .rates-accent {
@@ -179,7 +179,6 @@
   font-size: 22rpx;
   color: var(--text-secondary);
   background: var(--card-color);
-  transition: all 0.3s;
 }
 
 .tab-active {
@@ -296,7 +295,6 @@
   background: var(--card-color);
   border-radius: 24rpx;
   padding: 48rpx 40rpx;
-  animation: fadeUp 0.3s ease-out;
 }
 
 .modal-title {

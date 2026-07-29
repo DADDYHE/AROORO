@@ -9,7 +9,6 @@
   position: relative;
   overflow: hidden;
   background: var(--card-color);
-  animation: fadeUp 0.6s ease-out;
   padding-bottom: 20rpx;
 }
 
@@ -25,7 +24,7 @@
   right: 0;
   width: 300rpx;
   height: 300rpx;
-  background: radial-gradient(circle, rgba(78, 205, 196, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(79, 94, 53, 0.15) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -37,7 +36,6 @@
   height: 6rpx;
   background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   border-radius: 0 0 4rpx 4rpx;
-  animation: slideDown 0.5s ease-out;
 }
 
 .brand-main {
@@ -89,7 +87,6 @@
 
 .gallery-hall {
   padding: 32rpx;
-  animation: fadeUp 0.6s ease-out 0.2s both;
 }
 
 .gallery-portrait {
@@ -320,18 +317,12 @@
   letter-spacing: 4rpx;
   padding: 28rpx 0;
   text-align: center;
-  transition: all 0.3s ease;
 }
 
 .action-active {
   background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   color: var(--card-color);
-  box-shadow: 0 6rpx 20rpx rgba(78, 205, 196, 0.3);
-}
-
-.action-active:active {
-  transform: scale(0.98);
-  box-shadow: 0 3rpx 12rpx rgba(78, 205, 196, 0.3);
+  box-shadow: 0 6rpx 20rpx rgba(79, 94, 53, 0.3);
 }
 
 .action-disabled {
@@ -405,28 +396,6 @@
   min-width: 0 !important;
   display: flex !important;
   align-items: center !important;
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(24rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @media screen and (max-width: 750rpx) {

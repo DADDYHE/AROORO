@@ -88,7 +88,9 @@ MODULES.forEach(({ label, mod }) => {
     const openid = 'oConcurrentF1'
     const type = 'commission'
 
-    test('a. 两个并发首次请求：最终余额 == amount（非 2×）', async () => {
+    test('a. 两个并发首次请求：两笔都应入账，最终余额 == 2×amount', async () => {
+      // 并发首次创建钱包时，两个请求分别入账 100，最终余额应为 200。
+      // 旧实现直接 return 丢失金额；修复后 add 空钱包 + inc，确保不丢不重。
       await Promise.all([
         mod.ensureWalletBalance(openid, 100, type),
         mod.ensureWalletBalance(openid, 100, type),
@@ -97,8 +99,20 @@ MODULES.forEach(({ label, mod }) => {
       expect(docs.length).toBe(1)
       expect(docs[0].openid).toBe(openid)
       expect(docs[0].type).toBe(type)
-      expect(docs[0].balance).toBe(100)
-      expect(docs[0].totalIncome).toBe(100)
+      expect(docs[0].balance).toBe(200)
+      expect(docs[0].totalIncome).toBe(200)
+    })
+
+    test('a2. 三个并发不同金额首次请求：三笔都应入账', async () => {
+      await Promise.all([
+        mod.ensureWalletBalance(openid, 10, type),
+        mod.ensureWalletBalance(openid, 20, type),
+        mod.ensureWalletBalance(openid, 30, type),
+      ])
+      const docs = mockDb._collections.wallets.docs
+      expect(docs.length).toBe(1)
+      expect(docs[0].balance).toBe(60)
+      expect(docs[0].totalIncome).toBe(60)
     })
 
     test('b. 已存在钱包：每笔精确 +amount，多笔累加正确', async () => {

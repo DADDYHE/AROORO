@@ -10,7 +10,7 @@
 }
 
 .stats-accent {
-  background: linear-gradient(180deg, var(--info-color) 0%, #5856D6 100%) !important;
+  background: linear-gradient(180deg, var(--info-color) 0%, #3A4626 100%) !important;
 }
 
 .card-body {

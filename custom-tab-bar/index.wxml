@@ -1,24 +1,37 @@
+<!-- AROORO 启动屏：覆盖全屏（含 tabBar），冷启动仅显示一次 -->
+<view class="splash-overlay {{splashFading ? 'splash-fade-out' : ''}}" wx:if="{{showSplash}}" catchtap="dismissSplash">
+  <image class="splash-image" src="/images/splash/arooro-splash.jpg" mode="aspectFill" />
+</view>
+
 <view class="tab-bar" style="padding-bottom: {{tabBarPadding}}rpx;">
   <view class="tab-bar-item {{selected === 0 ? 'active' : ''}}" data-path="/pages/home/index" data-index="{{0}}" catchtap="switchTab">
-    <image class="tab-bar-icon" src="{{selected === 0 ? '/images/icons/home-white.svg' : '/images/icons/home-line.svg'}}" mode="aspectFit" />
+    <view class="tab-bar-icon-wrap">
+      <image class="tab-bar-icon" src="/images/icons/home-line.svg" mode="aspectFit" />
+    </view>
     <text class="tab-bar-text">首页</text>
   </view>
   <view class="tab-bar-item {{selected === 1 ? 'active' : ''}}" data-path="/pages/quick-register/index" data-index="{{1}}" catchtap="switchTab">
-    <image class="tab-bar-icon" src="{{selected === 1 ? '/images/icons/calendar-icon.svg' : '/images/icons/calendar-icon.svg'}}" mode="aspectFit" />
+    <view class="tab-bar-icon-wrap">
+      <image class="tab-bar-icon" src="/images/icons/calendar-icon.svg" mode="aspectFit" />
+    </view>
     <text class="tab-bar-text">一键报名</text>
   </view>
   <view class="tab-bar-item tab-bar-item-center {{selected === 2 ? 'active' : ''}}" data-path="/pages/discover/index" data-index="{{2}}" catchtap="switchTab">
     <view class="center-button">
-      <image class="center-button-icon" src="{{selected === 2 ? '/images/icons/discover-white.svg' : '/images/icons/discover-line.svg'}}" mode="aspectFit" />
+      <image class="center-button-icon" src="/images/icons/discover-white.svg" mode="aspectFit" />
       <text class="center-button-text">宠团团</text>
     </view>
   </view>
   <view class="tab-bar-item {{selected === 3 ? 'active' : ''}}" data-path="/pages/service/index" data-index="{{3}}" catchtap="switchTab">
-    <image class="tab-bar-icon" src="{{selected === 3 ? '/images/icons/service-line.svg' : '/images/icons/service-line.svg'}}" mode="aspectFit" />
+    <view class="tab-bar-icon-wrap">
+      <image class="tab-bar-icon" src="/images/icons/service-line.svg" mode="aspectFit" />
+    </view>
     <text class="tab-bar-text">上门服务</text>
   </view>
   <view class="tab-bar-item {{selected === 4 ? 'active' : ''}}" data-path="/pages/profile/index" data-index="{{4}}" catchtap="switchTab">
-    <image class="tab-bar-icon" src="{{selected === 4 ? '/images/icons/profile-white.svg' : '/images/icons/profile-line.svg'}}" mode="aspectFit" />
+    <view class="tab-bar-icon-wrap">
+      <image class="tab-bar-icon" src="/images/icons/profile-line.svg" mode="aspectFit" />
+    </view>
     <text class="tab-bar-text">我的</text>
   </view>
 </view>

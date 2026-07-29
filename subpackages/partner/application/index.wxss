@@ -46,7 +46,7 @@
 .perm-tag {
   font-size: 20rpx;
   padding: 8rpx 20rpx;
-  background: rgba(78, 205, 196, 0.12);
+  background: rgba(79, 94, 53, 0.12);
   color: var(--activity-primary-mid);
   border-radius: 8rpx;
 }

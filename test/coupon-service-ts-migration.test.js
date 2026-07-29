@@ -237,8 +237,8 @@ describe('Sprint 43: couponService TypeScript 迁移', () => {
       expect(code).toMatch(/coupon_usage/)
     })
 
-    test('使用 operation_logs 集合（领取/锁定/核销/解锁 4 个日志点）', () => {
-      const matches = code.match(/operation_logs/g) || []
+    test('调用 writeOperationLog（领取/锁定/核销/解锁 4 个日志点）', () => {
+      const matches = code.match(/writeOperationLog/g) || []
       expect(matches.length).toBeGreaterThanOrEqual(4)
     })
   })
@@ -261,8 +261,8 @@ describe('Sprint 43: couponService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s43-coupon-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s43-coupon-service-ts:strict/)
+    test('ci:check 包含 audit:all:strict', () => {
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
     })
   })
 

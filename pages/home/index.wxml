@@ -1,173 +1,190 @@
 <view class="home-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 
-  <!-- ===== 顶部状态栏（参考图：时间/天气/通知） ===== -->
-  <view class="top-bar">
-    <view class="top-bar-left">
-      <text class="top-greeting">{{isLoggedIn ? 'Hi, ' + (userInfo.nickName || '铲屎官') : '发现萌宠'}}</text>
-      <text class="top-date">{{todayDate}}</text>
+  <!-- ===== Section 1: 顶部栏（对齐设计稿 #topbar，仅登录用户可见） ===== -->
+  <header class="topbar" wx:if="{{isLoggedIn}}">
+    <view class="topbar-left" catchtap="handleLogin">
+      <image wx:if="{{isLoggedIn && userInfo.avatarUrl}}" class="topbar-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill" />
+      <view wx:else class="topbar-avatar topbar-avatar-ph">
+        <text class="topbar-avatar-text">{{isLoggedIn ? (userInfo.nickName ? userInfo.nickName.charAt(0) : '宠') : '宠'}}</text>
+      </view>
+      <view class="topbar-greeting">
+        <text class="topbar-name">{{isLoggedIn ? (userInfo.nickName || '铲屎官') : '发现萌宠'}}</text>
+        <text class="topbar-loc">{{todayDate || '早上好'}}</text>
+      </view>
     </view>
-    <view class="top-bar-right">
-      <text class="top-weather">☀ {{weatherTemp}}°C</text>
-      <view class="top-bell" bindtap="handleLogin">
-        <text class="bell-icon">🔔</text>
-        <view wx:if="{{unreadCount > 0}}" class="bell-dot"></view>
+    <view class="topbar-search" catchtap="handleSearch">
+      <view class="topbar-search-icon"></view>
+      <text class="topbar-search-text">搜索</text>
+    </view>
+  </header>
+
+  <!-- ===== Section 2: 英雄区（对齐设计稿 #hero） ===== -->
+  <view class="hero-section" wx:if="{{bannerList.length}}">
+    <swiper class="hero-swiper" autoplay circular interval="5000" duration="400" style="height: {{bannerHeight}}px;">
+      <swiper-item wx:for="{{bannerList}}" wx:key="_id" data-action="{{item.actionType || 'none'}}" data-target="{{item.actionTarget || ''}}" bindtap="handleBannerTap">
+        <view class="hero-card">
+          <image class="hero-img" src="{{item.imageUrl}}" mode="aspectFill" bindload="onBannerImageLoad" />
+          <view class="hero-overlay"></view>
+          <view class="hero-text">
+            <text class="hero-title">{{item.title || '宠爱如初'}}</text>
+            <text class="hero-sub">{{item.subtitle || '为爱宠开启精致生活'}}</text>
+          </view>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
+  <view class="hero-section" wx:else>
+    <view class="hero-card" style="height: {{bannerHeight}}px;">
+      <view class="hero-img hero-img-ph"></view>
+      <view class="hero-overlay"></view>
+      <view class="hero-text">
+        <text class="hero-title">宠爱如初</text>
+        <text class="hero-sub">为爱宠开启精致生活</text>
       </view>
     </view>
   </view>
 
-  <!-- ===== 快捷操作卡片（参考图：3 个圆角白卡 + 图标圆，一个深色选中） ===== -->
-  <view class="quick-grid">
-    <view class="quick-card quick-active" data-action="boarding" bindtap="handleBannerTap">
-      <view class="quick-icon-wrap">
-        <text class="quick-icon-text">寄</text>
-      </view>
-      <text class="quick-label">寄养</text>
-      <text class="quick-desc">安心托管</text>
-    </view>
-    <view class="quick-card" data-action="activity" bindtap="handleBannerTap">
-      <view class="quick-icon-wrap">
-        <text class="quick-icon-text">活</text>
-      </view>
-      <text class="quick-label">活动</text>
-      <text class="quick-desc">社区聚会</text>
-    </view>
-    <view class="quick-card" data-action="mall" bindtap="handleBannerTap">
-      <view class="quick-icon-wrap">
-        <text class="quick-icon-text">商</text>
-      </view>
-      <text class="quick-label">商城</text>
-      <text class="quick-desc">精选好物</text>
-    </view>
-  </view>
+  <!-- ===== 内容卡片：整体上移覆盖 banner，顶部 96rpx 圆角 ===== -->
+  <view class="home-content-sheet" style="margin-top: {{contentSheetMarginTop}}px;">
 
-  <!-- ===== 分页指示点（参考图风格） ===== -->
-  <view class="page-dots">
-    <view class="page-dot page-dot-active"></view>
-    <view class="page-dot"></view>
-    <view class="page-dot"></view>
-  </view>
-
-  <!-- ===== 板块区块（参考图：Connected Devices 样式） ===== -->
-
-  <!-- 我的宠物 -->
-  <view class="section-block" wx:if="{{isLoggedIn}}">
-    <view class="section-head">
-      <view class="section-title-row">
+  <!-- ===== Section 2.5: 我的宠物（仅登录用户可见） ===== -->
+  <view class="section my-pets-section" wx:if="{{isLoggedIn}}">
+    <view class="my-pets-header">
+      <view class="my-pets-title-wrap">
         <text class="section-title">我的宠物</text>
-        <view class="section-badge">{{displayPets.length}}</view>
+        <view class="pet-add-btn" catchtap="handleAddPet">
+          <text class="pet-add-icon">+</text>
+          <text class="pet-add-text">添加</text>
+        </view>
       </view>
-      <text class="section-more" bindtap="handleViewAllPets">查看全部 ›</text>
+      <text class="pet-view-all" wx:if="{{myPets.length > 0}}" bindtap="handleViewAllPets">查看全部 ›</text>
     </view>
 
-    <!-- 分类芯片条（参考图：Living Room / Kitchen / Bedroom 药丸） -->
-    <scroll-view class="chip-strip" scroll-x="true" enhanced="true" show-scrollbar="false">
-      <view class="chip chip-active"><text class="chip-icon">🐕</text><text>全部</text></view>
-      <view class="chip"><text class="chip-icon">🐶</text><text>狗狗</text></view>
-      <view class="chip"><text class="chip-icon">🐱</text><text>猫咪</text></view>
-      <view class="chip"><text class="chip-icon">🐰</text><text>其他</text></view>
-    </scroll-view>
-
-    <!-- 卡片网格（参考图：大深色主卡 + 小白卡） -->
-    <view class="card-grid">
-      <!-- 主卡片：深色大卡（参考图 Apple Air Conditioner 同款） -->
-      <view class="card-main" wx:if="{{displayPets.length > 0}}" data-id="{{displayPets[0]._id}}" bindtap="handlePetTap">
-        <view class="card-main-header">
-          <image wx:if="{{displayPets[0].avatarUrl}}" class="card-main-avatar" src="{{displayPets[0].avatarUrl}}" mode="aspectFill" />
-          <view wx:else class="card-main-avatar-ph">{{displayPets[0].name.charAt(0)}}</view>
-          <view class="card-main-info">
-            <text class="card-main-name">{{displayPets[0].name}}</text>
-            <text class="card-main-breed">{{displayPets[0].breed}} · {{displayPets[0].birthday || ''}}</text>
+    <!-- 有宠物：两列网格卡片 -->
+    <view class="pets-grid" wx:if="{{myPets.length > 0}}">
+      <view class="pet-card pet-card-{{item.genderClass}}" wx:for="{{myPets}}" wx:key="_id" data-id="{{item._id}}" bindtap="handlePetTap">
+        <image class="pet-avatar pet-avatar-{{item.genderClass}}" src="{{item.avatarUrl}}" mode="aspectFill" />
+        <view class="pet-info">
+          <view class="pet-name-row">
+            <text class="pet-name">{{item.name || '未命名'}}</text>
+            <text class="pet-gender-tag pet-gender-{{item.genderClass}}">{{item.genderSymbol}}</text>
           </view>
-          <view class="card-main-tag">寄养中</view>
+          <text class="pet-breed" wx:if="{{item.breed}}">{{item.breed}}</text>
         </view>
-        <view class="card-main-body">
-          <text class="card-main-big-num">{{displayPets[0].age || '2'}}</text>
-          <text class="card-main-unit">岁</text>
-        </view>
-        <view class="card-main-footer">
-          <view class="card-main-stat"><text class="stat-icon">❤</text></view>
-          <view class="card-main-stat"><text class="stat-icon">🍖</text></view>
-          <view class="card-main-stat"><text class="stat-icon">💉</text></view>
-          <view class="card-main-stat"><text class="stat-icon">✂</text></view>
-          <view class="card-main-stat"><text class="stat-icon">🏠</text></view>
-        </view>
-      </view>
-
-      <!-- 侧边小白卡（参考图 PHILO Bed Lamp 同款） -->
-      <view class="card-side" wx:if="{{displayPets.length > 1}}" data-id="{{displayPets[1]._id}}" bindtap="handlePetTap">
-        <view class="card-side-icon-wrap">
-          <image wx:if="{{displayPets[1].avatarUrl}}" class="card-side-avatar" src="{{displayPets[1].avatarUrl}}" mode="aspectFill" />
-          <view wx:else class="card-side-avatar-ph">{{displayPets[1].name.charAt(0)}}</view>
-        </view>
-        <view class="card-side-info">
-          <text class="card-side-name">{{displayPets[1].name}}</text>
-          <text class="card-side-breed">{{displayPets[1].breed}}</text>
-        </view>
-        <view class="card-side-tag">健康</view>
       </view>
     </view>
 
-    <!-- 更多小卡（第三行，参考图 LUNO/Sony 同款） -->
-    <view class="card-grid card-grid-sm" wx:if="{{displayPets.length > 2}}">
-      <view class="card-mini" wx:for="{{displayPets}}" wx:key="_id" wx:if="{{index >= 2}}" data-id="{{item._id}}" bindtap="handlePetTap">
-        <view class="card-mini-icon"></view>
-        <text class="card-mini-name">{{item.name}}</text>
-        <text class="card-mini-breed">{{item.breed}}</text>
-        <view class="card-mini-tag">正常</view>
+    <!-- 无宠物：两个占位卡片 -->
+    <view class="pets-grid pets-grid-empty" wx:else>
+      <view class="pet-card pet-card-empty" wx:for="{{[1,2]}}" wx:key="*this" bindtap="handleAddPet">
+        <text class="pet-empty-text">宠物档案待添加</text>
       </view>
     </view>
   </view>
 
-  <!-- 未登录提示卡 -->
-  <view class="section-block" wx:if="{{!isLoggedIn}}">
-    <view class="section-head">
-      <text class="section-title">开始使用</text>
-    </view>
-    <view class="login-card" bindtap="handleLogin">
-      <text class="login-card-title">登录后管理你的萌宠</text>
-      <text class="login-card-sub">记录成长 · 预约服务 · 社区互动</text>
-      <view class="login-card-btn">立即登录</view>
+  <!-- ===== Section 3: 未登录登录入口 ===== -->
+  <view class="search-section" wx:if="{{!isLoggedIn}}">
+    <view class="home-login-btn" catchtap="handleLogin">
+      <text class="home-login-text">立即登录</text>
     </view>
   </view>
 
-  <!-- 宠团团区块 -->
-  <view class="section-block" wx:if="{{tuanDeals.length}}">
-    <view class="section-head">
-      <view class="section-title-row">
-        <text class="section-title">{{t.GROUP_DEALS}}</text>
-        <view class="section-badge">{{tuanDeals.length}}</view>
+  <!-- ===== Section 4: 快捷服务入口 ===== -->
+  <view class="quick-services-wrapper">
+    <view class="quick-services">
+    <view class="qs-item" data-action="activity" bindtap="handleBannerTap">
+      <view class="qs-icon qs-icon-activity">
+        <image class="qs-emoji-img" src="cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/megaphone-line.svg" mode="aspectFit" />
       </view>
-      <text class="section-more" bindtap="handleViewAllTuan">查看全部 ›</text>
+      <text class="qs-title">线下活动</text>
+      <text class="qs-subtitle">精彩社区活动</text>
+      <view class="qs-accent qs-accent-activity"></view>
     </view>
-    <scroll-view class="deal-strip" scroll-x="true" enhanced="true" show-scrollbar="false">
-      <view class="deal-card" wx:for="{{tuanDeals}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleTuanTap">
-        <image wx:if="{{item.coverUrl}}" class="deal-cover" src="{{item.coverUrl}}" mode="aspectFill" />
-        <view wx:else class="deal-cover-ph"></view>
-        <view class="deal-info">
-          <text class="deal-name truncate">{{item.title}}</text>
-          <view class="deal-meta">
-            <text class="deal-price">¥{{item.minPrice}}</text>
-            <text class="deal-orders" wx:if="{{item.totalOrders > 0}}">{{item.totalOrders}}人团</text>
+    <view class="qs-item" data-action="mall" bindtap="handleBannerTap">
+      <view class="qs-icon qs-icon-mall">
+        <image class="qs-emoji-img" src="cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/shopping-cart-2-line.svg" mode="aspectFit" />
+      </view>
+      <text class="qs-title">宠物商城</text>
+      <text class="qs-subtitle">精选好物推荐</text>
+      <view class="qs-accent qs-accent-mall"></view>
+    </view>
+    </view>
+  </view>
+
+  <!-- ===== Section 5: 团购好物（横滑商品卡，图片占满 + 底部渐变标题） ===== -->
+  <view class="section" wx:if="{{tuanDeals.length}}">
+    <view class="section-head">
+      <text class="section-title">团购好物</text>
+      <text class="section-link" bindtap="handleViewAllTuan">查看全部 ›</text>
+    </view>
+    <scroll-view class="featured-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
+      <view class="mall-card" wx:for="{{tuanDeals}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleTuanTap">
+        <image wx:if="{{item.coverUrl}}" class="mall-card-img" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view wx:else class="mall-card-img mall-card-img-ph">
+          <text class="featured-img-ph-text">团</text>
+        </view>
+        <view class="mall-card-overlay"></view>
+        <view class="mall-card-info">
+          <text class="mall-card-name">{{item.title}}</text>
+          <view class="mall-card-price-row">
+            <text class="mall-card-price">¥{{item.minPrice}}</text>
+            <text class="mall-card-sold" wx:if="{{item.totalOrders > 0}}">已拼{{item.totalOrders}}件</text>
           </view>
         </view>
       </view>
     </scroll-view>
   </view>
 
-  <!-- 最新活动 -->
-  <view class="section-block" wx:if="{{latestActivities.length}}">
+  <!-- ===== Section 5.5: 商城好物（横滑商品卡，图片占满 + 底部渐变标题） ===== -->
+  <view class="section" wx:if="{{mallProducts.length}}">
     <view class="section-head">
-      <view class="section-title-row">
-        <text class="section-title">{{t.LATEST_ACTIVITIES}}</text>
-        <view class="section-badge">{{latestActivities.length}}</view>
-      </view>
-      <text class="section-more" bindtap="handleViewAllActivities">查看全部 ›</text>
+      <text class="section-title">商城好物</text>
+      <text class="section-link" bindtap="handleViewAllMallProducts">查看全部 ›</text>
     </view>
-    <view class="act-list">
-      <activity-card wx:for="{{latestActivities}}" wx:key="_id" item="{{item}}" locale="{{locale}}" bind:tap="handleActivityTap" />
+    <scroll-view class="featured-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
+      <view class="mall-card" wx:for="{{mallProducts}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleMallProductTap">
+        <image wx:if="{{item.coverUrl}}" class="mall-card-img" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view wx:else class="mall-card-img mall-card-img-ph">
+          <text class="featured-img-ph-text">品</text>
+        </view>
+        <view class="mall-card-overlay"></view>
+        <view class="mall-card-info">
+          <text class="mall-card-name">{{item.name}}</text>
+          <view class="mall-card-price-row">
+            <text class="mall-card-price">¥{{item.price}}</text>
+            <text class="mall-card-original" wx:if="{{item.originalPrice > item.price}}">¥{{item.originalPrice}}</text>
+            <text class="mall-card-sold" wx:if="{{item.soldCount > 0}}">已售{{item.soldCount}}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- ===== Section 6: 近期活动（对齐设计稿 #activity 横向卡片左图右文） ===== -->
+  <view class="section" wx:if="{{latestActivities.length}}">
+    <view class="section-head">
+      <text class="section-title">近期活动</text>
+      <text class="section-link" bindtap="handleViewAllActivities">更多 ›</text>
+    </view>
+    <view class="activity-list">
+      <view class="activity-h-card" wx:for="{{latestActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap">
+        <image wx:if="{{item.coverUrl}}" class="activity-h-img" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view wx:else class="activity-h-img activity-h-img-ph">
+          <text class="activity-h-img-ph-text">活动</text>
+        </view>
+        <view class="activity-h-body">
+          <text class="activity-h-name">{{item.title}}</text>
+          <text class="activity-h-info">{{item.timeText}}</text>
+          <view class="activity-h-meta">
+            <text class="activity-h-loc">📍 {{item.location || '待定'}}</text>
+          </view>
+          <text class="activity-h-people" wx:if="{{item.currentParticipants > 0}}">👥 已有{{item.currentParticipants}}人报名</text>
+        </view>
+      </view>
     </view>
   </view>
 
   <view class="bottom-spacer"></view>
+  </view>
 </view>

@@ -191,9 +191,7 @@ describe('Sprint 37: userService services TypeScript 迁移', () => {
       expect(code).toMatch(/export\s+interface\s+InvitedUserView\b/)
     })
 
-    test('包含 sumOrderTotal 函数（强类型化）', () => {
-      expect(code).toMatch(/function\s+sumOrderTotal\s*\(\s*orders\s*:\s*OrderLike\s*\[\s*\]\s*\)/)
-    })
+    // NOTE: sumOrderTotal 已从 referral.ts 移除（Sprint 37 重构），不再断言
 
     const ACTIONS = ['getReferralStats', 'getInvitedUsers']
     ACTIONS.forEach(act => {
@@ -221,8 +219,8 @@ describe('Sprint 37: userService services TypeScript 迁移', () => {
       expect(code).toMatch(/export\s+type\s+AddressHandler\b/)
     })
 
-    test('包含 AddressInput / AddressRecord 接口', () => {
-      expect(code).toMatch(/export\s+interface\s+AddressInput\b/)
+    test('AddressInput 从 common/types 引入 / AddressRecord 接口存在', () => {
+      expect(code).toMatch(/import\s+type\s*\{[^}]*AddressInput[^}]*\}\s*from\s*['"]\.\/common\/types['"]/)
       expect(code).toMatch(/export\s+interface\s+AddressRecord\b/)
     })
 
@@ -290,8 +288,8 @@ describe('Sprint 37: userService services TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s37-user-services-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s37-user-services-ts:strict/)
+    test('ci:check 包含 audit:all:strict', () => {
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
     })
   })
 

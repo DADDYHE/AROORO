@@ -8,13 +8,11 @@
 .page-header {
   background: var(--card-color);
   padding-bottom: 20rpx;
-  animation: fadeUp 0.6s ease-out;
   position: relative;
 }
 
 .record-list {
   padding: 32rpx;
-  animation: fadeUp 0.6s ease-out 0.2s both;
 }
 
 .record-card {

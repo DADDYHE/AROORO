@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设计规范</title>
+    <style id="theme-vars">
+/* ============================================================
+   Pet Luxury Mini-Program — Design Token System
+   Migrated from olive-green fresh-food app to healing light-luxury pet brand
+   Brand prefix: petlux
+   ============================================================ */
+
+:root {
+  /* ---------- Brand Primary (single hue: warm olive green) ---------- */
+  --petlux-brand: #4F5E35;           /* primary olive — CTAs, active states */
+  --petlux-brand-deep: #3A4626;      /* hover / pressed step */
+  --petlux-brand-soft: #EAEDDF;      /* 8% brand tint for tags, soft fills */
+  --petlux-brand-ink: #FAFAF6;       /* text on brand fills */
+
+  /* ---------- Surfaces (olive-tinted — brand primary light variant) ---------- */
+  --petlux-bg: #EDF0E2;              /* olive-tinted page base — brand light variant */
+  --petlux-surface: #FFFFFF;         /* white card */
+  --petlux-surface-2: #E2E6D3;       /* olive hover / selected */
+  --petlux-surface-3: #D6DBC5;       /* deeper olive fill */
+
+  /* ---------- Ink (text) ---------- */
+  --petlux-ink: #2A2823;             /* primary text — warm near-black */
+  --petlux-ink-2: #635E54;           /* secondary text */
+  --petlux-ink-3: #9A9489;           /* tertiary / placeholder */
+
+  /* ---------- Lines & Dividers ---------- */
+  --petlux-line: #D8DCCE;            /* hairline divider — olive tint */
+  --petlux-line-strong: #C9CFBA;     /* emphasized border */
+
+  /* ---------- State Colors (semantic only, never brand) ---------- */
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+
+  /* ---------- Radius Scale (2 / 8 / 12 / 16) ---------- */
+  --petlux-radius-xs: 4px;
+  --petlux-radius-sm: 8px;
+  --petlux-radius-md: 12px;
+  --petlux-radius-lg: 16px;
+  --petlux-radius-pill: 999px;
+
+  /* ---------- Shadow (subtle, alpha <= 0.05 for static) ---------- */
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+
+  /* ---------- Spacing (8pt grid) ---------- */
+  --petlux-s-1: 4px;
+  --petlux-s-2: 8px;
+  --petlux-s-3: 12px;
+  --petlux-s-4: 16px;
+  --petlux-s-5: 24px;
+  --petlux-s-6: 32px;
+  --petlux-s-7: 48px;
+
+  /* ---------- Typography ---------- */
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-font-latin: "Inter", system-ui, sans-serif;
+  --petlux-font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --petlux-text-display: 32px;
+  --petlux-text-h1: 24px;
+  --petlux-text-h2: 20px;
+  --petlux-text-h3: 17px;
+  --petlux-text-body: 15px;
+  --petlux-text-body-sm: 13px;
+  --petlux-text-caption: 12px;
+
+  --petlux-leading-tight: 1.2;
+  --petlux-leading-normal: 1.55;
+  --petlux-leading-relaxed: 1.7;
+
+  --petlux-weight-regular: 400;
+  --petlux-weight-medium: 500;
+  --petlux-weight-semibold: 600;
+
+  --petlux-tracking-tight: -0.02em;
+  --petlux-tracking-normal: 0;
+  --petlux-tracking-wide: 0.01em;
+
+  /* ============================================================
+     Semantic Aliases — required by apply-html-head-contract.mjs
+     ============================================================ */
+
+  --petlux-background: var(--petlux-bg);
+  --petlux-foreground: var(--petlux-ink);
+
+  --petlux-card: var(--petlux-surface);
+  --petlux-card-foreground: var(--petlux-ink);
+
+  --petlux-popover: var(--petlux-surface);
+  --petlux-popover-foreground: var(--petlux-ink);
+
+  --petlux-primary: var(--petlux-brand);
+  --petlux-primary-foreground: var(--petlux-brand-ink);
+
+  --petlux-secondary: var(--petlux-surface-2);
+  --petlux-secondary-foreground: var(--petlux-ink-2);
+
+  --petlux-muted: var(--petlux-surface-2);
+  --petlux-muted-foreground: var(--petlux-ink-2);
+
+  --petlux-accent: var(--petlux-brand-soft);
+  --petlux-accent-foreground: var(--petlux-brand);
+
+  --petlux-destructive: var(--petlux-state-error);
+  --petlux-destructive-foreground: #FAFAF6;
+
+  --petlux-border: var(--petlux-line);
+  --petlux-input: var(--petlux-line-strong);
+  --petlux-ring: var(--petlux-brand);
+
+  --petlux-radius-small: var(--petlux-radius-sm);
+  --petlux-radius-medium: var(--petlux-radius-md);
+  --petlux-radius-large: var(--petlux-radius-lg);
+}
+
+/* ---------- Dark mode stub (project is light-only; reserved) ---------- */
+.dark {
+  --petlux-background: #161612;
+  --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A;
+  --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A;
+  --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A;
+  --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924;
+  --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C;
+  --petlux-input: #34322C;
+  --petlux-ring: #7A8C5A;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--petlux-background);
+    --color-foreground: var(--petlux-foreground);
+    --color-card: var(--petlux-card);
+    --color-card-foreground: var(--petlux-card-foreground);
+    --color-popover: var(--petlux-popover);
+    --color-popover-foreground: var(--petlux-popover-foreground);
+    --color-primary: var(--petlux-primary);
+    --color-primary-foreground: var(--petlux-primary-foreground);
+    --color-secondary: var(--petlux-secondary);
+    --color-secondary-foreground: var(--petlux-secondary-foreground);
+    --color-muted: var(--petlux-muted);
+    --color-muted-foreground: var(--petlux-muted-foreground);
+    --color-accent: var(--petlux-accent);
+    --color-accent-foreground: var(--petlux-accent-foreground);
+    --color-destructive: var(--petlux-destructive);
+    --color-destructive-foreground: var(--petlux-destructive-foreground);
+    --color-border: var(--petlux-border);
+    --color-input: var(--petlux-input);
+    --color-ring: var(--petlux-ring);
+    --radius-sm: var(--petlux-radius-sm);
+    --radius-md: var(--petlux-radius-md);
+    --radius-lg: var(--petlux-radius-lg);
+  }
+  @layer base {
+    body { background: var(--petlux-background); color: var(--petlux-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--petlux-background); }
+      .text-background { color: var(--petlux-background); }
+      .border-background { border-color: var(--petlux-background); }
+      .ring-background { --tw-ring-color: var(--petlux-background); }
+      .bg-foreground { background-color: var(--petlux-foreground); }
+      .text-foreground { color: var(--petlux-foreground); }
+      .border-foreground { border-color: var(--petlux-foreground); }
+      .ring-foreground { --tw-ring-color: var(--petlux-foreground); }
+      .bg-card { background-color: var(--petlux-card); }
+      .text-card { color: var(--petlux-card); }
+      .border-card { border-color: var(--petlux-card); }
+      .ring-card { --tw-ring-color: var(--petlux-card); }
+      .bg-card-foreground { background-color: var(--petlux-card-foreground); }
+      .text-card-foreground { color: var(--petlux-card-foreground); }
+      .border-card-foreground { border-color: var(--petlux-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--petlux-card-foreground); }
+      .bg-popover { background-color: var(--petlux-popover); }
+      .text-popover { color: var(--petlux-popover); }
+      .border-popover { border-color: var(--petlux-popover); }
+      .ring-popover { --tw-ring-color: var(--petlux-popover); }
+      .bg-popover-foreground { background-color: var(--petlux-popover-foreground); }
+      .text-popover-foreground { color: var(--petlux-popover-foreground); }
+      .border-popover-foreground { border-color: var(--petlux-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--petlux-popover-foreground); }
+      .bg-primary { background-color: var(--petlux-primary); }
+      .text-primary { color: var(--petlux-primary); }
+      .border-primary { border-color: var(--petlux-primary); }
+      .ring-primary { --tw-ring-color: var(--petlux-primary); }
+      .bg-primary-foreground { background-color: var(--petlux-primary-foreground); }
+      .text-primary-foreground { color: var(--petlux-primary-foreground); }
+      .border-primary-foreground { border-color: var(--petlux-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--petlux-primary-foreground); }
+      .bg-secondary { background-color: var(--petlux-secondary); }
+      .text-secondary { color: var(--petlux-secondary); }
+      .border-secondary { border-color: var(--petlux-secondary); }
+      .ring-secondary { --tw-ring-color: var(--petlux-secondary); }
+      .bg-secondary-foreground { background-color: var(--petlux-secondary-foreground); }
+      .text-secondary-foreground { color: var(--petlux-secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--petlux-secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--petlux-secondary-foreground); }
+      .bg-muted { background-color: var(--petlux-muted); }
+      .text-muted { color: var(--petlux-muted); }
+      .border-muted { border-color: var(--petlux-muted); }
+      .ring-muted { --tw-ring-color: var(--petlux-muted); }
+      .bg-muted-foreground { background-color: var(--petlux-muted-foreground); }
+      .text-muted-foreground { color: var(--petlux-muted-foreground); }
+      .border-muted-foreground { border-color: var(--petlux-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--petlux-muted-foreground); }
+      .bg-accent { background-color: var(--petlux-accent); }
+      .text-accent { color: var(--petlux-accent); }
+      .border-accent { border-color: var(--petlux-accent); }
+      .ring-accent { --tw-ring-color: var(--petlux-accent); }
+      .bg-accent-foreground { background-color: var(--petlux-accent-foreground); }
+      .text-accent-foreground { color: var(--petlux-accent-foreground); }
+      .border-accent-foreground { border-color: var(--petlux-accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--petlux-accent-foreground); }
+      .bg-destructive { background-color: var(--petlux-destructive); }
+      .text-destructive { color: var(--petlux-destructive); }
+      .border-destructive { border-color: var(--petlux-destructive); }
+      .ring-destructive { --tw-ring-color: var(--petlux-destructive); }
+      .bg-destructive-foreground { background-color: var(--petlux-destructive-foreground); }
+      .text-destructive-foreground { color: var(--petlux-destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--petlux-destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--petlux-destructive-foreground); }
+      .bg-border { background-color: var(--petlux-border); }
+      .text-border { color: var(--petlux-border); }
+      .border-border { border-color: var(--petlux-border); }
+      .ring-border { --tw-ring-color: var(--petlux-border); }
+      .bg-input { background-color: var(--petlux-input); }
+      .text-input { color: var(--petlux-input); }
+      .border-input { border-color: var(--petlux-input); }
+      .ring-input { --tw-ring-color: var(--petlux-input); }
+      .bg-ring { background-color: var(--petlux-ring); }
+      .text-ring { color: var(--petlux-ring); }
+      .border-ring { border-color: var(--petlux-ring); }
+      .ring-ring { --tw-ring-color: var(--petlux-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <style id="critical-layout">
+      html, body { max-width: 100%; overflow-x: hidden; }
+      body { margin: 0; background-color: var(--petlux-background); -webkit-font-smoothing: antialiased; }
+      img { display: block; max-width: 100%; }
+      main > .petlux-shell { width: 100%; max-width: 28rem; margin-left: auto; margin-right: auto; }
+      header[data-topbar] { min-height: 56px; }
+      nav[data-mobile-nav="global"] { position: sticky; bottom: 0; z-index: 30; min-height: 64px; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+    <main>
+      <div class="petlux-shell max-w-md mx-auto bg-background min-h-screen pb-24">
+
+        <!-- Section 1: Top bar -->
+        <header data-topbar class="sticky top-0 z-20 h-14 bg-background/95 backdrop-blur border-b border-border flex items-center px-4 gap-3">
+          <i data-lucide="arrow-left" class="w-5 h-5 text-foreground shrink-0"></i>
+          <span class="text-foreground" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">设计规范</span>
+        </header>
+
+        <!-- Section 2: Overview -->
+        <section class="px-4 pt-6 pb-6">
+          <h2 class="text-foreground" style="font-size: var(--petlux-text-h1); line-height: var(--petlux-leading-tight); letter-spacing: var(--petlux-tracking-tight); font-weight: var(--petlux-weight-semibold);">AROORO 设计系统</h2>
+          <p class="mt-2 text-muted-foreground" style="font-size: var(--petlux-text-body-sm);">从橄榄绿轻奢生鲜 App 迁移至治愈轻奢宠物品牌</p>
+          <p class="mt-3 text-foreground" style="font-size: var(--petlux-text-body); line-height: var(--petlux-leading-relaxed);">以暖橄榄绿为主色，奶油色为底，营造自然治愈的轻奢质感。面向高净值养宠人群，视觉克制、留白充足。</p>
+        </section>
+
+        <!-- Section 3: Brand Colors -->
+        <section class="px-4 pb-4">
+          <div class="bg-card p-4" style="border-radius: var(--petlux-radius-lg); box-shadow: var(--petlux-shadow-1);">
+            <h3 class="text-foreground mb-4" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">品牌主色</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="w-full h-16" style="background-color: #4F5E35; border-radius: var(--petlux-radius-sm);"></div>
+                <p class="mt-2 text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">主色橄榄绿</p>
+                <p class="text-muted-foreground" style="font-size: 11px;">#4F5E35</p>
+              </div>
+              <div>
+                <div class="w-full h-16" style="background-color: #3A4626; border-radius: var(--petlux-radius-sm);"></div>
+                <p class="mt-2 text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">深色变体</p>
+                <p class="text-muted-foreground" style="font-size: 11px;">#3A4626</p>
+              </div>
+              <div>
+                <div class="w-full h-16" style="background-color: #EAEDDF; border-radius: var(--petlux-radius-sm);"></div>
+                <p class="mt-2 text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">浅色变体</p>
+                <p class="text-muted-foreground" style="font-size: 11px;">#EAEDDF</p>
+              </div>
+              <div>
+                <div class="w-full h-16" style="background-color: #FAFAF6; border-radius: var(--petlux-radius-sm); border: 1px solid var(--petlux-border);"></div>
+                <p class="mt-2 text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">品牌文字色</p>
+                <p class="text-muted-foreground" style="font-size: 11px;">#FAFAF6</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 4: Surface Colors -->
+        <section class="px-4 pb-4">
+          <div class="bg-card p-4" style="border-radius: var(--petlux-radius-lg); box-shadow: var(--petlux-shadow-1);">
+            <h3 class="text-foreground mb-4" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">表面与背景</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="w-full h-16" style="background-color: #EDF0E2; border-radius: var(--petlux-radius-sm); border: 1px solid var(--petlux-border);"></div>
+                <p class="mt-2 text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">页面底色</p>
+                <p class="text-muted-foreground" style="font-size: 11px;">#EDF0E2</p>
+              </div>
+              <div>
+                <div class="w-full h-16" style="background-color: #FFFFFF; border-radius: var(--petlux-radius-sm); border: 1px solid var(--petlux-border);"></div>
+                <p class="mt-2 text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">卡片白</p>
+                <p class="text-muted-foreground" style="font-size: 11px;">#FFFFFF</p>
+              </div>
+              <div>
+                <div class="w-full h-16" style="background-color: #E2E6D3; border-radius: var(--petlux-radius-sm); border: 1px solid var(--petlux-border);"></div>
+                <p class="mt-2 text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">橄榄悬停</p>
+                <p class="text-muted-foreground" style="font-size: 11px;">#E2E6D3</p>
+              </div>
+              <div>
+                <div class="w-full h-16" style="background-color: #D6DBC5; border-radius: var(--petlux-radius-sm); border: 1px solid var(--petlux-border);"></div>
+                <p class="mt-2 text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">深橄榄填充</p>
+                <p class="text-muted-foreground" style="font-size: 11px;">#D6DBC5</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 5: Text & Line Colors -->
+        <section class="px-4 pb-4">
+          <div class="bg-card p-4" style="border-radius: var(--petlux-radius-lg); box-shadow: var(--petlux-shadow-1);">
+            <h3 class="text-foreground mb-4" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">文字与线条</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span style="font-size: var(--petlux-text-body); color: #2A2823;">primary text 主文字</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">#2A2823</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span style="font-size: var(--petlux-text-body); color: #635E54;">secondary text 次文字</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">#635E54</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span style="font-size: var(--petlux-text-body); color: #9A9489;">tertiary text 辅助文字</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">#9A9489</span>
+              </div>
+              <div class="flex items-center justify-between pt-1">
+                <span class="text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">分割线</span>
+                <div class="h-1.5 flex-1 mx-3" style="background-color: #E7E3D9; border-radius: var(--petlux-radius-pill);"></div>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">#E7E3D9</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">强调边框</span>
+                <div class="h-1.5 flex-1 mx-3" style="background-color: #D8D3C7; border-radius: var(--petlux-radius-pill);"></div>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">#D8D3C7</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 6: State Colors -->
+        <section class="px-4 pb-4">
+          <div class="bg-card p-4" style="border-radius: var(--petlux-radius-lg); box-shadow: var(--petlux-shadow-1);">
+            <h3 class="text-foreground mb-1" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">状态色</h3>
+            <p class="text-muted-foreground mb-4" style="font-size: var(--petlux-text-caption);">语义专用，不作品牌色</p>
+            <div class="grid grid-cols-4 gap-2">
+              <div class="flex flex-col items-center">
+                <div class="w-full h-14 flex items-center justify-center" style="background-color: #5B7C4A; border-radius: var(--petlux-radius-sm);">
+                  <i data-lucide="check" class="w-4 h-4" style="color: #FAFAF6;"></i>
+                </div>
+                <span class="mt-2 text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">成功</span>
+                <span class="text-muted-foreground" style="font-size: 10px;">#5B7C4A</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <div class="w-full h-14 flex items-center justify-center" style="background-color: #B8893A; border-radius: var(--petlux-radius-sm);">
+                  <i data-lucide="alert-triangle" class="w-4 h-4" style="color: #FAFAF6;"></i>
+                </div>
+                <span class="mt-2 text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">警告</span>
+                <span class="text-muted-foreground" style="font-size: 10px;">#B8893A</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <div class="w-full h-14 flex items-center justify-center" style="background-color: #A85B4A; border-radius: var(--petlux-radius-sm);">
+                  <i data-lucide="x" class="w-4 h-4" style="color: #FAFAF6;"></i>
+                </div>
+                <span class="mt-2 text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">错误</span>
+                <span class="text-muted-foreground" style="font-size: 10px;">#A85B4A</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <div class="w-full h-14 flex items-center justify-center" style="background-color: #6B7D8C; border-radius: var(--petlux-radius-sm);">
+                  <i data-lucide="info" class="w-4 h-4" style="color: #FAFAF6;"></i>
+                </div>
+                <span class="mt-2 text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">信息</span>
+                <span class="text-muted-foreground" style="font-size: 10px;">#6B7D8C</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 7: Radius -->
+        <section class="px-4 pb-4">
+          <div class="bg-card p-4" style="border-radius: var(--petlux-radius-lg); box-shadow: var(--petlux-shadow-1);">
+            <h3 class="text-foreground mb-4" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">圆角规范</h3>
+            <div class="grid grid-cols-5 gap-2">
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-full aspect-square bg-accent" style="border-radius: var(--petlux-radius-xs);"></div>
+                <span class="text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">xs</span>
+                <span class="text-muted-foreground" style="font-size: 10px;">4px</span>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-full aspect-square bg-accent" style="border-radius: var(--petlux-radius-sm);"></div>
+                <span class="text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">sm</span>
+                <span class="text-muted-foreground" style="font-size: 10px;">8px</span>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-full aspect-square bg-accent" style="border-radius: var(--petlux-radius-md);"></div>
+                <span class="text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">md</span>
+                <span class="text-muted-foreground" style="font-size: 10px;">12px</span>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-full aspect-square bg-accent" style="border-radius: var(--petlux-radius-lg);"></div>
+                <span class="text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">lg</span>
+                <span class="text-muted-foreground" style="font-size: 10px;">16px</span>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-full aspect-square bg-accent" style="border-radius: var(--petlux-radius-pill);"></div>
+                <span class="text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">pill</span>
+                <span class="text-muted-foreground" style="font-size: 10px;">999px</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 8: Shadows -->
+        <section class="px-4 pb-4">
+          <div class="bg-card p-4" style="border-radius: var(--petlux-radius-lg); box-shadow: var(--petlux-shadow-1);">
+            <h3 class="text-foreground mb-4" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">阴影规范</h3>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-full h-16 bg-card" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1);"></div>
+                <span class="text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">shadow-1</span>
+                <span class="text-muted-foreground text-center" style="font-size: 10px; line-height: 1.3;">0 1px 3px<br>rgba(42,40,35,0.04)</span>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-full h-16 bg-card" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-2);"></div>
+                <span class="text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">shadow-2</span>
+                <span class="text-muted-foreground text-center" style="font-size: 10px; line-height: 1.3;">0 8px 24px -8px<br>rgba(42,40,35,0.12)</span>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-full h-16 bg-card" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-3);"></div>
+                <span class="text-foreground" style="font-size: 11px; font-weight: var(--petlux-weight-medium);">shadow-3</span>
+                <span class="text-muted-foreground text-center" style="font-size: 10px; line-height: 1.3;">0 16px 48px -16px<br>rgba(42,40,35,0.20)</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 9: Typography -->
+        <section class="px-4 pb-4">
+          <div class="bg-card p-4" style="border-radius: var(--petlux-radius-lg); box-shadow: var(--petlux-shadow-1);">
+            <h3 class="text-foreground mb-4" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">字体与字号</h3>
+            <div class="space-y-3 mb-5">
+              <div class="flex items-baseline justify-between">
+                <span class="text-foreground" style="font-size: var(--petlux-text-display); line-height: var(--petlux-leading-tight); font-weight: var(--petlux-weight-semibold);">展示标题</span>
+                <span class="text-muted-foreground shrink-0 ml-3" style="font-size: var(--petlux-text-caption);">Display 32px</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span class="text-foreground" style="font-size: var(--petlux-text-h1); line-height: var(--petlux-leading-tight); font-weight: var(--petlux-weight-semibold);">一级标题</span>
+                <span class="text-muted-foreground shrink-0 ml-3" style="font-size: var(--petlux-text-caption);">H1 24px</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span class="text-foreground" style="font-size: var(--petlux-text-h2); line-height: var(--petlux-leading-tight); font-weight: var(--petlux-weight-semibold);">二级标题</span>
+                <span class="text-muted-foreground shrink-0 ml-3" style="font-size: var(--petlux-text-caption);">H2 20px</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span class="text-foreground" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-medium);">三级标题</span>
+                <span class="text-muted-foreground shrink-0 ml-3" style="font-size: var(--petlux-text-caption);">H3 17px</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span class="text-foreground" style="font-size: var(--petlux-text-body);">正文内容</span>
+                <span class="text-muted-foreground shrink-0 ml-3" style="font-size: var(--petlux-text-caption);">Body 15px</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span class="text-foreground" style="font-size: var(--petlux-text-body-sm);">小号正文</span>
+                <span class="text-muted-foreground shrink-0 ml-3" style="font-size: var(--petlux-text-caption);">Body SM 13px</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">说明文字</span>
+                <span class="text-muted-foreground shrink-0 ml-3" style="font-size: var(--petlux-text-caption);">Caption 12px</span>
+              </div>
+            </div>
+            <div class="pt-4 border-t border-border">
+              <p class="text-muted-foreground mb-2" style="font-size: var(--petlux-text-caption);">字体族</p>
+              <p class="text-foreground" style="font-size: var(--petlux-text-body-sm);">PingFang SC / HarmonyOS Sans SC / Noto Sans SC</p>
+            </div>
+            <div class="pt-4 mt-4 border-t border-border">
+              <p class="text-muted-foreground mb-3" style="font-size: var(--petlux-text-caption);">字重</p>
+              <div class="flex items-baseline gap-6">
+                <span class="text-foreground" style="font-size: var(--petlux-text-body); font-weight: var(--petlux-weight-regular);">Regular 400</span>
+                <span class="text-foreground" style="font-size: var(--petlux-text-body); font-weight: var(--petlux-weight-medium);">Medium 500</span>
+                <span class="text-foreground" style="font-size: var(--petlux-text-body); font-weight: var(--petlux-weight-semibold);">Semibold 600</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 10: Spacing -->
+        <section class="px-4 pb-4">
+          <div class="bg-card p-4" style="border-radius: var(--petlux-radius-lg); box-shadow: var(--petlux-shadow-1);">
+            <h3 class="text-foreground mb-1" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">间距规范</h3>
+            <p class="text-muted-foreground mb-4" style="font-size: var(--petlux-text-caption);">8pt 网格</p>
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <div class="h-6 bg-primary" style="width: 4px; border-radius: var(--petlux-radius-xs);"></div>
+                <span class="text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">s-1</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">4px</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="h-6 bg-primary" style="width: 8px; border-radius: var(--petlux-radius-xs);"></div>
+                <span class="text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">s-2</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">8px</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="h-6 bg-primary" style="width: 12px; border-radius: var(--petlux-radius-xs);"></div>
+                <span class="text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">s-3</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">12px</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="h-6 bg-primary" style="width: 16px; border-radius: var(--petlux-radius-xs);"></div>
+                <span class="text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">s-4</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">16px</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="h-6 bg-primary" style="width: 24px; border-radius: var(--petlux-radius-xs);"></div>
+                <span class="text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">s-5</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">24px</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="h-6 bg-primary" style="width: 32px; border-radius: var(--petlux-radius-xs);"></div>
+                <span class="text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">s-6</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">32px</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="h-6 bg-primary" style="width: 48px; border-radius: var(--petlux-radius-xs);"></div>
+                <span class="text-foreground" style="font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">s-7</span>
+                <span class="text-muted-foreground" style="font-size: var(--petlux-text-caption);">48px</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 11: Components -->
+        <section class="px-4 pb-6">
+          <div class="bg-card p-4" style="border-radius: var(--petlux-radius-lg); box-shadow: var(--petlux-shadow-1);">
+            <h3 class="text-foreground mb-4" style="font-size: var(--petlux-text-h3); font-weight: var(--petlux-weight-semibold);">核心复用组件</h3>
+            <div class="space-y-4">
+              <div>
+                <p class="text-muted-foreground mb-2" style="font-size: var(--petlux-text-caption);">按钮</p>
+                <div class="flex items-center gap-3">
+                  <button class="bg-primary text-primary-foreground px-4 py-2" style="border-radius: var(--petlux-radius-md); font-size: var(--petlux-text-body-sm); font-weight: var(--petlux-weight-medium);">立即预约</button>
+                  <button class="bg-muted text-foreground px-4 py-2" style="border-radius: var(--petlux-radius-md); font-size: var(--petlux-text-body-sm); font-weight: var(--petlux-weight-medium);">了解更多</button>
+                </div>
+              </div>
+              <div>
+                <p class="text-muted-foreground mb-2" style="font-size: var(--petlux-text-caption);">标签</p>
+                <span class="inline-block bg-accent text-accent-foreground px-2 py-0.5" style="border-radius: var(--petlux-radius-pill); font-size: var(--petlux-text-caption); font-weight: var(--petlux-weight-medium);">热门</span>
+              </div>
+              <div>
+                <p class="text-muted-foreground mb-2" style="font-size: var(--petlux-text-caption);">输入框</p>
+                <input type="text" placeholder="请输入" class="w-full border border-input bg-card text-foreground px-3 py-2" style="border-radius: var(--petlux-radius-md); font-size: var(--petlux-text-body-sm);">
+              </div>
+              <div>
+                <p class="text-muted-foreground mb-2" style="font-size: var(--petlux-text-caption);">卡片</p>
+                <div class="bg-card p-3" style="border-radius: var(--petlux-radius-md); box-shadow: var(--petlux-shadow-1); border: 1px solid var(--petlux-border);">
+                  <p class="text-foreground" style="font-size: var(--petlux-text-body-sm); font-weight: var(--petlux-weight-medium);">卡片标题</p>
+                  <p class="text-muted-foreground mt-1" style="font-size: var(--petlux-text-caption);">这是卡片内的说明文字内容。</p>
+                </div>
+              </div>
+              <div>
+                <p class="text-muted-foreground mb-2" style="font-size: var(--petlux-text-caption);">进度条</p>
+                <div class="w-full h-2 bg-muted overflow-hidden" style="border-radius: var(--petlux-radius-pill);">
+                  <div class="h-full bg-primary" style="width: 66.67%; border-radius: var(--petlux-radius-pill);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+    <nav data-mobile-nav="global" class="w-full max-w-md mx-auto bg-card/95 backdrop-blur-sm border-t border-border sticky bottom-0"><div class="grid grid-cols-5 h-16"><a data-nav-key="home" data-active="true" class="flex flex-col items-center justify-center gap-1 px-1 h-full"><i data-lucide="home" class="w-5 h-5 shrink-0 text-primary"></i><span class="text-[11px] leading-none whitespace-nowrap text-primary font-medium">首页</span></a><a data-nav-key="activities" class="flex flex-col items-center justify-center gap-1 px-1 h-full"><i data-lucide="calendar-days" class="w-5 h-5 shrink-0 text-muted-foreground"></i><span class="text-[11px] leading-none whitespace-nowrap text-muted-foreground">活动报名</span></a><a data-nav-key="tuan" class="relative flex flex-col items-center justify-center gap-1 px-1 h-full"><span class="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-[0_0_0_4px_var(--petlux-card),0_6px_16px_-4px_rgba(79,94,53,0.5)]"><i data-lucide="users" class="w-5 h-5 shrink-0"></i></span><span class="block w-5 h-5 shrink-0" aria-hidden="true"></span><span class="text-[11px] leading-none whitespace-nowrap text-primary font-medium">宠团团</span></a><a data-nav-key="door" class="flex flex-col items-center justify-center gap-1 px-1 h-full"><i data-lucide="paw-print" class="w-5 h-5 shrink-0 text-muted-foreground"></i><span class="text-[11px] leading-none whitespace-nowrap text-muted-foreground">上门服务</span></a><a data-nav-key="me" class="flex flex-col items-center justify-center gap-1 px-1 h-full"><i data-lucide="user" class="w-5 h-5 shrink-0 text-muted-foreground"></i><span class="text-[11px] leading-none whitespace-nowrap text-muted-foreground">我的</span></a></div></nav>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

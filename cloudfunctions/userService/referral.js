@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * referral.ts - 用户邀请服务（TypeScript 源文件 - Sprint 37 迁移）

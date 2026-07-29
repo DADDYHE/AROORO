@@ -58,6 +58,15 @@ const mockDb = {
               // 其他操作符（and/or）默认通过
               continue
             }
+            // 兼容真实 db.command 的 MongoDB 风格操作符（{ $in: [...] } / { $nin: [...] }）
+            if (v && typeof v === 'object' && Array.isArray(v.$in)) {
+              if (!v.$in.includes(doc[k])) {return false}
+              continue
+            }
+            if (v && typeof v === 'object' && Array.isArray(v.$nin)) {
+              if (v.$nin.includes(doc[k])) {return false}
+              continue
+            }
             if (doc[k] !== v) {return false}
           }
           return true
@@ -65,7 +74,25 @@ const mockDb = {
         return {
           count: async () => ({ total: docs.length }),
           limit: () => ({ get: async () => ({ data: docs }) }),
-          field: () => ({ limit: () => ({ get: async () => ({ data: docs }) }) }),
+          // field(selection)：实现字段投影（仅保留 selection 中为 true 的字段），
+          // 并支持链式 .get() / .limit().get()
+          field: (selection) => {
+            let projected = docs
+            if (selection && typeof selection === 'object') {
+              const keys = Object.keys(selection).filter(k => selection[k])
+              if (keys.length) {
+                projected = docs.map(d => {
+                  const p = {}
+                  for (const k of keys) { p[k] = d[k] }
+                  return p
+                })
+              }
+            }
+            return {
+              get: async () => ({ data: projected }),
+              limit: () => ({ get: async () => ({ data: projected }) }),
+            }
+          },
           get: async () => ({ data: docs }),
         }
       },

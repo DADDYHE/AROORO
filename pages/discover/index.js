@@ -9,9 +9,9 @@ const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
 
 const ACCENT_COLORS = {
-  fixed_amount: '#C4956A',
-  discount: '#8BA4B8',
-  full_reduction: '#D4A853',
+  fixed_amount: '#B8893A',
+  discount: '#6B7D8C',
+  full_reduction: '#D4A858',
 }
 
 Page({
@@ -68,7 +68,7 @@ Page({
       const result = await CouponService.getPopupCoupon({ page: 'tuan' })
       if (result && result.code === 0 && result.data) {
         const coupon = result.data
-        coupon.accentColor = ACCENT_COLORS[coupon.type] || '#C4956A'
+        coupon.accentColor = ACCENT_COLORS[coupon.type] || '#B8893A'
         this.setData({ popupCoupon: coupon })
       }
     } catch (e) {

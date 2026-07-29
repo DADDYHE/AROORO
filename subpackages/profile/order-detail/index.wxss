@@ -9,11 +9,9 @@
 }
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }
 
 .status-banner {
@@ -128,10 +126,6 @@
   border: 1rpx solid rgba(156, 39, 176, 0.3);
   border-radius: 20rpx;
   background: rgba(156, 39, 176, 0.05);
-}
-
-.call-btn:active {
-  background: rgba(156, 39, 176, 0.12);
 }
 
 .pet-list {
@@ -261,10 +255,6 @@
   background: rgba(156, 39, 176, 0.05);
 }
 
-.copy-btn:active {
-  background: rgba(156, 39, 176, 0.12);
-}
-
 .total-row {
   margin-top: 8rpx;
   padding-top: 20rpx;
@@ -304,11 +294,6 @@
   text-align: center;
 }
 
-.btn-primary:active {
-  opacity: 0.9;
-  transform: scale(0.98);
-}
-
 .btn-secondary {
   padding: 18rpx 48rpx;
   background: var(--card-color);
@@ -319,8 +304,4 @@
   border: 1rpx solid #D1D1D6;
   letter-spacing: 1rpx;
   text-align: center;
-}
-
-.btn-secondary:active {
-  background: var(--background-color);
 }

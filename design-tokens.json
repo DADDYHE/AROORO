@@ -1,39 +1,45 @@
 {
   "meta": {
-    "product": "微信小程序「左右」",
-    "direction": "Deep Teal × Modern Minimal（暮野 PET 高端宠物平台质感）",
+    "product": "微信小程序「AROORO」",
+    "direction": "Olive Green × Healing Light-Luxury（PETLUX 高端宠物平台质感 · 橄榄绿换肤）",
     "unit": "rpx",
     "designWidth": 750,
     "note": "backdrop-filter 的 blur 与 env() 安全区为 px，非 rpx"
   },
   "color": {
     "primary": {
-      "900": "#083D4A",
-      "700": "#0D5A6B",
-      "500": "#2A7A89",
-      "300": "#7AB0BA",
-      "100": "#DDEAED",
-      "gradient": "linear-gradient(160deg, #2A7A89 0%, #0D5A6B 100%)"
+      "900": "#3A4626",
+      "700": "#4F5E35",
+      "500": "#6B7D5A",
+      "300": "#9A9489",
+      "100": "#EAEDDF",
+      "gradient": "linear-gradient(160deg, #4F5E35 0%, #3A4626 100%)"
     },
     "accent": {
-      "base": "#4ECDC4",
-      "hover": "#3DBDB4",
-      "soft": "#E6F7F5",
-      "glow": "rgba(78,205,196,0.35)"
+      "base": "#B8893A",
+      "hover": "#9A7430",
+      "soft": "#F2E8D4",
+      "glow": "rgba(184,138,58,0.35)"
     },
     "neutral": {
-      "bg": "#F4F9FA",
+      "bg": "#F8FAF3",
       "surface": "#FFFFFF",
       "surfaceGlass": "rgba(255,255,255,0.72)",
       "surfaceGlassSolid": "#FFFFFF",
       "surfaceGlassBorder": "rgba(255,255,255,0.55)",
-      "border": "#D2DEE1",
-      "borderStrong": "#B8C8CD",
-      "divider": "#E6EEF0",
-      "text1": "#152830",
-      "text2": "#4B5B60",
-      "text3": "#8A9AA0",
-      "textOnPrimary": "#F4F9FA"
+      "border": "#D8DCCE",
+      "borderStrong": "#C9CFBA",
+      "divider": "#EAEDDF",
+      "text1": "#2A2823",
+      "text2": "#635E54",
+      "text3": "#9A9489",
+      "textOnPrimary": "#FAFAF6"
+    },
+    "state": {
+      "success": "#5B7C4A",
+      "warning": "#B8893A",
+      "error": "#A85B4A",
+      "info": "#6B7D8C"
     }
   },
   "tabBar": {
@@ -43,10 +49,10 @@
     "bg": "rgba(255,255,255,0.92)",
     "bgGlass": "rgba(255,255,255,0.72)",
     "blur": "20px",
-    "borderTop": "1rpx solid rgba(13,90,107,0.08)",
-    "itemActive": "#0D5A6B",
-    "itemInactive": "#8A9AA0",
-    "itemActiveBg": "rgba(13,90,107,0.08)",
+    "borderTop": "1rpx solid rgba(79,94,53,0.08)",
+    "itemActive": "#4F5E35",
+    "itemInactive": "#9A9489",
+    "itemActiveBg": "rgba(79,94,53,0.08)",
     "iconSize": "48rpx",
     "iconStroke": "4rpx",
     "labelSize": "22rpx",
@@ -57,9 +63,9 @@
       "protrusion": "40rpx",
       "bottom": "calc(env(safe-area-inset-bottom, 0px) + 20rpx)",
       "iconSize": "56rpx",
-      "gradient": "linear-gradient(160deg, #2A7A89 0%, #0D5A6B 100%)",
-      "iconColor": "#FFFFFF",
-      "shadow": "0 12rpx 28rpx rgba(13,90,107,0.35), 0 4rpx 10rpx rgba(13,90,107,0.20)"
+      "gradient": "linear-gradient(160deg, #4F5E35 0%, #3A4626 100%)",
+      "iconColor": "#FAFAF6",
+      "shadow": "0 12rpx 28rpx rgba(79,94,53,0.35), 0 4rpx 10rpx rgba(79,94,53,0.20)"
     }
   },
   "typography": {
@@ -80,16 +86,16 @@
     "lg": "32rpx", "xl": "48rpx", "2xl": "64rpx", "3xl": "96rpx"
   },
   "radius": {
-    "sm": "16rpx", "md": "24rpx", "lg": "32rpx", "xl": "40rpx",
-    "2xl": "48rpx", "3xl": "56rpx", "pill": "999rpx"
+    "sm": "16rpx", "md": "24rpx", "lg": "24rpx", "xl": "32rpx",
+    "2xl": "32rpx", "3xl": "40rpx", "pill": "999rpx"
   },
   "shadow": {
-    "xs": "0 2rpx 8rpx rgba(13,90,107,0.04)",
-    "sm": "0 4rpx 16rpx rgba(13,90,107,0.06)",
-    "md": "0 8rpx 24rpx rgba(13,90,107,0.08)",
-    "lg": "0 16rpx 40rpx rgba(13,90,107,0.10)",
-    "fab": "0 12rpx 28rpx rgba(13,90,107,0.35), 0 4rpx 10rpx rgba(13,90,107,0.20)",
-    "floatTabBar": "0 -4rpx 32rpx rgba(13,90,107,0.10)"
+    "xs": "0 2rpx 8rpx rgba(42,40,35,0.04)",
+    "sm": "0 4rpx 16rpx rgba(42,40,35,0.06)",
+    "md": "0 8rpx 24rpx rgba(42,40,35,0.08)",
+    "lg": "0 16rpx 40rpx rgba(42,40,35,0.10)",
+    "fab": "0 12rpx 28rpx rgba(79,94,53,0.35), 0 4rpx 10rpx rgba(79,94,53,0.20)",
+    "floatTabBar": "0 -4rpx 32rpx rgba(42,40,35,0.10)"
   },
   "motion": {
     "easeStandard": "cubic-bezier(0.4,0,0.2,1)",

@@ -64,7 +64,7 @@ if (code) {
   check('M1 清理关联字段', /orderId:\s*['"]{2}/.test(code) && /orderType:\s*['"]{2}/.test(code))
   check('M1 卡死券告警', /coupon\.expiry\.stuck\.locked/.test(code))
   // M3: 接入告警
-  check('recordAlert 接入', /require\(['"]\.\.\/common\/alert['"]\)/.test(code) && /recordAlert\(['"]critical['"]/.test(code))
+  check('recordAlert 接入', /require\(['"]\.\/common\/alert['"]\)/.test(code) && /recordAlert\(['"]critical['"]/.test(code))
   // L2: 并发保护
   check('L2 并发保护', /_isRunning/.test(code) && /if\s*\(\s*_isRunning\s*\)/.test(code))
   check('Runtime shim', /_mod\.exports\s*=\s*\{/.test(code))

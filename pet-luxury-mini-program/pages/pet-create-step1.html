@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>创建宠物档案</title>
+    <style id="theme-vars">
+/* ============================================================
+   Pet Luxury Mini-Program — Design Token System
+   Migrated from olive-green fresh-food app to healing light-luxury pet brand
+   Brand prefix: petlux
+   ============================================================ */
+
+:root {
+  /* ---------- Brand Primary (single hue: warm olive green) ---------- */
+  --petlux-brand: #4F5E35;           /* primary olive — CTAs, active states */
+  --petlux-brand-deep: #3A4626;      /* hover / pressed step */
+  --petlux-brand-soft: #EAEDDF;      /* 8% brand tint for tags, soft fills */
+  --petlux-brand-ink: #FAFAF6;       /* text on brand fills */
+
+  /* ---------- Surfaces (olive-tinted — brand primary light variant) ---------- */
+  --petlux-bg: #EDF0E2;              /* olive-tinted page base — brand light variant */
+  --petlux-surface: #FFFFFF;         /* white card */
+  --petlux-surface-2: #E2E6D3;       /* olive hover / selected */
+  --petlux-surface-3: #D6DBC5;       /* deeper olive fill */
+
+  /* ---------- Ink (text) ---------- */
+  --petlux-ink: #2A2823;             /* primary text — warm near-black */
+  --petlux-ink-2: #635E54;           /* secondary text */
+  --petlux-ink-3: #9A9489;           /* tertiary / placeholder */
+
+  /* ---------- Lines & Dividers ---------- */
+  --petlux-line: #D8DCCE;            /* hairline divider — olive tint */
+  --petlux-line-strong: #C9CFBA;     /* emphasized border */
+
+  /* ---------- State Colors (semantic only, never brand) ---------- */
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+
+  /* ---------- Radius Scale (2 / 8 / 12 / 16) ---------- */
+  --petlux-radius-xs: 4px;
+  --petlux-radius-sm: 8px;
+  --petlux-radius-md: 12px;
+  --petlux-radius-lg: 16px;
+  --petlux-radius-pill: 999px;
+
+  /* ---------- Shadow (subtle, alpha <= 0.05 for static) ---------- */
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+
+  /* ---------- Spacing (8pt grid) ---------- */
+  --petlux-s-1: 4px;
+  --petlux-s-2: 8px;
+  --petlux-s-3: 12px;
+  --petlux-s-4: 16px;
+  --petlux-s-5: 24px;
+  --petlux-s-6: 32px;
+  --petlux-s-7: 48px;
+
+  /* ---------- Typography ---------- */
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-font-latin: "Inter", system-ui, sans-serif;
+  --petlux-font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --petlux-text-display: 32px;
+  --petlux-text-h1: 24px;
+  --petlux-text-h2: 20px;
+  --petlux-text-h3: 17px;
+  --petlux-text-body: 15px;
+  --petlux-text-body-sm: 13px;
+  --petlux-text-caption: 12px;
+
+  --petlux-leading-tight: 1.2;
+  --petlux-leading-normal: 1.55;
+  --petlux-leading-relaxed: 1.7;
+
+  --petlux-weight-regular: 400;
+  --petlux-weight-medium: 500;
+  --petlux-weight-semibold: 600;
+
+  --petlux-tracking-tight: -0.02em;
+  --petlux-tracking-normal: 0;
+  --petlux-tracking-wide: 0.01em;
+
+  /* ============================================================
+     Semantic Aliases — required by apply-html-head-contract.mjs
+     ============================================================ */
+
+  --petlux-background: var(--petlux-bg);
+  --petlux-foreground: var(--petlux-ink);
+
+  --petlux-card: var(--petlux-surface);
+  --petlux-card-foreground: var(--petlux-ink);
+
+  --petlux-popover: var(--petlux-surface);
+  --petlux-popover-foreground: var(--petlux-ink);
+
+  --petlux-primary: var(--petlux-brand);
+  --petlux-primary-foreground: var(--petlux-brand-ink);
+
+  --petlux-secondary: var(--petlux-surface-2);
+  --petlux-secondary-foreground: var(--petlux-ink-2);
+
+  --petlux-muted: var(--petlux-surface-2);
+  --petlux-muted-foreground: var(--petlux-ink-2);
+
+  --petlux-accent: var(--petlux-brand-soft);
+  --petlux-accent-foreground: var(--petlux-brand);
+
+  --petlux-destructive: var(--petlux-state-error);
+  --petlux-destructive-foreground: #FAFAF6;
+
+  --petlux-border: var(--petlux-line);
+  --petlux-input: var(--petlux-line-strong);
+  --petlux-ring: var(--petlux-brand);
+
+  --petlux-radius-small: var(--petlux-radius-sm);
+  --petlux-radius-medium: var(--petlux-radius-md);
+  --petlux-radius-large: var(--petlux-radius-lg);
+}
+
+/* ---------- Dark mode stub (project is light-only; reserved) ---------- */
+.dark {
+  --petlux-background: #161612;
+  --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A;
+  --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A;
+  --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A;
+  --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924;
+  --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C;
+  --petlux-input: #34322C;
+  --petlux-ring: #7A8C5A;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--petlux-background);
+    --color-foreground: var(--petlux-foreground);
+    --color-card: var(--petlux-card);
+    --color-card-foreground: var(--petlux-card-foreground);
+    --color-popover: var(--petlux-popover);
+    --color-popover-foreground: var(--petlux-popover-foreground);
+    --color-primary: var(--petlux-primary);
+    --color-primary-foreground: var(--petlux-primary-foreground);
+    --color-secondary: var(--petlux-secondary);
+    --color-secondary-foreground: var(--petlux-secondary-foreground);
+    --color-muted: var(--petlux-muted);
+    --color-muted-foreground: var(--petlux-muted-foreground);
+    --color-accent: var(--petlux-accent);
+    --color-accent-foreground: var(--petlux-accent-foreground);
+    --color-destructive: var(--petlux-destructive);
+    --color-destructive-foreground: var(--petlux-destructive-foreground);
+    --color-border: var(--petlux-border);
+    --color-input: var(--petlux-input);
+    --color-ring: var(--petlux-ring);
+    --radius-sm: var(--petlux-radius-sm);
+    --radius-md: var(--petlux-radius-md);
+    --radius-lg: var(--petlux-radius-lg);
+  }
+  @layer base {
+    body { background: var(--petlux-background); color: var(--petlux-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--petlux-background); }
+      .text-background { color: var(--petlux-background); }
+      .border-background { border-color: var(--petlux-background); }
+      .ring-background { --tw-ring-color: var(--petlux-background); }
+      .bg-foreground { background-color: var(--petlux-foreground); }
+      .text-foreground { color: var(--petlux-foreground); }
+      .border-foreground { border-color: var(--petlux-foreground); }
+      .ring-foreground { --tw-ring-color: var(--petlux-foreground); }
+      .bg-card { background-color: var(--petlux-card); }
+      .text-card { color: var(--petlux-card); }
+      .border-card { border-color: var(--petlux-card); }
+      .ring-card { --tw-ring-color: var(--petlux-card); }
+      .bg-card-foreground { background-color: var(--petlux-card-foreground); }
+      .text-card-foreground { color: var(--petlux-card-foreground); }
+      .border-card-foreground { border-color: var(--petlux-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--petlux-card-foreground); }
+      .bg-popover { background-color: var(--petlux-popover); }
+      .text-popover { color: var(--petlux-popover); }
+      .border-popover { border-color: var(--petlux-popover); }
+      .ring-popover { --tw-ring-color: var(--petlux-popover); }
+      .bg-popover-foreground { background-color: var(--petlux-popover-foreground); }
+      .text-popover-foreground { color: var(--petlux-popover-foreground); }
+      .border-popover-foreground { border-color: var(--petlux-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--petlux-popover-foreground); }
+      .bg-primary { background-color: var(--petlux-primary); }
+      .text-primary { color: var(--petlux-primary); }
+      .border-primary { border-color: var(--petlux-primary); }
+      .ring-primary { --tw-ring-color: var(--petlux-primary); }
+      .bg-primary-foreground { background-color: var(--petlux-primary-foreground); }
+      .text-primary-foreground { color: var(--petlux-primary-foreground); }
+      .border-primary-foreground { border-color: var(--petlux-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--petlux-primary-foreground); }
+      .bg-secondary { background-color: var(--petlux-secondary); }
+      .text-secondary { color: var(--petlux-secondary); }
+      .border-secondary { border-color: var(--petlux-secondary); }
+      .ring-secondary { --tw-ring-color: var(--petlux-secondary); }
+      .bg-secondary-foreground { background-color: var(--petlux-secondary-foreground); }
+      .text-secondary-foreground { color: var(--petlux-secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--petlux-secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--petlux-secondary-foreground); }
+      .bg-muted { background-color: var(--petlux-muted); }
+      .text-muted { color: var(--petlux-muted); }
+      .border-muted { border-color: var(--petlux-muted); }
+      .ring-muted { --tw-ring-color: var(--petlux-muted); }
+      .bg-muted-foreground { background-color: var(--petlux-muted-foreground); }
+      .text-muted-foreground { color: var(--petlux-muted-foreground); }
+      .border-muted-foreground { border-color: var(--petlux-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--petlux-muted-foreground); }
+      .bg-accent { background-color: var(--petlux-accent); }
+      .text-accent { color: var(--petlux-accent); }
+      .border-accent { border-color: var(--petlux-accent); }
+      .ring-accent { --tw-ring-color: var(--petlux-accent); }
+      .bg-accent-foreground { background-color: var(--petlux-accent-foreground); }
+      .text-accent-foreground { color: var(--petlux-accent-foreground); }
+      .border-accent-foreground { border-color: var(--petlux-accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--petlux-accent-foreground); }
+      .bg-destructive { background-color: var(--petlux-destructive); }
+      .text-destructive { color: var(--petlux-destructive); }
+      .border-destructive { border-color: var(--petlux-destructive); }
+      .ring-destructive { --tw-ring-color: var(--petlux-destructive); }
+      .bg-destructive-foreground { background-color: var(--petlux-destructive-foreground); }
+      .text-destructive-foreground { color: var(--petlux-destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--petlux-destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--petlux-destructive-foreground); }
+      .bg-border { background-color: var(--petlux-border); }
+      .text-border { color: var(--petlux-border); }
+      .border-border { border-color: var(--petlux-border); }
+      .ring-border { --tw-ring-color: var(--petlux-border); }
+      .bg-input { background-color: var(--petlux-input); }
+      .text-input { color: var(--petlux-input); }
+      .border-input { border-color: var(--petlux-input); }
+      .ring-input { --tw-ring-color: var(--petlux-input); }
+      .bg-ring { background-color: var(--petlux-ring); }
+      .text-ring { color: var(--petlux-ring); }
+      .border-ring { border-color: var(--petlux-ring); }
+      .ring-ring { --tw-ring-color: var(--petlux-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+
+/* ============================================================
+   Gallery Exhibition Style — create-step1
+   AROORO Pet Profile Creation
+   ============================================================ */
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+.gallery-container input,
+.gallery-container textarea,
+.gallery-container button {
+  font-family: var(--petlux-font-sans);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.gallery-container input:focus { outline: none; }
+.gallery-container textarea:focus { outline: none; }
+
+/* ---------- Petlux Utilities ---------- */
+.petlux-tap-none { -webkit-tap-highlight-color: transparent; }
+
+/* ---------- Page Shell ---------- */
+.petlux-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ---------- Sticky Navigation ---------- */
+.gallery-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 var(--petlux-s-3);
+  padding-top: env(safe-area-inset-top);
+  height: calc(48px + env(safe-area-inset-top));
+  background: rgba(237, 240, 226, 0.85);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border-bottom: 1px solid rgba(216, 220, 206, 0.5);
+}
+.nav-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--petlux-ink);
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease;
+}
+.nav-back:active { opacity: 0.5; }
+.nav-back svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.5;
+}
+.nav-title {
+  font-size: var(--petlux-text-body);
+  font-weight: var(--petlux-weight-medium);
+  letter-spacing: 0.08em;
+  color: var(--petlux-ink);
+}
+.nav-placeholder { width: 36px; flex-shrink: 0; }
+
+/* ---------- Gallery Container ---------- */
+.gallery-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Gallery Header (brand-block) ---------- */
+.gallery-header { padding: 0; }
+.brand-block {
+  padding: var(--petlux-s-6) var(--petlux-s-5) var(--petlux-s-4);
+}
+.brand-accent-bar {
+  width: 3px;
+  height: 20px;
+  background: var(--petlux-brand);
+  border-radius: 2px;
+  margin-bottom: var(--petlux-s-3);
+}
+.brand-main { position: relative; }
+.brand-main::before {
+  content: "AROORO";
+  display: block;
+  font-family: var(--petlux-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--petlux-ink-3);
+  margin-bottom: var(--petlux-s-2);
+  font-weight: var(--petlux-weight-medium);
+}
+.brand-text {
+  display: block;
+  font-size: var(--petlux-text-h1);
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  color: var(--petlux-ink);
+  line-height: var(--petlux-leading-tight);
+}
+.brand-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.brand-meta-line {
+  width: 24px;
+  height: 1px;
+  background: var(--petlux-line-strong);
+  flex-shrink: 0;
+}
+.brand-subtitle {
+  font-size: var(--petlux-text-caption);
+  color: var(--petlux-ink-2);
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Gallery Hall ---------- */
+.gallery-hall {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Portrait Upload Area ---------- */
+.gallery-portrait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--petlux-s-1) var(--petlux-s-5) var(--petlux-s-6);
+}
+.portrait-frame {
+  width: 120px;
+  height: 120px;
+  border: 1px dashed var(--petlux-line-strong);
+  border-radius: var(--petlux-radius-md);
+  background: var(--petlux-surface);
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.portrait-frame:hover {
+  border-color: var(--petlux-brand);
+  box-shadow: var(--petlux-shadow-2);
+}
+.portrait-frame:active {
+  transform: scale(0.97);
+}
+.portrait-canvas {
+  position: absolute;
+  inset: 10px;
+}
+/* Crosshair — horizontal */
+.canvas-crosshair-h {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--petlux-line);
+  transform: translateY(-0.5px);
+}
+/* Crosshair — vertical */
+.canvas-crosshair-v {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--petlux-line);
+  transform: translateX(-0.5px);
+}
+/* Camera icon — center circle backdrop */
+.portrait-canvas::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 38px;
+  height: 38px;
+  background: var(--petlux-surface);
+  border-radius: 50%;
+  z-index: 1;
+  box-shadow: 0 0 0 1px var(--petlux-line);
+}
+/* Camera icon — SVG */
+.portrait-canvas::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%239A9489' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/%3E%3Ccircle cx='12' cy='13' r='3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  z-index: 2;
+}
+/* Corner decorations — L-shaped */
+.canvas-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+}
+.canvas-tl {
+  top: 0; left: 0;
+  border-top: 1.5px solid var(--petlux-brand);
+  border-left: 1.5px solid var(--petlux-brand);
+}
+.canvas-tr {
+  top: 0; right: 0;
+  border-top: 1.5px solid var(--petlux-brand);
+  border-right: 1.5px solid var(--petlux-brand);
+}
+.canvas-bl {
+  bottom: 0; left: 0;
+  border-bottom: 1.5px solid var(--petlux-brand);
+  border-left: 1.5px solid var(--petlux-brand);
+}
+.canvas-br {
+  bottom: 0; right: 0;
+  border-bottom: 1.5px solid var(--petlux-brand);
+  border-right: 1.5px solid var(--petlux-brand);
+}
+/* Portrait label */
+.portrait-label {
+  display: flex;
+  align-items: center;
+  gap: var(--petlux-s-2);
+  margin-top: var(--petlux-s-3);
+}
+.label-line {
+  width: 16px;
+  height: 1px;
+  background: var(--petlux-line-strong);
+  flex-shrink: 0;
+}
+.label-text {
+  font-size: var(--petlux-text-caption);
+  color: var(--petlux-ink-3);
+  letter-spacing: 0.05em;
+}
+
+/* ---------- Gallery Entrance ---------- */
+.gallery-entrance {
+  display: flex;
+  align-items: center;
+  gap: var(--petlux-s-3);
+  padding: 0 var(--petlux-s-5) var(--petlux-s-4);
+}
+.entrance-line {
+  width: 20px;
+  height: 1px;
+  background: var(--petlux-brand);
+  flex-shrink: 0;
+}
+.entrance-label {
+  font-size: var(--petlux-text-body-sm);
+  font-weight: var(--petlux-weight-medium);
+  color: var(--petlux-ink);
+  letter-spacing: 0.1em;
+}
+
+/* ---------- Gallery Collection / Form Card ---------- */
+.gallery-collection {
+  padding: 0 var(--petlux-s-5);
+}
+.gallery-card {
+  background: var(--petlux-surface);
+  border-radius: var(--petlux-radius-md);
+  box-shadow: var(--petlux-shadow-1);
+  border: 1px solid rgba(216, 220, 206, 0.4);
+  overflow: hidden;
+  position: relative;
+}
+.card-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--petlux-brand) 0%, var(--petlux-brand-deep) 100%);
+}
+.card-body {
+  padding: var(--petlux-s-1) var(--petlux-s-4) var(--petlux-s-1) var(--petlux-s-5);
+}
+
+/* ---------- Form Fields ---------- */
+.form-field {
+  padding: 14px 0;
+}
+.form-field--clickable {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.form-field--clickable:active { opacity: 0.6; }
+
+.field-label {
+  font-size: var(--petlux-text-body-sm);
+  font-weight: var(--petlux-weight-regular);
+  color: var(--petlux-ink);
+  margin-bottom: var(--petlux-s-2);
+  line-height: 1.4;
+}
+.label-required {
+  font-size: 11px;
+  color: var(--petlux-ink-3);
+  margin-left: 1px;
+  font-weight: 300;
+}
+
+/* Input fields */
+.field-input {
+  display: block;
+  width: 100%;
+  font-size: var(--petlux-text-body-sm);
+  color: var(--petlux-ink);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 2px 0;
+  line-height: 1.5;
+}
+.field-input::placeholder {
+  color: var(--petlux-ink-3);
+  font-weight: 300;
+}
+
+/* Clickable field value */
+.field-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+}
+.field-placeholder {
+  font-size: var(--petlux-text-body-sm);
+  color: var(--petlux-ink-3);
+  font-weight: 300;
+}
+.field-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: var(--petlux-s-2);
+  flex-shrink: 0;
+}
+.arrow-line {
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--petlux-ink-3);
+  border-top: 1.5px solid var(--petlux-ink-3);
+  transform: rotate(45deg);
+  margin-right: 2px;
+}
+
+/* ---------- Field Divider ---------- */
+.field-divider {
+  height: 1px;
+  background: var(--petlux-line);
+}
+
+/* ---------- Textarea Field ---------- */
+.form-field-textarea {
+  padding-bottom: var(--petlux-s-4);
+}
+.field-textarea {
+  display: block;
+  width: 100%;
+  min-height: 80px;
+  font-size: var(--petlux-text-body-sm);
+  color: var(--petlux-ink);
+  background: rgba(216, 220, 206, 0.22);
+  border: none;
+  border-radius: var(--petlux-radius-sm);
+  padding: var(--petlux-s-3);
+  outline: none;
+  resize: none;
+  line-height: 1.6;
+  transition: background 0.2s ease;
+}
+.field-textarea::placeholder {
+  color: var(--petlux-ink-3);
+  font-weight: 300;
+}
+.field-textarea:focus {
+  background: rgba(216, 220, 206, 0.38);
+}
+
+/* ---------- Gallery Footer ---------- */
+.gallery-footer {
+  margin-top: auto;
+  padding: var(--petlux-s-5) var(--petlux-s-5);
+  padding-bottom: calc(var(--petlux-s-5) + env(safe-area-inset-bottom));
+}
+.footer-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  border-radius: var(--petlux-radius-md);
+  font-size: var(--petlux-text-body);
+  font-weight: var(--petlux-weight-medium);
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.action-disabled {
+  background: var(--petlux-surface-2);
+  color: var(--petlux-ink-3);
+  cursor: not-allowed;
+}
+.action-active {
+  background: var(--petlux-brand);
+  color: var(--petlux-brand-ink);
+  box-shadow: var(--petlux-shadow-2);
+}
+.action-active:active {
+  transform: scale(0.98);
+  background: var(--petlux-brand-deep);
+}
+
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<style id="critical-layout">
+html, body { max-width: 100%; overflow-x: hidden; }
+body { margin: 0; background-color: var(--petlux-background); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+main > .petlux-shell { width: 100%; max-width: 28rem; margin-left: auto; margin-right: auto; }
+header[data-topbar] { min-height: 56px; }
+nav[data-mobile-nav="global"] { position: sticky; bottom: 0; z-index: 30; min-height: 64px; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
+<main>
+  <div class="fixed top-0 right-3 z-50 flex items-center w-[88px] h-8 rounded-full border border-black/10 shrink-0" style="top: calc(env(safe-area-inset-top, 0px) + 12px);">
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="更多">
+        <i data-lucide="more-horizontal" class="w-4 h-4 text-foreground"></i>
+      </button>
+      <span class="w-px h-3 bg-black/10 block"></span>
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="关闭">
+        <i data-lucide="x" class="w-4 h-4 text-foreground"></i>
+      </button>
+    </div>
+
+<div class="petlux-shell max-w-md mx-auto bg-background min-h-screen">
+
+  <!-- Sticky Navigation -->
+  <nav class="gallery-nav petlux-tap-none">
+    <button class="nav-back" aria-label="返回" onclick="history.back()">
+      <i data-lucide="chevron-left"></i>
+    </button>
+    <span class="nav-title">创建档案</span>
+  </nav>
+
+  <!-- Gallery Container -->
+  <div class="gallery-container">
+
+    <!-- Gallery Header -->
+    <div class="gallery-header">
+      <div class="brand-block">
+        <div class="brand-accent-bar"></div>
+        <div class="brand-main">
+          <span class="brand-text">创建宠物档案</span>
+        </div>
+        <div class="brand-meta">
+          <div class="brand-meta-line"></div>
+          <span class="brand-subtitle">填写信息，建立专属档案</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gallery-hall">
+
+      <!-- Portrait Upload Area -->
+      <div class="gallery-portrait">
+        <div class="portrait-frame">
+          <div class="portrait-canvas">
+            <div class="canvas-crosshair-h"></div>
+            <div class="canvas-crosshair-v"></div>
+            <div class="canvas-corner canvas-tl"></div>
+            <div class="canvas-corner canvas-tr"></div>
+            <div class="canvas-corner canvas-bl"></div>
+            <div class="canvas-corner canvas-br"></div>
+          </div>
+        </div>
+        <div class="portrait-label">
+          <div class="label-line"></div>
+          <span class="label-text">点击上传宠物头像</span>
+        </div>
+      </div>
+
+      <!-- Gallery Entrance -->
+      <div class="gallery-entrance">
+        <div class="entrance-line"></div>
+        <span class="entrance-label">基本信息</span>
+      </div>
+
+      <!-- Form Card -->
+      <div class="gallery-collection">
+        <div class="gallery-card">
+          <div class="card-accent"></div>
+          <div class="card-body">
+
+            <!-- 宠物昵称 -->
+            <div class="form-field">
+              <div class="field-label">宠物昵称<span class="label-required">（必填）</span></div>
+              <input class="field-input" placeholder="请输入宠物昵称" />
+            </div>
+            <div class="field-divider"></div>
+
+            <!-- 宠物类型 -->
+            <div class="form-field form-field--clickable">
+              <div class="field-label">宠物类型<span class="label-required">（必填）</span></div>
+              <div class="field-value">
+                <span class="field-placeholder">请选择宠物类型</span>
+                <div class="field-arrow"><div class="arrow-line"></div></div>
+              </div>
+            </div>
+            <div class="field-divider"></div>
+
+            <!-- 品种 -->
+            <div class="form-field">
+              <div class="field-label">品种<span class="label-required">（必填）</span></div>
+              <input class="field-input" placeholder="请输入品种" />
+            </div>
+            <div class="field-divider"></div>
+
+            <!-- 性别 -->
+            <div class="form-field form-field--clickable">
+              <div class="field-label">性别<span class="label-required">（必填）</span></div>
+              <div class="field-value">
+                <span class="field-placeholder">请选择性别</span>
+                <div class="field-arrow"><div class="arrow-line"></div></div>
+              </div>
+            </div>
+            <div class="field-divider"></div>
+
+            <!-- 出生日期 -->
+            <div class="form-field form-field--clickable">
+              <div class="field-label">出生日期</div>
+              <div class="field-value">
+                <span class="field-placeholder">请选择出生日期</span>
+                <div class="field-arrow"><div class="arrow-line"></div></div>
+              </div>
+            </div>
+            <div class="field-divider"></div>
+
+            <!-- 体重 -->
+            <div class="form-field">
+              <div class="field-label">体重</div>
+              <input class="field-input" type="digit" placeholder="请输入体重（kg）" />
+            </div>
+            <div class="field-divider"></div>
+
+            <!-- 备注 -->
+            <div class="form-field form-field-textarea">
+              <div class="field-label">备注</div>
+              <textarea class="field-textarea" placeholder="性格傲娇还是可爱？还有生活习惯和饮食习惯描述一下吧"></textarea>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="gallery-footer">
+        <div class="footer-action action-disabled">完成创建</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</main>
+
+<script>
+  // Initialize Lucide icons
+  if (typeof lucide !== 'undefined' && lucide.createIcons) {
+    lucide.createIcons();
+  }
+</script>
+</body>
+</html>

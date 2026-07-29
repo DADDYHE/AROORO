@@ -33,7 +33,7 @@ jest.mock('jsonwebtoken', () => ({
   },
 }), { virtual: true })
 
-// 模拟 @cloudbase/node-sdk（adminService.webLogin 用 getAdminDb）
+// 模拟 wx-server-sdk（enrichAuthFromAdmin 经 getEnrichAdminDb 使用 wx-server-sdk）
 // 模拟 admins 集合：根据 doc(_id) 返回不同 admin 文档，验证 enrich 路径
 const ADMIN_DOCS = {
   super_admin: {
@@ -72,15 +72,15 @@ const ADMIN_DOCS = {
     status: 'active',
   },
 }
-jest.mock('@cloudbase/node-sdk', () => ({
-  init: () => ({
-    database: () => ({
-      // app.database() 返回 db 实例，db.collection() 才返回 collection 链
-      collection: () => ({
-        where: () => ({ limit: () => ({ get: async () => ({ data: [] }) }) }),
-        doc: id => ({
-          get: async () => ({ data: ADMIN_DOCS[id] || null }),
-        }),
+jest.mock('wx-server-sdk', () => ({
+  init: () => {},
+  DYNAMIC_CURRENT_ENV: 'mock-env',
+  // app.database() 返回 db 实例，db.collection() 才返回 collection 链
+  database: () => ({
+    collection: () => ({
+      where: () => ({ limit: () => ({ get: async () => ({ data: [] }) }) }),
+      doc: id => ({
+        get: async () => ({ data: ADMIN_DOCS[id] || null }),
       }),
     }),
   }),

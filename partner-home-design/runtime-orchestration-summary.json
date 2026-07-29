@@ -1,0 +1,276 @@
+{
+  "project": {
+    "resolvedLane": "graphic_bitmap_first",
+    "operatingMode": "append",
+    "selectedIntentWorkflowRead": true,
+    "contextRequirementsLoaded": [
+      {
+        "path": "intent-workflows/intent-graphic-asset-generation/INTENT_WORKFLOW.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-graphic-asset-generation/start-graphic-asset-project.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-graphic-asset-generation/append-graphic-assets.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-graphic-asset-generation/graphic-text-controllability-gate.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-graphic-asset-generation/graphic-asset-planning.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-graphic-asset-generation/graphic-asset-dispatch-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-graphic-asset-generation/orchestration-summary-fields.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "shared-runtime/design-artifact-formats/graphic-asset-design-file-format.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/delivery-evidence-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      }
+    ],
+    "contextReadScope": "graphic-asset-generation lane only",
+    "graphicStrategyGate": "bitmap-first",
+    "textCriticality": "low",
+    "copyDensity": "short",
+    "coreInfoTypes": [
+      "brand"
+    ],
+    "bitmapFirstAllowed": true,
+    "layoutStaticRequired": false,
+    "graphicStrategyRoutingReason": "Splash screen with brand name AROORO and short slogan only, visual impact is primary, no editable text or DOM requirement",
+    "validationRunDiscipline": "append-mode mixed project: validate .design asset invariant after image node registration",
+    "lowValueCallWatchdog": {
+      "noProgressNextAction": "proceed to image generation and canvas registration"
+    },
+    "visualQualityCheckpoints": [
+      {
+        "anchor": "Peacefully sleeping cute cat as focal point conveying trust and care",
+        "hierarchy": "Brand name AROORO primary, slogan secondary, sleeping cat visual anchor",
+        "composition": "9:16 vertical, brand name upper-center, slogan below, cat illustration center-bottom",
+        "implementationStrategy": "bitmap-first image generation with warm coral peach palette from mochi-pet design system"
+      }
+    ],
+    "validationHistory": [
+      {
+        "reportPath": "validation-report.json",
+        "reportHash": "32b59ce4b7ba657ffbc11469a485ecf7a8b472b2690f284c0b349eac06505100",
+        "checkedAt": "2026-07-28T15:45:46.649Z",
+        "success": false,
+        "exitCode": 1,
+        "renderBlockingErrorCount": 2,
+        "repairPlanHints": [],
+        "errorSignatures": [
+          {
+            "errorClass": "artifact-readiness",
+            "normalized": "[design-file] Validation failed for .design file batch: ======================================== [FAIL] Validation failed ---------------------------------------- Found 12 issues: 1. [data[0].id] invalid page id \"pending-page-home\", expected page-{slug} 2. [data[0].devMetadata.htmlSrc] must be a non-empty string 3. [data[1].id] invalid page id \"pending-page-services\", expected page-{slug} 4. [data[1].devMetadata.htmlSrc] must be a non-empty string 5. [data[2].id] invalid page id \"pending-page-mall\", expected page-{slug} 6. [data[2].devMetadata.htmlSrc] must be a non-empty string 7. [data[3].id] invalid page id \"pending-page-groupbuy\", expected page-{slug} 8. [data[3].devMetadata.htmlSrc] must be a non-empty string 9. [data[4].id] invalid page id \"pending-page-me\", expected page-{slug} 10. [data[4].devMetadata.htmlSrc] must be a non-empty string 11. [data[5].id] invalid page id \"pending-page-design-spec\", expected page-{slug} 12. [data[5].devMetadata.htmlSrc] must be a non-empty string ========================================",
+            "signature": "3b44f049769daa1303a4eab10a2876b9d324ffec380b0029d3e1d11359c262b4"
+          },
+          {
+            "errorClass": "artifact-readiness",
+            "normalized": "[html-files] : htmlSrc must stay under pages/",
+            "signature": "4c8c0ad5796adc71359b20bccd4b9b0ec9d51e78e2a643d21cf1de64af972ce5"
+          }
+        ],
+        "terminalState": null
+      },
+      {
+        "reportPath": "validation-report.json",
+        "reportHash": "e9ab06051e6b2ae5ea1c5bb0266bf15aac889258d8012e81005f8ca1c4865072",
+        "checkedAt": "2026-07-29T02:16:47.160Z",
+        "success": false,
+        "exitCode": 1,
+        "renderBlockingErrorCount": 6,
+        "repairPlanHints": [
+          "head-infrastructure-missing",
+          "hardcoded-color-in-body"
+        ],
+        "errorSignatures": [
+          {
+            "errorClass": "artifact-readiness",
+            "normalized": "[design-file] Validation failed for .design file batch: ======================================== [FAIL] Validation failed ---------------------------------------- Found 1 issues: 1. [data[1].canvasData.group] must be a non-negative integer ========================================",
+            "signature": "2f198f775500dd03848ea5f283d9fa69d0b3003cc2af17cd170a0ffc9ef1e008"
+          },
+          {
+            "errorClass": "head-infrastructure",
+            "normalized": "[html-infrastructure] [MAIN-AGENT] tabbar-effects.html missing Tailwind CSS CDN (<script src=\"...@tailwindcss/browser@4\">). Impact: all utility classes stop working; page degrades to unstyled HTML. Fix: run apply-html-head-contract.mjs <css-path> tabbar-effects.html --replace-head",
+            "signature": "5a12c156ac916fdf0b3cecd1898c33f46f6571ec6d72501d54101715c84ae593"
+          },
+          {
+            "errorClass": "head-infrastructure",
+            "normalized": "[html-infrastructure] [MAIN-AGENT] tabbar-effects.html missing <style id=\"theme-vars\"> theme CSS variable block. Impact: all semantic token colors degrade to transparent/default values. Fix: run apply-html-head-contract.mjs <css-path> tabbar-effects.html --replace-head",
+            "signature": "338e26ba3183657bb60fd9a0a56fdf11cb1842fef2becf9ac974e7e9319fc098"
+          },
+          {
+            "errorClass": "head-infrastructure",
+            "normalized": "[html-infrastructure] [MAIN-AGENT] tabbar-effects.html missing @theme inline Tailwind <-> CSS variable bridge block. Impact: bg-primary, text-foreground and similar classes cannot map to theme colors. Fix: run apply-html-head-contract.mjs <css-path> tabbar-effects.html --replace-head",
+            "signature": "e3fbbf4ad44b3ab6c80d8156a23d51e15566df750947947f8fb4d23c906414c3"
+          },
+          {
+            "errorClass": "head-infrastructure",
+            "normalized": "[html-infrastructure] [MAIN-AGENT] tabbar-effects.html missing @layer base global base styles. Impact: body background color, font, table word-break and other base styles are lost. Fix: run apply-html-head-contract.mjs <css-path> tabbar-effects.html --replace-head",
+            "signature": "e54f779dc8e374918ab8878bd007d65d6d523981cc9fd58453aae205c654911a"
+          },
+          {
+            "errorClass": "head-infrastructure",
+            "normalized": "[html-infrastructure] [MAIN-AGENT] tabbar-effects.html missing <html class=\"light\"> or <html class=\"dark\"> theme mode selector. Impact: CSS variable selectors do not match; all theme colors stop working. Fix: run apply-html-head-contract.mjs <css-path> tabbar-effects.html --replace-head",
+            "signature": "dbb83f5093e3578de049ff6754d79627472da80cabbe11caf311a807695d89b4"
+          }
+        ],
+        "terminalState": null
+      }
+    ],
+    "validationRepairLedger": [
+      {
+        "failedReportPath": "validation-report.json",
+        "failedReportHash": "32b59ce4b7ba657ffbc11469a485ecf7a8b472b2690f284c0b349eac06505100",
+        "repairWorkflowReadPath": "intent-workflows/intent-project-mutation/main-agent-repair-workflow.md",
+        "repairStartedAt": "2026-07-28T15:46:22.977Z",
+        "repairEntryStatus": "started-awaiting-owner-batch-repair",
+        "ownerTriage": [
+          {
+            "owner": "main-agent",
+            "errorClass": "artifact-readiness",
+            "affectedFiles": [],
+            "repairScope": "repair_design_registration_or_file_reference_only",
+            "strategy": "read .design and affected file metadata only"
+          },
+          {
+            "owner": "main-agent",
+            "errorClass": "artifact-readiness",
+            "affectedFiles": [],
+            "repairScope": "repair_design_registration_or_file_reference_only",
+            "strategy": "read .design and affected file metadata only"
+          }
+        ],
+        "repairPlanHints": [],
+        "repairActions": [],
+        "revalidationReportPath": null,
+        "revalidationReportHash": null,
+        "revalidationSuccess": null,
+        "blockedReason": null
+      },
+      {
+        "failedReportPath": "validation-report.json",
+        "failedReportHash": "e9ab06051e6b2ae5ea1c5bb0266bf15aac889258d8012e81005f8ca1c4865072",
+        "repairWorkflowReadPath": "intent-workflows/intent-project-mutation/main-agent-repair-workflow.md",
+        "repairStartedAt": "2026-07-29T02:17:17.849Z",
+        "repairEntryStatus": "started-awaiting-owner-batch-repair",
+        "ownerTriage": [
+          {
+            "owner": "main-agent",
+            "errorClass": "head-infrastructure-missing",
+            "affectedFiles": [
+              "tabbar-effects.html"
+            ],
+            "repairScope": "affected-page-head",
+            "strategy": "run_apply_html_head_replace"
+          },
+          {
+            "owner": "sub-agent",
+            "errorClass": "hardcoded-color-in-body",
+            "affectedFiles": [
+              "tabbar-effects.html"
+            ],
+            "repairScope": "targeted-token-replace",
+            "strategy": "targeted_token_replace_once"
+          }
+        ],
+        "repairPlanHints": [
+          {
+            "errorClass": "head-infrastructure-missing",
+            "owner": "main-agent",
+            "repairScope": "affected-page-head",
+            "strategy": "run_apply_html_head_replace",
+            "affectedFiles": [
+              "tabbar-effects.html"
+            ],
+            "repairReportPath": null,
+            "repairAlreadyAttempted": false,
+            "allowSourceRead": "no-full-html-read",
+            "maxValidationRuns": 2
+          },
+          {
+            "errorClass": "hardcoded-color-in-body",
+            "owner": "sub-agent",
+            "repairScope": "targeted-token-replace",
+            "strategy": "targeted_token_replace_once",
+            "affectedFiles": [
+              "tabbar-effects.html"
+            ],
+            "repairReportPath": null,
+            "repairAlreadyAttempted": false,
+            "allowSourceRead": "no-full-html-read",
+            "maxValidationRuns": 2
+          }
+        ],
+        "repairActions": [],
+        "revalidationReportPath": null,
+        "revalidationReportHash": null,
+        "revalidationSuccess": null,
+        "blockedReason": null
+      }
+    ],
+    "repairEntryEvidence": [
+      {
+        "failedReportPath": "validation-report.json",
+        "failedReportHash": "32b59ce4b7ba657ffbc11469a485ecf7a8b472b2690f284c0b349eac06505100",
+        "repairWorkflowReadPath": "intent-workflows/intent-project-mutation/main-agent-repair-workflow.md",
+        "repairStartedAt": "2026-07-28T15:46:22.977Z",
+        "ledgerIndex": 0,
+        "ownerTriageCount": 2,
+        "repairActionCount": 0,
+        "revalidationReportPath": null,
+        "revalidationReportHash": null,
+        "revalidationSuccess": null
+      },
+      {
+        "failedReportPath": "validation-report.json",
+        "failedReportHash": "e9ab06051e6b2ae5ea1c5bb0266bf15aac889258d8012e81005f8ca1c4865072",
+        "repairWorkflowReadPath": "intent-workflows/intent-project-mutation/main-agent-repair-workflow.md",
+        "repairStartedAt": "2026-07-29T02:17:17.849Z",
+        "ledgerIndex": 1,
+        "ownerTriageCount": 2,
+        "repairActionCount": 0,
+        "revalidationReportPath": null,
+        "revalidationReportHash": null,
+        "revalidationSuccess": null
+      }
+    ]
+  },
+  "imageAssets": [
+    {
+      "filename": "arooro-splash-screen.jpg",
+      "title": "AROORO 小程序开屏图",
+      "deliverableType": "splash-screen",
+      "intendedAspect": "portrait 9:16",
+      "status": "planned"
+    }
+  ]
+}

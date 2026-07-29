@@ -7,6 +7,7 @@ const homeBannerBehavior = require('../../behaviors/homeBannerBehavior')
 const homePetBehavior = require('../../behaviors/homePetBehavior')
 const homeActivityBehavior = require('../../behaviors/homeActivityBehavior')
 const homeTuanBehavior = require('../../behaviors/homeTuanBehavior')
+const homeMallBehavior = require('../../behaviors/homeMallBehavior')
 const { buildSharePath } = require('../../utils/share')
 const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 const pageI18n = require('../../utils/page-i18n.js')
@@ -23,7 +24,7 @@ const CLOUD_ICON_MAP_PIN = CLOUD_ICONS.MAP_PIN
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior, homeBannerBehavior, homePetBehavior, homeActivityBehavior, homeTuanBehavior],
+  behaviors: [tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior, homeBannerBehavior, homePetBehavior, homeActivityBehavior, homeTuanBehavior, homeMallBehavior],
   data: {
     t: pageI18n.buildTMap('zh-CN'),
     isLoggedIn: false,
@@ -74,6 +75,7 @@ Page({
     this._loadBannerData()
     this._loadTuanDeals()
     this._loadLatestActivities()
+    this._loadMallProducts()
   },
 
   _refreshUserData() {
@@ -113,7 +115,7 @@ Page({
   },
 
   handleSearch() {
-    wx.navigateTo({ url: '/subpackages/booking/host-list-all' })
+    wx.navigateTo({ url: '/subpackages/search/index' })
   },
 
   handleFeatureTap(e) {

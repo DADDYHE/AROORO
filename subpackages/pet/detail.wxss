@@ -118,24 +118,16 @@
   letter-spacing: 4rpx;
   padding: 28rpx 0;
   text-align: center;
-  transition: all 0.3s ease;
 }
 
 .action-active {
   background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
   color: var(--card-color);
-  box-shadow: 0 6rpx 20rpx rgba(78, 205, 196, 0.3);
-}
-
-.action-active:active {
-  transform: scale(0.98);
-  box-shadow: 0 3rpx 12rpx rgba(78, 205, 196, 0.3);
+  box-shadow: 0 6rpx 20rpx rgba(79, 94, 53, 0.3);
 }
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }

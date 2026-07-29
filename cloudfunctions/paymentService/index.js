@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * paymentService/index.ts - 支付服务统一入口（TypeScript 源文件 - Sprint 47 迁移）

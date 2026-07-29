@@ -213,8 +213,8 @@ describe('Sprint 38: activityService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s38-activity-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s38-activity-service-ts:strict/)
+    test('ci:check 包含 audit:all:strict', () => {
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
     })
   })
 

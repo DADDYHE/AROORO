@@ -200,8 +200,8 @@ describe('Sprint 41: feedingService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s41-feeding-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s41-feeding-service-ts:strict/)
+    test('ci:check 包含 audit:all:strict', () => {
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
     })
   })
 

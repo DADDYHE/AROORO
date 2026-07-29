@@ -1,0 +1,107 @@
+<view class="search-page">
+  <!-- 搜索栏 -->
+  <view class="search-header">
+    <view class="search-input-wrap">
+      <view class="search-icon"></view>
+      <input
+        class="search-input"
+        placeholder="搜索商品、团购、活动、寄养..."
+        value="{{keyword}}"
+        bindinput="handleInput"
+        bindconfirm="handleSearch"
+        confirm-type="search"
+        focus="{{true}}"
+      />
+      <view wx:if="{{keyword}}" class="clear-btn" catchtap="handleClearInput">×</view>
+    </view>
+    <text class="cancel-btn" catchtap="handleCancel">取消</text>
+  </view>
+
+  <!-- 历史 & 热门（未输入时） -->
+  <view wx:if="{{showHistory}}" class="suggest-section">
+    <!-- 搜索历史 -->
+    <view wx:if="{{history.length > 0}}" class="suggest-block">
+      <view class="suggest-head">
+        <text class="suggest-title">搜索历史</text>
+        <text class="suggest-clear" catchtap="handleClearHistory">清空</text>
+      </view>
+      <view class="tag-list">
+        <view
+          wx:for="{{history}}"
+          wx:key="*this"
+          class="tag-item"
+          data-keyword="{{item}}"
+          catchtap="handleHistoryKeyword"
+        >{{item}}</view>
+      </view>
+    </view>
+
+    <!-- 热门搜索 -->
+    <view class="suggest-block">
+      <view class="suggest-head">
+        <text class="suggest-title">热门搜索</text>
+      </view>
+      <view class="tag-list">
+        <view
+          wx:for="{{hotKeywords}}"
+          wx:key="*this"
+          class="tag-item tag-hot"
+          data-keyword="{{item}}"
+          catchtap="handleHotKeyword"
+        >{{item}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 搜索结果 -->
+  <view wx:if="{{searched}}" class="result-section">
+    <!-- 分类 Tab -->
+    <scroll-view class="tab-bar" scroll-x="true" enhanced="true" show-scrollbar="false">
+      <view
+        wx:for="{{tabs}}"
+        wx:key="key"
+        class="tab-item {{activeTab === item.key ? 'tab-active' : ''}}"
+        data-key="{{item.key}}"
+        catchtap="handleTabChange"
+      >{{item.label}}</view>
+    </scroll-view>
+
+    <!-- 加载中 -->
+    <view wx:if="{{loading}}" class="loading-state">
+      <text>搜索中...</text>
+    </view>
+
+    <!-- 结果列表 -->
+    <block wx:elif="{{results.length > 0}}">
+      <view class="result-list">
+        <view
+          wx:for="{{results}}"
+          wx:key="_id"
+          class="result-card"
+          data-item="{{item}}"
+          bindtap="handleItemTap"
+        >
+          <image wx:if="{{item._coverUrl}}" class="result-img" src="{{item._coverUrl}}" mode="aspectFill" />
+          <view wx:else class="result-img result-img-ph">
+            <text class="result-img-ph-text">{{item._typeLabel}}</text>
+          </view>
+          <view class="result-body">
+            <view class="result-title-row">
+              <text class="result-type-badge">{{item._typeLabel}}</text>
+              <text class="result-title">{{item._title}}</text>
+            </view>
+            <text wx:if="{{item._subtitle}}" class="result-sub">{{item._subtitle}}</text>
+            <text wx:if="{{item._priceText}}" class="result-price">{{item._priceText}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 空结果 -->
+    <view wx:else class="empty-state">
+      <text class="empty-icon">🔍</text>
+      <text class="empty-text">未找到相关结果</text>
+      <text class="empty-sub">换个关键词试试吧</text>
+    </view>
+  </view>
+</view>

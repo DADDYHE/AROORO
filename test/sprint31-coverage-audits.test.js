@@ -229,7 +229,7 @@ describe('Sprint 31: 全局限流覆盖度 + TypeScript 迁移覆盖率审计', 
       expect(code).toMatch(/export\s+function\s+initGlobalRateLimitFromDb/)
     })
 
-    test('5 个服务注入了 initGlobalRateLimitFromDb', () => {
+    test('5 个服务注入了 bootstrapRateLimit（限流引导，内部调用 initGlobalRateLimitFromDb）', () => {
       const services = [
         'orderService/index.js',
         'paymentService/index.js',
@@ -239,7 +239,8 @@ describe('Sprint 31: 全局限流覆盖度 + TypeScript 迁移覆盖率审计', 
       ]
       const injectedCount = services.filter(rel => {
         const code = readFileSafe(path.join(CF_ROOT, rel))
-        return code && /initGlobalRateLimitFromDb\s*\(/.test(code)
+        // Sprint 重构：服务入口改为调用 bootstrapRateLimit（其内部再调用 initGlobalRateLimitFromDb）
+        return code && /bootstrapRateLimit\s*\(/.test(code)
       }).length
       expect(injectedCount).toBe(5)
     })

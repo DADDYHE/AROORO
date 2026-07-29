@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * paymentService/commission.ts - 佣金记录服务（TypeScript 源文件 - Sprint 27 迁移）

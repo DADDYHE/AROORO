@@ -1,31 +1,14 @@
 <view class="logistics-card">
-  <view class="logistics-row" bindtap="onViewLogistics">
+  <view class="logistics-row">
     <view class="logistics-info">
       <view class="logistics-line">
         <text class="logistics-label">快递单号</text>
-        <text class="logistics-value">{{expressNo || '暂无'}}</text>
+        <text class="logistics-value" catchtap="onCopyExpressNo">{{expressNo || '暂无'}}</text>
       </view>
       <view class="logistics-line" wx:if="{{shippedAt}}">
         <text class="logistics-label">发货时间</text>
         <text class="logistics-value">{{shippedAt}}</text>
       </view>
     </view>
-    <view class="logistics-arrow"></view>
-  </view>
-  <view class="logistics-track" wx:if="{{logisticsExpanded}}">
-    <view class="track-loading" wx:if="{{logisticsLoading}}">加载中...</view>
-    <block wx:else>
-      <view class="track-empty" wx:if="{{logisticsTrack.length === 0}}">暂无轨迹</view>
-      <view class="track-item" wx:for="{{logisticsTrack}}" wx:key="time">
-        <view class="track-dot"></view>
-        <view class="track-content">
-          <text class="track-desc">{{item.desc}}</text>
-          <text class="track-time">{{item.time}}</text>
-        </view>
-      </view>
-    </block>
-  </view>
-  <view class="logistics-toggle" wx:if="{{logisticsTrack.length > 0}}" bindtap="onViewLogistics">
-    <text>{{logisticsExpanded ? '收起' : '展开'}}轨迹</text>
   </view>
 </view>

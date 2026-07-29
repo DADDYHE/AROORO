@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Price Display — MochiPet</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  /* Page scaffold — NOT extracted */
+  body { margin: 0; padding: var(--space-4); background: var(--color-surface); font-family: var(--font-body); color: var(--color-foreground); }
+  .row { display: flex; align-items: baseline; gap: var(--space-4); margin-bottom: var(--space-8); flex-wrap: wrap; }
+  .row:last-child { margin-bottom: 0; }
+  .label { display: inline-block; width: 92px; flex-shrink: 0; font-family: var(--font-body); font-size: var(--font-size-caption); font-weight: var(--font-weight-caption); color: var(--color-muted-foreground); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* @component-css-start */
+  /* Component definitions — extracted to components.css by deterministic script */
+  .price { display: inline-flex; align-items: baseline; font-family: var(--font-price); color: var(--color-primary); line-height: var(--line-height-price); white-space: nowrap; }
+  .price-lg { line-height: 1; }
+  .price-lg .sym { font-weight: 600; font-size: 16px; }
+  .price-lg .int { font-weight: var(--font-weight-price); font-size: 30px; }
+  .price-lg .dec { font-weight: var(--font-weight-price); font-size: 18px; }
+  .price-sm .sym { font-weight: 600; font-size: 12px; }
+  .price-sm .int { font-weight: 700; font-size: 17px; }
+  .price-md { font-weight: 700; font-size: 18px; }
+  .price-cur { font-weight: 700; font-size: 16px; }
+  .price-orig { font-family: var(--font-body); font-weight: 400; font-size: 13px; color: var(--color-muted-foreground); text-decoration: line-through; white-space: nowrap; }
+  .price-unit { font-family: var(--font-body); font-weight: 500; font-size: var(--font-size-caption); color: var(--color-muted-foreground); margin-left: var(--space-1); }
+  .price-pair { display: inline-flex; align-items: baseline; gap: var(--space-2); }
+  /* @component-css-end */
+</style>
+</head>
+<body>
+  <div class="row" data-evidence-sample="lg-detail">
+    <span class="label">详情页</span>
+    <span class="price price-lg"><span class="sym">¥</span><span class="int">499</span><span class="dec">.00</span></span>
+  </div>
+  <div class="row" data-evidence-sample="with-original">
+    <span class="label">现价·原价</span>
+    <span class="price-pair">
+      <span class="price price-cur">¥199</span>
+      <span class="price-orig">¥259</span>
+    </span>
+  </div>
+  <div class="row" data-evidence-sample="with-unit">
+    <span class="label">含单位</span>
+    <span class="price price-md">¥88<span class="price-unit">/袋</span></span>
+    <span class="price price-md">¥128<span class="price-unit">/次</span></span>
+  </div>
+  <div class="row" data-evidence-sample="sm-inline">
+    <span class="label">卡片页脚</span>
+    <span class="price price-sm"><span class="sym">¥</span><span class="int">49</span></span>
+  </div>
+</body>
+</html>

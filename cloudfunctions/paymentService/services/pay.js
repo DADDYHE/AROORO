@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * paymentService/pay.ts - 支付服务（TypeScript 源文件 - Sprint 25 迁移）

@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════════════════════════════
+   components.css — Design System Component Definitions
+   Auto-extracted from preview/component-*.html
+   DO NOT EDIT MANUALLY — regenerate via extract-components-css.mjs
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Cart Button ───────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">主行动</span><a class="cart-btn cart-primary" href="#" data-evidence-sample="primary-cta"><svg width="20" height="20"><use href="#icon-bag"/></svg>加入购物车</a>
+*/
+.cart-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); border: none; cursor: pointer; font-family: var(--font-body); white-space: nowrap; flex-shrink: 0; text-decoration: none; box-sizing: border-box; transition: filter .15s, background .15s, transform .1s; }
+.cart-btn svg { flex-shrink: 0; }
+.cart-primary { background: var(--color-primary); color: var(--color-primary-foreground); border-radius: var(--radius-pill); height: var(--size-button-lg); min-width: var(--size-button-lg); padding: 0 var(--space-8); font-size: 16px; font-weight: 700; box-shadow: var(--shadow-3); width: 100%; }
+.cart-primary:hover { filter: brightness(.92); }
+.cart-primary:active { box-shadow: var(--shadow-1); transform: scale(.97); }
+.cart-outline { background: transparent; color: var(--color-primary); border: 1.5px solid var(--color-primary); border-radius: var(--radius-pill); height: var(--size-button-lg); min-width: var(--size-button-lg); padding: 0 var(--space-6); font-size: 16px; font-weight: 600; width: 100%; }
+.cart-outline:hover { background: var(--color-muted); }
+.cart-float { background: var(--color-primary); color: var(--color-primary-foreground); border-radius: var(--radius-pill); height: var(--size-button-md); min-width: var(--size-button-md); padding: 0 var(--space-5); font-size: var(--font-size-body); font-weight: 700; box-shadow: var(--shadow-4); }
+.cart-float:hover { filter: brightness(.92); }
+.cart-float:active { box-shadow: var(--shadow-1); transform: scale(.97); }
+.cart-float .dot { width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--color-primary-foreground); opacity: .9; }
+.cart-icon { position: relative; width: var(--size-button-md); height: var(--size-button-md); min-width: var(--size-button-md); border-radius: var(--radius-pill); background: var(--color-card); color: var(--color-primary); box-shadow: var(--shadow-2); }
+.cart-icon:hover { filter: brightness(.92); }
+.cart-icon:active { box-shadow: var(--shadow-1); transform: scale(.97); }
+.badge { position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; padding: 0 var(--space-1); border-radius: var(--radius-pill); background: var(--color-primary); color: var(--color-primary-foreground); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--color-surface); }
+
+/* ── Category Tab ──────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">混合行</span> <div class="scroll-row"> <a class="cat-tab cat-tab--selected" href="#" data-evidence-sample="row-mixed">全部</a> <a class="cat-tab cat-tab--unselected" href="#" data-evidence-sample="row-mixed">主粮</a> <a class="cat-tab cat-tab--unselected" href="#" data-evidence-sample="row-mixed">零食</a> <a class="cat-tab cat-tab--unselected" href="#" data-evidence-sample="row-mixed...
+*/
+.cat-tab { display: inline-flex; align-items: center; justify-content: center; height: 36px; min-width: 36px; padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill); font-size: 14px; font-weight: 600; line-height: 1; white-space: nowrap; text-decoration: none; flex-shrink: 0; transition: filter .15s, border-color .15s; }
+.cat-tab--selected { background: var(--color-primary); color: var(--color-primary-foreground); box-shadow: var(--shadow-1); }
+.cat-tab--selected:hover { filter: brightness(.92); }
+.cat-tab--unselected { background: var(--color-card); color: var(--color-foreground); border: 1px solid var(--color-border); }
+.cat-tab--unselected:hover { filter: brightness(.92); }
+
+/* ── Option Selector ───────────────────────────────────────── */
+/* @anatomy
+   <div class="group"> <div data-evidence-sample="color-dots"> <span class="opt-label">颜色</span> <div class="dots"> <button class="dot dot-sage" aria-label="sage" aria-pressed="false"></button>
+*/
+.opt-label{display:block;font-size:13px;font-weight:500;color:var(--color-muted-foreground);margin-bottom:var(--space-2)}
+.dots{display:flex;gap:var(--space-3);align-items:center;margin-bottom:var(--space-4)}
+.dot{width:28px;height:28px;border-radius:var(--radius-pill);border:0;cursor:pointer;flex-shrink:0;padding:0;transition:filter .15s}
+.dot.selected{outline:2px solid var(--color-primary);outline-offset:3px}
+.dot:not(.selected):hover{filter:brightness(.92)}
+.dot-sage{background:var(--success-400)}
+.dot-honey{background:var(--warning-400)}
+.dot-rose{background:var(--primary-200)}
+.dot-coral{background:var(--primary-500)}
+.chips{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap}
+.chip{font-size:14px;line-height:1.2;padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-card);color:var(--color-foreground);cursor:pointer;white-space:nowrap;flex-shrink:0;min-width:32px;transition:background .15s,border-color .15s}
+.chip.selected{background:rgba(210,98,67,0.12);border-color:var(--color-primary);color:var(--color-primary)}
+.chip:not(.selected):hover{background:var(--color-muted)}
+
+/* ── Price Display ─────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">详情页</span> <span class="price price-lg"><span class="sym">¥</span><span class="int">499</span><span class="dec">.00</span></span>
+*/
+/* Component definitions — extracted to components.css by deterministic script */
+  .price { display: inline-flex; align-items: baseline; font-family: var(--font-price); color: var(--color-primary); line-height: var(--line-height-price); white-space: nowrap; }
+  .price-lg { line-height: 1; }
+  .price-lg .sym { font-weight: 600; font-size: 16px; }
+  .price-lg .int { font-weight: var(--font-weight-price); font-size: 30px; }
+  .price-lg .dec { font-weight: var(--font-weight-price); font-size: 18px; }
+  .price-sm .sym { font-weight: 600; font-size: 12px; }
+  .price-sm .int { font-weight: 700; font-size: 17px; }
+  .price-md { font-weight: 700; font-size: 18px; }
+  .price-cur { font-weight: 700; font-size: 16px; }
+  .price-orig { font-family: var(--font-body); font-weight: 400; font-size: 13px; color: var(--color-muted-foreground); text-decoration: line-through; white-space: nowrap; }
+  .price-unit { font-family: var(--font-body); font-weight: 500; font-size: var(--font-size-caption); color: var(--color-muted-foreground); margin-left: var(--space-1); }
+  .price-pair { display: inline-flex; align-items: baseline; gap: var(--space-2); }
+
+/* ── Product Card ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="grid"> <a class="pcard" href="#" data-evidence-sample="standard"><span class="pcard-media a"><svg><use href="#paw"/></svg></span><span class="pcard-name">冻干主粮 鸡肉味</span><span class="pcard-price"><span class="pcard-now">¥128</span><span class="pcard-unit">/袋</span></span></a> <a class="pcard" href="#" data-evidence-sample="with-discount"><span class="pcard-media b"><svg><use href="#p...
+*/
+.pcard{display:flex;flex-direction:column;gap:var(--space-2);background:var(--color-card);border-radius:var(--radius-xl);box-shadow:var(--shadow-2);padding:var(--space-3);text-decoration:none;transition:filter .15s;}
+.pcard:hover{filter:brightness(.97);}
+.pcard:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}
+.pcard-media{position:relative;aspect-ratio:1/1;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.pcard-media.a{background:linear-gradient(135deg,var(--primary-50),var(--primary-100));color:var(--primary-400);}
+.pcard-media.b{background:linear-gradient(135deg,var(--warning-50),var(--warning-100));color:var(--warning-400);}
+.pcard-media.c{background:linear-gradient(135deg,var(--success-50),var(--success-100));color:var(--success-400);}
+.pcard-media svg{width:46%;height:46%;fill:currentColor;opacity:.5;}
+.pcard-badge{position:absolute;top:8px;left:8px;background:var(--color-primary);color:var(--color-primary-foreground);font-size:var(--font-size-caption);font-weight:700;border-radius:var(--radius-pill);padding:var(--space-1) var(--space-3);box-shadow:var(--shadow-2);}
+.pcard-name{font-size:var(--font-size-body);font-weight:600;color:var(--color-foreground);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pcard-tag{align-self:flex-start;background:var(--success-100);color:var(--color-success);font-size:var(--font-size-caption);font-weight:600;border-radius:var(--radius-pill);padding:var(--space-1) var(--space-3);}
+.pcard-price{display:flex;align-items:baseline;gap:6px;}
+.pcard-now{font-family:var(--font-price);font-size:var(--font-size-price);font-weight:800;color:var(--color-primary);line-height:1.2;}
+.pcard-unit{font-size:var(--font-size-caption);color:var(--color-muted-foreground);}
+.pcard-orig{font-size:var(--font-size-caption);color:var(--color-muted-foreground);text-decoration:line-through;}
+
+/* ── Search Bar ────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">默认</span> <div class="bar" data-evidence-sample="default"> <div class="search"> <svg class="search-icon" aria-hidden="true" focusable="false"><use href="#icon-search"/></svg> <input class="search-input" type="text" placeholder="搜索 主粮、玩具、洗护…" aria-label="搜索">
+*/
+/* Component definitions — extracted to components.css by deterministic script */
+.bar { display:flex; align-items:center; gap:var(--space-3); flex:1; min-width:0; }
+.search { display:flex; align-items:center; gap:var(--space-2); flex:1; min-width:0; box-sizing:border-box; height:var(--size-input); padding:var(--space-2) var(--space-4); background:var(--color-card); border:none; border-radius:var(--radius-pill); box-shadow:var(--shadow-2); transition:box-shadow .15s,background .15s,filter .15s; }
+.search:hover { filter:brightness(.97); }
+.search-icon { width:var(--size-icon-md); height:var(--size-icon-md); flex-shrink:0; color:var(--color-muted-foreground); }
+.search-input { flex:1; min-width:0; padding:0; border:none; background:transparent; outline:none; font-family:var(--font-body); font-size:var(--font-size-body); color:var(--color-foreground); }
+.search-input::placeholder { color:var(--color-muted-foreground); }
+.search:focus-within { background:var(--color-surface); box-shadow:var(--shadow-1),0 0 0 2px var(--ring); }
+.search:focus-within .search-icon { color:var(--color-primary); }
+.avatar-wrap { position:relative; width:var(--size-avatar-md); height:var(--size-avatar-md); flex-shrink:0; }
+.avatar { width:var(--size-avatar-md); height:var(--size-avatar-md); border-radius:var(--radius-pill); background:linear-gradient(135deg,var(--primary-300),var(--primary-500)); box-shadow:var(--shadow-2); }
+.badge { position:absolute; top:-7px; right:-4px; z-index:2; background:var(--color-primary); color:var(--color-primary-foreground); font-size:var(--font-size-caption); font-weight:var(--font-weight-h4); padding:var(--space-1) var(--space-3); border-radius:var(--radius-pill); white-space:nowrap; box-shadow:var(--shadow-1); }

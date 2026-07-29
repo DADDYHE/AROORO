@@ -117,7 +117,7 @@
     "build:all-services": "node scripts/build-all-services.js",
     "build:payment-service": "node scripts/build-all-services.js",
     "build:order-service": "node scripts/build-all-services.js",
-    "ci:check": "npm run lint:cloudfunctions && npm run audit:all:strict && npm run i18n:collect:zh:check && npm run codemod:page-i18n:check && npm run test:ci",
+    "ci:check": "npm run lint:cloudfunctions && npm run audit:all:strict && npm run i18n:collect:zh:check && npm run codemod:page-i18n:check && npm run audit:s31-global-rate-limit-coverage:strict && npm run audit:s31-ts-coverage:strict && npm run audit:s32-deprecated-payment-removal:strict && npm run test:ci",
     "sync:common": "node scripts/sync-cloud-common.js",
     "sync:common:check": "node scripts/sync-cloud-common.js --check",
     "audit:common-refs": "node scripts/check-common-refs.js",

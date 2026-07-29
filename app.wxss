@@ -4,7 +4,7 @@
 @import './styles/theme-teal.wxss';
 @import './styles/components.wxss';
 
-/* 全局样式 - 苹果风格美学增强版 */
+/* 全局样式 — 2026-07-29 已清除全部交互动效 */
 page {
   background-color: var(--background-color);
   font-family: var(--font-regular);
@@ -45,7 +45,7 @@ page {
   box-sizing: border-box;
 }
 
-/* 容器 - 苹果风格更大留白 */
+/* 容器 */
 .container {
   padding: var(--spacing-xxl);
   min-height: 100vh;
@@ -53,14 +53,13 @@ page {
   margin: 0 auto;
 }
 
-/* 卡片 - 苹果风格美学增强版 */
+/* 卡片 */
 .card {
   background-color: var(--card-color);
   border-radius: var(--border-radius-2xl);
   box-shadow: var(--shadow-soft);
   padding: var(--card-padding);
   margin-bottom: var(--spacing-xxl);
-  transition: all var(--transition-normal);
   overflow: hidden;
   position: relative;
 }
@@ -76,17 +75,7 @@ page {
   opacity: 0.5;
 }
 
-.card:active {
-  transform: translateY(2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.card-hover:active {
-  transform: translateY(2px);
-  box-shadow: var(--shadow-sm);
-}
-
-/* 按钮 - 苹果风格美学增强版 */
+/* 按钮 */
 .btn {
   display: inline-block;
   padding: var(--spacing-md) var(--spacing-xl);
@@ -94,28 +83,10 @@ page {
   font-size: var(--font-size-sm);
   font-family: var(--font-semibold);
   text-align: center;
-  transition: all var(--transition-normal);
-  cursor: pointer;
   border: none;
   min-width: 88px;
   position: relative;
   overflow: hidden;
-  will-change: transform, box-shadow;
-}
-
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left var(--transition-smooth);
-}
-
-.btn:active::before {
-  left: 100%;
 }
 
 .btn-primary {
@@ -124,22 +95,10 @@ page {
   box-shadow: var(--shadow-md);
 }
 
-.btn-primary:active {
-  transform: scale(0.98);
-  opacity: 0.9;
-  box-shadow: var(--shadow-sm);
-}
-
 .btn-secondary {
   background-color: transparent;
   color: var(--primary-color);
   border: 1px solid var(--border-color);
-}
-
-.btn-secondary:active {
-  background-color: rgba(10, 17, 40, 0.05);
-  border-color: var(--primary-color);
-  transform: scale(0.98);
 }
 
 .btn-text {
@@ -149,12 +108,7 @@ page {
   border-radius: var(--border-radius-lg);
 }
 
-.btn-text:active {
-  background-color: rgba(10, 17, 40, 0.05);
-  transform: scale(0.98);
-}
-
-/* 输入框 - 苹果风格美学增强版 */
+/* 输入框 */
 .input {
   width: 100%;
   padding: var(--spacing-md);
@@ -162,29 +116,15 @@ page {
   border-radius: var(--border-radius-xl);
   font-size: var(--font-size-sm);
   font-family: var(--font-regular);
-  transition: all var(--transition-normal);
   background-color: var(--card-color);
   position: relative;
-  will-change: transform, box-shadow;
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(10, 17, 40, 0.08);
-  transform: translateY(-1px);
 }
 
 .input::placeholder {
   color: var(--text-tertiary);
-  transition: color var(--transition-fast);
 }
 
-.input:focus::placeholder {
-  color: var(--text-secondary);
-}
-
-/* 列表 - 苹果风格美学增强版 */
+/* 列表 */
 .list {
   background-color: var(--card-color);
   border-radius: var(--border-radius-2xl);
@@ -200,18 +140,11 @@ page {
   height: var(--list-item-height);
   padding: 0 var(--spacing-xl);
   border-bottom: 1px solid var(--divider-color);
-  transition: all var(--transition-normal);
   position: relative;
-  will-change: transform, background-color;
 }
 
 .list-item:last-child {
   border-bottom: none;
-}
-
-.list-item:active {
-  background-color: var(--divider-color);
-  transform: translateX(4px);
 }
 
 .list-item::after {
@@ -219,22 +152,15 @@ page {
   position: absolute;
   right: 0;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) rotate(-45deg);
   width: 8px;
   height: 8px;
   border-right: 2px solid var(--text-tertiary);
   border-bottom: 2px solid var(--text-tertiary);
-  transform: translateY(-50%) rotate(-45deg);
   opacity: 0;
-  transition: all var(--transition-fast);
 }
 
-.list-item:active::after {
-  opacity: 1;
-  right: var(--spacing-md);
-}
-
-/* 标题 - 苹果风格美学增强版 */
+/* 标题 */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-semibold);
   line-height: var(--line-height-title);
@@ -244,7 +170,7 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
 }
 
-/* 文本 - 苹果风格美学增强版 */
+/* 文本 */
 .text-primary {
   color: var(--text-primary);
 }
@@ -259,9 +185,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: var(--font-size-xxs);
 }
 
-/* 间距 - 苹果风格美学增强版 */
-
-/* 订单状态标签 - 苹果风格美学增强版 */
+/* 订单状态标签 */
 .status-badge {
   padding: 6px 16px;
   border-radius: var(--border-radius-full);
@@ -269,12 +193,6 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-semibold);
   display: inline-flex;
   align-items: center;
-  transition: all var(--transition-fast);
-  will-change: transform;
-}
-
-.status-badge:active {
-  transform: scale(0.96);
 }
 
 .status-pending {
@@ -297,7 +215,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--status-cancelled);
 }
 
-/* 加载状态 - 苹果风格美学增强版 */
+/* 加载状态 */
 .loading {
   display: flex;
   justify-content: center;
@@ -305,9 +223,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: var(--spacing-xxxxl);
 }
 
-/* 骨架屏 - 苹果风格美学增强版 */
-
-/* 空状态 - 苹果风格美学增强版 */
+/* 空状态 */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -317,15 +233,7 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
 }
 
-.empty-state:hover .empty-state-icon {
-  opacity: 0.3;
-}
-
-/* 动画 - 苹果风格美学增强版 */
-
-/* 新动画 - 苹果风格美学增强版 */
-
-/* 分割线 - 苹果风格美学增强版 */
+/* 分割线 */
 .divider {
   height: 1px;
   background-color: var(--divider-color);
@@ -343,13 +251,10 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(90deg, transparent, var(--divider-color), transparent);
 }
 
-/* 阴影效果 - 苹果风格美学增强版 */
-
+/* 阴影效果 */
 .shadow-soft {
   box-shadow: var(--shadow-soft);
 }
-
-/* 圆角 - 苹果风格美学增强版 */
 
 /* 文本截断 */
 .truncate {
@@ -358,35 +263,12 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
 }
 
-/* 多行文本截断 */
-
-/* 布局工具类 */
-
-/* 响应式隐藏 */
-
-/* 触摸反馈美学增强版 */
+/* 触摸反馈（已清除动效） */
 .touch-feedback {
-  transition: all var(--transition-normal);
-  will-change: transform;
-}
-
-.touch-feedback:active {
-  transform: scale(0.97);
 }
 
 .touch-feedback-strong {
-  transition: all var(--transition-fast);
-  will-change: transform, box-shadow;
 }
-
-.touch-feedback-strong:active {
-  transform: scale(0.95);
-  box-shadow: var(--shadow-xs);
-}
-
-/* 毛玻璃效果 - 苹果风格增强版 */
-
-/* 渐变背景 */
 
 /* 文字渐变 */
 .text-gradient {
@@ -404,7 +286,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* 边框渐变 */
-
 .border-gradient::before {
   content: '';
   position: absolute;
@@ -417,7 +298,7 @@ h1, h2, h3, h4, h5, h6 {
   z-index: -1;
 }
 
-/* 滚动条样式 - 苹果风格增强版 */
+/* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -431,41 +312,28 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb {
   background: var(--text-tertiary);
   border-radius: var(--border-radius-full);
-  transition: background var(--transition-fast);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
 }
 
 /* 选择文本样式 */
 ::selection {
-  background-color: rgba(10, 17, 40, 0.1);
+  background-color: rgba(42, 40, 35, 0.1);
   color: var(--text-primary);
 }
 
-/* 禁用状态 */
-
-/* 焦点样式 */
-
-/* 过渡效果 */
+/* 过渡效果类（已清除动效，保留类名避免引用断裂） */
 .transition {
-  transition: all var(--transition-normal);
 }
 
 .transition-fast {
-  transition: all var(--transition-fast);
 }
 
 .transition-slow {
-  transition: all var(--transition-slow);
 }
 
 .transition-smooth {
-  transition: all var(--transition-smooth);
 }
 
-/* 响应式设计 - 苹果风格增强版 */
+/* 响应式设计 */
 @media (max-width: 375px) {
   .container {
     padding: var(--spacing-xl);
@@ -474,29 +342,5 @@ h1, h2, h3, h4, h5, h6 {
   .card {
     padding: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
-  }
-}
-
-/* 无障碍：尊重「减少动态效果」系统偏好（2026-07-26 评审 P2-7）
-   注意：WXSS 编译器（lib 3.14.3）不接受裸 `*` 通用选择器，改用标签选择器列表覆盖常规元素及其伪元素。 */
-@media (prefers-reduced-motion: reduce) {
-  page,
-  view,
-  text,
-  image,
-  button,
-  navigator,
-  scroll-view,
-  swiper,
-  input,
-  textarea,
-  page::before,
-  page::after,
-  view::before,
-  view::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
   }
 }

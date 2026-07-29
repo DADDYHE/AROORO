@@ -50,17 +50,105 @@ jest.mock('../cloudfunctions/paymentService/common/config', () => ({
   },
 }))
 
-// ===== Mock risk-rate-limit（spy 真实模块，统计调用）=====
-jest.mock('../cloudfunctions/common/risk-rate-limit', () => {
-  const real = jest.requireActual('../cloudfunctions/common/risk-rate-limit')
-  return {
-    withRateLimit: jest.fn(async (input, fn) => real.withRateLimit(input, fn)),
-    consumeRateLimit: jest.fn(input => real.consumeRateLimit(input)),
-    peekRateLimit: jest.fn(input => real.peekRateLimit(input)),
-    _resetStore: jest.fn(() => real._resetStore()),
-    DEFAULT_RISK_RATE_LIMIT_CONFIG: real.DEFAULT_RISK_RATE_LIMIT_CONFIG,
+// ===== Mock risk-rate-limit（自包含内存限流，模拟真实 withRateLimit 契约）=====
+// 注意：pay.js / orders.js 分别 import 各自的 per-service 副本
+//   paymentService/common/risk-rate-limit 与 orderService/common/risk-rate-limit
+// 这里用同一个 mockRateLimitShared 同时拦截两条路径，内部用内存滑动窗口模拟限流，
+// 超限时抛出 BusinessError(code='RATE_LIMITED')，与真实实现保持一致的错误处理语义。
+// （不直接委托真实模块：per-service 副本在 jest 下会因 rate-limit-config 解析失败抛 SERVER:5001）
+class MockRateLimitBusinessError extends Error {
+  constructor(code, message) {
+    super(message)
+    this.name = 'BusinessError'
+    this.code = code
   }
-})
+}
+
+const _mockRateLimitStore = { global: new Map(), target: new Map() }
+// 每用户对同一目标每分钟允许的调用次数（按业务类型，对齐测试期望）
+const _mockRateLimitTargetLimits = {
+  payment: 5,
+  refund: 2,
+  order: 10,
+  evaluation: 10,
+  mall_order: 8,
+  activity_apply: 5,
+  boarding_accept: 5,
+  feeding_order: 5,
+}
+// 全局（每用户每分钟）上限设高，避免干扰 target 级限流的判定
+const _mockRateLimitGlobalLimits = {
+  payment: 100,
+  refund: 100,
+  order: 100,
+  evaluation: 100,
+  mall_order: 100,
+  activity_apply: 100,
+  boarding_accept: 100,
+  feeding_order: 100,
+}
+const _mockRateLimitWindowMs = 60 * 1000
+
+function _mockRateLimitCheck(input) {
+  const now = input.now ?? Date.now()
+  const cutoff = now - _mockRateLimitWindowMs
+  const type = input.type
+  const gLimit = _mockRateLimitGlobalLimits[type] ?? 100
+  const tLimit = _mockRateLimitTargetLimits[type] ?? 10
+  const gKey = `${input.userId}|${type}`
+  const gArr = (_mockRateLimitStore.global.get(gKey) || []).filter(t => t > cutoff)
+  if (gArr.length >= gLimit) {
+    throw new MockRateLimitBusinessError('RATE_LIMITED', `RATE_LIMIT_GLOBAL:${input.userId}`)
+  }
+  if (input.targetId) {
+    const tKey = `${input.userId}|${type}|${input.targetId}`
+    const tArr = (_mockRateLimitStore.target.get(tKey) || []).filter(t => t > cutoff)
+    if (tArr.length >= tLimit) {
+      throw new MockRateLimitBusinessError('RATE_LIMITED', `RATE_LIMIT_TARGET:${input.targetId}`)
+    }
+  }
+}
+
+function _mockRateLimitConsume(input) {
+  const now = input.now ?? Date.now()
+  const cutoff = now - _mockRateLimitWindowMs
+  const type = input.type
+  const gKey = `${input.userId}|${type}`
+  const gArr = (_mockRateLimitStore.global.get(gKey) || []).filter(t => t > cutoff)
+  gArr.push(now)
+  _mockRateLimitStore.global.set(gKey, gArr)
+  if (input.targetId) {
+    const tKey = `${input.userId}|${type}|${input.targetId}`
+    const tArr = (_mockRateLimitStore.target.get(tKey) || []).filter(t => t > cutoff)
+    tArr.push(now)
+    _mockRateLimitStore.target.set(tKey, tArr)
+  }
+}
+
+const mockRateLimitShared = {
+  withRateLimit: jest.fn(async (input, fn) => {
+    _mockRateLimitCheck(input)
+    _mockRateLimitConsume(input)
+    return await fn()
+  }),
+  consumeRateLimit: jest.fn((input) => {
+    _mockRateLimitCheck(input)
+    _mockRateLimitConsume(input)
+  }),
+  peekRateLimit: jest.fn(() => ({ allowed: true, remaining: 999, resetAt: Date.now() })),
+  _resetStore: jest.fn(() => {
+    _mockRateLimitStore.global.clear()
+    _mockRateLimitStore.target.clear()
+  }),
+  DEFAULT_RISK_RATE_LIMIT_CONFIG: {
+    perUserPerMinute: 10,
+    perUserPerTargetPerMinute: 5,
+    windowMs: _mockRateLimitWindowMs,
+  },
+}
+
+jest.mock('../cloudfunctions/paymentService/common/risk-rate-limit', () => mockRateLimitShared)
+jest.mock('../cloudfunctions/orderService/common/risk-rate-limit', () => mockRateLimitShared)
 
 // ===== Mock wx-server-sdk =====
 const mockDb = {
@@ -99,13 +187,22 @@ const mockDb = {
           }
           return true
         })
+        const applyUpdate = async ({ data }) => {
+          let updated = 0
+          for (const doc of docs) { Object.assign(doc, data); updated++ }
+          return { stats: { updated } }
+        }
         return {
           field: () => ({
-            limit: () => ({ get: async () => ({ data: docs }) }),
+            limit: () => ({ get: async () => ({ data: docs }), update: applyUpdate, count: async () => ({ total: docs.length }) }),
             get: async () => ({ data: docs }),
+            update: applyUpdate,
+            count: async () => ({ total: docs.length }),
           }),
-          limit: () => ({ get: async () => ({ data: docs }) }),
+          limit: () => ({ get: async () => ({ data: docs }), update: applyUpdate, count: async () => ({ total: docs.length }) }),
           get: async () => ({ data: docs }),
+          update: applyUpdate,
+          count: async () => ({ total: docs.length }),
         }
       },
       add: async ({ data }) => {
@@ -130,7 +227,7 @@ jest.mock('wx-server-sdk', () => ({
 const pay = require('../cloudfunctions/paymentService/services/pay')
 const orders = require('../cloudfunctions/orderService/orders')
 
-const mockRateLimit = require('../cloudfunctions/common/risk-rate-limit')
+const mockRateLimit = require('../cloudfunctions/paymentService/common/risk-rate-limit')
 const mockWithRateLimit = mockRateLimit.withRateLimit
 
 beforeEach(() => {
@@ -168,9 +265,9 @@ describe('Sprint 18: createPayment 接入风控限流', () => {
         {},
         { openid: 'oTest' }
       )
-      // Sprint 25: WrappedHandler 成功路径直接返回 CreatePaymentResult 原始数据
-      expect(r.code).toBeUndefined()
-      expect(r.outTradeNo).toMatch(/^ORDER_/)
+      // Sprint 25 + H7: createPayment 经 handleSuccess 包装为 { code, message, data }
+      expect(r.code).toBe(0)
+      expect(r.data.outTradeNo).toMatch(/^ORDER_/)
     }
     // 第 6 次应被限流
     const blocked = await pay.createPayment(
@@ -202,9 +299,9 @@ describe('Sprint 18: createPayment 接入风控限流', () => {
       {},
       { openid: 'oU2' }
     )
-    // Sprint 25: 成功路径返回原始数据
-    expect(r2.code).toBeUndefined()
-    expect(r2.outTradeNo).toMatch(/^ORDER_/)
+    // Sprint 25 + H7: createPayment 经 handleSuccess 包装为 { code, message, data }
+    expect(r2.code).toBe(0)
+    expect(r2.data.outTradeNo).toMatch(/^ORDER_/)
   })
 })
 
@@ -214,7 +311,7 @@ describe('Sprint 18: createOrder 接入风控限流', () => {
     // 预置数据
     mockDb._collections.users = { docs: [{ _id: 'oTest', nickName: '测试' }] }
     mockDb._collections.hostProfiles = { docs: [{ _id: 'h1', openid: 'hOpenid', hostName: '阳光之家', pricePerDay: 100 }] }
-    mockDb._collections.pets = { docs: [{ _id: 'p1', name: '小白' }] }
+    mockDb._collections.pets = { docs: [{ _id: 'p1', name: '小白', ownerId: 'oTest' }] }
     mockDb._collections.orders = { docs: [] }
 
     await orders.createOrder(

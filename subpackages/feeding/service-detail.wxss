@@ -29,7 +29,6 @@
   color: var(--text-secondary);
   font-weight: 500;
   letter-spacing: 1rpx;
-  transition: all 0.3s ease;
 }
 
 .tab-item.active .tab-text {
@@ -48,12 +47,6 @@
 /* ====== Tab内容 ====== */
 .tab-content {
   padding: 0;
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 /* ====== 头部区域 ====== */
@@ -74,7 +67,7 @@
   right: -100rpx;
   width: 400rpx;
   height: 400rpx;
-  background: radial-gradient(circle, rgba(78, 205, 196, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(79, 94, 53, 0.15) 0%, transparent 70%);
 }
 
 .header-content {
@@ -106,7 +99,7 @@
 .illustration-bg {
   width: 100%;
   height: 100%;
-  background: url("data:image/svg+xml,%3Csvg width='200' height='160' viewBox='0 0 200 160' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='80' y='60' width='100' height='80' rx='16' fill='%23007AFF' opacity='0.15'/%3E%3Crect x='120' y='100' width='60' height='40' rx='12' fill='%2334C759' opacity='0.1'/%3E%3Ccircle cx='170' cy='50' r='20' fill='%23FF9F0A' opacity='0.1'/%3E%3C/svg%3E") no-repeat center;
+  background: url("data:image/svg+xml,%3Csvg width='200' height='160' viewBox='0 0 200 160' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='80' y='60' width='100' height='80' rx='16' fill='%236B7D8C' opacity='0.15'/%3E%3Crect x='120' y='100' width='60' height='40' rx='12' fill='%235B7C4A' opacity='0.1'/%3E%3Ccircle cx='170' cy='50' r='20' fill='%23B8893A' opacity='0.1'/%3E%3C/svg%3E") no-repeat center;
   background-size: contain;
 }
 
@@ -128,7 +121,6 @@
   gap: 8rpx;
   padding: 20rpx;
   border-radius: 16rpx;
-  transition: all 0.3s ease;
 }
 
 .service-tab.active {
@@ -383,11 +375,11 @@
   position: absolute;
   width: 4rpx;
   height: 4rpx;
-  background: #D4A373;
+  background: #D4A858;
   border-radius: 50%;
   top: 20rpx;
   left: 12rpx;
-  box-shadow: 8rpx -2rpx 0 #C4956A, -2rpx 6rpx 0 #C4956A, 10rpx 4rpx 0 #D4A373;
+  box-shadow: 8rpx -2rpx 0 #B8893A, -2rpx 6rpx 0 #B8893A, 10rpx 4rpx 0 #D4A858;
 }
 
 /* ====== 4. 反馈宠物状态图标 ====== */
@@ -542,7 +534,7 @@
 
 /* ====== 服务说明 ====== */
 .service-note {
-  background: rgba(78, 205, 196, 0.06);
+  background: rgba(79, 94, 53, 0.06);
   border-radius: 16rpx;
   padding: 20rpx;
 }
@@ -790,7 +782,7 @@
   top: 48rpx;
   bottom: 48rpx;
   width: 2rpx;
-  background: linear-gradient(180deg, rgba(78, 205, 196, 0.4) 0%, rgba(78, 205, 196, 0.1) 100%);
+  background: linear-gradient(180deg, rgba(79, 94, 53, 0.4) 0%, rgba(79, 94, 53, 0.1) 100%);
 }
 
 .flow-item {
@@ -892,7 +884,7 @@
 }
 
 .flow-tip {
-  background: rgba(78, 205, 196, 0.08);
+  background: rgba(79, 94, 53, 0.08);
   border-radius: 12rpx;
   padding: 16rpx;
   display: flex;
@@ -985,7 +977,7 @@
 .step-line {
   width: 2rpx;
   height: 32rpx;
-  background: rgba(78, 205, 196, 0.3);
+  background: rgba(79, 94, 53, 0.3);
   margin-left: 23rpx;
 }
 
@@ -1390,7 +1382,6 @@
   border-top: 3rpx solid var(--text-tertiary);
   border-right: 3rpx solid var(--text-tertiary);
   transform: rotate(45deg);
-  transition: all 0.3s ease;
   flex-shrink: 0;
   margin-right: 8rpx;
 }

@@ -21,7 +21,7 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.adminService.json
  */
 
-import type { CloudBaseDB } from './common/types'
+import type { CloudBaseDB } from '../common/types'
 
 // =====================================================================
 // 公共类型
@@ -306,6 +306,7 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   handleMallOrder: 'partner',
   shipMallOrder: 'partner',
   completeMallOrder: 'partner',
+  getLogisticsTrack: 'partner',
   getProductStats: 'partner',
   getCategoryStats: 'partner',
   listCategories: 'partner',

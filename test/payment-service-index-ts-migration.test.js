@@ -119,7 +119,7 @@ describe('Sprint 47: paymentService/index TypeScript 迁移', () => {
     beforeAll(() => { pkg = JSON.parse(readFileSafe(path.join(ROOT, 'package.json'))) })
     test('audit script', () => { expect(pkg.scripts['audit:s47-payment-service-index-ts']).toBe('node scripts/audit-s47-payment-service-index-ts.js') })
     test('audit strict', () => { expect(pkg.scripts['audit:s47-payment-service-index-ts:strict']).toBe('node scripts/audit-s47-payment-service-index-ts.js --strict') })
-    test('ci:check 集成（batch 入口）', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:s47-batch-services-index-ts:strict/) })
+    test('ci:check 集成（统一 audit:all:strict 入口）', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/) })
   })
 
   describe('11. audit 脚本可运行', () => {

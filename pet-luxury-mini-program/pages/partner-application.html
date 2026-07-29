@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>申请状态</title>
+    <style id="theme-vars">
+:root {
+  --petlux-brand: #4F5E35;
+  --petlux-brand-deep: #3A4626;
+  --petlux-brand-soft: #EAEDDF;
+  --petlux-brand-ink: #FAFAF6;
+  --petlux-bg: #EDF0E2;
+  --petlux-surface: #FFFFFF;
+  --petlux-surface-2: #E2E6D3;
+  --petlux-surface-3: #D6DBC5;
+  --petlux-ink: #2A2823;
+  --petlux-ink-2: #635E54;
+  --petlux-ink-3: #9A9489;
+  --petlux-line: #D8DCCE;
+  --petlux-line-strong: #C9CFBA;
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+  --petlux-radius-xs: 4px;
+  --petlux-radius-sm: 8px;
+  --petlux-radius-md: 12px;
+  --petlux-radius-lg: 16px;
+  --petlux-radius-pill: 999px;
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+  --petlux-s-1: 4px; --petlux-s-2: 8px; --petlux-s-3: 12px; --petlux-s-4: 16px;
+  --petlux-s-5: 24px; --petlux-s-6: 32px; --petlux-s-7: 48px;
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-text-display: 32px; --petlux-text-h1: 24px; --petlux-text-h2: 20px;
+  --petlux-text-h3: 17px; --petlux-text-body: 15px; --petlux-text-body-sm: 13px; --petlux-text-caption: 12px;
+  --petlux-weight-regular: 400; --petlux-weight-medium: 500; --petlux-weight-semibold: 600;
+  --petlux-background: var(--petlux-bg); --petlux-foreground: var(--petlux-ink);
+  --petlux-card: var(--petlux-surface); --petlux-card-foreground: var(--petlux-ink);
+  --petlux-popover: var(--petlux-surface); --petlux-popover-foreground: var(--petlux-ink);
+  --petlux-primary: var(--petlux-brand); --petlux-primary-foreground: var(--petlux-brand-ink);
+  --petlux-secondary: var(--petlux-surface-2); --petlux-secondary-foreground: var(--petlux-ink-2);
+  --petlux-muted: var(--petlux-surface-2); --petlux-muted-foreground: var(--petlux-ink-2);
+  --petlux-accent: var(--petlux-brand-soft); --petlux-accent-foreground: var(--petlux-brand);
+  --petlux-destructive: var(--petlux-state-error); --petlux-destructive-foreground: #FAFAF6;
+  --petlux-border: var(--petlux-line); --petlux-input: var(--petlux-line-strong); --petlux-ring: var(--petlux-brand);
+  --petlux-radius-small: var(--petlux-radius-sm); --petlux-radius-medium: var(--petlux-radius-md); --petlux-radius-large: var(--petlux-radius-lg);
+}
+.dark {
+  --petlux-background: #161612; --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A; --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A; --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A; --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924; --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C; --petlux-input: #34322C; --petlux-ring: #7A8C5A;
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme inline {
+        --color-background: var(--petlux-background);
+        --color-foreground: var(--petlux-foreground);
+        --color-card: var(--petlux-card);
+        --color-card-foreground: var(--petlux-card-foreground);
+        --color-popover: var(--petlux-popover);
+        --color-popover-foreground: var(--petlux-popover-foreground);
+        --color-primary: var(--petlux-primary);
+        --color-primary-foreground: var(--petlux-primary-foreground);
+        --color-secondary: var(--petlux-secondary);
+        --color-secondary-foreground: var(--petlux-secondary-foreground);
+        --color-muted: var(--petlux-muted);
+        --color-muted-foreground: var(--petlux-muted-foreground);
+        --color-accent: var(--petlux-accent);
+        --color-accent-foreground: var(--petlux-accent-foreground);
+        --color-destructive: var(--petlux-destructive);
+        --color-destructive-foreground: var(--petlux-destructive-foreground);
+        --color-border: var(--petlux-border);
+        --color-input: var(--petlux-input);
+        --color-ring: var(--petlux-ring);
+        --radius-sm: var(--petlux-radius-sm);
+        --radius-md: var(--petlux-radius-md);
+        --radius-lg: var(--petlux-radius-lg);
+      }
+      @layer base {
+        body { background: var(--petlux-background); color: var(--petlux-foreground); }
+      }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--petlux-background); }
+      .text-background { color: var(--petlux-background); }
+      .border-background { border-color: var(--petlux-background); }
+      .ring-background { --tw-ring-color: var(--petlux-background); }
+      .bg-foreground { background-color: var(--petlux-foreground); }
+      .text-foreground { color: var(--petlux-foreground); }
+      .border-foreground { border-color: var(--petlux-foreground); }
+      .ring-foreground { --tw-ring-color: var(--petlux-foreground); }
+      .bg-card { background-color: var(--petlux-card); }
+      .text-card { color: var(--petlux-card); }
+      .border-card { border-color: var(--petlux-card); }
+      .ring-card { --tw-ring-color: var(--petlux-card); }
+      .bg-card-foreground { background-color: var(--petlux-card-foreground); }
+      .text-card-foreground { color: var(--petlux-card-foreground); }
+      .border-card-foreground { border-color: var(--petlux-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--petlux-card-foreground); }
+      .bg-popover { background-color: var(--petlux-popover); }
+      .text-popover { color: var(--petlux-popover); }
+      .border-popover { border-color: var(--petlux-popover); }
+      .ring-popover { --tw-ring-color: var(--petlux-popover); }
+      .bg-popover-foreground { background-color: var(--petlux-popover-foreground); }
+      .text-popover-foreground { color: var(--petlux-popover-foreground); }
+      .border-popover-foreground { border-color: var(--petlux-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--petlux-popover-foreground); }
+      .bg-primary { background-color: var(--petlux-primary); }
+      .text-primary { color: var(--petlux-primary); }
+      .border-primary { border-color: var(--petlux-primary); }
+      .ring-primary { --tw-ring-color: var(--petlux-primary); }
+      .bg-primary-foreground { background-color: var(--petlux-primary-foreground); }
+      .text-primary-foreground { color: var(--petlux-primary-foreground); }
+      .border-primary-foreground { border-color: var(--petlux-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--petlux-primary-foreground); }
+      .bg-secondary { background-color: var(--petlux-secondary); }
+      .text-secondary { color: var(--petlux-secondary); }
+      .border-secondary { border-color: var(--petlux-secondary); }
+      .ring-secondary { --tw-ring-color: var(--petlux-secondary); }
+      .bg-secondary-foreground { background-color: var(--petlux-secondary-foreground); }
+      .text-secondary-foreground { color: var(--petlux-secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--petlux-secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--petlux-secondary-foreground); }
+      .bg-muted { background-color: var(--petlux-muted); }
+      .text-muted { color: var(--petlux-muted); }
+      .border-muted { border-color: var(--petlux-muted); }
+      .ring-muted { --tw-ring-color: var(--petlux-muted); }
+      .bg-muted-foreground { background-color: var(--petlux-muted-foreground); }
+      .text-muted-foreground { color: var(--petlux-muted-foreground); }
+      .border-muted-foreground { border-color: var(--petlux-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--petlux-muted-foreground); }
+      .bg-accent { background-color: var(--petlux-accent); }
+      .text-accent { color: var(--petlux-accent); }
+      .border-accent { border-color: var(--petlux-accent); }
+      .ring-accent { --tw-ring-color: var(--petlux-accent); }
+      .bg-accent-foreground { background-color: var(--petlux-accent-foreground); }
+      .text-accent-foreground { color: var(--petlux-accent-foreground); }
+      .border-accent-foreground { border-color: var(--petlux-accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--petlux-accent-foreground); }
+      .bg-destructive { background-color: var(--petlux-destructive); }
+      .text-destructive { color: var(--petlux-destructive); }
+      .border-destructive { border-color: var(--petlux-destructive); }
+      .ring-destructive { --tw-ring-color: var(--petlux-destructive); }
+      .bg-destructive-foreground { background-color: var(--petlux-destructive-foreground); }
+      .text-destructive-foreground { color: var(--petlux-destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--petlux-destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--petlux-destructive-foreground); }
+      .bg-border { background-color: var(--petlux-border); }
+      .text-border { color: var(--petlux-border); }
+      .border-border { border-color: var(--petlux-border); }
+      .ring-border { --tw-ring-color: var(--petlux-border); }
+      .bg-input { background-color: var(--petlux-input); }
+      .text-input { color: var(--petlux-input); }
+      .border-input { border-color: var(--petlux-input); }
+      .ring-input { --tw-ring-color: var(--petlux-input); }
+      .bg-ring { background-color: var(--petlux-ring); }
+      .text-ring { color: var(--petlux-ring); }
+      .border-ring { border-color: var(--petlux-ring); }
+      .ring-ring { --tw-ring-color: var(--petlux-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+      .text-ink { color: var(--petlux-ink); }
+      .text-ink-2 { color: var(--petlux-ink-2); }
+      .text-ink-3 { color: var(--petlux-ink-3); }
+      .form-input:focus, .form-textarea:focus { border-color: var(--petlux-brand); outline: none; box-shadow: 0 0 0 2px rgba(79,94,53,0.12); }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<style id="critical-layout">
+html, body { max-width: 100%; overflow-x: hidden; }
+body { margin: 0; background-color: var(--petlux-background); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+main > .petlux-shell { width: 100%; max-width: 28rem; margin-left: auto; margin-right: auto; }
+</style>
+<style id="petlux-utilities">
+  .petlux-card { box-shadow: var(--petlux-shadow-1); transition: transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s ease; }
+  .petlux-card:hover { transform: translateY(-2px); box-shadow: var(--petlux-shadow-2); }
+  .petlux-tap { transition: background-color .2s ease, opacity .2s ease; }
+  .petlux-tap:hover { background-color: var(--petlux-muted); }
+  .petlux-tap:active { opacity: .65; }
+  .petlux-btn-press { transition: transform .15s ease, box-shadow .25s ease, background-color .2s ease; }
+  .petlux-btn-press:hover { box-shadow: var(--petlux-shadow-2); }
+  .petlux-btn-press:active { transform: scale(.98); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes modalIn { from { opacity: 0; transform: scale(.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  @keyframes maskIn { from { opacity: 0; } to { opacity: 1; } }
+  .gallery-header { animation: fadeUp .6s ease-out; }
+  .gallery-hall { animation: fadeUp .6s ease-out .2s both; }
+  .modal-content { animation: modalIn .3s ease-out; }
+  .modal-mask { animation: maskIn .25s ease-out; }
+</style>
+<main>
+  <div class="fixed top-0 right-3 z-50 flex items-center w-[88px] h-8 rounded-full border border-black/10 shrink-0" style="top: calc(env(safe-area-inset-top, 0px) + 12px);">
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="更多">
+        <i data-lucide="more-horizontal" class="w-4 h-4 text-foreground"></i>
+      </button>
+      <span class="w-px h-3 bg-black/10 block"></span>
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="关闭">
+        <i data-lucide="x" class="w-4 h-4 text-foreground"></i>
+      </button>
+    </div>
+
+<div class="petlux-shell max-w-md mx-auto bg-background min-h-screen pb-28">
+
+  <!-- 顶部栏 -->
+  <header data-topbar class="sticky top-0 z-20 h-14 flex items-center px-4 gap-3 bg-background/95 backdrop-blur-sm border-b border-border">
+<button type="button" aria-label="返回" class="flex items-center justify-center w-8 h-8 -ml-1 text-foreground petlux-tap rounded-full">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <h1 class="text-base font-medium text-foreground flex-1">申请状态</h1>
+    <span class="w-8 h-8"></span>
+  </header>
+
+  <!-- 画廊式品牌头部 -->
+  <header class="gallery-header px-5 pt-8 pb-6">
+    <div class="brand-block flex flex-col gap-3">
+      <div class="flex items-center gap-2">
+        <span class="brand-accent-bar w-1 h-6 bg-primary block rounded-sm"></span>
+        <span class="text-[11px] tracking-[0.2em] text-muted-foreground font-mono uppercase">AROORO</span>
+      </div>
+      <h1 class="brand-text text-3xl font-light tracking-widest text-foreground">申请状态</h1>
+      <div class="brand-meta flex items-center gap-2">
+        <span class="w-4 h-px bg-muted-foreground/50 block"></span>
+        <span class="text-[13px] text-muted-foreground tracking-wide">合作伙伴审核</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 画廊展厅 -->
+  <div class="gallery-hall px-4">
+
+    <!-- 申请卡片 -->
+    <div class="gallery-card bg-card rounded-lg overflow-hidden flex shadow-[var(--petlux-shadow-1)] mb-4 petlux-card">
+      <div class="card-accent w-1 self-stretch shrink-0 bg-primary"></div>
+      <div class="card-body p-5 flex-1">
+        <h2 class="status-title text-lg font-medium text-foreground block mb-2">成为合作伙伴</h2>
+        <p class="status-desc text-sm text-muted-foreground block mb-5">带货赚取收益，共建宠物生态</p>
+        <button type="button" class="apply-btn petlux-btn-press inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium">
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span>立即申请</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 权益说明 -->
+    <div class="gallery-card bg-card rounded-lg overflow-hidden flex shadow-[var(--petlux-shadow-1)] mb-4 petlux-card">
+      <div class="card-accent w-1 self-stretch shrink-0" style="background: linear-gradient(180deg, var(--petlux-state-success) 0%, var(--petlux-brand) 100%);"></div>
+      <div class="card-body p-5 flex-1">
+        <h2 class="text-base font-medium text-foreground mb-4">合作伙伴权益</h2>
+        <div class="flex flex-col gap-3">
+          <div class="flex items-start gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="wallet" class="w-4 h-4 text-accent-foreground"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-foreground">佣金收益</p>
+              <p class="text-[12px] text-muted-foreground mt-0.5">推荐用户消费即可获得佣金返利</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="calendar-days" class="w-4 h-4 text-accent-foreground"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-foreground">活动管理</p>
+              <p class="text-[12px] text-muted-foreground mt-0.5">创建和管理宠物活动，获取报名收益</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="home" class="w-4 h-4 text-accent-foreground"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-foreground">服务管理</p>
+              <p class="text-[12px] text-muted-foreground mt-0.5">管理寄养家庭与上门服务，赚取服务收入</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 申请弹窗 -->
+<div class="modal-mask fixed inset-0 z-50 flex items-center justify-center p-6" style="background: rgba(0,0,0,0.45);">
+  <div class="modal-content bg-card rounded-lg overflow-hidden w-full max-w-sm shadow-[var(--petlux-shadow-3)]">
+    <!-- 弹窗头部 -->
+    <div class="modal-header px-5 py-4 border-b border-border flex items-center justify-between">
+      <h3 class="modal-title text-base font-medium text-foreground">申请合作伙伴</h3>
+      <button type="button" aria-label="关闭" class="flex items-center justify-center w-7 h-7 text-muted-foreground petlux-tap rounded-full">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <!-- 弹窗主体 -->
+    <div class="modal-body p-5">
+      <!-- 真实姓名 -->
+      <div class="form-field mb-4">
+        <label class="form-label text-[13px] text-muted-foreground block mb-1.5">真实姓名</label>
+        <input type="text" class="form-input w-full h-10 px-3 border border-input rounded-md text-sm text-foreground bg-background" placeholder="请输入真实姓名" value="李明" />
+      </div>
+      <!-- 手机号 -->
+      <div class="form-field mb-4">
+        <label class="form-label text-[13px] text-muted-foreground block mb-1.5">手机号</label>
+        <input type="tel" maxlength="11" class="form-input w-full h-10 px-3 border border-input rounded-md text-sm text-foreground bg-background" placeholder="请输入手机号" value="138****8888" />
+      </div>
+      <!-- 申请理由 -->
+      <div class="form-field mb-2">
+        <label class="form-label text-[13px] text-muted-foreground block mb-1.5">申请理由</label>
+        <textarea class="form-textarea w-full h-24 p-3 border border-input rounded-md text-sm text-foreground bg-background resize-none" placeholder="请简述申请理由" maxlength="200">热爱宠物行业，拥有3年宠物寄养经验，希望通过AROORO平台为更多宠物主人提供优质的寄养和上门服务。</textarea>
+        <div class="text-right text-[11px] text-muted-foreground mt-1">56/200</div>
+      </div>
+    </div>
+    <!-- 弹窗底部 -->
+    <div class="modal-footer flex border-t border-border">
+      <button type="button" class="modal-btn btn-cancel flex-1 py-3.5 text-center text-sm text-muted-foreground petlux-tap border-r border-border">
+        取消
+      </button>
+      <button type="button" class="modal-btn btn-confirm flex-1 py-3.5 text-center text-sm font-medium text-primary petlux-tap">
+        提交申请
+      </button>
+    </div>
+  </div>
+</div>
+</main>
+<script>lucide.createIcons();</script>
+</body>
+</html>

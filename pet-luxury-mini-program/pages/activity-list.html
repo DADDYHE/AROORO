@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宠物活动</title>
+    <style id="theme-vars">
+/* ============================================================
+   Pet Luxury Mini-Program — Design Token System
+   Migrated from olive-green fresh-food app to healing light-luxury pet brand
+   Brand prefix: petlux
+   ============================================================ */
+
+:root {
+  /* ---------- Brand Primary (single hue: warm olive green) ---------- */
+  --petlux-brand: #4F5E35;           /* primary olive — CTAs, active states */
+  --petlux-brand-deep: #3A4626;      /* hover / pressed step */
+  --petlux-brand-soft: #EAEDDF;      /* 8% brand tint for tags, soft fills */
+  --petlux-brand-ink: #FAFAF6;       /* text on brand fills */
+
+  /* ---------- Surfaces (olive-tinted — brand primary light variant) ---------- */
+  --petlux-bg: #EDF0E2;              /* olive-tinted page base — brand light variant */
+  --petlux-surface: #FFFFFF;         /* white card */
+  --petlux-surface-2: #E2E6D3;       /* olive hover / selected */
+  --petlux-surface-3: #D6DBC5;       /* deeper olive fill */
+
+  /* ---------- Ink (text) ---------- */
+  --petlux-ink: #2A2823;             /* primary text — warm near-black */
+  --petlux-ink-2: #635E54;           /* secondary text */
+  --petlux-ink-3: #9A9489;           /* tertiary / placeholder */
+
+  /* ---------- Lines & Dividers ---------- */
+  --petlux-line: #D8DCCE;            /* hairline divider — olive tint */
+  --petlux-line-strong: #C9CFBA;     /* emphasized border */
+
+  /* ---------- State Colors (semantic only, never brand) ---------- */
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+
+  /* ---------- Radius Scale (2 / 8 / 12 / 16) ---------- */
+  --petlux-radius-xs: 4px;
+  --petlux-radius-sm: 8px;
+  --petlux-radius-md: 12px;
+  --petlux-radius-lg: 16px;
+  --petlux-radius-pill: 999px;
+
+  /* ---------- Shadow (subtle, alpha <= 0.05 for static) ---------- */
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+
+  /* ---------- Spacing (8pt grid) ---------- */
+  --petlux-s-1: 4px;
+  --petlux-s-2: 8px;
+  --petlux-s-3: 12px;
+  --petlux-s-4: 16px;
+  --petlux-s-5: 24px;
+  --petlux-s-6: 32px;
+  --petlux-s-7: 48px;
+
+  /* ---------- Typography ---------- */
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-font-latin: "Inter", system-ui, sans-serif;
+  --petlux-font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --petlux-text-display: 32px;
+  --petlux-text-h1: 24px;
+  --petlux-text-h2: 20px;
+  --petlux-text-h3: 17px;
+  --petlux-text-body: 15px;
+  --petlux-text-body-sm: 13px;
+  --petlux-text-caption: 12px;
+
+  --petlux-leading-tight: 1.2;
+  --petlux-leading-normal: 1.55;
+  --petlux-leading-relaxed: 1.7;
+
+  --petlux-weight-regular: 400;
+  --petlux-weight-medium: 500;
+  --petlux-weight-semibold: 600;
+
+  --petlux-tracking-tight: -0.02em;
+  --petlux-tracking-normal: 0;
+  --petlux-tracking-wide: 0.01em;
+
+  /* ============================================================
+     Semantic Aliases — required by apply-html-head-contract.mjs
+     ============================================================ */
+
+  --petlux-background: var(--petlux-bg);
+  --petlux-foreground: var(--petlux-ink);
+
+  --petlux-card: var(--petlux-surface);
+  --petlux-card-foreground: var(--petlux-ink);
+
+  --petlux-popover: var(--petlux-surface);
+  --petlux-popover-foreground: var(--petlux-ink);
+
+  --petlux-primary: var(--petlux-brand);
+  --petlux-primary-foreground: var(--petlux-brand-ink);
+
+  --petlux-secondary: var(--petlux-surface-2);
+  --petlux-secondary-foreground: var(--petlux-ink-2);
+
+  --petlux-muted: var(--petlux-surface-2);
+  --petlux-muted-foreground: var(--petlux-ink-2);
+
+  --petlux-accent: var(--petlux-brand-soft);
+  --petlux-accent-foreground: var(--petlux-brand);
+
+  --petlux-destructive: var(--petlux-state-error);
+  --petlux-destructive-foreground: #FAFAF6;
+
+  --petlux-border: var(--petlux-line);
+  --petlux-input: var(--petlux-line-strong);
+  --petlux-ring: var(--petlux-brand);
+
+  --petlux-radius-small: var(--petlux-radius-sm);
+  --petlux-radius-medium: var(--petlux-radius-md);
+  --petlux-radius-large: var(--petlux-radius-lg);
+}
+
+/* ---------- Dark mode stub (project is light-only; reserved) ---------- */
+.dark {
+  --petlux-background: #161612;
+  --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A;
+  --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A;
+  --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A;
+  --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924;
+  --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C;
+  --petlux-input: #34322C;
+  --petlux-ring: #7A8C5A;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--petlux-background);
+    --color-foreground: var(--petlux-foreground);
+    --color-card: var(--petlux-card);
+    --color-card-foreground: var(--petlux-card-foreground);
+    --color-popover: var(--petlux-popover);
+    --color-popover-foreground: var(--petlux-popover-foreground);
+    --color-primary: var(--petlux-primary);
+    --color-primary-foreground: var(--petlux-primary-foreground);
+    --color-secondary: var(--petlux-secondary);
+    --color-secondary-foreground: var(--petlux-secondary-foreground);
+    --color-muted: var(--petlux-muted);
+    --color-muted-foreground: var(--petlux-muted-foreground);
+    --color-accent: var(--petlux-accent);
+    --color-accent-foreground: var(--petlux-accent-foreground);
+    --color-destructive: var(--petlux-destructive);
+    --color-destructive-foreground: var(--petlux-destructive-foreground);
+    --color-border: var(--petlux-border);
+    --color-input: var(--petlux-input);
+    --color-ring: var(--petlux-ring);
+    --radius-sm: var(--petlux-radius-sm);
+    --radius-md: var(--petlux-radius-md);
+    --radius-lg: var(--petlux-radius-lg);
+  }
+  @layer base {
+    body { background: var(--petlux-background); color: var(--petlux-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--petlux-background); }
+      .text-background { color: var(--petlux-background); }
+      .border-background { border-color: var(--petlux-background); }
+      .ring-background { --tw-ring-color: var(--petlux-background); }
+      .bg-foreground { background-color: var(--petlux-foreground); }
+      .text-foreground { color: var(--petlux-foreground); }
+      .border-foreground { border-color: var(--petlux-foreground); }
+      .ring-foreground { --tw-ring-color: var(--petlux-foreground); }
+      .bg-card { background-color: var(--petlux-card); }
+      .text-card { color: var(--petlux-card); }
+      .border-card { border-color: var(--petlux-card); }
+      .ring-card { --tw-ring-color: var(--petlux-card); }
+      .bg-card-foreground { background-color: var(--petlux-card-foreground); }
+      .text-card-foreground { color: var(--petlux-card-foreground); }
+      .border-card-foreground { border-color: var(--petlux-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--petlux-card-foreground); }
+      .bg-popover { background-color: var(--petlux-popover); }
+      .text-popover { color: var(--petlux-popover); }
+      .border-popover { border-color: var(--petlux-popover); }
+      .ring-popover { --tw-ring-color: var(--petlux-popover); }
+      .bg-popover-foreground { background-color: var(--petlux-popover-foreground); }
+      .text-popover-foreground { color: var(--petlux-popover-foreground); }
+      .border-popover-foreground { border-color: var(--petlux-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--petlux-popover-foreground); }
+      .bg-primary { background-color: var(--petlux-primary); }
+      .text-primary { color: var(--petlux-primary); }
+      .border-primary { border-color: var(--petlux-primary); }
+      .ring-primary { --tw-ring-color: var(--petlux-primary); }
+      .bg-primary-foreground { background-color: var(--petlux-primary-foreground); }
+      .text-primary-foreground { color: var(--petlux-primary-foreground); }
+      .border-primary-foreground { border-color: var(--petlux-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--petlux-primary-foreground); }
+      .bg-secondary { background-color: var(--petlux-secondary); }
+      .text-secondary { color: var(--petlux-secondary); }
+      .border-secondary { border-color: var(--petlux-secondary); }
+      .ring-secondary { --tw-ring-color: var(--petlux-secondary); }
+      .bg-secondary-foreground { background-color: var(--petlux-secondary-foreground); }
+      .text-secondary-foreground { color: var(--petlux-secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--petlux-secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--petlux-secondary-foreground); }
+      .bg-muted { background-color: var(--petlux-muted); }
+      .text-muted { color: var(--petlux-muted); }
+      .border-muted { border-color: var(--petlux-muted); }
+      .ring-muted { --tw-ring-color: var(--petlux-muted); }
+      .bg-muted-foreground { background-color: var(--petlux-muted-foreground); }
+      .text-muted-foreground { color: var(--petlux-muted-foreground); }
+      .border-muted-foreground { border-color: var(--petlux-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--petlux-muted-foreground); }
+      .bg-accent { background-color: var(--petlux-accent); }
+      .text-accent { color: var(--petlux-accent); }
+      .border-accent { border-color: var(--petlux-accent); }
+      .ring-accent { --tw-ring-color: var(--petlux-accent); }
+      .bg-accent-foreground { background-color: var(--petlux-accent-foreground); }
+      .text-accent-foreground { color: var(--petlux-accent-foreground); }
+      .border-accent-foreground { border-color: var(--petlux-accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--petlux-accent-foreground); }
+      .bg-destructive { background-color: var(--petlux-destructive); }
+      .text-destructive { color: var(--petlux-destructive); }
+      .border-destructive { border-color: var(--petlux-destructive); }
+      .ring-destructive { --tw-ring-color: var(--petlux-destructive); }
+      .bg-destructive-foreground { background-color: var(--petlux-destructive-foreground); }
+      .text-destructive-foreground { color: var(--petlux-destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--petlux-destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--petlux-destructive-foreground); }
+      .bg-border { background-color: var(--petlux-border); }
+      .text-border { color: var(--petlux-border); }
+      .border-border { border-color: var(--petlux-border); }
+      .ring-border { --tw-ring-color: var(--petlux-border); }
+      .bg-input { background-color: var(--petlux-input); }
+      .text-input { color: var(--petlux-input); }
+      .border-input { border-color: var(--petlux-input); }
+      .ring-input { --tw-ring-color: var(--petlux-input); }
+      .bg-ring { background-color: var(--petlux-ring); }
+      .text-ring { color: var(--petlux-ring); }
+      .border-ring { border-color: var(--petlux-ring); }
+      .ring-ring { --tw-ring-color: var(--petlux-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<style id="critical-layout">
+html, body { max-width: 100%; overflow-x: hidden; }
+body { margin: 0; background-color: var(--petlux-background); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+main > .petlux-shell { width: 100%; max-width: 28rem; margin-left: auto; margin-right: auto; }
+header[data-topbar] { min-height: 56px; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
+<main>
+  <div class="fixed top-0 right-3 z-50 flex items-center w-[88px] h-8 rounded-full border border-black/10 shrink-0" style="top: calc(env(safe-area-inset-top, 0px) + 12px);">
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="更多">
+        <i data-lucide="more-horizontal" class="w-4 h-4 text-foreground"></i>
+      </button>
+      <span class="w-px h-3 bg-black/10 block"></span>
+      <button type="button" class="flex h-full flex-1 items-center justify-center" aria-label="关闭">
+        <i data-lucide="x" class="w-4 h-4 text-foreground"></i>
+      </button>
+    </div>
+
+<div class="petlux-shell max-w-md mx-auto bg-background min-h-screen pb-24">
+
+  <!-- 顶部栏 -->
+  <header data-topbar class="sticky top-0 z-20 h-14 px-4 flex items-center justify-between bg-background/95 backdrop-blur-sm border-b border-border">
+<div class="flex items-center gap-1.5 min-w-0">
+      <button type="button" aria-label="返回" class="flex items-center justify-center w-8 h-8 -ml-1 text-foreground">
+        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+      </button>
+      <h1 class="text-base font-semibold text-foreground">宠物活动</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" aria-label="发起活动" class="flex items-center justify-center w-8 h-8 text-foreground">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+      </button>
+      </div>
+  </header>
+
+  <!-- 页面头部 -->
+  <header class="page-header px-5 pt-8 pb-6">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="w-1 h-5 bg-primary block"></span>
+      <span class="text-[11px] tracking-[0.2em] text-muted-foreground font-mono uppercase">ACTIVITY</span>
+    </div>
+    <h1 class="page-title text-2xl font-semibold text-foreground tracking-wide">宠物活动</h1>
+    <p class="page-subtitle text-[13px] text-muted-foreground mt-1.5 tracking-wide">与爱宠一起创造美好回忆</p>
+  </header>
+
+  <!-- 分类标签栏 -->
+  <nav class="category-tabs sticky top-14 z-10 bg-background/95 backdrop-blur-sm px-5 py-3 border-b border-border/60">
+    <div class="no-scrollbar flex items-center gap-2 overflow-x-auto">
+      <button type="button" class="category-tab active shrink-0 px-3.5 py-1.5 rounded-full bg-primary text-primary-foreground text-[13px] font-medium">
+        <span class="category-tab-text">全部</span>
+      </button>
+      <button type="button" class="category-tab shrink-0 px-3.5 py-1.5 rounded-full bg-card text-muted-foreground text-[13px] font-medium border border-border">
+        <span class="category-tab-text">已报名</span>
+      </button>
+      <button type="button" class="category-tab shrink-0 px-3.5 py-1.5 rounded-full bg-card text-muted-foreground text-[13px] font-medium border border-border">
+        <span class="category-tab-text">户外</span>
+      </button>
+      <button type="button" class="category-tab shrink-0 px-3.5 py-1.5 rounded-full bg-card text-muted-foreground text-[13px] font-medium border border-border">
+        <span class="category-tab-text">聚会</span>
+      </button>
+      <button type="button" class="category-tab shrink-0 px-3.5 py-1.5 rounded-full bg-card text-muted-foreground text-[13px] font-medium border border-border">
+        <span class="category-tab-text">课程</span>
+      </button>
+      <button type="button" class="category-tab shrink-0 px-3.5 py-1.5 rounded-full bg-card text-muted-foreground text-[13px] font-medium border border-border">
+        <span class="category-tab-text">公益</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 活动列表 -->
+  <section class="activity-list px-5 pt-5 pb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-xs text-muted-foreground font-mono">01</span>
+      <h2 class="text-base font-semibold text-foreground">精选活动</h2>
+    </div>
+    <span class="block w-8 h-px bg-primary/60 mb-4"></span>
+
+    <div class="flex flex-col gap-3.5">
+
+      <!-- 活动卡片 1 -->
+      <article class="activity-card petlux-card relative bg-card rounded-lg overflow-hidden shadow-[var(--petlux-shadow-1)]">
+        <div class="activity-card-background absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+        <div class="activity-card-content relative flex gap-3 p-3">
+          <div class="activity-cover-wrapper shrink-0">
+            <img src="../assets/pet-activity.jpg" alt="秋日宠友花园派对" class="activity-cover w-24 h-24 rounded-md object-cover" />
+          </div>
+          <div class="activity-info flex-1 min-w-0 flex flex-col gap-2">
+            <div class="activity-header-row flex items-start justify-between gap-2">
+              <h3 class="activity-title text-[15px] font-semibold text-foreground truncate">秋日宠友花园派对</h3>
+              <span class="activity-price text-[14px] font-semibold text-primary shrink-0">¥128/位</span>
+            </div>
+            <div class="activity-meta flex flex-col gap-1.5">
+              <div class="meta-item flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-muted-foreground shrink-0"></i>
+                <span class="meta-text text-[12px] text-muted-foreground">10月19日 周六 14:00</span>
+              </div>
+              <div class="meta-item meta-item-right flex items-center gap-1.5">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-muted-foreground shrink-0"></i>
+                <span class="meta-text text-[12px] text-muted-foreground truncate">朝阳公园 · 花园草坪</span>
+                <div class="activity-participants ml-auto flex items-center gap-1.5 shrink-0">
+                  <span class="participants-text text-[11px] text-muted-foreground font-mono">18/30</span>
+                  <div class="participants-progress w-8 h-1 rounded-full bg-muted overflow-hidden">
+                    <div class="progress-bar h-full bg-primary rounded-full" style="width: 60%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="activity-organizer flex items-center justify-between gap-2 pt-1">
+              <div class="organizer-info flex items-center gap-1.5 min-w-0">
+                <div class="organizer-avatar-wrap has-avatar shrink-0">
+                  <img src="../assets/avatar-user.jpg" alt="小鹿主理人" class="organizer-avatar w-5 h-5 rounded-full object-cover" />
+                </div>
+                <span class="organizer-name text-[12px] text-muted-foreground truncate">小鹿主理人</span>
+              </div>
+              <button type="button" class="join-button petlux-tap shrink-0 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[12px] font-medium">
+                <span class="join-button-text">立即报名</span>
+              </button>
+            </div>
+          </div>
+          <div class="activity-accent absolute left-0 top-3 bottom-3 w-0.5 bg-primary/40 rounded-full"></div>
+        </div>
+      </article>
+
+      <!-- 活动卡片 2 -->
+      <article class="activity-card petlux-card relative bg-card rounded-lg overflow-hidden shadow-[var(--petlux-shadow-1)]">
+        <div class="activity-card-background absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+        <div class="activity-card-content relative flex gap-3 p-3">
+          <div class="activity-cover-wrapper shrink-0">
+            <img src="../assets/pet-activity.jpg" alt="宠物敏捷训练体验课" class="activity-cover w-24 h-24 rounded-md object-cover" />
+          </div>
+          <div class="activity-info flex-1 min-w-0 flex flex-col gap-2">
+            <div class="activity-header-row flex items-start justify-between gap-2">
+              <h3 class="activity-title text-[15px] font-semibold text-foreground truncate">宠物敏捷训练体验课</h3>
+              <span class="activity-price text-[14px] font-semibold text-primary shrink-0">¥198/位</span>
+            </div>
+            <div class="activity-meta flex flex-col gap-1.5">
+              <div class="meta-item flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-muted-foreground shrink-0"></i>
+                <span class="meta-text text-[12px] text-muted-foreground">10月22日 周二 10:00</span>
+              </div>
+              <div class="meta-item meta-item-right flex items-center gap-1.5">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-muted-foreground shrink-0"></i>
+                <span class="meta-text text-[12px] text-muted-foreground truncate">望京 · AROORO训练馆</span>
+                <div class="activity-participants ml-auto flex items-center gap-1.5 shrink-0">
+                  <span class="participants-text text-[11px] text-muted-foreground font-mono">6/12</span>
+                  <div class="participants-progress w-8 h-1 rounded-full bg-muted overflow-hidden">
+                    <div class="progress-bar h-full bg-primary rounded-full" style="width: 50%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="activity-organizer flex items-center justify-between gap-2 pt-1">
+              <div class="organizer-info flex items-center gap-1.5 min-w-0">
+                <div class="organizer-avatar-wrap has-avatar shrink-0">
+                  <img src="../assets/avatar-user.jpg" alt="训犬师阿哲" class="organizer-avatar w-5 h-5 rounded-full object-cover" />
+                </div>
+                <span class="organizer-name text-[12px] text-muted-foreground truncate">训犬师阿哲</span>
+              </div>
+              <button type="button" class="join-button petlux-tap shrink-0 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[12px] font-medium">
+                <span class="join-button-text">立即报名</span>
+              </button>
+            </div>
+          </div>
+          <div class="activity-accent absolute left-0 top-3 bottom-3 w-0.5 bg-primary/40 rounded-full"></div>
+        </div>
+      </article>
+
+      <!-- 活动卡片 3 -->
+      <article class="activity-card petlux-card relative bg-card rounded-lg overflow-hidden shadow-[var(--petlux-shadow-1)]">
+        <div class="activity-card-background absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+        <div class="activity-card-content relative flex gap-3 p-3">
+          <div class="activity-cover-wrapper shrink-0">
+            <img src="../assets/pet-activity.jpg" alt="城市宠物公益领养日" class="activity-cover w-24 h-24 rounded-md object-cover" />
+          </div>
+          <div class="activity-info flex-1 min-w-0 flex flex-col gap-2">
+            <div class="activity-header-row flex items-start justify-between gap-2">
+              <h3 class="activity-title text-[15px] font-semibold text-foreground truncate">城市宠物公益领养日</h3>
+              <span class="activity-price free text-[14px] font-semibold text-state-success shrink-0" style="color: var(--petlux-state-success)">免费</span>
+            </div>
+            <div class="activity-meta flex flex-col gap-1.5">
+              <div class="meta-item flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-muted-foreground shrink-0"></i>
+                <span class="meta-text text-[12px] text-muted-foreground">10月26日 周六 13:00</span>
+              </div>
+              <div class="meta-item meta-item-right flex items-center gap-1.5">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-muted-foreground shrink-0"></i>
+                <span class="meta-text text-[12px] text-muted-foreground truncate">三里屯 · 通盈中心广场</span>
+                <div class="activity-participants ml-auto flex items-center gap-1.5 shrink-0">
+                  <span class="participants-text text-[11px] text-muted-foreground font-mono">42/不限</span>
+                  <div class="participants-progress w-8 h-1 rounded-full bg-muted overflow-hidden">
+                    <div class="progress-bar h-full bg-primary rounded-full" style="width: 35%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="activity-organizer flex items-center justify-between gap-2 pt-1">
+              <div class="organizer-info flex items-center gap-1.5 min-w-0">
+                <div class="organizer-avatar-wrap has-avatar shrink-0">
+                  <img src="../assets/avatar-user.jpg" alt="流浪动物之家" class="organizer-avatar w-5 h-5 rounded-full object-cover" />
+                </div>
+                <span class="organizer-name text-[12px] text-muted-foreground truncate">流浪动物之家</span>
+              </div>
+              <button type="button" class="join-button petlux-tap shrink-0 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[12px] font-medium">
+                <span class="join-button-text">立即报名</span>
+              </button>
+            </div>
+          </div>
+          <div class="activity-accent absolute left-0 top-3 bottom-3 w-0.5 bg-primary/40 rounded-full"></div>
+        </div>
+      </article>
+
+      <!-- 活动卡片 4 - 已报名 -->
+      <article class="activity-card petlux-card relative bg-card rounded-lg overflow-hidden shadow-[var(--petlux-shadow-1)]">
+        <div class="activity-card-background absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+        <div class="activity-card-content relative flex gap-3 p-3">
+          <div class="activity-cover-wrapper shrink-0">
+            <img src="../assets/pet-activity.jpg" alt="周末狗狗社交日" class="activity-cover w-24 h-24 rounded-md object-cover" />
+          </div>
+          <div class="activity-info flex-1 min-w-0 flex flex-col gap-2">
+            <div class="activity-header-row flex items-start justify-between gap-2">
+              <h3 class="activity-title text-[15px] font-semibold text-foreground truncate">周末狗狗社交日</h3>
+              <span class="activity-price text-[14px] font-semibold text-primary shrink-0">¥88/位</span>
+            </div>
+            <div class="activity-meta flex flex-col gap-1.5">
+              <div class="meta-item flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-muted-foreground shrink-0"></i>
+                <span class="meta-text text-[12px] text-muted-foreground">11月02日 周六 15:30</span>
+              </div>
+              <div class="meta-item meta-item-right flex items-center gap-1.5">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-muted-foreground shrink-0"></i>
+                <span class="meta-text text-[12px] text-muted-foreground truncate">奥森公园 · 南园草坪</span>
+                <div class="activity-participants ml-auto flex items-center gap-1.5 shrink-0">
+                  <span class="participants-text text-[11px] text-muted-foreground font-mono">24/40</span>
+                  <div class="participants-progress w-8 h-1 rounded-full bg-muted overflow-hidden">
+                    <div class="progress-bar h-full bg-primary rounded-full" style="width: 60%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="activity-organizer flex items-center justify-between gap-2 pt-1">
+              <div class="organizer-info flex items-center gap-1.5 min-w-0">
+                <div class="organizer-avatar-wrap has-avatar shrink-0">
+                  <img src="../assets/avatar-user.jpg" alt="宠友会社群" class="organizer-avatar w-5 h-5 rounded-full object-cover" />
+                </div>
+                <span class="organizer-name text-[12px] text-muted-foreground truncate">宠友会社群</span>
+              </div>
+              <span class="joined-badge shrink-0 px-3 py-1 rounded-full bg-accent text-accent-foreground text-[12px] font-medium">
+                <span class="joined-badge-text">已报名</span>
+              </span>
+            </div>
+          </div>
+          <div class="activity-accent absolute left-0 top-3 bottom-3 w-0.5 bg-primary/40 rounded-full"></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- 我报名的活动提示 -->
+  <section class="joined-hint px-5 pb-6">
+    <div class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-md bg-accent/60">
+      <i data-lucide="info" class="w-3.5 h-3.5 text-muted-foreground shrink-0"></i>
+      <span class="hint-text text-[12px] text-muted-foreground">仅能显示最近6个月我报名的活动</span>
+    </div>
+  </section>
+
+  <!-- 加载状态 -->
+  <section class="loading-more px-5 pb-8">
+    <div class="flex flex-col items-center gap-2 py-4">
+      <div class="loading-dots flex items-center gap-1">
+        <span class="loading-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse"></span>
+        <span class="loading-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse" style="animation-delay: 0.15s"></span>
+        <span class="loading-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse" style="animation-delay: 0.3s"></span>
+      </div>
+      <span class="loading-more-text text-[12px] text-muted-foreground">加载中</span>
+    </div>
+  </section>
+
+  <!-- 空状态（仅作展示，默认隐藏） -->
+  <section class="empty-state px-5 py-16 hidden">
+    <div class="flex flex-col items-center gap-3 text-center">
+      <div class="empty-icon w-16 h-16 rounded-full bg-accent flex items-center justify-center">
+        <i data-lucide="calendar-x" class="w-7 h-7 text-accent-foreground"></i>
+      </div>
+      <h3 class="empty-title text-[15px] font-semibold text-foreground">暂无活动</h3>
+      <p class="empty-text text-[13px] text-muted-foreground">精彩活动即将上线，敬请期待</p>
+    </div>
+  </section>
+
+</div>
+</main>
+<script>lucide.createIcons();</script>
+</body>
+</html>

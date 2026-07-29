@@ -42,6 +42,11 @@ export interface ServiceLogger extends Logger {
     errorWithContext: (action: string, error: Error | unknown, context?: Record<string, unknown>) => void;
     performance: (action: string, duration: number, metadata?: Record<string, unknown>) => void;
     database: (action: string, collection: string, operation: string, result?: Record<string, unknown>) => void;
+    /**
+     * 关键路径性能采样：按 PERF_SAMPLING_RATE 概率记录耗时，不受 LOG_LEVEL 限制。
+     * 详见模块级 perfSample()。
+     */
+    perf: (action: string, duration: number, metadata?: Record<string, unknown>) => void;
 }
 /**
  * 创建服务专用的日志记录器
@@ -61,4 +66,15 @@ export declare function setLogLevel(level: LogLevelValue | number): void;
  * 获取当前日志级别
  */
 export declare function getLogLevel(): number;
+/**
+ * 性能采样：按 PERF_SAMPLING_RATE 概率记录关键路径耗时。
+ * 采样命中时直接 console.log，绕过 LOG_LEVEL，确保线上可观测。
+ *
+ * @example
+ *   const start = Date.now()
+ *   // ... 关键路径 ...
+ *   logger.perf('orderService', 'createOrder', Date.now() - start, { orderId })
+ */
+export declare function perfSample(service: string, action: string, duration: number, metadata?: Record<string, unknown>): void;
+export declare function installGlobalExceptionHandlers(): void;
 export { LOG_LEVELS };

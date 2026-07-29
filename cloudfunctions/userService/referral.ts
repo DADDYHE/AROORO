@@ -132,7 +132,7 @@ export async function getReferralStats(
         .skip(invitedSkip)
         .limit(INVITE_BATCH)
         .get()
-      const batch = (res.data || []).map((u: { _id?: string }) => u._id).filter((id): id is string => Boolean(id))
+      const batch = (res.data || []).map((u: { _id?: string }) => u._id).filter((id: string | undefined): id is string => Boolean(id))
       invitedOpenids.push(...batch)
       if (batch.length < INVITE_BATCH) { break }
       invitedSkip += INVITE_BATCH

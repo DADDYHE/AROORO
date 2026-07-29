@@ -1,0 +1,72 @@
+{
+  "nodeId": "page-home",
+  "htmlSrc": "pages/home.html",
+  "cssPath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+  "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/pages/home.html",
+  "brandPrefix": "pa",
+  "packetType": "RestorePagePacket",
+  "laneContract": {
+    "resolvedLane": "restore_1to1",
+    "packetType": "RestorePagePacket",
+    "pageRuntimeGuide": "intent-workflows/intent-page-restore-1to1/restore-1to1-page-runtime.md",
+    "dispatchContract": "intent-workflows/intent-page-restore-1to1/dispatch-contract.md"
+  },
+  "restoreContractStatus": { "reportPath": "restore-contract-report.json", "success": true },
+  "fillHtmlHeadCommand": "node /Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs /Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css /Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/pages/home.html --title=\"Home — Hi Taban\" --lang=en --prefix=pa",
+  "allowedWritePaths": ["pages/home.html", "assets/"],
+  "forbiddenWriteRoots": ["*.design", "runtime-orchestration-summary.json", "validation-report.json", "finish-readiness-report.json", "restore-contract-report.json"],
+  "toolPolicy": { "todoWriteAllowed": false, "validationScriptsAllowed": false, "previewAllowed": false, "helperScriptsAllowed": false, "designFileWriteAllowed": false, "allowedWritePaths": ["pages/home.html", "assets/"] },
+  "sourceType": "image",
+  "referenceCaptureEvidence": {
+    "sourceType": "image",
+    "filePath": "reference/source-screenshot.png",
+    "visualAuthority": "provided-image",
+    "screenToRestore": "RIGHT screen — home/dashboard"
+  },
+  "sourceAuthorityLock": {
+    "visualAuthority": "provided-image",
+    "contentSupplement": "none",
+    "browserObservationRole": "targeted-verification-only",
+    "mayOverrideVisualAuthority": false,
+    "lockedBeforeDispatch": true
+  },
+  "sourceIdentity": {
+    "businessType": "pet-adoption-marketplace-mobile-app",
+    "deviceType": "mobile",
+    "pageTitle": "Home — Hi Taban"
+  },
+  "pageStateLock": {
+    "currentState": "Home dashboard: header row (hamburger + 'Hi Taban 🙌'/'Good Morning!!' greeting + cartoon avatar + search), category pills row ('All' selected black + Cat/Dog/Bird outlined), featured section with two circular coral product cards (Familiar Dog $140.00 / Soft Dog $241.99) + 'See more' paw button, 'Expensive Cat' section header with 'See All' link and partial cat cards with heart icons, floating '1,327' likes chip, bottom nav (home/heart-active/profile).",
+    "forbiddenDeviations": ["do not replace circular product cards with rectangular", "do not change 'All' selected pill from black fill", "do not remove 'Expensive Cat' section", "do not change coral card background"]
+  },
+  "sourceDocumentProfile": { "sourceType": "image", "documentLengthClass": "single-screen", "viewportScrollRatio": 1.0, "deviceFramePresent": true },
+  "restorationContractLite": {
+    "allowedDeviationList": [
+      { "ref": "copy-localization", "note": "Preserve exact copy: 'Hi Taban 🙌', 'Good Morning!!', 'All', 'Cat', 'Dog', 'Bird', 'Familiar Dog', 'Half white Color', '$140.00', 'Soft Dog', 'White Color', '$241.99', 'See more', 'Expensive Cat', 'See All', '1,327'" },
+      { "ref": "image-asset-generation", "note": "Use assets/avatar-taban.jpg (avatar), assets/dog-familiar.jpg (Familiar Dog), assets/dog-soft.jpg (Soft Dog), assets/cat-1.jpg + assets/cat-2.jpg (Expensive Cat cards)" },
+      { "ref": "icon-substitution", "note": "Hamburger, search, paw, heart, home, profile icons rebuilt as inline SVG" }
+    ]
+  },
+  "visualSpecExcerpt": "=== HOME PAGE SPEC (viewport 390x844, iOS) ===\n[LAYOUT]\nstatus-bar: top 0, height 54px (9:41 + icons), Dynamic Island pill center\nheader: flex row, padding 16px 20px, items center, gap 12px\n  hamburger: svg 24px #1A1A1A\n  greeting-col: flex 1; line1 'Hi Taban 🙌' 20px 700 #1A1A1A; line2 'Good Morning!!' 13px 400 #9E9E9E\n  avatar: img 44x44 border-radius 50% (assets/avatar-taban.jpg), border 2px #FFFFFF, box-shadow\n  search: svg 24px #1A1A1A\ncategory-row: flex row, gap 10px, padding 12px 20px, overflow-x auto\n  pill 'All': height 36px, padding 0 18px, border-radius 20px, bg #1A1A1A, color #FFFFFF, 14px 500\n  pill 'Cat'/'Dog'/'Bird': same shape, bg #FFFFFF, border 1px #E0E0E0, color #1A1A1A\nfeatured-section: padding 16px 20px\n  cards-row: flex row, gap 16px, justify center\n    card-left: width 150px, flex col items center\n      circle: 150x150, border-radius 50%, bg #FF8A80, overflow hidden; img assets/dog-familiar.jpg object-fit cover, centered, width 120px height 120px border-radius 50%\n      label: 'Familiar Dog' 14px 600 #1A1A1A margin-top 8px\n      sub: 'Half white Color' 12px #9E9E9E\n      price: '$140.00' 16px 700 #1A1A1A margin-top 4px\n    card-right: same shape; img assets/dog-soft.jpg; 'Soft Dog' / 'White Color' / '$241.99'\n  see-more: flex row centered, margin-top 16px; pill 'See more' with paw svg 16px #C2185B, 13px 500 #C2185B\nexpensive-section: padding 16px 20px\n  header-row: flex row justify between items center\n    title: 'Expensive Cat' 18px 700 #1A1A1A\n    link: 'See All' 14px 600 #C2185B\n  cards-row: flex row, gap 12px, margin-top 12px\n    cat-card: width 140px, border-radius 16px, bg #FFFFFF, box-shadow 0 4px 16px rgba(0,0,0,0.06), overflow hidden\n      img: assets/cat-1.jpg width 140px height 110px object-fit cover\n      body: padding 8px 10px; row flex justify between; col: 'Persian Cat' 13px 600 #1A1A1A, '$320.00' 12px 700 #1A1A1A; heart svg 18px #E53935\n    cat-card2: same with assets/cat-2.jpg\nlikes-chip: absolute/fixed bottom 96px right 20px; pill, bg #FFFFFF, box-shadow 0 6px 18px rgba(0,0,0,0.12), padding 8px 14px, border-radius 20px; heart svg 16px #E53935 + '1,327' 13px 600 #1A1A1A\nbottom-nav: fixed bottom 0, width 100%, height 64px, bg #FFFFFF, border-top 1px #E0E0E0, flex row justify around items center\n  home: svg 24px #9E9E9E\n  heart: svg 26px #C2185B (active, centered)\n  profile: svg 24px #9E9E9E\n[COLORS]\nprimary: #C2185B\npaw-red: #E53935\ncard-coral: #FF8A80\nselected-pill: #1A1A1A\nborder: #E0E0E0\nmuted: #9E9E9E\ntext: #1A1A1A\n[SHADOWS]\ncard-shadow: 0 4px 16px rgba(0,0,0,0.06)\nfloat-shadow: 0 6px 18px rgba(0,0,0,0.12)\n[RADII]\ncircle: 50%\ncat-card: 16px\nlikes-chip: 20px\n=== END SPEC ===",
+  "contentToPreserve": [
+    "Header: hamburger, 'Hi Taban 🙌' (20px bold), 'Good Morning!!' (13px gray), avatar (assets/avatar-taban.jpg), search icon",
+    "Category pills: 'All' (selected black #1A1A1A white text), 'Cat', 'Dog', 'Bird' (outlined)",
+    "Featured card 1: assets/dog-familiar.jpg, 'Familiar Dog', 'Half white Color', '$140.00'",
+    "Featured card 2: assets/dog-soft.jpg, 'Soft Dog', 'White Color', '$241.99'",
+    "'See more' button with paw icon",
+    "Section: 'Expensive Cat' + 'See All' link",
+    "Cat cards: assets/cat-1.jpg + assets/cat-2.jpg with heart icons",
+    "Likes chip: '1,327' with heart icon",
+    "Bottom nav: home, heart (active magenta), profile"
+  ],
+  "restoreVisualCheckpoints": [
+    { "id": "vc-01", "priority": "high", "dimension": "layout", "sourceObservation": "iPhone frame, Dynamic Island, 9:41", "targetImplementation": "iOS status bar + Dynamic Island", "region": "device-shell" },
+    { "id": "vc-07", "priority": "high", "dimension": "layout", "sourceObservation": "Header row hamburger|greeting(2 lines)|avatar|search; 2 circular cards row", "targetImplementation": "flex header + 2 circular cards 150px each gap 16px", "region": "header" },
+    { "id": "vc-04", "priority": "high", "dimension": "component-proportion", "sourceObservation": "Category pills 36px h r20, All=black fill", "targetImplementation": "pill h36 r20, All #1A1A1A white, others outlined", "region": "card" },
+    { "id": "vc-08", "priority": "medium", "dimension": "color-rhythm", "sourceObservation": "Circular product cards coral #FF8A80 bg with white pet centered", "targetImplementation": "150px circle bg #FF8A80, pet img centered", "region": "card" },
+    { "id": "vc-09", "priority": "high", "dimension": "fine-detail", "sourceObservation": "Red paw #E53935 branding; See more paw button", "targetImplementation": "paw svg #E53935 in See more", "region": "card" },
+    { "id": "vc-11", "priority": "medium", "dimension": "component-proportion", "sourceObservation": "See more paw btn; Expensive Cat + See All; likes chip 1,327; bottom nav home/heart/profile", "targetImplementation": "See more pill; section header 18px + See All 14px magenta; likes chip pill; bottom nav 64px heart active #C2185B", "region": "bottom-nav" },
+    { "id": "vc-12", "priority": "medium", "dimension": "typography", "sourceObservation": "Greeting 20px bold + 13px gray; price 16px bold; category 14px", "targetImplementation": "greeting 20px/13px, price 16px 700, category 14px 500", "region": "card" }
+  ],
+  "pageSpecificSpec": "Home dashboard. Header: hamburger + 'Hi Taban 🙌' (20px bold) / 'Good Morning!!' (13px gray) + avatar (assets/avatar-taban.jpg, 44px circle) + search icon. Category pills: 'All' (black fill white text) + 'Cat'/'Dog'/'Bird' (outlined). Featured: two circular cards (150px, coral #FF8A80 bg) — left 'Familiar Dog'/'Half white Color'/'$140.00' (assets/dog-familiar.jpg), right 'Soft Dog'/'White Color'/'$241.99' (assets/dog-soft.jpg). 'See more' paw button below. 'Expensive Cat' section (18px bold) + 'See All' (magenta link), with 2 cat cards (assets/cat-1.jpg, assets/cat-2.jpg) showing heart icons. Floating '1,327' likes chip with heart. Bottom nav: home, heart (active magenta), profile."
+}

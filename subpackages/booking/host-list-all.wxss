@@ -13,7 +13,6 @@
   position: relative;
   z-index: 999;
   padding: var(--spacing-md, 24rpx) var(--spacing-lg, 32rpx);
-  transition: all var(--transition-fast, 0.3s);
   border-bottom: none;
   background-color: transparent;
   overflow: hidden;
@@ -25,10 +24,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(78, 205, 196, 0.05) 0%, rgba(69, 183, 170, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(79, 94, 53, 0.05) 0%, rgba(69, 183, 170, 0.1) 100%);
   backdrop-filter: blur(10px);
   opacity: 0;
-  transition: opacity 0.3s ease;
   z-index: -1;
 }
 
@@ -41,7 +39,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   position: sticky;
   top: 0;
-  border-bottom: 1rpx solid rgba(78, 205, 196, 0.2);
+  border-bottom: 1rpx solid rgba(79, 94, 53, 0.2);
 }
 
 .header-content {
@@ -64,12 +62,10 @@
 .brand-main {
   display: flex;
   align-items: center;
-  animation: brandFadeIn 1s ease-out;
   padding: 16rpx 24rpx;
   border-radius: 16rpx;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(8px);
-  transition: all 0.3s ease;
 }
 
 .home-header.scrolled .brand-main {
@@ -93,7 +89,6 @@
   background-clip: text;
   letter-spacing: 1px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
 }
 
 .home-header.scrolled .brand-title {
@@ -106,7 +101,6 @@
   letter-spacing: 2px;
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
   background: rgba(0, 0, 0, 0.2);
   padding: 4rpx 12rpx;
   border-radius: 8rpx;
@@ -115,13 +109,8 @@
 
 .home-header.scrolled .brand-slogan {
   color: var(--gray-700);
-  background: rgba(78, 205, 196, 0.1);
+  background: rgba(79, 94, 53, 0.1);
   text-shadow: none;
-}
-
-@keyframes brandFadeIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* 头部操作区域已移除搜索按钮 */
@@ -147,32 +136,25 @@
   padding: 16rpx 20rpx;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   border: 1rpx solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.search-bar:focus-within {
-  box-shadow: 0 4px 16px rgba(78, 205, 196, 0.15);
-  border-color: var(--activity-primary);
 }
 
 .search-bar .search-icon {
   font-size: 20rpx;
-  color: #999999;
+  color: var(--text-tertiary);
   margin-right: 12rpx;
 }
 
 .search-input {
   flex: 1;
   font-size: 24rpx;
-  color: #333333;
+  color: var(--text-primary);
   background: transparent;
   border: none;
-  outline: none;
   padding: 0;
 }
 
 .search-input::placeholder {
-  color: #CCCCCC;
+  color: var(--text-tertiary);
 }
 
 /* 筛选栏 */
@@ -199,7 +181,7 @@
 .filter-label {
   font-size: 22rpx;
   font-weight: 500;
-  color: #333333;
+  color: var(--text-primary);
   white-space: nowrap;
 }
 
@@ -214,7 +196,6 @@
   border-radius: 16rpx;
   background: rgba(0, 0, 0, 0.03);
   border: 1rpx solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 4rpx;
@@ -223,11 +204,10 @@
 .filter-option text {
   font-size: 20rpx;
   color: var(--gray-700);
-  transition: all 0.3s ease;
 }
 
 .filter-option.active {
-  background: rgba(78, 205, 196, 0.1);
+  background: rgba(79, 94, 53, 0.1);
   border-color: var(--activity-primary);
 }
 
@@ -238,12 +218,7 @@
 
 .filter-arrow {
   font-size: 16rpx;
-  color: #999999;
-  transition: all 0.3s ease;
-}
-
-.filter-option:active {
-  transform: scale(0.95);
+  color: var(--text-tertiary);
 }
 
 /* 寄养家庭列表 */
@@ -260,7 +235,6 @@
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
   border: 1rpx solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
   position: relative;
   backdrop-filter: blur(10rpx);
   -webkit-backdrop-filter: blur(10rpx);
@@ -275,16 +249,6 @@
   height: 4rpx;
   background: linear-gradient(90deg, var(--activity-primary), var(--activity-primary-mid));
   opacity: 0;
-  transition: all 0.3s ease;
-}
-
-.host-card:hover {
-  transform: translateY(-4rpx);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.host-card:hover::before {
-  opacity: 1;
 }
 
 .host-cover-container {
@@ -329,7 +293,7 @@
   color: var(--card-color);
   padding: 6rpx 12rpx;
   border-radius: 12rpx;
-  box-shadow: 0 2px 8px rgba(78, 205, 196, 0.3);
+  box-shadow: 0 2px 8px rgba(79, 94, 53, 0.3);
   backdrop-filter: blur(10rpx);
   -webkit-backdrop-filter: blur(10rpx);
 }
@@ -354,7 +318,7 @@
   width: 72rpx;
   height: 72rpx;
   border-radius: 50%;
-  border: 2rpx solid rgba(78, 205, 196, 0.3);
+  border: 2rpx solid rgba(79, 94, 53, 0.3);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
 }
@@ -362,7 +326,7 @@
 .host-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333333;
+  color: var(--text-primary);
   flex: 1;
 }
 
@@ -389,10 +353,10 @@
 .host-tag {
   font-size: 16rpx;
   color: var(--activity-primary);
-  background: rgba(78, 205, 196, 0.08);
+  background: rgba(79, 94, 53, 0.08);
   padding: 4rpx 12rpx;
   border-radius: 12rpx;
-  border: 1rpx solid rgba(78, 205, 196, 0.2);
+  border: 1rpx solid rgba(79, 94, 53, 0.2);
 }
 
 .host-features {
@@ -444,7 +408,7 @@
 
 .price-unit {
   font-size: 20rpx;
-  color: #999999;
+  color: var(--text-tertiary);
 }
 
 .book-btn {
@@ -455,17 +419,11 @@
   border-radius: 16rpx;
   font-size: 22rpx;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.25);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(79, 94, 53, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 140rpx;
-}
-
-.book-btn:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 8px rgba(78, 205, 196, 0.2);
 }
 
 /* 加载状态 */
@@ -489,26 +447,18 @@
   height: 8rpx;
   border-radius: 50%;
   background: var(--activity-primary);
-  animation: dotBounce 1.4s ease-in-out infinite;
 }
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }
 
 .loading-more-text {
   font-size: 24rpx;
   color: var(--text-secondary);
   letter-spacing: 4rpx;
-}
-
-@keyframes dotBounce {
-  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
-  40% { opacity: 1; transform: translateY(-12rpx); }
 }
 
 .no-more {
@@ -520,7 +470,7 @@
 
 .no-more-text {
   font-size: 18rpx;
-  color: #CCCCCC;
+  color: var(--text-tertiary);
 }
 
 .empty-state {
@@ -540,12 +490,12 @@
 .empty-title {
   font-size: 24rpx;
   font-weight: 600;
-  color: #333333;
+  color: var(--text-primary);
 }
 
 .empty-subtitle {
   font-size: 20rpx;
-  color: #999999;
+  color: var(--text-tertiary);
   text-align: center;
 }
 
@@ -560,7 +510,6 @@
   z-index: 2000;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
   backdrop-filter: blur(10rpx);
   -webkit-backdrop-filter: blur(10rpx);
 }
@@ -578,7 +527,6 @@
   background: var(--card-color);
   border-radius: 32rpx 32rpx 0 0;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
   max-height: 80vh;
   overflow-y: auto;
   z-index: 2001;
@@ -603,7 +551,7 @@
 .modal-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333333;
+  color: var(--text-primary);
 }
 
 .modal-close-btn {
@@ -614,12 +562,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.modal-close-btn:active {
-  transform: scale(0.9);
-  background: rgba(0, 0, 0, 0.1);
 }
 
 .modal-close {
@@ -638,7 +580,7 @@
 .filter-group-title {
   font-size: 24rpx;
   font-weight: 600;
-  color: #333333;
+  color: var(--text-primary);
   margin-bottom: 16rpx;
 }
 
@@ -656,12 +598,10 @@
   border-radius: 16rpx;
   background: rgba(0, 0, 0, 0.03);
   border: 1rpx solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  cursor: pointer;
 }
 
 .checkbox-item.checked {
-  background: rgba(78, 205, 196, 0.1);
+  background: rgba(79, 94, 53, 0.1);
   border-color: var(--activity-primary);
 }
 
@@ -669,8 +609,7 @@
   width: 20rpx;
   height: 20rpx;
   border-radius: 4rpx;
-  border: 2rpx solid #CCCCCC;
-  transition: all 0.3s ease;
+  border: 2rpx solid var(--border-color);
   position: relative;
 }
 
@@ -692,7 +631,6 @@
 .checkbox-item text {
   font-size: 20rpx;
   color: var(--gray-700);
-  transition: all 0.3s ease;
 }
 
 .checkbox-item.checked text {
@@ -712,17 +650,17 @@
   border-radius: 12rpx;
   border: 1rpx solid rgba(0, 0, 0, 0.1);
   font-size: 20rpx;
-  color: #333333;
+  color: var(--text-primary);
   text-align: center;
 }
 
 .price-input::placeholder {
-  color: #CCCCCC;
+  color: var(--text-tertiary);
 }
 
 .price-separator {
   font-size: 20rpx;
-  color: #999999;
+  color: var(--text-tertiary);
 }
 
 .modal-footer {
@@ -745,11 +683,6 @@
   border-radius: 16rpx;
   font-size: 22rpx;
   font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.reset-btn:active {
-  background: rgba(0, 0, 0, 0.05);
 }
 
 .apply-btn {
@@ -761,13 +694,7 @@
   border-radius: 16rpx;
   font-size: 22rpx;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.25);
-  transition: all 0.3s ease;
-}
-
-.apply-btn:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 8px rgba(78, 205, 196, 0.2);
+  box-shadow: 0 4px 12px rgba(79, 94, 53, 0.25);
 }
 
 /* 响应式设计 */

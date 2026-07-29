@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in</title>
+  <link rel="stylesheet" href="../colors_and_type.css" />
+</head>
+<body>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: var(--pa-font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body {
+      background: #ECECEE;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    /* ---- Device frame ---- */
+    .phone {
+      position: relative;
+      width: 390px;
+      min-height: 844px;
+      background: var(--pa-background);
+      border-radius: 44px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- iOS status bar ---- */
+    .status-bar {
+      height: 54px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 5;
+    }
+    .status-bar .time {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--pa-foreground);
+      letter-spacing: -0.2px;
+    }
+    .status-bar .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* ---- Dynamic Island ---- */
+    .dynamic-island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 34px;
+      background: #000000;
+      border-radius: 20px;
+      z-index: 6;
+    }
+
+    /* ---- Container ---- */
+    .container {
+      flex: 1;
+      background: var(--pa-background);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ---- Paw logo ---- */
+    .paw-logo {
+      margin-top: 24px;
+      width: 36px;
+      height: 36px;
+      color: var(--pa-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .paw-logo svg { width: 36px; height: 36px; display: block; }
+
+    /* ---- Sign in header ---- */
+    .signin-header {
+      margin-top: 16px;
+      font-size: var(--pa-fs-signin-header);
+      font-weight: 700;
+      color: var(--pa-primary);
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    /* ---- Google button ---- */
+    .google-btn {
+      margin-top: 32px;
+      width: 100%;
+      height: 52px;
+      border: none;
+      border-radius: 26px;
+      background: var(--pa-primary);
+      color: var(--pa-on-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .google-btn .g-glyph { display: flex; align-items: center; justify-content: center; }
+
+    /* ---- Social row ---- */
+    .social-row {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .social-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--pa-radius-circle);
+      border: 1px solid var(--pa-border);
+      background: var(--pa-background);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .social-btn svg { width: 24px; height: 24px; display: block; }
+
+    /* ---- Divider ---- */
+    .divider {
+      margin-top: 28px;
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+    .divider .line {
+      flex: 1;
+      height: 1px;
+      background: var(--pa-border);
+    }
+    .divider .divider-text {
+      font-size: var(--pa-fs-divider);
+      color: var(--pa-muted);
+      padding: 0 12px;
+      white-space: nowrap;
+    }
+
+    /* ---- Inputs ---- */
+    .input-field {
+      width: 100%;
+      height: 52px;
+      border-radius: var(--pa-radius-md);
+      border: 1px solid var(--pa-border);
+      background: var(--pa-background);
+      padding: 0 16px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+    }
+    .input-field .lead-icon { color: var(--pa-muted); display: flex; }
+    .input-field .lead-icon svg { width: 20px; height: 20px; display: block; }
+    .input-field input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--pa-foreground);
+    }
+    .input-field input::placeholder { color: var(--pa-muted); }
+    .input-field .trail { display: flex; align-items: center; flex-shrink: 0; }
+    .input-field .trail svg { width: 20px; height: 20px; display: block; }
+
+    #email-input { margin-top: 24px; }
+    #email-input .trail { color: var(--pa-success); }
+
+    #password-input { margin-top: 16px; }
+    #password-input .forgot {
+      font-size: var(--pa-fs-divider);
+      font-weight: 600;
+      color: var(--pa-primary);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    /* ---- CTA ---- */
+    .cta {
+      margin-top: 28px;
+      width: 100%;
+      height: 56px;
+      border: none;
+      border-radius: var(--pa-radius-pill);
+      background: var(--pa-primary);
+      color: var(--pa-on-primary);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: var(--pa-shadow-cta);
+      cursor: pointer;
+    }
+
+    /* ---- Footer ---- */
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: var(--pa-fs-link);
+      color: var(--pa-muted);
+    }
+    .footer .footer-link {
+      color: var(--pa-primary);
+      font-weight: 600;
+    }
+  </style>
+
+  <div class="phone">
+    <!-- iOS status bar -->
+    <div class="status-bar" id="status-bar">
+      <span class="time">9:41</span>
+      <div class="status-icons" aria-hidden="true">
+        <!-- signal -->
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+          <rect x="0" y="8" width="3" height="4" rx="1" fill="#1A1A1A"/>
+          <rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="#1A1A1A"/>
+          <rect x="10" y="3" width="3" height="9" rx="1" fill="#1A1A1A"/>
+          <rect x="15" y="0.5" width="3" height="11.5" rx="1" fill="#1A1A1A"/>
+        </svg>
+        <!-- wifi -->
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+          <path d="M8.5 2c2.7 0 5.2 1 7.1 2.7l-1.4 1.6A7.6 7.6 0 0 0 8.5 4 7.6 7.6 0 0 0 2.8 6.3L1.4 4.7A10.2 10.2 0 0 1 8.5 2z" fill="#1A1A1A"/>
+          <path d="M8.5 5.6c1.5 0 2.9.6 3.9 1.5l-1.5 1.6A2.9 2.9 0 0 0 8.5 7.6c-.9 0-1.7.4-2.4 1.1L4.6 7.1A5.6 5.6 0 0 1 8.5 5.6z" fill="#1A1A1A"/>
+          <circle cx="8.5" cy="10.4" r="1.3" fill="#1A1A1A"/>
+        </svg>
+        <!-- battery -->
+        <svg width="26" height="13" viewBox="0 0 26 13" fill="none">
+          <rect x="1" y="1" width="21" height="11" rx="3.2" stroke="#1A1A1A" stroke-opacity="0.4" stroke-width="1" fill="none"/>
+          <rect x="3" y="3" width="17" height="7" rx="1.6" fill="#1A1A1A"/>
+          <rect x="23.2" y="4.2" width="1.8" height="4.6" rx="0.9" fill="#1A1A1A" fill-opacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Dynamic Island -->
+    <div class="dynamic-island" id="dynamic-island" aria-hidden="true"></div>
+
+    <!-- Main container -->
+    <main class="container">
+      <!-- Paw logo -->
+      <div class="paw-logo" id="paw-logo" aria-label="Paw logo">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="9" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9" r="2.2"/><path d="M12 11c-3 0-5 2.5-5 5 0 2 1.5 3 3 3 .8 0 1.3-.3 2-.3s1.2.3 2 .3c1.5 0 3-1 3-3 0-2.5-2-5-5-5z"/></svg>
+      </div>
+
+      <!-- Sign in header -->
+      <h1 class="signin-header" id="signin-header">Sign in</h1>
+
+      <!-- With Google button -->
+      <button class="google-btn" id="google-btn" type="button">
+        <span class="g-glyph" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24"><text x="12" y="18" text-anchor="middle" font-size="19" font-weight="800" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif">G</text></svg>
+        </span>
+        <span>With Google</span>
+      </button>
+
+      <!-- Social row -->
+      <div class="social-row" id="social-row">
+        <button class="social-btn" id="facebook-btn" type="button" aria-label="Sign in with Facebook">
+          <svg viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12a12 12 0 1 0-13.875 11.854v-8.385H7.078V12h3.047V9.356c0-3.007 1.792-4.668 4.533-4.668 1.312 0 2.686.234 2.686.234v2.953H15.83c-1.49 0-1.955.925-1.955 1.874V12h3.328l-.532 3.469h-2.796v8.385A12.002 12.002 0 0 0 24 12z"/></svg>
+        </button>
+        <button class="social-btn" id="twitter-btn" type="button" aria-label="Sign in with Twitter">
+          <svg viewBox="0 0 24 24" fill="#1DA1F2"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider" id="divider">
+        <span class="line"></span>
+        <span class="divider-text">Or with Email</span>
+        <span class="line"></span>
+      </div>
+
+      <!-- Email input -->
+      <div class="input-field" id="email-input">
+        <span class="lead-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        </span>
+        <input type="email" placeholder="Email" aria-label="Email" />
+        <span class="trail" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </span>
+      </div>
+
+      <!-- Password input -->
+      <div class="input-field" id="password-input">
+        <span class="lead-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </span>
+        <input type="password" value="12345678" aria-label="Password" />
+        <span class="trail">
+          <span class="forgot">Forgot?</span>
+        </span>
+      </div>
+
+      <!-- CTA -->
+      <button class="cta" id="cta-get-started" type="button">Get Started</button>
+
+      <!-- Footer -->
+      <p class="footer" id="footer"><span class="footer-pre">New User? </span><span class="footer-link">Sign Up</span></p>
+    </main>
+  </div>
+</body>
+</html>

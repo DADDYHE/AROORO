@@ -41,6 +41,7 @@ const homePetBehavior = Behavior({
           birthday: pet.birthday || '',
           avatarUrl: pet.avatarUrl || '/images/default-avatar.svg',
           genderClass: pet.gender === 'male' ? 'male' : pet.gender === 'female' ? 'female' : 'unknown',
+          genderSymbol: pet.gender === 'male' ? '♂' : pet.gender === 'female' ? '♀' : '',
           type: pet.type || '',
         }))
 

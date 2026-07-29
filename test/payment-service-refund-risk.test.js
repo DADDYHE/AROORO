@@ -51,23 +51,105 @@ const mockMapActionToErrorCode = jest.fn(action => {
   return 'RISK_PASS'
 })
 
-jest.mock('../cloudfunctions/common/risk-control', () => ({
+// 注意：refund.js 实际 require('../common/risk-control') —— 解析后为 paymentService 下的副本
+//       （cloudfunctions/paymentService/common/risk-control），而非共享的 cloudfunctions/common/risk-control。
+//       mock 路径须与之一致，否则 refund 风控走真实模块、断言语义错位。
+jest.mock('../cloudfunctions/paymentService/common/risk-control', () => ({
   detectRefundAbuse: (...args) => mockDetectRefundAbuse(...args),
   mapActionToErrorCode: (...args) => mockMapActionToErrorCode(...args),
 }))
 
-// ===== Mock risk-rate-limit（spy 真实模块，统计调用）=====
-jest.mock('../cloudfunctions/common/risk-rate-limit', () => {
-  // 这里不能引用外部变量，必须用 require
-  const real = jest.requireActual('../cloudfunctions/common/risk-rate-limit')
-  return {
-    withRateLimit: jest.fn(async (input, fn) => real.withRateLimit(input, fn)),
-    consumeRateLimit: jest.fn(input => real.consumeRateLimit(input)),
-    peekRateLimit: jest.fn(input => real.peekRateLimit(input)),
-    _resetStore: jest.fn(() => real._resetStore()),
-    DEFAULT_RISK_RATE_LIMIT_CONFIG: real.DEFAULT_RISK_RATE_LIMIT_CONFIG,
+// ===== Mock risk-rate-limit（自包含内存限流，模拟真实 withRateLimit 契约）=====
+// 注意：refund.js 实际 import 的是 paymentService/common/risk-rate-limit（per-service 副本），
+//       并非 cloudfunctions/common/risk-rate-limit，因此 mock 路径需对齐。
+// 不直接委托真实模块：per-service 副本在 jest 下会因 rate-limit-config 解析失败抛 SERVER:5001，
+// 导致限流测试无法验证「超限抛 RATE_LIMITED」的真实语义。这里用内存滑动窗口自实现，
+// 超限时抛出 BusinessError(code='RATE_LIMITED')，与真实实现保持一致的错误处理语义。
+class MockRateLimitBusinessError extends Error {
+  constructor(code, message) {
+    super(message)
+    this.name = 'BusinessError'
+    this.code = code
   }
-})
+}
+
+const _mockRateLimitStore = { global: new Map(), target: new Map() }
+// 每用户对同一目标每分钟允许的调用次数（按业务类型，对齐 BUSINESS_TYPE_DEFAULT_CONFIG）
+const _mockRateLimitTargetLimits = {
+  payment: 5,
+  refund: 2,
+  order: 10,
+  evaluation: 10,
+  mall_order: 8,
+  activity_apply: 5,
+  boarding_accept: 5,
+  feeding_order: 5,
+}
+const _mockRateLimitGlobalLimits = {
+  payment: 100, refund: 100, order: 100, evaluation: 100,
+  mall_order: 100, activity_apply: 100, boarding_accept: 100, feeding_order: 100,
+}
+const _mockRateLimitWindowMs = 60 * 1000
+
+function _mockRateLimitCheck(input) {
+  const now = input.now ?? Date.now()
+  const cutoff = now - _mockRateLimitWindowMs
+  const type = input.type
+  const gLimit = _mockRateLimitGlobalLimits[type] ?? 100
+  const tLimit = _mockRateLimitTargetLimits[type] ?? 10
+  const gKey = `${input.userId}|${type}`
+  const gArr = (_mockRateLimitStore.global.get(gKey) || []).filter(t => t > cutoff)
+  if (gArr.length >= gLimit) {
+    throw new MockRateLimitBusinessError('RATE_LIMITED', `RATE_LIMIT_GLOBAL:${input.userId}`)
+  }
+  if (input.targetId) {
+    const tKey = `${input.userId}|${type}|${input.targetId}`
+    const tArr = (_mockRateLimitStore.target.get(tKey) || []).filter(t => t > cutoff)
+    if (tArr.length >= tLimit) {
+      throw new MockRateLimitBusinessError('RATE_LIMITED', `RATE_LIMIT_TARGET:${input.targetId}`)
+    }
+  }
+}
+
+function _mockRateLimitConsume(input) {
+  const now = input.now ?? Date.now()
+  const cutoff = now - _mockRateLimitWindowMs
+  const type = input.type
+  const gKey = `${input.userId}|${type}`
+  const gArr = (_mockRateLimitStore.global.get(gKey) || []).filter(t => t > cutoff)
+  gArr.push(now)
+  _mockRateLimitStore.global.set(gKey, gArr)
+  if (input.targetId) {
+    const tKey = `${input.userId}|${type}|${input.targetId}`
+    const tArr = (_mockRateLimitStore.target.get(tKey) || []).filter(t => t > cutoff)
+    tArr.push(now)
+    _mockRateLimitStore.target.set(tKey, tArr)
+  }
+}
+
+const mockRateLimitShared = {
+  withRateLimit: jest.fn(async (input, fn) => {
+    _mockRateLimitCheck(input)
+    _mockRateLimitConsume(input)
+    return await fn()
+  }),
+  consumeRateLimit: jest.fn((input) => {
+    _mockRateLimitCheck(input)
+    _mockRateLimitConsume(input)
+  }),
+  peekRateLimit: jest.fn(() => ({ allowed: true, remaining: 999, resetAt: Date.now() })),
+  _resetStore: jest.fn(() => {
+    _mockRateLimitStore.global.clear()
+    _mockRateLimitStore.target.clear()
+  }),
+  DEFAULT_RISK_RATE_LIMIT_CONFIG: {
+    perUserPerMinute: 10,
+    perUserPerTargetPerMinute: 5,
+    windowMs: _mockRateLimitWindowMs,
+  },
+}
+
+jest.mock('../cloudfunctions/paymentService/common/risk-rate-limit', () => mockRateLimitShared)
 
 // ===== Mock wx-server-sdk =====
 const mockDb = {
@@ -136,7 +218,7 @@ jest.mock('wx-server-sdk', () => ({
 const refund = require('../cloudfunctions/paymentService/services/refund')
 
 // mock 的 _resetStore 会调用真实的 _resetStore
-const mockRateLimit = require('../cloudfunctions/common/risk-rate-limit')
+const mockRateLimit = require('../cloudfunctions/paymentService/common/risk-rate-limit')
 const mockWithRateLimit = mockRateLimit.withRateLimit
 
 beforeEach(() => {

@@ -1,0 +1,24 @@
+{
+  "skillProvenance": {
+    "name": "solo-design",
+    "version": "2026.07.22.00.00.00",
+    "version_source": "skill-release-manifest.json",
+    "runtime_skill_dir": "/Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design",
+    "recorded_at": "2026-07-28T12:00:00.000Z"
+  },
+  "operation": "append-graphic-asset",
+  "targetProject": "partner-home-design",
+  "designLibrary": "mochi-pet",
+  "assetCount": 1,
+  "assets": [
+    {
+      "filename": "arooro-splash-screen.jpg",
+      "title": "AROORO 小程序开屏图",
+      "deliverableType": "splash-screen",
+      "intendedAspect": "portrait 9:16",
+      "status": "generated",
+      "designNodeId": "image-001",
+      "promptSummary": "Peacefully sleeping cute cat as focal point, AROORO brand name and Chinese slogan, warm coral peach mochi-pet palette, 9:16 vertical"
+    }
+  ]
+}

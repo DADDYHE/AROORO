@@ -85,7 +85,7 @@
         </view>
       </view>
 
-      <view wx:for="{{activities}}" wx:key="_id" class="gallery-card {{isRefreshing ? 'card-fading' : ''}}" bindtap="onActivityTap" data-id="{{item._id}}" hover-class="card-hover">
+      <view wx:for="{{activities}}" wx:key="_id" class="gallery-card" bindtap="onActivityTap" data-id="{{item._id}}">
         <view class="card-accent card-accent-{{item.status}}"></view>
         <view class="card-body">
           <view class="card-header">
@@ -136,7 +136,7 @@
     </view>
   </block>
 
-  <view class="fab-btn" bindtap="onCreateTap" hover-class="fab-hover">
+  <view class="fab-btn" bindtap="onCreateTap">
     <view class="fab-icon-line"></view>
     <view class="fab-icon-line fab-icon-vertical"></view>
   </view>

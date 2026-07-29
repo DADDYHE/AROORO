@@ -1,0 +1,133 @@
+/* ============================================================
+   Pet Luxury Mini-Program — Design Token System
+   Migrated from olive-green fresh-food app to healing light-luxury pet brand
+   Brand prefix: petlux
+   ============================================================ */
+
+:root {
+  /* ---------- Brand Primary (single hue: warm olive green) ---------- */
+  --petlux-brand: #4F5E35;           /* primary olive — CTAs, active states */
+  --petlux-brand-deep: #3A4626;      /* hover / pressed step */
+  --petlux-brand-soft: #EAEDDF;      /* 8% brand tint for tags, soft fills */
+  --petlux-brand-ink: #FAFAF6;       /* text on brand fills */
+
+  /* ---------- Surfaces (olive-tinted — brand primary light variant) ---------- */
+  --petlux-bg: #EDF0E2;              /* olive-tinted page base — brand light variant */
+  --petlux-surface: #FFFFFF;         /* white card */
+  --petlux-surface-2: #E2E6D3;       /* olive hover / selected */
+  --petlux-surface-3: #D6DBC5;       /* deeper olive fill */
+
+  /* ---------- Ink (text) ---------- */
+  --petlux-ink: #2A2823;             /* primary text — warm near-black */
+  --petlux-ink-2: #635E54;           /* secondary text */
+  --petlux-ink-3: #9A9489;           /* tertiary / placeholder */
+
+  /* ---------- Lines & Dividers ---------- */
+  --petlux-line: #D8DCCE;            /* hairline divider — olive tint */
+  --petlux-line-strong: #C9CFBA;     /* emphasized border */
+
+  /* ---------- State Colors (semantic only, never brand) ---------- */
+  --petlux-state-success: #5B7C4A;
+  --petlux-state-warning: #B8893A;
+  --petlux-state-error: #A85B4A;
+  --petlux-state-info: #6B7D8C;
+
+  /* ---------- Radius Scale (2 / 8 / 12 / 16) ---------- */
+  --petlux-radius-xs: 4px;
+  --petlux-radius-sm: 8px;
+  --petlux-radius-md: 12px;
+  --petlux-radius-lg: 16px;
+  --petlux-radius-pill: 999px;
+
+  /* ---------- Shadow (subtle, alpha <= 0.05 for static) ---------- */
+  --petlux-shadow-1: 0 1px 3px rgba(42,40,35,0.04), 0 1px 2px rgba(42,40,35,0.03);
+  --petlux-shadow-2: 0 8px 24px -8px rgba(42,40,35,0.12);
+  --petlux-shadow-3: 0 16px 48px -16px rgba(42,40,35,0.20);
+
+  /* ---------- Spacing (8pt grid) ---------- */
+  --petlux-s-1: 4px;
+  --petlux-s-2: 8px;
+  --petlux-s-3: 12px;
+  --petlux-s-4: 16px;
+  --petlux-s-5: 24px;
+  --petlux-s-6: 32px;
+  --petlux-s-7: 48px;
+
+  /* ---------- Typography ---------- */
+  --petlux-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --petlux-font-latin: "Inter", system-ui, sans-serif;
+  --petlux-font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --petlux-text-display: 32px;
+  --petlux-text-h1: 24px;
+  --petlux-text-h2: 20px;
+  --petlux-text-h3: 17px;
+  --petlux-text-body: 15px;
+  --petlux-text-body-sm: 13px;
+  --petlux-text-caption: 12px;
+
+  --petlux-leading-tight: 1.2;
+  --petlux-leading-normal: 1.55;
+  --petlux-leading-relaxed: 1.7;
+
+  --petlux-weight-regular: 400;
+  --petlux-weight-medium: 500;
+  --petlux-weight-semibold: 600;
+
+  --petlux-tracking-tight: -0.02em;
+  --petlux-tracking-normal: 0;
+  --petlux-tracking-wide: 0.01em;
+
+  /* ============================================================
+     Semantic Aliases — required by apply-html-head-contract.mjs
+     ============================================================ */
+
+  --petlux-background: var(--petlux-bg);
+  --petlux-foreground: var(--petlux-ink);
+
+  --petlux-card: var(--petlux-surface);
+  --petlux-card-foreground: var(--petlux-ink);
+
+  --petlux-popover: var(--petlux-surface);
+  --petlux-popover-foreground: var(--petlux-ink);
+
+  --petlux-primary: var(--petlux-brand);
+  --petlux-primary-foreground: var(--petlux-brand-ink);
+
+  --petlux-secondary: var(--petlux-surface-2);
+  --petlux-secondary-foreground: var(--petlux-ink-2);
+
+  --petlux-muted: var(--petlux-surface-2);
+  --petlux-muted-foreground: var(--petlux-ink-2);
+
+  --petlux-accent: var(--petlux-brand-soft);
+  --petlux-accent-foreground: var(--petlux-brand);
+
+  --petlux-destructive: var(--petlux-state-error);
+  --petlux-destructive-foreground: #FAFAF6;
+
+  --petlux-border: var(--petlux-line);
+  --petlux-input: var(--petlux-line-strong);
+  --petlux-ring: var(--petlux-brand);
+
+  --petlux-radius-small: var(--petlux-radius-sm);
+  --petlux-radius-medium: var(--petlux-radius-md);
+  --petlux-radius-large: var(--petlux-radius-lg);
+}
+
+/* ---------- Dark mode stub (project is light-only; reserved) ---------- */
+.dark {
+  --petlux-background: #161612;
+  --petlux-foreground: #EDE9E0;
+  --petlux-card: #1F1E1A;
+  --petlux-card-foreground: #EDE9E0;
+  --petlux-popover: #1F1E1A;
+  --petlux-popover-foreground: #EDE9E0;
+  --petlux-primary: #7A8C5A;
+  --petlux-primary-foreground: #161612;
+  --petlux-muted: #2A2924;
+  --petlux-muted-foreground: #9A9489;
+  --petlux-border: #34322C;
+  --petlux-input: #34322C;
+  --petlux-ring: #7A8C5A;
+}

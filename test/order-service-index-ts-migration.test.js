@@ -89,7 +89,7 @@ describe('Sprint 47: orderService/index TypeScript 迁移', () => {
     let code
     beforeAll(() => { code = readFileSafe(path.join(TS_DIR, 'index.ts')) })
     test('main 入口', () => { expect(code).toMatch(/export\s+async\s+function\s+main\b/) })
-    test('main 按 action 分发到 handlers', () => { expect(code).toMatch(/handlers\[action\]\(event,\s*context,\s*auth\)/) })
+    test('main 按 action 分发到 handlers', () => { expect(code).toMatch(/const\s+handler\s*=\s*handlers\[action\]/) })
     test('main 注入 verifyAuth 鉴权（所有 action 都需要登录）', () => {
       expect(code).toMatch(/verifyAuth\(event,\s*\{/)
       expect(code).toMatch(/requireLogin\s*=\s*true/)
@@ -105,7 +105,7 @@ describe('Sprint 47: orderService/index TypeScript 迁移', () => {
     beforeAll(() => { code = readFileSafe(path.join(TS_DIR, 'index.ts')) })
     test('Sprint 21 限流：initGlobalRateLimitFromDb', () => { expect(code).toMatch(/initGlobalRateLimitFromDb/) })
     test('使用 logger.warn 降级日志', () => {
-      expect(code).toMatch(/logger\.warn\(['"]initGlobalRateLimitFromDb/)
+      expect(code).toMatch(/logger\.warn\(['"]bootstrapRateLimit/)
     })
   })
 
@@ -121,7 +121,7 @@ describe('Sprint 47: orderService/index TypeScript 迁移', () => {
     beforeAll(() => { pkg = JSON.parse(readFileSafe(path.join(ROOT, 'package.json'))) })
     test('audit script', () => { expect(pkg.scripts['audit:s47-order-service-index-ts']).toBe('node scripts/audit-s47-order-service-index-ts.js') })
     test('audit strict', () => { expect(pkg.scripts['audit:s47-order-service-index-ts:strict']).toBe('node scripts/audit-s47-order-service-index-ts.js --strict') })
-    test('ci:check 集成（batch 入口）', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:s47-batch-services-index-ts:strict/) })
+    test('ci:check 集成（统一 audit:all:strict 入口）', () => { expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/) })
   })
 
   describe('10. audit 脚本可运行', () => {

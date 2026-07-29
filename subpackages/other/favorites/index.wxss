@@ -46,7 +46,6 @@
   font-family: 'Arial Black', 'Arial Bold', sans-serif;
   line-height: 1;
   text-shadow: 2rpx 2rpx 4rpx rgba(0, 0, 0, 0.1);
-  animation: fade-in 0.8s ease-out;
 }
 
 /* 页面标题 */
@@ -60,7 +59,6 @@
   line-height: 1.2;
   text-transform: uppercase;
   text-shadow: 1rpx 1rpx 2rpx rgba(0, 0, 0, 0.1);
-  animation: slide-up 0.8s ease-out 0.2s both;
 }
 
 .title-text {
@@ -92,11 +90,9 @@
 /* 加载状态 */
 
 .loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
 }
 
 .loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
 }
 
 /* 空状态 */
@@ -107,41 +103,10 @@
   justify-content: center;
   padding: 120rpx 40rpx;
   text-align: center;
-  animation: emptyFadeIn 0.8s ease-out;
-}
-
-@keyframes emptyFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(30rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .empty-icon {
   margin-bottom: 30rpx;
-  animation: heartBeat 2s infinite ease-in-out;
-}
-
-@keyframes heartBeat {
-  0%, 100% {
-    transform: scale(1);
-  }
-  14% {
-    transform: scale(1.1);
-  }
-  28% {
-    transform: scale(1);
-  }
-  42% {
-    transform: scale(1.1);
-  }
-  70% {
-    transform: scale(1);
-  }
 }
 
 .empty-title {
@@ -171,18 +136,6 @@
 .section-header {
   position: relative;
   margin-bottom: 40rpx;
-  animation: sectionSlideIn 0.8s ease-out;
-}
-
-@keyframes sectionSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
 }
 
 .section-title {
@@ -205,10 +158,8 @@
   padding: 40rpx;
   margin-bottom: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  animation: cardFadeIn 0.6s ease-out;
 }
 
 .card::before {
@@ -221,22 +172,6 @@
   background: linear-gradient(90deg, #ff9a9e, #fecfef, #a8edea, #fed6e3);
 }
 
-.card:active {
-  transform: translateY(3rpx);
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-}
-
-@keyframes cardFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* 寄养家庭项 */
 .host-item {
   display: flex;
@@ -247,12 +182,6 @@
 /* 已暂停接待的寄养家庭 */
 .host-item.disabled {
   opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.host-item.disabled:active {
-  transform: none;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
 }
 
 /* 寄养家庭主体区域 */
@@ -270,26 +199,15 @@
   overflow: hidden;
   flex-shrink: 0;
   border: 3rpx solid #f0f0f0;
-  background-color: #f5f5f5;
+  background-color: var(--background-color);
   box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.1);
   position: relative;
-  transition: all 0.3s ease;
-}
-
-.host-avatar-wrapper:hover {
-  transform: scale(1.02);
-  box-shadow: 0 12rpx 35rpx rgba(0, 0, 0, 0.15);
 }
 
 .host-avatar {
   width: 100%;
   height: 100%;
   display: block;
-  transition: transform 0.5s ease;
-}
-
-.host-avatar-wrapper:hover .host-avatar {
-  transform: scale(1.05);
 }
 
 /* 寄养家庭详情区域 */
@@ -326,12 +244,6 @@
   letter-spacing: 1rpx;
   text-transform: uppercase;
   font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.tag:hover {
-  background-color: #e6e8eb;
-  transform: translateY(-2rpx);
 }
 
 /* 位置信息 */
@@ -415,7 +327,6 @@
   text-transform: uppercase;
   letter-spacing: 3rpx;
   box-shadow: 0 8rpx 24rpx rgba(255, 154, 158, 0.3);
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
   border: none;
@@ -429,16 +340,6 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s;
-}
-
-.book-button:hover::before {
-  left: 100%;
-}
-
-.book-button:active {
-  transform: translateY(4rpx);
-  box-shadow: 0 4rpx 12rpx rgba(255, 154, 158, 0.4);
 }
 
 /* 错误提示 */
@@ -451,7 +352,6 @@
   color: #000000;
   text-transform: uppercase;
   letter-spacing: 3rpx;
-  animation: errorFadeIn 0.5s ease-out;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border: 1rpx solid rgba(0, 0, 0, 0.05);
@@ -470,17 +370,6 @@
   right: 0;
   height: 4rpx;
   background: linear-gradient(90deg, #ff9a9e, #fecfef, #a8edea, #fed6e3);
-}
-
-@keyframes errorFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .error-message van-icon {
@@ -507,22 +396,9 @@
   border-radius: 28rpx;
   text-transform: uppercase;
   box-shadow: 0 10rpx 30rpx rgba(255, 154, 158, 0.3);
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
-  animation: buttonSlideIn 1s ease-out;
   border: none;
-}
-
-@keyframes buttonSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(30rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .show-all-button::before {
@@ -533,25 +409,10 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s;
-}
-
-.show-all-button:hover::before {
-  left: 100%;
-}
-
-.show-all-button:active {
-  transform: translateY(6rpx);
-  box-shadow: 0 5rpx 15rpx rgba(255, 154, 158, 0.4);
 }
 
 .button-arrow {
   font-size: 28rpx;
-  transition: transform 0.3s ease;
-}
-
-.show-all-button:active .button-arrow {
-  transform: translateX(10rpx);
 }
 
 /* 响应式设计 */
@@ -646,29 +507,6 @@
   }
 }
 
-/* 动画效果 */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 8rpx;
@@ -680,10 +518,6 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #000000;
+  background: var(--overlay-color);
   border-radius: 4rpx;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #333333;
 }

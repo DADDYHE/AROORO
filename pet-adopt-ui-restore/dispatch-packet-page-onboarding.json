@@ -1,0 +1,69 @@
+{
+  "nodeId": "page-onboarding",
+  "htmlSrc": "pages/onboarding.html",
+  "cssPath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css",
+  "htmlFilePath": "/Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/pages/onboarding.html",
+  "brandPrefix": "pa",
+  "packetType": "RestorePagePacket",
+  "laneContract": {
+    "resolvedLane": "restore_1to1",
+    "packetType": "RestorePagePacket",
+    "pageRuntimeGuide": "intent-workflows/intent-page-restore-1to1/restore-1to1-page-runtime.md",
+    "dispatchContract": "intent-workflows/intent-page-restore-1to1/dispatch-contract.md"
+  },
+  "restoreContractStatus": { "reportPath": "restore-contract-report.json", "success": true },
+  "fillHtmlHeadCommand": "node /Users/yy/.trae-cn/builtin/design/hebe/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs /Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/colors_and_type.css /Users/yy/Documents/trae_projects/zuoyou/pet-adopt-ui-restore/pages/onboarding.html --title=\"Onboarding — Proud to Be a Pet Adopter\" --lang=en --prefix=pa",
+  "allowedWritePaths": ["pages/onboarding.html", "assets/"],
+  "forbiddenWriteRoots": ["*.design", "runtime-orchestration-summary.json", "validation-report.json", "finish-readiness-report.json", "restore-contract-report.json"],
+  "toolPolicy": { "todoWriteAllowed": false, "validationScriptsAllowed": false, "previewAllowed": false, "helperScriptsAllowed": false, "designFileWriteAllowed": false, "allowedWritePaths": ["pages/onboarding.html", "assets/"] },
+  "sourceType": "image",
+  "referenceCaptureEvidence": {
+    "sourceType": "image",
+    "filePath": "reference/source-screenshot.png",
+    "visualAuthority": "provided-image",
+    "screenToRestore": "LEFT screen — onboarding/welcome"
+  },
+  "sourceAuthorityLock": {
+    "visualAuthority": "provided-image",
+    "contentSupplement": "none",
+    "browserObservationRole": "targeted-verification-only",
+    "mayOverrideVisualAuthority": false,
+    "lockedBeforeDispatch": true
+  },
+  "sourceIdentity": {
+    "businessType": "pet-adoption-marketplace-mobile-app",
+    "deviceType": "mobile",
+    "pageTitle": "Onboarding — Proud to Be a Pet Adopter"
+  },
+  "pageStateLock": {
+    "currentState": "Onboarding welcome screen: full-bleed hero photo of a woman hugging a brown dog in the top ~58%, white rounded bottom-sheet card overlaying the lower ~42% with a red paw icon (with '1' badge), headline, subtext, and a magenta 'Next' CTA. Top-left white paw logo, top-right 'Skip' link.",
+    "forbiddenDeviations": ["do not change hero image subject", "do not remove bottom-sheet card", "do not change magenta CTA color"]
+  },
+  "sourceDocumentProfile": { "sourceType": "image", "documentLengthClass": "single-screen", "viewportScrollRatio": 1.0, "deviceFramePresent": true },
+  "restorationContractLite": {
+    "allowedDeviationList": [
+      { "ref": "copy-localization", "note": "Preserve exact English copy: 'Proud to Be a Pet Adopter', 'Looking for unconditional love? visit the shelter today', 'Next', 'Skip'" },
+      { "ref": "image-asset-generation", "note": "Use assets/hero-woman-dog.jpg as the hero image (regenerated equivalent of the original woman+hugging brown dog photo)" },
+      { "ref": "icon-substitution", "note": "Paw icons rebuilt as inline SVG in #E53935; white paw logo top-left as SVG" }
+    ]
+  },
+  "visualSpecExcerpt": "=== ONBOARDING PAGE SPEC (viewport 390x844, iOS) ===\n[LAYOUT]\nstatus-bar: top 0, height 54px (9:41 left, signal/wifi/battery right), Dynamic Island pill center\nhero-img: absolute top 0, left 0, width 100%, height 58vh, object-fit cover (assets/hero-woman-dog.jpg)\nbottom-card: absolute bottom 0, left 0, width 100%, height 42vh, background #FFFFFF, border-top-left-radius 32px, border-top-right-radius 32px, box-shadow 0 -8px 24px rgba(0,0,0,0.08), padding 24px\ntop-logo: absolute top 60px left 20px, white paw svg 28px\ntop-skip: absolute top 64px right 20px, 'Skip' 14px white\n[CONTENT inside card]\npaw-icon-row: red paw svg 40px with circular '1' badge (16px, #C2185B bg, white text, top-right of icon)\nheadline: 'Proud to Be a Pet Adopter' 26px/32px 700 #1A1A1A, margin-top 16px\nsubtext: 'Looking for unconditional love? visit the shelter today' 14px/20px 400 #9E9E9E, margin-top 12px\ncta: 'Next' pill button, width 100%, height 56px, border-radius 30px, background #C2185B, color #FFFFFF, font 16px 600, flex row centered, trailing paw svg 20px white, margin-top 24px, box-shadow 0 8px 20px rgba(194,24,91,0.25)\n[COLORS]\nprimary: #C2185B\npaw-red: #E53935\ntext: #1A1A1A\nmuted: #9E9E9E\nsurface: #FFFFFF\n[RADII]\ncta-pill: 30px\ncard-top: 32px\nbadge: 50%\n=== END SPEC ===",
+  "contentToPreserve": [
+    "Top-left: white paw logo",
+    "Top-right: 'Skip'",
+    "Hero: assets/hero-woman-dog.jpg",
+    "Card: red paw icon (#E53935) with '1' badge",
+    "Headline: 'Proud to Be a Pet Adopter'",
+    "Subtext: 'Looking for unconditional love? visit the shelter today'",
+    "CTA: 'Next' with trailing paw icon, magenta #C2185B pill"
+  ],
+  "restoreVisualCheckpoints": [
+    { "id": "vc-01", "priority": "high", "dimension": "layout", "sourceObservation": "iPhone 14 Pro frame, Dynamic Island, 9:41 status bar", "targetImplementation": "iOS status bar 54px + Dynamic Island pill", "region": "device-shell" },
+    { "id": "vc-02", "priority": "high", "dimension": "layout", "sourceObservation": "Hero photo top 58% + white bottom-sheet card 42% with top radius 32px", "targetImplementation": "absolute hero 58vh + card 42vh radius-top 32px shadow up", "region": "hero" },
+    { "id": "vc-03", "priority": "high", "dimension": "color-rhythm", "sourceObservation": "Magenta #C2185B Next CTA", "targetImplementation": "CTA bg #C2185B white text", "region": "card" },
+    { "id": "vc-05", "priority": "high", "dimension": "typography", "sourceObservation": "Headline 26px bold, subtext 14px gray", "targetImplementation": "headline 26px/32px 700 #1A1A1A, subtext 14px/20px #9E9E9E", "region": "card" },
+    { "id": "vc-06", "priority": "high", "dimension": "density", "sourceObservation": "Card padding 24px, headline-subtext gap 12px, subtext-cta gap 24px", "targetImplementation": "padding 24px, gaps 12/24px", "region": "card" },
+    { "id": "vc-09", "priority": "high", "dimension": "fine-detail", "sourceObservation": "Red paw #E53935 with '1' badge; white paw logo top-left; 'Skip' top-right", "targetImplementation": "paw svg #E53935 + 16px badge; white paw top-left; Skip 14px white top-right", "region": "card" }
+  ],
+  "pageSpecificSpec": "Onboarding welcome screen. Hero image fills top 58% (woman hugging brown dog). White bottom-sheet card with 32px top radius overlays bottom 42%. Card contains: red paw icon with '1' notification badge, headline 'Proud to Be a Pet Adopter' (26px bold), subtext 'Looking for unconditional love? visit the shelter today' (14px gray), and full-width magenta 'Next' pill CTA with trailing paw icon. Top-left white paw logo, top-right 'Skip' text (white, overlaid on hero)."
+}

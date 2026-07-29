@@ -31,7 +31,7 @@
   <view wx:else class="record-list">
     <view wx:for="{{list}}" wx:key="_id" class="record-card">
       <view class="record-top">
-        <text class="record-amount" style="color: {{item.status === 'rejected' ? '#FF3B30' : '#34C759'}}">
+        <text class="record-amount" style="color: {{item.status === 'rejected' ? '#A85B4A' : '#5B7C4A'}}">
           {{item.status === 'rejected' ? '-' : '+'}}¥{{item.amountText}}
         </text>
         <text class="record-status" style="color: {{item.statusColor}}">{{item.statusText}}</text>

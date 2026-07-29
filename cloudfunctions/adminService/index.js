@@ -200,6 +200,7 @@ const ACTION_PERMISSIONS = {
     handleMallOrder: 'partner',
     shipMallOrder: 'partner',
     completeMallOrder: 'partner',
+    getLogisticsTrack: 'partner',
     getProductStats: 'partner',
     getCategoryStats: 'partner',
     listCategories: 'partner',

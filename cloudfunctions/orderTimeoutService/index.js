@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 /**
  * orderTimeoutService/index.ts - 订单超时自动取消服务（TypeScript 源文件 - Sprint 45 迁移）

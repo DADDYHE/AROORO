@@ -69,40 +69,48 @@
 </view>
 
 <view class="sku-popup-mask {{showBuyModal ? 'show' : ''}}" bindtap="onCloseBuyModal"></view>
-<view class="sku-popup {{showBuyModal ? 'show' : ''}}">
-  <view class="sku-popup-header">
-    <image class="sku-popup-thumb" src="{{skuPopupImage || (products[selectedProductIndex].image || '/images/default-product.svg')}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage}}" data-path="skuPopupImage" />
-    <view class="sku-popup-info">
-      <text class="sku-popup-price">¥{{skuPopupPrice}}</text>
-      <text class="sku-popup-stock">库存: {{skuPopupStock}}件</text>
-      <text class="sku-popup-selected" wx:if="{{selectedSkuText}}">{{selectedSkuText}}</text>
-    </view>
-    <view class="sku-popup-close" bindtap="onCloseBuyModal">✕</view>
+<view class="sku-popup {{showBuyModal ? 'show' : ''}}" hidden="{{!showBuyModal}}">
+  <view class="sku-popup-brand-bar">
+    <text class="sku-popup-brand-text">AROORO · 安心呼噜 放心托付</text>
+  </view>
+  <view class="sku-popup-close-btn" bindtap="onCloseBuyModal">✕</view>
+
+  <view class="sku-popup-image-wrap">
+    <image class="sku-popup-image" src="{{skuPopupImage || (products[selectedProductIndex].image || '/images/default-product.svg')}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage}}" data-path="skuPopupImage" />
   </view>
 
-  <view class="sku-popup-body">
+  <scroll-view class="sku-popup-body" scroll-y enhanced show-scrollbar="{{false}}">
     <view class="sku-popup-body-inner">
-      <view class="sku-group" wx:for="{{popupSpecGroups}}" wx:key="specId">
-        <text class="sku-group-label">{{item.name}}</text>
-        <view class="sku-options">
+      <view class="sku-product-info">
+        <text class="sku-product-name">{{products[selectedProductIndex].name}}</text>
+        <view class="sku-product-meta">
+          <text class="sku-product-price">¥{{skuPopupPrice}}</text>
+          <text class="sku-product-stock">库存 {{skuPopupStock}}件</text>
+        </view>
+        <text class="sku-product-selected" wx:if="{{selectedSkuText}}">{{selectedSkuText}}</text>
+      </view>
+
+      <view class="sku-spec-section" wx:for="{{popupSpecGroups}}" wx:key="specId">
+        <text class="sku-spec-label">{{item.name}}</text>
+        <view class="sku-spec-options">
           <view wx:for="{{item.values}}" wx:for-item="val" wx:key="*this"
-            class="sku-option {{item.selectedValue === val ? 'selected' : ''}} {{item.disabledValues && item.disabledValues[val] ? 'disabled' : ''}}"
+            class="sku-spec-option {{item.selectedValue === val ? 'selected' : ''}} {{item.disabledValues && item.disabledValues[val] ? 'disabled' : ''}}"
             data-spec-id="{{item.specId}}" data-value="{{val}}" bindtap="onPopupSelectSpec">
-            <text class="sku-option-name">{{val}}</text>
+            <text class="sku-spec-option-text">{{val}}</text>
           </view>
         </view>
       </view>
 
-      <view class="sku-quantity">
-        <text class="sku-group-label">数量</text>
-        <view class="quantity-control">
-          <view class="quantity-btn {{quantity <= 1 ? 'disabled' : ''}}" bindtap="onQuantityMinus">−</view>
-          <text class="quantity-value">{{quantity}}</text>
-          <view class="quantity-btn" bindtap="onQuantityPlus">+</view>
+      <view class="sku-quantity-section">
+        <text class="sku-spec-label">数量</text>
+        <view class="sku-quantity-row">
+          <view class="sku-qty-btn {{quantity <= 1 ? 'disabled' : ''}}" bindtap="onQuantityMinus">−</view>
+          <text class="sku-qty-value">{{quantity}}</text>
+          <view class="sku-qty-btn" bindtap="onQuantityPlus">+</view>
         </view>
       </view>
     </view>
-  </view>
+  </scroll-view>
 
   <view class="sku-popup-footer">
     <view class="sku-confirm-btn {{!allSpecsSelected ? 'disabled' : ''}}" bindtap="onSubmitOrder">

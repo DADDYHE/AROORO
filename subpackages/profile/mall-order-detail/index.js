@@ -127,6 +127,7 @@ Page({
       // 物流信息（透传给 logistics-card 组件）
       expressCompany: raw.expressCompany || '',
       expressNo: raw.expressNo || '',
+      waybillToken: raw.waybillToken || '',
       shippedAt: this._formatDateTime(raw.shippedAt),
       status,
       statusText: STATUS_TEXT_MAP[status] || status,

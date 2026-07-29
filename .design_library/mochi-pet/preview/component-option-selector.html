@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../colors_and_type.css">
+<title>Option Selector — MochiPet</title>
+<style>
+body{margin:0;padding:12px;background:var(--color-background);font-family:var(--font-body);color:var(--color-foreground)}
+.group{margin-bottom:var(--space-5)}
+.divider{border:0;border-top:1px solid var(--color-border);margin:var(--space-4) 0}
+/* @component-css-start */
+.opt-label{display:block;font-size:13px;font-weight:500;color:var(--color-muted-foreground);margin-bottom:var(--space-2)}
+.dots{display:flex;gap:var(--space-3);align-items:center;margin-bottom:var(--space-4)}
+.dot{width:28px;height:28px;border-radius:var(--radius-pill);border:0;cursor:pointer;flex-shrink:0;padding:0;transition:filter .15s}
+.dot.selected{outline:2px solid var(--color-primary);outline-offset:3px}
+.dot:not(.selected):hover{filter:brightness(.92)}
+.dot-sage{background:var(--success-400)}
+.dot-honey{background:var(--warning-400)}
+.dot-rose{background:var(--primary-200)}
+.dot-coral{background:var(--primary-500)}
+.chips{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap}
+.chip{font-size:14px;line-height:1.2;padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-card);color:var(--color-foreground);cursor:pointer;white-space:nowrap;flex-shrink:0;min-width:32px;transition:background .15s,border-color .15s}
+.chip.selected{background:rgba(210,98,67,0.12);border-color:var(--color-primary);color:var(--color-primary)}
+.chip:not(.selected):hover{background:var(--color-muted)}
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="group">
+<div data-evidence-sample="color-dots">
+<span class="opt-label">颜色</span>
+<div class="dots">
+<button class="dot dot-sage" aria-label="sage" aria-pressed="false"></button>
+<button class="dot dot-honey" aria-label="honey" aria-pressed="false"></button>
+<button class="dot dot-rose" aria-label="rose" aria-pressed="false"></button>
+<button class="dot dot-coral selected" aria-label="coral" aria-pressed="true"></button>
+</div>
+</div>
+<div data-evidence-sample="spec-chips">
+<span class="opt-label">口味 / 规格</span>
+<div class="chips">
+<button class="chip selected" aria-pressed="true">鸡肉味</button>
+<button class="chip" aria-pressed="false">鱼肉味</button>
+<button class="chip" aria-pressed="false">1.5kg</button>
+<button class="chip" aria-pressed="false">3kg</button>
+</div>
+</div>
+</div>
+<hr class="divider">
+<div class="group" data-evidence-sample="combined">
+<span class="opt-label">颜色</span>
+<div class="dots">
+<button class="dot dot-sage" aria-label="sage" aria-pressed="false"></button>
+<button class="dot dot-honey" aria-label="honey" aria-pressed="false"></button>
+<button class="dot dot-rose" aria-label="rose" aria-pressed="false"></button>
+<button class="dot dot-coral selected" aria-label="coral" aria-pressed="true"></button>
+</div>
+<span class="opt-label">口味 / 规格</span>
+<div class="chips">
+<button class="chip selected" aria-pressed="true">鸡肉味</button>
+<button class="chip" aria-pressed="false">鱼肉味</button>
+<button class="chip" aria-pressed="false">1.5kg</button>
+<button class="chip" aria-pressed="false">3kg</button>
+</div>
+</div>
+</body>
+</html>

@@ -56,7 +56,10 @@ cloudfunctions/*/node_modules/
 functions/*/node_modules/
 
 # Cloud functions local common copies (source is cloudfunctions/common/)
-cloudfunctions/*/common/
+# Tracked: *.d.ts type-reexport shims (re-export root cloudfunctions/common/* so the tsc gate passes)
+# Ignored: build-generated *.js runtime copies
+cloudfunctions/*/common/*
+!cloudfunctions/*/common/*.d.ts
 
 # Testing
 coverage/

@@ -270,7 +270,7 @@ describe('partnerService/wallet', () => {
 
     test('完整数据应正确汇总', async () => {
       mockDb._collections.users = { docs: [{ _id: 'oTest_openid' }] }
-      mockDb._collections.tuan_commissions = { docs: [
+      mockDb._collections.commissions = { docs: [
         { _id: 'c1', inviterId: 'oTest_openid', commissionAmount: 10, status: 'pending', orderType: 'tuan', createdAt: new Date() },
         { _id: 'c2', inviterId: 'oTest_openid', commissionAmount: 30, status: 'settled', orderType: 'mall', createdAt: new Date() },
       ] }
@@ -308,7 +308,7 @@ describe('partnerService/wallet', () => {
   describe('getMyIncomeDetails', () => {
     test('默认 all 类型应合并多源数据', async () => {
       mockDb._collections.users = { docs: [{ _id: 'oTest_openid' }] }
-      mockDb._collections.tuan_commissions = { docs: [
+      mockDb._collections.commissions = { docs: [
         { _id: 'c1', inviterId: 'oTest_openid', commissionAmount: 50, orderType: 'mall', status: 'settled', createdAt: new Date() },
       ] }
       const result = await wallet.getMyIncomeDetails({}, {}, { openid: 'oTest_openid' })
@@ -320,7 +320,7 @@ describe('partnerService/wallet', () => {
 
     test('type=commission 应被拒绝（H4: 已移除该选项，与 all 行为重复）', async () => {
       // H4: 'commission' 类型已从 ALLOWED_TYPES 移除，避免与 'all' 行为重复
-      //   'all' 已仅查询 tuan_commissions 集合（H7），等价于原 'commission' 语义
+      //   'all' 已仅查询 commissions 集合（H7），等价于原 'commission' 语义
       mockDb._collections.users = { docs: [{ _id: 'oTest_openid' }] }
       await expect(
         wallet.getMyIncomeDetails({ type: 'commission' }, {}, { openid: 'oTest_openid' })
@@ -333,7 +333,7 @@ describe('partnerService/wallet', () => {
         _id: `c${i}`, inviterId: 'oTest_openid', commissionAmount: 10, status: 'settled',
         createdAt: new Date(Date.now() - i * 1000),
       }))
-      mockDb._collections.tuan_commissions = { docs: items }
+      mockDb._collections.commissions = { docs: items }
       const result = await wallet.getMyIncomeDetails({ type: 'all', page: 2, pageSize: 10 }, {}, { openid: 'oTest_openid' })
       expect(result.data.list.length).toBe(10)
       expect(result.data.total).toBe(25)

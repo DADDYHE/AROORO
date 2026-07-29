@@ -2,11 +2,11 @@ const { AdminService } = require('../../../services/CloudFunctionService')
 const { formatTime } = require('../../profile/utils/dateUtils')
 
 const STATUS_MAP = {
-  pending: { text: '待审核', color: '#FF9500' },
-  approved: { text: '待转账', color: '#5856D6' },
-  processing: { text: '转账中', color: '#007AFF' },
-  completed: { text: '已到账', color: '#34C759' },
-  rejected: { text: '已拒绝', color: '#FF3B30' },
+  pending: { text: '待审核', color: '#B8893A' },
+  approved: { text: '待转账', color: '#6B7D5A' },
+  processing: { text: '转账中', color: '#6B7D8C' },
+  completed: { text: '已到账', color: '#5B7C4A' },
+  rejected: { text: '已拒绝', color: '#A85B4A' },
 }
 
 Page({
@@ -31,7 +31,7 @@ Page({
         const list = (res.data.list || []).map(item => ({
           ...item,
           statusText: STATUS_MAP[item.status]?.text || item.status,
-          statusColor: STATUS_MAP[item.status]?.color || '#8E8E93',
+          statusColor: STATUS_MAP[item.status]?.color || '#9A9489',
           amountText: Number(item.amount).toFixed(2),
           timeText: this._formatTime(item.createdAt),
           rejectReason: item.rejectReason || '',

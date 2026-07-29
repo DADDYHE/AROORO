@@ -20,7 +20,7 @@
  * 编译方式：
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.adminService.json
  */
-import type { CloudBaseDB } from './common/types';
+import type { CloudBaseDB } from '../common/types';
 export type PermissionLevel = 'partner' | 'admin' | 'super_admin' | null;
 export type ActionHandler<E = CloudEvent, C = CloudContext, A = AuthLike> = (event: E, context: C, auth: A) => Promise<unknown>;
 export type CloudFunctionHandler<E = CloudEvent, C = CloudContext, A = AuthLike> = ActionHandler<E, C, A>;

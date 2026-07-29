@@ -24,7 +24,7 @@
 //   - 业务错误码使用 err(...) 工厂，与 risk-rate-limit 共用同一个 BusinessError 类
 
 import { err, isBusinessError, withErrorHandling, type WrappedHandler } from '../common/errors'
-import { initCloud, handleSuccess } from '../common/utils'
+import { initCloud, handleSuccess, type SuccessResult } from '../common/utils'
 import { createLogger } from '../common/logger'
 import { withRateLimit } from '../common/risk-rate-limit'
 import type { CloudBaseDB } from '../common/types'
@@ -207,7 +207,7 @@ export function getOrderType(outTradeNo: string): OrderType | null {
  * @throws BusinessError AUTH_REQUIRED / INVALID_PARAMS / WECHAT_API_ERROR / ORDER_NOT_FOUND
  *         ORDER_ALREADY_PAID / PAYMENT_AMOUNT_MISMATCH / PAYMENT_CREATE_FAILED / RATE_LIMITED
  */
-export const createPayment: WrappedHandler<CreatePaymentResult> = withErrorHandling<CreatePaymentResult>(async (
+export const createPayment: WrappedHandler<SuccessResult<CreatePaymentResult>> = withErrorHandling<SuccessResult<CreatePaymentResult>>(async (
   event: Record<string, unknown>,
   context: Record<string, unknown>,
   auth: { openid?: string; [k: string]: unknown }

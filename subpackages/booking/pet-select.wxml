@@ -172,7 +172,7 @@
           type="multiple"
           min-date="{{ minServiceDate }}"
           max-date="{{ maxServiceDate }}"
-          color="#4ECDC4"
+          color="#4F5E35"
           bind:select="onCalendarSelect"
           default-date="{{defaultCalendarDates}}"
           poppable="{{false}}"

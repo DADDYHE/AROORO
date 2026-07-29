@@ -6,7 +6,7 @@ const { MALL_ORDER_TRANSITIONS, MALL_STATUS_MAP, STATUS_LABELS, validateTransiti
 const { createCommissionRecord } = require('./commission')
 const { enrichBuyerFields } = require('./_enrichBuyers')
 const { err } = require('../common/errors')
-const { uploadShippingInfo } = require('../common/wxLogistics')
+const { uploadShippingInfo, traceWaybill, followWaybill, queryTrace } = require('../common/wxLogistics')
 
 const { db } = initCloud()
 const _ = db.command
@@ -337,6 +337,81 @@ async function shipMallOrder(event, context, auth) {
         orderId, msg: (e && e.message) || String(e),
       })
     }
+
+    // 调微信「物流查询组件」trace_waybill 拿 waybillToken 存到订单
+    // 前端 logistics-card 调 plugin.openWaybillTracking({waybillToken}) 拉起原生物流详情页
+    // best-effort：失败只记日志，不阻断发货（用户仍可看到快递单号）
+    const openid = orderRes.data.ownerId || ''
+    const receiverPhone = orderRes.data.receiverPhone || ''
+    const productImage = orderRes.data.productImage || ''
+    const productName = orderRes.data.productName || '商品'
+    if (openid && receiverPhone) {
+      try {
+        const traceRes = await traceWaybill({
+          openid,
+          receiverPhone,
+          waybillId: expressNo,
+          transId: transactionId,
+          orderDetailPath: `subpackages/profile/mall-order-detail/index?id=${orderId}`,
+          goodsInfo: [{
+            goodsName: productName,
+            goodsImgUrl: productImage,
+          }],
+          deliveryId: expressCompany,
+        })
+        if (traceRes.ok && traceRes.waybillToken) {
+          await db.collection('orders').doc(orderId).update({
+            data: { waybillToken: traceRes.waybillToken, updatedAt: db.serverDate() },
+          })
+        } else {
+          logger.warn('shipMallOrder.traceWaybill.fail', {
+            orderId, transactionId, expressNo, error: traceRes.error,
+          })
+        }
+      } catch (e) {
+        logger.warn('shipMallOrder.traceWaybill.exception', {
+          orderId, msg: (e && e.message) || String(e),
+        })
+      }
+    } else {
+      logger.warn('shipMallOrder.traceWaybill.skip', {
+        orderId, hasOpenid: Boolean(openid), hasReceiverPhone: Boolean(receiverPhone),
+      })
+    }
+
+    // 调微信「物流消息能力」follow_waybill 触发服务通知推送
+    // 微信在「已揽件/派件中/已签收」三个关键节点主动给用户推送服务通知
+    // best-effort：失败只记日志，不阻断发货（与 traceWaybill 容错策略一致）
+    if (openid && receiverPhone) {
+      try {
+        const followRes = await followWaybill({
+          openid,
+          receiverPhone,
+          waybillId: expressNo,
+          transId: transactionId,
+          orderDetailPath: `subpackages/profile/mall-order-detail/index?id=${orderId}`,
+          goodsInfo: [{
+            goodsName: productName,
+            goodsImgUrl: productImage,
+          }],
+          deliveryId: expressCompany,
+        })
+        if (followRes.ok && followRes.waybillToken) {
+          // followWaybillToken 与 traceWaybill 的 waybillToken 用途不同，单独存储备 query_follow_trace 用
+          await db.collection('orders').doc(orderId).update({
+            data: { followWaybillToken: followRes.waybillToken, updatedAt: db.serverDate() },
+          })
+        } else {
+          logger.warn('shipMallOrder.followWaybill.fail', {
+            orderId, transactionId, expressNo, error: followRes.error,
+          })
+        }
+      } catch (e) {
+        logger.warn('shipMallOrder.followWaybill.exception', {
+          orderId, msg: (e && e.message) || String(e),
+        })
+      }
+    }
   }
 
   return handleSuccess(null, '发货成功')
@@ -362,6 +437,65 @@ async function completeMallOrder(event, context, auth) {
   await createCommissionRecord('mall', orderRes.data)
 
   return handleSuccess(null, '订单已完成')
+}
+
+/**
+ * 查询商城订单物流轨迹（web-admin 后台用）。
+ *
+ * 数据流：
+ *   1. 从 orders 表读订单的 waybillToken + ownerId
+ *   2. 调微信 query_trace 接口拿运单状态
+ *   3. 返回 { status, statusLabel, statusColor, waybillId, goodsInfo }
+ *
+ * 注意：
+ *   - 历史订单（无 waybillToken）返回 code=1 提示「该订单未推送物流查询组件」
+ *   - query_trace 不返回轨迹节点列表，只有当前状态（0-6）
+ */
+async function getLogisticsTrack(event, context, auth) {
+  const { orderId } = event
+  if (!orderId) {throw err('INVALID_PARAMS', '缺少订单ID')}
+
+  const orderRes = await db.collection('orders').doc(orderId).get()
+  if (!orderRes.data) {throw err('NOT_FOUND', '订单不存在')}
+
+  const order = orderRes.data
+  if (!order.waybillToken) {
+    return handleSuccess({
+      status: -1,
+      statusLabel: '未推送查询组件',
+      statusColor: '#909399',
+      waybillId: order.expressNo || '',
+      expressCompany: order.expressCompany || '',
+      goodsInfo: [],
+    }, '该订单未推送物流查询组件（历史订单或发货失败）')
+  }
+
+  const traceRes = await queryTrace({
+    waybillToken: order.waybillToken,
+    openid: order.ownerId || '',
+  })
+
+  if (!traceRes.ok) {
+    logger.warn('getLogisticsTrack.queryTrace.fail', { orderId, error: traceRes.error })
+    return handleSuccess({
+      status: -1,
+      statusLabel: '查询失败',
+      statusColor: '#f56c6c',
+      waybillId: order.expressNo || '',
+      expressCompany: order.expressCompany || '',
+      goodsInfo: [],
+      error: traceRes.error,
+    }, traceRes.error || '查询物流状态失败')
+  }
+
+  return handleSuccess({
+    status: traceRes.status,
+    statusLabel: traceRes.statusLabel,
+    statusColor: traceRes.statusColor,
+    waybillId: traceRes.waybillId || order.expressNo || '',
+    expressCompany: order.expressCompany || '',
+    goodsInfo: traceRes.goodsInfo || [],
+  })
 }
 
 async function getProductStats(event, context, auth) {
@@ -467,6 +601,7 @@ module.exports = {
   getProductList, getProductDetail, createProduct, updateProduct, deleteProduct,
   batchUpdateProducts, cloneProduct,
   getMallOrders, getMallOrderDetail, handleMallOrder, shipMallOrder, completeMallOrder,
+  getLogisticsTrack,
   getProductStats, getCategoryStats,
   listCategories, createCategory, updateCategory, deleteCategory,
 }

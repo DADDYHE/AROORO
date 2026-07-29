@@ -35,7 +35,7 @@
         <view class="hero-accent-line"></view>
       </view>
 
-      <view class="info-card animate-item" style="animation-delay: 0.1s;">
+      <view class="info-card">
         <view class="info-grid">
           <view class="info-cell {{isMultiDay ? 'multi-day' : ''}}">
             <text class="info-label">活动时间</text>
@@ -68,7 +68,7 @@
         </view>
       </view>
 
-      <view class="highlight-section animate-item" style="animation-delay: 0.2s;" wx:if="{{highlightTags.length > 0}}">
+      <view class="highlight-section" wx:if="{{highlightTags.length > 0}}">
         <scroll-view scroll-x class="highlight-scroll">
           <view class="highlight-tags">
             <view class="highlight-tag" wx:for="{{highlightTags}}" wx:key="index">
@@ -78,7 +78,7 @@
         </scroll-view>
       </view>
 
-      <view class="section-card animate-item" style="animation-delay: 0.3s;">
+      <view class="section-card">
         <view class="section-header">
           <view class="section-title-wrapper">
             <view class="section-title-accent"></view>
@@ -88,7 +88,7 @@
         <text class="description">{{activity.description || '暂无详细描述'}}</text>
       </view>
 
-      <view class="section-card animate-item" style="animation-delay: 0.4s;" wx:if="{{activity.images && activity.images.length > 0}}">
+      <view class="section-card" wx:if="{{activity.images && activity.images.length > 0}}">
         <view class="section-header">
           <view class="section-title-wrapper">
             <view class="section-title-accent"></view>
@@ -109,7 +109,7 @@
         </view>
       </view>
 
-      <view class="organizer-card animate-item" style="animation-delay: 0.5s;">
+      <view class="organizer-card">
         <view class="section-header">
           <view class="section-title-wrapper">
             <view class="section-title-accent"></view>

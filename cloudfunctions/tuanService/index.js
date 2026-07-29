@@ -27,7 +27,7 @@ exports.main = exports.createTuanOrder = exports.getTuanDealDetail = exports.get
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES, paginate } = require('./common/utils');
+const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES, paginate, escapeRegExp } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -38,7 +38,7 @@ const { withRateLimit } = require('./common/risk-rate-limit');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { uploadShippingInfo } = require('./common/wxLogistics');
+const { uploadShippingInfo, traceWaybill, followWaybill } = require('./common/wxLogistics');
 const { cloud, db } = initCloud();
 const logger = createLogger('tuanService');
 const _ = db.command;
@@ -271,7 +271,7 @@ async function writeOperationLog(params) {
 // Action 1：拉取团购列表
 // =====================================================================
 async function getTuanDealList(event) {
-    const { page = 1, pageSize = exports.DEFAULT_PAGE_SIZE, status } = event;
+    const { page = 1, pageSize = exports.DEFAULT_PAGE_SIZE, status, keyword } = event;
     const where = {};
     if (status) {
         where.status = status;
@@ -282,6 +282,10 @@ async function getTuanDealList(event) {
     const now = new Date();
     where.startTime = _.lte(now);
     where.endTime = _.gte(now);
+    if (keyword) {
+        const safeKeyword = escapeRegExp(String(keyword).slice(0, 50));
+        where.title = db.RegExp({ regexp: safeKeyword, options: 'i' });
+    }
     const result = await paginate(db, 'tuan_deals', {
         page, pageSize, where, projection: exports.TUAN_DEAL_LIST_FIELDS,
         orderBy: { field: 'createdAt', direction: 'desc' },
@@ -672,6 +676,109 @@ async function shipTuanOrder(event, _context, auth) {
             logger.warn('shipTuanOrder.uploadShippingInfo.exception', {
                 orderId, msg: e?.message || String(e),
             });
+        }
+        // 调微信「物流查询组件」trace_waybill 拿 waybillToken 存到订单
+        // 前端 logistics-card 调 plugin.openWaybillTracking({waybillToken}) 拉起原生物流详情页
+        // best-effort：失败只记日志，不阻断发货（用户仍可看到快递单号）
+        const openid = order.ownerId || '';
+        const receiverPhone = order.receiverPhone || '';
+        const productImage = order.productImage || '';
+        const productName = order.productName || '团购商品';
+        if (openid && receiverPhone) {
+            try {
+                const traceRes = await traceWaybill({
+                    openid,
+                    receiverPhone,
+                    waybillId: expressNo,
+                    transId: transactionId,
+                    orderDetailPath: `subpackages/profile/mall-order-detail/index?id=${orderId}`,
+                    goodsInfo: [{
+                            goodsName: productName,
+                            goodsImgUrl: productImage,
+                        }],
+                    deliveryId: expressCompany,
+                });
+                if (traceRes.ok && traceRes.waybillToken) {
+                    await db.collection('orders').doc(orderId).update({
+                        data: { waybillToken: traceRes.waybillToken, updatedAt: db.serverDate() },
+                    });
+                    // 同步 waybillToken 到 tuan_orders 表（与 orders 表保持一致）
+                    if (order.tuanOrderId) {
+                        try {
+                            await db.collection('tuan_orders').doc(order.tuanOrderId).update({
+                                data: { waybillToken: traceRes.waybillToken, updatedAt: db.serverDate() },
+                            });
+                        }
+                        catch (e) {
+                            logger.warn('shipTuanOrder.syncWaybillTokenToTuanOrder.failed', {
+                                orderId, tuanOrderId: order.tuanOrderId, msg: e?.message,
+                            });
+                        }
+                    }
+                }
+                else {
+                    logger.warn('shipTuanOrder.traceWaybill.fail', {
+                        orderId, transactionId, expressNo, error: traceRes.error,
+                    });
+                }
+            }
+            catch (e) {
+                logger.warn('shipTuanOrder.traceWaybill.exception', {
+                    orderId, msg: e?.message || String(e),
+                });
+            }
+        }
+        else {
+            logger.warn('shipTuanOrder.traceWaybill.skip', {
+                orderId, hasOpenid: Boolean(openid), hasReceiverPhone: Boolean(receiverPhone),
+            });
+        }
+        // 调微信「物流消息能力」follow_waybill 触发服务通知推送
+        // 微信在「已揽件/派件中/已签收」三个关键节点主动给用户推送服务通知
+        // best-effort：失败只记日志，不阻断发货（与 traceWaybill 容错策略一致）
+        if (openid && receiverPhone) {
+            try {
+                const followRes = await followWaybill({
+                    openid,
+                    receiverPhone,
+                    waybillId: expressNo,
+                    transId: transactionId,
+                    orderDetailPath: `subpackages/profile/mall-order-detail/index?id=${orderId}`,
+                    goodsInfo: [{
+                            goodsName: productName,
+                            goodsImgUrl: productImage,
+                        }],
+                    deliveryId: expressCompany,
+                });
+                if (followRes.ok && followRes.waybillToken) {
+                    // followWaybillToken 与 traceWaybill 的 waybillToken 用途不同，单独存储备 query_follow_trace 用
+                    await db.collection('orders').doc(orderId).update({
+                        data: { followWaybillToken: followRes.waybillToken, updatedAt: db.serverDate() },
+                    });
+                    if (order.tuanOrderId) {
+                        try {
+                            await db.collection('tuan_orders').doc(order.tuanOrderId).update({
+                                data: { followWaybillToken: followRes.waybillToken, updatedAt: db.serverDate() },
+                            });
+                        }
+                        catch (e) {
+                            logger.warn('shipTuanOrder.syncFollowWaybillTokenToTuanOrder.failed', {
+                                orderId, tuanOrderId: order.tuanOrderId, msg: e?.message,
+                            });
+                        }
+                    }
+                }
+                else {
+                    logger.warn('shipTuanOrder.followWaybill.fail', {
+                        orderId, transactionId, expressNo, error: followRes.error,
+                    });
+                }
+            }
+            catch (e) {
+                logger.warn('shipTuanOrder.followWaybill.exception', {
+                    orderId, msg: e?.message || String(e),
+                });
+            }
         }
     }
     // L1: 写操作审计日志（best-effort）

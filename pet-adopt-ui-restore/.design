@@ -1,0 +1,141 @@
+{
+  "data": [
+    {
+      "id": "page-onboarding",
+      "title": "Onboarding — Proud to Be a Pet Adopter",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785078800000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/onboarding.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-signin",
+      "title": "Sign in",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785078800000,
+      "canvasData": {
+        "x": 309,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/sign-in.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-home",
+      "title": "Home — Hi Taban",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785078800000,
+      "canvasData": {
+        "x": 618,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/home.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "image-001",
+      "title": "Hero — woman hugging brown dog",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1785078820000,
+      "canvasData": {
+        "x": 0,
+        "y": 378
+      },
+      "devMetadata": {
+        "imageSrc": "assets/hero-woman-dog.jpg"
+      }
+    },
+    {
+      "id": "image-002",
+      "title": "Avatar — Taban (red hair cartoon)",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1785078820000,
+      "canvasData": {
+        "x": 309,
+        "y": 378
+      },
+      "devMetadata": {
+        "imageSrc": "assets/avatar-taban.jpg"
+      }
+    },
+    {
+      "id": "image-003",
+      "title": "Familiar Dog — half white fluffy",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1785078820000,
+      "canvasData": {
+        "x": 618,
+        "y": 378
+      },
+      "devMetadata": {
+        "imageSrc": "assets/dog-familiar.jpg"
+      }
+    },
+    {
+      "id": "image-004",
+      "title": "Soft Dog — white bulldog",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1785078820000,
+      "canvasData": {
+        "x": 927,
+        "y": 378
+      },
+      "devMetadata": {
+        "imageSrc": "assets/dog-soft.jpg"
+      }
+    },
+    {
+      "id": "image-005",
+      "title": "Cat 1 — orange tabby",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1785078820000,
+      "canvasData": {
+        "x": 1236,
+        "y": 378
+      },
+      "devMetadata": {
+        "imageSrc": "assets/cat-1.jpg"
+      }
+    },
+    {
+      "id": "image-006",
+      "title": "Cat 2 — gray british shorthair",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1785078820000,
+      "canvasData": {
+        "x": 1545,
+        "y": 378
+      },
+      "devMetadata": {
+        "imageSrc": "assets/cat-2.jpg"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "mobile",
+    "projectName": "Pet Adoption App UI Restore"
+  }
+}

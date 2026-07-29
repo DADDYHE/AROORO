@@ -113,16 +113,16 @@ describe('Sprint 34: userService TypeScript 迁移', () => {
       expect(code).toMatch(/Sprint\s*34/)
     })
 
-    test('包含 AuthLike 接口', () => {
-      expect(code).toMatch(/export\s+interface\s+AuthLike\b/)
+    test('从 common/types 引入 AuthLike 类型', () => {
+      expect(code).toMatch(/import\s+type\s*\{[^}]*AuthLike[^}]*\}\s*from\s*['"]\.\/common\/types['"]/)
     })
 
-    test('包含 CloudEvent 接口', () => {
-      expect(code).toMatch(/export\s+interface\s+CloudEvent\b/)
+    test('从 common/types 引入 CloudEvent 类型', () => {
+      expect(code).toMatch(/import\s+type\s*\{[^}]*CloudEvent[^}]*\}\s*from\s*['"]\.\/common\/types['"]/)
     })
 
-    test('包含 CloudContext 接口', () => {
-      expect(code).toMatch(/export\s+interface\s+CloudContext\b/)
+    test('从 common/types 引入 CloudContext 类型', () => {
+      expect(code).toMatch(/import\s+type\s*\{[^}]*CloudContext[^}]*\}\s*from\s*['"]\.\/common\/types['"]/)
     })
 
     test('包含 UserActionHandler 类型', () => {
@@ -214,8 +214,8 @@ describe('Sprint 34: userService TypeScript 迁移', () => {
       )
     })
 
-    test('ci:check 包含 audit:s34-user-service-ts:strict', () => {
-      expect(pkg.scripts['ci:check']).toMatch(/audit:s34-user-service-ts:strict/)
+    test('ci:check 包含 audit:all:strict', () => {
+      expect(pkg.scripts['ci:check']).toMatch(/audit:all:strict/)
     })
   })
 
