@@ -1,0 +1,46 @@
+--- a/styles/theme-teal.wxss
++++ b/styles/theme-teal.wxss
+@@ -261,29 +261,12 @@ page {
+   --shadow-glow-mall: 0 8rpx 24rpx rgba(201,162,75, 0.25);
+   --shadow-glow-coupon: 0 8rpx 24rpx rgba(201,162,75, 0.28);
+ 
+-  /* ===== TabBar 专用 ===== */
+-  --zy-tabbar-height: 104rpx;
+-  --zy-tabbar-safe-bottom: env(safe-area-inset-bottom, 0px);
+-  --zy-tabbar-total-height: calc(104rpx + env(safe-area-inset-bottom, 0px));
+-  --zy-tabbar-bg: rgba(255, 255, 255, 0.96);
+-  --zy-tabbar-bg-glass: rgba(255, 255, 255, 0.92);
+-  --zy-tabbar-blur: 20px;
+-  --zy-tabbar-border-top: 1rpx solid rgba(26, 26, 23, 0.06);
+-  --zy-tabbar-item-active: #1F3A1F;
+-  --zy-tabbar-item-inactive: #9E9889;
+-  --zy-tabbar-item-active-bg: transparent;
+-  --zy-tabbar-icon-size: 44rpx;
+-  --zy-tabbar-label-size: 20rpx;
+-  --zy-tabbar-label-weight: 400;
+-  --zy-tabbar-label-weight-active: 500;
+-  --zy-tabbar-center-d: 112rpx;
+-  --zy-tabbar-center-protrusion: 36rpx;
+-  --zy-tabbar-center-bottom: calc(env(safe-area-inset-bottom, 0px) + 24rpx);
+-  --zy-tabbar-center-icon-size: 52rpx;
+-  --zy-tabbar-center-grad: linear-gradient(180deg, #2D4F2D 0%, #0F2410 100%);
+-  --zy-tabbar-center-icon: #F7F5EF;
+-  --zy-tabbar-center-shadow: 0 8rpx 24rpx rgba(31, 58, 31, 0.25), 0 2rpx 8rpx rgba(31, 58, 31, 0.15);
+-  --zy-shadow-float-tabbar: 0 -2rpx 24rpx rgba(26, 26, 23, 0.06);
++  /* ===== TabBar 专用 =====
++     23 个令牌已退役（全仓 0 消费）：21 个 --zy-tabbar-*、--zy-shadow-fab
++     与 --zy-shadow-float-tabbar（后二者为转引/重复死值，值分别由组件本地
++     --tb-center-shadow 与全局 --shadow-float 承担）。
++     tabBar 是全仓唯一实现（custom-tab-bar/），其几何/材质值就地声明为
++     --tb-*；颜色直接消费调色板主令牌。详见 deliverables/tabbar-convergence/audit.md */
+ 
+   /* ===== zy-* 排版令牌 ===== */
+   --zy-fs-display: 60rpx;  --zy-fs-display-w: 300; --zy-fs-display-lh: 1.1;
+@@ -318,7 +301,6 @@ page {
+   --zy-shadow-sm: none;
+   --zy-shadow-md: 0 2rpx 12rpx rgba(26, 26, 23, 0.04);
+   --zy-shadow-lg: 0 8rpx 32rpx -8rpx rgba(26, 26, 23, 0.08);
+-  --zy-shadow-fab: var(--zy-tabbar-center-shadow);
+ 
+   /* ===== 动效（更慢更优雅） ===== */
+   --zy-ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
