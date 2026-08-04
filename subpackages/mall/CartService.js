@@ -1,5 +1,5 @@
-const { MALL } = require('../../config/storageKeys')
-const CART_STORAGE_KEY = MALL.CART
+const { CART } = require('../../config/storageKeys')
+const CART_STORAGE_KEY = CART
 
 class CartService {
   static getCart() {
