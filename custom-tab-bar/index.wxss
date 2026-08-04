@@ -4,7 +4,7 @@
    高奢 TabBar：
      · 奶油米白半透底 + 发丝顶线
      · 选中指示：极简竖线（取代圆点，更克制）
-     · 中央按钮：深林绿渐变 + 金属高光
+     · 中央按钮：香槟金平涂 + 金属高光（金 CTA 化）
      · 图标线条极细，文字极轻
    ----------------------------------------------------------------
    设计系统：styles/theme-teal.wxss（深森林绿体系 · 事实生效层）
@@ -57,15 +57,16 @@
      .tab-bar 是 portal 子树的根，其后代（中心按钮等）均可继承。
      以下值在 theme-teal 中无精确等价物，就地令牌化以保证零外观改变。 */
   --tb-bar-bg: rgba(247, 245, 239, 0.96);          /* 奶油米白半透底（非 --zy-tabbar-bg 的纯白） */
+  --tb-center-bg: var(--zy-accent);                /* 香槟金平涂底（引用 theme-teal 活令牌 #C9A24B） */
   --tb-center-shadow:
-    0 6rpx 20rpx rgba(31, 58, 31, 0.28),
-    0 2rpx 8rpx rgba(31, 58, 31, 0.18);            /* 深林绿投影（非橄榄绿） */
+    0 6rpx 20rpx rgba(31, 58, 31, 0.32),
+    0 2rpx 8rpx rgba(31, 58, 31, 0.20);            /* 深林绿投影（非橄榄绿） */
   --tb-center-shadow-active:
-    0 12rpx 36rpx rgba(31, 58, 31, 0.38),
-    0 4rpx 14rpx rgba(31, 58, 31, 0.25);
-  --tb-center-border: 2rpx solid rgba(201, 162, 75, 0.15);  /* 香槟金细环 */
-  --tb-center-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 100%);
-  --tb-center-inner-shadow: linear-gradient(0deg, rgba(0, 0, 0, 0.15) 0%, transparent 100%);
+    0 16rpx 44rpx rgba(31, 58, 31, 0.46),
+    0 4rpx 14rpx rgba(31, 58, 31, 0.28);
+  --tb-center-border: 2rpx solid var(--zy-primary-700);  /* 深绿实线环（金底压深绿，边缘清晰） */
+  --tb-center-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 100%);
+  --tb-center-inner-shadow: linear-gradient(0deg, rgba(168, 137, 74, 0.30) 0%, transparent 100%);
 
   position: fixed;
   bottom: 0;
@@ -205,7 +206,7 @@
 }
 
 /* ================================================================
-   中心按钮 — 深林绿渐变圆钮（香槟金环 + 呼吸光晕）
+   中心按钮 — 香槟金圆钮（深绿环 + 呼吸光晕）
    ================================================================ */
 .tab-bar-item-center {
   position: relative;
@@ -226,7 +227,7 @@
   width: 104rpx;
   height: 104rpx;
   border-radius: 50%;
-  background: var(--zy-tabbar-center-grad);
+  background: var(--tb-center-bg);
   position: relative;
   overflow: visible;
   box-shadow: var(--tb-center-shadow);
@@ -295,9 +296,9 @@
 }
 
 .center-button-text {
-  font-size: 16rpx;
-  font-weight: 500;
-  color: var(--zy-text-on-primary);
+  font-size: 18rpx;
+  font-weight: 600;
+  color: var(--text-on-accent);
   line-height: 1;
   position: relative;
   z-index: 2;

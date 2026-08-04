@@ -25,7 +25,7 @@
     </view>
     <view class="tab-bar-item tab-bar-item-center {{selected === 2 ? 'active' : ''}}" data-path="/pages/discover/index" data-index="{{2}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
       <view class="center-button tab-scale-2">
-        <image class="center-button-icon" src="/images/icons/discover-white.svg" mode="aspectFit" />
+        <image class="center-button-icon" src="/images/icons/discover-ink.svg" mode="aspectFit" />
         <text class="center-button-text">宠团团</text>
       </view>
     </view>
