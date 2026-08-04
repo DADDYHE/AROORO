@@ -1,11 +1,11 @@
-const { AdminService } = require('../../../services/CloudFunctionService')
+const { OrderService } = require('../../../services/CloudFunctionService')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
+  behaviors: [ListBehavior],
   data: {
     isLoading: true,
-    feeder: null,
-    hasFeeder: false,
-    serviceTypesText: '',
+    isLoadingMore: false,
     orders: [],
     orderTotal: 0,
     page: 1,
@@ -14,43 +14,42 @@ Page({
   },
 
   onLoad() {
-    this._loadData()
+    this._initNavbarHeight()
+    this._initListBehavior({
+      fetchFn: () => this._loadOrders(),
+    })
+    this._loadOrders()
   },
 
-  async _loadData() {
-    this.setData({ isLoading: true })
+  async _loadOrders(append = false) {
+    this.setData({ isLoadingMore: append })
+    if (!append) this.setData({ isLoading: true })
     try {
-      const res = await AdminService.getCurrentFeeder()
-      if (res.code === 0 && res.data) {
-        this.setData({
-          feeder: res.data,
-          hasFeeder: true,
-          serviceTypesText: (res.data.serviceTypes || []).join('、') || '—',
-          isLoading: false,
-        })
-        this._loadOrders()
-      } else {
-        this.setData({ hasFeeder: false, isLoading: false })
-      }
-    } catch (e) {
-      console.error('[partner/feeding] _loadData error:', e)
-      this.setData({ isLoading: false })
-    }
-  },
-
-  async _loadOrders() {
-    try {
-      const res = await AdminService.getFeederOrders({ page: this.data.page, pageSize: this.data.pageSize })
+      const res = await OrderService.getFeedingOrders({
+        page: this.data.page,
+        pageSize: this.data.pageSize,
+      })
       if (res.code === 0 && res.data) {
         const list = res.data.list || []
         this.setData({
-          orders: list,
+          orders: append ? [...this.data.orders, ...list] : list,
           orderTotal: res.data.total || 0,
           hasMore: list.length >= this.data.pageSize,
+          isLoading: false,
+          isLoadingMore: false,
         })
+      } else {
+        this.setData({ isLoading: false, isLoadingMore: false })
       }
     } catch (e) {
       console.error('[partner/feeding] _loadOrders error:', e)
+      this.setData({ isLoading: false, isLoadingMore: false })
     }
+  },
+
+  onReachBottom() {
+    if (!this.data.hasMore || this.data.isLoading) {return}
+    this.setData({ page: this.data.page + 1 })
+    return this._loadOrders(true)
   },
 })

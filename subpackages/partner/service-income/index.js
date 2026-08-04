@@ -1,9 +1,11 @@
 const { AdminService } = require('../../../services/CloudFunctionService')
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     isLoading: true,
     overview: null,
@@ -13,9 +15,12 @@ Page({
     page: 1,
     pageSize: 20,
     hasMore: true,
+    isDetailLoading: false,
+    isLoadingMore: false,
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._loadData()
   },
 
@@ -52,24 +57,28 @@ Page({
     }
   },
 
-  async _loadDetails() {
+  async _loadDetails(append = false) {
+    const loadingKey = append ? 'isLoadingMore' : 'isDetailLoading'
+    this.setData({ [loadingKey]: true })
     try {
       const res = await AdminService.getServiceIncomeDetails({
         type: this.data.activeTab,
         page: this.data.page,
         pageSize: this.data.pageSize,
       })
-      
+
       if (res.code === 0 && res.data) {
         const list = res.data.list || []
         this.setData({
-          details: this.data.page === 1 ? list : [...this.data.details, ...list],
+          details: append ? [...this.data.details, ...list] : list,
           detailTotal: res.data.total || 0,
           hasMore: list.length >= this.data.pageSize,
         })
       }
     } catch (e) {
       console.error('[service-income] _loadDetails error:', e)
+    } finally {
+      this.setData({ [loadingKey]: false })
     }
   },
 
@@ -85,13 +94,10 @@ Page({
     this._loadDetails()
   },
 
-  onLoadMore() {
-    if (!this.data.hasMore) return
-    
-    this.setData({
-      page: this.data.page + 1,
-    })
-    this._loadDetails()
+  onReachBottom() {
+    if (this.data.isDetailLoading || this.data.isLoading || !this.data.hasMore) {return}
+    this.setData({ page: this.data.page + 1 })
+    return this._loadDetails(true)
   },
 
   onPullDownRefresh() {

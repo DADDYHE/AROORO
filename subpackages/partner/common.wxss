@@ -1,69 +1,114 @@
 @import '../../styles/loading-animation.wxss';
 
+/* ================================================================
+   AROORO 合伙人公共样式 — Haute-Luxury Editorial Dashboard v2
+   ----------------------------------------------------------------
+   设计语言：深森林绿主色 + 金属香槟金阶 + 奶油暖白底
+            层次阴影取代纯发丝线 · 编辑级排版 · 金线装饰
+   Skyline 兼容：无 :active / text-transform / backdrop-filter
+            transition 仅 transform & opacity / 单行截断
+   ================================================================ */
+
+/* ---------- 页面容器 ---------- */
+.partner-page {
+  min-height: 100vh;
+  background-color: var(--background-color);
+  padding: 0 var(--page-padding);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 32rpx);
+  font-family: var(--font-stack);
+}
+
 .gallery-container {
   min-height: 100vh;
   background-color: var(--background-color);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding: 0 var(--page-padding);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 32rpx);
 }
 
+/* ---------- 顶部品牌区域 ---------- */
 .gallery-header {
-  padding: 0;
   position: relative;
   overflow: hidden;
   background: var(--card-color);
-  padding-bottom: 20rpx;
+  margin: 0 calc(var(--page-padding) * -1);
+  padding: 0 var(--page-padding) 36rpx;
+  border-bottom: 1rpx solid var(--lux-hairline);
+}
+
+/* 头部底部金线装饰 */
+.gallery-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: var(--page-padding);
+  width: 80rpx;
+  height: 2rpx;
+  background: var(--lux-gold-line-solid);
 }
 
 .brand-block {
-  padding: 80rpx 48rpx 64rpx;
+  padding: 72rpx 0 48rpx;
   position: relative;
 }
 
+/* 品牌区右上角森林绿光晕 */
 .brand-block::before {
   content: '';
   position: absolute;
   top: 0;
-  right: 0;
-  width: 300rpx;
-  height: 300rpx;
-  background: radial-gradient(circle, rgba(79, 94, 53, 0.15) 0%, transparent 70%);
+  right: -60rpx;
+  width: 280rpx;
+  height: 280rpx;
+  background: radial-gradient(circle, var(--primary-tint-04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* 品牌区左上角金色光晕 */
+.brand-block::after {
+  content: '';
+  position: absolute;
+  top: 20rpx;
+  left: -40rpx;
+  width: 200rpx;
+  height: 200rpx;
+  background: radial-gradient(circle, var(--mall-tint-04) 0%, transparent 70%);
   pointer-events: none;
 }
 
 .brand-accent-bar {
   position: absolute;
   top: 0;
-  left: 48rpx;
+  left: 0;
   width: 48rpx;
-  height: 6rpx;
-  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  border-radius: 0 0 4rpx 4rpx;
+  height: 3rpx;
+  background: var(--lux-gold-line-solid);
+  border-radius: 0 0 3rpx 3rpx;
 }
 
 .brand-main {
   position: relative;
-  margin-bottom: 24rpx;
+  margin-bottom: 20rpx;
 }
 
 .brand-text {
-  font-size: 64rpx;
+  font-size: 52rpx;
   font-weight: 300;
   color: var(--text-primary);
-  letter-spacing: 12rpx;
+  letter-spacing: 0.14em;
   display: block;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .brand-meta {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .brand-meta-line {
-  width: 40rpx;
-  height: 2rpx;
-  background: var(--gray-200);
+  width: 32rpx;
+  height: 1rpx;
+  background: var(--lux-gold-400);
   position: relative;
 }
 
@@ -71,43 +116,719 @@
   content: '';
   position: absolute;
   top: 50%;
-  right: -4rpx;
+  right: -3rpx;
   transform: translateY(-50%);
-  width: 6rpx;
-  height: 6rpx;
+  width: 5rpx;
+  height: 5rpx;
   border-radius: 50%;
-  background: var(--activity-primary);
+  background: var(--lux-gold-500);
 }
 
 .brand-subtitle {
   font-size: 22rpx;
   color: var(--text-secondary);
-  letter-spacing: 8rpx;
+  letter-spacing: 0.20em;
   font-weight: 400;
 }
 
+/* ---------- 内容区域 ---------- */
 .gallery-hall {
-  padding: 32rpx;
+  padding: 36rpx 0 0;
 }
 
+/* ---------- 仪表盘卡片（层次阴影 + 发丝边 + 金角） ---------- */
 .gallery-card {
-  background: var(--card-color);
-  border-radius: 24rpx;
+  background: var(--lux-card-bg);
+  border-radius: var(--lux-radius-card);
   overflow: hidden;
   margin-bottom: 24rpx;
-  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid var(--lux-hairline);
+  box-shadow: var(--lux-shadow-card);
   position: relative;
 }
 
+/* 卡片左侧色条 */
+.card-accent {
+  width: 3rpx;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: var(--primary-color);
+}
+
+.card-body {
+  position: relative;
+  padding: 36rpx;
+}
+
+/* ---------- 统计数据块 ---------- */
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: 300;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+  font-feature-settings: 'tnum';
+  line-height: 1.2;
+}
+
+.stat-value-accent {
+  color: var(--primary-color);
+}
+
+.stat-value-primary {
+  color: var(--primary-color);
+}
+
+.stat-label {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.18em;
+  font-weight: 400;
+}
+
+.stat-divider {
+  width: 1rpx;
+  height: 56rpx;
+  background: var(--divider-color);
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+/* ---------- 分区标题（金线 + 文字 + 金线） ---------- */
+.gallery-entrance {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin: 36rpx 0 24rpx;
+}
+
+.entrance-line {
+  width: 32rpx;
+  height: 1rpx;
+  background: var(--lux-gold-400);
+}
+
+.entrance-label {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.20em;
+  font-weight: 400;
+}
+
+/* ---------- 状态徽章 ---------- */
+.status-badge {
+  font-size: 20rpx;
+  padding: 6rpx 18rpx;
+  border-radius: var(--zy-radius-sm);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-success {
+  background: var(--wash-success-08);
+  color: var(--success-color);
+}
+
+/* B′ 金在浅底不作文字色：原 --warning-color 压 --accent-wash 2.17:1 → 深绿 11.26:1。
+   状态徽章族（success/error/warning）以语义色为文字色，warning 取品牌深绿承接原金位。 */
+.status-warning {
+  background: var(--accent-wash);
+  color: var(--primary-color);
+}
+
+/* ⚠ #B85C3C 压自身 8% 洗底：白卡上 4.09、奶油卡 3.89、页面底 3.78，均未达 4.5:1。
+   已纳入 --error-color 令牌层修复补丁（改 #A45236，色相不变、最低 4.51）
+   —— scripts/patches/aa-text-tokens.patch，待 DADDY 看样张后决定是否 apply。 */
+.status-error {
+  background: var(--wash-error-08);
+  color: var(--error-color);
+}
+
+/* 原为 var(--primary-100, #EAEDDF)：--primary-100 全仓无声明，兜底值是唯一承重点，
+   且 #EAEDDF 是旧橄榄坐标系的浅绿，与「中性」语义不符。
+   按裁定不复活 --primary-100 这个旧名（新体系里它是 #E8ECE2 淡绿，语义对不上），
+   改用中性洗底令牌。文字 --text-secondary 压其上 6.70:1。 */
+.status-neutral {
+  background: var(--wash-neutral-10);
+  color: var(--text-secondary);
+}
+
+/* ⚠ #9E9889 压中性洗底：白卡 2.63、奶油卡 2.50、页面底 2.43。
+   注：本条语义是「已停用」，按 WCAG 1.4.3「非活动 UI 组件文字无对比度要求」可豁免，
+   故它不参与 --text-tertiary 的卡值（卡值场景见 patch 头部说明）。
+   即便如此，补丁把令牌改到 #736D5F 后这里也会顺带升到 4.18，观感更清楚。 */
+.status-disabled {
+  background: var(--wash-neutral-10);
+  color: var(--text-tertiary);
+}
+
+/* ---------- 按钮系统 ---------- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 48rpx;
+  background: var(--gradient-primary);
+  color: var(--text-on-primary);
+  border-radius: var(--lux-radius-pill);
+  font-size: 26rpx;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  box-shadow: var(--lux-shadow-green);
+  border: none;
+  line-height: 1;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 48rpx;
+  background: var(--lux-gold-grad);
+  color: var(--text-on-accent);  /* 原 #FFFFFF */
+  border-radius: var(--lux-radius-pill);
+  font-size: 26rpx;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  box-shadow: var(--lux-shadow-gold);
+  border: none;
+  line-height: 1;
+}
+
+.btn-accent::after {
+  border: none;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18rpx 44rpx;
+  background: transparent;
+  color: var(--primary-color);
+  border: 1rpx solid var(--primary-color);
+  border-radius: var(--lux-radius-pill);
+  font-size: 26rpx;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.btn-outline::after {
+  border: none;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18rpx 44rpx;
+  background: var(--divider-color);
+  color: var(--text-primary);
+  border-radius: var(--lux-radius-pill);
+  font-size: 26rpx;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  border: none;
+  line-height: 1;
+}
+
+.btn-ghost::after {
+  border: none;
+}
+
+/* 按压态 — 通过 pressed class 实现 */
+.btn-primary.pressed,
+.btn-accent.pressed {
+  opacity: 0.88;
+  transform: scale(0.98);
+}
+
+.btn-outline.pressed,
+.btn-ghost.pressed {
+  opacity: 0.7;
+  transform: scale(0.98);
+}
+
+/* ---------- 表单元素 ---------- */
+.form-field {
+  margin-bottom: 28rpx;
+}
+
+.form-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 12rpx;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+}
+
+.form-label .required {
+  color: var(--error-color);
+  margin-left: 4rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 24rpx;
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-inner);
+  font-size: 28rpx;
+  color: var(--text-primary);
+  background: var(--lux-card-bg);
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 160rpx;
+  padding: 20rpx 24rpx;
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-inner);
+  font-size: 28rpx;
+  color: var(--text-primary);
+  background: var(--lux-card-bg);
+  box-sizing: border-box;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.form-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80rpx;
+  padding: 0 24rpx;
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-inner);
+  background: var(--lux-card-bg);
+}
+
+.form-picker-text {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.form-picker-text.placeholder {
+  color: var(--text-tertiary);
+}
+
+.form-picker-arrow {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+
+.form-row {
+  display: flex;
+  gap: 20rpx;
+}
+
+.form-field-half {
+  flex: 1;
+}
+
+/* ---------- 数据表格 / 价格列表 ---------- */
+.data-table {
+  background: var(--lux-card-bg);
+  border-radius: var(--lux-radius-card);
+  border: 1rpx solid var(--lux-hairline);
+  overflow: hidden;
+}
+
+.data-table-header {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 28rpx;
+  background: var(--lux-card-cream);
+  border-bottom: 1rpx solid var(--lux-hairline);
+}
+
+.data-table-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 28rpx;
+  border-bottom: 1rpx solid var(--lux-hairline);
+}
+
+.data-table-row:last-child {
+  border-bottom: none;
+}
+
+.data-table-key {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+}
+
+.data-table-value {
+  font-size: 26rpx;
+  color: var(--text-primary);
+  text-align: right;
+  font-feature-settings: 'tnum';
+}
+
+/* ---------- 信息行 ---------- */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0;
+}
+
+.info-key {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  font-weight: 400;
+}
+
+.info-val {
+  font-size: 26rpx;
+  color: var(--text-primary);
+  text-align: right;
+  font-weight: 400;
+  max-width: 420rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-divider {
+  height: 1rpx;
+  background: var(--divider-color);
+  margin: 8rpx 0;
+}
+
+/* ---------- 弹窗 / 底部弹层 ---------- */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-color);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  width: 600rpx;
+  background: var(--lux-card-bg);
+  border-radius: var(--zy-radius-2xl);
+  overflow: hidden;
+  box-shadow: var(--lux-shadow-elevated);
+}
+
+.modal-header {
+  padding: 36rpx;
+  border-bottom: 1rpx solid var(--divider-color);
+}
+
+.modal-title {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.08em;
+}
+
+.modal-body {
+  padding: 36rpx;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid var(--divider-color);
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 28rpx;
+  text-align: center;
+}
+
+.btn-cancel {
+  border-right: 1rpx solid var(--divider-color);
+}
+
+.btn-confirm .modal-btn-text {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.modal-btn-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* 底部弹层 */
+.sheet-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-color);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet-content {
+  width: 100%;
+  background: var(--lux-card-bg);
+  border-radius: var(--zy-radius-2xl) var(--zy-radius-2xl) 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  border-bottom: 1rpx solid var(--divider-color);
+  flex-shrink: 0;
+}
+
+.sheet-title {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.sheet-close {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  padding: 8rpx;
+}
+
+.sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12rpx 0;
+}
+
+/* ---------- 空状态 ---------- */
 .gallery-empty {
   text-align: center;
   padding: 120rpx 0;
 }
 
-/* Loading Animation */
+.empty-line {
+  width: 48rpx;
+  height: 1rpx;
+  background: var(--lux-gold-400);
+  margin: 0 auto 24rpx;
+}
 
+.empty-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.16em;
+  margin-bottom: 8rpx;
+}
+
+.empty-hint {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.08em;
+  margin-bottom: 32rpx;
+}
+
+/* ---------- 列表结尾 ---------- */
+.list-end {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 48rpx 0 24rpx;
+}
+
+.list-end-line {
+  flex: 1;
+  height: 1rpx;
+  background: var(--divider-color);
+}
+
+.list-end-text {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.16em;
+}
+
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 40rpx 0;
+}
+
+/* ---------- 图片网格 ---------- */
+.image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.image-grid-item {
+  position: relative;
+  border-radius: var(--lux-radius-inner);
+  overflow: hidden;
+}
+
+.grid-image {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ---------- 入场动画 ---------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in-up {
+  animation-name: fadeInUp;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation-name: fadeIn;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation-fill-mode: forwards;
+  opacity: 0;
+}
+
+/* ---------- 固定底部操作栏 ---------- */
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 16rpx;
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: var(--lux-card-bg);
+  border-top: 1rpx solid var(--lux-hairline);
+  box-shadow: var(--shadow-float);
+  z-index: 50;
+}
+
+.action-bar .action-btn {
+  flex: 1;
+  height: 84rpx;
+  border-radius: var(--lux-radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  border: none;
+  line-height: 1;
+}
+
+.action-bar .action-btn::after {
+  border: none;
+}
+
+.action-btn-primary {
+  background: var(--gradient-primary);
+  color: var(--text-on-primary);
+  box-shadow: var(--lux-shadow-green);
+}
+
+.action-btn-accent {
+  background: var(--lux-gold-grad);
+  color: var(--text-on-accent);  /* 原 #FFFFFF */
+  box-shadow: var(--lux-shadow-gold);
+}
+
+.action-btn-outline {
+  background: transparent;
+  color: var(--primary-color);
+  border: 1rpx solid var(--primary-color);
+}
+
+.action-btn-ghost {
+  background: var(--divider-color);
+  color: var(--text-primary);
+}
+
+/* ---------- 悬浮按钮 ---------- */
+.fab-btn {
+  position: fixed;
+  right: 40rpx;
+  bottom: calc(env(safe-area-inset-bottom) + 60rpx);
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  box-shadow: var(--lux-shadow-fab);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+/* Loading dots placeholder */
 .loading-dot:nth-child(2) {
+  animation-delay: 150ms;
 }
 
 .loading-dot:nth-child(3) {
+  animation-delay: 300ms;
 }

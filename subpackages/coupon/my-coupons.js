@@ -1,11 +1,5 @@
 const { CouponService } = require('../../services/CouponService')
-const { getAccentColor, translateScopes, mapCouponTemplates } = require('./coupon-utils')
-
-const TYPE_MAP = {
-  full_reduction: '满减',
-  discount: '折扣',
-  fixed_amount: '固定金额',
-}
+const { getAccentColor, translateScopes } = require('./coupon-utils')
 
 function formatRule(coupon) {
   if (!coupon || !coupon.rules) {return ''}
@@ -39,9 +33,11 @@ function formatEndTime(dateStr) {
 }
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     coupons: [],
     claimableTemplates: [],
@@ -59,6 +55,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._loadData()
     this._startExpiryTimer()
   },

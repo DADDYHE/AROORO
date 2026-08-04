@@ -1,13 +1,15 @@
 <view class="favorite-btn {{ isActive ? 'active' : '' }}" bindtap="handleToggle">
   <view wx:if="{{ loading }}" class="loading-container">
-    <view class="loading-dots">
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-    </view>
+    <view class="lux-silk">
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 100ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 200ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 300ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 400ms;"></view>
+</view>
   </view>
   <view wx:else>
-    <text class="heart-icon" style="color: {{ iconColor }}">{{ isActive ? '♥' : '♡' }}</text>
+    <image class="heart-icon" src="{{ isActive ? '/images/icons/heart-luxury-fill.svg' : '/images/icons/heart-luxury-line.svg' }}" mode="aspectFit"></image>
     <text wx:if="{{ !isActive }}" class="plus-icon">+</text>
   </view>
 </view>

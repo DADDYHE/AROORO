@@ -9,14 +9,14 @@ const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
 
 const ACCENT_COLORS = {
-  fixed_amount: '#B8893A',
+  fixed_amount: '#C9A24B',
   discount: '#6B7D8C',
-  full_reduction: '#D4A858',
+  full_reduction: '#C9A24B',
 }
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior, ListBehavior],
+  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior],
 
   data: {
     dealList: [],
@@ -30,6 +30,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._initListBehavior(
       params => this._doFetch(params),
       { pageSize: 10, listKey: 'dealList' }
@@ -61,14 +62,13 @@ Page({
 
   async _checkPopupCoupon() {
     // 防骚扰：本次会话已弹过则不再弹
-    const dismissedKey = 'popup_dismissed_tuan'
     if (this._popupDismissed) { return }
 
     try {
       const result = await CouponService.getPopupCoupon({ page: 'tuan' })
       if (result && result.code === 0 && result.data) {
         const coupon = result.data
-        coupon.accentColor = ACCENT_COLORS[coupon.type] || '#B8893A'
+        coupon.accentColor = ACCENT_COLORS[coupon.type] || '#C9A24B'
         this.setData({ popupCoupon: coupon })
       }
     } catch (e) {

@@ -1,3 +1,15 @@
+<zy-navbar title="推荐有礼" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <view class="stats-card">
     <view class="stat-item">
@@ -21,13 +33,13 @@
     <view class="share-card">
       <button class="share-row-btn" open-type="share">
         <view class="share-info">
-          <text class="share-icon">📤</text>
+          <image class="share-icon share-icon--svg" src="/images/icons/share-luxury-node.svg" mode="aspectFit" />
           <view class="share-text">
             <text class="share-label">分享小程序给好友</text>
             <text class="share-desc">好友通过你的分享注册后自动绑定</text>
           </view>
         </view>
-        <text class="share-arrow">›</text>
+        <image class="share-arrow share-arrow--svg" src="/images/icons/chevron-right-luxury-line.svg" mode="aspectFit" />
       </button>
     </view>
   </view>
@@ -48,25 +60,31 @@
       </view>
     </view>
     <view class="empty-state" wx:elif="{{!isLoading}}">
-      <text class="empty-icon">👥</text>
+      <image class="empty-icon empty-icon--svg" src="/images/icons/users-luxury-line.svg" mode="aspectFit" />
       <text class="empty-text">还没有推荐用户</text>
       <text class="empty-desc">分享小程序给你的朋友，他们注册后就会出现在这里</text>
     </view>
   </view>
 
   <view class="loading-more" wx:if="{{isLoading}}">
-    <view class="loading-dots">
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-    </view>
+    <view class="lux-silk">
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 100ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 200ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 300ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 400ms;"></view>
+</view>
     <text class="loading-more-text">加载中</text>
   </view>
   <view class="no-more" wx:if="{{!hasMore && invitedUsers && invitedUsers.length > 0}}"><text>— 没有更多了 —</text></view>
 
+  <root-portal>
   <view class="share-bottom-bar">
     <button class="share-btn" open-type="share">
-      <text>📤 分享小程序给好友</text>
+      <image class="share-btn-icon" src="/images/icons/share-luxury-node-light.svg" mode="aspectFit" />
+      <text>分享小程序给好友</text>
     </button>
   </view>
+  </root-portal>
 </view>
+</scroll-view>

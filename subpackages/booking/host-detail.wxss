@@ -1,21 +1,9 @@
-@import '../../styles/loading-animation.wxss';
+/* 寄养家庭详情页样式
+   设计系统：AROORO Haute-Luxury v2
+   token 来源：styles/variables.wxss → styles/design-tokens.wxss → styles/theme-teal.wxss（app.wxss 按序注入）
+   P1-B 改造：清除外来暖橙、纯白/通用灰硬编码，统一为语义 token */
 
-/* 自定义导航栏 */
-.custom-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: calc(var(--status-bar-height) + 100rpx);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--status-bar-height) 30rpx 0;
-  box-sizing: border-box;
-  z-index: 999;
-  background-color: transparent;
-  color: white;
-}
+@import '../../styles/loading-animation.wxss';
 
 /* 加载中状态 */
 
@@ -53,14 +41,14 @@
   text-align: center;
   font-size: 36rpx;
   font-weight: bold;
-  color: white;
+  color: var(--text-inverse);
 }
 
 /* 回退按钮 */
 .back-icon {
   width: 40rpx;
   height: 40rpx;
-  border: 2rpx solid white;
+  border: 2rpx solid var(--text-inverse);
   border-width: 2rpx 0 0 2rpx;
   transform: rotate(-45deg);
 }
@@ -77,7 +65,7 @@
 
 /* 照片显示区域 - 顶部背景图效果 */
 .media-section-header {
-  background-color: white;
+  background-color: var(--card-color);
   border-radius: 0;
   margin-bottom: 30rpx;
   margin-top: 0;
@@ -161,15 +149,15 @@
   left: 20rpx;
   display: flex;
   gap: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--overlay-color);
   border-radius: 18rpx;
   padding: 4rpx;
-  backdrop-filter: blur(10rpx);
+  backdrop-filter: blur(5px);
   z-index: 3;
 }
 
 .media-type-btn {
-  color: white;
+  color: var(--text-inverse);
   font-size: 20rpx;
   padding: 6rpx 12rpx;
   border-radius: 16rpx;
@@ -179,7 +167,7 @@
 }
 
 .media-type-btn.active {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--border-inverse-35);
 }
 
 /* 相册按钮特殊样式 */
@@ -191,7 +179,7 @@
 .album-separator {
   width: 2rpx;
   height: 24rpx;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--text-on-dark-50);
   margin-right: 16rpx;
 }
 
@@ -217,7 +205,7 @@
   border-bottom: 8rpx solid transparent;
   border-left: 12rpx solid transparent;
   border-right: 0;
-  border-left: 12rpx solid rgba(255, 255, 255, 0.8);
+  border-left: 12rpx solid var(--text-on-dark-90);
   transform: translateY(-50%);
   box-sizing: border-box;
 }
@@ -231,7 +219,7 @@
   height: 0;
   border-top: 6rpx solid transparent;
   border-bottom: 6rpx solid transparent;
-  border-left: 9rpx solid rgba(0, 0, 0, 0.6);
+  border-left: 9rpx solid var(--overlay-color);
   transform: translateY(-50%);
   box-sizing: border-box;
 }
@@ -243,13 +231,13 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--overlay-color);
   border-radius: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--text-on-dark-90);
   z-index: 2;
 }
 
@@ -273,11 +261,11 @@
 /* 寄养家庭基本信息 */
 .host-info {
   display: flex;
-  background-color: white;
+  background-color: var(--card-color);
   border-radius: 16rpx;
   padding: 40rpx;
   margin: 0 30rpx 30rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  box-shadow: var(--lux-shadow-card);
 }
 
 .avatar-container {
@@ -290,7 +278,7 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 4rpx solid #f0f0f0;
+  border: 4rpx solid var(--border-soft);
 }
 
 .host-details {
@@ -325,11 +313,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: white;
+  background-color: var(--card-color);
   border-radius: 16rpx;
   padding: 40rpx;
   margin: 0 30rpx 30rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  box-shadow: var(--lux-shadow-card);
 }
 
 .action-buttons {
@@ -343,16 +331,17 @@
   align-items: baseline;
 }
 
+/* 价格强调色：原外来暖橙 → 深森林绿，与 host-list-all .price 对齐 */
 .price-symbol {
   font-size: 32rpx;
-  color: #ff6b35;
+  color: var(--activity-primary);
   margin-right: 5rpx;
 }
 
 .price-number {
   font-size: 60rpx;
   font-weight: bold;
-  color: #ff6b35;
+  color: var(--activity-primary);
   margin-right: 5rpx;
 }
 
@@ -361,17 +350,19 @@
   color: var(--text-tertiary);
 }
 
+/* 主按钮：原 background-color 误用 --overlay-color（半透明遮罩）→ 主色渐变 */
 .booking-btn {
   width: 200rpx;
   height: 80rpx;
-  background-color: var(--overlay-color);
-  color: white;
+  background: var(--gradient-primary);
+  color: var(--text-on-primary);
   font-size: 32rpx;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 40rpx;
+  box-shadow: var(--shadow-glow-primary-btn);
 }
 
 /* 收藏按钮 */
@@ -380,11 +371,11 @@
 .tags-section {
   display: flex;
   flex-wrap: wrap;
-  background-color: white;
+  background-color: var(--card-color);
   border-radius: 16rpx;
   padding: 40rpx;
   margin: 0 30rpx 30rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  box-shadow: var(--lux-shadow-card);
 }
 
 .tag {
@@ -403,11 +394,11 @@
 
 /* 通用 section 样式 */
 .section {
-  background-color: white;
+  background-color: var(--card-color);
   border-radius: 16rpx;
   padding: 40rpx;
   margin: 0 30rpx 30rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  box-shadow: var(--lux-shadow-card);
 }
 
 .section-title {
@@ -416,7 +407,7 @@
   color: var(--text-primary);
   margin-bottom: 30rpx;
   padding-bottom: 20rpx;
-  border-bottom: 2rpx solid #f0f0f0;
+  border-bottom: 2rpx solid var(--divider-color);
 }
 
 .section-content {
@@ -488,9 +479,11 @@
   color: var(--text-tertiary);
 }
 
+/* 禁用态：原 bg 与 color 同为 --text-tertiary 导致文字不可见，改为灰阶分层 */
 .booking-btn.disabled {
-  background-color: var(--text-tertiary);
-  color: var(--text-tertiary);
+  background: var(--gray-300);
+  color: var(--gray-600);
+  box-shadow: none;
   pointer-events: none;
 }
 
@@ -500,14 +493,14 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
+  background-color: var(--overlay-color);
+  color: var(--text-on-dark-90);
   padding: 20rpx 40rpx;
   border-radius: 10rpx;
   font-size: 28rpx;
   font-weight: bold;
   z-index: 10;
-  backdrop-filter: blur(5rpx);
+  backdrop-filter: blur(3px);
 }
 
 .icon-container {

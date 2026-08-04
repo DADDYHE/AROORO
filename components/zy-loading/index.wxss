@@ -1,0 +1,363 @@
+/* ================================================================
+   components/zy-loading · Haute-Luxury Loading Animation v2
+   ----------------------------------------------------------------
+   奢侈品级加载组件：六种动画类型
+     1. circular    圆环型（默认 · worklet 驱动）
+     2. spinner     菊花型（worklet 驱动）
+     3. tourbillon  陀飞轮金环（纯 CSS · 三层金环旋转）
+     4. cascade     金粒瀑布（纯 CSS · 七颗金粒坠落）
+     5. silk        丝缎波纹（纯 CSS · 五条金线波浪）
+     6. monogram    品牌呼吸（纯 CSS · 品牌字 + 涟漪扩散）
+   ----------------------------------------------------------------
+   Skyline 兼容：仅用 transform: rotate/scale/translateY & opacity
+   动效节奏：缓慢、克制、有呼吸感（非快餐式闪烁）
+   ----------------------------------------------------------------
+   使用纪律（P1④ · 金粒瀑布非常驻）：
+     · cascade 金粒瀑布仅用于「加载中 / 开屏」瞬态，数据就绪即卸载；
+     · 严禁作为首页常驻装饰——常驻会挤占内容、持续耗电；
+     · 本组件所有 type 均为瞬态加载指示器，不可做永久背景或装饰元素。
+   ================================================================ */
+
+/* ================================================================
+   通用容器与文字 — 所有变体共享
+   ================================================================ */
+
+.zy-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+}
+
+.zy-loading--vertical {
+  flex-direction: column;
+  gap: 44rpx;
+}
+
+/* ---- 加载文字 ---- */
+.zy-loading__text {
+  font-size: 24rpx;
+  color: var(--zy-text-2, #635E54);
+  letter-spacing: 0.32em;
+  font-weight: 300;
+  animation-name: lux-text-pulse;
+  animation-duration: var(--lux-dur-text-pulse, 2400ms);
+  animation-timing-function: var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1));
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+}
+
+/* ================================================================
+   类型 1 & 2：圆环型 / 菊花型（worklet 驱动，CSS 兜底）
+   ================================================================ */
+
+/* ---- 圆环型 ---- */
+.zy-loading__circular {
+  border-style: solid;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border-top-color: var(--zy-primary-700, #4F5E35);
+  border-right-color: rgba(31, 58, 31, 0.18);
+  border-bottom-color: rgba(31, 58, 31, 0.08);
+  border-left-color: rgba(31, 58, 31, 0.04);
+  animation-name: zy-loading-rotate;
+  animation-duration: 1200ms;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+}
+
+.zy-loading__circular.worklet-driven {
+  animation: none;
+}
+
+@keyframes zy-loading-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ---- 菊花型 ---- */
+.zy-loading__spinner {
+  position: relative;
+  display: flex;
+  animation-name: zy-loading-rotate;
+  animation-duration: 1400ms;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+}
+
+.zy-loading__spinner.worklet-driven {
+  animation: none;
+}
+
+.zy-loading__leaf {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 3rpx;
+  height: 30%;
+  margin-left: -1.5rpx;
+  border-radius: 2rpx;
+  background: var(--zy-primary-700, #4F5E35);
+  transform-origin: 50% 100%;
+  opacity: 0.12;
+}
+
+.zy-loading__leaf:nth-child(1) { opacity: 1; }
+.zy-loading__leaf:nth-child(2) { opacity: 0.88; }
+.zy-loading__leaf:nth-child(3) { opacity: 0.76; }
+.zy-loading__leaf:nth-child(4) { opacity: 0.64; }
+.zy-loading__leaf:nth-child(5) { opacity: 0.52; }
+.zy-loading__leaf:nth-child(6) { opacity: 0.40; }
+.zy-loading__leaf:nth-child(7) { opacity: 0.32; }
+.zy-loading__leaf:nth-child(8) { opacity: 0.24; }
+.zy-loading__leaf:nth-child(9) { opacity: 0.20; }
+.zy-loading__leaf:nth-child(10) { opacity: 0.16; }
+.zy-loading__leaf:nth-child(11) { opacity: 0.14; }
+.zy-loading__leaf:nth-child(12) { opacity: 0.12; }
+
+/* ================================================================
+   类型 3：陀飞轮金环 Tourbillon Gold Rings
+   ----------------------------------------------------------------
+   三层同心金环以不同速度正反向旋转
+   外环金渐变 / 中环森林绿 / 内环金
+   中心金色渐变点呼吸缩放
+   ================================================================ */
+
+.lux-tourbillon {
+  position: relative;
+  width: 120rpx;
+  height: 120rpx;
+}
+
+/* 三层金环共享圆形样式（Skyline 不支持 margin:auto 居中，改用显式 top/left） */
+.lux-ring {
+  position: absolute;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+/* 外环：缓慢旋转（2.4s 一圈），香槟金 */
+.lux-ring--outer {
+  width: 100rpx;
+  height: 100rpx;
+  top: 10rpx;
+  left: 10rpx;
+  border: 2rpx solid var(--lux-gold-400, #D4B978);
+  border-radius: 50%;
+  animation: lux-ring-spin var(--lux-dur-ring-spin, 2400ms) linear infinite;
+}
+
+/* 中环：反向旋转，更慢（3s），深森林绿 */
+.lux-ring--middle {
+  width: 72rpx;
+  height: 72rpx;
+  top: 24rpx;
+  left: 24rpx;
+  border: 2rpx solid var(--lux-green-600, #3D5A3D);
+  border-radius: 50%;
+  animation: lux-ring-spin-reverse var(--lux-dur-ring-reverse, 3000ms) linear infinite;
+}
+
+/* 内环：最快旋转（1.8s），亮金 */
+.lux-ring--inner {
+  width: 48rpx;
+  height: 48rpx;
+  top: 36rpx;
+  left: 36rpx;
+  border: 2rpx solid var(--lux-gold-500, #C9A24B);
+  border-radius: 50%;
+  animation: lux-ring-spin-inner var(--lux-dur-ring-inner, 1800ms) linear infinite;
+}
+
+/* 旋转标记点 — 位于各环 12 点方向，旋转时作为视觉参照 */
+.lux-ring-marker {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border-radius: 50%;
+}
+
+.lux-ring-marker--outer {
+  margin-left: -4rpx;
+  width: 8rpx;
+  height: 8rpx;
+  background: var(--lux-gold-300, #E8D5A8);
+}
+
+.lux-ring-marker--middle {
+  margin-left: -4rpx;
+  width: 8rpx;
+  height: 8rpx;
+  background: var(--primary-soft);
+}
+
+.lux-ring-marker--inner {
+  margin-left: -3rpx;
+  width: 6rpx;
+  height: 6rpx;
+  background: var(--lux-gold-300, #E8D5A8);
+}
+
+/* 中心点：呼吸缩放 */
+.lux-ring-dot {
+  position: absolute;
+  top: 55rpx;
+  left: 55rpx;
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: var(--lux-gold-grad, linear-gradient(135deg, #E8D5A8, #C9A24B, #B8923E));
+  animation: lux-dot-pulse var(--lux-dur-dot-pulse, 2000ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
+}
+
+/* ================================================================
+   类型 4：金粒瀑布 Gold Cascade
+   ----------------------------------------------------------------
+   七颗金粒以错落延迟垂直坠落
+   透明度渐入渐出，形成香槟金粒子瀑布流
+   ================================================================ */
+
+.lux-cascade {
+  position: relative;
+  width: 120rpx;
+  height: 200rpx;
+  overflow: hidden;
+}
+
+.lux-cascade-dot {
+  position: absolute;
+  top: 0;
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  animation: lux-cascade-fall var(--lux-dur-cascade, 1600ms) linear infinite;
+}
+
+/* ================================================================
+   类型 5：丝缎波纹 Silk Wave
+   ----------------------------------------------------------------
+   五条金色横线以波浪式缩放和透明度变化
+   模拟丝绸缎面的流动质感
+   ================================================================ */
+
+.lux-silk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  width: 80rpx;
+}
+
+.lux-silk-line {
+  width: 80rpx;
+  height: 2rpx;
+  border-radius: 1rpx;
+  transform-origin: center;
+  animation: lux-silk-wave var(--lux-dur-silk-wave, 1400ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
+}
+
+/* ================================================================
+   类型 6：品牌呼吸 Monogram Breath
+   ----------------------------------------------------------------
+   品牌名称呼吸式明暗变化
+   三层金色涟漪由内向外扩散消散
+   ================================================================ */
+
+.lux-monogram {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+}
+
+.lux-monogram-rings {
+  position: relative;
+  width: 120rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lux-breath-ring {
+  position: absolute;
+  top: 10rpx;
+  left: 30rpx;
+  width: 60rpx;
+  height: 60rpx;
+  border: 1rpx solid var(--lux-gold-500, #C9A24B);
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: lux-ring-expand var(--lux-dur-breath, 2400ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
+}
+
+.lux-monogram-text {
+  font-size: 18rpx;
+  font-weight: 300;
+  letter-spacing: 0.24em;
+  color: var(--zy-text-1, #2A2823);
+  animation: lux-breath var(--lux-dur-breath, 2400ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
+}
+
+/* ================================================================
+   关键帧定义 — Skyline 兼容（仅 transform & opacity）
+   ================================================================ */
+
+/* ---------- 陀飞轮金环 ---------- */
+@keyframes lux-ring-spin {
+  from { transform: rotate(0deg); opacity: 0.7; }
+  50% { opacity: 1; }
+  to { transform: rotate(360deg); opacity: 0.7; }
+}
+
+@keyframes lux-ring-spin-reverse {
+  from { transform: rotate(360deg); opacity: 0.5; }
+  50% { opacity: 0.9; }
+  to { transform: rotate(0deg); opacity: 0.5; }
+}
+
+@keyframes lux-ring-spin-inner {
+  from { transform: rotate(0deg); opacity: 0.6; }
+  50% { opacity: 1; }
+  to { transform: rotate(360deg); opacity: 0.6; }
+}
+
+@keyframes lux-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+
+/* ---------- 金粒瀑布 ---------- */
+@keyframes lux-cascade-fall {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(200rpx); opacity: 0; }
+}
+
+/* ---------- 丝缎波纹 ---------- */
+@keyframes lux-silk-wave {
+  0%, 100% { transform: scaleX(0.3); opacity: 0.3; }
+  50% { transform: scaleX(1); opacity: 1; }
+}
+
+/* ---------- 品牌呼吸 ---------- */
+@keyframes lux-ring-expand {
+  0% { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes lux-breath {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* ---------- 通用文字脉冲 ---------- */
+@keyframes lux-text-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}

@@ -1,15 +1,15 @@
-const app = getApp()
 const { petStore, petService } = require('./index.js')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const { buildSharePath } = require('../../utils/share')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
     petProfiles: [],
     isLoggedIn: false,
@@ -21,6 +21,7 @@ Page({
   },
 
   async onLoad(options) {
+    this._initNavbarHeight()
     petStore.subscribe('pet-list-page', this.handleStoreChange.bind(this))
 
     const isLoggedIn = authService.isLoggedIn()

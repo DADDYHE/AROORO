@@ -4,7 +4,7 @@
   },
   "navigationBarTitleText": "宠物服务",
   "navigationBarTextStyle": "black",
-  "navigationBarBackgroundColor": "#FFFFFF",
-  "backgroundColor": "#F5F5F7",
+  "navigationBarBackgroundColor": "#F7F5EF",
+  "backgroundColor": "#F7F5EF",
   "enablePullDownRefresh": false
 }

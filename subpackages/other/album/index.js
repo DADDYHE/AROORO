@@ -1,12 +1,13 @@
 // 相册页面逻辑
 const { HostService } = require('../../../services/CloudFunctionService')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 const pageI18n = require('../../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior],
   data: {
     currentTab: 'album',
     photos: [],
@@ -20,6 +21,7 @@ Page({
   },
 
   onLoad (options) {
+    this._initNavbarHeight()
     const tab = options.tab || 'album'
     const hostId = options.hostId
 
@@ -120,7 +122,7 @@ Page({
   onProgressTouchMove (e) {
     const index = e.currentTarget.dataset.index
     const touch = e.touches[0]
-    const query = wx.createSelectorQuery()
+    const query = wx.createSelectorQuery().in(this)
     query.select('.progress-bar').boundingClientRect()
     query.exec(res => {
       if (!res || !res[0]) {return}

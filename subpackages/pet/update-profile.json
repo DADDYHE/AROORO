@@ -1,10 +1,6 @@
 {
   "usingComponents": {
-    "van-field": "@vant/weapp/field/index",
-    "van-cell-group": "@vant/weapp/cell-group/index",
-    "van-action-sheet": "@vant/weapp/action-sheet/index",
-    "van-popup": "@vant/weapp/popup/index",
-    "van-datetime-picker": "@vant/weapp/datetime-picker/index"
+    "zy-action-sheet": "../../components/zy-action-sheet/index"
   },
   "navigationBarTitleText": "更新宠物档案"
 }

@@ -1,135 +1,75 @@
 /* ============================================================
-   design-tokens.wxss · 微信小程序「左右」设计令牌
-   方向：Olive Green × Healing Light-Luxury（PETLUX · 橄榄绿治愈轻奢）
+   design-tokens.wxss · --zy-* 令牌层（任务 #10 去重后残余）
+   ------------------------------------------------------------
+   ⚠ 防复发约定（改动本文件前必读）
+   1. 本文件**不得声明 theme-teal.wxss 已有的令牌**。
+      theme-teal.wxss 是全站唯一的运行时生效层（app.wxss 中最后 import，
+      且 custom-tab-bar 单独 import 的也是它）。在本文件重复声明同名令牌，
+      运行时一定被 theme-teal 覆盖 = 纯冗余，还会让人误以为改这里有用。
+   2. 新增令牌请直接加到 styles/theme-teal.wxss，不要加在这里。
+   3. 守卫会拦：`node scripts/lint-tokens.js` 规则 C（同名跨文件冲突）应恒为 0；
+      层叠等价性由 `node scripts/verify-token-cascade.js` 验收。
    ------------------------------------------------------------
    单位约定：所有尺寸用 rpx（750rpx 设计稿基准，1rpx≈0.5pt）。
-   例外（非 rpx）：
-     · backdrop-filter 的 blur() 用 px（设备像素级模糊，rpx 无效）
-     · env(safe-area-inset-bottom) 返回 px，保留在 calc() 中
-   接线方式：在 app.wxss 中本文件须 import 于 variables.wxss 之后，
-   使同名语义变量覆盖旧值；新屏幕可直接引用 --zy-* 令牌。
+   例外（非 rpx）：env(safe-area-inset-bottom) 返回 px，保留在 calc() 中。
+   历史：本文件原为橄榄绿 --zy-* 全量令牌（181 行），#10 已删除 79 行
+   （theme-teal 已同名定义者），只保留 theme-teal 未定义的独有令牌。
    ============================================================ */
 
 page {
-  /* ---------- 品牌主色：橄榄绿（PETLUX 结构锚点） ---------- */
-  --zy-primary-900: #3A4626;   /* 最深：按下态 / 深色卡片 */
-  --zy-primary-700: #4F5E35;   /* 主锚点：TabBar 选中 / 主按钮 / 深色卡 */
-  --zy-primary-500: #6B7D5A;   /* 浅橄榄：hover / 次级结构 / 中央钮渐变起 */
-  --zy-primary-300: #9A9489;   /* 柔灰：禁用 / 插画 */
-  --zy-primary-100: #EAEDDF;   /* 橄榄浅底：选中态芯片底 */
-  --zy-primary-grad: linear-gradient(160deg, #4F5E35 0%, #3A4626 100%);
+  /* ---------- TabBar 描边（theme-teal 未定义此档） ---------- */
+  --zy-tabbar-icon-stroke: 4rpx;                          /* ≈2px@1x 视觉描边（750rpx 2x 下）；当前 0 引用 */
 
-  /* ---------- 点缀色：暖金（交互/强调） ---------- */
-  --zy-accent: #B8893A;
-  --zy-accent-hover: #9A7430;
-  --zy-accent-soft: #F2E8D4;
-  --zy-accent-glow: rgba(184, 137, 58, 0.35);
-
-  /* ---------- 中性色：橄榄调暖白、暖墨文字、橄榄描边 ---------- */
-  --zy-bg: #F8FAF3;                              /* 页面背景（橄榄调暖白） */
-  --zy-surface: #FFFFFF;                        /* 卡片表面 */
-  --zy-surface-glass: rgba(255, 255, 255, 0.72); /* 毛玻璃底色（理想态） */
-  --zy-surface-glass-solid: #FFFFFF;             /* 安卓低端机兜底纯色 */
-  --zy-surface-glass-border: rgba(255, 255, 255, 0.55); /* 玻璃高光描边 */
-  --zy-border: #D8DCCE;                         /* 描边（橄榄调极淡） */
-  --zy-border-strong: #C9CFBA;
-  --zy-divider: #EAEDDF;                        /* 分割线 */
-  --zy-text-1: #2A2823;                         /* 主文字（暖墨，非纯黑） */
-  --zy-text-2: #635E54;                         /* 次文字 */
-  --zy-text-3: #9A9489;                         /* 三级 / 说明 */
-  --zy-text-on-primary: #FAFAF6;               /* 主色上的反白文字 */
-
-  /* ---------- TabBar 专用令牌（精度优先） ---------- */
-  --zy-tabbar-height: 100rpx;                               /* 内容区高度（不含安全区） */
-  --zy-tabbar-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --zy-tabbar-total-height: calc(100rpx + env(safe-area-inset-bottom, 0px));
-  --zy-tabbar-bg: rgba(255, 255, 255, 0.92);               /* 兜底基色（无 blur 也成立） */
-  --zy-tabbar-bg-glass: rgba(255, 255, 255, 0.72);         /* 支持 blur 时切换的真玻璃 */
-  --zy-tabbar-blur: 20px;                                  /* 模糊半径（用 px） */
-  --zy-tabbar-border-top: 1rpx solid rgba(79, 94, 53, 0.06); /* 顶部细线（极淡橄榄） */
-
-  --zy-tabbar-item-active: #4F5E35;                       /* 选中 图标+文字 橄榄绿 */
-  --zy-tabbar-item-inactive: #9A9489;                     /* 未选中 暖灰 */
-  --zy-tabbar-item-active-bg: rgba(79, 94, 53, 0.08);    /* 选中态图标芯片浅橄榄底（可选） */
-  --zy-tabbar-icon-size: 48rpx;
-  --zy-tabbar-icon-stroke: 4rpx;                          /* ≈2px@1x 视觉描边（750rpx 2x 下） */
-  --zy-tabbar-label-size: 22rpx;
-  --zy-tabbar-label-weight: 500;
-  --zy-tabbar-label-weight-active: 600;
-
-  --zy-tabbar-center-d: 120rpx;                           /* 中央按钮直径 */
-  --zy-tabbar-center-protrusion: 40rpx;                   /* 上沿外露 ≈ 直径 1/3 */
-  --zy-tabbar-center-bottom: calc(env(safe-area-inset-bottom, 0px) + 20rpx); /* = 栏高-(d-外露) */
-  --zy-tabbar-center-icon-size: 56rpx;
-  --zy-tabbar-center-grad: linear-gradient(160deg, #4F5E35 0%, #3A4626 100%);
-  --zy-tabbar-center-icon: #FAFAF6;
-  --zy-tabbar-center-shadow: 0 12rpx 28rpx rgba(79, 94, 53, 0.35), 0 4rpx 10rpx rgba(79, 94, 53, 0.20);
-
-  /* ---------- 字体栈（系统字体 + PingFang SC） ---------- */
+  /* ---------- 无衬线字体栈（theme-teal 的 --font-sans 是另一个名字，此处独有） ---------- */
   --zy-font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", "Source Han Sans SC", "Noto Sans CJK SC", sans-serif;
 
-  /* ---------- 字号梯度（rpx） ---------- */
-  --zy-fs-display: 56rpx;  --zy-fs-display-w: 700; --zy-fs-display-lh: 1.15;
-  --zy-fs-h1: 44rpx;       --zy-fs-h1-w: 700;      --zy-fs-h1-lh: 1.2;
-  --zy-fs-h2: 36rpx;       --zy-fs-h2-w: 600;      --zy-fs-h2-lh: 1.3;
-  --zy-fs-h3: 32rpx;       --zy-fs-h3-w: 600;      --zy-fs-h3-lh: 1.4;
-  --zy-fs-body: 28rpx;     --zy-fs-body-w: 400;    --zy-fs-body-lh: 1.6;
-  --zy-fs-sm: 24rpx;       --zy-fs-sm-w: 400;      --zy-fs-sm-lh: 1.5;
-  --zy-fs-xs: 20rpx;       --zy-fs-xs-w: 500;      --zy-fs-xs-lh: 1.4;
+  /* ---------- 奢侈品级令牌 — Haute-Luxury Elevation Layer ----------
+     金属香槟金阶 · 深森林绿阶 · 层次阴影 · 金线装饰
+     供 zy-loading 奢侈级动画变体及全局高奢组件使用 */
+  --lux-gold-100: #FDF8EE;
+  --lux-gold-200: #F5EBD0;
+  --lux-gold-300: #E8D5A8;
+  --lux-gold-400: #D4B978;
+  --lux-gold-500: #C9A24B;
+  --lux-gold-600: #B8923E;
+  --lux-gold-700: #9A7430;
+  --lux-gold-grad: linear-gradient(135deg, #E8D5A8 0%, #C9A24B 40%, #B8923E 100%);
 
-  /* ---------- 间距（8pt 网格 → rpx，1pt=2rpx） ---------- */
-  --zy-space-2xs: 4rpx;
-  --zy-space-xs: 8rpx;
-  --zy-space-sm: 16rpx;
-  --zy-space-md: 24rpx;
-  --zy-space-lg: 32rpx;
-  --zy-space-xl: 48rpx;
-  --zy-space-2xl: 64rpx;
-  --zy-space-3xl: 96rpx;
+  --lux-green-900: #1A2E1A;
+  --lux-green-800: #1F3A1F;
+  --lux-green-700: #2D4A2D;
+  --lux-green-600: #3D5A3D;
 
-  /* ---------- 圆角（PETLUX 克制圆角） ---------- */
-  --zy-radius-sm: 16rpx;
-  --zy-radius-md: 24rpx;
-  --zy-radius-lg: 24rpx;
-  --zy-radius-xl: 32rpx;
-  --zy-radius-2xl: 32rpx;   /* 卡片默认 */
-  --zy-radius-3xl: 40rpx;
-  --zy-radius-pill: 999rpx;
+  --lux-shadow-gold: 0 2rpx 8rpx rgba(201,162,75,0.12), 0 8rpx 24rpx rgba(201,162,75,0.16);
 
-  /* ---------- 阴影（轻弥散，暖墨染） ---------- */
-  --zy-shadow-xs: 0 2rpx 8rpx rgba(42, 40, 35, 0.04);
-  --zy-shadow-sm: 0 4rpx 16rpx rgba(42, 40, 35, 0.06);   /* 卡片 */
-  --zy-shadow-md: 0 8rpx 24rpx rgba(42, 40, 35, 0.08);   /* 浮起卡 */
-  --zy-shadow-lg: 0 16rpx 40rpx rgba(42, 40, 35, 0.10);  /* 弹层/浮层 */
-  --zy-shadow-fab: var(--zy-tabbar-center-shadow);       /* 中央钮浮起 */
-  --zy-shadow-float-tabbar: 0 -4rpx 32rpx rgba(42, 40, 35, 0.10); /* TabBar 上沿浮影 */
+  --lux-hairline-gold: rgba(201,162,75,0.18);
 
-  /* ---------- 动效（已清除，时长归零） ---------- */
-  --zy-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
-  --zy-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
-  --zy-ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
-  --zy-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --zy-dur-fast: 0ms;
-  --zy-dur-base: 0ms;
-  --zy-dur-slow: 0ms;
-  --zy-dur-fab: 0ms;
+  /* 奢侈级动画时长令牌 */
+  --lux-dur-ring-spin: 2400ms;
+  --lux-dur-ring-reverse: 3000ms;
+  --lux-dur-ring-inner: 1800ms;
+  --lux-dur-dot-pulse: 2000ms;
+  --lux-dur-cascade: 1600ms;
+  --lux-dur-silk-wave: 1400ms;
+  --lux-dur-breath: 2400ms;
+  --lux-dur-text-pulse: 2400ms;
+  --lux-ease-soft: cubic-bezier(0.25, 0.1, 0.25, 1);
 
-  /* ---------- 兼容重映射：让既有组件直接换肤 ----------
-     若希望引用 --primary-color / --background-color 等的现有组件直接换橄榄绿主色，
-     取消下方注释即可（app.wxss 中本文件须 import 于 variables.wxss 之后）。 */
-  /*
-  --primary-color: var(--zy-primary-700);
-  --secondary-color: var(--zy-accent);
-  --background-color: var(--zy-bg);
-  --card-color: var(--zy-surface);
-  --text-primary: var(--zy-text-1);
-  --text-secondary: var(--zy-text-2);
-  --text-tertiary: var(--zy-text-3);
-  --border-color: var(--zy-border);
-  --divider-color: var(--zy-divider);
-  --gradient-primary: var(--zy-primary-grad);
-  --gradient-secondary: linear-gradient(135deg, #7A8C5A 0%, #6B7D5A 100%);
-  */
+  /* ---------- 纸纹材质（REV.4 P0-2 base64 内联）----------
+     微信 WXSS 不支持本地图片 background-image，真机静默失败；
+     改用 base64 内联（48×48 · 4% alpha · 5.8KB），纯色 #ECE4D4 兜底。
+     用法：background: var(--zy-paper-noise) repeat, var(--zy-paper-fallback); */
+  --zy-paper-noise: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAQtUlEQVR4nDXZB9iX8xcG8IdQHSMUKaPMSlFaZgohqyEpZZQITXtHsqOQWWiHtMuIsoXQIBQNQtl7K/yvz7n+z3td7/W+7/P7Pt/vOfe57/uc53mLVq1axemnnx7jxo2LbbbZJnbYYYc466yzombNmnHjjTfGtddeG+3bt4+BAwfG2rVr8vvvv/+Oo446KnbZZZfo0aNHfPjhhzFgwIB49dVXc92tt94a33zzTey///6xdOnSmDFjRmyyySZx6aWXxrvvvhs77rhjTJ48OerWrRt9+/aN8ePHR+/evaN69erx0ksvZSwnn3xyrFy5Ms4777xYsGBBPPbYY3HuuefGp59+GjfffHM888wzuW/x888/R/fu3ePss8/OwLfddtvYbrvt4swzz8wgf/nll/B15ZVXxk8//RQPPvhgnHHGGbF+/fq8p23btnHqqafGs88+G7fffnsm3Lx58xg2bFiCILGHH344xowZk3u8/PLLMXz48Dj44IPj+++/j0033TTvO/HEE+PYY4+NP/74I3799df48ssv47TTTovRo0fn+mXLlkXPnj2jTZs2sW7dukzgxx9/jKJFixYhiffeey8Pt1DWm2++edSqVSuatWsXO++8c2YN2QMOOCA+/vjjREdwVapUicqVK8fs2bPjuOOOy2pKbPXq1VGxYsUEQMUEVa1atfj333+zKhdccEHcf//9cdBBB8Vvv/2W66dNm5ZgzZs3L/o06dNvv/12vPDCC4n8Pffck+d36dIl41K9m266KQqlgsp3332XGbt56tSpmZDSHnjggYlCgwYN4oEHHsgq+KxXr15RqVKleOONN2K//faLiRMnJgXuuOOODGLUqFHxzjvvZMUcDtGPPvoo9t1336y0v6GOSpKpXbt2vPnmm/HDDz/EEUcckRVDt0suuSRWrFiRqKOPqm299dZx+OGHZ9JJIYfvtttuicSiRYsS4bvuuis++OCDvBl3cf3rr7/OzX19++23yflTTjklrrvuuqwIRG+77bakoGv//fdfBqCKDpswYULSSgKvvfZaFEWRyaEI2l100UVxxRVXJP+xQYWfe+652GKLLXK/jh075nWUVQWAFE2aNEkuOQRqUL/33nsTZUFWqFAhUVF+Xy+++GK8/vrrSSUHHHPMMVl6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");
+  --zy-paper-fallback: #ECE4D4;
+
+  /* ---------- 已废弃：「兼容重映射」注释块（#10 移除） ----------
+     此处原有一段被注释掉的重映射声明（--primary-color / --background-color 等
+     11 条），附带「取消注释即可换肤」的指引。现已废弃，且**禁止恢复**：
+       · 这些令牌现由 theme-teal.wxss 统一定义，本文件再声明一定被覆盖；
+       · 恢复它等于直接违反本文件顶部的防复发约定第 1 条。
+     另外它还是个隐蔽的度量污染源：守卫早期按行正则建索引、不识别注释，
+     曾把这 11 条计入「同名令牌冲突」，凭空造出 --card-color 这类假冲突
+     （两侧同为 #FFFFFF，本不冲突）。守卫已改用真 CSS 解析器修正。 */
 }
 
 /* ============================================================
@@ -138,14 +78,6 @@ page {
         → 支持 blur 时降 alpha 至 0.72 并加模糊
    ============================================================ */
 .zy-glass {
-  background: var(--zy-tabbar-bg);                 /* 0.92 兜底基色 */
-  border-top: var(--zy-tabbar-border-top);
-}
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .zy-glass {
-    background: var(--zy-tabbar-bg-glass);         /* 0.72 真玻璃 */
-    -webkit-backdrop-filter: blur(var(--zy-tabbar-blur));
-    backdrop-filter: blur(var(--zy-tabbar-blur));
-    border-top: 1rpx solid var(--zy-surface-glass-border);
-  }
+  background: rgba(255, 255, 255, 0.88); /* Skyline: backdrop-filter 不支持，改用实色半透明背景 */
+  border-top: 1rpx solid var(--zy-surface-glass-border);
 }

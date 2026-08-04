@@ -1,3 +1,15 @@
+<zy-navbar title="确认服务" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <view class="gallery-header">
     <view class="brand-block">
@@ -15,15 +27,15 @@
   <view class="page-content">
     <view wx:if="{{ loading }}" class="loading-container">
       <view class="loading-content">
-        <view class="loading-brand-mark">
-          <view class="brand-ring"></view>
-          <view class="brand-ring brand-ring--delay"></view>
-          <view class="brand-dot"></view>
-        </view>
-        <view class="loading-dots">
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
+        <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
         </view>
         <text class="loading-text">加载中</text>
       </view>
@@ -35,7 +47,7 @@
       </view>
 
       <view class="info-item address-item" bindtap="onChooseAddress">
-        <text class="label">服务地址</text>
+        <text class="label">服务地址<text class="required-star">*</text></text>
         <view class="address-value">
           <text class="address-text {{addressText ? '' : 'placeholder'}}">{{ addressText || '请选择服务地址' }}</text>
           <text class="arrow">›</text>
@@ -48,7 +60,7 @@
       </view>
 
       <view class="info-item interaction-item" bindtap="onShowKeyPicker">
-        <text class="label">钥匙交接</text>
+        <text class="label">钥匙交接<text class="required-star">*</text></text>
         <view class="value-with-arrow">
           <text class="{{keyMethod ? '' : 'placeholder'}}">{{ keyMethod || '请选择交接方式' }}</text>
           <text class="arrow">›</text>
@@ -56,7 +68,7 @@
       </view>
 
       <view class="info-item interaction-item" bindtap="onShowTimePicker">
-        <text class="label">期望上门时间</text>
+        <text class="label">期望上门时间<text class="required-star">*</text></text>
         <view class="value-with-arrow">
           <text class="{{visitTimeText ? '' : 'placeholder'}}">{{ visitTimeText || '请选择上门时间' }}</text>
           <text class="arrow">›</text>
@@ -194,19 +206,21 @@
       <view class="remove-coupon" wx:if="{{selectedCoupon && !showCouponSelector}}" bindtap="onRemoveCoupon">不使用优惠券</view>
     </view>
 
+    <root-portal>
     <view class="gallery-modal" wx:if="{{showFamiliarityPicker}}">
       <view class="gallery-mask" bindtap="onHideFamiliarityPicker"></view>
       <view class="gallery-sheet">
         <view class="gallery-sheet-close" bindtap="onHideFamiliarityPicker">
           <text class="close-icon">×</text>
         </view>
+        <view class="gallery-sheet-body">
         <view class="gallery-sheet-header center-header">
           <text class="gallery-sheet-title">提前熟悉</text>
           <text class="gallery-sheet-subtitle">喂养员服务日期前，根据所设置的日期提前上门熟悉宠物</text>
         </view>
         <scroll-view class="picker-date-scroll" scroll-x="true" enable-flex="true">
           <view class="picker-date-list">
-            <view class="picker-date-pill {{familiaritySelectedIndex === index ? 'picker-date-pill-active' : ''}}" wx:for="{{familiarityDates}}" wx:key="date" bindtap="onSelectFamiliarityDate" data-index="{{index}}">
+            <view class="picker-date-pill {{familiaritySelectedIndex === index ? 'picker-date-pill-active' : ''}}" wx:for="{{familiarityDates}}" wx:key="date" hover-class="picker-date-pill--pressed" bindtap="onSelectFamiliarityDate" data-index="{{index}}">
               <text class="picker-date-pill-text">{{item.shortDate}}</text>
               <text class="picker-date-pill-count" wx:if="{{item.count > 0}}">{{item.count}}次</text>
             </view>
@@ -215,34 +229,40 @@
         <view class="picker-stepper-row">
           <text class="picker-stepper-label">提前熟悉</text>
           <view class="picker-stepper-bar">
-            <view class="picker-stepper-btn picker-stepper-minus {{familiarityCount <= 0 ? 'picker-stepper-disabled' : ''}}" bindtap="onFamiliarityDecrease">−</view>
+            <view class="picker-stepper-btn picker-stepper-minus {{familiarityCount <= 0 ? 'picker-stepper-disabled' : ''}}" hover-class="picker-stepper-btn--pressed" bindtap="onFamiliarityDecrease"><text class="picker-stepper-btn-text">−</text></view>
             <text class="picker-stepper-value">{{familiarityCount}}</text>
-            <view class="picker-stepper-btn picker-stepper-plus {{familiarityCount >= 10 ? 'picker-stepper-disabled' : ''}}" bindtap="onFamiliarityIncrease">+</view>
+            <view class="picker-stepper-btn picker-stepper-plus {{familiarityCount >= 10 ? 'picker-stepper-disabled' : ''}}" hover-class="picker-stepper-btn--pressed" bindtap="onFamiliarityIncrease"><text class="picker-stepper-btn-text">+</text></view>
           </view>
           <text class="picker-stepper-unit">次</text>
         </view>
         <view class="picker-stepper-price" wx:if="{{familiarityUnitPrice > 0}}">
-          <text class="picker-stepper-price-text">¥{{familiarityUnitPrice}}/次</text>
+          <text class="picker-stepper-price-label">单价</text>
+          <text class="picker-stepper-price-text">¥{{familiarityUnitPrice}}</text>
+          <text class="picker-stepper-price-unit">/次</text>
+        </view>
         </view>
         <view class="gallery-sheet-footer">
-          <view class="gallery-confirm-btn" bindtap="onConfirmFamiliarity">确定</view>
+          <view class="gallery-confirm-btn" hover-class="gallery-confirm-btn--pressed" bindtap="onConfirmFamiliarity"><text>确定</text></view>
         </view>
       </view>
     </view>
+    </root-portal>
 
+    <root-portal>
     <view class="gallery-modal" wx:if="{{showMultiVisitPicker}}">
       <view class="gallery-mask" bindtap="onHideMultiVisitPicker"></view>
       <view class="gallery-sheet">
         <view class="gallery-sheet-close" bindtap="onHideMultiVisitPicker">
           <text class="close-icon">×</text>
         </view>
+        <view class="gallery-sheet-body">
         <view class="gallery-sheet-header center-header">
           <text class="gallery-sheet-title">一天多次</text>
           <text class="gallery-sheet-subtitle">为每个日期设置上门服务次数</text>
         </view>
         <scroll-view class="picker-date-scroll" scroll-x="true" enable-flex="true">
           <view class="picker-date-list">
-            <view class="picker-date-pill {{multiVisitSelectedIndex === index ? 'picker-date-pill-active' : ''}}" wx:for="{{multiVisitDates}}" wx:key="date" bindtap="onSelectMultiVisitDate" data-index="{{index}}">
+            <view class="picker-date-pill {{multiVisitSelectedIndex === index ? 'picker-date-pill-active' : ''}}" wx:for="{{multiVisitDates}}" wx:key="date" hover-class="picker-date-pill--pressed" bindtap="onSelectMultiVisitDate" data-index="{{index}}">
               <text class="picker-date-pill-text">{{item.shortDate}}</text>
               <text class="picker-date-pill-count" wx:if="{{item.count > 0}}">{{item.count}}次</text>
             </view>
@@ -251,43 +271,52 @@
         <view class="picker-stepper-row">
           <text class="picker-stepper-label">上门次数</text>
           <view class="picker-stepper-bar">
-            <view class="picker-stepper-btn picker-stepper-minus {{multiVisitCount <= 0 ? 'picker-stepper-disabled' : ''}}" bindtap="onDecreaseDateCount">−</view>
+            <view class="picker-stepper-btn picker-stepper-minus {{multiVisitCount <= 0 ? 'picker-stepper-disabled' : ''}}" hover-class="picker-stepper-btn--pressed" bindtap="onDecreaseDateCount"><text class="picker-stepper-btn-text">−</text></view>
             <text class="picker-stepper-value">{{multiVisitCount}}</text>
-            <view class="picker-stepper-btn picker-stepper-plus {{multiVisitCount >= 10 ? 'picker-stepper-disabled' : ''}}" bindtap="onIncreaseDateCount">+</view>
+            <view class="picker-stepper-btn picker-stepper-plus {{multiVisitCount >= 10 ? 'picker-stepper-disabled' : ''}}" hover-class="picker-stepper-btn--pressed" bindtap="onIncreaseDateCount"><text class="picker-stepper-btn-text">+</text></view>
           </view>
           <text class="picker-stepper-unit">次</text>
         </view>
         <view class="picker-stepper-price" wx:if="{{multiVisitUnitPrice > 0}}">
-          <text class="picker-stepper-price-text">¥{{multiVisitUnitPrice}}/次</text>
+          <text class="picker-stepper-price-label">单价</text>
+          <text class="picker-stepper-price-text">¥{{multiVisitUnitPrice}}</text>
+          <text class="picker-stepper-price-unit">/次</text>
+        </view>
         </view>
         <view class="gallery-sheet-footer">
-          <view class="gallery-confirm-btn" bindtap="onConfirmMultiVisit">确定</view>
+          <view class="gallery-confirm-btn" hover-class="gallery-confirm-btn--pressed" bindtap="onConfirmMultiVisit"><text>确定</text></view>
         </view>
       </view>
     </view>
+    </root-portal>
 
+    <root-portal>
     <view class="bottom-bar">
       <view class="price-info">
         <text class="price-label">实付金额</text>
-        <text class="price-value">
-          <text class="symbol">¥</text>{{ selectedCouponId ? finalPrice : totalPrice }}
-        </text>
+        <text class="price-symbol">¥</text>
+        <text class="price-value">{{ selectedCouponId ? finalPrice : totalPrice }}</text>
         <text class="coupon-sub" wx:if="{{couponDiscount > 0}}">已优惠¥{{couponDiscount}}</text>
-        <text class="min-amount-tip" wx:if="{{selectedCouponId && finalPrice === 0.1}}">优惠券金额已超出应付</text>
       </view>
-      <button class="bar-action-item contact-btn" open-type="contact">
-        <image class="bar-action-icon-img" src="{{iconService}}" mode="aspectFit" />
-        <text class="bar-action-text">客服</text>
-      </button>
-      <view class="confirm-btn {{isSubmitting ? 'confirm-btn-disabled' : ''}}" bindtap="onSubmit">
-        <text>{{isSubmitting ? '提交中...' : '确认下单'}}</text>
+      <view class="action-row">
+        <view class="bar-action-item contact-wrap" hover-class="contact-wrap--pressed" hover-stay-time="120">
+          <image class="bar-action-icon-img" src="{{iconService}}" mode="aspectFit" />
+          <text class="bar-action-text">客服</text>
+          <button class="contact-overlay" open-type="contact"></button>
+        </view>
+        <view class="confirm-btn {{isSubmitting ? 'confirm-btn-disabled' : ''}}" hover-class="confirm-btn--pressed" bindtap="onSubmit">
+          <text>{{isSubmitting ? '提交中...' : '确认下单'}}</text>
+        </view>
       </view>
     </view>
+    </root-portal>
 
     <view class="content-bottom-space"></view>
   </view>
 </view>
+</scroll-view>
 
+<root-portal>
 <view class="picker-modal" wx:if="{{showKeyPicker}}">
   <view class="picker-mask" bindtap="onHideKeyPicker"></view>
   <view class="picker-content">
@@ -303,7 +332,9 @@
     </picker-view>
   </view>
 </view>
+</root-portal>
 
+<root-portal>
 <view class="picker-modal" wx:if="{{showTimePicker}}">
   <view class="picker-mask" bindtap="onHideTimePicker"></view>
   <view class="picker-content">
@@ -322,6 +353,7 @@
     </picker-view>
   </view>
 </view>
+</root-portal>
 
 
 

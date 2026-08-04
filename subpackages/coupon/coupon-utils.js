@@ -1,11 +1,11 @@
 const ACCENT_COLORS = {
-  fixed_amount: '#B8893A',
+  fixed_amount: '#C9A24B',
   discount: '#6B7D8C',
-  full_reduction: '#D4A858',
+  full_reduction: '#C9A24B',
 }
 
 function getAccentColor(type) {
-  return ACCENT_COLORS[type] || '#B8893A'
+  return ACCENT_COLORS[type] || '#C9A24B'
 }
 
 const SCOPE_MAP = {
@@ -13,7 +13,7 @@ const SCOPE_MAP = {
   mall: '商城',
   tuan: '团购',
   feeding: '上门服务',
-  hosting: '寄养',
+  boarding: '寄养',
   activity: '活动',
 }
 

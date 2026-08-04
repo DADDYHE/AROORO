@@ -1,10 +1,12 @@
 const { CouponService } = require('../../services/CouponService')
-const { getAccentColor, translateScopes, isTemplateExpired, getClaimBtnState, mapCouponTemplates } = require('./coupon-utils')
+const { getAccentColor, translateScopes, isTemplateExpired, getClaimBtnState } = require('./coupon-utils')
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     templates: [],
     page: 1,
@@ -14,6 +16,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._loadTemplates()
   },
 

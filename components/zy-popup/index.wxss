@@ -1,0 +1,200 @@
+/* ================================================================
+   components/zy-popup · 高奢弹层系统 v2
+   奶油白底 + 发丝描边 + 极简阴影 · Skyline 兼容
+   transition 仅 transform & opacity，无 :active/backdrop-filter
+   时长统一：overlay 400ms（领先铺陈）/ panel 600ms（丝绸升起）/ center 500ms
+   ================================================================ */
+
+.zy-popup-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.zy-popup__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(20, 18, 14, 0.5);
+  opacity: 0;
+  pointer-events: auto;
+  /* 遮罩领先铺陈：400ms 快于面板，营造景深层次 */
+  transition-property: opacity;
+  transition-duration: 400ms;
+  transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.zy-popup--show ~ .zy-popup__overlay,
+.zy-popup__overlay.zy-popup__overlay--show {
+  opacity: 1;
+}
+
+.zy-popup {
+  position: fixed;
+  pointer-events: auto;
+  background: var(--card-cream, #FBF9F4);
+  box-sizing: border-box;
+  opacity: 0;
+  box-shadow: 0 8rpx 32rpx -8rpx rgba(26,26,23,0.08);
+}
+
+/* worklet 模式下：禁用 CSS transition，由 worklet 直接驱动 */
+.zy-popup.worklet-driven {
+  transition: none;
+  transform: none;
+  opacity: 1;
+}
+
+/* ---- 底部弹出（丝绸升起：600ms ease-silk） ---- */
+.zy-popup--bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  transform: translateY(100%);
+  transition-property: transform, opacity;
+  transition-duration: 600ms, 480ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1), cubic-bezier(0.19, 1, 0.22, 1);
+  border-radius: 24rpx 24rpx 0 0;
+  border-top: 1rpx solid var(--hairline, rgba(26,26,23,0.06));
+}
+
+.zy-popup--bottom.zy-popup--show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ---- 顶部弹出 ---- */
+.zy-popup--top {
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  transform: translateY(-100%);
+  transition-property: transform, opacity;
+  transition-duration: 600ms, 480ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1), cubic-bezier(0.19, 1, 0.22, 1);
+  border-radius: 0 0 24rpx 24rpx;
+  border-bottom: 1rpx solid var(--hairline, rgba(26,26,23,0.06));
+}
+
+.zy-popup--top.zy-popup--show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ---- 右侧弹出 ---- */
+.zy-popup--right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  transform: translateX(100%);
+  transition-property: transform, opacity;
+  transition-duration: 600ms, 480ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1), cubic-bezier(0.19, 1, 0.22, 1);
+  border-left: 1rpx solid var(--hairline, rgba(26,26,23,0.06));
+}
+
+.zy-popup--right.zy-popup--show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* ---- 左侧弹出 ---- */
+.zy-popup--left {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  transform: translateX(-100%);
+  transition-property: transform, opacity;
+  transition-duration: 600ms, 480ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1), cubic-bezier(0.19, 1, 0.22, 1);
+  border-right: 1rpx solid var(--hairline, rgba(26,26,23,0.06));
+}
+
+.zy-popup--left.zy-popup--show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* ---- 中央弹出（珠宝浮现：500ms ease-silk，0.92 缩放克制） ---- */
+.zy-popup--center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  transition-property: transform, opacity;
+  transition-duration: 500ms, 480ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1), cubic-bezier(0.19, 1, 0.22, 1);
+  border-radius: 24rpx;
+  border: 1rpx solid var(--hairline, rgba(26,26,23,0.06));
+}
+
+.zy-popup--center.zy-popup--show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* 圆角（兼容性） */
+.zy-popup--round.zy-popup--bottom { border-radius: 24rpx 24rpx 0 0; }
+.zy-popup--round.zy-popup--top { border-radius: 0 0 24rpx 24rpx; }
+.zy-popup--round.zy-popup--center { border-radius: 24rpx; }
+.zy-popup--round.zy-popup--right,
+.zy-popup--round.zy-popup--left { border-radius: 0; }
+
+/* 关闭按钮（珠宝扣合按压） */
+.zy-popup__close {
+  position: absolute;
+  top: 24rpx;
+  right: 24rpx;
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 26, 23, 0.03);
+  border-radius: 50%;
+  z-index: 2;
+  transition-property: transform, opacity;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.zy-popup__close--pressed {
+  transform: scale(0.88);
+  opacity: 0.7;
+}
+
+.zy-popup__close-icon {
+  width: 20rpx;
+  height: 20rpx;
+  position: relative;
+}
+
+.zy-popup__close-icon::before,
+.zy-popup__close-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2rpx;
+  background: var(--text-secondary);
+  border-radius: 1rpx;
+}
+
+.zy-popup__close-icon::before { transform: translateY(-50%) rotate(45deg); }
+.zy-popup__close-icon::after { transform: translateY(-50%) rotate(-45deg); }
+
+.zy-popup--bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+.zy-popup--top { padding-top: env(safe-area-inset-top, 0); }

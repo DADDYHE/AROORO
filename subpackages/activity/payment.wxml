@@ -1,15 +1,27 @@
+<zy-navbar title="支付" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="payment-page">
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
-      <view class="loading-brand-mark">
-        <view class="brand-ring"></view>
-        <view class="brand-ring brand-ring--delay"></view>
-        <view class="brand-dot"></view>
-      </view>
-      <view class="loading-dots">
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
+      <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
       </view>
       <text class="loading-text">加载中</text>
     </view>
@@ -17,10 +29,14 @@
 
   <block wx:elif="{{mode === 'detail'}}">
     <view class="status-header status-{{orderStatus}}">
-      <text class="status-icon">{{orderStatus === 'pending_payment' ? '💰' : orderStatus === 'confirmed' ? '✅' : '❌'}}</text>
+      <image class="status-icon" src="{{orderStatus === 'pending_payment' ? '/images/icons/wallet-luxury-line.svg' : orderStatus === 'confirmed' ? '/images/icons/check-circle-luxury-line.svg' : '/images/icons/x-circle-luxury-line.svg'}}" mode="aspectFit"></image>
       <text class="status-title">{{orderStatusText}}</text>
       <text class="status-subtitle" wx:if="{{orderStatus === 'pending_payment'}}">请尽快完成支付</text>
       <text class="status-subtitle" wx:elif="{{orderStatus === 'confirmed'}}">平台已确认，期待您的参与</text>
+      <view wx:if="{{orderStatus === 'pending_payment' && payCountdown}}" class="pay-countdown">
+        <text class="pay-countdown-label">支付剩余</text>
+        <text class="pay-countdown-time">{{payCountdown}}</text>
+      </view>
     </view>
 
     <view class="order-card">
@@ -29,7 +45,7 @@
         <view class="activity-details">
           <text class="activity-name">{{activity.title}}</text>
           <text class="activity-time" wx:if="{{activity.startTime}}">{{activity.startTime}}</text>
-          <text class="activity-location" wx:if="{{activity.location}}">📍 {{activity.location}}</text>
+          <view class="activity-location" wx:if="{{activity.location}}"><image class="activity-location-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image><text class="activity-location-text">{{activity.location}}</text></view>
         </view>
       </view>
 
@@ -68,14 +84,18 @@
       </view>
     </view>
 
+    <root-portal>
     <view class="pay-section" wx:if="{{orderStatus === 'pending_payment' && !activityExpired}}">
-      <button class="pay-btn" bindtap="onGoPay" disabled="{{paying}}">
+      <button class="pay-btn" hover-class="pay-btn--pressed" bindtap="onGoPay" disabled="{{paying}}">
         <text class="pay-btn-text">{{paying ? '处理中...' : '去支付 ¥' + finalAmount}}</text>
       </button>
     </view>
+    </root-portal>
+    <root-portal>
     <view class="expired-tip" wx:if="{{orderStatus === 'pending_payment' && activityExpired}}">
       <text class="expired-text">活动已结束，无法继续支付</text>
     </view>
+    </root-portal>
   </block>
 
   <block wx:else>
@@ -119,10 +139,13 @@
       </view>
     </view>
 
+    <root-portal>
     <view class="pay-section">
-      <button class="pay-btn" bindtap="onConfirmPay" disabled="{{paying}}">
+      <button class="pay-btn" hover-class="pay-btn--pressed" bindtap="onConfirmPay" disabled="{{paying}}">
         <text class="pay-btn-text">{{paying ? '处理中...' : '确认支付 ¥' + finalAmount}}</text>
       </button>
     </view>
+    </root-portal>
   </block>
 </view>
+</scroll-view>

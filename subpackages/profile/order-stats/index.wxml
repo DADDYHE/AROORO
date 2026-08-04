@@ -1,3 +1,15 @@
+<zy-navbar title="订单统计" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page">
   <view class="stats-summary">
     <view class="summary-item">
@@ -48,6 +60,7 @@
             <view class="mall-product-bottom">
               <text class="mall-product-price {{item.orderType === 'group_buy' ? 'group-price' : ''}}">¥{{item.unitPrice}}</text>
               <text class="mall-product-qty">×{{item.quantity}}</text>
+              <text class="mall-product-qty" wx:if="{{item.hasMultiItems}}">等{{item.itemCount}}件商品</text>
             </view>
           </view>
         </view>
@@ -97,11 +110,14 @@
   </view>
 
   <view class="loading-more" wx:if="{{isLoading}}">
-    <view class="loading-dots">
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-    </view>
+    <view class="lux-silk">
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 100ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 200ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 300ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 400ms;"></view>
+</view>
     <text class="loading-more-text">加载中</text>
   </view>
 </view>
+</scroll-view>

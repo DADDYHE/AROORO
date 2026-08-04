@@ -1,3 +1,15 @@
+<zy-navbar title="我的优惠券" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="container">
   <view class="tabs">
     <view class="tab {{activeTab === item.key ? 'tab-active' : ''}}" wx:for="{{tabs}}" wx:key="key" data-key="{{item.key}}" bindtap="onTabChange">
@@ -56,15 +68,17 @@
     </view>
   </view>
 
-  <!-- 领券中心入口（固定在页面最底部，仅「全部」tab 显示） -->
-  <view class="claim-entry-fab" wx:if="{{activeTab === 'all'}}" bindtap="onGoClaimCenter">
-    <view class="claim-entry-icon">+</view>
-    <view class="claim-entry-text">
-      <view class="claim-entry-title">领券中心</view>
-      <view class="claim-entry-desc">领取更多优惠券</view>
+  <!-- 领券中心入口（root-portal：Skyline 下保证 fixed 相对 viewport） -->
+  <root-portal wx:if="{{activeTab === 'all'}}">
+    <view class="claim-entry-fab" bindtap="onGoClaimCenter">
+      <view class="claim-entry-icon">+</view>
+      <view class="claim-entry-text">
+        <view class="claim-entry-title">领券中心</view>
+        <view class="claim-entry-desc">领取更多优惠券</view>
+      </view>
+      <view class="claim-entry-arrow">›</view>
     </view>
-    <view class="claim-entry-arrow">›</view>
-  </view>
+  </root-portal>
 </view>
 
 <wxs module="utils">
@@ -82,3 +96,4 @@
   }
   module.exports = { formatEndTime: formatEndTime }
 </wxs>
+</scroll-view>

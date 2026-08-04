@@ -1,9 +1,9 @@
 // 视频列表页面逻辑
-const { buildSharePath } = require('../../../utils/share')
 const shareEntryBehavior = require('../../../behaviors/shareEntryBehavior')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
-  behaviors: [shareEntryBehavior],
+  behaviors: [ListBehavior, shareEntryBehavior],
 
   /**
    * 页面的初始数据
@@ -16,6 +16,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad (options) {
+    this._initNavbarHeight()
     try {
       const host = options.hostId ? null : JSON.parse(decodeURIComponent(options.host || '{}'))
 

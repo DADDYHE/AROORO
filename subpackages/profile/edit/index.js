@@ -1,8 +1,6 @@
 const app = getApp()
 const { UserService } = require('../../../services/CloudFunctionService')
-const { authService } = require('../../../services/AuthService')
 const { validateFields } = require('../../validator')
-const { AddressService } = require('../../../utils/AddressService')
 
 const PROFILE_VALIDATION_FIELDS = [
   { name: 'nickName', label: '昵称', required: true },
@@ -11,9 +9,11 @@ const PROFILE_VALIDATION_FIELDS = [
 ]
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     userInfo: {
       nickName: '',
@@ -43,6 +43,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this.checkLoginAndLoadUserInfo()
   },
 

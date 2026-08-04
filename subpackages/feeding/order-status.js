@@ -1,20 +1,23 @@
 const { FeedingService } = require('./services/FeedingService')
 const DEFAULT_AVATAR = '/images/default-avatar.svg'
 const PaymentService = require('../../services/PaymentService')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const { formatTime } = require('../../profile/utils/dateUtils')
+const countdownBehavior = require('../../behaviors/countdownBehavior')
+const { formatTime } = require('../profile/utils/dateUtils')
+const pageI18n = require('../../utils/page-i18n.js')
 
 const STATUS_CONFIG = {
-  pending_payment: { title: '待付款', subtitle: '请尽快完成支付', icon: '💰' },
-  confirmed: { title: '订单已确认', subtitle: '平台已接单，将安排服务人员上门', icon: '✅' },
-  in_progress: { title: '服务进行中', subtitle: '服务人员正在为您服务', icon: '🐾' },
-  completed: { title: '服务已完成', subtitle: '感谢您的使用', icon: '🎉' },
-  cancelled: { title: '订单已取消', subtitle: '', icon: '❌' },
+  pending_payment: { title: '待付款', subtitle: '请尽快完成支付', icon: '/images/icons/wallet-luxury-line.svg' },
+  confirmed: { title: '订单已确认', subtitle: '平台已接单，将安排服务人员上门', icon: '/images/icons/check-circle-luxury-line.svg' },
+  in_progress: { title: '服务进行中', subtitle: '服务人员正在为您服务', icon: '/images/icons/paw-luxury-line.svg' },
+  completed: { title: '服务已完成', subtitle: '感谢您的使用', icon: '/images/icons/celebration-luxury-line.svg' },
+  cancelled: { title: '订单已取消', subtitle: '', icon: '/images/icons/x-circle-luxury-line.svg' },
 }
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
 
   data: {
     orderId: '',
@@ -23,9 +26,13 @@ Page({
     statusConfig: null,
     serviceBreakdown: [],
     isPaying: false,
+    // 支付倒计时计算用：原始创建时间戳 + 超时分钟（与后端 30min 超时取消对齐）
+    createdAtTs: 0,
+    timeoutMinutes: 30,
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     const orderId = options.orderId || ''
     if (!orderId) {
       this.error('INVALID_PARAMS')
@@ -45,10 +52,12 @@ Page({
     try {
       const result = await FeedingService.getOrderStatus(this.data.orderId)
       if (result && result.code === 0) {
-        const orderInfo = result.data
-        orderInfo.createdAt = formatTime(orderInfo.createdAt)
-        orderInfo.confirmedAt = formatTime(orderInfo.confirmedAt)
-        orderInfo.completedAt = formatTime(orderInfo.completedAt)
+      const orderInfo = result.data
+      // 在 formatTime 覆盖原始 createdAt 之前，先取时间戳供支付倒计时使用
+      const createdAtTs = orderInfo.createdAt ? new Date(orderInfo.createdAt).getTime() : 0
+      orderInfo.createdAt = formatTime(orderInfo.createdAt)
+      orderInfo.confirmedAt = formatTime(orderInfo.confirmedAt)
+      orderInfo.completedAt = formatTime(orderInfo.completedAt)
 
         const dateSet = new Set()
         if (orderInfo.petServices) {
@@ -67,7 +76,14 @@ Page({
         const statusConfig = STATUS_CONFIG[orderInfo.status] || STATUS_CONFIG.confirmed
         const serviceBreakdown = this._buildServiceBreakdown(orderInfo)
 
-        this.setData({ orderInfo, statusConfig, serviceBreakdown, isLoading: false })
+        this.setData({ orderInfo, statusConfig, serviceBreakdown, isLoading: false, createdAtTs, timeoutMinutes: 30 })
+        this._loadedOnce = true
+        // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
+        if (orderInfo.status === 'pending_payment') {
+          this._startPayCountdown((this.data.createdAtTs || 0) + (this.data.timeoutMinutes || 30) * 60 * 1000)
+        } else {
+          this._stopPayCountdown()
+        }
       } else {
         this.setData({ isLoading: false })
         this.errorDynamic(result?.message, 'LOAD_FAILED')
@@ -77,6 +93,21 @@ Page({
       this.setData({ isLoading: false })
       this.error('LOAD_FAILED')
     }
+  },
+
+  // 页面重新显示时刷新订单（支付/取消后返回需拿到最新状态），并重启倒计时
+  onShow() {
+    if (this._loadedOnce && this.data.orderId) {
+      this._fetchOrderStatus()
+    }
+  },
+
+  onHide() {
+    this._stopPayCountdown()
+  },
+
+  onUnload() {
+    this._stopPayCountdown()
   },
 
   _buildServiceBreakdown(orderInfo) {

@@ -1,13 +1,14 @@
 const { petService, petStore, petFormatter } = require('./index')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const { chooseAndUploadAvatar } = require('./utils/avatarUpload')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior],
   data: {
     pet: {},
     editingData: {
@@ -32,15 +33,18 @@ Page({
     ],
     showTypeSheet: false,
     showGenderSheet: false,
-    showBirthdayPicker: false,
-    currentDate: new Date().getTime(),
-    minDate: new Date(2000, 0, 1).getTime(),
-    maxDate: new Date().getTime(),
+    // 原生 <picker mode="date"> 用：今日日期字符串（YYYY-MM-DD）
+    todayStr: '',
     saving: false,
     isLoading: false,
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
+    const now = new Date()
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    this.setData({ todayStr })
+
     if (options.petId) {
       this.loadPetData(options.petId)
     } else {
@@ -80,18 +84,9 @@ Page({
           avatarUrl: petData.avatarUrl || '',
         }
 
-        let currentDate = this.data.currentDate
-        if (editingData.birthday) {
-          const bd = new Date(editingData.birthday)
-          if (!isNaN(bd.getTime())) {
-            currentDate = bd.getTime()
-          }
-        }
-
         this.setData({
           pet: petData,
           editingData,
-          currentDate,
           isLoading: false,
         })
       }
@@ -151,19 +146,18 @@ Page({
   },
 
   selectBirthday() {
-    this.setData({ showBirthdayPicker: true })
+    // 原生 <picker mode="date"> 由 WXML 触发，此处保留空函数避免意外调用
   },
 
   onConfirmBirthday(e) {
-    const date = new Date(e.detail)
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    this.setData({ 'editingData.birthday': `${y}-${m}-${d}`, showBirthdayPicker: false })
+    // 原生 picker 返回 'YYYY-MM-DD' 字符串
+    const dateStr = e.detail.value
+    if (!dateStr) return
+    this.setData({ 'editingData.birthday': dateStr })
   },
 
   onCloseBirthday() {
-    this.setData({ showBirthdayPicker: false })
+    // 兼容旧调用（原生 picker 无需关闭）
   },
 
   async savePetInfo() {

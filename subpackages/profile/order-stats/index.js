@@ -1,5 +1,6 @@
 const { orderManager, ORDER_EVENTS } = require('../../../services/OrderManager')
 const { OrderService } = require('../../../services/CloudFunctionService')
+const { TuanService } = require('../../../services/TuanService')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
 const { STATUS_TEXT_MAP, MALL_STATUS_TEXT_MAP, GROUP_STATUS_TEXT_MAP } = require('../utils/orderConstants')
 const { formatDate, formatDateTime, parseDate } = require('../utils/dateUtils')
@@ -39,10 +40,11 @@ const DEFAULT_STATUS_TABS = [
 ]
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior],
   data: {
     orders: [],
     orderType: 'boarding',
@@ -58,6 +60,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     if (options.outTradeNo) {
       wx.redirectTo({ url: `/subpackages/profile/order-detail/index?outTradeNo=${options.outTradeNo}` })
       return
@@ -254,6 +257,7 @@ Page({
     }
 
     if (orderType === 'mall') {
+      const items = Array.isArray(raw.items) ? raw.items : []
       return {
         _id: raw._id,
         orderType,
@@ -262,6 +266,9 @@ Page({
         skuText: raw.skuText || '',
         unitPrice: raw.unitPrice || 0,
         quantity: raw.quantity || 1,
+        // P1-C: 合并单 items 提示（列表显示"首件 ×N 等 M 件"）
+        itemCount: items.length,
+        hasMultiItems: items.length > 1,
         status,
         statusText: MALL_STATUS_TEXT_MAP[status] || status,
         totalPrice: raw.totalAmount || 0,
@@ -522,11 +529,14 @@ Page({
 
   async _doCancelMallOrder(orderId) {
     try {
-      const res = await OrderService.cancelMallOrder(orderId)
+      const target = (this._allOrders || []).find(o => o._id === orderId)
+      // P1-2: 团购订单走 tuanService.cancelTuanOrder（含 tuan_orders 同步 + 库存回退 + 退款）
+      const res = target && target.orderType === 'group_buy'
+        ? await TuanService.cancelTuanOrder(orderId)
+        : await OrderService.cancelMallOrder(orderId)
       if (res && res.code === 0) {
         this.toast('CANCEL_SUCCESS')
         // 刷新列表：本地内存中把该订单 status 改为 cancelled
-        const target = (this._allOrders || []).find(o => o._id === orderId)
         if (target) {
           target.status = 'cancelled'
           if (target.orderType === 'mall') {

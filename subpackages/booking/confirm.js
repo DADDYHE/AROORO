@@ -5,6 +5,7 @@ const { BookingData } = require('../../utils/BookingDataService')
 const { CouponService } = require('../../services/CouponService')
 const PaymentService = require('../../services/PaymentService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const { computeFinalAmount } = require('../../utils/coupon-amount')
 const { isHoliday } = require('../../utils/holidays')
 const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
@@ -13,7 +14,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, couponSelectorBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, couponSelectorBehavior],
   data: {
     hostId: '',
     hostName: '',
@@ -51,6 +52,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     const isLoggedIn = authService.isLoggedIn()
     const hostId = options.hostId || options.id
     const updates = { isLoggedIn }
@@ -349,7 +351,7 @@ Page({
 
     try {
       const result = await CouponService.getAvailableCoupons({
-        business: 'hosting',
+        business: 'boarding',
         items: hostId ? [hostId] : [],
         amount: totalPrice,
       })
@@ -455,7 +457,7 @@ Page({
 
       if (this.data.selectedCouponId) {
         try {
-          const lockRes = await CouponService.lockCoupon(this.data.selectedCouponId, orderId, 'boarding_order', 'hosting')
+          const lockRes = await CouponService.lockCoupon(this.data.selectedCouponId, orderId, 'boarding_order', 'boarding')
           if (lockRes && lockRes.code !== 0) {
             this.errorDynamic(lockRes.message, 'COUPON_LOCK_FAILED')
             this._batchUpdate({ loading: false })
@@ -512,20 +514,22 @@ Page({
       const createResult = await orderManager.createOrder(orderData)
       const finalOrderId = createResult.orderId || createResult._id
 
-      // ===== 标记优惠券已使用 =====
-      if (lockedCouponId && this.data.couponDiscount > 0) {
-        CouponService.useCoupon(
-          lockedCouponId, finalOrderId, 'hosting', this.data.totalPrice, this.data.couponDiscount, this.data.finalPrice
-        ).catch(err => {
-          console.error('[confirm] 优惠券标用失败（优惠券锁定但未消耗）:', err)
-        })
-      }
+      // P1-B 修复：不再在此处 useCoupon（支付前核销）——券保持 locked，
+      //   支付成功由 paymentService 支付回调（notify）统一核销（business='boarding'）；
+      //   支付取消/失败/超时由前端 unlock 或取消/超时路径解锁（unlockOrderCoupons 按 couponId 直解）
 
       // ===== 发起微信支付（使用折后价） =====
       const payAmount = this.data.selectedCouponId ? this.data.finalPrice : this.data.totalPrice
       try {
         await this.initiateWechatPayment(finalOrderId, payAmount)
       } catch (payError) {
+        // P1-B 修复：支付失败/取消时释放已锁定的券（lockedCouponId 在本作用域），
+        //   避免券卡 locked；订单保留待支付，可稍后在订单列表重新支付
+        if (lockedCouponId) {
+          CouponService.unlockCoupon(lockedCouponId).catch(e => {
+            console.error('[confirm] 支付失败解锁优惠券失败（超时路径会兜底）:', e)
+          })
+        }
         this.error('ORDER_CREATED_PAY_LATER')
         setTimeout(() => {
           wx.redirectTo({ url: '/subpackages/profile/order-stats/index?type=boarding' })

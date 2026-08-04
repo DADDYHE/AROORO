@@ -1,3 +1,15 @@
+<zy-navbar title="确认订单" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <!-- 头部区域 -->
   <view class="page-header">
@@ -13,15 +25,15 @@
     <!-- 加载动画 -->
     <view wx:if="{{ loading }}" class="loading-container">
       <view class="loading-content">
-        <view class="loading-brand-mark">
-          <view class="brand-ring"></view>
-          <view class="brand-ring brand-ring--delay"></view>
-          <view class="brand-dot"></view>
-        </view>
-        <view class="loading-dots">
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
+        <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
         </view>
         <text class="loading-text">加载中</text>
       </view>
@@ -171,6 +183,7 @@
     </view>
 
     <!-- 底部操作栏 -->
+    <root-portal>
     <view class="bottom-bar">
       <view class="price-info">
         <text class="price-label">实付金额</text>
@@ -182,9 +195,10 @@
       </view>
       <view class="confirm-btn" bindtap="confirmBooking" loading="{{ loading }}">
         <text wx:if="{{ !loading }}">确认预订</text>
-        <van-loading wx:if="{{ loading }}" type="circular" size="20rpx" color="#ffffff" />
+        <zy-loading wx:if="{{ loading }}" type="circular" size="20" color="#ffffff" />
       </view>
     </view>
+    </root-portal>
 
     <!-- 页面底部预留空间 -->
     <view class="content-bottom-space"></view>
@@ -192,7 +206,7 @@
 </view>
 
 <!-- 日历弹窗 -->
-  <van-calendar
+  <zy-calendar
     show="{{ showCalendar }}"
     bind:confirm="onConfirmCalendar"
     bind:close="onCloseCalendar"
@@ -207,5 +221,6 @@
     bind:change="onCalendarChange"
     poppable="{{ true }}"
     position="bottom"
-    round
+    round="{{ true }}"
   />
+</scroll-view>

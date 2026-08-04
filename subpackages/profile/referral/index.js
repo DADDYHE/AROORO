@@ -11,6 +11,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     const userInfo = getApp()?.globalData?.userInfo
     this._isPartner = Boolean(userInfo?.isPartner || userInfo?.permissions?.length)
     this._initListBehavior(

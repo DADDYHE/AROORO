@@ -1,6 +1,7 @@
 const { OrderService } = require('../../../services/CloudFunctionService')
 const PaymentService = require('../../../services/PaymentService')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
+const countdownBehavior = require('../../../behaviors/countdownBehavior')
 const { STATUS_TEXT_MAP } = require('../utils/orderConstants')
 const { formatDate, formatDateTime } = require('../utils/dateUtils')
 
@@ -16,10 +17,11 @@ const STATUS_DESC_MAP = {
 }
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
   data: {
     isLoading: true,
     order: null,
@@ -28,6 +30,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     const orderId = options.id || ''
     const outTradeNo = options.outTradeNo || ''
     if (orderId || outTradeNo) {
@@ -45,6 +48,13 @@ Page({
       if (res && res.code === 0 && res.data) {
         const order = this._normalizeOrder(res.data)
         this.setData({ order, isLoading: false })
+        this._loadedOnce = true
+        // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
+        if (order.status === 'pending_payment') {
+          this._startPayCountdown((order.createdAtTs || 0) + (order.timeoutMinutes || 30) * 60 * 1000)
+        } else {
+          this._stopPayCountdown()
+        }
       } else {
         this.setData({ isLoading: false })
         this.error('ORDER_NOT_FOUND')
@@ -93,6 +103,9 @@ Page({
       finalPrice: raw.finalPrice || raw.totalPrice || 0,
       note: raw.note || '',
       createdAt: this._formatDateTime(raw.createdAt),
+      // 保留原始创建时间戳，供支付倒计时计算（与后端 ORDER_TIMEOUT_MINUTES=30 对齐）
+      createdAtTs: raw.createdAt ? new Date(raw.createdAt).getTime() : 0,
+      timeoutMinutes: 30,
       paidAt: this._formatDateTime(raw.paidAt),
       paymentStatus: raw.paymentStatus || 'unpaid',
     }
@@ -175,6 +188,21 @@ Page({
     } catch (err) {
       this.errorDynamic((err && err.message) || '', 'CANCEL_FAILED')
     }
+  },
+
+  // 页面重新显示时刷新订单（支付/取消后返回需拿到最新状态），并重启倒计时
+  onShow() {
+    if (this._loadedOnce && this.data.order && this.data.order._id) {
+      this._loadOrder({ orderId: this.data.order._id })
+    }
+  },
+
+  onHide() {
+    this._stopPayCountdown()
+  },
+
+  onUnload() {
+    this._stopPayCountdown()
   },
 
   onPullDownRefresh() {

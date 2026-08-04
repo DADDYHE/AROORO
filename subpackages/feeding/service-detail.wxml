@@ -1,17 +1,48 @@
+<zy-navbar title="服务详情" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
+
+  <view class="gallery-header">
+    <view class="brand-block">
+      <view class="brand-accent-bar"></view>
+      <view class="brand-main">
+        <text class="brand-text">服务详情</text>
+      </view>
+      <view class="brand-meta">
+        <view class="brand-meta-line"></view>
+        <text class="brand-subtitle">上门喂养 · 专属守护</text>
+      </view>
+    </view>
+  </view>
+
   <view class="tab-bar">
     <view class="tab-item {{activeTab === 0 ? 'active' : ''}}" bindtap="handleTabTap" data-tab="0">
       <text class="tab-text">服务收费</text>
-      <view class="tab-indicator" wx:if="{{activeTab === 0}}"></view>
     </view>
     <view class="tab-item {{activeTab === 1 ? 'active' : ''}}" bindtap="handleTabTap" data-tab="1">
       <text class="tab-text">预约指引</text>
-      <view class="tab-indicator" wx:if="{{activeTab === 1}}"></view>
     </view>
     <view class="tab-item {{activeTab === 2 ? 'active' : ''}}" bindtap="handleTabTap" data-tab="2">
       <text class="tab-text">常见问题</text>
-      <view class="tab-indicator" wx:if="{{activeTab === 2}}"></view>
+    </view>
+    <!-- Worklet 驱动的丝滑滑动指示器 -->
+    <!-- track 固定在 tab-bar 底部，slider 为 1/3 宽度，通过 translateX 滑动 -->
+    <!-- worklet 未启用时用 pos-N class 兜底 -->
+    <view class="tab-indicator-track">
+      <view class="tab-indicator-slider pos-{{activeTab}} {{_workletTabEnabled ? 'worklet-driven' : ''}}">
+        <view class="tab-indicator-bar"></view>
+      </view>
     </view>
   </view>
 
@@ -27,8 +58,9 @@
 
     <!-- 宠物喂养内容 -->
     <view wx:if="{{serviceType === 'feeding'}}">
-      <view class="section-card">
+      <view class="section-card section-card-0">
         <view class="section-header">
+          <view class="section-accent"></view>
           <text class="section-title">宠物喂养基础服务</text>
         </view>
         
@@ -101,8 +133,9 @@
         </view>
       </view>
 
-      <view class="section-card">
+      <view class="section-card section-card-1">
         <view class="section-header">
+          <view class="section-accent"></view>
           <text class="section-title">宠物喂养服务费用标准</text>
         </view>
         
@@ -123,8 +156,9 @@
         </view>
       </view>
 
-      <view class="section-card">
+      <view class="section-card section-card-2">
         <view class="section-header">
+          <view class="section-accent"></view>
           <text class="section-title">宠物喂养更多服务</text>
         </view>
         
@@ -191,14 +225,15 @@
         </view>
       </view>
 
-      <view class="section-card">
+      <view class="section-card section-card-3">
         <view class="section-header">
+          <view class="section-accent"></view>
           <text class="section-title">宠物喂养服务流程</text>
         </view>
         
         <view class="flow-list">
           <view class="flow-item">
-            <view class="flow-number">1</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon order"></view>
@@ -212,7 +247,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">2</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon accept"></view>
@@ -223,7 +258,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">3</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon key"></view>
@@ -237,7 +272,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">4</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon prepare"></view>
@@ -251,7 +286,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">5</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon checkin"></view>
@@ -265,7 +300,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">6</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon disinfection"></view>
@@ -276,7 +311,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">7</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon comfort"></view>
@@ -294,8 +329,9 @@
 
     <!-- 上门遛狗内容 -->
     <view wx:if="{{serviceType === 'walking'}}">
-      <view class="section-card">
+      <view class="section-card section-card-4">
         <view class="section-header">
+          <view class="section-accent"></view>
           <text class="section-title">上门遛狗基础服务</text>
         </view>
         
@@ -339,8 +375,9 @@
         </view>
       </view>
 
-      <view class="section-card">
+      <view class="section-card section-card-5">
         <view class="section-header">
+          <view class="section-accent"></view>
           <text class="section-title">上门遛狗服务费用标准</text>
         </view>
 
@@ -361,8 +398,9 @@
         </view>
       </view>
 
-      <view class="section-card">
+      <view class="section-card section-card-6">
         <view class="section-header">
+          <view class="section-accent"></view>
           <text class="section-title">上门遛狗更多服务</text>
         </view>
         
@@ -429,14 +467,15 @@
         </view>
       </view>
 
-      <view class="section-card">
+      <view class="section-card section-card-7">
         <view class="section-header">
+          <view class="section-accent"></view>
           <text class="section-title">上门遛狗服务流程</text>
         </view>
         
         <view class="flow-list">
           <view class="flow-item">
-            <view class="flow-number">1</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon order"></view>
@@ -450,7 +489,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">2</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon accept"></view>
@@ -461,7 +500,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">3</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon key"></view>
@@ -475,7 +514,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">4</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon prepare"></view>
@@ -489,7 +528,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">5</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon checkin"></view>
@@ -503,7 +542,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">6</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon disinfection"></view>
@@ -514,7 +553,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">7</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon comfort"></view>
@@ -525,7 +564,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">8</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon start"></view>
@@ -536,7 +575,7 @@
           </view>
           
           <view class="flow-item">
-            <view class="flow-number">9</view>
+            <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
                 <view class="flow-icon complete"></view>
@@ -589,26 +628,26 @@
           </view>
           <view class="gallery-table">
             <view class="gallery-table-header">
-              <view class="gallery-table-cell gallery-table-cell-wide">单日服务需求</view>
-              <view class="gallery-table-cell gallery-table-cell-wide">预约项目</view>
+              <view class="gallery-table-cell gallery-table-cell-wide"><text>单日服务需求</text></view>
+              <view class="gallery-table-cell gallery-table-cell-wide"><text>预约项目</text></view>
             </view>
             <view class="gallery-table-subheader">
               <view class="gallery-table-cell"></view>
               <view class="gallery-table-cell"></view>
-              <view class="gallery-table-cell">基础服务</view>
-              <view class="gallery-table-cell">增值服务</view>
+              <view class="gallery-table-cell"><text>基础服务</text></view>
+              <view class="gallery-table-cell"><text>增值服务</text></view>
             </view>
             <view class="gallery-table-row">
               <view class="gallery-table-cell gallery-table-cell-group">
-                <view class="gallery-tag">仅喂养</view>
+                <view class="gallery-tag"><text>仅喂养</text></view>
               </view>
               <view class="gallery-table-cell">
                 <text class="highlight-red">1次喂养</text>
               </view>
               <view class="gallery-table-cell">
-                宠物喂养<text class="highlight-red">*1</text>
+                <text>宠物喂养</text><text class="highlight-red">*1</text>
               </view>
-              <view class="gallery-table-cell">—</view>
+              <view class="gallery-table-cell"><text>—</text></view>
             </view>
             <view class="gallery-table-row gallery-table-row-alt">
               <view class="gallery-table-cell"></view>
@@ -616,47 +655,47 @@
                 <text class="highlight-red">n+1次喂养</text>
               </view>
               <view class="gallery-table-cell">
-                宠物喂养<text class="highlight-red">*1</text>
+                <text>宠物喂养</text><text class="highlight-red">*1</text>
               </view>
               <view class="gallery-table-cell">
-                一天多次<text class="highlight-red">*n</text>
+                <text>一天多次</text><text class="highlight-red">*n</text>
               </view>
             </view>
             <view class="gallery-table-row">
               <view class="gallery-table-cell gallery-table-cell-group">
-                <view class="gallery-tag">仅遛狗</view>
+                <view class="gallery-tag"><text>仅遛狗</text></view>
               </view>
               <view class="gallery-table-cell">
                 <text class="highlight-red">n+1次上门遛狗</text>
               </view>
               <view class="gallery-table-cell">
-                上门遛狗<text class="highlight-red">*1</text>
+                <text>上门遛狗</text><text class="highlight-red">*1</text>
               </view>
               <view class="gallery-table-cell">
-                一天多次<text class="highlight-red">*n</text>
+                <text>一天多次</text><text class="highlight-red">*n</text>
               </view>
             </view>
             <view class="gallery-table-row gallery-table-row-alt">
               <view class="gallery-table-cell gallery-table-cell-group">
-                <view class="gallery-tag gallery-tag-multi">喂养+遛狗</view>
+                <view class="gallery-tag gallery-tag-multi"><text>喂养+遛狗</text></view>
               </view>
               <view class="gallery-table-cell">
-                喂养+遛狗<text class="highlight-red">1次</text>
+                <text>喂养+遛狗</text><text class="highlight-red">1次</text>
               </view>
               <view class="gallery-table-cell">
-                宠物喂养<text class="highlight-red">*1</text>
+                <text>宠物喂养</text><text class="highlight-red">*1</text>
               </view>
-              <view class="gallery-table-cell">陪玩/遛狗</view>
+              <view class="gallery-table-cell"><text>陪玩/遛狗</text></view>
             </view>
             <view class="gallery-table-row">
               <view class="gallery-table-cell"></view>
               <view class="gallery-table-cell">
-                喂养+遛狗<text class="highlight-red">1次</text> 遛狗<text class="highlight-red">n次</text>
+                <text>喂养+遛狗</text><text class="highlight-red">1次</text><text> 遛狗</text><text class="highlight-red">n次</text>
               </view>
               <view class="gallery-table-cell">
-                宠物喂养<text class="highlight-red">*1</text>
+                <text>宠物喂养</text><text class="highlight-red">*1</text>
               </view>
-              <view class="gallery-table-cell">陪玩/遛狗</view>
+              <view class="gallery-table-cell"><text>陪玩/遛狗</text></view>
             </view>
           </view>
         </view>
@@ -669,23 +708,23 @@
           <text class="gallery-card-note">建议频率：以下为平台内专业服务人员提供的建议，可做参考，具体服务情况可根据宠物健康状况，怕生程度自行决定~</text>
           <view class="gallery-table">
             <view class="gallery-table-header">
-              <view class="gallery-table-cell">年龄</view>
-              <view class="gallery-table-cell gallery-table-cell-narrow">数量</view>
-              <view class="gallery-table-cell gallery-table-cell-wide-freq">建议服务频率&时长</view>
+              <view class="gallery-table-cell"><text>年龄</text></view>
+              <view class="gallery-table-cell gallery-table-cell-narrow"><text>数量</text></view>
+              <view class="gallery-table-cell gallery-table-cell-wide-freq"><text>建议服务频率&时长</text></view>
             </view>
             <view class="gallery-table-row">
               <view class="gallery-table-cell gallery-table-cell-age">
                 <text class="gallery-table-age-text">0~2月</text>
               </view>
-              <view class="gallery-table-cell gallery-table-cell-narrow">—</view>
-              <view class="gallery-table-cell gallery-table-cell-wide-freq">建议专人全天照料~</view>
+              <view class="gallery-table-cell gallery-table-cell-narrow"><text>—</text></view>
+              <view class="gallery-table-cell gallery-table-cell-wide-freq"><text>建议专人全天照料~</text></view>
             </view>
             <view class="gallery-table-row gallery-table-row-alt">
               <view class="gallery-table-cell gallery-table-cell-age">
                 <text class="gallery-table-age-text">2~6月</text>
               </view>
-              <view class="gallery-table-cell gallery-table-cell-narrow">—</view>
-              <view class="gallery-table-cell gallery-table-cell-wide-freq">每1天1~2次上门，每次<text class="highlight-red">30~60分钟</text></view>
+              <view class="gallery-table-cell gallery-table-cell-narrow"><text>—</text></view>
+              <view class="gallery-table-cell gallery-table-cell-wide-freq"><text>每1天1~2次上门，每次</text><text class="highlight-red">30~60分钟</text></view>
             </view>
             <view class="gallery-table-row">
               <view class="gallery-table-cell gallery-table-cell-age">
@@ -722,12 +761,12 @@
           <view class="gallery-hexagon-inner"></view>
         </view>
         <view class="gallery-guarantee-grid">
-          <view class="gallery-guarantee-badge">全程录像保障</view>
-          <view class="gallery-guarantee-badge">全程位置定位</view>
-          <view class="gallery-guarantee-badge">喂养服务手册</view>
-          <view class="gallery-guarantee-badge">专属管家监管</view>
-          <view class="gallery-guarantee-badge">私密聊天功能</view>
-          <view class="gallery-guarantee-badge">实名身份核验</view>
+          <view class="gallery-guarantee-badge"><text>全程录像保障</text></view>
+          <view class="gallery-guarantee-badge"><text>全程位置定位</text></view>
+          <view class="gallery-guarantee-badge"><text>喂养服务手册</text></view>
+          <view class="gallery-guarantee-badge"><text>专属管家监管</text></view>
+          <view class="gallery-guarantee-badge"><text>私密聊天功能</text></view>
+          <view class="gallery-guarantee-badge"><text>实名身份核验</text></view>
         </view>
       </view>
 
@@ -792,3 +831,4 @@
     </view>
   </view>
 </view>
+</scroll-view>

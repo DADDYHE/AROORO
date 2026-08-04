@@ -2,6 +2,7 @@ const { AdminService } = require('../../../services/CloudFunctionService')
 const { parseDate } = require('../../../utils/dateUtils')
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 function formatDateTime(dateValue) {
   const d = parseDate(dateValue)
@@ -12,6 +13,7 @@ function formatDateTime(dateValue) {
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     isLoading: true,
     isPartner: false,
@@ -22,6 +24,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     // 申请页面：未登录才返回，partner 状态由 _loadData 异步处理
     const userInfo = getApp()?.globalData?.userInfo
     if (!userInfo) {

@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "zy-popup": "/components/zy-popup/index"
+  },
+  "styleIsolation": "isolated"
+}

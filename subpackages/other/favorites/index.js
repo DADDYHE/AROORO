@@ -1,8 +1,8 @@
-const app = getApp()
 const { FavoriteService, HostService } = require('../../../services/CloudFunctionService')
 const { extractCityAndDistrict } = require('../../../utils/addressUtils')
 const { authService } = require('../../../services/AuthService')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 const SWIPE_THRESHOLD = 10
 
@@ -10,7 +10,7 @@ const pageI18n = require('../../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior],
   data: {
     favoriteFamilies: [],
     hostList: [],
@@ -25,6 +25,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     setTimeout(() => {
       this.checkLoginAndLoadData()
     }, 800)

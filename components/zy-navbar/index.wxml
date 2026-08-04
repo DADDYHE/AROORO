@@ -1,0 +1,18 @@
+<root-portal>
+  <view class="zy-navbar" style="background: {{transparent ? 'transparent' : bg}};">
+    <!-- 状态栏占位 -->
+    <view style="height: {{statusBarHeight}}px;"></view>
+    <!-- 导航栏内容区 -->
+    <view class="zy-navbar__content" style="height: {{navBarHeight}}px;">
+      <view class="zy-navbar__left" wx:if="{{showBack}}" bindtap="onBackTap" hover-class="zy-navbar__left--pressed" hover-stay-time="120">
+        <view class="zy-navbar__back-icon" style="border-color: {{color}};"></view>
+      </view>
+      <view class="zy-navbar__title" style="color: {{color}};">
+        <text class="zy-navbar__title-text">{{title}}</text>
+      </view>
+      <view class="zy-navbar__right" style="width: {{menuButtonHeight + 23}}px;"></view>
+    </view>
+  </view>
+</root-portal>
+<!-- 占位块：让页面内容不被导航栏遮挡（transparent 模式下不占位） -->
+<view wx:if="{{!transparent}}" style="height: {{statusBarHeight + navBarHeight}}px;"></view>

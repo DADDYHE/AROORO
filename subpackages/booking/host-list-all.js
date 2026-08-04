@@ -1,12 +1,13 @@
 const { HostService } = require('../../services/CloudFunctionService')
 const { extractCityAndDistrict } = require('../../utils/addressUtils')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior],
   data: {
     isHeaderScrolled: false,
     isLoading: true,
@@ -27,6 +28,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     this.getHostList()
   },
 

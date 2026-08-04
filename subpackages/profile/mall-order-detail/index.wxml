@@ -1,15 +1,27 @@
+<zy-navbar title="订单详情" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page">
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
-      <view class="loading-brand-mark">
-        <view class="brand-ring"></view>
-        <view class="brand-ring brand-ring--delay"></view>
-        <view class="brand-dot"></view>
-      </view>
-      <view class="loading-dots">
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
+      <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
       </view>
       <text class="loading-text">加载中</text>
     </view>
@@ -19,6 +31,10 @@
     <view class="status-banner status-{{order.status}}">
       <text class="status-text">{{order.statusText}}</text>
       <text class="status-desc">{{order.statusDesc}}</text>
+      <view wx:if="{{order.status === 'pending_payment' && payCountdown}}" class="pay-countdown">
+        <text class="pay-countdown-label">支付剩余</text>
+        <text class="pay-countdown-time">{{payCountdown}}</text>
+      </view>
     </view>
 
     <view class="section product-section" bindtap="onGoProductDetail">
@@ -31,10 +47,26 @@
           <view class="product-bottom">
             <text class="product-price">¥{{order.unitPrice}}</text>
             <text class="product-qty">×{{order.quantity}}</text>
+            <text class="product-qty" wx:if="{{order.itemCount > 1}}">等{{order.itemCount}}件商品</text>
           </view>
         </view>
         <view class="product-arrow"></view>
       </view>
+      <!-- P1-C: 合并单列出全部商品 -->
+      <block wx:if="{{order.itemCount > 1}}">
+        <view class="product-row" wx:for="{{order.items}}" wx:key="index" wx:for-item="sub" wx:for-index="subIdx">
+          <image class="product-img" wx:if="{{sub.productImage}}" src="{{sub.productImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{sub.productImage}}" data-path="order.items[{{subIdx}}].productImage" />
+          <view class="product-img-placeholder" wx:else></view>
+          <view class="product-info">
+            <text class="product-name">{{sub.productName}}</text>
+            <text class="product-sku" wx:if="{{sub.skuText}}">{{sub.skuText}}</text>
+            <view class="product-bottom">
+              <text class="product-price">¥{{sub.unitPrice}}</text>
+              <text class="product-qty">×{{sub.quantity}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
     </view>
 
     <view class="section receiver-section" wx:if="{{order.receiverName}}">
@@ -88,6 +120,7 @@
       </view>
     </view>
 
+    <root-portal>
     <view class="bottom-bar">
       <block wx:if="{{order.status === 'pending_payment'}}">
         <view class="btn-secondary" bindtap="onCancelOrder">取消订单</view>
@@ -108,5 +141,7 @@
         <view class="btn-secondary danger" bindtap="onDeleteOrder">删除订单</view>
       </block>
     </view>
+    </root-portal>
   </block>
 </view>
+</scroll-view>

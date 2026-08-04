@@ -1,9 +1,11 @@
 const { AdminService } = require('../../../services/CloudFunctionService')
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     isEdit: false,
     activityId: '',
@@ -19,6 +21,8 @@ Page({
       maxParticipants: '',
       location: '',
       locationName: '',
+      latitude: null,
+      longitude: null,
       startDate: '',
       startTime: '',
       endDate: '',
@@ -44,6 +48,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     const now = new Date()
     const today = this._formatDate(now)
     this.setData({ today })
@@ -81,6 +86,8 @@ Page({
           'formData.maxParticipants': a.maxParticipants || '',
           'formData.location': a.location || '',
           'formData.locationName': a.location || '',
+          'formData.latitude': a.latitude || null,
+          'formData.longitude': a.longitude || null,
           'formData.startDate': startDate,
           'formData.startTime': startTime,
           'formData.endDate': endDate,
@@ -142,6 +149,8 @@ Page({
     this.setData({ showCategoryPicker: false })
   },
 
+  noop() {},
+
   onCategorySelect(e) {
     const key = e.currentTarget.dataset.key
     const item = this.data.categories.find(c => c.key === key)
@@ -174,6 +183,8 @@ Page({
         this.setData({
           'formData.location': res.name || res.address,
           'formData.locationName': res.name || res.address,
+          'formData.latitude': res.latitude,
+          'formData.longitude': res.longitude,
         })
       },
       fail: () => {
@@ -189,7 +200,7 @@ Page({
   },
 
   onClearLocation() {
-    this.setData({ 'formData.location': '', 'formData.locationName': '' })
+    this.setData({ 'formData.location': '', 'formData.locationName': '', 'formData.latitude': null, 'formData.longitude': null })
   },
 
   onChooseCover() {
@@ -205,13 +216,13 @@ Page({
   },
 
   onChooseImages() {
-    const remaining = 9 - this.data.formData.images.length
+    const remaining = 15 - this.data.formData.images.length
     if (remaining <= 0) {
-      this.error('MAX_9_IMAGES')
+      this.error('MAX_15_IMAGES')
       return
     }
     wx.chooseMedia({
-      count: remaining,
+      count: Math.min(remaining, 9),
       mediaType: ['image'],
       sizeType: ['compressed'],
       success: res => {
@@ -258,6 +269,11 @@ Page({
         console.error('[activity-create] upload image error:', e)
       }
     }
+    if (tempPaths.length > 0 && results.length === 0) {
+      wx.hideLoading()
+      this.error('UPLOAD_FAILED')
+      return
+    }
     this.setData({ 'formData.images': [...this.data.formData.images, ...results] })
     wx.hideLoading()
   },
@@ -279,6 +295,7 @@ Page({
 
   async _doSubmit(status) {
     const { formData, isEdit, activityId } = this.data
+    if (this.data.isSubmitting) return
     if (!formData.title.trim()) {
       this.error('ACTIVITY_TITLE_REQUIRED')
       return
@@ -299,6 +316,16 @@ Page({
       this.error('ACTIVITY_PHONE_REQUIRED')
       return
     }
+    if (!/^1\d{10}$/.test(formData.contactPhone.trim())) {
+      this.error('PHONE_INVALID')
+      return
+    }
+    const startDT = `${formData.startDate} ${formData.startTime}`
+    const endDT = formData.endDate && formData.endTime ? `${formData.endDate} ${formData.endTime}` : ''
+    if (endDT && endDT <= startDT) {
+      this.error('DATE_END_INVALID')
+      return
+    }
 
     this.setData({ isSubmitting: true })
 
@@ -316,6 +343,8 @@ Page({
         pricePerPet: Number(formData.pricePerPet) || 0,
         maxParticipants: Number(formData.maxParticipants) || 0,
         location: formData.location.trim(),
+        latitude: formData.latitude || null,
+        longitude: formData.longitude || null,
         startTime: startDateTime,
         endTime: endDateTime,
         coverUrl: formData.coverUrl || '',
@@ -335,7 +364,7 @@ Page({
       }
 
       if (res.code === 0) {
-        this.toast(() => (isEdit ? 'SAVED' : (status === 'published' ? 'PUBLISHED' : 'SAVED')))
+        this.toast(isEdit ? 'SAVED' : (status === 'published' ? 'PUBLISHED' : 'SAVED'))
         setTimeout(() => {
           wx.navigateBack()
         }, 1500)

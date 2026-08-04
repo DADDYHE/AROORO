@@ -1,6 +1,18 @@
+<zy-navbar title="用户协议" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <view class="page-header">
-    <text class="page-back" bindtap="goBack">← 返回</text>
+    <view class="page-back" bindtap="goBack"><image class="page-back-icon" src="/images/icons/arrow-left-luxury-line.svg" mode="aspectFit"></image><text class="page-back-text">返回</text></view>
     <text class="page-title">用户协议</text>
   </view>
   <view class="page-content">
@@ -117,3 +129,4 @@
     </view>
   </view>
 </view>
+</scroll-view>

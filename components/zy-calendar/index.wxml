@@ -1,0 +1,127 @@
+<!-- zy-calendar · Skyline 兼容日历选择组件 -->
+<!-- poppable=true：弹层模式（默认） -->
+<zy-popup
+  wx:if="{{poppable}}"
+  visible="{{show}}"
+  position="{{position}}"
+  round="{{round}}"
+  closeable="{{false}}"
+  overlay="{{true}}"
+  close-on-click-overlay="{{true}}"
+  z-index="{{zIndex}}"
+  duration="{{500}}"
+  bind:close="onClose"
+>
+  <view class="zy-calendar" style="--zy-calendar-color: {{color}};" catchtap="noop">
+    <!-- 头部 -->
+    <view class="zy-calendar__header">
+      <view class="zy-calendar__title">{{title}}</view>
+      <view class="zy-calendar__close" catchtap="onClose">
+        <view class="zy-calendar__close-icon"></view>
+      </view>
+    </view>
+
+    <!-- 周标题 -->
+    <view wx:if="{{showWeekTitle}}" class="zy-calendar__week-title">
+      <view wx:for="{{weekDays}}" wx:key="*this" class="zy-calendar__week-day">{{item}}</view>
+    </view>
+
+    <!-- 月份滚动区 -->
+    <scroll-view
+      class="zy-calendar__body"
+      scroll-y
+      enhanced
+      show-scrollbar="{{false}}"
+      scroll-into-view="{{scrollIntoView}}"
+      style="max-height: 800rpx;"
+    >
+      <view
+        wx:for="{{months}}"
+        wx:key="id"
+        wx:for-item="month"
+        id="{{month.id}}"
+        class="zy-calendar__month"
+      >
+        <!-- 月份标题 -->
+        <view wx:if="{{showMonthTitle}}" class="zy-calendar__month-title">{{month.title}}</view>
+
+        <!-- 日期网格 -->
+        <view class="zy-calendar__days">
+          <view
+            wx:for="{{month.cells}}"
+            wx:key="key"
+            wx:for-item="cell"
+            class="zy-calendar__day zy-calendar__day--{{cell.type}} zy-calendar__day--{{cell.state}} {{cell.disabled ? 'zy-calendar__day--disabled' : ''}} {{cell.className || ''}}"
+            data-date="{{cell.date}}"
+            catchtap="onDayTap"
+          >
+            <block wx:if="{{cell.type === 'day'}}">
+              <view wx:if="{{cell.topInfo}}" class="zy-calendar__day-top">{{cell.topInfo}}</view>
+              <view class="zy-calendar__day-text">{{cell.day}}</view>
+              <view wx:if="{{cell.bottomInfo}}" class="zy-calendar__day-info">{{cell.bottomInfo}}</view>
+              <view wx:elif="{{cell.isToday && showMark}}" class="zy-calendar__day-info">今天</view>
+            </block>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 底部确认栏 -->
+    <view wx:if="{{showConfirm}}" class="zy-calendar__footer">
+      <view class="zy-calendar__selected-text">{{selectedText || '请选择日期'}}</view>
+      <view class="zy-calendar__confirm-btn" hover-class="zy-calendar__confirm-btn--hover" hover-stay-time="100" catchtap="onConfirm">{{confirmText}}</view>
+    </view>
+  </view>
+</zy-popup>
+
+<!-- poppable=false：内联模式 -->
+<view wx:else class="zy-calendar zy-calendar--inline" style="--zy-calendar-color: {{color}};" catchtap="noop">
+  <!-- 头部（仅当 title 非空时显示） -->
+  <view wx:if="{{title}}" class="zy-calendar__header">
+    <view class="zy-calendar__title">{{title}}</view>
+  </view>
+
+  <!-- 周标题 -->
+  <view wx:if="{{showWeekTitle}}" class="zy-calendar__week-title">
+    <view wx:for="{{weekDays}}" wx:key="*this" class="zy-calendar__week-day">{{item}}</view>
+  </view>
+
+  <!-- 月份滚动区（inline 模式：不限制高度，由外层 scroll-view 负责滚动） -->
+  <view class="zy-calendar__body zy-calendar__body--inline">
+    <view
+      wx:for="{{months}}"
+      wx:key="id"
+      wx:for-item="month"
+      id="{{month.id}}"
+      class="zy-calendar__month"
+    >
+      <!-- 月份标题 -->
+      <view wx:if="{{showMonthTitle}}" class="zy-calendar__month-title">{{month.title}}</view>
+
+      <!-- 日期网格 -->
+      <view class="zy-calendar__days">
+        <view
+          wx:for="{{month.cells}}"
+          wx:key="key"
+          wx:for-item="cell"
+          class="zy-calendar__day zy-calendar__day--{{cell.type}} zy-calendar__day--{{cell.state}} {{cell.disabled ? 'zy-calendar__day--disabled' : ''}} {{cell.className || ''}}"
+          data-date="{{cell.date}}"
+          catchtap="onDayTap"
+        >
+          <block wx:if="{{cell.type === 'day'}}">
+            <view wx:if="{{cell.topInfo}}" class="zy-calendar__day-top">{{cell.topInfo}}</view>
+            <view class="zy-calendar__day-text">{{cell.day}}</view>
+            <view wx:if="{{cell.bottomInfo}}" class="zy-calendar__day-info">{{cell.bottomInfo}}</view>
+            <view wx:elif="{{cell.isToday && showMark}}" class="zy-calendar__day-info">今天</view>
+          </block>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部确认栏 -->
+  <view wx:if="{{showConfirm}}" class="zy-calendar__footer">
+    <view class="zy-calendar__selected-text">{{selectedText || '请选择日期'}}</view>
+    <view class="zy-calendar__confirm-btn" catchtap="onConfirm">{{confirmText}}</view>
+  </view>
+</view>

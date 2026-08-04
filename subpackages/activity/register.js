@@ -3,6 +3,7 @@ const { PetService } = require('../../services/CloudFunctionService')
 const { ActivityService } = require('./services/ActivityService')
 const { CouponService } = require('../../services/CouponService')
 const { computeFinalAmount } = require('../../utils/coupon-amount')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
 
@@ -10,7 +11,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, couponSelectorBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, couponSelectorBehavior],
   data: {
     activityId: '',
     activity: null,
@@ -37,6 +38,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     const { id } = options
     this.setData({ activityId: id })
     this._loadActivity()

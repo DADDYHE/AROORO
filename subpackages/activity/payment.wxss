@@ -1,86 +1,142 @@
 @import '../../styles/loading-animation.wxss';
+/* ================================================================
+   subpackages/activity/payment · AROORO 活动支付 — Haute-Luxury Editorial
+   板块色：活动绿 + 暖金点缀 --accent-color
+   Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
+   ================================================================ */
 
+/* ===== 入场动画 ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(32rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== 页面容器 ===== */
 .payment-page {
   min-height: 100vh;
   background: var(--background-color);
-  padding-bottom: 100rpx;
+  padding-bottom: calc(200rpx + env(safe-area-inset-bottom));
 }
 
-.loading-dot:nth-child(2) {
-}
-
-.loading-dot:nth-child(3) {
-}
-
+/* ===== 状态头部 ===== */
 .status-header {
-  padding: 48rpx 32rpx 32rpx;
+  padding: 64rpx var(--page-padding) var(--zy-space-lg);
   background: var(--card-color);
   text-align: center;
+  border-bottom: 1rpx solid var(--hairline);
+  animation-name: fadeInUp;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-fill-mode: forwards;
 }
 
 .status-header.status-pending_payment {
-  background: linear-gradient(180deg, #fff8e1 0%, #fff 100%);
+  background: linear-gradient(180deg, var(--accent-wash) 0%, var(--card-color) 100%);
+}
+
+/* 支付倒计时（待支付订单，与后端 ORDER_TIMEOUT_MINUTES=30 超时取消对齐） */
+.pay-countdown {
+  margin-top: 12rpx;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  font-size: 24rpx;
+  color: rgba(168, 137, 74, 0.95);
+}
+
+.pay-countdown-label {
+  opacity: 0.85;
+  margin-right: 10rpx;
+  letter-spacing: 0.04em;
+}
+
+.pay-countdown-time {
+  font-weight: 600;
+  font-size: 34rpx;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1rpx;
 }
 
 .status-header.status-confirmed {
-  background: linear-gradient(180deg, #e0f5f3 0%, #fff 100%);
+  background: linear-gradient(180deg, var(--primary-tint) 0%, var(--card-color) 100%);
 }
 
 .status-header.status-cancelled {
-  background: linear-gradient(180deg, #fce4ec 0%, #fff 100%);
+  background: linear-gradient(180deg, rgba(184,92,60,0.04) 0%, var(--card-color) 100%);
 }
 
 .status-icon {
-  font-size: 64rpx;
+  width: 48rpx;
+  height: 48rpx;
   display: block;
   margin-bottom: 16rpx;
 }
 
 .status-title {
-  font-size: 36rpx;
-  font-weight: 700;
+  font-size: 34rpx;
+  font-weight: 500;
   color: var(--text-primary);
   display: block;
   margin-bottom: 8rpx;
+  letter-spacing: 0.06em;
+  font-family: var(--font-serif);
 }
 
 .status-subtitle {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--text-secondary);
   display: block;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+/* ===== 支付头部（备用） ===== */
 .payment-header {
-  padding: 32rpx;
+  padding: var(--zy-space-lg);
   background: var(--card-color);
 }
 
 .payment-title {
-  font-size: 36rpx;
-  font-weight: 700;
+  font-size: 34rpx;
+  font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.04em;
+  font-family: var(--font-serif);
 }
 
+/* ===== 订单卡片 ===== */
 .order-card {
-  margin: 24rpx 32rpx;
+  margin: var(--zy-space-lg) var(--page-padding);
   background: var(--card-color);
-  border-radius: 24rpx;
+  border-radius: var(--zy-radius-lg);
   overflow: hidden;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid var(--hairline);
+  animation-name: fadeInUp;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-delay: 80ms;
+  animation-fill-mode: forwards;
 }
 
 .activity-info {
   display: flex;
-  padding: 24rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: var(--zy-space-lg);
+  border-bottom: 1rpx solid var(--hairline);
 }
 
 .activity-cover {
   width: 120rpx;
   height: 120rpx;
-  border-radius: 16rpx;
-  margin-right: 24rpx;
-  background: linear-gradient(135deg, #e0f2f1 0%, #EAEDDF 100%);
+  border-radius: var(--zy-radius-lg);
+  margin-right: var(--zy-space-lg);
+  background: var(--activity-accent);
+  flex-shrink: 0;
 }
 
 .activity-details {
@@ -88,130 +144,187 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-width: 0;
 }
 
 .activity-name {
-  font-size: 32rpx;
-  font-weight: 600;
+  font-size: 30rpx;
+  font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 8rpx;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-serif);
 }
 
 .activity-time {
   font-size: 24rpx;
   color: var(--text-secondary);
   margin-bottom: 4rpx;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .activity-location {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
   font-size: 24rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
 }
 
+.activity-location-icon {
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
+}
+
+.activity-location-text {
+  font-size: inherit;
+  color: inherit;
+}
+
+/* ===== 订单详情 ===== */
 .order-details {
-  padding: 24rpx;
+  padding: var(--zy-space-lg);
 }
 
 .detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12rpx 0;
+  padding: 14rpx 0;
 }
 
 .detail-label {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .detail-value {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 400;
   max-width: 400rpx;
   text-align: right;
   word-break: break-all;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .detail-value.discount {
-  color: var(--activity-primary);
+  color: #1F3A1F;
 }
 
+/* ===== 价格卡片 ===== */
 .price-card {
-  margin: 24rpx 32rpx;
+  margin: var(--zy-space-lg) var(--page-padding);
   background: var(--card-color);
-  border-radius: 24rpx;
-  padding: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border-radius: var(--zy-radius-lg);
+  padding: var(--zy-space-lg);
+  border: 1rpx solid var(--hairline);
+  animation-name: fadeInUp;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-delay: 160ms;
+  animation-fill-mode: forwards;
 }
 
 .price-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12rpx 0;
+  padding: 14rpx 0;
 }
 
 .price-row.total {
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 1rpx solid var(--hairline);
   padding-top: 20rpx;
   margin-top: 8rpx;
 }
 
 .price-label {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .price-value {
-  font-size: 32rpx;
-  font-weight: 600;
+  font-size: 30rpx;
+  font-weight: 400;
   color: var(--text-primary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .price-value.discount {
-  color: var(--activity-primary);
+  color: #1F3A1F;
 }
 
 .price-value.final {
   font-size: 40rpx;
   color: var(--activity-primary);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: var(--font-serif);
 }
 
+/* ===== 过期提示（固定底部） ===== */
 .expired-tip {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 24rpx 32rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  padding: var(--zy-space-lg) var(--page-padding);
+  padding-bottom: calc(var(--zy-space-lg) + env(safe-area-inset-bottom));
   background: var(--card-color);
-  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.05);
+  border-top: 1rpx solid var(--hairline);
   text-align: center;
+  z-index: 10;
 }
 
 .expired-text {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+/* ===== 支付操作区（固定底部） ===== */
 .pay-section {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 24rpx 32rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  padding: 20rpx var(--page-padding);
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   background: var(--card-color);
-  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.05);
+  border-top: 1rpx solid var(--hairline);
+  z-index: 10;
 }
 
 .pay-btn {
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  background: var(--gradient-primary);
   border: none;
-  border-radius: 16rpx;
-  padding: 24rpx 0;
-  box-shadow: 0 4rpx 12rpx rgba(79, 94, 53, 0.3);
+  border-radius: var(--zy-radius-pill);
+  padding: 26rpx 0;
+  box-shadow: var(--shadow-glow-primary-btn);
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.pay-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 .pay-btn::after {
@@ -219,12 +332,14 @@
 }
 
 .pay-btn[disabled] {
-  background: var(--border-color);
+  background: var(--divider-color);
   box-shadow: none;
 }
 
 .pay-btn-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #FAFAF6;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text-on-primary);
+  letter-spacing: 0.12em;
+  font-family: var(--font-serif);
 }

@@ -1,4 +1,16 @@
 <!--subpackages/activity/friend.wxml-->
+<zy-navbar title="活动好友" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="container">
   <view class="form-section">
     <text class="section-title">代好友报名信息</text>
@@ -98,3 +110,4 @@
     </button>
   </view>
 </view>
+</scroll-view>

@@ -1,14 +1,20 @@
 /* ================================================================
-   activity-card · PETLUX 橄榄绿治愈轻奢视觉语言
-   2026-07-28 按新设计系统重写 — 令牌化颜色/圆角/阴影
+   activity-card · PETLUX 深森林绿 × 香槟金 × 奶油白 高奢视觉语言
+   Skyline 兼容：无 :active / 无 text-transform / 无 backdrop-filter /
+   transition 仅 transform & opacity / 无 !important / 单行截断
    ================================================================ */
 
 .activity-card {
   background: var(--card-color);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--zy-radius-md);
   overflow: hidden;
-  margin-bottom: 16rpx;
-  box-shadow: var(--zy-shadow-xs);
+  margin-bottom: var(--zy-space-lg);
+  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+  box-shadow: none;
+}
+
+.activity-card--pressed {
+  transform: scale(0.98);
 }
 
 .activity-main {
@@ -32,30 +38,30 @@
   display: flex;
   align-items: center;
   padding: 6rpx 16rpx;
-  border-radius: var(--border-radius-pill);
+  border-radius: var(--zy-radius-pill);
   font-size: 22rpx;
 }
 
 .badge-active {
   background: var(--primary-color);
-  color: #FAFAF6;
+  color: var(--text-on-primary);
 }
 
 .badge-stopped {
   background: var(--warning-color);
-  color: #FAFAF6;
+  color: var(--text-on-accent);  /* 金面文字：原 --text-on-primary 2.2:1 → 炭墨 7.27:1 */
 }
 
 .badge-ended {
   background: var(--text-tertiary);
-  color: #FAFAF6;
+  color: var(--text-on-primary);
 }
 
 .badge-dot {
   width: 10rpx;
   height: 10rpx;
   border-radius: 50%;
-  background: #FAFAF6;
+  background: var(--text-on-primary);
   margin-right: 8rpx;
 }
 
@@ -69,14 +75,14 @@
   top: 16rpx;
   right: 16rpx;
   padding: 6rpx 16rpx;
-  background: var(--overlay-color);
-  border-radius: var(--border-radius-pill);
-  color: #FAFAF6;
+  background: var(--overlay-color, rgba(26,26,23,0.5));
+  border-radius: var(--zy-radius-pill);
+  color: var(--text-on-primary);
   font-size: 20rpx;
 }
 
 .activity-details {
-  padding: 20rpx 24rpx 24rpx;
+  padding: 32rpx 32rpx 36rpx;
 }
 
 .activity-title-row {
@@ -88,11 +94,12 @@
 
 .activity-name {
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
   flex: 1;
   margin-right: 16rpx;
   line-height: 1.3;
+  letter-spacing: 0.01em;
 }
 
 .truncate {
@@ -103,12 +110,12 @@
 
 .activity-price {
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
 
 .price-paid {
-  color: var(--primary-color);
+  color: var(--text-primary);
 }
 
 .price-free {
@@ -129,8 +136,10 @@
 }
 
 .info-icon {
-  font-size: 24rpx;
+  width: 24rpx;
+  height: 24rpx;
   margin-right: 8rpx;
+  flex-shrink: 0;
 }
 
 .info-text {

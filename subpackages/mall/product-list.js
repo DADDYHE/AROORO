@@ -1,12 +1,13 @@
 const { MallService } = require('./MallService')
 const { CartService } = require('./CartService')
 const mallCategories = require('./mallCategories')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
-  behaviors: [cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
     currentCategory: '',
     currentCategoryLabel: '',
@@ -23,6 +24,7 @@ Page({
   },
 
   async onLoad() {
+    this._initNavbarHeight()
     this._refreshCartCount()
     this.setData({ categories: mallCategories })
     try {

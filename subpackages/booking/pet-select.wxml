@@ -1,3 +1,15 @@
+<zy-navbar title="选择宠物" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="gallery-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="gallery-header">
@@ -15,15 +27,15 @@
 
   <view class="loading-container" wx:if="{{isLoading}}">
     <view class="loading-content">
-      <view class="loading-brand-mark">
-        <view class="brand-ring"></view>
-        <view class="brand-ring brand-ring--delay"></view>
-        <view class="brand-dot"></view>
-      </view>
-      <view class="loading-dots">
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
+      <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
       </view>
       <text class="loading-text">加载中</text>
     </view>
@@ -94,29 +106,31 @@
     </view>
   </view>
 
+  <root-portal>
   <view class="gallery-footer" wx:if="{{pets.length > 0}}">
     <view class="footer-status">
       <view class="status-dot {{selectedPets.length > 0 ? 'dot-active' : 'dot-idle'}}"></view>
       <text class="status-text">已选 {{selectedPets.length}} 只宠物</text>
     </view>
     <view class="footer-bottom">
-      <button class="bar-action-item contact-btn" open-type="contact">
+      <view class="bar-action-item contact-wrap" hover-class="contact-wrap--pressed" hover-stay-time="120">
         <image class="bar-action-icon-img" src="{{iconService}}" mode="aspectFit" />
         <text class="bar-action-text">客服</text>
-      </button>
+        <button class="contact-overlay" open-type="contact"></button>
+      </view>
       <view bindtap="nextStep" class="footer-action {{selectedPets.length === 0 ? 'action-disabled' : 'action-active'}}">
-        确定选择
+        <text>确定选择</text>
       </view>
     </view>
   </view>
+  </root-portal>
 
-  <van-popup
-    show="{{ showSelectPopup }}"
+  <zy-popup
+    visible="{{ showSelectPopup }}"
     position="bottom"
-    round
+    round="{{ true }}"
     bind:close="closeSelectPopup"
-    z-index="2000"
-    custom-style="background: #FFFFFF;"
+    z-index="{{ 2000 }}"
   >
     <view class="bottom-popup">
       <view class="popup-handle-bar"></view>
@@ -165,13 +179,21 @@
         </view>
       </view>
 
-      <view class="popup-calendar-area" wx:key="{{calendarKey}}">
-        <van-calendar
+      <scroll-view
+        class="popup-calendar-area"
+        scroll-y
+        enhanced
+        show-scrollbar="{{false}}"
+        wx:key="{{calendarKey}}"
+      >
+        <zy-calendar
           title=""
           show-mark="{{false}}"
           type="multiple"
           min-date="{{ minServiceDate }}"
           max-date="{{ maxServiceDate }}"
+          selectable-min-date="{{ selectableMinDate }}"
+          selectable-max-date="{{ selectableMaxDate }}"
           color="#4F5E35"
           bind:select="onCalendarSelect"
           default-date="{{defaultCalendarDates}}"
@@ -179,7 +201,7 @@
           show-confirm="{{false}}"
           formatter="{{ calendarFormatter }}"
         />
-      </view>
+      </scroll-view>
 
       <view class="popup-confirm-area">
         <view class="popup-confirm-btn {{selectedServiceDates.length > 0 ? 'btn-enabled' : 'btn-disabled'}}" catchtap="confirmSelectPet">
@@ -187,5 +209,6 @@
         </view>
       </view>
     </view>
-  </van-popup>
+  </zy-popup>
 </view>
+</scroll-view>

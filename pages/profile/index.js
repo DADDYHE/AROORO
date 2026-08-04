@@ -4,13 +4,14 @@ const { PetService, ActivityService } = require('../../services/CloudFunctionSer
 const { CouponService } = require('../../services/CouponService')
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
 const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [tabBarSyncBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior],
   data: {
     userInfo: {
       nickName: 'AROORO用户',
@@ -32,6 +33,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this.getUserInfo()
   },
 

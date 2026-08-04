@@ -1,4 +1,0 @@
-@import '../../styles/components.wxss';
-
-.page-container { min-height: 100vh; background: var(--background-color); padding: 32rpx; }
-.picker-val.placeholder { color: var(--text-tertiary); }

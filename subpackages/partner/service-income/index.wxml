@@ -1,8 +1,31 @@
+<zy-navbar title="服务收入" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="service-income-page">
   <!-- 加载状态 -->
   <view wx:if="{{isLoading && !overview}}" class="loading-container">
-    <view class="loading-spinner"></view>
-    <text class="loading-text">加载中...</text>
+    <view class="loading-content">
+      <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
+      </view>
+      <text class="loading-text">加载中</text>
+    </view>
   </view>
 
   <view wx:else class="gallery-container">
@@ -117,36 +140,52 @@
 
       <!-- 时间线列表 -->
       <view class="timeline-list">
-        <view wx:if="{{details.length === 0}}" class="empty-gallery">
-          <view class="empty-icon"></view>
-          <text class="empty-text">暂无收入记录</text>
+        <view wx:if="{{isDetailLoading}}" class="detail-loading">
+          <view class="lux-cascade">
+            <view class="lux-cascade-dot"></view>
+            <view class="lux-cascade-dot"></view>
+            <view class="lux-cascade-dot"></view>
+            <view class="lux-cascade-dot"></view>
+            <view class="lux-cascade-dot"></view>
+            <view class="lux-cascade-dot"></view>
+            <view class="lux-cascade-dot"></view>
+          </view>
+          <text class="loading-text">加载中</text>
         </view>
 
-        <view wx:for="{{details}}" wx:key="id" class="timeline-item">
-          <view class="timeline-marker">
-            <view class="marker-dot {{item.type}}-marker"></view>
+        <block wx:elif="{{details.length === 0}}">
+          <view class="empty-gallery">
+            <view class="empty-icon"></view>
+            <text class="empty-text">暂无收入记录</text>
           </view>
-          <view class="timeline-content">
-            <view class="content-header">
-              <text class="content-title">{{item.description}}</text>
-              <text class="content-amount">+¥{{item.amount}}</text>
-            </view>
-            <view class="content-footer">
-              <text class="content-time">{{item.createdAt}}</text>
-              <text class="content-status">{{item.status === 'completed' ? '已完成' : '待结算'}}</text>
-            </view>
-          </view>
-        </view>
+        </block>
 
-        <!-- 加载更多 -->
-        <view wx:if="{{hasMore}}" class="load-more" bindtap="onLoadMore">
-          <text>查看更多</text>
-        </view>
-        
-        <view wx:elif="{{details.length > 0}}" class="end-mark">
-          <view class="end-dot"></view>
-        </view>
+        <block wx:else>
+          <view wx:for="{{details}}" wx:key="id" class="timeline-item">
+            <view class="timeline-marker">
+              <view class="marker-dot {{item.type}}-marker"></view>
+            </view>
+            <view class="timeline-content">
+              <view class="content-header">
+                <text class="content-title">{{item.description}}</text>
+                <text class="content-amount">+¥{{item.amount}}</text>
+              </view>
+              <view class="content-footer">
+                <text class="content-time">{{item.createdAt}}</text>
+                <text class="content-status">{{item.status === 'completed' ? '已完成' : '待结算'}}</text>
+              </view>
+            </view>
+          </view>
+
+          <view wx:if="{{isLoadingMore}}" class="loading-more">
+            <text class="loading-text">加载中</text>
+          </view>
+          <view wx:elif="{{details.length > 0}}" class="end-mark">
+            <view class="end-dot"></view>
+          </view>
+        </block>
       </view>
     </view>
   </view>
 </view>
+</scroll-view>

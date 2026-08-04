@@ -1,3 +1,15 @@
+<zy-navbar title="一键报名" showBack="{{false}}" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="quick-register-container">
   <view class="gallery-header">
     <view class="brand-block">
@@ -13,7 +25,7 @@
   </view>
 
   <view wx:if="{{activities.length > 0}}" class="activity-list">
-    <view class="activity-card" wx:for="{{activities}}" wx:key="_id">
+    <view class="activity-card" wx:for="{{activities}}" wx:key="_id" hover-class="activity-card--pressed">
       <view class="activity-main" data-id="{{item._id}}" bindtap="handleActivityDetailTap">
         <image lazy-load class="activity-cover" src="{{item.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="activities[{{index}}].coverUrl" />
         <view class="activity-overlay">
@@ -58,7 +70,7 @@
       </view>
 
       <view class="activity-action">
-        <view class="action-btn {{item.isEnded ? 'btn-ended' : item.isRegistered ? 'btn-registered' : item.registrationEnded ? 'btn-disabled' : 'btn-active'}}" data-id="{{item._id}}" data-isended="{{item.isEnded}}" data-isregistered="{{item.isRegistered}}" data-registration-ended="{{item.registrationEnded}}" bindtap="handleActivityTap">
+        <view class="action-btn {{item.isEnded ? 'btn-ended' : item.isRegistered ? 'btn-registered' : item.registrationEnded ? 'btn-disabled' : 'btn-active'}}" hover-class="action-btn--pressed" data-id="{{item._id}}" data-isended="{{item.isEnded}}" data-isregistered="{{item.isRegistered}}" data-registration-ended="{{item.registrationEnded}}" bindtap="handleActivityTap">
           <text class="btn-text">{{item.isEnded ? '已结束' : item.isRegistered ? '已报名' : item.registrationEnded ? '已截止' : '立即报名'}}</text>
         </view>
       </view>
@@ -70,3 +82,4 @@
     <text class="empty-subtitle">请稍后再来查看</text>
   </view>
 </view>
+</scroll-view>

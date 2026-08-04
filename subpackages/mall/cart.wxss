@@ -1,26 +1,77 @@
+/* ================================================================
+   mall/cart.wxss · AROORO 商城购物车页 — Haute-Luxury Editorial
+   板块色：香槟金家族 --mall-primary / --mall-secondary
+   发丝描边 + 奶油纸感底 + 金色 CTA 光晕
+   Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
+   ================================================================ */
+
 page {
-  background: var(--background-color);
+  background-color: var(--background-color);
 }
 
+/* ===== 入场动画 ===== */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(24rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ===== 页面容器 ===== */
 .page-container {
   min-height: 100vh;
-  padding-bottom: 140rpx;
+  padding-bottom: calc(160rpx + env(safe-area-inset-bottom));
+  background-color: var(--background-color);
 }
 
+/* ===== 购物车列表 ===== */
 .cart-list {
-  padding: 16rpx 24rpx;
+  padding: var(--zy-space-lg) var(--page-padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--zy-space-lg);
 }
 
+/* ===== 购物车商品卡片 ===== */
 .cart-item {
   display: flex;
   align-items: center;
-  background: var(--card-color);
-  border-radius: 16rpx;
-  padding: 20rpx;
-  margin-bottom: 16rpx;
-  gap: 16rpx;
+  background-color: var(--card-color);
+  border-radius: var(--zy-radius-lg);
+  padding: var(--zy-space-lg);
+  gap: var(--zy-space-sm2);
+  border: 1rpx solid var(--hairline);
+  transition: transform 280ms cubic-bezier(0.25,0.1,0.25,1),
+              border-color 280ms cubic-bezier(0.25,0.1,0.25,1),
+              opacity 280ms cubic-bezier(0.25,0.1,0.25,1);
+  animation-name: fadeInUp;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-fill-mode: forwards;
 }
 
+.cart-item:nth-child(1) { animation-delay: 60ms; }
+.cart-item:nth-child(2) { animation-delay: 120ms; }
+.cart-item:nth-child(3) { animation-delay: 180ms; }
+.cart-item:nth-child(4) { animation-delay: 240ms; }
+.cart-item:nth-child(5) { animation-delay: 300ms; }
+.cart-item:nth-child(n+6) { animation-delay: 360ms; }
+
+.cart-item--pressed {
+  transform: scale(0.99);
+  border-color: rgba(201,162,75, 0.2);
+}
+
+/* ===== 勾选圈 ===== */
 .item-check {
   flex-shrink: 0;
 }
@@ -29,27 +80,47 @@ page {
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  border: 2rpx solid #D1D1D6;
+  border: 2rpx solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22rpx;
-  color: #FAFAF6;
+  color: var(--text-on-primary);
+  transition: transform 280ms cubic-bezier(0.25,0.1,0.25,1),
+              background-color 280ms cubic-bezier(0.25,0.1,0.25,1),
+              border-color 280ms cubic-bezier(0.25,0.1,0.25,1);
+  background-color: transparent;
+}
+
+.check-circle--pressed {
+  transform: scale(0.9);
 }
 
 .check-circle.checked {
-  background: var(--activity-secondary);
-  border-color: var(--activity-secondary);
+  background: var(--mall-primary);
+  border-color: var(--mall-primary);
 }
 
+.check-circle.disabled {
+  background-color: var(--divider-color);
+  border-color: var(--border-color);
+}
+
+.cart-check-icon {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+/* ===== 商品图片 ===== */
 .item-image {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 12rpx;
+  width: 148rpx;
+  height: 148rpx;
+  border-radius: var(--zy-radius-md);
   flex-shrink: 0;
-  background: var(--background-color);
+  background-color: var(--card-cream);
 }
 
+/* ===== 商品信息 ===== */
 .item-info {
   flex: 1;
   min-width: 0;
@@ -65,15 +136,19 @@ page {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .item-sku {
   font-size: 22rpx;
-  color: var(--text-secondary);
-  background: var(--divider-color);
-  padding: 4rpx 12rpx;
-  border-radius: 6rpx;
+  color: var(--text-tertiary);
+  background-color: var(--accent-wash);
+  padding: 4rpx 14rpx;
+  border-radius: var(--zy-radius-sm);
   align-self: flex-start;
+  font-weight: 400;
+  letter-spacing: 0.04em;
 }
 
 .item-bottom {
@@ -83,112 +158,154 @@ page {
   margin-top: 8rpx;
 }
 
+/* ===== 价格（商城用香槟金） ===== */
 .item-price {
   font-size: 30rpx;
-  color: var(--error-color);
-  font-weight: 600;
+  color: var(--text-primary);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+/* ===== 数量控制器 ===== */
 .quantity-control {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 4rpx;
 }
 
 .qty-btn {
-  width: 44rpx;
-  height: 44rpx;
-  border-radius: 22rpx;
-  background: var(--divider-color);
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background-color: var(--card-cream);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28rpx;
   color: var(--text-primary);
+  border: 1rpx solid var(--hairline);
+  transition: transform 280ms cubic-bezier(0.25,0.1,0.25,1),
+              background-color 280ms cubic-bezier(0.25,0.1,0.25,1);
+}
+
+.qty-btn--pressed {
+  transform: scale(0.9);
+  background-color: var(--mall-accent);
 }
 
 .qty-value {
   font-size: 26rpx;
   color: var(--text-primary);
-  min-width: 40rpx;
+  min-width: 48rpx;
   text-align: center;
+  font-weight: 400;
 }
 
+/* ===== 删除按钮 ===== */
 .item-delete {
   flex-shrink: 0;
-  width: 44rpx;
-  height: 44rpx;
+  width: 48rpx;
+  height: 48rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
+  font-size: 28rpx;
   color: var(--text-tertiary);
+  transition: transform 280ms cubic-bezier(0.25,0.1,0.25,1),
+              color 280ms cubic-bezier(0.25,0.1,0.25,1);
 }
 
+.item-delete--pressed {
+  transform: scale(0.9);
+  color: var(--brand-red);
+}
+
+/* ===== 失效商品 ===== */
 .cart-item.invalid {
-  opacity: 0.5;
+  opacity: 0.45;
   position: relative;
 }
 
 .cart-item.invalid .item-name,
 .cart-item.invalid .item-price {
-  color: var(--gray-500);
+  color: var(--text-tertiary);
 }
 
 .invalid-tag {
   position: absolute;
-  top: 16rpx;
-  right: 60rpx;
-  background: var(--error-color);
-  color: #FAFAF6;
+  top: var(--zy-space-sm2);
+  right: var(--zy-space-lg);
+  background-color: var(--text-tertiary);
+  color: var(--text-on-primary);
   font-size: 20rpx;
   padding: 4rpx 12rpx;
-  border-radius: 6rpx;
+  border-radius: var(--zy-radius-sm);
+  font-weight: 400;
+  letter-spacing: 0.06em;
 }
 
-.check-circle.disabled {
-  background: var(--gray-200);
-  border-color: #D1D1D6;
-}
-
+/* ===== 清除失效 ===== */
 .clear-invalid {
   text-align: center;
-  padding: 20rpx;
+  padding: var(--zy-space-lg);
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
+  letter-spacing: 0.08em;
+  font-weight: 400;
 }
 
 .clear-invalid text {
-  text-decoration: underline;
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
+/* ===== 空状态（居中、奶油底、宽字距） ===== */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding-top: 200rpx;
-  gap: 24rpx;
+  gap: var(--zy-space-lg);
+  animation-name: fadeIn;
+  animation-duration: 600ms;
+  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-fill-mode: forwards;
 }
 
 .empty-icon {
-  font-size: 80rpx;
+  width: 80rpx;
+  height: 80rpx;
+  opacity: 0.35;
 }
 
 .empty-text {
   font-size: 28rpx;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
+  letter-spacing: 0.10em;
+  font-weight: 400;
 }
 
 .empty-btn {
-  padding: 16rpx 64rpx;
-  background: var(--activity-secondary);
-  color: #FAFAF6;
-  border-radius: 40rpx;
-  font-size: 28rpx;
-  margin-top: 16rpx;
+  padding: 18rpx 64rpx;
+  background: var(--gradient-secondary);
+  color: var(--text-on-accent);  /* 原 var(--text-on-primary) */
+  border-radius: var(--zy-radius-pill);
+  font-size: 26rpx;
+  margin-top: var(--zy-space-sm2);
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  box-shadow: var(--shadow-glow-mall);
+  transition: transform 280ms cubic-bezier(0.25,0.1,0.25,1),
+              box-shadow 280ms cubic-bezier(0.25,0.1,0.25,1);
 }
 
+.empty-btn--pressed {
+  transform: scale(0.97);
+}
+
+/* ===== 底部结算栏（固定底栏 + 安全区） ===== */
 .bottom-bar {
   position: fixed;
   bottom: 0;
@@ -197,10 +314,10 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16rpx 24rpx;
-  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
-  background: var(--card-color);
-  border-top: 1rpx solid var(--gray-200);
+  padding: var(--zy-space-sm2) var(--page-padding);
+  padding-bottom: calc(var(--zy-space-sm2) + env(safe-area-inset-bottom));
+  background-color: rgba(255, 255, 255, 0.96);
+  border-top: 1rpx solid var(--hairline);
   z-index: 100;
 }
 
@@ -218,12 +335,14 @@ page {
 .check-all-text {
   font-size: 26rpx;
   color: var(--text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.04em;
 }
 
 .bar-right {
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  gap: var(--zy-space-lg);
 }
 
 .total-section {
@@ -232,25 +351,41 @@ page {
 }
 
 .total-label {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.04em;
 }
 
 .total-price {
-  font-size: 34rpx;
-  color: var(--error-color);
-  font-weight: 600;
+  font-size: 36rpx;
+  color: var(--text-primary);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
+  margin-left: 6rpx;
 }
 
 .checkout-btn {
-  padding: 16rpx 40rpx;
-  background: var(--activity-secondary);
-  color: #FAFAF6;
-  border-radius: 40rpx;
+  padding: 20rpx 48rpx;
+  background: var(--gradient-secondary);
+  color: var(--text-on-accent);  /* 原 var(--text-on-primary) */
+  border-radius: var(--zy-radius-pill);
   font-size: 28rpx;
   font-weight: 500;
+  letter-spacing: 0.10em;
+  box-shadow: var(--shadow-glow-mall);
+  transition: transform 280ms cubic-bezier(0.25,0.1,0.25,1),
+              box-shadow 280ms cubic-bezier(0.25,0.1,0.25,1),
+              opacity 280ms cubic-bezier(0.25,0.1,0.25,1);
+}
+
+.checkout-btn--pressed {
+  transform: scale(0.97);
 }
 
 .checkout-btn.disabled {
   background: var(--text-tertiary);
+  box-shadow: none;
+  opacity: 0.6;
 }

@@ -1,33 +1,44 @@
-const app = getApp()
+const { ListBehavior } = require('../../behaviors/listBehavior')
 
 const HOT_KEYWORDS = ['猫粮', '狗粮', '寄养', '洗澡', '逗猫棒', '冻干']
-
-const TABS = [
-  { key: 'all', label: '全部' },
-  { key: 'product', label: '商品' },
-  { key: 'tuan', label: '团购' },
-  { key: 'activity', label: '活动' },
-  { key: 'host', label: '寄养' },
-]
 
 const HISTORY_KEY = 'search_history'
 const MAX_HISTORY = 10
 
 Page({
+  behaviors: [ListBehavior],
   data: {
     keyword: '',
-    activeTab: 'all',
-    tabs: TABS,
     hotKeywords: HOT_KEYWORDS,
     history: [],
     results: [],
     loading: false,
     searched: false,
     showHistory: true,
+    searchHeaderHeight: 96,
+    inputFocus: false,
   },
 
   onLoad() {
+    this._initNavbarHeight()
+    this._initSearchHeaderHeight()
     this._loadHistory()
+    wx.nextTick(() => {
+      this.setData({ inputFocus: true })
+    })
+  },
+
+  // 计算搜索栏实际高度（rpx → px），供 scroll-view 高度计算使用
+  _initSearchHeaderHeight() {
+    try {
+      const windowWidth = wx.getWindowInfo().windowWidth
+      // padding 16rpx * 2 + input-wrap 内容 64rpx（16rpx padding * 2 + 32rpx 字体）
+      const heightRpx = 96
+      const heightPx = Math.round(heightRpx * windowWidth / 750)
+      this.setData({ searchHeaderHeight: heightPx })
+    } catch (e) {
+      // 降级使用默认值
+    }
   },
 
   _loadHistory() {
@@ -53,12 +64,12 @@ Page({
 
   handleInput(e) {
     const keyword = e.detail.value
-    this.setData({ keyword, showHistory: !keyword })
+    // model:value 已自动同步 keyword，这里仅做防抖搜索
+    this.setData({ showHistory: !keyword })
     if (!keyword.trim()) {
       this.setData({ results: [], searched: false })
       return
     }
-    // 防抖 300ms
     if (this._debounceTimer) {
       clearTimeout(this._debounceTimer)
     }
@@ -68,10 +79,16 @@ Page({
   },
 
   handleSearch() {
+    if (this._debounceTimer) {
+      clearTimeout(this._debounceTimer)
+    }
     this._doSearch()
   },
 
   handleClearInput() {
+    if (this._debounceTimer) {
+      clearTimeout(this._debounceTimer)
+    }
     this.setData({
       keyword: '',
       results: [],
@@ -80,22 +97,16 @@ Page({
     })
   },
 
-  handleTabChange(e) {
-    const activeTab = e.currentTarget.dataset.key
-    this.setData({ activeTab })
-    if (this.data.keyword.trim()) {
-      this._doSearch()
-    }
-  },
-
   handleHotKeyword(e) {
     const keyword = e.currentTarget.dataset.keyword
+    this._keyword = keyword
     this.setData({ keyword, showHistory: false })
     this._doSearch()
   },
 
   handleHistoryKeyword(e) {
     const keyword = e.currentTarget.dataset.keyword
+    this._keyword = keyword
     this.setData({ keyword, showHistory: false })
     this._doSearch()
   },
@@ -125,7 +136,7 @@ Page({
         name: 'searchService',
         data: {
           keyword,
-          type: this.data.activeTab,
+          type: 'all',
         },
       })
 

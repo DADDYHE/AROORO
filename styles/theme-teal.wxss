@@ -1,204 +1,419 @@
 /* ================================================================
-   theme-teal.wxss · 橄榄绿治愈轻奢主题（PETLUX · 全盘换肤）
-   2026-07-28 基于 pet-luxury-mini-program 设计系统确立
-   注：文件名 theme-teal 为历史遗留，内容已全盘替换为橄榄绿主题。
+   theme-teal.wxss · AROORO 高奢视觉主题 v2
+   方向：Haute-Luxury · Artistic Whitespace · Editorial Minimalism
    ----------------------------------------------------------------
-   设计语言：
-     橄榄色调暖白底 + 深橄榄绿品牌色 + 纯白卡片 + 克制圆角
-     + 暖灰药丸分类条 + 品牌强调线 + 画廊式留白
-     + 极简 TabBar（白底 + 居中橄榄绿圆钮）
-   ----------------------------------------------------------------
-   橄榄绿色板（源自 pet-luxury-mini-program 设计系统）：
-     主锚点 #4F5E35 · 深橄榄 #3A4626 · 柔橄榄 #EAEDDF
-     暖墨 #2A2823 · 次墨 #635E54 · 浅墨 #9A9489
-     橄榄线 #D8DCCE · 页底 #F8FAF3
-   ----------------------------------------------------------------
-   接线方式：在 app.wxss 中本文件须 import 于 variables.wxss 之后，
-   使同名语义变量覆盖旧值；同时覆盖 design-tokens.wxss 的 --zy-* 令牌。
-   本文件合并了原 theme-teal（令牌覆盖）与 theme-warm（圆角/阴影调整）
-   的职责，全局唯一橄榄绿主题，首页无需再单独 import。
+   设计参考：Hermès / Chanel / Dior / The Row / Loewe
+   核心哲学：
+     · 少即是多——每一个像素都有理由存在
+     · 奶油米白底 + 深森林绿主色 + 香槟金点缀
+     · 发丝描边取代阴影，直角/微圆角取代大圆角
+     · 艺术级留白：外侧 48rpx+ 边距，章节间距 ≥ 120rpx
+     · 排版像杂志：大字重标题 + 轻正文 + 宽字距小标签
+     · 图片优先：全出血大图 + 克制文案
+   Skyline 兼容：不使用 :active / text-transform / backdrop-filter / sticky
    ================================================================ */
 
 page {
-  /* ===== 品牌层：橄榄绿（PETLUX 主色 #4F5E35） ===== */
-  --primary-color: #4F5E35;            /* 橄榄绿 — 主按钮 / 选中态 / 品牌锚点 */
-  --primary-light: #EAEDDF;            /* 柔橄榄底 — 浅选中态芯片 */
-  --secondary-color: #3A4626;          /* 深橄榄 — hover / 按下态 */
-  --accent-color: #B8893A;             /* 暖金 — 点缀 / 提示（极少用） */
-  --gradient-primary: linear-gradient(160deg, #4F5E35 0%, #3A4626 100%);
-  --gradient-secondary: linear-gradient(135deg, #B8893A 0%, #9A7430 100%);
+  /* ===== 品牌主色：深森林绿（奢侈品级沉稳） ===== */
+  --primary-color: #1F3A1F;            /* 深森林绿 — 品牌锚点，取代原橄榄绿 */
+  --primary-deep: #0F2410;             /* 最深林绿 — 按下/深底 */
+  --primary-mid: #2D4F2D;              /* 中林绿 — hover态 */
+  --primary-soft: #3D6B3D;             /* 柔林绿 — 图标描边 */
+  --primary-tint: #E8ECE2;             /* 林绿极浅底 — 选中芯片/浅填充 */
+  --primary-wash: #F2F5EC;             /* 林绿洗底 — 整块背景 */
+  --secondary-color: #0F2410;          /* 深林绿 — 深按压/渐变深停 */
+  --gradient-primary: linear-gradient(180deg, #2D4F2D 0%, #0F2410 100%);
 
-  /* ===== --zy-* 橄榄绿令牌（覆盖 design-tokens.wxss） ===== */
-  --zy-primary-900: #3A4626;            /* 最深：按下态 / 深色卡片 */
-  --zy-primary-700: #4F5E35;            /* 主锚点：TabBar 选中 / 主按钮 */
-  --zy-primary-500: #6B7D5A;            /* 浅橄榄：hover / 次级结构 */
-  --zy-primary-300: #9A9489;            /* 柔灰：禁用 / 插画 */
-  --zy-primary-100: #EAEDDF;            /* 橄榄浅底：选中态芯片底 */
-  --zy-primary-grad: linear-gradient(160deg, #4F5E35 0%, #3A4626 100%);
+  /* ===== 点缀色：香槟金（克制使用，<5% 面积） ===== */
+  --accent-color: #C9A24B;             /* 香槟金 — 核心点缀 */
+  --accent-deep: #A8894A;              /* 深金 — 按下态 */
+  --accent-soft: #F0E6D0;              /* 浅金底 — 徽章/标签 */
+  --accent-wash: #F8F3E6;              /* 金洗底 — 整块浅色 */
+  --accent-glow: rgba(201,162,75, 0.20);
+  --gradient-secondary: linear-gradient(135deg, #C9A24B 0%, #A8894A 100%);
 
-  /* ===== 中性层：橄榄调暖白底 + 暖墨文字（对齐 PETLUX 令牌） ===== */
-  --background-color: #F8FAF3;          /* 橄榄调暖白页面底色 */
-  --card-color: #FFFFFF;                /* 纯白卡片 */
-  --surface-tint: #EAEDDF;              /* 次级表面 / 芯片底 */
-  --text-primary: #2A2823;              /* 主文字 暖墨（非纯黑） */
-  --text-secondary: #635E54;            /* 中性次文字 */
-  --text-tertiary: #9A9489;             /* 浅灰提示 */
-  --border-color: #D8DCCE;              /* 边框 橄榄调 */
-  --divider-color: #EAEDDF;             /* 分割线 */
-  --overlay-color: rgba(42, 40, 35, 0.5);
+  /* ===== 品牌红：陶土暖红（收藏/点赞/警示） ===== */
+  --brand-red: #B85C3C;
+  --brand-red-soft: #F0DFD6;
 
-  /* ===== --zy-* 中性令牌覆盖 ===== */
-  --zy-bg: #F8FAF3;
+  /* ===== 语义性别色（男蓝女粉，跨页面复用） ===== */
+  --gender-male: #6B9DAE;
+  --gender-male-tint: rgba(107, 157, 174, 0.10);
+  --gender-male-border: rgba(107, 157, 174, 0.25);
+  --gender-female: #C0788E;
+  --gender-female-tint: rgba(192, 120, 142, 0.10);
+  --gender-female-border: rgba(192, 120, 142, 0.25);
+
+  /* ===== 中性色：奶油纸感白底 + 炭墨文字 ===== */
+  --background-color: #F7F5EF;         /* 奶油米白 — 页面底（Hermès 纸感） */
+  --background-warm: #F3F0E8;          /* 暖米 — 分区底 */
+  --card-color: #FFFFFF;               /* 纯白卡片 */
+  --card-cream: #FBF9F4;               /* 奶油卡 — 次级卡片 */
+  --ink-black: #1A1A17;                /* 炭黑 — 主标题（非纯黑） */
+  --text-primary: #1A1A17;             /* 主文字 炭墨 */
+  --text-secondary: #5A564C;           /* 次文字 暖炭灰 */
+  --text-tertiary: #736D5F;            /* 三级文字 米灰 — AA：6 种卡底最低 4.51:1（原 #9E9889 仅 2.52，全场景不达标）*/
+  --text-on-primary: #F7F5EF;          /* 主色上的反白文字 */
+  --text-on-accent: #1A1A17;           /* 金族面上的文字 — 炭墨。补齐"缺的一格"：
+                                          金族四个色停 L=0.271~0.676，全部 > 白字上限 0.1833，
+                                          任何反白都不达标（纯白最低 1.45、奶油最低 1.33）。
+                                          炭墨在 #E8D5A8/#C9A24B/#B8923E/#A8894A 上为
+                                          12.05 / 7.27 / 6.00 / 5.27，最低 5.27 ✓。
+                                          ⚠ 必须是固定字面量，不可写成 var(--ink-black)：
+                                          金面不随主题变，而 --ink-black 在 .theme-dark 翻成
+                                          #F0EDE4，会把金按钮打到 1.33:1。 */
+  --text-gold: #1F3A1F;                /* 浅底金文字 → 深绿（REV.4 B′）*/
+  --border-color: #E2DED3;             /* 描边 发丝米灰 */
+  --border-soft: #EDEAE1;              /* 浅描边 */
+  --divider-color: #ECE8DE;            /* 分割线 极淡米 */
+  --hairline: rgba(26, 26, 23, 0.08);  /* 发丝线 — 极细边框 */
+  --overlay-color: rgba(26, 26, 23, 0.5);
+  --scrim-overlay: rgba(26, 46, 26, 0.4);  /* 深绿 scrim — 图片底遮罩（activity-detail 吸附） */
+
+  /* ===== 灰度系统（苹果风格，奢侈品冷调） ===== */
+  --gray-50: #FAFAF8;
+  --gray-100: #F5F3EE;
+  --gray-200: #E8E5DC;
+  --gray-300: #D6D2C7;
+  --gray-400: #B8B3A6;
+  --gray-500: #9E9889;
+  --gray-600: #7A7568;
+  --gray-700: #5A564C;
+  --gray-800: #3A3730;
+  --gray-900: #1A1A17;
+  --gray-950: #0F0E0C;
+  --surface-tint: #F2F0E8;
+
+  /* ===== --zy-* 设计令牌同步覆盖 ===== */
+  --zy-primary-900: #0F2410;
+  --zy-primary-700: #1F3A1F;
+  --zy-primary-500: #3D6B3D;
+  --zy-primary-300: #8A9E7A;
+  --zy-primary-100: #E8ECE2;
+  --zy-primary-grad: linear-gradient(180deg, #2D4F2D 0%, #0F2410 100%);
+  --zy-accent: #C9A24B;
+  --zy-accent-hover: #A8894A;
+  --zy-accent-soft: #F0E6D0;
+  --zy-accent-glow: rgba(201,162,75, 0.20);
+  --zy-bg: #F7F5EF;
   --zy-surface: #FFFFFF;
-  --zy-surface-glass: rgba(255, 255, 255, 0.92);
+  --zy-surface-glass: rgba(255, 255, 255, 0.95);
   --zy-surface-glass-solid: #FFFFFF;
-  --zy-surface-glass-border: rgba(255, 255, 255, 0.55);
-  --zy-border: #D8DCCE;
-  --zy-border-strong: #C9CFBA;
-  --zy-divider: #EAEDDF;
-  --zy-text-1: #2A2823;
-  --zy-text-2: #635E54;
-  --zy-text-3: #9A9489;
-  --zy-text-on-primary: #FAFAF6;
+  --zy-surface-glass-border: rgba(214, 210, 199, 0.4);
+  --zy-border: #E2DED3;
+  --zy-border-strong: #D6D2C7;
+  --zy-divider: #ECE8DE;
+  --zy-text-1: #1A1A17;
+  --zy-text-2: #5A564C;
+  --zy-text-3: #736D5F;                 /* 镜像 --text-tertiary（AA：#9E9889→#736D5F 同步，零消费死码） */
+  --zy-text-on-primary: #F7F5EF;
 
-  /* ===== PETLUX 专属令牌（暖金圆卡 + 橄榄强调） ===== */
-  --pa-card-coral: #B8893A;             /* 暖金圆卡底（替代珊瑚） */
-  --pa-card-coral-deep: #9A7430;        /* 暖金深环 */
-  --pa-paw-red: #A85B4A;                /* 爪印/红心 暖陶土 */
+  /* ===== 功能色 ===== */
+  --success-color: #3D7A45;
+  --warning-color: #C9A24B;
+  --error-color: #A45236;              /* AA：含「自身 8% wash 上的文字」最低 4.51:1（原 #B85C3C 仅 3.78）*/
+  --info-color: #5C7A8A;
+  /* status 族：横幅底色，均为「白字压其上」用途，故全部满足 L≤0.1833（白字 4.5:1）。
+     新增/改值时务必复核该阈值，勿凭肉眼判断"够不够深"。 */
+  --status-pending: #C9A24B;           /* 金。例外：L 过高，白字仅 2.40:1 → 金底文字用 --text-primary */
+  --status-active: #5C7A8A;            /* 白字 4.56:1 */
+  --status-active-deep: #4A6572;       /* 白字 6.18:1 */
+  /* 「进行中」原先缺档，开发者就近借用了 --feeding-gradient（旧橄榄坐标）补位，
+     导致所有已确认/进行中订单不分业务线统一渲橄榄绿。补齐此档以断掉借用动机。
+     取值为体系内既有色：#3D6B3D = --activity-primary-mid，#2D4F2D = tabbar center 渐变起点。 */
+  --status-progress: #3D6B3D;          /* 白字 6.23:1 */
+  --status-progress-deep: #2D4F2D;     /* 白字 9.26:1 */
+  --status-completed: #3D7A45;         /* 白字 5.16:1 */
+  --status-completed-deep: #2D5A33;    /* 白字 8.01:1 */
+  /* 原 #9E9889/#7A7568 白字最差端仅 2.87:1，且两端对白对炭黑皆不达标（双输），只能整体加深。 */
+  --status-cancelled: #7A7568;         /* 白字 4.59:1 */
+  --status-cancelled-deep: #5A564C;    /* 白字 7.32:1（= --text-secondary） */
 
-  /* ===== TabBar 专用令牌覆盖 ===== */
-  --zy-tabbar-item-active: #4F5E35;                    /* 选中 图标+文字 橄榄绿 */
-  --zy-tabbar-item-inactive: #9A9489;                  /* 未选中 暖灰 */
-  --zy-tabbar-item-active-bg: rgba(79, 94, 53, 0.08);  /* 选中态浅橄榄底 */
-  --zy-tabbar-border-top: 1rpx solid rgba(79, 94, 53, 0.08);
-  --zy-tabbar-center-grad: linear-gradient(160deg, #4F5E35 0%, #3A4626 100%);
-  --zy-tabbar-center-shadow: 0 12rpx 28rpx rgba(79, 94, 53, 0.35), 0 4rpx 10rpx rgba(79, 94, 53, 0.20);
+  /* ===== 板块色（全部向高奢家族靠拢） ===== */
+  --boarding-primary: #8B6350;
+  --boarding-secondary: #A68370;
+  --boarding-accent: #F0E5DC;
+  --boarding-tint: rgba(139, 99, 80, 0.08);
 
-  /* ===== 阴影（PETLUX 极柔 — 静态 alpha ≤ 0.04，浮层渐强） ===== */
-  --zy-shadow-xs: 0 2rpx 6rpx rgba(42, 40, 35, 0.04), 0 1rpx 3rpx rgba(42, 40, 35, 0.03);
-  --zy-shadow-sm: 0 4rpx 12rpx rgba(42, 40, 35, 0.05), 0 1rpx 4rpx rgba(42, 40, 35, 0.03);
-  --zy-shadow-md: 0 8rpx 24rpx -8rpx rgba(42, 40, 35, 0.10);
-  --zy-shadow-lg: 0 16rpx 48rpx -16rpx rgba(42, 40, 35, 0.16);
-  --zy-shadow-float-tabbar: 0 -4rpx 32rpx rgba(42, 40, 35, 0.08);
+  --activity-primary: #2D4F2D;
+  --activity-secondary: #4A6B4A;
+  --activity-accent: #E2EBDF;
+  --activity-tint: rgba(45, 79, 45, 0.08);
 
-  --shadow-soft: 0 2rpx 6rpx rgba(42, 40, 35, 0.04), 0 1rpx 3rpx rgba(42, 40, 35, 0.03);
-  --shadow-xs: 0 1rpx 3rpx rgba(42, 40, 35, 0.03);
-  --shadow-md: 0 4rpx 12rpx rgba(42, 40, 35, 0.05), 0 1rpx 4rpx rgba(42, 40, 35, 0.03);
-  --shadow-lg: 0 8rpx 24rpx -8rpx rgba(42, 40, 35, 0.10);
-  --shadow-float: 0 -4rpx 32rpx rgba(42, 40, 35, 0.08);
+  --mall-primary: #C9A24B;
+  --mall-secondary: #DDBE86;
+  --mall-accent: #F0E6D0;
+  --mall-tint: rgba(201,162,75, 0.08);
+  --mall-gradient: linear-gradient(135deg, #C9A24B 0%, #A8894A 100%);  /* REV.4 覆盖 variables 野金 */
 
-  /* ===== 发光阴影 ===== */
-  --shadow-glow-primary: 0 8rpx 24rpx rgba(79, 94, 53, 0.30);
-  --shadow-glow-primary-soft: 0 4rpx 12rpx rgba(79, 94, 53, 0.18);
-  --shadow-glow-primary-lg: 0 16rpx 40rpx rgba(79, 94, 53, 0.38);
-  --shadow-glow-primary-btn: 0 6rpx 16rpx rgba(79, 94, 53, 0.30);
-  --shadow-glow-primary-xs: 0 2rpx 6rpx rgba(79, 94, 53, 0.18);
-  --shadow-glow-mall: 0 8rpx 24rpx rgba(184, 137, 58, 0.30);
-  --shadow-glow-coupon: 0 8rpx 24rpx rgba(184, 137, 58, 0.35);
+  --feeding-primary: #4A6B4A;
+  --feeding-secondary: #6B8A6B;
+  --feeding-accent: #E2EBDF;
+  --feeding-tint: rgba(74, 107, 74, 0.08);
 
-  /* ===== 功能色（PETLUX 语义状态色） ===== */
-  --success-color: #5B7C4A;
-  --warning-color: #B8893A;
-  --error-color: #A85B4A;
-  --info-color: #6B7D8C;
+  --tuan-primary: #A86348;
+  --tuan-secondary: #C08068;
+  --tuan-accent: #F0DFD6;
+  --tuan-tint: rgba(168, 99, 72, 0.08);
 
-  /* ===== 订单状态色 ===== */
-  --status-pending: #B8893A;
-  --status-active: #6B7D8C;
-  --status-completed: #5B7C4A;
-  --status-cancelled: #9A9489;
+  /* ===== 业务线 tint 扩展档（partner 分包裸 rgba 吸附 0.04/0.08/0.12 三档） =====
+     基础档 --*-tint 固定 0.08；0.04/0.12 两档仅按需补充（吸邻近档，平局向下）。
+     0.20 档无人使用，未建。--primary-tint-* 为品牌主绿 #1F3A1F 的洗底。 */
+  --mall-tint-04: rgba(201, 162, 75, 0.04);
+  --mall-tint-12: rgba(201, 162, 75, 0.12);
+  --primary-tint-04: rgba(31, 58, 31, 0.04);
+  --primary-tint-08: rgba(31, 58, 31, 0.08);
+  --feeding-tint-12: rgba(74, 107, 74, 0.12);
+  --boarding-tint-12: rgba(139, 99, 80, 0.12);
 
-  /* ===== 语义补齐 ===== */
-  --gray-100: #F8FAF3;                /* 橄榄调暖白（对齐 PETLUX 页底） */
-  --gray-450: #9A9489;
-  --gray-350: #C9CFBA;
-  --activity-primary-mid: #6B7D5A;
-  --text-gold: #B8893A;
+  /* ===== 语义状态洗底（--wash-<语义>-<透明度>）=====
+     与上方 --<业务线>-tint 区分：-tint 是业务线着色，-wash 是语义状态着色。
+     二者都固定 0.08/0.10 两档，勿再手写新的 alpha。
+     ⚠ alpha 洗底的实际对比度取决于其后的卡片色（白/奶油/warm 各不同），
+       无法脱离上下文单独判定达标，改语义色时须连同洗底一起复核。 */
+  --wash-success-08: rgba(61, 122, 69, 0.08);
+  --wash-error-08: rgba(184, 92, 60, 0.08);
+  --wash-neutral-10: rgba(158, 152, 137, 0.10);
 
-  /* ===== 圆角（PETLUX 克制圆角 4/8/12/16px） ===== */
-  --border-radius-xs: 8rpx;            /* 4px — 小标签、芯片 */
-  --border-radius-sm: 16rpx;           /* 8px — 小卡片、输入框 */
-  --border-radius-md: 24rpx;           /* 12px — 中卡片、按钮 */
-  --border-radius-lg: 32rpx;           /* 16px — 大卡片（默认） */
-  --border-radius-xl: 32rpx;
-  --border-radius-2xl: 32rpx;          /* 卡片默认 */
-  --border-radius-3xl: 32rpx;
-  --border-radius-4xl: 32rpx;
-  --border-radius-pill: 999rpx;        /* 药丸 — 按钮、标签 */
+  /* ===== 券/渐变 ===== */
+  --coupon-gradient: linear-gradient(135deg, #1F3A1F 0%, #0F2410 100%);
 
-  /* ===== 排版层级（PETLUX Typography — px→rpx 2x） ===== */
-  --text-display: 64rpx;               /* 32px — 首屏大标题 */
-  --text-h1: 48rpx;                    /* 24px — 页面标题 */
-  --text-h2: 40rpx;                    /* 20px — 区块标题 */
-  --text-h3: 34rpx;                    /* 17px — 卡片标题 */
-  --text-body: 30rpx;                  /* 15px — 正文 */
-  --text-body-sm: 26rpx;               /* 13px — 小正文 */
-  --text-caption: 24rpx;               /* 12px — 辅助/说明 */
-  --leading-tight: 1.2;
-  --leading-normal: 1.55;
-  --leading-relaxed: 1.7;
-  --tracking-tight: -0.02em;
-  --tracking-normal: 0;
-  --tracking-wide: 0.01em;
+  /* ===== 字体栈 ===== */
+  --font-stack: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Songti SC", "STSong", "Microsoft YaHei", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --font-serif: "Songti SC", "STSong", "Songti TC", "SimSun", serif;
+  --font-bold: var(--font-sans);
+  --font-regular: var(--font-sans);
+  --font-light: var(--font-sans);
+  --font-thin: var(--font-sans);
+  --font-semibold: var(--font-sans);
+  --font-heavy: var(--font-sans);
 
-  /* ===== 间距（PETLUX 8pt 网格 — px→rpx 2x） ===== */
-  --space-1: 8rpx;                     /* 4px */
-  --space-2: 16rpx;                    /* 8px */
-  --space-3: 24rpx;                    /* 12px */
-  --space-4: 32rpx;                    /* 16px */
-  --space-5: 48rpx;                    /* 24px */
-  --space-6: 64rpx;                    /* 32px */
-  --space-7: 96rpx;                    /* 48px */
+  /* ===== 字号梯度（奢侈品排版：标题更大更重，正文克制） ===== */
+  /* ⚠️ 旧代字号令牌已退役（A-3，2026-08-04）：全仓消费已迁移至 --zy-fs-*，详见 deliverables/legacy-retire/migration-map.md */
 
-  /* ===== 板块色（统一向橄榄绿家族靠拢，保留各板块辨识度） ===== */
-  --boarding-primary: #C08060;          /* 寄养 暖陶土（暖调区分） */
-  --boarding-secondary: #D49E80;
-  --boarding-accent: #F0E0D4;
-  --boarding-gradient: linear-gradient(135deg, #C08060 0%, #D49E80 100%);
-  --boarding-tint: rgba(192, 128, 96, 0.10);
+  /* 行高（奢侈品更松） */
+  --line-height-title: 1.15;
+  --line-height-text: 1.65;
+  --line-height-tight: 1.3;
+  --line-height-loose: 1.85;
 
-  --activity-primary: #7A8C5A;          /* 活动 橄榄绿（品牌家族） */
-  --activity-secondary: #9AAB7A;
-  --activity-accent: #EAEDDF;
-  --activity-gradient: linear-gradient(135deg, #7A8C5A 0%, #9AAB7A 100%);
-  --activity-tint: rgba(122, 140, 90, 0.10);
+  /* 字间距（奢侈品宽字距） */
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0.01em;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.12em;
+  --letter-spacing-display: 0.2em;  /* 品牌大标极宽字距 */
 
-  --mall-primary: #B8893A;             /* 商城 暖金 */
-  --mall-secondary: #D4A858;
-  --mall-accent: #F2E8D4;
-  --mall-gradient: linear-gradient(135deg, #B8893A 0%, #D4A858 100%);
-  --mall-tint: rgba(184, 137, 58, 0.10);
+  /* ===== 间距（艺术留白：更大更松） ===== */
+  /* ⚠️ 旧代间距令牌已退役（A-3，2026-08-04）：全仓消费已迁移至 --zy-space-*，详见 deliverables/legacy-retire/migration-map.md */
+  /* 页面外侧边距（奢侈品标准：48rpx = 24px） */
+  --page-padding: 48rpx;
+  --section-gap: 120rpx;     /* 章节间距 */
+  --card-padding: 40rpx;     /* 卡片内边距 */
 
-  --feeding-primary: #7C9468;          /* 服务 鼠尾草绿 */
-  --feeding-secondary: #9AB488;
-  --feeding-accent: #E8EFE0;
-  --feeding-gradient: linear-gradient(135deg, #7C9468 0%, #9AB488 100%);
-  --feeding-tint: rgba(124, 148, 104, 0.10);
+  /* ===== 圆角（奢侈品微圆角：2-8rpx，近乎直角） ===== */
+  /* ⚠️ 旧代圆角令牌已退役（A-3，2026-08-04）：全仓消费已迁移至 --zy-radius-*，详见 deliverables/legacy-retire/migration-map.md */
 
-  --tuan-primary: #B07560;              /* 团购 暖陶土玫瑰 */
-  --tuan-secondary: #C99480;
-  --tuan-accent: #F0DEDE;
-  --tuan-gradient: linear-gradient(135deg, #B07560 0%, #C99480 100%);
-  --tuan-tint: rgba(176, 117, 96, 0.10);
+  /* ===== 阴影（极克制：几乎无阴影，用发丝描边替代） ===== */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: 0 2rpx 12rpx rgba(26, 26, 23, 0.04);
+  --shadow-lg: 0 8rpx 32rpx -8rpx rgba(26, 26, 23, 0.08);
+  --shadow-xl: 0 16rpx 48rpx -16rpx rgba(26, 26, 23, 0.12);
+  --shadow-2xl: 0 24rpx 64rpx -20rpx rgba(26, 26, 23, 0.16);
+  --shadow-soft: none;
+  --shadow-float: 0 -2rpx 24rpx rgba(26, 26, 23, 0.06);
 
-  /* ===== 券渐变 ===== */
-  --coupon-gradient: linear-gradient(135deg, #4F5E35 0%, #3A4626 100%);
+  /* ===== 发光阴影（主按钮/浮钮专用） ===== */
+  --shadow-glow-primary: 0 8rpx 24rpx rgba(31, 58, 31, 0.25);
+  --shadow-glow-primary-soft: 0 4rpx 12rpx rgba(31, 58, 31, 0.15);
+  --shadow-glow-primary-lg: 0 12rpx 36rpx rgba(31, 58, 31, 0.30);
+  --shadow-glow-primary-btn: 0 6rpx 18rpx rgba(31, 58, 31, 0.22);
+  --shadow-glow-primary-xs: 0 2rpx 6rpx rgba(31, 58, 31, 0.12);
+  --shadow-glow-mall: 0 8rpx 24rpx rgba(201,162,75, 0.25);
+  --shadow-glow-coupon: 0 8rpx 24rpx rgba(201,162,75, 0.28);
 
-  /* ===== 骨架屏 ===== */
-  --skeleton-base: #E2E6D3;
+  /* ===== TabBar 专用 ===== */
+  --zy-tabbar-height: 104rpx;
+  --zy-tabbar-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --zy-tabbar-total-height: calc(104rpx + env(safe-area-inset-bottom, 0px));
+  --zy-tabbar-bg: rgba(255, 255, 255, 0.96);
+  --zy-tabbar-bg-glass: rgba(255, 255, 255, 0.92);
+  --zy-tabbar-blur: 20px;
+  --zy-tabbar-border-top: 1rpx solid rgba(26, 26, 23, 0.06);
+  --zy-tabbar-item-active: #1F3A1F;
+  --zy-tabbar-item-inactive: #9E9889;
+  --zy-tabbar-item-active-bg: transparent;
+  --zy-tabbar-icon-size: 44rpx;
+  --zy-tabbar-label-size: 20rpx;
+  --zy-tabbar-label-weight: 400;
+  --zy-tabbar-label-weight-active: 500;
+  --zy-tabbar-center-d: 112rpx;
+  --zy-tabbar-center-protrusion: 36rpx;
+  --zy-tabbar-center-bottom: calc(env(safe-area-inset-bottom, 0px) + 24rpx);
+  --zy-tabbar-center-icon-size: 52rpx;
+  --zy-tabbar-center-grad: linear-gradient(180deg, #2D4F2D 0%, #0F2410 100%);
+  --zy-tabbar-center-icon: #F7F5EF;
+  --zy-tabbar-center-shadow: 0 8rpx 24rpx rgba(31, 58, 31, 0.25), 0 2rpx 8rpx rgba(31, 58, 31, 0.15);
+  --zy-shadow-float-tabbar: 0 -2rpx 24rpx rgba(26, 26, 23, 0.06);
+
+  /* ===== zy-* 排版令牌 ===== */
+  --zy-fs-display: 60rpx;  --zy-fs-display-w: 300; --zy-fs-display-lh: 1.1;
+  --zy-fs-h1: 48rpx;       --zy-fs-h1-w: 500;      --zy-fs-h1-lh: 1.15;
+  --zy-fs-h2: 40rpx;       --zy-fs-h2-w: 500;      --zy-fs-h2-lh: 1.25;
+  --zy-fs-h3: 34rpx;       --zy-fs-h3-w: 500;      --zy-fs-h3-lh: 1.35;
+  --zy-fs-body: 30rpx;     --zy-fs-body-w: 400;    --zy-fs-body-lh: 1.65;
+  --zy-fs-md: 28rpx;       --zy-fs-md-w: 400;      --zy-fs-md-lh: 1.6;   /* A-1 补档：覆盖旧 --font-size-sm(14px=28rpx) 迁移目标 + 硬编码 28rpx×186 */
+  --zy-fs-sm: 26rpx;       --zy-fs-sm-w: 400;      --zy-fs-sm-lh: 1.5;
+  --zy-fs-xs-lg: 24rpx;    --zy-fs-xs-lg-w: 400;   --zy-fs-xs-lg-lh: 1.5; /* A-1 补档：覆盖旧 --font-size-xs(12px=24rpx) 迁移目标 + 硬编码 24rpx×199（全仓 TOP1） */
+  --zy-fs-xs: 22rpx;       --zy-fs-xs-w: 400;      --zy-fs-xs-lh: 1.4;
+  --zy-fs-2xs: 20rpx;      --zy-fs-2xs-w: 400;     --zy-fs-2xs-lh: 1.4;  /* A-1 补档：覆盖旧 --font-size-xxs(10px=20rpx) 迁移目标 + 硬编码 20rpx×93 */
+
+  /* ===== zy-* 间距令牌 ===== */
+  --zy-space-2xs: 4rpx;
+  --zy-space-xs: 8rpx;
+  --zy-space-sm: 16rpx;
+  --zy-space-sm2: 20rpx;   /* A-1 补档：覆盖硬编码 20rpx×177（全仓间距 TOP 缺档）+ 旧 --spacing-sm(20rpx) 迁移目标 */
+  --zy-space-md: 24rpx;
+  --zy-space-lg: 40rpx;
+  --zy-space-xl: 64rpx;
+  --zy-space-2xl: 96rpx;
+  --zy-space-3xl: 128rpx;
+  --zy-space-4xl: 200rpx;  /* A-1 补档：覆盖旧 --spacing-xxxxxl(200rpx) 2 处消费 + 硬编码 200rpx×11 */
+
+  /* ===== zy-* 圆角令牌 ===== */
+  --zy-radius-xs: 4rpx;   /* A-1 补档：覆盖旧 --border-radius-xs(4rpx) 38 处消费，实现圆角零动版迁移 */
+  --zy-radius-sm: 8rpx;
+  --zy-radius-md: 12rpx;
+  --zy-radius-lg: 16rpx;
+  --zy-radius-xl: 20rpx;
+  --zy-radius-2xl: 24rpx;
+  --zy-radius-3xl: 32rpx;
+  --zy-radius-pill: 12rpx;
+
+  /* ===== zy-* 阴影 ===== */
+  --zy-shadow-xs: none;
+  --zy-shadow-sm: none;
+  --zy-shadow-md: 0 2rpx 12rpx rgba(26, 26, 23, 0.04);
+  --zy-shadow-lg: 0 8rpx 32rpx -8rpx rgba(26, 26, 23, 0.08);
+  --zy-shadow-fab: var(--zy-tabbar-center-shadow);
+
+  /* ===== 动效（更慢更优雅） ===== */
+  --zy-ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --zy-ease-emphasized: cubic-bezier(0.19, 1, 0.22, 1);
+  --zy-ease-decelerate: cubic-bezier(0.16, 1, 0.3, 1);
+  --zy-ease-spring: cubic-bezier(0.34, 1.15, 0.64, 1);
+  --zy-dur-fast: 280ms;
+  --zy-dur-base: 500ms;
+  --zy-dur-slow: 700ms;
+  --zy-dur-fab: 600ms;
+
+  --transition-fast: 280ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-normal: 500ms cubic-bezier(0.19, 1, 0.22, 1);
+  --transition-slow: 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-bounce: 600ms cubic-bezier(0.34, 1.15, 0.64, 1);
+  --transition-smooth: 500ms cubic-bezier(0.19, 1, 0.22, 1);
+  --transition-elastic: 700ms cubic-bezier(0.34, 1.15, 0.64, 1);
+
+  /* ===== 布局 ===== */
+  --header-height: 48px;
+  --tabbar-height: 52px;
+  --list-item-height: 72px;
+  --container-max-width: 750rpx;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --tap-target-min: 88rpx;
+
+  /* ===== z-index ===== */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
+
+  /* 其他 */
+  --metallic-gold-dark: #A8894A;
+  --shadow-emboss: inset 0 1rpx 0 rgba(255, 255, 255, 0.6);
+  --skeleton-base: #ECE8DE;
+  --gray-450: #9E9889;
+  --gray-350: #D6D2C7;
+  --activity-primary-mid: #3D6B3D;
+  --pa-card-coral: #C9A24B;
+  --pa-card-coral-deep: #A8894A;
+  --pa-paw-red: #B85C3C;
+
+  /* ===== 团购板块色（groupbuy，兼容旧 group-detail 页面） ===== */
+  --groupbuy-primary: #A86348;
+  --groupbuy-gradient: linear-gradient(135deg, #A86348 0%, #8B4A32 100%);
+  --groupbuy-light: #F0DFD6;
+  --groupbuy-tint: rgba(168, 99, 72, 0.08);
+  --shadow-glow-groupbuy: 0 8rpx 24rpx rgba(168, 99, 72, 0.25);
+  --shadow-glow-groupbuy-dark: 0 8rpx 24rpx rgba(168, 99, 72, 0.35);
+  --shadow-sku-popup-groupbuy: 0 -8rpx 32rpx rgba(26, 26, 23, 0.10);
+  --shadow-top-lg: 0 -8rpx 32rpx rgba(26, 26, 23, 0.08);
+
+  /* ===== 玻璃/遮罩令牌 ===== */
+  --glass-bg-95: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(214, 210, 199, 0.3);
+  --border-inverse-35: rgba(255, 255, 255, 0.35);
+  --border-inverse-20: rgba(255, 255, 255, 0.20);
+  --text-inverse: #FFFFFF;
+
+  /* ===== 深底场景令牌（券面/渐变底上的半透明文字与边框） ===== */
+  --text-on-dark-90: rgba(247, 245, 239, 0.90);   /* 主文字（奶油白90%） */
+  --text-on-dark-70: rgba(247, 245, 239, 0.70);   /* 次文字（奶油白70%） */
+  --text-on-dark-50: rgba(247, 245, 239, 0.50);   /* 辅助文字（奶油白50%） */
+  --text-gold-on-dark: rgba(201,162,75, 0.90);  /* 金色文字（深底专用） */
+  --text-gold-on-dark-70: rgba(201,162,75, 0.70);
+  --border-gold-on-dark: rgba(201,162,75, 0.30); /* 金色边框（深底） */
+  --bg-gold-on-dark: rgba(201,162,75, 0.15);    /* 金色浅底（深底） */
+
+  /* ===== 渐变遮罩 ===== */
+  --gradient-white-fade: linear-gradient(to top, #FFFFFF 0%, rgba(255,255,255,0) 100%);
+  --gradient-white-fade-soft: linear-gradient(to top, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
+
+  /* ===== 寄养洗色（host-list 引用） ===== */
+  --boarding-wash: #F5EDE5;
 }
 
-/* ===== 暗色模式（手动切换 data-theme="dark"） ===== */
-[data-theme="dark"] {
-  --primary-color: #7A8C5A;
-  --secondary-color: #9AAB7A;
-  --background-color: #1A1916;
-  --card-color: #262420;
-  --text-primary: #EDE9E0;
-  --text-secondary: #9A9489;
-  --text-tertiary: #635E54;
-  --border-color: #3A3830;
-  --divider-color: #2A2924;
-  --surface-tint: #262420;
-  --overlay-color: rgba(0, 0, 0, 0.7);
+/* ===== 暗色模式 ===== */
+.theme-dark {
+  --primary-color: #3D6B3D;
+  --primary-deep: #1F3A1F;
+  --secondary-color: #4A8A4A;
+  --background-color: #121310;
+  --background-warm: #181915;
+  --card-color: #1E1F1B;
+  --card-cream: #252621;
+  --ink-black: #F0EDE4;
+  --text-primary: #F0EDE4;
+  --text-secondary: #A39E90;
+  --text-tertiary: #6E6A5E;
+  --border-color: #2E2F29;
+  --border-soft: #252621;
+  --divider-color: #252621;
+  --hairline: rgba(240, 237, 228, 0.08);
+  --gray-50: #181915;
+  --gray-100: #1E1F1B;
+  --gray-200: #2E2F29;
+  --gray-900: #F0EDE4;
+  --surface-tint: #252621;
+  --overlay-color: rgba(0, 0, 0, 0.75);
+  --zy-bg: #121310;
+  --zy-surface: #1E1F1B;
+  --zy-text-1: #F0EDE4;
+  --zy-text-2: #A39E90;
+  --zy-text-3: #6E6A5E;
+  --zy-border: #2E2F29;
+  --zy-divider: #252621;
+}
+
+/* ===== 毛玻璃降级 ===== */
+.zy-glass {
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1rpx solid rgba(214, 210, 199, 0.3);
 }

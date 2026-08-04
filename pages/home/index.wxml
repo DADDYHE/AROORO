@@ -1,69 +1,98 @@
+<zy-navbar title="AROORO" showBack="{{false}}" />
+
+<!-- ===== Section 1: 顶部栏 ===== -->
+<header class="topbar topbar-stagger" wx:if="{{isLoggedIn}}">
+  <view class="topbar-left" catchtap="handleLogin" hover-class="topbar-left--pressed" hover-stay-time="120">
+    <image wx:if="{{isLoggedIn && userInfo.avatarUrl}}" class="topbar-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill" hover-class="topbar-avatar--pressed" hover-stay-time="120" />
+    <view wx:else class="topbar-avatar topbar-avatar-ph" hover-class="topbar-avatar--pressed" hover-stay-time="120">
+      <text class="topbar-avatar-text">{{isLoggedIn ? (userInfo.nickName ? userInfo.nickName.charAt(0) : '宠') : '宠'}}</text>
+    </view>
+    <view class="topbar-greeting">
+      <text class="topbar-name">{{isLoggedIn ? (userInfo.nickName || '铲屎官') : '发现萌宠'}}</text>
+      <text class="topbar-loc">{{todayDate || '早上好'}}</text>
+    </view>
+  </view>
+  <view class="topbar-search" catchtap="handleSearch" hover-class="topbar-search--pressed" hover-stay-time="120">
+    <view class="topbar-search-icon"></view>
+    <text class="topbar-search-text">搜索</text>
+  </view>
+</header>
+
+<!-- ===== Section 2: 英雄区 ===== -->
+<view class="hero-section" wx:if="{{bannerList.length}}">
+  <swiper class="hero-swiper" autoplay circular interval="5000" duration="600" style="height: {{bannerHeight}}px;">
+    <swiper-item wx:for="{{bannerList}}" wx:key="_id" data-action="{{item.actionType || 'none'}}" data-target="{{item.actionTarget || ''}}" bindtap="handleBannerTap">
+      <view class="hero-card">
+        <image class="hero-img" src="{{item.imageUrl}}" mode="aspectFill" bindload="onBannerImageLoad" />
+        <view class="hero-overlay"></view>
+        <view class="hero-text">
+          <text class="hero-title hero-title-stagger">{{item.title || '宠爱如初'}}</text>
+          <text class="hero-sub hero-sub-stagger">{{item.subtitle || '为爱宠开启精致生活'}}</text>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+</view>
+<view class="hero-section" wx:else>
+  <view class="hero-card" style="height: {{bannerHeight}}px;">
+    <view class="hero-img hero-img-ph"></view>
+    <view class="hero-overlay"></view>
+    <view class="hero-text">
+      <text class="hero-title hero-title-stagger">宠爱如初</text>
+      <text class="hero-sub hero-sub-stagger">为爱宠开启精致生活</text>
+    </view>
+    <view class="scroll-hint">
+      <view class="scroll-hint-line"></view>
+    </view>
+  </view>
+</view>
+
+<!-- ===== 内容滚动区 ===== -->
+<scroll-view
+  class="home-scroll"
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  refresher-default-style="none"
+  refresher-threshold="80"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindrefresherpulling="_onRefresherPulling"
+  bindrefresherabort="_onRefresherAbort"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{scrollViewOffset}}px); margin-top: {{scrollMarginTop}}px;"
+>
+<!-- 自定义下拉刷新指示器 -->
+<view slot="refresher" class="refresh-indicator">
+  <view class="refresh-spinner">
+    <zy-loading wx:if="{{_refresherTriggered}}" type="tourbillon" size="40" color="#4F5E35" />
+    <view wx:else class="refresh-arrow {{_refreshPulling ? 'refresh-arrow-pulling' : ''}}"></view>
+  </view>
+  <text class="refresh-text">{{_refresherTriggered ? '刷新中...' : '下拉刷新'}}</text>
+</view>
 <view class="home-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 
-  <!-- ===== Section 1: 顶部栏（对齐设计稿 #topbar，仅登录用户可见） ===== -->
-  <header class="topbar" wx:if="{{isLoggedIn}}">
-    <view class="topbar-left" catchtap="handleLogin">
-      <image wx:if="{{isLoggedIn && userInfo.avatarUrl}}" class="topbar-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill" />
-      <view wx:else class="topbar-avatar topbar-avatar-ph">
-        <text class="topbar-avatar-text">{{isLoggedIn ? (userInfo.nickName ? userInfo.nickName.charAt(0) : '宠') : '宠'}}</text>
-      </view>
-      <view class="topbar-greeting">
-        <text class="topbar-name">{{isLoggedIn ? (userInfo.nickName || '铲屎官') : '发现萌宠'}}</text>
-        <text class="topbar-loc">{{todayDate || '早上好'}}</text>
-      </view>
-    </view>
-    <view class="topbar-search" catchtap="handleSearch">
-      <view class="topbar-search-icon"></view>
-      <text class="topbar-search-text">搜索</text>
-    </view>
-  </header>
+  <!-- ===== 内容卡片 sheet：优雅上掀 ===== -->
+  <view class="home-content-sheet stagger-item stagger-sheet" style="margin-top: {{bannerVisibleHeight}}px;">
 
-  <!-- ===== Section 2: 英雄区（对齐设计稿 #hero） ===== -->
-  <view class="hero-section" wx:if="{{bannerList.length}}">
-    <swiper class="hero-swiper" autoplay circular interval="5000" duration="400" style="height: {{bannerHeight}}px;">
-      <swiper-item wx:for="{{bannerList}}" wx:key="_id" data-action="{{item.actionType || 'none'}}" data-target="{{item.actionTarget || ''}}" bindtap="handleBannerTap">
-        <view class="hero-card">
-          <image class="hero-img" src="{{item.imageUrl}}" mode="aspectFill" bindload="onBannerImageLoad" />
-          <view class="hero-overlay"></view>
-          <view class="hero-text">
-            <text class="hero-title">{{item.title || '宠爱如初'}}</text>
-            <text class="hero-sub">{{item.subtitle || '为爱宠开启精致生活'}}</text>
-          </view>
-        </view>
-      </swiper-item>
-    </swiper>
-  </view>
-  <view class="hero-section" wx:else>
-    <view class="hero-card" style="height: {{bannerHeight}}px;">
-      <view class="hero-img hero-img-ph"></view>
-      <view class="hero-overlay"></view>
-      <view class="hero-text">
-        <text class="hero-title">宠爱如初</text>
-        <text class="hero-sub">为爱宠开启精致生活</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- ===== 内容卡片：整体上移覆盖 banner，顶部 96rpx 圆角 ===== -->
-  <view class="home-content-sheet" style="margin-top: {{contentSheetMarginTop}}px;">
-
-  <!-- ===== Section 2.5: 我的宠物（仅登录用户可见） ===== -->
-  <view class="section my-pets-section" wx:if="{{isLoggedIn}}">
+  <!-- ===== Section 2.5: 我的宠物 ===== -->
+  <view class="section my-pets-section stagger-item stagger-rise-fast delay-1" wx:if="{{isLoggedIn}}">
     <view class="my-pets-header">
       <view class="my-pets-title-wrap">
         <text class="section-title">我的宠物</text>
-        <view class="pet-add-btn" catchtap="handleAddPet">
+        <view class="pet-add-btn" catchtap="handleAddPet" hover-class="pet-add-btn--pressed" hover-stay-time="120">
           <text class="pet-add-icon">+</text>
           <text class="pet-add-text">添加</text>
         </view>
       </view>
-      <text class="pet-view-all" wx:if="{{myPets.length > 0}}" bindtap="handleViewAllPets">查看全部 ›</text>
+      <text class="pet-view-all" wx:if="{{myPets.length > 0}}" bindtap="handleViewAllPets" hover-class="pet-view-all--pressed" hover-stay-time="120">查看全部 ›</text>
     </view>
 
-    <!-- 有宠物：两列网格卡片 -->
     <view class="pets-grid" wx:if="{{myPets.length > 0}}">
-      <view class="pet-card pet-card-{{item.genderClass}}" wx:for="{{myPets}}" wx:key="_id" data-id="{{item._id}}" bindtap="handlePetTap">
+      <view class="pet-card pet-card-{{item.genderClass}} stagger-item stagger-scale" wx:for="{{myPets}}" wx:key="_id" data-id="{{item._id}}" bindtap="handlePetTap" hover-class="pet-card--pressed" hover-stay-time="120" style="animation-delay: {{220 + index * 80}}ms;">
         <image class="pet-avatar pet-avatar-{{item.genderClass}}" src="{{item.avatarUrl}}" mode="aspectFill" />
         <view class="pet-info">
           <view class="pet-name-row">
@@ -75,25 +104,24 @@
       </view>
     </view>
 
-    <!-- 无宠物：两个占位卡片 -->
     <view class="pets-grid pets-grid-empty" wx:else>
-      <view class="pet-card pet-card-empty" wx:for="{{[1,2]}}" wx:key="*this" bindtap="handleAddPet">
+      <view class="pet-card pet-card-empty" wx:for="{{[1,2]}}" wx:key="*this" bindtap="handleAddPet" hover-class="pet-card-empty--pressed" hover-stay-time="120">
         <text class="pet-empty-text">宠物档案待添加</text>
       </view>
     </view>
   </view>
 
   <!-- ===== Section 3: 未登录登录入口 ===== -->
-  <view class="search-section" wx:if="{{!isLoggedIn}}">
-    <view class="home-login-btn" catchtap="handleLogin">
+  <view class="search-section stagger-item stagger-rise delay-2" wx:if="{{!isLoggedIn}}">
+    <view class="home-login-btn" catchtap="handleLogin" hover-class="home-login-btn--pressed" hover-stay-time="120">
       <text class="home-login-text">立即登录</text>
     </view>
   </view>
 
   <!-- ===== Section 4: 快捷服务入口 ===== -->
-  <view class="quick-services-wrapper">
+  <view class="quick-services-wrapper stagger-item stagger-rise-fast delay-2">
     <view class="quick-services">
-    <view class="qs-item" data-action="activity" bindtap="handleBannerTap">
+    <view class="qs-item stagger-item stagger-scale" data-action="activity" bindtap="handleBannerTap" hover-class="qs-item--pressed" hover-stay-time="120" style="animation-delay: 330ms;">
       <view class="qs-icon qs-icon-activity">
         <image class="qs-emoji-img" src="cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/megaphone-line.svg" mode="aspectFit" />
       </view>
@@ -101,7 +129,7 @@
       <text class="qs-subtitle">精彩社区活动</text>
       <view class="qs-accent qs-accent-activity"></view>
     </view>
-    <view class="qs-item" data-action="mall" bindtap="handleBannerTap">
+    <view class="qs-item stagger-item stagger-scale" data-action="mall" bindtap="handleBannerTap" hover-class="qs-item--pressed" hover-stay-time="120" style="animation-delay: 420ms;">
       <view class="qs-icon qs-icon-mall">
         <image class="qs-emoji-img" src="cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/shopping-cart-2-line.svg" mode="aspectFit" />
       </view>
@@ -112,14 +140,15 @@
     </view>
   </view>
 
-  <!-- ===== Section 5: 团购好物（横滑商品卡，图片占满 + 底部渐变标题） ===== -->
-  <view class="section" wx:if="{{tuanDeals.length}}">
+  <!-- ===== Section 5: 团购好物 ===== -->
+  <view class="section section-featured stagger-item stagger-rise delay-3" wx:if="{{tuanDeals.length}}">
     <view class="section-head">
       <text class="section-title">团购好物</text>
-      <text class="section-link" bindtap="handleViewAllTuan">查看全部 ›</text>
+      <text class="section-link" bindtap="handleViewAllTuan" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
     </view>
     <scroll-view class="featured-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
-      <view class="mall-card" wx:for="{{tuanDeals}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleTuanTap">
+      <view class="featured-list">
+      <view class="mall-card" wx:for="{{tuanDeals}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleTuanTap" hover-class="mall-card--pressed" hover-stay-time="120">
         <image wx:if="{{item.coverUrl}}" class="mall-card-img" src="{{item.coverUrl}}" mode="aspectFill" />
         <view wx:else class="mall-card-img mall-card-img-ph">
           <text class="featured-img-ph-text">团</text>
@@ -133,18 +162,22 @@
           </view>
         </view>
       </view>
+      </view>
     </scroll-view>
   </view>
 
-  <!-- ===== Section 5.5: 商城好物（横滑商品卡，图片占满 + 底部渐变标题） ===== -->
-  <view class="section" wx:if="{{mallProducts.length}}">
+  <!-- ===== Section 5.5: 商城好物 ===== -->
+  <view class="section section-featured stagger-item stagger-rise delay-4" wx:if="{{mallProducts.length}}">
     <view class="section-head">
       <text class="section-title">商城好物</text>
-      <text class="section-link" bindtap="handleViewAllMallProducts">查看全部 ›</text>
+      <text class="section-link" bindtap="handleViewAllMallProducts" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
     </view>
     <scroll-view class="featured-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
-      <view class="mall-card" wx:for="{{mallProducts}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleMallProductTap">
-        <image wx:if="{{item.coverUrl}}" class="mall-card-img" src="{{item.coverUrl}}" mode="aspectFill" />
+      <view class="featured-list">
+      <view class="mall-card" wx:for="{{mallProducts}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleMallProductTap" hover-class="mall-card--pressed" hover-stay-time="120">
+        <share-element wx:if="{{item.coverUrl}}" key="product-{{item._id}}" class="mall-card-img-share">
+          <image class="mall-card-img" src="{{item.coverUrl}}" mode="aspectFill" />
+        </share-element>
         <view wx:else class="mall-card-img mall-card-img-ph">
           <text class="featured-img-ph-text">品</text>
         </view>
@@ -158,18 +191,21 @@
           </view>
         </view>
       </view>
+      </view>
     </scroll-view>
   </view>
 
-  <!-- ===== Section 6: 近期活动（对齐设计稿 #activity 横向卡片左图右文） ===== -->
-  <view class="section" wx:if="{{latestActivities.length}}">
+  <!-- ===== Section 6: 近期活动 ===== -->
+  <view class="section stagger-item stagger-rise delay-5" wx:if="{{latestActivities.length}}">
     <view class="section-head">
       <text class="section-title">近期活动</text>
-      <text class="section-link" bindtap="handleViewAllActivities">更多 ›</text>
+      <text class="section-link" bindtap="handleViewAllActivities" hover-class="section-link--pressed" hover-stay-time="120">更多 ›</text>
     </view>
     <view class="activity-list">
-      <view class="activity-h-card" wx:for="{{latestActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap">
-        <image wx:if="{{item.coverUrl}}" class="activity-h-img" src="{{item.coverUrl}}" mode="aspectFill" />
+      <view class="activity-h-card" wx:for="{{latestActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap" hover-class="activity-h-card--pressed" hover-stay-time="120" style="animation: rise-fade-in-short 420ms cubic-bezier(0.19,1,0.22,1) {{550 + index * 90}}ms forwards; opacity: 0;">
+        <share-element wx:if="{{item.coverUrl}}" key="activity-{{item._id}}" class="activity-h-img-share">
+          <image class="activity-h-img" src="{{item.coverUrl}}" mode="aspectFill" />
+        </share-element>
         <view wx:else class="activity-h-img activity-h-img-ph">
           <text class="activity-h-img-ph-text">活动</text>
         </view>
@@ -177,9 +213,9 @@
           <text class="activity-h-name">{{item.title}}</text>
           <text class="activity-h-info">{{item.timeText}}</text>
           <view class="activity-h-meta">
-            <text class="activity-h-loc">📍 {{item.location || '待定'}}</text>
+            <view class="activity-h-loc"><image class="activity-h-loc-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image><text class="activity-h-loc-text">{{item.location || '待定'}}</text></view>
           </view>
-          <text class="activity-h-people" wx:if="{{item.currentParticipants > 0}}">👥 已有{{item.currentParticipants}}人报名</text>
+          <view class="activity-h-people" wx:if="{{item.currentParticipants > 0}}"><image class="activity-h-people-icon" src="/images/icons/users-luxury-line.svg" mode="aspectFit"></image><text class="activity-h-people-text">已有{{item.currentParticipants}}人报名</text></view>
         </view>
       </view>
     </view>
@@ -188,3 +224,4 @@
   <view class="bottom-spacer"></view>
   </view>
 </view>
+</scroll-view>

@@ -1,15 +1,27 @@
+<zy-navbar title="上门服务管理" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="gallery-container">
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
-      <view class="loading-brand-mark">
-        <view class="brand-ring"></view>
-        <view class="brand-ring brand-ring--delay"></view>
-        <view class="brand-dot"></view>
-      </view>
-      <view class="loading-dots">
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
+      <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
       </view>
       <text class="loading-text">加载中</text>
     </view>
@@ -24,73 +36,36 @@
         </view>
         <view class="brand-meta">
           <view class="brand-meta-line"></view>
-          <text class="brand-subtitle" wx:if="{{hasFeeder}}">{{feeder.realName || feeder.nickname}}</text>
-          <text class="brand-subtitle" wx:else>服务管理</text>
+          <text class="brand-subtitle">平台统一接单</text>
         </view>
       </view>
     </view>
 
     <view class="gallery-hall">
-      <view wx:if="{{!hasFeeder}}" class="gallery-card">
-        <view class="card-accent"></view>
-        <view class="card-body">
-          <text class="pending-title">暂无服务档案</text>
-          <button class="contact-cs-btn" open-type="contact">联系客服申请</button>
-        </view>
+      <view class="gallery-entrance">
+        <view class="entrance-line"></view>
+        <text class="entrance-label">服务订单 ({{orderTotal}})</text>
       </view>
 
-      <block wx:else>
-        <view class="gallery-card profile-card">
-          <view class="card-accent"></view>
-          <view class="card-body">
-            <view class="info-row">
-              <view class="info-key">状态</view>
-              <view class="info-val">
-                <text class="status-tag {{feeder.status === 'active' ? 'tag-active' : 'tag-inactive'}}">{{feeder.status === 'active' ? '营业中' : (feeder.status === 'pending' ? '审核中' : '已停用')}}</text>
-              </view>
-            </view>
-            <view class="info-divider"></view>
-            <view class="info-row">
-              <view class="info-key">服务类型</view>
-              <view class="info-val">{{serviceTypesText}}</view>
-            </view>
-            <view class="info-divider"></view>
-            <view class="info-row">
-              <view class="info-key">单次价格</view>
-              <view class="info-val">¥{{feeder.pricePerVisit || 0}}/次</view>
-            </view>
-            <view class="info-divider"></view>
-            <view class="info-row" wx:if="{{feeder.address}}">
-              <view class="info-key">服务区域</view>
-              <view class="info-val">{{feeder.address}}</view>
-            </view>
+      <view wx:if="{{orders.length === 0}}" class="gallery-empty">
+        <view class="empty-line"></view>
+        <text class="empty-text">暂无订单</text>
+      </view>
+
+      <view wx:for="{{orders}}" wx:key="_id" class="gallery-card order-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <view class="card-header">
+            <text class="card-title">订单号：{{item.orderNo || '—'}}</text>
+            <text class="card-status status-{{item.status}}">{{item.status === 'pending_payment' ? '待付款' : (item.status === 'confirmed' ? '已确认' : (item.status === 'in_progress' ? '服务中' : (item.status === 'completed' ? '已完成' : '已取消')))}}</text>
+          </view>
+          <view class="card-info">
+            <text class="card-info-item" wx:if="{{item.startDate}}">服务日期：{{item.startDate}}{{item.endDate ? ' ~ ' + item.endDate : ''}}</text>
+            <text class="card-info-item">金额：¥{{item.totalAmount || item.totalPrice || 0}}</text>
           </view>
         </view>
-
-        <view class="gallery-entrance">
-          <view class="entrance-line"></view>
-          <text class="entrance-label">服务订单 ({{orderTotal}})</text>
-        </view>
-
-        <view wx:if="{{orders.length === 0}}" class="gallery-empty">
-          <view class="empty-line"></view>
-          <text class="empty-text">暂无订单</text>
-        </view>
-
-        <view wx:for="{{orders}}" wx:key="_id" class="gallery-card order-card">
-          <view class="card-accent"></view>
-          <view class="card-body">
-            <view class="card-header">
-              <text class="card-title">{{item.userName || '服务订单'}}</text>
-              <text class="card-status status-{{item.status}}">{{item.status === 'pending_payment' ? '待确认' : (item.status === 'confirmed' ? '已确认' : (item.status === 'in_progress' ? '服务中' : (item.status === 'completed' ? '已完成' : '已取消')))}}</text>
-            </view>
-            <view class="card-info">
-              <text class="card-info-item" wx:if="{{item.serviceDate}}">服务日期：{{item.serviceDate}}</text>
-              <text class="card-info-item">金额：¥{{item.totalPrice || 0}}</text>
-            </view>
-          </view>
-        </view>
-      </block>
+      </view>
     </view>
   </block>
 </view>
+</scroll-view>

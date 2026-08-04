@@ -3,13 +3,14 @@ const app = getApp()
 const { petService, petStore, petFormatter } = require('./index')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const { chooseAndUploadAvatar } = require('./utils/avatarUpload')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior],
   goBack() {
     wx.navigateBack()
   },
@@ -25,16 +26,19 @@ Page({
   },
 
   onLoad(options) {
-    this.setData({
-      isLoading: true,
-    })
+    this._initNavbarHeight()
 
+    // 合并初始状态到一次 setData，减少渲染帧
+    const initialData = { isLoading: true }
     if (options.fromPetSelect) {
-      this.setData({ fromPetSelect: true })
+      initialData.fromPetSelect = true
     }
+    this.setData(initialData)
 
     const petId = options.petId || options.id
     if (petId) {
+      this._petId = petId
+      this._firstLoadDone = false
       this.loadPetData(petId)
     } else {
       this.setData({ isLoading: false })
@@ -42,12 +46,17 @@ Page({
   },
 
   onShow() {
-    const petId = this.data.pet._id || this.data.pet.id
-    if (petId) {
-      this.loadPetData(petId, true)
-    } else {
+    const petId = this.data.pet._id || this.data.pet.id || this._petId
+    if (!petId) {
       console.warn('[APP] 没有找到 petId')
+      return
     }
+    // 首次进入时 onLoad 已在加载，跳过避免 loading 重复闪烁
+    if (!this._firstLoadDone) {
+      return
+    }
+    // 从子页面返回时静默刷新，不显示 loading 动画
+    this.loadPetData(petId, true, true)
   },
 
   onPageScroll(e) {
@@ -65,16 +74,21 @@ Page({
     authService.startLogin()
   },
 
-  async loadPetData(petId, forceRefresh = false) {
+  async loadPetData(petId, forceRefresh = false, silent = false) {
     const isLoggedIn = authService.isLoggedIn()
 
     if (!isLoggedIn) {
-      this.setData({ isLoading: false })
+      if (!silent) {
+        this.setData({ isLoading: false })
+      }
       return
     }
 
     try {
-      this.setData({ isLoading: true })
+      // 守卫：若已在 loading 状态则不重复 setData，减少渲染帧
+      if (!silent && !this.data.isLoading) {
+        this.setData({ isLoading: true })
+      }
 
       const pet = await petStore.fetchPetDetail(petId, forceRefresh)
 
@@ -83,15 +97,21 @@ Page({
 
         this.setData({
           pet: formattedPet,
-          isLoading: false,
+          ...(silent ? {} : { isLoading: false }),
         })
       } else {
         console.warn('[APP] 没有获取到宠物数据')
-        this.setData({ isLoading: false })
+        if (!silent) {
+          this.setData({ isLoading: false })
+        }
       }
+
+      this._firstLoadDone = true
     } catch (error) {
       console.error('[APP] 加载宠物数据失败:', error)
-      this.setData({ isLoading: false })
+      if (!silent) {
+        this.setData({ isLoading: false })
+      }
 
       if (error.message && (error.message.includes('不存在') || error.message.includes('权限'))) {
         this.error('PET_DELETED')

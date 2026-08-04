@@ -1,12 +1,18 @@
 @import '../common.wxss';
 
+/* ============================================
+   AROORO 喂养服务管理
+   服务管理仪表盘 — 服务开关 + 订单列表
+   ============================================ */
+
+/* ---------- 卡片色条 — 喂养板块使用鼠尾草绿 ---------- */
 .card-accent {
   width: 3rpx;
   height: 100%;
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  background: var(--feeding-primary);
 }
 
 .card-body {
@@ -14,24 +20,27 @@
   padding: 32rpx 36rpx;
 }
 
+/* ---------- 信息行 ---------- */
 .info-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8rpx 0;
+  padding: 12rpx 0;
 }
 
 .info-key {
   font-size: 24rpx;
   color: var(--text-secondary);
-  letter-spacing: 2rpx;
+  letter-spacing: 1rpx;
+  font-weight: 400;
 }
 
 .info-val {
   font-size: 26rpx;
   color: var(--text-primary);
   text-align: right;
-  max-width: 400rpx;
+  font-weight: 400;
+  max-width: 420rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -39,75 +48,89 @@
 
 .info-divider {
   height: 1rpx;
-  background: var(--divider-color);
+  background: var(--lux-hairline);
   margin: 4rpx 0;
 }
 
+/* ---------- 状态标签 ---------- */
 .status-tag {
   font-size: 20rpx;
   padding: 4rpx 16rpx;
-  border-radius: 8rpx;
-  font-weight: 500;
+  border-radius: var(--zy-radius-sm);
+  font-weight: 400;
+  letter-spacing: 1rpx;
 }
 
 .tag-active {
-  background: rgba(79, 94, 53, 0.12);
-  color: var(--activity-primary-mid);
+  background: var(--feeding-tint);
+  color: var(--feeding-primary);
 }
 
 .tag-inactive {
-  background: var(--divider-color);
-  color: var(--text-secondary);
+  background: var(--wash-neutral-10);
+  color: var(--text-tertiary);
 }
 
+/* ---------- 待审核/提示区 ---------- */
 .pending-title {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 500;
   color: var(--text-primary);
   display: block;
   margin-bottom: 12rpx;
+  letter-spacing: 1rpx;
 }
 
 .pending-desc {
   font-size: 24rpx;
   color: var(--text-secondary);
   display: block;
+  line-height: 1.6;
 }
 
 .contact-cs-btn {
   margin-top: 16rpx;
-  padding: 12rpx 32rpx;
+  padding: 14rpx 32rpx;
   font-size: 24rpx;
-  color: var(--card-color);
-  background: var(--activity-primary);
-  border-radius: 32rpx;
+  color: var(--text-on-primary);
+  background: var(--gradient-primary);
+  border-radius: var(--lux-radius-pill);
   border: none;
-  line-height: normal;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 2rpx;
+  font-weight: 400;
+  box-shadow: var(--lux-shadow-green);
 }
 
 .contact-cs-btn::after {
   border: none;
 }
 
+/* ---------- 分区标题 ---------- */
 .gallery-entrance {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 16rpx;
   margin: 32rpx 0 24rpx;
 }
 
 .entrance-line {
-  width: 40rpx;
-  height: 2rpx;
-  background: var(--text-tertiary);
+  width: 32rpx;
+  height: 1rpx;
+  background: var(--lux-gold-400);
 }
 
 .entrance-label {
   font-size: 22rpx;
   color: var(--text-secondary);
-  letter-spacing: 8rpx;
+  letter-spacing: 6rpx;
+  font-weight: 400;
 }
 
+/* ---------- 卡片头部（订单列表卡片） ---------- */
 .card-header {
   display: flex;
   align-items: center;
@@ -116,7 +139,7 @@
 }
 
 .card-title {
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: 500;
   color: var(--text-primary);
   flex: 1;
@@ -124,41 +147,44 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   margin-right: 16rpx;
+  letter-spacing: 1rpx;
 }
 
 .card-status {
   font-size: 20rpx;
   padding: 6rpx 16rpx;
-  border-radius: 8rpx;
-  font-weight: 500;
+  border-radius: var(--zy-radius-sm);
+  font-weight: 400;
   flex-shrink: 0;
+  letter-spacing: 1rpx;
 }
 
 .status-pending {
-  background: rgba(255, 149, 0, 0.12);
-  color: var(--warning-color);
+  background: var(--mall-tint);
+  color: var(--primary-color);  /* B′ 金在浅底不作文字色：原 --warning-color → 深绿 */
 }
 
 .status-confirmed {
-  background: rgba(0, 122, 255, 0.12);
-  color: var(--info-color);
+  background: var(--feeding-tint);
+  color: var(--feeding-primary);
 }
 
 .status-in_progress {
-  background: rgba(79, 94, 53, 0.12);
-  color: var(--activity-primary-mid);
+  background: var(--primary-tint-08);
+  color: var(--primary-color);
 }
 
 .status-completed {
-  background: rgba(52, 199, 89, 0.12);
+  background: var(--wash-success-08);
   color: var(--success-color);
 }
 
 .status-cancelled {
-  background: rgba(255, 59, 48, 0.12);
+  background: var(--wash-error-08);
   color: var(--error-color);
 }
 
+/* ---------- 卡片信息列表 ---------- */
 .card-info {
   display: flex;
   flex-direction: column;
@@ -168,12 +194,54 @@
 .card-info-item {
   font-size: 22rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.5rpx;
 }
+
+/* ---------- 服务开关行 ---------- */
+.service-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--lux-hairline);
+}
+
+.service-toggle-row:last-child {
+  border-bottom: none;
+}
+
+.service-toggle-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  flex: 1;
+}
+
+.service-toggle-name {
+  font-size: 26rpx;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.service-toggle-desc {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5rpx;
+}
+
+.service-toggle-price {
+  font-size: 24rpx;
+  color: var(--feeding-primary);
+  font-feature-settings: 'tnum';
+  margin-right: 16rpx;
+}
+
+/* ---------- 空状态 ---------- */
 .empty-line {
-  width: 60rpx;
-  height: 2rpx;
-  background: var(--text-tertiary);
-  margin-bottom: 24rpx;
+  width: 48rpx;
+  height: 1rpx;
+  background: var(--lux-gold-400);
+  margin-bottom: 20rpx;
 }
 
 .empty-text {

@@ -2,7 +2,7 @@
   "navigationBarTitleText": "选择宠物",
   "usingComponents": {
     "login-prompt": "../../components/login-prompt/login-prompt",
-    "van-popup": "@vant/weapp/popup/index",
-    "van-calendar": "@vant/weapp/calendar/index"
+    "zy-popup": "../../components/zy-popup/index",
+    "zy-calendar": "../../components/zy-calendar/index"
   }
 }

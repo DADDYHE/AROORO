@@ -1,3 +1,15 @@
+<zy-navbar title="多语言管理" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page">
   <!-- Sprint 53: 顶部统计概览 -->
   <view class="stats-bar">
@@ -63,11 +75,13 @@
 
   <!-- 列表 -->
   <view wx:if="{{isLoading && list.length === 0}}" class="empty-state">
-    <view class="loading-dots">
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-    </view>
+    <view class="lux-silk">
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 100ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 200ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 300ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 400ms;"></view>
+</view>
     <text class="loading-more-text">加载中</text>
   </view>
   <view wx:elif="{{list.length === 0}}" class="empty-state">
@@ -107,17 +121,20 @@
       </view>
     </view>
     <view wx:if="{{isLoading && list.length > 0}}" class="load-more">
-      <view class="loading-dots">
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
-      </view>
+      <view class="lux-silk">
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 100ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 200ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 300ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 400ms;"></view>
+</view>
       <text class="loading-more-text">加载中</text>
     </view>
     <view wx:elif="{{!hasMore && list.length > 0}}" class="load-more">— 已加载全部 ({{total}}) —</view>
   </view>
 
   <!-- 编辑器弹层 -->
+  <root-portal>
   <view wx:if="{{editorVisible}}" class="modal-mask" bindtap="onCloseEditor">
     <view class="modal" catchtap="">
       <view class="modal-title">{{editorMode === 'create' ? '新建 i18n 覆盖' : '编辑 i18n 覆盖'}}</view>
@@ -196,8 +213,10 @@
       </view>
     </view>
   </view>
+  </root-portal>
 
   <!-- 预览弹层 -->
+  <root-portal>
   <view wx:if="{{previewVisible}}" class="modal-mask" bindtap="onClosePreview">
     <view class="modal" catchtap="">
       <view class="modal-title">{{previewData.key}}</view>
@@ -214,8 +233,10 @@
       </view>
     </view>
   </view>
+  </root-portal>
 
   <!-- Sprint 53: 缺失翻译弹层 -->
+  <root-portal>
   <view wx:if="{{missingPanelVisible}}" class="modal-mask" bindtap="onCloseMissing">
     <view class="modal modal-large" catchtap="">
       <view class="modal-title">缺失翻译概览</view>
@@ -241,7 +262,7 @@
               >补</view>
             </view>
           </view>
-          <view wx:else class="missing-empty">✓ 全部翻译齐</view>
+          <view wx:else class="missing-empty"><image class="missing-check-icon" src="/images/icons/check-luxury-line.svg" mode="aspectFit"></image><text>全部翻译齐</text></view>
         </view>
       </scroll-view>
       <view class="modal-actions">
@@ -249,4 +270,6 @@
       </view>
     </view>
   </view>
+  </root-portal>
 </view>
+</scroll-view>

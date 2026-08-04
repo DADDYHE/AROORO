@@ -1,8 +1,9 @@
 const { AdminService } = require('../../../services/CloudFunctionService')
 const { formatTime } = require('../../profile/utils/dateUtils')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 const STATUS_MAP = {
-  pending: { text: '待审核', color: '#B8893A' },
+  pending: { text: '待审核', color: '#C9A24B' },
   approved: { text: '待转账', color: '#6B7D5A' },
   processing: { text: '转账中', color: '#6B7D8C' },
   completed: { text: '已到账', color: '#5B7C4A' },
@@ -10,6 +11,7 @@ const STATUS_MAP = {
 }
 
 Page({
+  behaviors: [ListBehavior],
   data: {
     list: [],
     total: 0,
@@ -20,6 +22,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._loadData()
   },
 

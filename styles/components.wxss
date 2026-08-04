@@ -10,7 +10,7 @@
 .tap-target {
   min-height: var(--tap-target-min);
   min-width: var(--tap-target-min);
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
 }

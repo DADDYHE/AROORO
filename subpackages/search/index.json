@@ -1,5 +1,5 @@
 {
   "navigationBarTitleText": "搜索",
-  "navigationStyle": "default",
+  "renderer": "webview",
   "usingComponents": {}
 }

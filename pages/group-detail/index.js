@@ -1,6 +1,7 @@
 const { TuanService } = require('../../services/TuanService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
@@ -9,7 +10,7 @@ const skuHelper = require('../../utils/skuHelper')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
 
   data: {
     dealId: '',
@@ -30,10 +31,11 @@ Page({
     skuPopupImage: '',
     selectedSkuText: '',
     iconShoppingCart: CLOUD_ICONS.SHOPPING_CART,
-    iconService: CLOUD_ICONS.SERVICE,
+    iconService: '/images/icons/message-luxury-line.svg',
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     const dealId = options.dealId || options.id || ''
     if (dealId) {
       this.setData({ dealId })
@@ -77,7 +79,10 @@ Page({
         return {
           ...p,
           price: p.tuanPrice || p.price || 0,
-          tuanStock: p.stock || p.tuanStock || 0,
+          // 多规格商品级库存展示：用当前各 SKU 团购配额之和（p.stock 是创建时的初始汇总，下单扣减后不会更新）
+          tuanStock: p.skuType === 'multi' && Array.isArray(p.skus) && p.skus.length > 0
+            ? p.skus.filter(s => s.enabled !== false).reduce((sum, s) => sum + (Number(s.tuanStock) || Number(s.stock) || 0), 0)
+            : (p.stock || p.tuanStock || 0),
           displayPrice,
         }
       })

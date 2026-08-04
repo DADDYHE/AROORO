@@ -1,64 +1,94 @@
-/* 视频列表页面样式 */
+/* ================================================================
+   subpackages/other/video-list/index · AROORO 视频列表 — Haute-Luxury Editorial
+   板块色：通用中性 + 暖金点缀 --accent-color
+   Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
+   ================================================================ */
+
+/* ===== 入场动画 ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== 页面容器 ===== */
 .container {
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background-color: var(--background-color);
   position: relative;
 }
 
-/* 内容区域 */
+/* ===== 内容区域 ===== */
 .content-area {
-  padding: 24rpx;
-  padding-top: 40rpx; /* 为小程序默认导航栏留出空间 */
+  padding: var(--page-padding);
+  padding-top: var(--zy-space-lg);
+  animation-name: fadeInUp;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-fill-mode: forwards;
 }
 
-/* 视频列表 */
+/* ===== 视频列表 ===== */
 .video-list {
-  min-height: calc(100vh - 200rpx); /* 调整高度，去掉顶部栏后的计算 */
+  min-height: calc(100vh - 200rpx);
 }
 
-/* 大图 */
+/* ===== 主视频大图 ===== */
 .main-video {
   width: 100%;
   aspect-ratio: 16/9;
-  background-color: white;
-  border-radius: 18rpx;
+  background-color: var(--card-color);
+  border-radius: var(--zy-radius-lg);
   overflow: hidden;
-  margin-bottom: 28rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  margin-bottom: var(--zy-space-lg);
+  border: 1rpx solid var(--hairline);
   position: relative;
 }
 
 .main-video-player {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  background-color: var(--overlay-color);
+  background-color: var(--primary-deep);
 }
 
-/* 缩略图网格 */
+/* ===== 缩略图网格 ===== */
 .thumbnail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zy-space-lg);
+}
+
+.thumbnail-grid > .thumbnail-item {
+  flex: 0 0 calc((100% - var(--zy-space-lg)) / 2);
 }
 
 .thumbnail-item {
   aspect-ratio: 1/1;
-  background-color: white;
-  border-radius: 14rpx;
+  background-color: var(--card-color);
+  border-radius: var(--zy-radius-lg);
   overflow: hidden;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid var(--hairline);
   position: relative;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.thumbnail-item--pressed {
+  transform: scale(0.97);
+  opacity: 0.9;
 }
 
 .thumbnail-video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  background-color: var(--overlay-color);
+  background-color: var(--primary-deep);
 }
 
-/* 播放按钮覆盖层 */
+/* ===== 播放按钮覆盖层（金色圆形半透明） ===== */
 .play-overlay {
   position: absolute;
   top: 0;
@@ -68,83 +98,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: var(--overlay-color, rgba(26,26,23,0.5));
 }
 
 .play-icon {
-  font-size: 48rpx;
-  color: white;
-  font-weight: bold;
-  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.5);
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: rgba(201,162,75, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid var(--border-inverse-35, rgba(255,255,255,0.35));
 }
 
-/* 空状态 */
+/* ===== 空状态 ===== */
 .empty-state {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 400rpx;
   color: var(--text-tertiary);
-  font-size: 32rpx;
-  background-color: white;
-  border-radius: 16rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  font-size: 26rpx;
+  background-color: var(--card-color);
+  border-radius: var(--zy-radius-lg);
+  border: 1rpx solid var(--hairline);
+  letter-spacing: 0.04em;
+  font-family: var(--font-sans);
 }
 
 .empty-text {
-  font-size: 32rpx;
+  font-size: 26rpx;
   color: var(--text-tertiary);
-}
-
-/* 响应式设计 */
-@media screen and (max-width: 750rpx) {
-  .content-area {
-    padding: 16rpx;
-    padding-top: 30rpx; /* 调整顶部内边距 */
-  }
-  
-  .main-video {
-    margin-bottom: 20rpx;
-    border-radius: 16rpx;
-  }
-  
-  .thumbnail-grid {
-    gap: 16rpx;
-  }
-  
-  .thumbnail-item {
-    border-radius: 12rpx;
-  }
-  
-  .empty-text {
-    font-size: 30rpx;
-  }
-}
-
-/* 小屏幕设备优化 */
-@media screen and (max-width: 375rpx) {
-  .content-area {
-    padding: 12rpx;
-    padding-top: 24rpx; /* 调整顶部内边距 */
-  }
-  
-  .main-video {
-    margin-bottom: 16rpx;
-    border-radius: 14rpx;
-  }
-  
-  .thumbnail-grid {
-    gap: 12rpx;
-  }
-  
-  .thumbnail-item {
-    border-radius: 10rpx;
-  }
-  
-  .empty-text {
-    font-size: 28rpx;
-  }
-}
-
-.content-area {
+  letter-spacing: 0.04em;
+  font-family: var(--font-sans);
 }

@@ -3,6 +3,5 @@
     "login-prompt": "../../components/login-prompt/login-prompt"
   },
   "navigationBarTitleText": "宠物商城",
-  "enablePullDownRefresh": true,
-  "onReachBottomDistance": 100
+  "enablePullDownRefresh": true
 }

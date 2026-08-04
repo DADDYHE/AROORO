@@ -10,6 +10,7 @@ Page({
   data: { notifications: [], unreadCount: 0 },
 
   onLoad() {
+    this._initNavbarHeight()
     this._initListBehavior(
       params => this._doFetch(params),
       { listKey: 'notifications' }

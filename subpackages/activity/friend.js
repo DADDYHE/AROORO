@@ -1,8 +1,10 @@
 // subpackages/activity/friend.js
 const pageI18n = require('../../utils/page-i18n.js')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
 
   /**
    * 页面的初始数据
@@ -20,6 +22,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this._initNavbarHeight()
     // 从URL参数中获取index
     let initialIndex = -1
     if (options.index) {

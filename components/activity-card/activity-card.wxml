@@ -25,7 +25,7 @@
         <text class="info-text">{{item.timeText}}</text>
       </view>
       <view class="info-item participants-item">
-        <text class="info-icon">👥</text>
+        <image class="info-icon" src="/images/icons/users-luxury-line.svg" mode="aspectFit"></image>
         <text class="info-text participants-text">{{item.currentParticipants > 0 ? item.currentParticipants : 0}}/{{item.maxParticipants || '不限'}}</text>
       </view>
     </view>

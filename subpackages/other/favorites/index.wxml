@@ -1,4 +1,16 @@
 <!--pages/favorites/index.wxml-->
+<zy-navbar title="我的收藏" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <!-- 头部区域 -->
   <view class="page-header">
@@ -18,15 +30,15 @@
     <!-- 加载状态 -->
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
-      <view class="loading-brand-mark">
-        <view class="brand-ring"></view>
-        <view class="brand-ring brand-ring--delay"></view>
-        <view class="brand-dot"></view>
-      </view>
-      <view class="loading-dots">
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
+      <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
       </view>
       <text class="loading-text">加载中</text>
     </view>
@@ -35,7 +47,7 @@
     <!-- 空状态 -->
     <view wx:elif="{{!isLoading && favoriteFamilies.length === 0 && hostList.length > 0}}" class="empty-state">
       <view class="empty-icon">
-        <van-icon name="heart-o" size="80px" color="#000000" />
+        <zy-icon name="heart" size="160" />
       </view>
       <view class="empty-title">您还没有收藏寄养家庭</view>
       <view class="empty-subtitle">以下是全部寄养家庭列表，点击即可收藏</view>
@@ -51,6 +63,7 @@
         <view class="card host-item {{host.isAcceptingOrders === false ? 'disabled' : ''}}" 
               bindtouchstart="onHostItemTouchStart" 
               bindtouchend="onHostItemTouchEnd" 
+              hover-class="card--pressed"
               data-id="{{host.id}}">
           <view class="host-main">
             <view class="host-avatar-wrapper">
@@ -65,7 +78,7 @@
               </view>
               
               <view class="host-location">
-                <text class="location-icon">📍</text>
+                <image class="location-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image>
                 <text>{{host.location}}</text>
               </view>
             </view>
@@ -81,7 +94,7 @@
               </view>
             </view>
             <view class="host-actions" wx:if="{{host.isAcceptingOrders !== false}}">
-              <view class="book-button" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="true">
+              <view class="book-button" hover-class="book-button--pressed" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="true">
                 预约
               </view>
             </view>
@@ -99,6 +112,7 @@
         <view class="card host-item {{host.isAcceptingOrders === false ? 'disabled' : ''}}" 
               bindtouchstart="onHostItemTouchStart" 
               bindtouchend="onHostItemTouchEnd" 
+              hover-class="card--pressed"
               data-id="{{host.id}}">
           <view class="host-main">
             <view class="host-avatar-wrapper">
@@ -113,7 +127,7 @@
               </view>
               
               <view class="host-location">
-                <text class="location-icon">📍</text>
+                <image class="location-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image>
                 <text>{{host.location}}</text>
               </view>
             </view>
@@ -129,7 +143,7 @@
               </view>
             </view>
             <view class="host-actions" wx:if="{{host.isAcceptingOrders !== false}}">
-              <view class="book-button" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="true">
+              <view class="book-button" hover-class="book-button--pressed" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="true">
                 预约
               </view>
             </view>
@@ -140,16 +154,17 @@
 
     <!-- 错误提示 -->
     <view wx:if="{{!isLoading && errorMessage}}" class="error-message">
-      <van-icon name="warning-o" color="#000000" />
+      <zy-icon name="alert" />
       <text>{{errorMessage}}</text>
     </view>
 
     <!-- 显示全部寄养家庭按钮 -->
     <view wx:if="{{!isLoading && favoriteFamilies.length > 0 && !showAllHosts}}" class="show-all-container">
-      <view class="show-all-button" bindtap="showAllHosts">
+      <view class="show-all-button" hover-class="show-all-button--pressed" bindtap="showAllHosts">
         <span class="button-text">查看全部寄养家庭</span>
-        <span class="button-arrow">→</span>
+        <image class="button-arrow" src="/images/icons/chevron-right-luxury-line.svg" mode="aspectFit"></image>
       </view>
     </view>
   </view>
 </view>
+</scroll-view>

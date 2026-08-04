@@ -25,6 +25,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._initListBehavior(
       params => this._doFetch(params),
       { pageSize: 10, listKey: 'activities', sortFn: this._sortActivities }

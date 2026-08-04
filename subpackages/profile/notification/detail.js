@@ -1,12 +1,15 @@
 const { NotificationService } = require('../services/NotificationService')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 const pageI18n = require('../../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: { notification: null, isLoading: true },
 
   onLoad(options) {
+    this._initNavbarHeight()
     if (options.id) {
       this._loadNotification(options.id)
     } else {

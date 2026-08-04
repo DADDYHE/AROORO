@@ -1,0 +1,9 @@
+<!-- zy-icon · Skyline 兼容图标组件 -->
+<image
+  wx:if="{{_src}}"
+  class="zy-icon"
+  src="{{_src}}"
+  mode="aspectFit"
+  style="width: {{size}}rpx; height: {{size}}rpx;"
+  bindtap="onTap"
+/>

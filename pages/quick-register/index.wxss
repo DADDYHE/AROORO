@@ -1,106 +1,107 @@
-/* 活动报名 - PETLUX 橄榄绿治愈轻奢风格 */
+/* ================================================================
+   pages/quick-register/index · AROORO 快速报名 — Haute-Luxury Editorial
+   板块色：通用中性 + 暖金点缀 --accent-color
+   Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
+   ================================================================ */
 
+/* ===== 入场动画 ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(32rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== 页面容器 ===== */
 .quick-register-container {
   min-height: 100vh;
   background-color: var(--background-color);
-  padding: 0 0 180rpx;
+  padding: 0 0 calc(200rpx + env(safe-area-inset-bottom));
 }
 
-/* 顶部画廊区 */
+/* ===== 顶部品牌区 ===== */
 .gallery-header {
   padding: 0;
   position: relative;
-  overflow: hidden;
-  background: var(--card-color);
-  padding-bottom: 20rpx;
 }
 
 .brand-block {
-  padding: 80rpx 48rpx 64rpx;
+  padding: var(--zy-space-xl) var(--page-padding, 48rpx) var(--zy-space-2xl);
   position: relative;
-}
-
-.brand-block::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 300rpx;
-  height: 300rpx;
-  background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
-  pointer-events: none;
+  animation-name: fadeInUp;
+  animation-duration: 600ms;
+  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-fill-mode: forwards;
 }
 
 .brand-accent-bar {
-  position: absolute;
-  top: 0;
-  left: 48rpx;
   width: 48rpx;
-  height: 6rpx;
-  background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-light) 100%);
-  border-radius: 0 0 4rpx 4rpx;
+  height: 2rpx;
+  background: var(--accent-color, #C9A24B);
+  margin-bottom: var(--zy-space-lg);
 }
 
 .brand-main {
   position: relative;
-  margin-bottom: 24rpx;
+  margin-bottom: var(--zy-space-lg);
 }
 
 .brand-text {
-  font-size: 56rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 8rpx;
+  font-family: var(--font-serif);
+  font-size: 64rpx;
+  font-weight: 300;
+  color: var(--text-primary, #1A1A17);
+  letter-spacing: -0.01em;
   display: block;
   line-height: 1.1;
-  position: relative;
 }
 
 .brand-meta {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: var(--zy-space-lg);
 }
 
 .brand-meta-line {
-  width: 40rpx;
-  height: 2rpx;
-  background: var(--border-color);
-  position: relative;
-}
-
-.brand-meta-line::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -4rpx;
-  transform: translateY(-50%);
-  width: 6rpx;
-  height: 6rpx;
-  border-radius: 50%;
-  background: var(--primary-color);
+  width: 32rpx;
+  height: 1rpx;
+  background: var(--text-tertiary);
+  opacity: 0.5;
 }
 
 .brand-subtitle {
+  font-family: var(--font-sans);
   font-size: 24rpx;
-  color: var(--text-secondary);
-  letter-spacing: 4rpx;
-  font-weight: 400;
+  font-weight: 300;
+  color: var(--text-tertiary);
+  letter-spacing: 0.18em;
 }
 
-/* 活动列表 - 画廊展区 */
+/* ===== 活动列表 ===== */
 .activity-list {
-  padding: 32rpx;
+  padding: var(--zy-space-lg);
 }
 
 .activity-block,
 .activity-card {
   background: var(--card-color);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--zy-radius-lg);
   overflow: hidden;
   margin-bottom: 24rpx;
-  box-shadow: var(--zy-shadow-xs);
-  border: 1rpx solid var(--border-color);
+  border: 1rpx solid var(--hairline);
+  animation-name: fadeInUp;
+  animation-duration: 600ms;
+  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-fill-mode: forwards;
+  transition: transform var(--transition-fast);
+}
+
+.activity-card--pressed {
+  transform: scale(0.99);
 }
 
 .activity-main {
@@ -108,6 +109,7 @@
   width: 100%;
   height: 0;
   padding-bottom: 56.25%;
+  overflow: hidden;
 }
 
 .activity-cover {
@@ -118,8 +120,7 @@
   bottom: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--background-color) 100%);
+  background: linear-gradient(135deg, var(--primary-tint) 0%, var(--background-color) 100%);
 }
 
 .activity-overlay {
@@ -128,24 +129,24 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.22) 100%);
-  padding: 24rpx;
+  background: linear-gradient(180deg, transparent 50%, rgba(15,36,16,0.28) 100%);
+  padding: var(--zy-space-lg);
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
 }
 
 .activity-badge {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8rpx;
   padding: 8rpx 20rpx;
-  border-radius: var(--border-radius-pill);
-  box-shadow: var(--zy-shadow-xs);
+  border-radius: var(--zy-radius-pill);
+  border: 1rpx solid var(--border-inverse-20, rgba(255,255,255,0.20));
 }
 
 .activity-badge.badge-active {
-  background: var(--primary-color);
+  background: var(--gradient-primary);
 }
 
 .activity-badge.badge-stopped {
@@ -156,7 +157,7 @@
   width: 12rpx;
   height: 12rpx;
   border-radius: 50%;
-  background: #FAFAF6;
+  background: var(--text-on-primary);
   flex-shrink: 0;
 }
 
@@ -165,9 +166,11 @@
 }
 
 .badge-text {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #FAFAF6;
+  font-size: 22rpx;
+  font-weight: 400;
+  color: var(--text-on-primary);
+  letter-spacing: 0.06em;
+  font-family: var(--font-sans);
 }
 
 .activity-category-badge {
@@ -175,19 +178,21 @@
   top: 24rpx;
   left: 24rpx;
   padding: 8rpx 20rpx;
-  border-radius: var(--border-radius-pill);
+  border-radius: var(--zy-radius-pill);
   background: var(--card-color);
-  box-shadow: var(--zy-shadow-xs);
+  border: 1rpx solid var(--hairline);
 }
 
 .category-text {
-  font-size: 24rpx;
-  font-weight: 600;
+  font-size: 22rpx;
+  font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.04em;
+  font-family: var(--font-sans);
 }
 
 .activity-details {
-  padding: 24rpx;
+  padding: var(--zy-space-lg);
 }
 
 .activity-title-row {
@@ -198,19 +203,25 @@
 }
 
 .activity-name {
-  font-size: 30rpx;
-  font-weight: 600;
+  font-size: 28rpx;
+  font-weight: 500;
   color: var(--text-primary);
   flex: 1;
-  line-height: 1.3;
-  letter-spacing: 1rpx;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-serif);
 }
 
 .activity-price {
-  font-size: 30rpx;
-  font-weight: 600;
+  font-size: 28rpx;
+  font-weight: 500;
   flex-shrink: 0;
   margin-left: 16rpx;
+  letter-spacing: 0.02em;
+  font-family: var(--font-serif);
 }
 
 .activity-price.price-paid {
@@ -244,7 +255,7 @@
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
-  line-height: 1.4;
+  line-height: 1.5;
   word-break: break-all;
 }
 
@@ -254,9 +265,11 @@
 }
 
 .activity-time-row .participants-text {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--primary-color);
   white-space: nowrap;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .activity-info-row {
@@ -277,79 +290,99 @@
 }
 
 .info-label {
-  font-size: 24rpx;
-  font-weight: 600;
+  font-size: 22rpx;
+  font-weight: 500;
   color: var(--text-primary);
   flex-shrink: 0;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .info-text {
-  font-size: 24rpx;
+  font-size: 22rpx;
   font-weight: 400;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .activity-action {
-  padding: 0 24rpx 24rpx;
+  padding: 0 var(--zy-space-lg) var(--zy-space-lg);
   display: flex;
   justify-content: center;
 }
 
 .action-btn {
-  padding: 20rpx 32rpx;
-  border-radius: var(--border-radius-pill);
+  padding: 22rpx 32rpx;
+  border-radius: var(--zy-radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  border: none;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.action-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.action-btn::after {
+  border: none;
 }
 
 .action-btn.btn-active {
-  background: var(--primary-color);
-  box-shadow: var(--zy-shadow-xs);
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-glow-primary-btn);
 }
 
 .action-btn.btn-active .btn-text {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #FAFAF6;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text-on-primary);
+  letter-spacing: 0.12em;
+  font-family: var(--font-serif);
 }
 
 .action-btn.btn-disabled {
-  background: var(--primary-light);
+  background: var(--primary-tint);
   border: 1rpx solid var(--border-color);
 }
 
 .action-btn.btn-disabled .btn-text {
-  font-size: 28rpx;
-  font-weight: 600;
+  font-size: 26rpx;
+  font-weight: 400;
   color: var(--text-tertiary);
+  letter-spacing: 0.06em;
 }
 
 .action-btn.btn-registered {
   background: var(--card-color);
-  border: 2rpx solid var(--primary-color);
+  border: 1rpx solid var(--primary-color);
 }
 
 .action-btn.btn-registered .btn-text {
-  font-size: 28rpx;
-  font-weight: 600;
+  font-size: 26rpx;
+  font-weight: 500;
   color: var(--primary-color);
+  letter-spacing: 0.08em;
 }
 
 .action-btn.btn-ended {
-  background: var(--primary-light);
+  background: var(--card-cream);
   border: 1rpx solid var(--border-color);
 }
 
 .action-btn.btn-ended .btn-text {
-  font-size: 28rpx;
-  font-weight: 600;
+  font-size: 26rpx;
+  font-weight: 400;
   color: var(--text-tertiary);
+  letter-spacing: 0.06em;
 }
 
-/* 空状态 - 画廊风格 */
+/* ===== 空状态 ===== */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -360,13 +393,17 @@
 }
 
 .empty-text {
-  font-size: 32rpx;
+  font-size: 30rpx;
   color: var(--text-secondary);
-  font-weight: 600;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  font-family: var(--font-serif);
 }
 
 .empty-subtitle {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--text-tertiary);
-  font-weight: 400;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  font-family: var(--font-sans);
 }

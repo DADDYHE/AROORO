@@ -1,59 +1,33 @@
+/* ================================================================
+   AROORO 合伙人收入页 · 深森林绿 × 香槟金 × 奶油白 高奢风格
+   Skyline 兼容：无 :active / transition 仅 transform & opacity / 单行截断
+   ================================================================ */
 @import '../common.wxss';
 
+/* ============================================
+   收入仪表盘 — 大数字 + 统计 + 钱包 + 费率 + 流水列表
+   ============================================ */
+
+/* ---------- 卡片色条 ---------- */
 .card-accent {
   width: 3rpx;
   height: 100%;
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  background: var(--primary-color);
 }
 
 .income-accent {
-  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--success-color) 100%) !important;
+  background: var(--lux-gold-500);
 }
 
 .wallet-accent {
-  background: linear-gradient(180deg, #6B7D5A 0%, #3A4626 100%) !important;
+  background: var(--primary-soft);
 }
 
 .rates-accent {
-  background: linear-gradient(180deg, var(--warning-color) 0%, var(--boarding-primary) 100%) !important;
-}
-
-.rates-title {
-  margin-bottom: 24rpx;
-}
-
-.rates-title-text {
-  font-size: 26rpx;
-  font-weight: 500;
-  color: var(--text-primary);
-  letter-spacing: 4rpx;
-}
-
-.rates-grid {
-  display: flex;
-  justify-content: space-around;
-}
-
-.rates-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.rates-item-value {
-  font-size: 32rpx;
-  font-weight: 300;
-  color: var(--text-primary);
-}
-
-.rates-item-label {
-  font-size: 20rpx;
-  color: var(--text-secondary);
-  letter-spacing: 4rpx;
+  background: var(--lux-gold-600);
 }
 
 .card-body {
@@ -61,6 +35,19 @@
   padding: 32rpx 36rpx;
 }
 
+/* ---------- 总收入概览卡片金色光晕 ---------- */
+.income-overview-card::before {
+  content: '';
+  position: absolute;
+  top: -40rpx;
+  right: -40rpx;
+  width: 200rpx;
+  height: 200rpx;
+  background: radial-gradient(circle, var(--mall-tint-04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ---------- 总收入概览 ---------- */
 .overview-total {
   display: flex;
   flex-direction: column;
@@ -72,19 +59,22 @@
 .overview-label {
   font-size: 22rpx;
   color: var(--text-secondary);
-  letter-spacing: 4rpx;
+  letter-spacing: 0.15em;
+  font-weight: 400;
 }
 
 .overview-value {
   font-size: 56rpx;
   font-weight: 300;
   color: var(--text-primary);
-  letter-spacing: 2rpx;
+  letter-spacing: 0.02em;
+  font-feature-settings: 'tnum';
+  line-height: 1.1;
 }
 
 .overview-divider {
   height: 1rpx;
-  background: var(--divider-color);
+  background: var(--lux-hairline);
   margin-bottom: 24rpx;
 }
 
@@ -96,34 +86,41 @@
 .overview-row-bottom {
   margin-top: 24rpx;
   padding-top: 24rpx;
-  border-top: 1rpx solid var(--divider-color);
+  border-top: 1rpx solid var(--lux-hairline);
 }
 
 .overview-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8rpx;
+  gap: 6rpx;
 }
 
 .overview-stat-value {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 300;
   color: var(--text-primary);
+  font-feature-settings: 'tnum';
+}
+
+.overview-stat-value-positive {
+  color: var(--success-color);
 }
 
 .overview-stat-label {
   font-size: 20rpx;
   color: var(--text-secondary);
-  letter-spacing: 4rpx;
+  letter-spacing: 0.16em;
+  font-weight: 400;
 }
 
 .overview-stat-sub {
-  font-size: 16rpx;
+  font-size: 18rpx;
   color: var(--text-tertiary);
-  letter-spacing: 2rpx;
+  letter-spacing: 0.04em;
 }
 
+/* ---------- 钱包卡片 ---------- */
 .wallet-row {
   display: flex;
   justify-content: space-around;
@@ -140,150 +137,236 @@
   font-size: 32rpx;
   font-weight: 300;
   color: var(--text-primary);
+  font-feature-settings: 'tnum';
+}
+
+.wallet-value-accent {
+  color: var(--primary-color);
 }
 
 .wallet-label {
   font-size: 20rpx;
   color: var(--text-secondary);
-  letter-spacing: 4rpx;
+  letter-spacing: 0.16em;
+  font-weight: 400;
 }
 
+/* ---------- 费率卡片 ---------- */
+.rates-title {
+  margin-bottom: 24rpx;
+}
+
+.rates-title-text {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.16em;
+}
+
+.rates-grid {
+  display: flex;
+  justify-content: space-around;
+}
+
+.rates-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.rates-item-value {
+  font-size: 30rpx;
+  font-weight: 300;
+  color: var(--primary-color);
+  font-feature-settings: 'tnum';
+}
+
+.rates-item-label {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.16em;
+  font-weight: 400;
+}
+
+/* ---------- 分区标题 ---------- */
 .gallery-entrance {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 16rpx;
   margin: 32rpx 0 24rpx;
 }
 
 .entrance-line {
-  width: 40rpx;
-  height: 2rpx;
-  background: var(--text-tertiary);
+  width: 32rpx;
+  height: 1rpx;
+  background: var(--lux-gold-400);
 }
 
 .entrance-label {
   font-size: 22rpx;
   color: var(--text-secondary);
-  letter-spacing: 8rpx;
+  letter-spacing: 0.15em;
+  font-weight: 400;
 }
 
+/* ---------- Tab 筛选 ---------- */
 .tab-bar {
   display: flex;
-  gap: 16rpx;
+  gap: 12rpx;
   margin-bottom: 24rpx;
 }
 
 .tab-item {
-  padding: 12rpx 28rpx;
-  border-radius: 12rpx;
+  padding: 12rpx 24rpx;
+  border-radius: var(--lux-radius-pill);
   font-size: 22rpx;
   color: var(--text-secondary);
-  background: var(--card-color);
+  background: var(--lux-card-bg);
+  border: 1rpx solid var(--lux-hairline);
+  font-weight: 400;
+  letter-spacing: 0.03em;
 }
 
 .tab-active {
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  color: var(--card-color);
+  background: var(--gradient-primary);
+  color: var(--text-on-primary);
+  border-color: transparent;
 }
 
+/* ---------- 流水明细行 ---------- */
 .detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--lux-hairline);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
 }
 
 .detail-left {
   display: flex;
   flex-direction: column;
-  gap: 6rpx;
+  gap: 4rpx;
+  flex: 1;
+  min-width: 0;
 }
 
 .detail-type {
   font-size: 26rpx;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-primary);
+  letter-spacing: 0.01em;
 }
 
 .detail-desc {
   font-size: 20rpx;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
 }
 
 .detail-buyer {
   display: flex;
   align-items: center;
   gap: 8rpx;
-  margin-top: 4rpx;
+  margin-top: 2rpx;
 }
 
 .detail-buyer-avatar {
-  width: 28rpx;
-  height: 28rpx;
+  width: 24rpx;
+  height: 24rpx;
   border-radius: 50%;
-  background: var(--bg-secondary, #f0f0f0);
+  background: var(--divider-color);
+  flex-shrink: 0;
 }
 
 .detail-buyer-name {
   font-size: 20rpx;
-  color: var(--text-secondary);
-  max-width: 220rpx;
+  color: var(--text-tertiary);
+  max-width: 200rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .detail-amount {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 300;
   color: var(--success-color);
+  font-feature-settings: 'tnum';
+  flex-shrink: 0;
+  margin-left: 16rpx;
 }
+
+.detail-amount-negative {
+  color: var(--error-color);
+}
+
+/* ---------- 空状态 ---------- */
 .empty-line {
-  width: 60rpx;
-  height: 2rpx;
-  background: var(--text-tertiary);
-  margin-bottom: 24rpx;
+  width: 48rpx;
+  height: 1rpx;
+  background: var(--lux-gold-400);
+  margin-bottom: 20rpx;
 }
 
 .empty-text {
   font-size: 24rpx;
   color: var(--text-secondary);
-  letter-spacing: 4rpx;
+  letter-spacing: 0.16em;
 }
 
-/* 提现按钮和记录入口 */
+/* ---------- 金粒瀑布 · 切换分类加载 ---------- */
+.detail-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 44rpx;
+  padding: 100rpx 0;
+}
+
+/* ---------- 钱包操作 ---------- */
 .wallet-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 24rpx;
   padding-top: 24rpx;
-  border-top: 1rpx solid var(--divider-color);
+  border-top: 1rpx solid var(--lux-hairline);
 }
 
 .withdraw-btn {
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  color: var(--card-color);
-  font-size: 26rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-primary);
+  color: var(--text-on-primary);
+  font-size: 24rpx;
   font-weight: 500;
-  padding: 16rpx 48rpx;
-  border-radius: 12rpx;
-  letter-spacing: 4rpx;
+  padding: 16rpx 40rpx;
+  border-radius: var(--lux-radius-pill);
+  letter-spacing: 0.1em;
+  box-shadow: var(--lux-shadow-green);
 }
 
 .withdraw-records-link {
   font-size: 24rpx;
-  color: var(--activity-primary);
-  letter-spacing: 2rpx;
+  color: var(--primary-color);
+  letter-spacing: 0.03em;
+  font-weight: 400;
 }
 
-/* 提现弹窗 */
+/* ---------- 提现弹窗 ---------- */
 .modal-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-color);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -292,37 +375,42 @@
 
 .modal-content {
   width: 600rpx;
-  background: var(--card-color);
-  border-radius: 24rpx;
+  background: var(--lux-card-bg);
+  border-radius: var(--zy-radius-xl);
   padding: 48rpx 40rpx;
+  border: 1rpx solid var(--lux-hairline);
+  box-shadow: var(--lux-shadow-elevated);
 }
 
 .modal-title {
-  font-size: 34rpx;
+  font-size: 32rpx;
   font-weight: 500;
   color: var(--text-primary);
   text-align: center;
-  margin-bottom: 32rpx;
+  margin-bottom: 24rpx;
+  letter-spacing: 0.05em;
 }
 
 .modal-balance {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--text-secondary);
   text-align: center;
-  margin-bottom: 32rpx;
+  margin-bottom: 28rpx;
+  letter-spacing: 0.03em;
 }
 
 .modal-input-row {
   display: flex;
   align-items: center;
-  border: 2rpx solid var(--gray-200);
-  border-radius: 16rpx;
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-card);
   padding: 20rpx 24rpx;
   margin-bottom: 16rpx;
+  background: var(--lux-card-cream);
 }
 
 .modal-input-prefix {
-  font-size: 40rpx;
+  font-size: 36rpx;
   font-weight: 300;
   color: var(--text-primary);
   margin-right: 12rpx;
@@ -330,28 +418,31 @@
 
 .modal-input {
   flex: 1;
-  font-size: 40rpx;
+  font-size: 36rpx;
   font-weight: 300;
   color: var(--text-primary);
-  height: 56rpx;
+  height: 50rpx;
+  font-family: inherit;
+  font-feature-settings: 'tnum';
 }
 
 .modal-tips {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40rpx;
+  margin-bottom: 36rpx;
 }
 
 .modal-tips text:first-child {
   font-size: 22rpx;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
 }
 
 .modal-all-btn {
   font-size: 24rpx;
-  color: var(--activity-primary);
-  font-weight: 500;
+  color: var(--primary-color);
+  font-weight: 400;
+  letter-spacing: 0.03em;
 }
 
 .modal-btns {
@@ -363,10 +454,15 @@
   flex: 1;
   text-align: center;
   padding: 20rpx 0;
-  border-radius: 12rpx;
-  font-size: 28rpx;
+  border-radius: var(--lux-radius-pill);
+  font-size: 26rpx;
   font-weight: 500;
-  letter-spacing: 4rpx;
+  letter-spacing: 0.1em;
+  border: none;
+}
+
+.modal-btn::after {
+  border: none;
 }
 
 .modal-btn-cancel {
@@ -375,11 +471,11 @@
 }
 
 .modal-btn-confirm {
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  color: var(--card-color);
+  background: var(--gradient-primary);
+  color: var(--text-on-primary);
+  box-shadow: var(--lux-shadow-green);
 }
 
 .modal-btn-disabled {
-  opacity: 0.6;
-  pointer-events: none;
+  opacity: 0.5;
 }

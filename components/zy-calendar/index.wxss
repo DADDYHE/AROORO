@@ -1,0 +1,359 @@
+/* ================================================================
+   components/zy-calendar · AROORO Haute-Luxury 日历选择
+   ----------------------------------------------------------------
+   奶油白底 · 发丝描边 · 克制字体
+   Skyline 兼容：无 :active / backdrop-filter / position:sticky
+   按压反馈由 hover-class 驱动（--hover / --pressed）
+   ================================================================ */
+
+.zy-calendar {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  max-height: 960rpx;
+  background: var(--card-color, #FFFFFF);
+  /* 主题色（由 color 属性注入，默认深森林绿） */
+  --zy-calendar-color: var(--primary-color, #1F3A1F);
+  box-sizing: border-box;
+}
+
+/* 内联模式：自适应高度，不限制 max-height，由外层 scroll-view 控制滚动 */
+.zy-calendar--inline {
+  height: auto;
+  max-height: 9999rpx;
+}
+
+/* ---------- 头部 ---------- */
+.zy-calendar__header {
+  position: relative;
+  padding: 40rpx 48rpx 24rpx;
+  text-align: center;
+  border-bottom: 1rpx solid var(--hairline, rgba(26, 26, 23, 0.08));
+}
+
+.zy-calendar__title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text-primary, #1A1A17);
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+}
+
+.zy-calendar__close {
+  position: absolute;
+  top: 28rpx;
+  right: 28rpx;
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border-radius: 50%;
+  transition: background-color var(--transition-fast, 280ms cubic-bezier(0.25, 0.1, 0.25, 1)),
+              transform var(--transition-fast, 280ms cubic-bezier(0.25, 0.1, 0.25, 1));
+}
+
+.zy-calendar__close-icon {
+  width: 22rpx;
+  height: 22rpx;
+  position: relative;
+}
+
+.zy-calendar__close-icon::before,
+.zy-calendar__close-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2rpx;
+  background: var(--text-secondary, #5A564C);
+  border-radius: 1rpx;
+}
+
+.zy-calendar__close-icon::before {
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.zy-calendar__close-icon::after {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+/* ---------- 周标题 ---------- */
+.zy-calendar__week-title {
+  display: flex;
+  padding: 20rpx 32rpx 12rpx;
+  border-bottom: 1rpx solid var(--hairline, rgba(26, 26, 23, 0.08));
+}
+
+.zy-calendar__week-day {
+  flex: 1;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- 月份滚动区 ---------- */
+.zy-calendar__body {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* inline 模式：自然展开，由外层 scroll-view 负责滚动 */
+.zy-calendar__body--inline {
+  flex: none;
+  overflow: visible;
+}
+
+/* ---------- 月份 ---------- */
+.zy-calendar__month {
+  padding: 24rpx 32rpx;
+}
+
+.zy-calendar__month-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text-secondary, #5A564C);
+  text-align: center;
+  margin-bottom: 16rpx;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+}
+
+/* ---------- 日期网格（flex 替代 grid，Skyline 兼容） ---------- */
+.zy-calendar__days {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.zy-calendar__day {
+  width: calc(100% / 7);
+  height: 96rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+  transition: background-color var(--transition-fast, 280ms cubic-bezier(0.25, 0.1, 0.25, 1)),
+              transform var(--transition-fast, 280ms cubic-bezier(0.25, 0.1, 0.25, 1));
+}
+
+/* 按压反馈（由 hover-class 驱动） */
+.zy-calendar__day--hover:not(.zy-calendar__day--empty):not(.zy-calendar__day--disabled) {
+  background: var(--primary-wash, #F2F5EC);
+}
+
+.zy-calendar__day--hover:not(.zy-calendar__day--empty):not(.zy-calendar__day--disabled) .zy-calendar__day-text {
+  transform: scale(0.92);
+}
+
+/* 空白单元格 */
+.zy-calendar__day--empty {
+  pointer-events: none;
+}
+
+/* 日期文本 */
+.zy-calendar__day-text {
+  font-size: 28rpx;
+  color: var(--text-primary, #1A1A17);
+  line-height: 1.4;
+  z-index: 2;
+  position: relative;
+  font-weight: 400;
+  letter-spacing: 0;
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color var(--transition-fast, 280ms cubic-bezier(0.25, 0.1, 0.25, 1)),
+              color var(--transition-fast, 280ms cubic-bezier(0.25, 0.1, 0.25, 1)),
+              transform var(--transition-fast, 280ms cubic-bezier(0.25, 0.1, 0.25, 1));
+}
+
+.zy-calendar__day-info {
+  font-size: 18rpx;
+  color: var(--text-tertiary);
+  line-height: 1.2;
+  margin-top: 2rpx;
+  z-index: 2;
+  position: relative;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* 顶部信息（formatter topInfo） */
+.zy-calendar__day-top {
+  font-size: 18rpx;
+  color: var(--text-primary, #1A1A17);
+  line-height: 1.2;
+  margin-bottom: 2rpx;
+  z-index: 2;
+  position: relative;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* 今天：发丝金色环（未选中态） */
+.zy-calendar__day--day:not(.zy-calendar__day--selected):not(.zy-calendar__day--start):not(.zy-calendar__day--end):not(.zy-calendar__day--middle) .zy-calendar__day-text {
+  position: relative;
+}
+
+.zy-calendar__day--day.zy-calendar__day--today:not(.zy-calendar__day--selected):not(.zy-calendar__day--start):not(.zy-calendar__day--end):not(.zy-calendar__day--middle) .zy-calendar__day-text {
+  color: var(--primary-color, #1F3A1F);
+  font-weight: 500;
+  box-shadow: inset 0 0 0 2rpx var(--accent-color, #C9A24B);
+}
+
+/* 禁用日期 */
+.zy-calendar__day--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.zy-calendar__day--disabled .zy-calendar__day-text {
+  color: var(--text-tertiary);  /* 删陈旧橄榄兜底 #9A9489（≠令牌真值 #736D5F，见 #12 口径） */
+  font-weight: 400;
+}
+
+.zy-calendar__day--disabled .zy-calendar__day-info {
+  color: var(--text-tertiary);  /* 删陈旧橄榄兜底 #9A9489 */
+}
+
+/* ---------- 选中态（single/multiple）：深森林绿圆形 + 白字 ---------- */
+.zy-calendar__day--selected .zy-calendar__day-text {
+  background: var(--zy-calendar-color, #1F3A1F);
+  color: var(--text-on-primary, #F7F5EF);
+  font-weight: 500;
+}
+
+.zy-calendar__day--selected .zy-calendar__day-info {
+  color: rgba(247, 245, 239, 0.7);
+}
+
+.zy-calendar__day--selected .zy-calendar__day-top {
+  color: rgba(247, 245, 239, 0.85);
+}
+
+/* 选中态今天：金色环被选中圆覆盖，无需额外处理 */
+.zy-calendar__day--selected.zy-calendar__day--today .zy-calendar__day-text {
+  box-shadow: none;
+}
+
+/* ---------- range 起止 ---------- */
+.zy-calendar__day--start .zy-calendar__day-text,
+.zy-calendar__day--end .zy-calendar__day-text,
+.zy-calendar__day--start-end .zy-calendar__day-text {
+  background: var(--zy-calendar-color, #1F3A1F);
+  color: var(--text-on-primary, #F7F5EF);
+  font-weight: 500;
+}
+
+.zy-calendar__day--start .zy-calendar__day-info,
+.zy-calendar__day--end .zy-calendar__day-info,
+.zy-calendar__day--start-end .zy-calendar__day-info {
+  color: rgba(247, 245, 239, 0.7);
+}
+
+.zy-calendar__day--start .zy-calendar__day-top,
+.zy-calendar__day--end .zy-calendar__day-top,
+.zy-calendar__day--start-end .zy-calendar__day-top {
+  color: rgba(247, 245, 239, 0.85);
+}
+
+.zy-calendar__day--start::before,
+.zy-calendar__day--end::before {
+  content: '';
+  position: absolute;
+  top: 16rpx;
+  bottom: 16rpx;
+  width: 50%;
+  background: var(--zy-calendar-color, #1F3A1F);
+  opacity: 0.08;
+  z-index: 0;
+}
+
+.zy-calendar__day--start::before {
+  right: 0;
+}
+
+.zy-calendar__day--end::before {
+  left: 0;
+}
+
+.zy-calendar__day--start-end::before {
+  display: none;
+}
+
+/* ---------- range 中间日期：浅底 ---------- */
+.zy-calendar__day--middle {
+  background: transparent;
+  position: relative;
+}
+
+.zy-calendar__day--middle::before {
+  content: '';
+  position: absolute;
+  top: 16rpx;
+  left: 0;
+  right: 0;
+  bottom: 16rpx;
+  background: var(--zy-calendar-color, #1F3A1F);
+  opacity: 0.08;
+  z-index: 0;
+}
+
+.zy-calendar__day--middle .zy-calendar__day-text {
+  color: var(--zy-calendar-color, #1F3A1F);
+}
+
+.zy-calendar__day--middle .zy-calendar__day-top {
+  color: #1F3A1F;
+}
+
+/* ---------- 底部确认栏 ---------- */
+.zy-calendar__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 48rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom, 0));
+  border-top: 1rpx solid var(--hairline, rgba(26, 26, 23, 0.08));
+  gap: 32rpx;
+  background: var(--card-color, #FFFFFF);
+}
+
+.zy-calendar__selected-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--text-secondary, #5A564C);
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.zy-calendar__confirm-btn {
+  padding: 20rpx 48rpx;
+  background: var(--zy-calendar-color, #1F3A1F);
+  color: var(--text-on-primary, #F7F5EF);
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: var(--zy-radius-pill);
+  text-align: center;
+  min-width: 200rpx;
+  letter-spacing: 0.04em;
+  transition: opacity var(--transition-fast, 280ms cubic-bezier(0.25, 0.1, 0.25, 1)),
+              transform var(--transition-fast, 280ms cubic-bezier(0.25, 0.1, 0.25, 1));
+}
+
+/* 按压反馈 */
+.zy-calendar__confirm-btn--hover {
+  opacity: 0.85;
+  transform: scale(0.97);
+}

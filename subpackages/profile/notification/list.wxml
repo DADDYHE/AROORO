@@ -1,3 +1,15 @@
+<zy-navbar title="消息通知" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <view class="header-bar" wx:if="{{unreadCount > 0}}">
     <text class="unread-text">{{unreadCount}}条未读</text>
@@ -17,7 +29,8 @@
   </view>
 
   <view class="empty-state" wx:if="{{notifications.length === 0 && !isLoading}}">
-    <text class="empty-icon">🔔</text>
+    <image class="empty-icon" src="/images/icons/bell-luxury-line.svg" mode="aspectFit"></image>
     <text class="empty-text">暂无通知</text>
   </view>
 </view>
+</scroll-view>

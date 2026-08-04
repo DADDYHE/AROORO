@@ -1,3 +1,15 @@
+<zy-navbar title="我的" showBack="{{false}}" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page">
   <!-- 顶部画廊区 -->
   <view class="gallery-header">
@@ -17,7 +29,7 @@
 <view class="order-exhibit-section">
   <view class="exhibit-list">
     <view class="exhibit-row">
-      <view class="exhibit-row-index" style="flex:1;text-align:center;">
+      <view class="exhibit-profile-cell">
         <view class="exhibit-avatar-wrap">
           <image lazy-load class="exhibit-avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{userInfo.avatarUrl}}" data-path="userInfo.avatarUrl" />
         </view>
@@ -207,7 +219,7 @@
 <view class="order-exhibit-section">
   <view class="exhibit-list">
     <view class="exhibit-row">
-      <view class="exhibit-row-index" style="flex:1;">
+      <view class="exhibit-profile-cell">
         <view class="exhibit-logout-btn" bindtap="onLogout">
           <text class="exhibit-logout-text">退出登录</text>
         </view>
@@ -221,23 +233,26 @@
     <text class="version-text">版本 {{appVersion}}</text>
   </view>
 
-  <!-- 入驻弹窗 -->
-  <view class="modal-mask" wx:if="{{showHostModal}}" bindtap="onCloseHostModal">
-    <view class="modal-content" catchtap="">
-      <view class="modal-header">
-        <text class="modal-title">入驻平台请联系客服</text>
-      </view>
-      <view class="modal-body">
-        <text class="modal-desc">点击下方按钮联系微信客服</text>
-      </view>
-      <view class="modal-footer">
-        <button class="modal-btn contact-customer-btn" open-type="contact">
-          <text class="modal-btn-text">联系客服</text>
-        </button>
-      </view>
-      <view class="modal-close" bindtap="onCloseHostModal">
-        <view class="modal-close-icon"></view>
+  <!-- 入驻弹窗（root-portal：Skyline 下保证 fixed 相对 viewport） -->
+  <root-portal wx:if="{{showHostModal}}">
+    <view class="modal-mask" bindtap="onCloseHostModal">
+      <view class="modal-content" catchtap="">
+        <view class="modal-header">
+          <text class="modal-title">入驻平台请联系客服</text>
+        </view>
+        <view class="modal-body">
+          <text class="modal-desc">点击下方按钮联系微信客服</text>
+        </view>
+        <view class="modal-footer">
+          <button class="modal-btn contact-customer-btn" open-type="contact">
+            <text class="modal-btn-text">联系客服</text>
+          </button>
+        </view>
+        <view class="modal-close" bindtap="onCloseHostModal">
+          <view class="modal-close-icon"></view>
+        </view>
       </view>
     </view>
-  </view>
+  </root-portal>
 </view>
+</scroll-view>

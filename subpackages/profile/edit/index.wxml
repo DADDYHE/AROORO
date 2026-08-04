@@ -1,3 +1,15 @@
+<zy-navbar title="编辑资料" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <view class="page-content">
     <!-- 个人信息编辑 -->
@@ -106,3 +118,4 @@
   
 
 </view>
+</scroll-view>

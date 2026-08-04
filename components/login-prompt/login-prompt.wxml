@@ -1,22 +1,24 @@
-<view class="login-overlay" wx:if="{{visible}}" bindtap="onClose">
-  <view class="login-card" catchtap="">
-    <view class="card-top-bar"></view>
-    <view class="card-content">
-      <view class="card-icon">
-        <view class="icon-circle">
-          <view class="icon-gradient"></view>
+<root-portal wx:if="{{visible}}">
+  <view class="login-overlay {{_leaving ? 'leaving' : ''}}" bindtap="onClose">
+    <view class="login-card {{_leaving ? 'leaving' : ''}}" catchtap="">
+      <view class="card-top-bar"></view>
+      <view class="card-content">
+        <view class="card-icon login-reveal">
+          <view class="icon-circle">
+            <view class="icon-gradient"></view>
+          </view>
         </view>
-      </view>
-      <view class="card-text">
-        <text class="card-title">欢迎来到 AROORO</text>
-        <text class="card-subtitle">登录后即可体验完整功能，享受专属优惠</text>
-      </view>
-      <view class="card-btn" bindtap="onLogin">
-        <text class="btn-text">立即登录</text>
-      </view>
-      <view class="card-skip" bindtap="onClose">
-        <text class="skip-text">稍后再说</text>
+        <view class="card-text login-reveal">
+          <text class="card-title">欢迎来到 AROORO</text>
+          <text class="card-subtitle">登录后即可体验完整功能，享受专属优惠</text>
+        </view>
+        <view class="card-btn login-reveal" bindtap="onLogin" hover-class="card-btn--pressed" hover-stay-time="120">
+          <text class="btn-text">立即登录</text>
+        </view>
+        <view class="card-skip login-reveal" bindtap="onClose" hover-class="card-skip--pressed" hover-stay-time="120">
+          <text class="skip-text">稍后再说</text>
+        </view>
       </view>
     </view>
   </view>
-</view>
+</root-portal>

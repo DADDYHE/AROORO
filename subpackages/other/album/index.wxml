@@ -1,17 +1,31 @@
+<zy-navbar title="相册" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="container">
 
   <!-- 功能按钮 -->
   <view class="function-tabs">
-    <view 
-      class="tab-button {{currentTab === 'video' ? 'active' : ''}}" 
-      catchtap="switchTab" 
+    <view
+      class="tab-button {{currentTab === 'video' ? 'active' : ''}}"
+      catchtap="switchTab"
+      hover-class="tab-button--pressed"
       data-tab="video"
     >
       视频
     </view>
-    <view 
-      class="tab-button {{currentTab === 'album' ? 'active' : ''}}" 
-      catchtap="switchTab" 
+    <view
+      class="tab-button {{currentTab === 'album' ? 'active' : ''}}"
+      catchtap="switchTab"
+      hover-class="tab-button--pressed"
       data-tab="album"
     >
       相册
@@ -20,13 +34,15 @@
 
   <!-- 视频功能区 -->
   <view class="content-area video-section {{currentTab === 'video' ? 'active' : 'hidden'}}">
-    <!-- 垂直指示器和视频数量指示器 -->
-    <view class="vertical-indicator-container" wx:if="{{videos.length > 0}}">
-      <!-- 视频数量指示器 -->
-      <view class="video-count-indicator">
-        {{currentVideoIndex + 1}} / {{videos.length}}
+    <!-- 垂直指示器和视频数量指示器（root-portal：Skyline 下保证 fixed 相对 viewport） -->
+    <root-portal wx:if="{{videos.length > 0}}">
+      <view class="vertical-indicator-container">
+        <!-- 视频数量指示器 -->
+        <view class="video-count-indicator">
+          {{currentVideoIndex + 1}} / {{videos.length}}
+        </view>
       </view>
-    </view>
+    </root-portal>
     
     <swiper 
       class="video-swiper" 
@@ -106,17 +122,19 @@
       </swiper-item>
     </swiper>
     
-    <!-- 右下角6个方块按钮 -->
-    <view class="grid-button" catchtap="goToVideoList">
-      <view class="grid-container">
-        <view class="grid-item"></view>
-        <view class="grid-item"></view>
-        <view class="grid-item"></view>
-        <view class="grid-item"></view>
-        <view class="grid-item"></view>
-        <view class="grid-item"></view>
+    <!-- 右下角6个方块按钮（root-portal：Skyline 下保证 fixed 相对 viewport） -->
+    <root-portal>
+      <view class="grid-button" hover-class="grid-button--pressed" catchtap="goToVideoList">
+        <view class="grid-container">
+          <view class="grid-item"></view>
+          <view class="grid-item"></view>
+          <view class="grid-item"></view>
+          <view class="grid-item"></view>
+          <view class="grid-item"></view>
+          <view class="grid-item"></view>
+        </view>
       </view>
-    </view>
+    </root-portal>
   </view>
 
   <!-- 相册功能区 -->
@@ -137,12 +155,13 @@
       
       <!-- 缩略图网格 -->
       <view wx:if="{{photos.length > 1}}" class="thumbnail-grid">
-        <view 
-          class="thumbnail-item" 
-          wx:for="{{photos}}" 
+        <view
+          class="thumbnail-item"
+          wx:for="{{photos}}"
           wx:key="id"
           wx:if="{{index > 0}}"
           bindtap="previewPhoto"
+          hover-class="thumbnail-item--pressed"
           data-index="{{index}}"
         >
           <image lazy-load 
@@ -161,3 +180,4 @@
     </view>
   </view>
 </view>
+</scroll-view>

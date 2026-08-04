@@ -1,17 +1,22 @@
 /* ================================================================
-   custom-tab-bar/index.wxss · AROORO TabBar 选中/未选中效果
-   2026-07-29 基于设计系统令牌重新设计
+   custom-tab-bar/index.wxss · AROORO TabBar · Haute-Luxury v2
    ----------------------------------------------------------------
-   设计系统令牌：
-     选中色 --zy-tabbar-item-active: #4F5E35（橄榄绿）
-     未选中色 --zy-tabbar-item-inactive: #9A9489（暖灰）
-     选中底 --zy-tabbar-item-active-bg: rgba(79, 94, 53, 0.08)
-     点缀金 --zy-accent: #B8893A
-     动效 --zy-dur-base: 250ms / --zy-ease-standard: cubic-bezier(0.4,0,0.2,1)
+   高奢 TabBar：
+     · 奶油米白半透底 + 发丝顶线
+     · 选中指示：极简竖线（取代圆点，更克制）
+     · 中央按钮：深林绿渐变 + 金属高光
+     · 图标线条极细，文字极轻
+   ----------------------------------------------------------------
+   设计系统：styles/theme-teal.wxss（深森林绿体系 · 事实生效层）
+   注意：styles/design-tokens.wxss 的 --zy-tabbar-* 为橄榄绿旧值，
+        已被 app.wxss 中后置的 theme-teal.wxss 覆盖，勿直接依赖。
    ================================================================ */
 
+/* 显式导入令牌层：即使组件样式隔离，也保证令牌在本组件作用域可解析 */
+@import '../styles/theme-teal.wxss';
+
 /* ================================================================
-   AROORO 启动屏覆盖层 — 覆盖全屏（含 tabBar 本身）
+   启动屏覆盖层
    ================================================================ */
 .splash-overlay {
   position: fixed;
@@ -22,11 +27,14 @@
   width: 100%;
   height: 100vh;
   z-index: 99999;
-  background: #FFFFFF;
+  background: var(--zy-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 1;
+  transition-property: opacity;
+  transition-duration: 900ms;
+  transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 .splash-overlay.splash-fade-out {
@@ -40,24 +48,56 @@
 }
 
 /* ================================================================
-   导航栏容器 — 纯白底 + 顶部细线
+   导航栏容器 — 奶油米白 + 发丝顶线
    ================================================================ */
 .tab-bar {
+  /* ---- 组件内局部令牌 ----------------------------------------
+     声明在 .tab-bar 而非 :host：本组件 WXML 用 <root-portal> 包裹，
+     子树会被搬出宿主节点，:host 上的自定义属性无法继承进来。
+     .tab-bar 是 portal 子树的根，其后代（中心按钮等）均可继承。
+     以下值在 theme-teal 中无精确等价物，就地令牌化以保证零外观改变。 */
+  --tb-bar-bg: rgba(247, 245, 239, 0.96);          /* 奶油米白半透底（非 --zy-tabbar-bg 的纯白） */
+  --tb-center-shadow:
+    0 6rpx 20rpx rgba(31, 58, 31, 0.28),
+    0 2rpx 8rpx rgba(31, 58, 31, 0.18);            /* 深林绿投影（非橄榄绿） */
+  --tb-center-shadow-active:
+    0 12rpx 36rpx rgba(31, 58, 31, 0.38),
+    0 4rpx 14rpx rgba(31, 58, 31, 0.25);
+  --tb-center-border: 2rpx solid rgba(201, 162, 75, 0.15);  /* 香槟金细环 */
+  --tb-center-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 100%);
+  --tb-center-inner-shadow: linear-gradient(0deg, rgba(0, 0, 0, 0.15) 0%, transparent 100%);
+
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 128rpx;
-  background: #FFFFFF;
-  border-top: 2rpx solid var(--border-color, #D8DCCE);
+  height: 104rpx;
+  background: var(--tb-bar-bg);
+  border-top: var(--zy-tabbar-border-top);
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
-  padding-top: 12rpx;
+  padding-top: 8rpx;
   padding-bottom: env(safe-area-inset-bottom, 0);
   box-sizing: border-box;
   overflow: visible;
+  animation-name: tabbar-fade-in;
+  animation-duration: 700ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-delay: 300ms;
+  animation-fill-mode: forwards;
+}
+
+@keyframes tabbar-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(16rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .tab-bar::before {
@@ -77,81 +117,100 @@
   position: relative;
 }
 
-/* ---- 选中态：顶部金色指示点 ---- */
+/* ---- 选中态：顶部发丝金色指示线（极简，奢侈品克制） ---- */
 .tab-bar-item.active::after {
   content: '';
   position: absolute;
-  top: 2rpx;
+  top: 0;
   left: 50%;
-  transform: translateX(-50%);
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  background: #B8893A;
-  opacity: 1;
+  width: 32rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: var(--zy-accent);
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  opacity: 0;
+  animation-name: gold-line-appear;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+@keyframes gold-line-appear {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scaleX(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scaleX(1);
+  }
 }
 
 /* ================================================================
-   图标包裹层 — 选中态芯片背景
+   图标包裹层
    ================================================================ */
 .tab-bar-icon-wrap {
-  width: 72rpx;
-  height: 56rpx;
-  border-radius: 16rpx;
+  width: 64rpx;
+  height: 48rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 6rpx;
+  margin-bottom: 4rpx;
   background: transparent;
+  transition-property: transform;
+  transition-duration: 320ms;
+  transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-/* 选中态：浅橄榄绿芯片底 */
 .tab-bar-item.active .tab-bar-icon-wrap {
-  background: rgba(79, 94, 53, 0.08);
+  transform: translateY(-2rpx);
 }
 
 /* ================================================================
-   图标 — 选中/未选中色彩区分
+   图标 — 线条图标，未选中极淡
    ================================================================ */
 .tab-bar-icon {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
+  transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
+              transform 320ms cubic-bezier(0.34, 1.15, 0.64, 1);
+  opacity: 0.35;
 }
 
-/* 未选中：暖灰半透明 */
-.tab-bar-icon {
-  opacity: 0.45;
-}
-
-/* 选中：橄榄绿色调滤镜 */
 .tab-bar-item.active .tab-bar-icon {
   opacity: 1;
-  filter: brightness(0) saturate(100%) invert(31%) sepia(14%) saturate(647%) hue-rotate(41deg) brightness(94%) contrast(93%);
+  transform: translateY(-1rpx);
 }
 
 /* ================================================================
-   文字 — 选中/未选中色彩区分
+   文字 — 极轻，宽字距
    ================================================================ */
 .tab-bar-text {
-  font-size: 20rpx;
-  font-weight: 500;
-  color: #9A9489;
+  font-size: 18rpx;
+  font-weight: 400;
+  color: var(--zy-tabbar-item-inactive);
   line-height: 1;
+  transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
+              transform 320ms cubic-bezier(0.19, 1, 0.22, 1);
+  letter-spacing: 0.02em;
+  opacity: 0.6;
 }
 
-/* 选中态文字：橄榄绿 + 加粗 */
 .tab-bar-item.active .tab-bar-text {
-  color: #4F5E35;
-  font-weight: 600;
+  color: var(--zy-tabbar-item-active);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  opacity: 1;
 }
 
 /* ================================================================
-   中心按钮 — 橄榄绿渐变浮动圆钮
+   中心按钮 — 深林绿渐变圆钮（香槟金环 + 呼吸光晕）
    ================================================================ */
 .tab-bar-item-center {
   position: relative;
   overflow: visible !important;
-  flex: 0 0 0 !important;
+  flex: 1 1 0 !important;
 }
 
 .tab-bar-item-center::before,
@@ -167,53 +226,93 @@
   width: 104rpx;
   height: 104rpx;
   border-radius: 50%;
-  background: linear-gradient(160deg, #4F5E35 0%, #3A4626 100%);
+  background: var(--zy-tabbar-center-grad);
   position: relative;
   overflow: visible;
-  box-shadow:
-    0 8rpx 24rpx rgba(79, 94, 53, 0.30),
-    0 3rpx 10rpx rgba(79, 94, 53, 0.18);
-  margin-top: -56rpx;
-  border: none;
+  box-shadow: var(--tb-center-shadow);
+  margin-top: -48rpx;
+  border: var(--tb-center-border);
+  animation-name: center-btn-glow;
+  animation-duration: 5000ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-delay: 1500ms;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  transition: transform 180ms cubic-bezier(0.25, 0.1, 0.25, 1),
+              opacity 320ms cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-/* 顶部微高光 */
+@keyframes center-btn-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.95;
+  }
+}
+
+/* 顶部金属高光 */
+.center-button::before {
+  content: '';
+  position: absolute;
+  top: 6rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 24rpx;
+  background: var(--tb-center-highlight);
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 底部微阴影凹陷（珠宝感） */
 .center-button::after {
   content: '';
   position: absolute;
-  top: 8rpx;
+  bottom: 6rpx;
   left: 50%;
   transform: translateX(-50%);
-  width: 56%;
-  height: 28rpx;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 100%);
+  width: 40%;
+  height: 16rpx;
+  background: var(--tb-center-inner-shadow);
   border-radius: 50%;
   z-index: 1;
   pointer-events: none;
 }
 
 .center-button-icon {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
   position: relative;
   z-index: 2;
   margin-bottom: 0;
+  transition-property: transform;
+  transition-duration: 320ms;
+  transition-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
 }
 
 .center-button-text {
-  font-size: 18rpx;
-  font-weight: 600;
-  color: #FAFAF6;
+  font-size: 16rpx;
+  font-weight: 500;
+  color: var(--zy-text-on-primary);
   line-height: 1;
   position: relative;
   z-index: 2;
-  letter-spacing: 0.5rpx;
-  margin-top: 2rpx;
+  letter-spacing: 0.08em;
+  margin-top: 4rpx;
 }
 
-/* 选中态中心按钮：加深阴影 */
 .tab-bar-item-center.active .center-button {
-  box-shadow:
-    0 10rpx 28rpx rgba(79, 94, 53, 0.38),
-    0 4rpx 14rpx rgba(79, 94, 53, 0.22);
+  box-shadow: var(--tb-center-shadow-active);
+}
+
+.tab-bar-item-center.active .center-button-icon {
+  transform: translateY(-2rpx) scale(1.06);
+}
+
+.tab-bar-item-center.active .center-button-text {
+  letter-spacing: 0.12em;
 }

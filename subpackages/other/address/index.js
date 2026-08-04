@@ -2,9 +2,11 @@ const { AddressService } = require('../../../utils/AddressService')
 const app = getApp()
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     addresses: [],
     selectedAddressId: '',
@@ -15,6 +17,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     this.loadAddresses()
     if (options.selectedId) {
       this.setData({ selectedAddressId: options.selectedId })

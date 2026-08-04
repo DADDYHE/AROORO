@@ -3,7 +3,7 @@ const { AdminService } = require('../../../services/CloudFunctionService')
 const STATUS_MAP = {
   draft: { text: '待发布', color: '#9A9489' },
   published: { text: '报名中', color: '#4F5E35' },
-  registration_stopped: { text: '报名截止', color: '#B8893A' },
+  registration_stopped: { text: '报名截止', color: '#C9A24B' },
   ended: { text: '已结束', color: '#9A9489' },
   cancelled: { text: '已取消', color: '#A85B4A' },
 }
@@ -19,9 +19,11 @@ const CATEGORY_MAP = {
 }
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     activity: null,
     isLoading: true,
@@ -39,6 +41,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     if (options.id) {
       this._activityId = options.id
       this._loadActivity(options.id)

@@ -1,101 +1,128 @@
 {
   "meta": {
+    "_generation": "本文件是【新代设计系统】的规格源，与 styles/theme-teal.wxss 的 --zy-* 令牌族同属一代（spacing↔--zy-space-*、radius↔--zy-radius-*、typography.scale↔--zy-fs-*）。A-0 审计确认：该代 79 定义仅 14 活、总消费 22；实际渲染由旧代 --spacing-*(340 消费)/--border-radius-*(320)/--font-size-*(12) 承担。路线 A 已拍板：完全采用新代 --zy-* 体系、彻底废弃旧代旧前缀族。A-1 已按迁移映射表对 theme-teal 补档（--zy-radius-xs/--zy-fs-md/--zy-fs-xs-lg/--zy-fs-2xs/--zy-space-sm2/--zy-space-4xl），本文件三块已对齐运行时真值、解除冻结标注。详见 deliverables/legacy-retire/migration-map.md。",
     "product": "微信小程序「AROORO」",
-    "direction": "Olive Green × Healing Light-Luxury（PETLUX 高端宠物平台质感 · 橄榄绿换肤）",
+    "direction": "Haute-Luxury：深森林绿 #1F3A1F（结构）× 一支金 #C9A24B（功能信号）× 暖石底 — 金仅作填充/描边/渐变停点，浅底文字一律深绿或炭墨（B′ 裁定）",
     "unit": "rpx",
     "designWidth": 750,
-    "note": "backdrop-filter 的 blur 与 env() 安全区为 px，非 rpx"
+    "note": "backdrop-filter 的 blur 与 env() 安全区为 px，非 rpx",
+    "_runtimeTokensNote": "2026-08-04 落地新增的运行时令牌以 styles/theme-teal.wxss 为唯一真相源，未回写本文件：--text-on-accent(#1A1A17 金面文字炭墨)、--scrim-overlay(rgba(26,46,26,0.4))、--mall-tint-04/12、--primary-tint-04/08、--feeding-tint-12、--boarding-tint-12、--status-cancelled-deep（B2′/B3′ 落地）。这些是本代(zy-*) 与运行时桥接的补充，勿在本文件重复定义以免双源漂移。"
   },
   "color": {
     "primary": {
-      "900": "#3A4626",
-      "700": "#4F5E35",
-      "500": "#6B7D5A",
-      "300": "#9A9489",
-      "100": "#EAEDDF",
-      "gradient": "linear-gradient(160deg, #4F5E35 0%, #3A4626 100%)"
+      "900": "#0F2410",
+      "700": "#1F3A1F",
+      "500": "#3D6B3D",
+      "300": "#8A9E7A",
+      "100": "#E8ECE2",
+      "gradient": "linear-gradient(180deg, #2D4F2D 0%, #0F2410 100%)"
     },
     "accent": {
-      "base": "#B8893A",
-      "hover": "#9A7430",
-      "soft": "#F2E8D4",
-      "glow": "rgba(184,138,58,0.35)"
+      "base": "#C9A24B",
+      "hover": "#A8894A",
+      "soft": "#F0E6D0",
+      "glow": "rgba(201,162,75,0.20)"
     },
     "neutral": {
-      "bg": "#F8FAF3",
+      "bg": "#F7F5EF",
       "surface": "#FFFFFF",
-      "surfaceGlass": "rgba(255,255,255,0.72)",
+      "surfaceGlass": "rgba(255,255,255,0.95)",
       "surfaceGlassSolid": "#FFFFFF",
-      "surfaceGlassBorder": "rgba(255,255,255,0.55)",
-      "border": "#D8DCCE",
-      "borderStrong": "#C9CFBA",
-      "divider": "#EAEDDF",
-      "text1": "#2A2823",
-      "text2": "#635E54",
-      "text3": "#9A9489",
-      "textOnPrimary": "#FAFAF6"
+      "surfaceGlassBorder": "rgba(214,210,199,0.40)",
+      "border": "#E2DED3",
+      "borderStrong": "#D6D2C7",
+      "divider": "#ECE8DE",
+      "text1": "#1A1A17",
+      "text2": "#5A564C",
+      "text3": "#9E9889",
+      "textOnPrimary": "#F7F5EF"
     },
     "state": {
-      "success": "#5B7C4A",
-      "warning": "#B8893A",
-      "error": "#A85B4A",
-      "info": "#6B7D8C"
+      "success": "#3D7A45",
+      "warning": "#C9A24B",
+      "error": "#B85C3C",
+      "info": "#5C7A8A"
     }
   },
   "tabBar": {
-    "height": "100rpx",
+    "height": "104rpx",
     "safeBottom": "env(safe-area-inset-bottom, 0px)",
-    "totalHeight": "calc(100rpx + env(safe-area-inset-bottom, 0px))",
-    "bg": "rgba(255,255,255,0.92)",
-    "bgGlass": "rgba(255,255,255,0.72)",
+    "totalHeight": "calc(104rpx + env(safe-area-inset-bottom, 0px))",
+    "bg": "rgba(255,255,255,0.96)",
+    "bgGlass": "rgba(255,255,255,0.92)",
     "blur": "20px",
-    "borderTop": "1rpx solid rgba(79,94,53,0.08)",
-    "itemActive": "#4F5E35",
-    "itemInactive": "#9A9489",
-    "itemActiveBg": "rgba(79,94,53,0.08)",
-    "iconSize": "48rpx",
+    "borderTop": "1rpx solid rgba(26,26,23,0.06)",
+    "itemActive": "#1F3A1F",
+    "itemInactive": "#9E9889",
+    "itemActiveBg": "transparent",
+    "iconSize": "44rpx",
     "iconStroke": "4rpx",
-    "labelSize": "22rpx",
-    "labelWeight": 500,
-    "labelWeightActive": 600,
+    "labelSize": "20rpx",
+    "labelWeight": 400,
+    "labelWeightActive": 500,
     "center": {
-      "diameter": "120rpx",
-      "protrusion": "40rpx",
-      "bottom": "calc(env(safe-area-inset-bottom, 0px) + 20rpx)",
-      "iconSize": "56rpx",
-      "gradient": "linear-gradient(160deg, #4F5E35 0%, #3A4626 100%)",
-      "iconColor": "#FAFAF6",
-      "shadow": "0 12rpx 28rpx rgba(79,94,53,0.35), 0 4rpx 10rpx rgba(79,94,53,0.20)"
+      "diameter": "112rpx",
+      "protrusion": "36rpx",
+      "bottom": "calc(env(safe-area-inset-bottom, 0px) + 24rpx)",
+      "iconSize": "52rpx",
+      "gradient": "linear-gradient(180deg, #2D4F2D 0%, #0F2410 100%)",
+      "iconColor": "#F7F5EF",
+      "shadow": "0 8rpx 24rpx rgba(31,58,31,0.25), 0 2rpx 8rpx rgba(31,58,31,0.15)"
     }
   },
   "typography": {
+    "_status": "✅ 已按 A 路线对齐运行时真值（A-1）。真值源 = styles/theme-teal.wxss 的 --zy-fs-*（60/48/40/34/30/28/26/24/22/20rpx），含 A-1 补档的 --zy-fs-md(28)/--zy-fs-xs-lg(24)/--zy-fs-2xs(20)。旧代 --font-size-*(px) 与旧 json scale 已废弃，不再作为真值。",
+    "_conflict1_unit": "已解决（A-1）：旧 --font-size-* 用 px、本块用 rpx 的单位分裂随旧代废弃而消失。本块与运行时 --zy-fs-* 同用 rpx。",
+    "_conflict2_naming": "已解决（A-1）：旧「同名不同值」陷阱（旧 json sm=24rpx vs theme-teal --font-size-sm=14px=28rpx）随旧代废弃而消失；本块档名/档值与运行时 --zy-fs-* 逐字一致。",
+    "_conflict3_reality": "已解决（A-1）：旧 json scale（56/44/36/32/28/24/20/22rpx）与运行时 --zy-fs-*（60/48/40/34/30/26/22rpx）数值分叉已消除——本块按运行时真值重写，并补档实践高频档 28/24/20rpx（硬编码 186/199/93 处）。实践高频 26/30/34/22rpx 已在运行时梯子内。18rpx(19 处低频) 按映射表建议吸附 22rpx，不补档。",
     "fontStack": "-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Helvetica Neue\", \"Microsoft YaHei\", \"Source Han Sans SC\", \"Noto Sans CJK SC\", sans-serif",
     "scale": {
-      "display": { "size": "56rpx", "weight": 700, "lineHeight": 1.15 },
-      "h1": { "size": "44rpx", "weight": 700, "lineHeight": 1.2 },
-      "h2": { "size": "36rpx", "weight": 600, "lineHeight": 1.3 },
-      "h3": { "size": "32rpx", "weight": 600, "lineHeight": 1.4 },
-      "body": { "size": "28rpx", "weight": 400, "lineHeight": 1.6 },
-      "sm": { "size": "24rpx", "weight": 400, "lineHeight": 1.5 },
-      "xs": { "size": "20rpx", "weight": 500, "lineHeight": 1.4 },
-      "tab": { "size": "22rpx", "weight": 500, "lineHeight": 1 }
+      "display": { "size": "60rpx", "weight": 300, "lineHeight": 1.1 },
+      "h1": { "size": "48rpx", "weight": 500, "lineHeight": 1.15 },
+      "h2": { "size": "40rpx", "weight": 500, "lineHeight": 1.25 },
+      "h3": { "size": "34rpx", "weight": 500, "lineHeight": 1.35 },
+      "body": { "size": "30rpx", "weight": 400, "lineHeight": 1.65 },
+      "md": { "size": "28rpx", "weight": 400, "lineHeight": 1.6 },
+      "sm": { "size": "26rpx", "weight": 400, "lineHeight": 1.5 },
+      "xs-lg": { "size": "24rpx", "weight": 400, "lineHeight": 1.5 },
+      "xs": { "size": "22rpx", "weight": 400, "lineHeight": 1.4 },
+      "2xs": { "size": "20rpx", "weight": 400, "lineHeight": 1.4 }
     }
   },
   "spacing": {
-    "2xs": "4rpx", "xs": "8rpx", "sm": "16rpx", "md": "24rpx",
-    "lg": "32rpx", "xl": "48rpx", "2xl": "64rpx", "3xl": "96rpx"
+    "_status": "✅ 已按 A 路线对齐运行时真值（A-1）。真值源 = styles/theme-teal.wxss 的 --zy-space-*（4/8/16/20/24/40/64/96/128/200rpx），含 A-1 补档的 --zy-space-sm2(20)/--zy-space-4xl(200)。旧代 --spacing-*(2/4/8/12/20/32/48/64/96/128/160/200) 已废弃，不再作为真值。",
+    "_conflict_twoLadders": "已解决（A-1）：旧「两套矛盾梯子」——theme-teal 内 --spacing-*(消费 340) 与 --zy-space-*(消费 0) 并存——随旧代废弃收敛为单一 --zy-space-* 梯子；本块与之逐字一致（含补档）。",
+    "_conflict_reality": "已解决（A-1）：旧 json 与死码梯子跟的 2xs/xs/sm/md(4/8/16/24) 同值、lg 起分叉（json 32/48/64/96 vs 运行时 40/64/96/128）的分叉已消除。本块按运行时真值重写，并补档实践高频 20rpx（硬编码 177 处）+ 缺档 200rpx（旧 --spacing-xxxxxl 2 处）。",
+    "2xs": "4rpx", "xs": "8rpx", "sm": "16rpx", "sm2": "20rpx", "md": "24rpx",
+    "lg": "40rpx", "xl": "64rpx", "2xl": "96rpx", "3xl": "128rpx", "4xl": "200rpx"
   },
   "radius": {
-    "sm": "16rpx", "md": "24rpx", "lg": "24rpx", "xl": "32rpx",
-    "2xl": "32rpx", "3xl": "40rpx", "pill": "999rpx"
+    "_source": "styles/theme-teal.wxss 的 --zy-radius-*（A-1 补档后 4/8/12/16/20/24/32/12rpx）为运行时真值；本块与之对齐。A-1 新增 --zy-radius-xs:4rpx（旧 --border-radius-xs 的 38 处消费缺口档），补档后旧代 --border-radius-* 全族可零动版迁移。旧值整体错 1-2 档（sm 16/md 24/lg 24/xl 32/2xl 32/3xl 40）已废弃。",
+    "xs": "4rpx",
+    "sm": "8rpx",
+    "md": "12rpx",
+    "lg": "16rpx",
+    "xl": "20rpx",
+    "2xl": "24rpx",
+    "3xl": "32rpx",
+    "4xl": "40rpx",
+    "full": "12rpx",
+    "pill": "12rpx",
+    "_pillNote": "999rpx 胶囊已废弃（Haute-Luxury 去胶囊化 → 矩形微圆角 12rpx）。⚠ A-1 复核：全仓 wxss 中 999rpx/9999rpx 作为 var() 兜底仍存在 5 处（zy-action-sheet / zy-calendar / activity-card / login-prompt 的 var(--border-radius-full/pill, 9999rpx)），属 A-2 前置清理项——删旧代定义前必须先改，否则兜底退回胶囊形。另有 169 处 border-radius:50% 为圆形头像/图标容器，属合法用法，不受本梯子约束。"
   },
   "shadow": {
-    "xs": "0 2rpx 8rpx rgba(42,40,35,0.04)",
-    "sm": "0 4rpx 16rpx rgba(42,40,35,0.06)",
-    "md": "0 8rpx 24rpx rgba(42,40,35,0.08)",
-    "lg": "0 16rpx 40rpx rgba(42,40,35,0.10)",
-    "fab": "0 12rpx 28rpx rgba(79,94,53,0.35), 0 4rpx 10rpx rgba(79,94,53,0.20)",
-    "floatTabBar": "0 -4rpx 32rpx rgba(42,40,35,0.10)"
+    "_source": "styles/theme-teal.wxss L227-234 为运行时真值；本块与之逐字对齐。染色统一 rgba(26,26,23,*)（墨黑 #1A1A17），旧 rgba(42,40,35,*)（#2A2823）已废弃。Haute-Luxury 方向：xs/sm 去阴影改发丝线。",
+    "xs": "none",
+    "sm": "none",
+    "md": "0 2rpx 12rpx rgba(26,26,23,0.04)",
+    "lg": "0 8rpx 32rpx -8rpx rgba(26,26,23,0.08)",
+    "xl": "0 16rpx 48rpx -16rpx rgba(26,26,23,0.12)",
+    "2xl": "0 24rpx 64rpx -20rpx rgba(26,26,23,0.16)",
+    "soft": "none",
+    "fab": "0 8rpx 24rpx rgba(31,58,31,0.25), 0 2rpx 8rpx rgba(31,58,31,0.15)",
+    "_fabNote": "⚠️ 已退役（2026-08-04 #14 裁定）：theme-teal 的 --zy-shadow-fab（转引自 --zy-tabbar-center-shadow）已随 21 个 --zy-tabbar-* 一并删除，本键无真相源、无消费方，保留仅供档案。tabBar 中心按钮阴影由组件局部 --tb-center-shadow 承担（0 6rpx 20rpx rgba(31,58,31,0.28), 0 2rpx 8rpx rgba(31,58,31,0.18)）。",
+    "floatTabBar": "0 -2rpx 24rpx rgba(26,26,23,0.06)",
+    "_floatTabBarNote": "⚠️ 已退役（2026-08-04 #14 裁定）：全仓 0 消费，与活令牌 --shadow-float（2 处消费，partner/activity-create:287、partner/common:766）逐字重复，随 --zy-tabbar-* 一并退役，保留仅供档案。"
   },
   "motion": {
     "easeStandard": "cubic-bezier(0.4,0,0.2,1)",

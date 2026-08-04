@@ -1,6 +1,6 @@
 {
   "usingComponents": {
-    "van-icon": "@vant/weapp/icon/index"
+    "zy-icon": "../../../components/zy-icon/index"
   },
   "navigationBarTitleText": "我的收藏"
 }

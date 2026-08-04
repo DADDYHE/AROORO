@@ -1,3 +1,15 @@
+<zy-navbar title="活动列表" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <!-- 顶部品牌栏 -->
@@ -90,18 +102,20 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{activities.length === 0 && !isLoading}}">
-    <view class="empty-icon">🎉</view>
+    <image class="empty-icon" src="/images/icons/celebration-luxury-line.svg" mode="aspectFit"></image>
     <text class="empty-title">暂无活动</text>
     <text class="empty-text">精彩活动即将上线，敬请期待</text>
   </view>
 
   <!-- 加载状态 -->
   <view class="loading-more" wx:if="{{isLoading}}">
-    <view class="loading-dots">
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-    </view>
+    <view class="lux-silk">
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 100ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 200ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 300ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 400ms;"></view>
+</view>
     <text class="loading-more-text">加载中</text>
   </view>
 
@@ -110,3 +124,4 @@
     <text class="hint-text">仅能显示最近6个月我报名的活动</text>
   </view>
 </view>
+</scroll-view>

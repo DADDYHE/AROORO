@@ -1,3 +1,15 @@
+<zy-navbar title="活动地图" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="map-page">
   <map
     id="map"
@@ -19,3 +31,4 @@
     </button>
   </view>
 </view>
+</scroll-view>

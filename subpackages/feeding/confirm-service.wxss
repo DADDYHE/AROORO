@@ -2,14 +2,44 @@
 
 @import '../../styles/components.wxss';
 
+/* ================================================================
+   subpackages/feeding/confirm-service · AROORO 确认服务 — Haute-Luxury Editorial
+   板块色：喂养绿 + 暖金点缀 --accent-color
+   Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
+   ================================================================ */
+
+/* ===== 入场动画 ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(32rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ===== 页面容器 ===== */
 .page-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--background-color);
   position: relative;
+  padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
 }
 
+/* ===== 顶部品牌头部 ===== */
 .gallery-header {
   padding: 0;
   position: relative;
@@ -19,7 +49,7 @@
 }
 
 .brand-block {
-  padding: 80rpx 48rpx 64rpx;
+  padding: 80rpx var(--page-padding) 64rpx;
   position: relative;
 }
 
@@ -30,17 +60,17 @@
   right: 0;
   width: 300rpx;
   height: 300rpx;
-  background: radial-gradient(circle, rgba(33, 150, 243, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--feeding-tint, rgba(74,107,74,0.08)) 0%, transparent 70%);
   pointer-events: none;
 }
 
 .brand-accent-bar {
   position: absolute;
   top: 0;
-  left: 48rpx;
+  left: var(--page-padding);
   width: 48rpx;
   height: 6rpx;
-  background: linear-gradient(90deg, var(--feeding-primary) 0%, #1976D2 100%);
+  background: linear-gradient(90deg, var(--feeding-primary) 0%, var(--feeding-secondary) 100%);
   border-radius: 0 0 4rpx 4rpx;
 }
 
@@ -53,10 +83,11 @@
   font-size: 64rpx;
   font-weight: 300;
   color: var(--text-primary);
-  letter-spacing: 12rpx;
+  letter-spacing: 0.12em;
   display: block;
   line-height: 1;
   position: relative;
+  font-family: var(--font-serif);
 }
 
 .brand-meta {
@@ -68,7 +99,7 @@
 .brand-meta-line {
   width: 40rpx;
   height: 2rpx;
-  background: var(--gray-200);
+  background: var(--border-color);
   position: relative;
 }
 
@@ -87,27 +118,44 @@
 .brand-subtitle {
   font-size: 22rpx;
   color: var(--text-secondary);
-  letter-spacing: 8rpx;
+  letter-spacing: 0.08em;
   font-weight: 400;
+  font-family: var(--font-sans);
 }
 
+/* ===== 内容区 ===== */
 .page-content {
   flex: 1;
-  padding: 0 32rpx 24rpx;
+  padding: 0 var(--page-padding) 24rpx;
   position: relative;
   z-index: 1;
-  padding-bottom: 160rpx;
 }
 
+/* ===== 信息卡片 ===== */
 .info-card {
   background: var(--card-color);
-  border-radius: 24rpx;
+  border-radius: var(--zy-radius-lg);
   padding: 0;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
-  border: 1rpx solid rgba(134, 134, 139, 0.1);
+  margin-bottom: var(--zy-space-lg);
+  border: 1rpx solid var(--hairline);
   position: relative;
   overflow: hidden;
+  animation-name: fadeInUp;
+  animation-duration: 600ms;
+  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-fill-mode: forwards;
+}
+
+.info-card:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.info-card:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.info-card:nth-child(4) {
+  animation-delay: 240ms;
 }
 
 .info-card::before {
@@ -116,24 +164,26 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3rpx;
-  background: linear-gradient(90deg, var(--feeding-primary) 0%, #1976D2 50%, transparent 100%);
-  border-radius: 24rpx 24rpx 0 0;
+  height: 2rpx;
+  background: linear-gradient(90deg, var(--feeding-primary) 0%, var(--feeding-secondary) 50%, transparent 100%);
+  border-radius: var(--zy-radius-lg) var(--zy-radius-lg) 0 0;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28rpx 32rpx 20rpx;
+  padding: 28rpx var(--zy-space-lg) 20rpx;
   border-bottom: 1rpx solid var(--divider-color);
-  background: rgba(33, 150, 243, 0.06);
+  background: var(--feeding-tint);
 }
 
 .card-title {
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.04em;
+  font-family: var(--font-serif);
 }
 
 .card-header-link {
@@ -146,19 +196,22 @@
   font-size: 24rpx;
   color: var(--feeding-primary);
   font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .link-arrow {
   font-size: 28rpx;
   color: var(--feeding-primary);
   font-weight: 300;
+  font-family: var(--font-sans);
 }
 
 .info-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28rpx 32rpx;
+  padding: 28rpx var(--zy-space-lg);
   border-bottom: 1rpx solid var(--divider-color);
 }
 
@@ -171,28 +224,35 @@
   font-weight: 500;
   color: var(--text-primary);
   flex-shrink: 0;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .info-item .value {
   font-size: 26rpx;
   color: var(--text-secondary);
   font-weight: 400;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+/* ===== 交互项 ===== */
 .interaction-item {
   position: relative;
 }
 
 .brand-action-item {
-  background: linear-gradient(135deg, rgba(79, 94, 53, 0.06) 0%, rgba(58, 70, 38, 0.03) 100%);
-  border-bottom: 1rpx solid rgba(79, 94, 53, 0.12);
+  background: var(--feeding-tint);
+  border-bottom: 1rpx solid rgba(74,107,74,0.1);
 }
 
 .brand-action-label {
   font-size: 28rpx;
-  font-weight: 600;
-  color: var(--activity-primary);
+  font-weight: 500;
+  color: var(--feeding-primary);
   flex-shrink: 0;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .brand-action-value {
@@ -202,17 +262,21 @@
 
 .brand-action-placeholder {
   font-size: 24rpx;
-  color: var(--activity-primary);
-  font-weight: 500;
-  opacity: 0.7;
+  color: var(--feeding-primary);
+  font-weight: 400;
+  opacity: 0.6;
+  letter-spacing: 0.02em;
 }
 
 .brand-action-text {
   font-size: 26rpx;
-  color: var(--activity-primary);
-  font-weight: 600;
+  color: var(--feeding-primary);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+/* ===== 地址项 ===== */
 .address-item {
   flex-direction: column;
   align-items: flex-start;
@@ -231,9 +295,11 @@
   font-size: 26rpx;
   color: var(--text-primary);
   font-weight: 500;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   word-break: break-all;
   line-height: 1.5;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .address-value .placeholder {
@@ -269,6 +335,7 @@
   font-weight: 300;
 }
 
+/* ===== 备注输入 ===== */
 .notes-input {
   font-size: 26rpx;
   color: var(--text-primary);
@@ -276,10 +343,13 @@
   width: 100%;
   box-sizing: border-box;
   padding: 20rpx 24rpx;
-  background-color: #F5F7FA;
-  border-radius: 12rpx;
+  background-color: var(--card-cream);
+  border-radius: var(--zy-radius-md);
   min-height: 120rpx;
   line-height: 1.6;
+  border: 1rpx solid var(--hairline);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .notes-item {
@@ -303,6 +373,8 @@
   text-align: right;
   flex: 1;
   min-width: 0;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .required-star {
@@ -310,6 +382,7 @@
   margin-left: 4rpx;
 }
 
+/* ===== 选择器弹窗 ===== */
 .picker-modal {
   position: fixed;
   top: 0;
@@ -327,14 +400,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--overlay-color, rgba(26,26,23,0.5));
 }
 
 .picker-content {
   position: relative;
   width: 100%;
   background: var(--card-color);
-  border-radius: 28rpx 28rpx 0 0;
+  border-radius: var(--zy-radius-2xl) var(--zy-radius-2xl) 0 0;
   overflow: hidden;
 }
 
@@ -342,7 +415,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28rpx 32rpx;
+  padding: 28rpx var(--zy-space-lg);
   border-bottom: 1rpx solid var(--divider-color);
 }
 
@@ -350,19 +423,25 @@
   font-size: 28rpx;
   color: var(--text-secondary);
   padding: 8rpx 16rpx;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .picker-title {
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.04em;
+  font-family: var(--font-serif);
 }
 
 .picker-confirm {
   font-size: 28rpx;
   color: var(--feeding-primary);
-  font-weight: 600;
+  font-weight: 500;
   padding: 8rpx 16rpx;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .picker-view {
@@ -382,25 +461,31 @@
   color: var(--text-primary);
   height: 80rpx;
   line-height: 80rpx;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+/* ===== 空提示 ===== */
 .empty-tip {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 60rpx 32rpx;
-  color: var(--gray-500);
+  padding: 60rpx var(--zy-space-lg);
+  color: var(--text-tertiary);
   font-size: 26rpx;
-  background-color: var(--background-color);
-  border-radius: 16rpx;
-  margin: 24rpx 32rpx 32rpx;
+  background-color: var(--card-cream);
+  border-radius: var(--zy-radius-lg);
+  margin: 24rpx var(--zy-space-lg) 32rpx;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+/* ===== 宠物项 ===== */
 .pet-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 32rpx;
+  padding: 28rpx var(--zy-space-lg);
   border-bottom: 1rpx solid var(--divider-color);
 }
 
@@ -418,10 +503,10 @@
 .avatar-container {
   width: 96rpx;
   height: 96rpx;
-  border-radius: 20rpx;
+  border-radius: var(--zy-radius-lg);
   overflow: hidden;
   flex-shrink: 0;
-  border: 1rpx solid var(--gray-200);
+  border: 1rpx solid var(--hairline);
   background-color: var(--background-color);
   margin-right: 24rpx;
 }
@@ -441,14 +526,21 @@
 
 .pet-name {
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
   line-height: 1.2;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-serif);
 }
 
 .pet-details {
   font-size: 22rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .pet-right {
@@ -470,36 +562,39 @@
 .service-tag {
   font-size: 20rpx;
   color: var(--feeding-primary);
-  background: rgba(33, 150, 243, 0.06);
+  background: var(--feeding-tint);
   padding: 4rpx 12rpx;
-  border-radius: 6rpx;
-  font-weight: 500;
+  border-radius: var(--zy-radius-sm);
+  font-weight: 400;
   white-space: nowrap;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .walk-tag {
-  color: var(--activity-primary);
-  background: rgba(79, 94, 53, 0.06);
+  color: var(--feeding-primary);
+  background: rgba(74,107,74,0.06);
 }
 
 .pet-service-dates {
   font-size: 20rpx;
-  color: var(--gray-500);
+  color: var(--text-tertiary);
   line-height: 1.5;
   text-align: right;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   word-break: break-all;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-sans);
 }
 
+/* ===== 价格项 ===== */
 .price-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20rpx 32rpx;
+  padding: 20rpx var(--zy-space-lg);
   border-bottom: 1rpx solid var(--divider-color);
 }
 
@@ -510,32 +605,36 @@
 .price-item .label {
   font-size: 26rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .price-item .value {
   font-size: 26rpx;
   color: var(--text-primary);
   font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .price-item.total {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.04) 0%, rgba(25, 118, 210, 0.02) 100%);
-  border-radius: 16rpx;
-  margin: 12rpx 32rpx 20rpx;
-  padding: 28rpx 32rpx;
-  border: 1rpx solid rgba(33, 150, 243, 0.1);
+  background: var(--feeding-tint);
+  border-radius: var(--zy-radius-md);
+  margin: 12rpx var(--zy-space-lg) 20rpx;
+  padding: 28rpx var(--zy-space-lg);
+  border: 1rpx solid rgba(74,107,74,0.12);
 }
 
 .price-item.total .label {
   font-size: 28rpx;
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .price-item.total .value {
   font-size: 36rpx;
   color: var(--feeding-primary);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .price-pet-group {
@@ -546,26 +645,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8rpx 32rpx 8rpx 48rpx;
+  padding: 8rpx var(--zy-space-lg) 8rpx 48rpx;
 }
 
 .sub-label {
   font-size: 24rpx;
-  color: var(--gray-500);
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .sub-value {
   font-size: 24rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+/* ===== 优惠券区块 ===== */
 .info-section.coupon-section {
   background: var(--card-color);
-  border-radius: 24rpx;
-  margin-bottom: 24rpx;
+  border-radius: var(--zy-radius-lg);
+  margin-bottom: var(--zy-space-lg);
   overflow: hidden;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
-  border: 1rpx solid rgba(134, 134, 139, 0.1);
+  border: 1rpx solid var(--hairline);
   position: relative;
 }
 
@@ -575,34 +678,38 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3rpx;
-  background: linear-gradient(90deg, var(--feeding-primary) 0%, #1976D2 50%, transparent 100%);
-  border-radius: 24rpx 24rpx 0 0;
+  height: 2rpx;
+  background: linear-gradient(90deg, var(--feeding-primary) 0%, var(--feeding-secondary) 50%, transparent 100%);
+  border-radius: var(--zy-radius-lg) var(--zy-radius-lg) 0 0;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28rpx 32rpx;
+  padding: 28rpx var(--zy-space-lg);
   border-bottom: 1rpx solid var(--divider-color);
-  background: rgba(33, 150, 243, 0.06);
+  background: var(--feeding-tint);
 }
 
 .section-header-left {
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.04em;
+  font-family: var(--font-serif);
 }
 
 .section-header-right {
   font-size: 24rpx;
   color: var(--feeding-primary);
   font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .coupon-list {
-  padding: 16rpx 32rpx 24rpx;
+  padding: 16rpx var(--zy-space-lg) 24rpx;
 }
 
 .coupon-option {
@@ -629,7 +736,7 @@
 
 .coupon-option-left .big {
   font-size: 44rpx;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .coupon-option-right {
@@ -644,11 +751,15 @@
   font-size: 26rpx;
   color: var(--text-primary);
   font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .coupon-rule {
   font-size: 22rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .remove-coupon {
@@ -657,22 +768,24 @@
   font-size: 26rpx;
   color: var(--feeding-primary);
   border-top: 1rpx solid var(--divider-color);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+/* ===== 底部操作栏 ===== */
 .bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20rpx 32rpx;
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1rpx solid rgba(134, 134, 139, 0.1);
+  padding: 12rpx var(--page-padding);
+  padding-bottom: calc(12rpx + env(safe-area-inset-bottom));
+  background: var(--card-color);
+  border-top: 1rpx solid var(--hairline);
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 16rpx;
+  gap: 20rpx;
   z-index: 100;
 }
 
@@ -684,26 +797,32 @@
   position: relative;
 }
 
-.contact-btn {
-  display: flex !important;
-  flex-direction: column;
-  align-items: center;
-  gap: 4rpx;
+.contact-wrap {
   position: relative;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  line-height: normal !important;
-  min-width: 0 !important;
-  width: auto !important;
-  font-size: inherit !important;
-  box-sizing: border-box;
   flex-shrink: 0;
+  transition: opacity var(--dur-fast) var(--ease-refined);
 }
 
-.contact-btn::after {
-  border: none !important;
+.contact-wrap--pressed {
+  opacity: 0.6;
+}
+
+.contact-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  background: transparent;
+  border: none;
+  margin: 0;
+  padding: 0;
+  line-height: normal;
+}
+
+.contact-overlay::after {
+  border: none;
 }
 
 .bar-action-icon-img {
@@ -713,13 +832,25 @@
 
 .bar-action-text {
   font-size: 18rpx;
-  color: var(--gray-500);
-  letter-spacing: 1rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .price-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6rpx;
+  overflow: hidden;
+}
+
+.action-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
 }
 
 .bottom-left {
@@ -729,37 +860,62 @@
 }
 
 .price-label {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
+  line-height: 1.2;
+}
+
+.price-symbol {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--feeding-primary);
+  font-family: var(--font-serif);
+  line-height: 1.2;
 }
 
 .price-value {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: var(--feeding-primary);
-}
-
-.price-value .symbol {
-  font-size: 28rpx;
-  margin-right: 2rpx;
+  font-size: 44rpx;
   font-weight: 600;
+  color: var(--feeding-primary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-serif);
+  line-height: 1.2;
 }
 
 .coupon-sub {
   font-size: 22rpx;
-  color: var(--gray-500);
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .confirm-btn {
-  padding: 22rpx 64rpx;
-  background: linear-gradient(135deg, var(--feeding-primary) 0%, #1976D2 100%);
-  border-radius: 48rpx;
+  flex: 1;
+  padding: 16rpx 0;
+  background: linear-gradient(135deg, var(--feeding-primary) 0%, var(--primary-deep) 100%);
+  border-radius: var(--zy-radius-pill);
   text-align: center;
   font-size: 28rpx;
-  font-weight: 600;
-  color: var(--card-color);
-  letter-spacing: 2rpx;
-  box-shadow: 0 6rpx 16rpx rgba(33, 150, 243, 0.3);
+  font-weight: 500;
+  color: var(--text-on-primary);
+  letter-spacing: 0.06em;
+  box-shadow: var(--shadow-glow-primary-btn);
+  border: none;
+  margin: 0;
+  line-height: 1;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  font-family: var(--font-serif);
+}
+
+.confirm-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.confirm-btn::after {
+  border: none;
 }
 
 .confirm-btn-disabled {
@@ -777,6 +933,7 @@
 .loading-dot:nth-child(3) {
 }
 
+/* ===== 服务选择弹窗 ===== */
 .gallery-modal {
   position: fixed;
   top: 0;
@@ -794,22 +951,27 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--overlay-color, rgba(26,26,23,0.5));
 }
 
 .gallery-sheet {
   position: relative;
   width: 100%;
+  max-height: 85vh;
   background: var(--card-color);
-  border-radius: 28rpx 28rpx 0 0;
-  padding: 40rpx 32rpx 48rpx;
+  border-radius: var(--zy-radius-2xl) var(--zy-radius-2xl) 0 0;
+  padding: 40rpx var(--zy-space-lg) 48rpx;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.gallery-sheet-body {
+  /* Skyline: view 元素自然流动，由父容器 .gallery-sheet 的 max-height 约束整体高度 */
 }
 
 .gallery-sheet-close {
   position: absolute;
   top: 32rpx;
-  right: 32rpx;
+  right: var(--zy-space-lg);
   width: 56rpx;
   height: 56rpx;
   display: flex;
@@ -823,25 +985,33 @@
   color: var(--text-tertiary);
   font-weight: 300;
   line-height: 1;
+  font-family: var(--font-sans);
 }
 
 .gallery-sheet-header {
   margin-bottom: 32rpx;
   padding-bottom: 24rpx;
   border-bottom: 1rpx solid var(--divider-color);
+  padding-right: 72rpx;
 }
 
 .gallery-sheet-header.center-header {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding-top: 8rpx;
+  padding-right: 72rpx;
 }
 
 .gallery-sheet-title {
   font-size: 34rpx;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--text-primary);
   display: block;
   margin-bottom: 8rpx;
+  letter-spacing: 0.04em;
+  font-family: var(--font-serif);
+  text-align: center;
 }
 
 .gallery-sheet-subtitle {
@@ -849,6 +1019,9 @@
   color: var(--text-secondary);
   line-height: 1.5;
   display: block;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
+  text-align: center;
 }
 
 .gallery-options {
@@ -862,16 +1035,21 @@
   display: flex;
   align-items: center;
   padding: 28rpx 24rpx;
-  border-radius: 20rpx;
-  border: 2rpx solid var(--divider-color);
-  background: var(--surface-tint);
+  border-radius: var(--zy-radius-lg);
+  border: 1rpx solid var(--hairline);
+  background: var(--card-cream);
   position: relative;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.gallery-option--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 .gallery-option-selected {
   border-color: var(--feeding-primary);
-  background: rgba(33, 150, 243, 0.04);
-  box-shadow: 0 4rpx 16rpx rgba(33, 150, 243, 0.1);
+  background: var(--feeding-tint);
 }
 
 .gallery-option-icon {
@@ -882,13 +1060,13 @@
   align-items: center;
   justify-content: center;
   background: var(--background-color);
-  border-radius: 16rpx;
+  border-radius: var(--zy-radius-md);
   flex-shrink: 0;
   margin-right: 20rpx;
 }
 
 .gallery-option-selected .gallery-option-icon {
-  background: rgba(33, 150, 243, 0.1);
+  background: rgba(74,107,74,0.1);
 }
 
 .gallery-option-info {
@@ -901,14 +1079,18 @@
 
 .gallery-option-title {
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .gallery-option-desc {
   font-size: 22rpx;
   color: var(--text-secondary);
   line-height: 1.4;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .gallery-option-check {
@@ -928,88 +1110,119 @@
 .gallery-sheet-footer {
   display: flex;
   justify-content: center;
+  padding-top: 8rpx;
 }
 
 .gallery-confirm-btn {
   width: 100%;
   height: 96rpx;
-  line-height: 96rpx;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 32rpx;
-  font-weight: 600;
-  color: var(--card-color);
-  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
-  border-radius: 48rpx;
-  letter-spacing: 2rpx;
-  box-shadow: 0 8rpx 24rpx rgba(79, 94, 53, 0.35);
+  font-weight: 500;
+  color: var(--text-on-primary);
+  background: linear-gradient(135deg, var(--feeding-primary), var(--primary-deep));
+  border-radius: var(--zy-radius-pill);
+  letter-spacing: 0.06em;
+  box-shadow: var(--shadow-glow-primary-btn);
+  border: none;
+  padding: 0;
+  margin: 0;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  font-family: var(--font-serif);
 }
 
+.gallery-confirm-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.gallery-confirm-btn::after {
+  border: none;
+}
+
+/* ===== 日期选择器 ===== */
 .picker-date-scroll {
-  margin-bottom: 48rpx;
+  margin-bottom: 24rpx;
   white-space: nowrap;
+  /* Skyline: scroll-view 是原生组件，不会自动撑开高度，需显式设置 */
+  height: 140rpx;
 }
 
 .picker-date-list {
-  display: inline-flex;
+  display: flex;
   gap: 20rpx;
   padding: 8rpx 4rpx;
 }
 
 .picker-date-pill {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-width: 120rpx;
   height: 120rpx;
   padding: 16rpx 24rpx;
-  border-radius: 24rpx;
-  background: var(--background-color);
-  border: 2rpx solid var(--background-color);
+  border-radius: var(--zy-radius-lg);
+  background: var(--card-cream);
+  border: 1rpx solid var(--hairline);
   position: relative;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.picker-date-pill--pressed {
+  transform: scale(0.96);
+  opacity: 0.85;
 }
 
 .picker-date-pill-active {
-  background: rgba(79, 94, 53, 0.1);
-  border-color: var(--activity-primary);
-  box-shadow: 0 4rpx 16rpx rgba(79, 94, 53, 0.15);
+  background: var(--feeding-tint);
+  border-color: var(--feeding-primary);
 }
 
 .picker-date-pill-text {
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
   line-height: 1.2;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
 .picker-date-pill-count {
   font-size: 20rpx;
-  color: var(--activity-primary);
-  font-weight: 600;
+  color: var(--feeding-primary);
+  font-weight: 500;
   margin-top: 4rpx;
+  font-family: var(--font-sans);
 }
 
+/* ===== 时间数量步进器 ===== */
 .picker-stepper-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 32rpx 0;
-  margin-bottom: 48rpx;
+  padding: 32rpx 24rpx;
+  margin-bottom: 24rpx;
+  background: var(--card-cream);
+  border-radius: var(--zy-radius-lg);
+  border: 1rpx solid var(--hairline);
 }
 
 .picker-stepper-label {
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
   flex-shrink: 0;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
+  margin-right: 24rpx;
 }
 
 .picker-stepper-bar {
   display: flex;
   align-items: center;
-  gap: 32rpx;
-  flex: 1;
-  justify-content: center;
+  margin-left: auto;
 }
 
 .picker-stepper-btn {
@@ -1019,20 +1232,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36rpx;
-  font-weight: 500;
+  flex-shrink: 0;
+  transition-property: transform, opacity;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.picker-stepper-btn-text {
+  font-size: 40rpx;
+  font-weight: 300;
+  line-height: 1;
+  font-family: var(--font-sans);
+}
+
+.picker-stepper-btn--pressed {
+  transform: scale(0.92);
+  opacity: 0.85;
 }
 
 .picker-stepper-minus {
-  background: var(--background-color);
+  background: var(--background-color, #F7F5EF);
   color: var(--text-secondary);
-  border: 2rpx solid var(--gray-200);
+  border: 1rpx solid var(--hairline);
 }
 
 .picker-stepper-plus {
-  background: linear-gradient(135deg, var(--activity-primary), var(--activity-secondary));
-  color: var(--card-color);
-  box-shadow: 0 4rpx 16rpx rgba(79, 94, 53, 0.35);
+  background: linear-gradient(135deg, var(--feeding-primary), var(--primary-deep));
+  color: var(--text-on-primary);
+  box-shadow: 0 4rpx 16rpx rgba(74, 107, 74, 0.2);
 }
 
 .picker-stepper-disabled {
@@ -1041,31 +1268,58 @@
 }
 
 .picker-stepper-value {
-  font-size: 40rpx;
-  font-weight: 700;
+  font-size: 44rpx;
+  font-weight: 500;
   color: var(--text-primary);
-  min-width: 60rpx;
+  min-width: 80rpx;
   text-align: center;
+  font-family: var(--font-sans);
+  margin: 0 24rpx;
 }
 
 .picker-stepper-unit {
   font-size: 28rpx;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: 400;
   flex-shrink: 0;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
+  margin-left: 16rpx;
 }
 
 .picker-stepper-price {
-  text-align: center;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8rpx;
   margin-bottom: 32rpx;
+  padding: 20rpx 0;
+}
+
+.picker-stepper-price-label {
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  font-family: var(--font-sans);
+  letter-spacing: 0.04em;
 }
 
 .picker-stepper-price-text {
-  font-size: 24rpx;
-  color: var(--activity-primary);
-  font-weight: 500;
+  font-size: 36rpx;
+  color: var(--feeding-primary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }
 
+.picker-stepper-price-unit {
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  font-family: var(--font-sans);
+}
+
+/* ===== 支付弹窗 ===== */
 .payment-modal {
   position: fixed;
   top: 0;
@@ -1084,25 +1338,28 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--overlay-color, rgba(26,26,23,0.5));
 }
 
 .modal-content {
   position: relative;
   width: 580rpx;
   background: var(--card-color);
-  border-radius: 28rpx;
+  border-radius: var(--zy-radius-2xl);
   padding: 48rpx 40rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
+  border: 1rpx solid var(--hairline);
 }
 
 .modal-title {
   font-size: 32rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 32rpx;
+  letter-spacing: 0.04em;
+  font-family: var(--font-serif);
 }
 
 .modal-total {
@@ -1117,8 +1374,9 @@
 
 .final-price {
   font-size: 40rpx;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--feeding-primary);
+  font-family: var(--font-serif);
 }
 
 .pay-btn {
@@ -1126,14 +1384,23 @@
   height: 88rpx;
   line-height: 88rpx;
   font-size: 30rpx;
-  font-weight: 600;
-  color: var(--card-color);
-  background: linear-gradient(135deg, var(--feeding-primary), #1976D2);
-  border-radius: 48rpx;
+  font-weight: 500;
+  color: var(--text-on-primary);
+  background: linear-gradient(135deg, var(--feeding-primary), var(--primary-deep));
+  border-radius: var(--zy-radius-pill);
   margin-bottom: 24rpx;
   text-align: center;
   padding: 0;
   border: none;
+  letter-spacing: 0.06em;
+  box-shadow: var(--shadow-glow-primary-btn);
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  font-family: var(--font-serif);
+}
+
+.pay-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 .pay-btn::after {
@@ -1144,4 +1411,6 @@
   font-size: 26rpx;
   color: var(--text-secondary);
   padding: 16rpx;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 }

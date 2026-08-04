@@ -1,3 +1,15 @@
+<zy-navbar title="通知详情" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container" wx:if="{{notification}}">
   <view class="detail-card">
     <text class="notification-title">{{notification.title}}</text>
@@ -7,3 +19,4 @@
     <text class="notification-body">{{notification.body}}</text>
   </view>
 </view>
+</scroll-view>

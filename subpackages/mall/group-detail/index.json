@@ -1,8 +1,0 @@
-{
-  "usingComponents": {
-    "login-prompt": "../../../components/login-prompt/login-prompt"
-  },
-  "navigationBarTitleText": "团购详情",
-  "navigationBarBackgroundColor": "#ffffff",
-  "navigationBarTextStyle": "black"
-}

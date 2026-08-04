@@ -1,9 +1,8 @@
 const { BookingData } = require('../../utils/BookingDataService')
-const { CouponService } = require('../../services/CouponService')
 const { AddressService } = require('../../utils/AddressService')
 const { FeedingService } = require('./services/FeedingService')
-const DEFAULT_AVATAR = '/images/default-avatar.svg'
 const PaymentService = require('../../services/PaymentService')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const { computeFinalAmount } = require('../../utils/coupon-amount')
 const { isHoliday } = require('../../utils/holidays')
@@ -24,7 +23,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, couponSelectorBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, couponSelectorBehavior],
 
   data: {
     loading: true,
@@ -51,7 +50,7 @@ Page({
     timeMinuteOptions: TIME_MINUTE_OPTIONS,
     timePickerValue: [9, 0],
     showTimePicker: false,
-    iconService: '/images/icons/客服.svg',
+    iconService: '/images/icons/message-luxury-line.svg',
     familiarityValue: '',
     familiarityText: '',
     showFamiliarityPicker: false,
@@ -76,6 +75,8 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
+    this._initCouponSelector('totalPrice')
     const app = getApp()
     const isLoggedIn = app && app.globalData && app.globalData.isLoggedIn
     if (!isLoggedIn) {
@@ -96,6 +97,277 @@ Page({
         addressText: globalAddress.fullAddress || '',
       })
       app.globalData.selectedAddress = null
+    }
+  },
+
+  // ===== 表单事件 =====
+  onChooseAddress() {
+    wx.navigateTo({
+      url: '/subpackages/other/address/index',
+    })
+  },
+
+  onPhoneInput(e) {
+    this.setData({ contactPhone: e.detail.value })
+  },
+
+  onPhoneBlur(e) {
+    const phone = e.detail.value
+    if (phone && phone.length !== 11) {
+      wx.showToast({ title: '请输入11位手机号', icon: 'none' })
+    }
+  },
+
+  onNotesInput(e) {
+    this.setData({ notes: e.detail.value })
+  },
+
+  onViewServiceStandard() {
+    wx.navigateTo({
+      url: '/subpackages/feeding/service-detail',
+    })
+  },
+
+  // ===== 钥匙交接选择器 =====
+  onShowKeyPicker() {
+    const idx = Math.max(0, this.data.keyOptions.indexOf(this.data.keyMethod))
+    this.setData({
+      showKeyPicker: true,
+      keyPickerValue: [idx >= 0 ? idx : 0],
+    })
+  },
+
+  onHideKeyPicker() {
+    this.setData({ showKeyPicker: false })
+  },
+
+  onKeyPickerChange(e) {
+    this.setData({ keyPickerValue: e.detail.value })
+  },
+
+  onConfirmKeyPicker() {
+    const idx = this.data.keyPickerValue[0]
+    this.setData({
+      keyMethod: this.data.keyOptions[idx] || '',
+      showKeyPicker: false,
+    })
+  },
+
+  // ===== 上门时间选择器 =====
+  onShowTimePicker() {
+    let hourIdx = 9
+    let minuteIdx = 0
+    if (this.data.visitHour) {
+      const h = parseInt(this.data.visitHour, 10)
+      hourIdx = Math.max(0, Math.min(h, this.data.timeHourOptions.length - 1))
+    }
+    this.setData({
+      showTimePicker: true,
+      timePickerValue: [hourIdx, minuteIdx],
+    })
+  },
+
+  onHideTimePicker() {
+    this.setData({ showTimePicker: false })
+  },
+
+  onTimePickerChange(e) {
+    this.setData({ timePickerValue: e.detail.value })
+  },
+
+  onConfirmTimePicker() {
+    const [hIdx, mIdx] = this.data.timePickerValue
+    const hour = this.data.timeHourOptions[hIdx] || ''
+    const minute = this.data.timeMinuteOptions[mIdx] || ''
+    this.setData({
+      visitHour: hour,
+      visitMinute: minute,
+      visitTimeText: `${hour}-${minute}`,
+      showTimePicker: false,
+    })
+  },
+
+  // ===== 提前熟悉选择器 =====
+  onShowFamiliarityPicker() {
+    const dates = picker.buildDateMap(this.data.petServices, this.data.selectedPetDetails)
+    const merged = picker.mergePrevCounts(dates, this.data.familiarityDates)
+    this.setData({
+      familiarityDates: merged,
+      showFamiliarityPicker: true,
+      familiaritySelectedIndex: 0,
+      familiarityCount: merged[0]?.count || 0,
+      familiarityUnitPrice: merged[0] ? picker.calcUnitPrice(merged[0].date, 0.7) : 0,
+    })
+  },
+
+  onHideFamiliarityPicker() {
+    this.setData({ showFamiliarityPicker: false })
+  },
+
+  onSelectFamiliarityDate(e) {
+    picker.onSelectDate(this, 'familiarity', e.currentTarget.dataset.index)
+  },
+
+  onFamiliarityDecrease() {
+    picker.onDecrease(this, 'familiarity')
+  },
+
+  onFamiliarityIncrease() {
+    picker.onIncrease(this, 'familiarity')
+  },
+
+  onConfirmFamiliarity() {
+    picker.onConfirm(this, 'familiarity', { onConfirm: () => this._calculatePrice() })
+  },
+
+  // ===== 一天多次选择器 =====
+  onShowMultiVisitPicker() {
+    const dates = picker.buildDateMap(this.data.petServices, this.data.selectedPetDetails)
+    const merged = picker.mergePrevCounts(dates, this.data.multiVisitDates)
+    this.setData({
+      multiVisitDates: merged,
+      showMultiVisitPicker: true,
+      multiVisitSelectedIndex: 0,
+      multiVisitCount: merged[0]?.count || 0,
+      multiVisitUnitPrice: merged[0] ? picker.calcUnitPrice(merged[0].date, 0.8) : 0,
+    })
+  },
+
+  onHideMultiVisitPicker() {
+    this.setData({ showMultiVisitPicker: false })
+  },
+
+  onSelectMultiVisitDate(e) {
+    picker.onSelectDate(this, 'multiVisit', e.currentTarget.dataset.index)
+  },
+
+  onDecreaseDateCount() {
+    picker.onDecrease(this, 'multiVisit')
+  },
+
+  onIncreaseDateCount() {
+    picker.onIncrease(this, 'multiVisit')
+  },
+
+  onConfirmMultiVisit() {
+    picker.onConfirm(this, 'multiVisit', { onConfirm: () => this._calculatePrice() })
+  },
+
+  // ===== 提交订单 =====
+  async onSubmit() {
+    if (this.data.isSubmitting) {return}
+
+    // 表单校验
+    if (!this.data.address || !this.data.addressText) {
+      wx.showToast({ title: '请选择服务地址', icon: 'none' })
+      return
+    }
+    if (!this.data.contactPhone || this.data.contactPhone.length !== 11) {
+      wx.showToast({ title: '请输入11位手机号', icon: 'none' })
+      return
+    }
+    if (!this.data.keyMethod) {
+      wx.showToast({ title: '请选择钥匙交接方式', icon: 'none' })
+      return
+    }
+    if (!this.data.visitTimeText) {
+      wx.showToast({ title: '请选择期望上门时间', icon: 'none' })
+      return
+    }
+    if (!this.data.selectedPetDetails || this.data.selectedPetDetails.length === 0) {
+      wx.showToast({ title: '暂无服务宠物', icon: 'none' })
+      return
+    }
+
+    this.setData({ isSubmitting: true })
+
+    try {
+      // 构造订单数据（字段名需与云函数 createFeedingOrder 的 event 解构一致）
+      const petDetails = this.data.selectedPetDetails
+      const petIds = petDetails.map(pet => pet.id)
+
+      // 从所有宠物的 serviceDates 中提取起止日期（YYYY-MM-DD）
+      const allDates = []
+      petDetails.forEach(pet => {
+        const svc = this.data.petServices[pet.id]
+        if (svc && svc.serviceDates) {
+          svc.serviceDates.forEach(d => allDates.push(d.date))
+        }
+      })
+      allDates.sort()
+      const startDate = allDates[0] || ''
+      const endDate = allDates[allDates.length - 1] || ''
+
+      // multiVisit 总次数（multiVisitDates 中各日期 count 之和）
+      const multiVisitTotal = this.data.multiVisitDates
+        .filter(d => d.count > 0)
+        .reduce((sum, d) => sum + d.count, 0)
+
+      const orderData = {
+        petIds,
+        petDetails,
+        petServices: this.data.petServices,
+        address: this.data.address,
+        contactPhone: this.data.contactPhone,
+        keyMethod: this.data.keyMethod,
+        visitTime: this.data.visitTimeText,
+        visitTimes: this.data.visitTimeText ? [this.data.visitTimeText] : [],
+        startDate,
+        endDate,
+        notes: this.data.notes,
+        familiarityDates: this.data.familiarityDates.filter(d => d.count > 0),
+        multiVisit: multiVisitTotal,
+        multiVisitDates: this.data.multiVisitDates.filter(d => d.count > 0),
+        couponId: this.data.selectedCouponId || '',
+        couponDiscount: this.data.couponDiscount || 0,
+        // totalAmount/originalAmount 由云函数按平台价目表重算，前端不传以避免篡改
+      }
+
+      // 创建喂养订单
+      const result = await FeedingService.createFeedingOrder(orderData)
+      if (!result || result.code !== 0) {
+        throw new Error(result?.message || '创建订单失败')
+      }
+
+      const orderId = result.data?.id || result.data?.orderId || result.data?._id || ''
+      if (!orderId) {
+        throw new Error('订单创建异常')
+      }
+
+      // 发起支付（金额单位：云函数 createPayment 要求分为单位的正整数）
+      const payAmountYuan = result.data?.totalAmount != null
+        ? result.data.totalAmount
+        : (this.data.selectedCouponId ? this.data.finalPrice : this.data.totalPrice)
+      const payResult = await PaymentService.pay({
+        type: 'feeding',
+        orderId,
+        amount: Math.round(payAmountYuan * 100),
+        description: '宠物喂养服务',
+      })
+
+      if (payResult && payResult.paid) {
+        wx.showToast({ title: '下单成功', icon: 'success' })
+        setTimeout(() => {
+          wx.redirectTo({
+            url: '/subpackages/feeding/order-status?orderId=' + orderId,
+          })
+        }, 1500)
+      }
+    } catch (err) {
+      if (err && err.isCancel) {
+        wx.showToast({ title: '支付已取消', icon: 'none' })
+      } else if (err && err.isPending) {
+        wx.showToast({ title: '支付确认中，请稍后查看订单', icon: 'none' })
+        setTimeout(() => {
+          wx.redirectTo({
+            url: '/subpackages/feeding/order-status?orderId=',
+          })
+        }, 1500)
+      } else {
+        wx.showToast({ title: err?.message || '下单失败', icon: 'none' })
+      }
+    } finally {
+      this.setData({ isSubmitting: false })
     }
   },
 

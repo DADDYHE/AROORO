@@ -1,16 +1,25 @@
+/* ================================================================
+   AROORO 合伙人创建活动 · 深森林绿 × 香槟金 × 奶油白 高奢风格
+   Skyline 兼容：无 :active / transition 仅 transform & opacity / 单行截断
+   ================================================================ */
 @import '../common.wxss';
+
+/* ============================================
+   表单页 — 封面上传 + 表单字段 + 日期选择 + 发布按钮
+   ============================================ */
 
 .form-scroll {
   padding-bottom: 180rpx;
 }
 
+/* ---------- 卡片色条 ---------- */
 .card-accent {
   width: 3rpx;
   height: 100%;
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  background: var(--primary-color);
 }
 
 .card-body {
@@ -18,14 +27,16 @@
   padding: 32rpx 36rpx;
 }
 
+/* ---------- 表单分区标题 ---------- */
 .form-section-title {
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 24rpx;
-  letter-spacing: 4rpx;
+  letter-spacing: 0.16em;
 }
 
+/* ---------- 表单字段 ---------- */
 .form-field {
   margin-bottom: 28rpx;
 }
@@ -39,51 +50,61 @@
   color: var(--text-secondary);
   display: block;
   margin-bottom: 12rpx;
-  letter-spacing: 2rpx;
+  letter-spacing: 0.06em;
+  font-weight: 400;
 }
 
 .required {
   color: var(--error-color);
+  margin-left: 4rpx;
 }
 
 .form-input {
   width: 100%;
   height: 76rpx;
   padding: 0 24rpx;
-  border: 1rpx solid var(--gray-200);
-  border-radius: 12rpx;
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-inner);
   font-size: 28rpx;
   color: var(--text-primary);
   box-sizing: border-box;
-  background: var(--surface-tint);
+  background: var(--lux-card-bg);
+  font-family: inherit;
 }
 
 .form-textarea {
   width: 100%;
   height: 200rpx;
   padding: 20rpx 24rpx;
-  border: 1rpx solid var(--gray-200);
-  border-radius: 12rpx;
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-inner);
   font-size: 28rpx;
   color: var(--text-primary);
   box-sizing: border-box;
-  background: var(--surface-tint);
+  background: var(--lux-card-bg);
+  font-family: inherit;
+  line-height: 1.6;
 }
 
+/* ---------- 选择器 ---------- */
 .form-picker {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 76rpx;
   padding: 0 24rpx;
-  border: 1rpx solid var(--gray-200);
-  border-radius: 12rpx;
-  background: var(--surface-tint);
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-inner);
+  background: var(--lux-card-bg);
 }
 
 .form-picker-text {
   font-size: 28rpx;
   color: var(--text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .form-picker-text.placeholder {
@@ -91,8 +112,10 @@
 }
 
 .form-picker-arrow {
-  font-size: 32rpx;
+  font-size: 28rpx;
   color: var(--text-tertiary);
+  flex-shrink: 0;
+  margin-left: 12rpx;
 }
 
 .form-row {
@@ -100,15 +123,17 @@
   gap: 20rpx;
 }
 
+/* ---------- 封面上传 ---------- */
 .image-upload-area {
   width: 100%;
   height: 320rpx;
-  border: 2rpx dashed var(--gray-200);
-  border-radius: 16rpx;
+  border: 1rpx dashed var(--border-color);
+  border-radius: var(--lux-radius-card);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--lux-card-cream);
 }
 
 .cover-preview {
@@ -125,7 +150,7 @@
 }
 
 .upload-icon {
-  font-size: 56rpx;
+  font-size: 48rpx;
   color: var(--text-tertiary);
   font-weight: 300;
   line-height: 1;
@@ -133,21 +158,26 @@
 
 .upload-text {
   font-size: 22rpx;
-  color: var(--text-secondary);
-  letter-spacing: 4rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
 }
 
+/* ---------- 详情图片网格 ---------- */
 .image-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.image-grid > .image-grid-item {
+  flex: 0 0 calc((100% - 24rpx) / 3);
 }
 
 .image-grid-item {
   position: relative;
   width: 100%;
-  padding-bottom: 100%;
-  border-radius: 12rpx;
+  aspect-ratio: 1;
+  border-radius: var(--lux-radius-inner);
   overflow: hidden;
 }
 
@@ -163,20 +193,20 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 40rpx;
-  height: 40rpx;
-  background: rgba(0, 0, 0, 0.5);
-  color: var(--card-color);
-  font-size: 24rpx;
+  width: 36rpx;
+  height: 36rpx;
+  background: var(--overlay-color);
+  color: var(--lux-card-bg);
+  font-size: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0 0 0 12rpx;
+  border-radius: 0 0 0 var(--lux-radius-inner);
 }
 
 .image-add {
-  border: 2rpx dashed var(--gray-200);
-  background: var(--surface-tint);
+  border: 1rpx dashed var(--border-color);
+  background: var(--lux-card-cream);
 }
 
 .image-add .upload-icon-small {
@@ -187,27 +217,31 @@
 }
 
 .upload-icon-small {
-  font-size: 40rpx;
+  font-size: 36rpx;
   color: var(--text-tertiary);
   font-weight: 300;
 }
 
+/* ---------- 位置选择 ---------- */
 .location-picker {
   display: flex;
   align-items: center;
   justify-content: space-between;
   min-height: 76rpx;
   padding: 16rpx 24rpx;
-  border: 1rpx solid var(--gray-200);
-  border-radius: 12rpx;
-  background: var(--surface-tint);
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-inner);
+  background: var(--lux-card-bg);
 }
 
 .location-picker-text {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-primary);
   flex: 1;
   margin-right: 16rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .location-picker-text.placeholder {
@@ -222,21 +256,22 @@
 }
 
 .location-clear {
-  width: 36rpx;
-  height: 36rpx;
+  width: 32rpx;
+  height: 32rpx;
   border-radius: 50%;
-  background: var(--gray-200);
+  background: var(--divider-color);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .clear-icon {
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: var(--text-secondary);
   line-height: 1;
 }
 
+/* ---------- 底部操作栏 ---------- */
 .action-bar {
   position: fixed;
   bottom: 0;
@@ -246,18 +281,24 @@
   gap: 20rpx;
   padding: 24rpx 32rpx;
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-  background: var(--card-color);
-  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.06);
+  background: var(--lux-card-bg);
+  border-top: 1rpx solid var(--lux-hairline);
   z-index: 50;
+  box-shadow: var(--shadow-float);
 }
 
 .action-btn {
   flex: 1;
   height: 88rpx;
-  border-radius: 16rpx;
+  border-radius: var(--lux-radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+}
+
+.action-btn::after {
+  border: none;
 }
 
 .action-btn-draft {
@@ -267,27 +308,30 @@
 .action-btn-draft .action-btn-text {
   color: var(--text-primary);
   font-size: 28rpx;
-  font-weight: 500;
+  font-weight: 400;
+  letter-spacing: 0.06em;
 }
 
 .action-btn-publish {
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  box-shadow: 0 4rpx 16rpx rgba(79, 94, 53, 0.3);
+  background: var(--gradient-primary);
+  box-shadow: var(--lux-shadow-green);
 }
 
 .action-btn-publish .action-btn-text {
-  color: var(--card-color);
+  color: var(--text-on-primary);
   font-size: 28rpx;
   font-weight: 500;
+  letter-spacing: 0.1em;
 }
 
+/* ---------- 底部选择弹层 ---------- */
 .picker-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-color);
   z-index: 1000;
   display: flex;
   align-items: flex-end;
@@ -296,10 +340,12 @@
 
 .picker-sheet {
   width: 100%;
-  background: var(--card-color);
-  border-radius: 24rpx 24rpx 0 0;
+  background: var(--lux-card-bg);
+  border-radius: var(--zy-radius-2xl) var(--zy-radius-2xl) 0 0;
   overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1rpx solid var(--lux-hairline);
+  box-shadow: var(--lux-shadow-elevated);
 }
 
 .picker-sheet-header {
@@ -308,9 +354,10 @@
 }
 
 .picker-sheet-title {
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.06em;
 }
 
 .picker-sheet-body {
@@ -325,20 +372,22 @@
 }
 
 .picker-item-active {
-  background: rgba(79, 94, 53, 0.06);
+  background: var(--primary-tint);
 }
 
 .picker-sheet-item-text {
   font-size: 28rpx;
   color: var(--text-primary);
+  font-weight: 400;
 }
 
 .picker-item-active .picker-sheet-item-text {
-  color: var(--activity-primary-mid);
+  color: var(--primary-color);
   font-weight: 500;
 }
 
 .picker-check {
-  font-size: 28rpx;
-  color: var(--activity-primary);
+  width: 26rpx;
+  height: 26rpx;
+  flex-shrink: 0;
 }

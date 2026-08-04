@@ -9,12 +9,13 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [tabBarSyncBehavior, cloudImageBehavior, ListBehavior],
+  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior],
   data: {
     activities: [],
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._initListBehavior(
       params => this._doFetch(params),
       { pageSize: 10, listKey: 'activities', sortFn: this._sortActivities }

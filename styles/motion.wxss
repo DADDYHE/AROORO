@@ -1,0 +1,571 @@
+/* ============================================================
+   motion.wxss · AROORO 奢侈品级动效系统 v2
+   方向：High-Luxury · Artistic Whitespace · Subtle Motion
+   ------------------------------------------------------------
+   哲学：
+     · 克制即奢华——动效时长偏慢、幅度偏小、曲线偏雅
+     · 入场如丝绸展开，交互如珠宝扣合
+     · 金色微光点缀，不喧宾夺主
+     · 艺术留白：元素之间有呼吸，动画之间有节奏
+   单位约定：ms（时间） / rpx（位移）
+   Skyline 兼容规则（严格遵守）：
+     1. 仅使用 transform / opacity（GPU 加速）
+     2. animation-fill-mode 只用 forwards（both/backwards/none 不支持）
+     3. 所有需要 delay 的动画：手动设置 opacity:0 初始态（替代 backwards）
+     4. animation 属性使用展开形式（animation-name/duration/timing-function/fill-mode）
+        不在简写中使用 CSS 变量
+     5. transition 可使用 CSS 变量（Skyline 对 transition 变量支持良好）
+     6. 不使用 :active 伪类，按压反馈统一使用 --pressed 修饰类 + hover-class
+     7. @keyframes 全局可用（keyframeStyleIsolation: false）
+   ============================================================ */
+
+/* ========== 1. 奢侈品级缓动曲线（设计令牌） ========== */
+page {
+  /* 优雅减速——最常用（遮罩铺陈、页面入场、模态弹出） */
+  --ease-luxury: cubic-bezier(0.19, 1, 0.22, 1);
+  /* 丝绸减速——更柔软（大卡片、hero 区、面板升起） */
+  --ease-silk: cubic-bezier(0.16, 1, 0.3, 1);
+  /* 精致标准——通用交互（按钮、chip、列表项） */
+  --ease-refined: cubic-bezier(0.25, 0.1, 0.25, 1);
+  /* 加速离场——元素退出（弹窗关闭、卡片消失） */
+  --ease-exit: cubic-bezier(0.55, 0, 1, 0.45);
+  /* 柔和弹性——按压释放（轻微 overshoot，不卡通） */
+  --ease-soft-spring: cubic-bezier(0.34, 1.15, 0.64, 1);
+
+  /* 时长梯度（奢侈品偏慢，给予视觉呼吸） */
+  --dur-instant: 160ms;   /* 按压反馈、微交互 */
+  --dur-fast: 240ms;      /* 按钮、chip、小元素 */
+  --dur-base: 420ms;      /* 卡片、列表项入场 */
+  --dur-slow: 600ms;      /* 页面级、hero 区、大面板 */
+  --dur-elegant: 800ms;   /* 启动屏、品牌级转场 */
+  --dur-shimmer: 2000ms;  /* 金色微光循环 */
+
+  /* Stagger 节奏（艺术留白：元素间呼吸间隔） */
+  --stagger-xs: 40ms;
+  --stagger-sm: 70ms;
+  --stagger-md: 110ms;
+  --stagger-lg: 160ms;
+  --stagger-xl: 220ms;
+
+  /* 入场位移距离（克制，奢侈品幅度小） */
+  --enter-y-xs: 8rpx;
+  --enter-y-sm: 16rpx;
+  --enter-y-md: 28rpx;
+  --enter-y-lg: 48rpx;
+
+  /* 按压缩放（珠宝般的紧实反馈） */
+  --press-scale: 0.97;
+  --press-scale-soft: 0.985;
+  --press-scale-card: 0.98;
+}
+
+/* ========== 2. 全局关键帧（所有页面/组件可直接使用） ==========
+   命名规范：zy- 前缀避免与第三方组件冲突
+   ============================================================ */
+
+/* 基础淡入 */
+@keyframes zy-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* 丝绸上浮入场（28rpx）——最常用 */
+@keyframes zy-fade-in-up {
+  0% { opacity: 0; transform: translateY(28rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 小幅上浮（16rpx）——紧凑列表 */
+@keyframes zy-fade-in-up-sm {
+  0% { opacity: 0; transform: translateY(16rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 大幅上浮（48rpx）——hero 区、首屏标题 */
+@keyframes zy-fade-in-up-lg {
+  0% { opacity: 0; transform: translateY(48rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 缩放浮现——居中弹窗、珠宝呈现 */
+@keyframes zy-scale-in {
+  0% { opacity: 0; transform: scale(0.92); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* 缩放 + 上浮——卡片出现 */
+@keyframes zy-scale-in-up {
+  0% { opacity: 0; transform: scale(0.96) translateY(16rpx); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 从右侧滑入——侧栏、返回面板 */
+@keyframes zy-slide-in-right {
+  0% { opacity: 0; transform: translateX(28rpx); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* 遮罩铺陈——暖墨色渐入 */
+@keyframes zy-overlay-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* 遮罩消散——暖墨色渐退 */
+@keyframes zy-overlay-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 面板退场——优雅收缩下沉 */
+@keyframes zy-panel-out {
+  0% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.94) translateY(16rpx); }
+}
+
+/* 底栏升起——固定操作栏 */
+@keyframes zy-footer-rise {
+  0% { opacity: 0; transform: translateY(100%); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 金色微光扫过 */
+@keyframes zy-shimmer-sweep {
+  0% { transform: translateX(-167%); }
+  100% { transform: translateX(267%); }
+}
+
+/* 金色脉冲（TabBar 选中点、通知红点） */
+@keyframes zy-gold-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  70% { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* 呼吸光晕（中央浮动按钮） */
+@keyframes zy-glow-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+/* 骨架屏微光 */
+@keyframes zy-skeleton {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+/* 徽标弹出 */
+@keyframes zy-badge-pop {
+  0% { opacity: 0; transform: scale(0.6); }
+  60% { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* 心跳（收藏按钮） */
+@keyframes zy-heart-beat {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* 分割线生长 */
+@keyframes zy-divider-grow {
+  0% { transform: scaleX(0); opacity: 0; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+
+/* 加载旋转 */
+@keyframes zy-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 弹窗内容揭示（28rpx 上浮） */
+@keyframes zy-popup-reveal {
+  0% { opacity: 0; transform: translateY(28rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 弹窗内容柔和揭示（16rpx 上浮） */
+@keyframes zy-popup-reveal-soft {
+  0% { opacity: 0; transform: translateY(16rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== 3. 基础过渡类（transition，CSS 变量安全） ========== */
+.transition {
+  transition-property: transform, opacity;
+  transition-duration: 240ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.transition-fast {
+  transition-property: transform, opacity;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.transition-slow {
+  transition-property: transform, opacity;
+  transition-duration: 420ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.transition-smooth {
+  transition-property: transform, opacity, background-color;
+  transition-duration: 240ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ========== 4. 触摸反馈（珠宝扣合般的紧实按压） ==========
+   使用方式：
+   <view class="touch-feedback" hover-class="touch-feedback--pressed" hover-stay-time="120"> */
+.touch-feedback {
+  transition-property: transform;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.touch-feedback--pressed {
+  transform: scale(0.985);
+}
+
+.touch-feedback-strong {
+  transition-property: transform, opacity;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.touch-feedback-strong--pressed {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+
+/* 图标按压 */
+.anim-icon {
+  transition-property: transform;
+  transition-duration: 240ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.anim-icon--pressed {
+  transform: scale(0.9);
+}
+
+/* ========== 5. 入场动画工具类（Skyline 安全：展开属性 + forwards + opacity:0） ==========
+   使用方式：
+   · 无 delay：<view class="zy-enter">内容</view>
+   · 有 delay：<view class="zy-enter" style="animation-delay: 200ms;">内容</view>
+   · 或使用预设 stagger 类 zy-enter--d1 到 zy-enter--d6
+   ============================================================ */
+
+/* 基础入场：丝绸上浮（最常用，420ms ease-silk） */
+.zy-enter {
+  opacity: 0;
+  animation-name: zy-fade-in-up;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 快速入场：小幅上浮（240ms，适合紧凑列表） */
+.zy-enter-fast {
+  opacity: 0;
+  animation-name: zy-fade-in-up-sm;
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 慢速入场：大幅上浮（600ms，适合 hero 区/标题） */
+.zy-enter-slow {
+  opacity: 0;
+  animation-name: zy-fade-in-up-lg;
+  animation-duration: 600ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 缩放入场：珠宝浮现（居中弹窗/封面图） */
+.zy-enter-scale {
+  opacity: 0;
+  animation-name: zy-scale-in;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 淡入：无位移（纯透明度变化，适合文字/分割线） */
+.zy-enter-fade {
+  opacity: 0;
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 右侧滑入 */
+.zy-enter-right {
+  opacity: 0;
+  animation-name: zy-slide-in-right;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+/* ========== 6. Stagger 延迟预设（1-6 步，60ms 呼吸节奏） ========== */
+.zy-enter--d1 { animation-delay: 80ms; }
+.zy-enter--d2 { animation-delay: 140ms; }
+.zy-enter--d3 { animation-delay: 200ms; }
+.zy-enter--d4 { animation-delay: 260ms; }
+.zy-enter--d5 { animation-delay: 320ms; }
+.zy-enter--d6 { animation-delay: 380ms; }
+
+/* ========== 7. 弹窗动效系统（三层分层编排） ==========
+   设计哲学：遮罩铺陈 → 面板丝绸升起 → 内容依次揭示
+   ============================================================ */
+
+/* 遮罩层 */
+.zy-overlay {
+  opacity: 0;
+  animation-name: zy-overlay-in;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+.zy-overlay.leaving {
+  animation-name: zy-overlay-out;
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  animation-fill-mode: forwards;
+}
+
+/* 弹窗面板（底部弹起） */
+.zy-panel-bottom {
+  transform: translateY(100%);
+  transition-property: transform;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.zy-panel-bottom.show {
+  transform: translateY(0);
+}
+
+.zy-panel-bottom.leaving {
+  transition-duration: 320ms;
+  transition-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  transform: translateY(100%);
+}
+
+/* 弹窗面板（居中浮现） */
+.zy-panel-center {
+  opacity: 0;
+  transform: scale(0.92) translateY(24rpx);
+  animation-name: zy-scale-in-up;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+  animation-delay: 80ms;
+}
+
+.zy-panel-center.leaving {
+  animation-name: zy-panel-out;
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  animation-fill-mode: forwards;
+  animation-delay: 0ms;
+}
+
+/* 弹窗内容依次揭示（.show 触发，适用于底部面板） */
+.popup-stagger {
+  opacity: 0;
+}
+
+.show .popup-stagger {
+  animation-name: zy-popup-reveal;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.show .popup-stagger:nth-child(1) { animation-delay: 160ms; }
+.show .popup-stagger:nth-child(2) { animation-delay: 220ms; }
+.show .popup-stagger:nth-child(3) { animation-delay: 280ms; }
+.show .popup-stagger:nth-child(4) { animation-delay: 340ms; }
+.show .popup-stagger:nth-child(5) { animation-delay: 400ms; }
+.show .popup-stagger:nth-child(6) { animation-delay: 460ms; }
+.show .popup-stagger:nth-child(7) { animation-delay: 520ms; }
+.show .popup-stagger:nth-child(8) { animation-delay: 580ms; }
+
+/* 柔和 stagger（底部按钮等次要元素） */
+.popup-stagger-soft {
+  opacity: 0;
+}
+
+.show .popup-stagger-soft {
+  animation-name: zy-popup-reveal-soft;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.show .popup-stagger-soft:nth-child(1) { animation-delay: 200ms; }
+.show .popup-stagger-soft:nth-child(2) { animation-delay: 260ms; }
+.show .popup-stagger-soft:nth-child(3) { animation-delay: 320ms; }
+
+/* wx:if 挂载即播的弹窗内容（居中弹窗） */
+.popup-reveal-mount {
+  opacity: 0;
+  animation-name: zy-popup-reveal;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.popup-reveal-mount:nth-child(1) { animation-delay: 200ms; }
+.popup-reveal-mount:nth-child(2) { animation-delay: 280ms; }
+.popup-reveal-mount:nth-child(3) { animation-delay: 360ms; }
+.popup-reveal-mount:nth-child(4) { animation-delay: 440ms; }
+
+/* ========== 8. 金色微光效果 ========== */
+.anim-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.anim-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 80%
+  );
+  transform: translateX(-167%);
+  pointer-events: none;
+}
+
+.anim-shimmer-active::after {
+  animation-name: zy-shimmer-sweep;
+  animation-duration: 2000ms;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 金色脉冲（红点/徽标） */
+.anim-gold-pulse {
+  animation-name: zy-gold-pulse;
+  animation-duration: 2000ms;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation-iteration-count: infinite;
+}
+
+/* 呼吸光晕 */
+.anim-glow-breathe {
+  animation-name: zy-glow-breathe;
+  animation-duration: 4000ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-iteration-count: infinite;
+}
+
+/* ========== 9. 骨架屏 ========== */
+.skeleton-shimmer {
+  position: relative;
+  background: #F5F5F0;
+  overflow: hidden;
+}
+
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.45) 50%,
+    transparent 100%
+  );
+  animation-name: zy-skeleton;
+  animation-duration: 1800ms;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation-iteration-count: infinite;
+  pointer-events: none;
+}
+
+/* ========== 10. 心跳动画 ========== */
+.anim-heart {
+  animation-name: zy-heart-beat;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
+  animation-fill-mode: forwards;
+}
+
+/* ========== 11. 分割线生长 ========== */
+.anim-divider {
+  opacity: 0;
+  transform-origin: left;
+  transform: scaleX(0);
+  animation-name: zy-divider-grow;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+/* ========== 12. 加载旋转 ========== */
+.anim-spin {
+  animation-name: zy-spin;
+  animation-duration: 1200ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-iteration-count: infinite;
+}
+
+/* ========== 13. 列表项依次进入（配合 nth-child） ========== */
+.zy-list-item {
+  opacity: 0;
+  animation-name: zy-fade-in-up-sm;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+/* ========== 14. 兼容旧类名（指向新 keyframes） ==========
+   以下类名在项目中被广泛使用，保持向后兼容
+   ============================================================ */
+
+/* fadeIn / fadeInUp 是各页面重复定义最多的关键帧，提供全局类 */
+.fade-in {
+  opacity: 0;
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+.fade-in-up {
+  opacity: 0;
+  animation-name: zy-fade-in-up;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 页面入场（兼容旧 page-animate-enter） */
+.page-animate-enter {
+  opacity: 0;
+  animation-name: zy-fade-in-up;
+  animation-duration: 600ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}

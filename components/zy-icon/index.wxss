@@ -1,0 +1,23 @@
+/* ================================================================
+   components/zy-icon · AROORO Haute-Luxury 图标包装器
+   ----------------------------------------------------------------
+   极简容器：flex 居中对齐，默认不干预尺寸与颜色
+   SVG 图标颜色默认继承 currentColor，由父级控制
+   Skyline 兼容：无 vertical-align（用 flex 居中替代）
+   ================================================================ */
+
+.zy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* 内部 image / SVG 默认跟随父级颜色（微信小程序 image 不支持 color 继承，
+   若需变色请用多色 SVG 或 iconfont；此处保持尺寸响应父级） */
+.zy-icon image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

@@ -1,3 +1,15 @@
+<zy-navbar title="商品列表" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="page-divider"></view>
@@ -5,12 +17,12 @@
     <scroll-view class="category-sidebar" scroll-y="true" show-scrollbar="false">
       <block wx:for="{{categories}}" wx:key="key">
         <view class="cat-group">
-          <view class="cat-item {{currentCategory === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="onCategoryTap">
+          <view class="cat-item {{currentCategory === item.key ? 'active' : ''}}" data-key="{{item.key}}" hover-class="cat-item--pressed" hover-stay-time="80" bindtap="onCategoryTap">
             <text>{{item.label}}</text>
-            <text class="cat-arrow {{expandedCategory === item.key ? 'expanded' : ''}}">▾</text>
+            <image class="cat-arrow {{expandedCategory === item.key ? 'expanded' : ''}}" src="/images/icons/chevron-down-luxury-line.svg" mode="aspectFit"></image>
           </view>
           <view wx:if="{{expandedCategory === item.key && item.subcats && item.subcats.length > 0}}" class="subcat-list">
-            <view wx:for="{{item.subcats}}" wx:for-item="sub" wx:key="key" class="subcat-item {{currentSubCategory === sub.key ? 'active' : ''}}" data-key="{{sub.key}}" bindtap="onSubCategoryTap">
+            <view wx:for="{{item.subcats}}" wx:for-item="sub" wx:key="key" class="subcat-item {{currentSubCategory === sub.key ? 'active' : ''}}" data-key="{{sub.key}}" hover-class="subcat-item--pressed" hover-stay-time="80" bindtap="onSubCategoryTap">
               <text>{{sub.label}}</text>
             </view>
           </view>
@@ -19,13 +31,19 @@
     </scroll-view>
     <view class="content-area">
       <view class="category-header">
-        <text class="category-name">{{currentCategoryLabel}}</text>
-        <text wx:if="{{currentSubCategoryLabel}}" class="subcat-label"> · {{currentSubCategoryLabel}}</text>
+        <view class="category-header-inner">
+          <view class="label-accent"></view>
+          <text class="category-name">{{currentCategoryLabel}}</text>
+          <view class="label-accent"></view>
+          <text wx:if="{{currentSubCategoryLabel}}" class="subcat-label">{{currentSubCategoryLabel}}</text>
+        </view>
       </view>
       <view class="content-divider"></view>
       <view class="product-grid">
-        <view wx:for="{{currentProducts}}" wx:key="_id" class="product-card" data-id="{{item._id}}" bindtap="onProductTap">
-          <image lazy-load class="product-img" src="{{item.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="currentProducts[{{index}}].coverUrl" />
+        <view wx:for="{{currentProducts}}" wx:key="_id" class="product-card" data-id="{{item._id}}" hover-class="product-card--pressed" hover-stay-time="80" bindtap="onProductTap">
+          <view class="product-img-wrap">
+            <image lazy-load class="product-img" src="{{item.coverUrl}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="currentProducts[{{index}}].coverUrl" />
+          </view>
           <text class="product-label">{{item.name}}</text>
           <view class="product-price-row">
             <text class="product-price">¥{{item.minPrice || item.price}}</text>
@@ -33,16 +51,21 @@
           </view>
         </view>
       </view>
-      <view class="view-more" bindtap="onViewMore">
-        <text>查看更多</text>
+      <view class="view-more" hover-class="view-more--pressed" hover-stay-time="120" bindtap="onViewMore">
+        <view class="view-more-inner">
+          <text class="view-more-inner-text">查看更多</text>
+        </view>
       </view>
     </view>
   </view>
 
-  <view class="floating-cart" bindtap="onCartTap">
-    <text class="floating-cart-icon">🛒</text>
+  <root-portal>
+  <view class="floating-cart" hover-class="floating-cart--pressed" hover-stay-time="120" bindtap="onCartTap">
+    <image class="floating-cart-icon" src="/images/icons/cart-luxury-line.svg" mode="aspectFit"></image>
     <view wx:if="{{cartCount > 0}}" class="floating-cart-badge">
       <text class="floating-cart-badge-text">{{cartCount > 99 ? '99+' : cartCount}}</text>
     </view>
   </view>
+  </root-portal>
 </view>
+</scroll-view>

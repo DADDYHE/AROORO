@@ -23,9 +23,11 @@ const SUPPORTED_LOCALES = ['zh-CN', 'en-US', 'ja-JP']
 const PAGE_SIZE = 30
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     isLoading: false,
     isSaving: false,
@@ -67,6 +69,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._loadData(true)
     this._loadStats()
   },
@@ -90,7 +93,7 @@ Page({
 
   // === 数据加载 ===
 
-  async _loadData(isInitial, isLoadMore = false) {
+  async _loadData(isLoadMore = false) {
     if (this.data.isLoading) {return}
     this.setData({ isLoading: true })
     try {
@@ -265,7 +268,7 @@ Page({
         this.errorDynamic((res && res.message), 'OPERATION_FAILED')
         return
       }
-      this.toast(() => (next === 'active' ? 'BIZ_E6C0B' : 'BIZ_ECOJD'))
+      this.toast(next === 'active' ? 'BIZ_E6C0B' : 'BIZ_ECOJD')
       this._loadData(true)
     } catch (err) {
       this.errorDynamic(err.message, 'OPERATION_FAILED')

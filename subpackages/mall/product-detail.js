@@ -1,5 +1,6 @@
 const { MallService } = require('./MallService')
 const { CartService } = require('./CartService')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
@@ -10,7 +11,7 @@ const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
     product: null,
     isLoading: true,
@@ -32,11 +33,12 @@ Page({
     selectedSpecs: {},
     allSpecsSelected: false,
     iconShare: CLOUD_ICONS.SHARE,
-    iconService: CLOUD_ICONS.SERVICE,
+    iconService: '/images/icons/message-luxury-line.svg',
     iconShoppingCart: CLOUD_ICONS.SHOPPING_CART,
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     if (options.id) {
       this._loadProduct(options.id)
     } else {

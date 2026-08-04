@@ -3,12 +3,13 @@ const { extractCityAndDistrict } = require('../../utils/addressUtils')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   /**
    * 页面的初始数据
    */
@@ -26,20 +27,20 @@ Page({
     isLoading: true, // 是否正在加载寄养家庭详情
     isFavoriteLoading: false, // 是否正在处理收藏操作
     services: [
-      { icon: '🏠', text: '提供舒适的寄养环境' },
-      { icon: '🥣', text: '定时喂食和喝水' },
-      { icon: '🚶', text: '每日遛弯和陪伴' },
-      { icon: '📸', text: '每日照片和视频反馈' },
-      { icon: '💊', text: '按时喂药服务' },
-      { icon: '🛀', text: '洗澡和美容服务' },
+      { icon: '/images/icons/home-luxury-line.svg', text: '提供舒适的寄养环境' },
+      { icon: '/images/icons/bowl-luxury-line.svg', text: '定时喂食和喝水' },
+      { icon: '/images/icons/walk-luxury-line.svg', text: '每日遛弯和陪伴' },
+      { icon: '/images/icons/camera-luxury-line.svg', text: '每日照片和视频反馈' },
+      { icon: '/images/icons/pill-luxury-line.svg', text: '按时喂药服务' },
+      { icon: '/images/icons/bath-luxury-line.svg', text: '洗澡和美容服务' },
     ],
     facilities: [
-      { icon: '🏡', text: '独立房间' },
-      { icon: '🏃', text: '户外花园' },
-      { icon: '🌲', text: '宠物乐园' },
-      { icon: '🔒', text: '安全围栏' },
-      { icon: '📺', text: '监控摄像头' },
-      { icon: '🚽', text: '宠物厕所' },
+      { icon: '/images/icons/house-garden-luxury-line.svg', text: '独立房间' },
+      { icon: '/images/icons/run-luxury-line.svg', text: '户外花园' },
+      { icon: '/images/icons/tree-luxury-line.svg', text: '宠物乐园' },
+      { icon: '/images/icons/lock-luxury-line.svg', text: '安全围栏' },
+      { icon: '/images/icons/monitor-luxury-line.svg', text: '监控摄像头' },
+      { icon: '/images/icons/toilet-luxury-line.svg', text: '宠物厕所' },
     ],
   },
 
@@ -47,6 +48,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this._initNavbarHeight()
     const hostId = options.id || options.hostId
     if (!hostId) {
       this.error('HOST_ID_MISSING')
@@ -223,7 +225,6 @@ Page({
 
   playVideo(e) {
     const index = e.currentTarget.dataset.index
-    const videoUrl = this.data.host.videos[index]
     wx.navigateTo({ url: `/subpackages/other/video-list/index?hostId=${this.data.host._id}&index=${index}` })
   },
 

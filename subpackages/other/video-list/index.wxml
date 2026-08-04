@@ -1,3 +1,15 @@
+<zy-navbar title="视频列表" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <!-- 视频内容区域 -->
@@ -30,6 +42,7 @@
           wx:key="id"
           wx:if="{{index > 0 && index <= 2}}"
           catchtap="previewVideo"
+          hover-class="thumbnail-item--pressed"
           data-index="{{index}}"
         >
           <video 
@@ -48,7 +61,7 @@
           ></video>
           <!-- 播放按钮覆盖层 -->
           <view class="play-overlay" catchtap="previewVideo" data-index="{{index}}">
-            <text class="play-icon">▶</text>
+            <image class="play-icon" src="/images/icons/play-luxury-line.svg" mode="aspectFit"></image>
           </view>
         </view>
       </view>
@@ -60,3 +73,4 @@
     </view>
   </view>
 </view>
+</scroll-view>

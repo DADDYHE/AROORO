@@ -1,0 +1,28 @@
+<!-- zy-popup · Skyline Worklet 驱动弹层组件 v2 -->
+<!-- worklet-driven class：worklet 启用时禁用 CSS transition/transform，由 worklet 驱动 -->
+<!-- _animating class：控制 overlay 与面板的 CSS transition（CSS 兜底模式） -->
+<root-portal wx:if="{{_innerVisible}}" class="zy-popup-root">
+  <!-- 遮罩层（暖墨色铺陈 400ms，领先面板淡入营造景深） -->
+  <view
+    wx:if="{{overlay}}"
+    class="zy-popup__overlay {{_animating ? 'zy-popup__overlay--show' : ''}}"
+    style="z-index: {{zIndex}};"
+    catchtap="onOverlayTap"
+  ></view>
+
+  <!-- 内容容器：
+       · worklet 模式：worklet-driven 禁用 CSS transition，worklet 驱动 transform+opacity
+       · CSS 兜底：--show class 触发 transition（600ms/500ms 丝绸曲线） -->
+  <view
+    class="zy-popup zy-popup--{{position}} {{round ? 'zy-popup--round' : ''}} {{_animating ? 'zy-popup--show' : ''}} {{_workletEnabled ? 'worklet-driven' : ''}}"
+    style="z-index: {{zIndex + 1}};"
+    catchtap="noop"
+    catch:touchmove="noop"
+    bindtransitionend="onTransitionEnd"
+  >
+    <slot></slot>
+    <view wx:if="{{closeable}}" class="zy-popup__close" catchtap="onCloseTap" hover-class="zy-popup__close--pressed" hover-stay-time="120">
+      <view class="zy-popup__close-icon"></view>
+    </view>
+  </view>
+</root-portal>

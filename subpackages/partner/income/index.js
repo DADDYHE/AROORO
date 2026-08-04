@@ -1,9 +1,11 @@
 const { AdminService } = require('../../../services/CloudFunctionService')
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     isLoading: true,
     overview: null,
@@ -20,6 +22,8 @@ Page({
     pageSize: 20,
     hasMore: true,
     activeTab: 'all',
+    isDetailLoading: false,
+    isLoadingMore: false,
     // 提现弹窗
     showWithdrawModal: false,
     withdrawAmount: '',
@@ -28,6 +32,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._loadData()
   },
 
@@ -62,7 +67,7 @@ Page({
       if (overview) {
         const ct = overview.commission?.total || 0
         const at = overview.activity?.total || 0
-        const ht = overview.hosting?.total || 0
+        const ht = overview.boarding?.total || 0
         const ft = overview.feeding?.total || 0
         totalIncomeText = (ct + at + ht + ft).toFixed(2)
         commissionText = ct.toFixed(2)
@@ -89,11 +94,13 @@ Page({
     }
   },
 
-  async _loadDetails() {
+  async _loadDetails(append = false) {
+    const loadingKey = append ? 'isLoadingMore' : 'isDetailLoading'
+    this.setData({ [loadingKey]: true })
     try {
       const res = await AdminService.getMyIncomeDetails({ type: this.data.activeTab, page: this.data.page, pageSize: this.data.pageSize })
       if (res.code === 0 && res.data) {
-        const list = res.data.list || []
+        let list = res.data.list || []
         // 转换 cloud:// 头像 URL 为可访问的临时 URL
         const cloudAvatars = list.filter(it => it.buyerAvatarUrl && it.buyerAvatarUrl.startsWith('cloud://'))
         if (cloudAvatars.length > 0) {
@@ -111,14 +118,17 @@ Page({
             console.error('[partner/income] avatarUrl convert error:', e)
           }
         }
+        const details = append ? this.data.details.concat(list) : list
         this.setData({
-          details: list,
+          details,
           detailTotal: res.data.total || 0,
           hasMore: list.length >= this.data.pageSize,
         })
       }
     } catch (e) {
       console.error('[partner/income] _loadDetails error:', e)
+    } finally {
+      this.setData({ [loadingKey]: false })
     }
   },
 
@@ -126,6 +136,12 @@ Page({
     const { tab } = e.currentTarget.dataset
     this.setData({ activeTab: tab, page: 1, details: [] })
     this._loadDetails()
+  },
+
+  onReachBottom() {
+    if (this.data.isDetailLoading || this.data.isLoading || !this.data.hasMore) {return}
+    this.setData({ page: this.data.page + 1 })
+    return this._loadDetails(true)
   },
 
   onWithdrawTap() {

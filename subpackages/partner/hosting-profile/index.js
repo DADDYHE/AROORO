@@ -1,6 +1,8 @@
 const { AdminService } = require('../../../services/CloudFunctionService')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
+  behaviors: [ListBehavior],
   data: {
     isLoading: true,
     profile: null,
@@ -13,6 +15,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._loadData()
   },
 

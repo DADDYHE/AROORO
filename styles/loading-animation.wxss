@@ -1,67 +1,288 @@
-/* Loading Animation — 已清除全部动效
-   2026-07-29 全面清理交互动效
-   保留静态布局结构，移除所有 @keyframes 和 animation 属性 */
+/* ================================================================
+   loading-animation.wxss · 奢侈品级加载动画全局工具类
+   ----------------------------------------------------------------
+   设计语言：高奢腕表级机械美学
+   四种加载动画变体（全局工具类版本）：
+     1. 陀飞轮金环 Tourbillon Gold Rings（全局加载态）
+     2. 金粒瀑布 Gold Cascade（数据列表加载）
+     3. 丝缎波纹 Silk Wave（轻量操作等待）
+     4. 品牌呼吸 Monogram Breath（全屏加载 · 品牌仪式感）
+   ----------------------------------------------------------------
+   使用方式：
+     · 组件方式（推荐）：<zy-loading type="tourbillon" vertical text="加载中" />
+     · 全局工具类：在页面中直接使用 .lux-tourbillon 等类名
+   令牌来源：design-tokens.wxss 中的 --lux-* 变量
+   Skyline 兼容：仅用 transform: rotate/scale/translateY & opacity
+   ----------------------------------------------------------------
+   使用纪律（P1④ · 金粒瀑布非常驻）：
+     · .lux-cascade 金粒瀑布仅用于「加载中 / 开屏」瞬态，数据就绪即卸载；
+     · 严禁作为首页常驻装饰——120rpx×200rpx 常驻会挤占内容、持续耗电；
+     · 所有变体均为瞬态加载指示器，不可做永久背景或装饰元素。
+   ================================================================ */
+
+/* ================================================================
+   通用容器与文字
+   ================================================================ */
 
 .loading-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--background-color, #F8FAF3);
+  background: var(--zy-bg, #F8FAF3);
 }
 
 .loading-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40rpx;
+  gap: 44rpx;
 }
 
-.loading-brand-mark {
+.loading-text {
+  font-size: 22rpx;
+  color: var(--zy-text-2, #635E54);
+  letter-spacing: 0.32em;
+  font-weight: 300;
+  animation: lux-text-pulse var(--lux-dur-text-pulse, 2400ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
+}
+
+/* ================================================================
+   变体 1：陀飞轮金环 Tourbillon Gold Rings
+   ================================================================ */
+
+.lux-tourbillon {
   position: relative;
   width: 120rpx;
   height: 120rpx;
+}
+
+.lux-ring {
+  position: absolute;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.lux-ring--outer {
+  width: 100rpx;
+  height: 100rpx;
+  top: 10rpx;
+  left: 10rpx;
+  border: 2rpx solid var(--lux-gold-400, #D4B978);
+  border-radius: 50%;
+  animation: lux-ring-spin var(--lux-dur-ring-spin, 2400ms) linear infinite;
+}
+
+.lux-ring--middle {
+  width: 72rpx;
+  height: 72rpx;
+  top: 24rpx;
+  left: 24rpx;
+  border: 2rpx solid var(--lux-green-600, #3D5A3D);
+  border-radius: 50%;
+  animation: lux-ring-spin-reverse var(--lux-dur-ring-reverse, 3000ms) linear infinite;
+}
+
+.lux-ring--inner {
+  width: 48rpx;
+  height: 48rpx;
+  top: 36rpx;
+  left: 36rpx;
+  border: 2rpx solid var(--lux-gold-500, #C9A24B);
+  border-radius: 50%;
+  animation: lux-ring-spin-inner var(--lux-dur-ring-inner, 1800ms) linear infinite;
+}
+
+/* 旋转标记点 — 位于各环 12 点方向，旋转时作为视觉参照 */
+.lux-ring-marker {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border-radius: 50%;
+}
+
+.lux-ring-marker--outer {
+  margin-left: -4rpx;
+  width: 8rpx;
+  height: 8rpx;
+  background: var(--lux-gold-300, #E8D5A8);
+}
+
+.lux-ring-marker--middle {
+  margin-left: -4rpx;
+  width: 8rpx;
+  height: 8rpx;
+  background: var(--primary-soft);
+}
+
+.lux-ring-marker--inner {
+  margin-left: -3rpx;
+  width: 6rpx;
+  height: 6rpx;
+  background: var(--lux-gold-300, #E8D5A8);
+}
+
+.lux-ring-dot {
+  position: absolute;
+  top: 55rpx;
+  left: 55rpx;
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: var(--lux-gold-grad, linear-gradient(135deg, #E8D5A8, #C9A24B, #B8923E));
+  animation: lux-dot-pulse var(--lux-dur-dot-pulse, 2000ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
+}
+
+/* ================================================================
+   变体 2：金粒瀑布 Gold Cascade
+   ================================================================ */
+
+.lux-cascade {
+  position: relative;
+  width: 120rpx;
+  height: 200rpx;
+  overflow: hidden;
+}
+
+.lux-cascade-dot {
+  position: absolute;
+  top: 0;
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  animation: lux-cascade-fall var(--lux-dur-cascade, 1600ms) linear infinite;
+}
+
+.lux-cascade-dot:nth-child(1) { left: 20rpx; background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms; }
+.lux-cascade-dot:nth-child(2) { left: 36rpx; background: var(--lux-gold-400, #D4B978); animation-delay: 150ms; }
+.lux-cascade-dot:nth-child(3) { left: 52rpx; background: var(--lux-gold-500, #C9A24B); animation-delay: 300ms; }
+.lux-cascade-dot:nth-child(4) { left: 68rpx; background: var(--lux-gold-400, #D4B978); animation-delay: 450ms; }
+.lux-cascade-dot:nth-child(5) { left: 84rpx; background: var(--lux-gold-300, #E8D5A8); animation-delay: 600ms; }
+.lux-cascade-dot:nth-child(6) { left: 100rpx; background: var(--lux-gold-500, #C9A24B); animation-delay: 750ms; }
+.lux-cascade-dot:nth-child(7) { left: 48rpx; background: var(--lux-gold-400, #D4B978); animation-delay: 900ms; }
+
+/* ================================================================
+   变体 3：丝缎波纹 Silk Wave
+   ================================================================ */
+
+.lux-silk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  width: 80rpx;
+}
+
+.lux-silk-line {
+  width: 80rpx;
+  height: 2rpx;
+  border-radius: 1rpx;
+  transform-origin: center;
+  animation: lux-silk-wave var(--lux-dur-silk-wave, 1400ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
+}
+
+.lux-silk-line:nth-child(1) { background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms; }
+.lux-silk-line:nth-child(2) { background: var(--lux-gold-400, #D4B978); animation-delay: 100ms; }
+.lux-silk-line:nth-child(3) { background: var(--lux-gold-500, #C9A24B); animation-delay: 200ms; }
+.lux-silk-line:nth-child(4) { background: var(--lux-gold-400, #D4B978); animation-delay: 300ms; }
+.lux-silk-line:nth-child(5) { background: var(--lux-gold-300, #E8D5A8); animation-delay: 400ms; }
+
+/* ================================================================
+   变体 4：品牌呼吸 Monogram Breath
+   ================================================================ */
+
+.lux-monogram {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+}
+
+.lux-monogram-rings {
+  position: relative;
+  width: 120rpx;
+  height: 80rpx;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.brand-ring {
+.lux-breath-ring {
   position: absolute;
-  width: 100rpx;
-  height: 100rpx;
-  border: 3rpx solid transparent;
+  top: 10rpx;
+  left: 30rpx;
+  width: 60rpx;
+  height: 60rpx;
+  border: 1rpx solid var(--lux-gold-500, #C9A24B);
   border-radius: 50%;
+  box-sizing: border-box;
+  animation: lux-ring-expand var(--lux-dur-breath, 2400ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
 }
 
-.brand-ring--delay {
-  width: 80rpx;
-  height: 80rpx;
-}
+.lux-breath-ring:nth-child(1) { animation-delay: 0ms; }
+.lux-breath-ring:nth-child(2) { animation-delay: 800ms; }
+.lux-breath-ring:nth-child(3) { animation-delay: 1600ms; }
 
-.brand-dot {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  background: var(--activity-primary, #7A8C5A);
-}
-
-.loading-dots {
-  display: flex;
-  gap: 12rpx;
-  align-items: center;
-}
-
-.loading-dot {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  background: var(--activity-primary, #7A8C5A);
-}
-
-.loading-text {
-  font-size: 24rpx;
-  color: var(--text-secondary, #635E54);
-  letter-spacing: 8rpx;
+.lux-monogram-text {
+  font-size: 18rpx;
   font-weight: 300;
+  letter-spacing: 0.24em;
+  color: var(--zy-text-1, #2A2823);
+  animation: lux-breath var(--lux-dur-breath, 2400ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
+}
+
+/* ================================================================
+   关键帧定义 — Skyline 兼容（仅 transform & opacity）
+   ================================================================ */
+
+@keyframes lux-ring-spin {
+  from { transform: rotate(0deg); opacity: 0.7; }
+  50% { opacity: 1; }
+  to { transform: rotate(360deg); opacity: 0.7; }
+}
+
+@keyframes lux-ring-spin-reverse {
+  from { transform: rotate(360deg); opacity: 0.5; }
+  50% { opacity: 0.9; }
+  to { transform: rotate(0deg); opacity: 0.5; }
+}
+
+@keyframes lux-ring-spin-inner {
+  from { transform: rotate(0deg); opacity: 0.6; }
+  50% { opacity: 1; }
+  to { transform: rotate(360deg); opacity: 0.6; }
+}
+
+@keyframes lux-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+
+@keyframes lux-cascade-fall {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(200rpx); opacity: 0; }
+}
+
+@keyframes lux-silk-wave {
+  0%, 100% { transform: scaleX(0.3); opacity: 0.3; }
+  50% { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes lux-ring-expand {
+  0% { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes lux-breath {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes lux-text-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }

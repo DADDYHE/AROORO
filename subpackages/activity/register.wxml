@@ -1,4 +1,16 @@
 <!--subpackages/activity/register.wxml-->
+<zy-navbar title="活动报名" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="container">
   <!-- 艺术风格的活动信息头部 -->
   <view class="activity-header">
@@ -7,11 +19,11 @@
       <text class="activity-title">{{activity ? activity.title : ''}}</text>
       <view class="activity-meta">
         <view class="meta-item">
-          <text class="meta-icon">🕒</text>
+          <image class="meta-icon" src="/images/icons/clock-luxury-line.svg" mode="aspectFit"></image>
           <text class="meta-text">{{activity ? activity.time : ''}}</text>
         </view>
         <view class="meta-item">
-          <text class="meta-icon">📍</text>
+          <image class="meta-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image>
           <text class="meta-text">{{activity ? activity.location : ''}}</text>
         </view>
       </view>
@@ -28,7 +40,7 @@
 
   <!-- 已报名状态 -->
   <view wx:if="{{isRegistered}}" class="registered-status">
-    <view class="registered-icon">✓</view>
+    <image class="registered-icon" src="/images/icons/check-luxury-line.svg" mode="aspectFit"></image>
     <text class="registered-text">您已报名此活动</text>
     <text class="registered-hint">请勿重复报名</text>
   </view>
@@ -121,6 +133,7 @@
     </view>
 
     <!-- 宠物档案选择弹窗 -->
+    <root-portal>
     <view class="pet-picker-mask" wx:if="{{showPetPicker}}" bindtap="onHidePetPicker">
       <view class="pet-picker-panel" catchtap="">
         <view class="pet-picker-header">
@@ -151,6 +164,7 @@
         </scroll-view>
       </view>
     </view>
+    </root-portal>
 
     <!-- 参加人数 -->
     <view class="form-item">
@@ -240,7 +254,7 @@
         </view>
       </view>
       <view wx:if="{{friends.length === 0}}" class="empty-friends">
-        <text class="empty-icon">👥</text>
+        <image class="empty-icon" src="/images/icons/users-luxury-line.svg" mode="aspectFit"></image>
         <text>暂无好友信息</text>
         <text class="empty-hint">点击下方按钮添加好友信息</text>
       </view>
@@ -270,7 +284,7 @@
         <text class="coupon-name">{{selectedCoupon.templateName}}</text>
         <text class="coupon-discount">-¥{{couponDiscount}}</text>
       </view>
-      <text class="remove-coupon" bindtap="onRemoveCoupon">✕</text>
+      <image class="remove-coupon" src="/images/icons/close-luxury-line.svg" mode="aspectFit" bindtap="onRemoveCoupon"></image>
     </view>
     <view class="no-coupon selected-coupon" wx:elif="{{availableCoupons.length > 0}}" bindtap="onToggleCouponSelector">
       <text class="coupon-name">{{availableCoupons.length}}张可用优惠券，点击选择</text>
@@ -320,3 +334,4 @@
     </button>
   </view>
 </view>
+</scroll-view>

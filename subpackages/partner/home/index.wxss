@@ -1,16 +1,23 @@
 @import '../common.wxss';
 
+/* ============================================
+   AROORO 合伙人工作台首页 — Haute-Luxury Dashboard
+   深森林绿主色 + 金属香槟金阶 + 奶油暖白底
+   层次阴影 · 编辑级排版 · 金线装饰 · 线性图标
+   ============================================ */
+
+/* ---------- 待处理/审核卡片 ---------- */
 .card-accent {
   width: 3rpx;
   height: 100%;
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  background: var(--primary-color);
 }
 
 .income-accent {
-  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--success-color) 100%);
+  background: var(--lux-gold-grad);
 }
 
 .card-body {
@@ -19,11 +26,12 @@
 }
 
 .pending-title {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 500;
   color: var(--text-primary);
   display: block;
   margin-bottom: 12rpx;
+  letter-spacing: 0.06em;
 }
 
 .pending-desc {
@@ -31,83 +39,120 @@
   color: var(--text-secondary);
   display: block;
   margin-bottom: 28rpx;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
 }
 
 .pending-btn {
   display: inline-flex;
-  padding: 16rpx 40rpx;
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  border-radius: 16rpx;
+  padding: 16rpx 44rpx;
+  background: var(--gradient-primary);
+  border-radius: var(--lux-radius-pill);
+  box-shadow: var(--lux-shadow-green);
 }
 
 .pending-btn-text {
   font-size: 24rpx;
-  color: var(--card-color);
+  color: var(--text-on-primary);
   font-weight: 500;
+  letter-spacing: 0.10em;
+}
+
+/* ---------- 收入概览卡片（深色高奢卡） ---------- */
+.income-card {
+  background: var(--lux-green-grad-rich);
+  border: 1rpx solid var(--lux-hairline-green);
+}
+
+.income-card .card-body {
+  padding: 40rpx 36rpx;
+}
+
+/* 收入卡片右上角金色光晕 */
+.income-card::before {
+  content: '';
+  position: absolute;
+  top: -40rpx;
+  right: -40rpx;
+  width: 200rpx;
+  height: 200rpx;
+  background: radial-gradient(circle, var(--mall-tint) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .income-row {
   display: flex;
   align-items: center;
   justify-content: space-around;
+  position: relative;
 }
 
 .income-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8rpx;
+  gap: 10rpx;
 }
 
 .income-value {
-  font-size: 40rpx;
+  font-size: 38rpx;
   font-weight: 300;
-  color: var(--text-primary);
-  letter-spacing: 2rpx;
+  color: var(--lux-gold-300);
+  letter-spacing: 0.01em;
+  font-feature-settings: 'tnum';
 }
 
 .income-label {
   font-size: 20rpx;
-  color: var(--text-secondary);
-  letter-spacing: 4rpx;
+  color: var(--text-on-dark-50);
+  letter-spacing: 0.20em;
+  font-weight: 400;
 }
 
 .income-divider {
   width: 1rpx;
-  height: 60rpx;
-  background: var(--gray-200);
+  height: 56rpx;
+  background: var(--bg-gold-on-dark);
 }
 
+/* ---------- 分区入口标题 ---------- */
 .gallery-entrance {
   display: flex;
   align-items: center;
-  gap: 20rpx;
-  margin: 32rpx 0 24rpx;
+  gap: 16rpx;
+  margin: 36rpx 0 24rpx;
 }
 
 .entrance-line {
-  width: 40rpx;
-  height: 2rpx;
-  background: var(--text-tertiary);
+  width: 32rpx;
+  height: 1rpx;
+  background: var(--lux-gold-400);
 }
 
 .entrance-label {
   font-size: 22rpx;
   color: var(--text-secondary);
-  letter-spacing: 8rpx;
+  letter-spacing: 0.20em;
+  font-weight: 400;
 }
 
+/* ---------- 快捷功能网格 ---------- */
 .module-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 20rpx;
 }
 
+.module-grid > .module-card {
+  flex: 0 0 calc((100% - 20rpx) / 2);
+}
+
 .module-card {
-  background: var(--card-color);
-  border-radius: 24rpx;
+  background: var(--lux-card-bg);
+  border-radius: var(--lux-radius-card);
   padding: 32rpx 28rpx;
-  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid var(--lux-hairline);
+  box-shadow: var(--lux-shadow-card);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -116,89 +161,97 @@
   overflow: hidden;
 }
 
-.module-card::before {
+/* 模块卡片右上角微光装饰 */
+.module-card::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3rpx;
-  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  opacity: 0;
+  top: -30rpx;
+  right: -30rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: radial-gradient(circle, var(--mall-tint-04) 0%, transparent 70%);
+  pointer-events: none;
 }
 
+/* ---------- 模块图标容器 ---------- */
 .module-icon {
   width: 56rpx;
   height: 56rpx;
-  border-radius: 16rpx;
+  border-radius: var(--lux-radius-inner);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8rpx;
+  margin-bottom: 4rpx;
+  position: relative;
 }
 
-.module-icon-activity {
-  background: linear-gradient(135deg, rgba(79, 94, 53, 0.15) 0%, rgba(79, 94, 53, 0.05) 100%);
+.module-icon-img {
+  width: 32rpx;
+  height: 32rpx;
 }
 
-.module-icon-hosting {
-  background: linear-gradient(135deg, rgba(255, 149, 0, 0.15) 0%, rgba(255, 149, 0, 0.05) 100%);
-}
-
-.module-icon-feeding {
-  background: linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(52, 199, 89, 0.05) 100%);
-}
-
+/* 各模块图标底色 — 使用板块色调浅底 */
 .module-icon-income {
-  background: linear-gradient(135deg, rgba(175, 82, 222, 0.15) 0%, rgba(175, 82, 222, 0.05) 100%);
+  background: var(--lux-card-gold-tint);
+  border: 1rpx solid var(--lux-hairline-gold);
+}
+
+.module-icon-serviceIncome {
+  background: var(--lux-card-gold-tint);
+  border: 1rpx solid var(--lux-hairline-gold);
 }
 
 .module-icon-referral {
-  background: linear-gradient(135deg, rgba(0, 122, 255, 0.15) 0%, rgba(0, 122, 255, 0.05) 100%);
+  background: var(--activity-accent);
+  border: 1rpx solid var(--lux-hairline-green);
+}
+
+.module-icon-activity {
+  background: var(--activity-accent);
+  border: 1rpx solid var(--lux-hairline-green);
+}
+
+.module-icon-hosting {
+  background: var(--boarding-accent);
+  border: 1rpx solid var(--boarding-tint-12);
+}
+
+.module-icon-feeding {
+  background: var(--feeding-accent);
+  border: 1rpx solid var(--feeding-tint-12);
 }
 
 .module-icon-application {
-  background: linear-gradient(135deg, rgba(255, 59, 48, 0.15) 0%, rgba(255, 59, 48, 0.05) 100%);
-}
-
-.module-icon::after {
-  font-size: 28rpx;
-}
-
-.module-icon-activity::after {
-  content: '\1F3AA';
-}
-
-.module-icon-hosting::after {
-  content: '\1F3E0';
-}
-
-.module-icon-feeding::after {
-  content: '\1F43E';
-}
-
-.module-icon-income::after {
-  content: '\1F4B0';
-}
-
-.module-icon-referral::after {
-  content: '\1F465';
-}
-
-.module-icon-application::after {
-  content: '\1F4CB';
+  background: var(--lux-card-cream);
+  border: 1rpx solid var(--lux-hairline);
 }
 
 .module-title {
   font-size: 28rpx;
   font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.04em;
 }
 
 .module-desc {
   font-size: 20rpx;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
 }
 
-/* 品牌呼吸环 — 双环交叠呼吸动画 */
-/* 省略点动画 */
+/* ---------- 入场动画 ---------- */
+.module-card {
+  animation-name: fadeInUp;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+  opacity: 0;
+}
+
+.module-grid > .module-card:nth-child(1) { animation-delay: 50ms; }
+.module-grid > .module-card:nth-child(2) { animation-delay: 100ms; }
+.module-grid > .module-card:nth-child(3) { animation-delay: 150ms; }
+.module-grid > .module-card:nth-child(4) { animation-delay: 200ms; }
+.module-grid > .module-card:nth-child(5) { animation-delay: 250ms; }
+.module-grid > .module-card:nth-child(6) { animation-delay: 300ms; }
+.module-grid > .module-card:nth-child(7) { animation-delay: 350ms; }

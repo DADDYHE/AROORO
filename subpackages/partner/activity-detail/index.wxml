@@ -1,15 +1,27 @@
+<zy-navbar title="活动详情" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="gallery-container">
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
-      <view class="loading-brand-mark">
-        <view class="brand-ring"></view>
-        <view class="brand-ring brand-ring--delay"></view>
-        <view class="brand-dot"></view>
-      </view>
-      <view class="loading-dots">
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
+      <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
       </view>
       <text class="loading-text">加载中</text>
     </view>
@@ -82,7 +94,7 @@
                   <text class="participant-count">{{participantText}}</text>
                 </view>
                 <view class="participant-bar" wx:if="{{activity.maxParticipants}}">
-                  <view class="participant-fill" style="width: {{participantPct}}%; background: {{participantPct >= 100 ? '#B8893A' : '#4F5E35'}}"></view>
+                  <view class="participant-fill" style="width: {{participantPct}}%; background: {{participantPct >= 100 ? '#C9A24B' : '#4F5E35'}}"></view>
                 </view>
               </view>
             </view>
@@ -132,6 +144,7 @@
       </view>
     </scroll-view>
 
+    <root-portal>
     <view class="action-bar">
       <view wx:if="{{activity.status === 'draft'}}" class="action-btn action-btn-edit" bindtap="onEdit">
         <text class="action-btn-text">编辑</text>
@@ -140,14 +153,16 @@
         <text class="action-btn-text">{{statusActionText}}</text>
       </view>
     </view>
+    </root-portal>
   </block>
 
+  <root-portal>
   <view class="reg-list-mask" wx:if="{{showRegList}}" bindtap="onCloseRegList">
     <view class="reg-list-sheet" catchtap="">
       <view class="reg-list-header">
         <text class="reg-list-title">报名名单 ({{registrations.length}}人)</text>
         <view class="reg-list-close" bindtap="onCloseRegList">
-          <text>✕</text>
+          <image src="/images/icons/close-luxury-line.svg" mode="aspectFit" class="modal-close-icon"></image>
         </view>
       </view>
       <scroll-view scroll-y class="reg-list-body">
@@ -157,7 +172,7 @@
             <text class="reg-meta">{{item.contactPhone || ''}}</text>
           </view>
           <view class="reg-action" wx:if="{{item.contactPhone}}" bindtap="onCallParticipant" data-phone="{{item.contactPhone}}">
-            <text class="reg-call">📞</text>
+            <image class="reg-call" src="/images/icons/phone-luxury-line.svg" mode="aspectFit"></image>
           </view>
         </view>
         <view class="reg-empty" wx:if="{{registrations.length === 0}}">
@@ -166,4 +181,6 @@
       </scroll-view>
     </view>
   </view>
+  </root-portal>
 </view>
+</scroll-view>

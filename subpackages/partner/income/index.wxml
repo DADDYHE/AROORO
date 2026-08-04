@@ -1,15 +1,27 @@
+<zy-navbar title="收入统计" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="gallery-container">
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
-      <view class="loading-brand-mark">
-        <view class="brand-ring"></view>
-        <view class="brand-ring brand-ring--delay"></view>
-        <view class="brand-dot"></view>
-      </view>
-      <view class="loading-dots">
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
-        <view class="loading-dot"></view>
+      <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
       </view>
       <text class="loading-text">加载中</text>
     </view>
@@ -111,21 +123,35 @@
         <view class="tab-item {{activeTab === 'tuan' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="tuan">团购</view>
         <view class="tab-item {{activeTab === 'mall' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="mall">商城</view>
         <view class="tab-item {{activeTab === 'activity' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="activity">活动</view>
-        <view class="tab-item {{activeTab === 'hosting' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="hosting">寄养</view>
+        <view class="tab-item {{activeTab === 'boarding' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="boarding">寄养</view>
         <view class="tab-item {{activeTab === 'feeding' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="feeding">服务</view>
       </view>
 
-      <view wx:if="{{details.length === 0}}" class="gallery-empty">
+      <view wx:if="{{isDetailLoading}}" class="detail-loading">
+        <view class="lux-cascade">
+          <view class="lux-cascade-dot"></view>
+          <view class="lux-cascade-dot"></view>
+          <view class="lux-cascade-dot"></view>
+          <view class="lux-cascade-dot"></view>
+          <view class="lux-cascade-dot"></view>
+          <view class="lux-cascade-dot"></view>
+          <view class="lux-cascade-dot"></view>
+        </view>
+        <text class="loading-text">加载中</text>
+      </view>
+
+      <view wx:elif="{{details.length === 0}}" class="gallery-empty">
         <view class="empty-line"></view>
         <text class="empty-text">暂无记录</text>
       </view>
 
+      <block wx:else>
       <view wx:for="{{details}}" wx:key="id" class="gallery-card detail-card">
         <view class="card-accent"></view>
         <view class="card-body">
           <view class="detail-row">
             <view class="detail-left">
-              <text class="detail-type">{{item.typeName || (item.type === 'tuan' ? '团购' : (item.type === 'mall' ? '商城' : (item.type === 'activity' ? '活动' : (item.type === 'hosting' ? '寄养' : '服务'))))}}</text>
+              <text class="detail-type">{{item.typeName || (item.type === 'tuan' ? '团购' : (item.type === 'mall' ? '商城' : (item.type === 'activity' ? '活动' : (item.type === 'boarding' ? '寄养' : '服务'))))}}</text>
               <text class="detail-desc">{{item.description}}</text>
               <view wx:if="{{item.buyerNickName}}" class="detail-buyer">
                 <image wx:if="{{item.buyerAvatarUrl}}" class="detail-buyer-avatar" src="{{item.buyerAvatarUrl}}" mode="aspectFill" />
@@ -136,10 +162,15 @@
           </view>
         </view>
       </view>
+      <view wx:if="{{isLoadingMore}}" class="loading-more">
+        <text class="loading-text">加载中</text>
+      </view>
+      </block>
     </view>
   </block>
 
   <!-- 提现弹窗 -->
+  <root-portal>
   <view wx:if="{{showWithdrawModal}}" class="modal-mask" bindtap="onWithdrawCancel">
     <view class="modal-content" catchtap="">
       <view class="modal-title">申请提现</view>
@@ -158,4 +189,6 @@
       </view>
     </view>
   </view>
+  </root-portal>
 </view>
+</scroll-view>

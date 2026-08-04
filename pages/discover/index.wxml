@@ -1,3 +1,15 @@
+<zy-navbar title="宠团团" showBack="{{false}}" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="tuan-page">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="tuan-header">
@@ -13,9 +25,9 @@
     </view>
   </view>
 
-  <scroll-view class="tuan-list" scroll-y="true" bindscrolltolower="onReachBottom" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" bindrefresherrefresh="onPullDownRefresh">
+  <view class="tuan-list">
     <view class="tuan-list-inner">
-      <view class="deal-card" wx:for="{{dealList}}" wx:key="_id">
+      <view class="deal-card" wx:for="{{dealList}}" wx:key="_id" hover-class="deal-card--pressed" hover-stay-time="120">
         <view class="deal-top" data-id="{{item._id}}" bindtap="onDealTap">
           <view class="deal-title-row">
             <text class="deal-name">{{item.title}}</text>
@@ -39,64 +51,69 @@
         </view>
 
         <view class="deal-actions">
-          <button class="deal-action-btn btn-share" open-type="share" data-id="{{item._id}}" data-title="{{item.title}}">
-            <text class="action-icon">🔗</text>
+          <button class="deal-action-btn btn-share" open-type="share" data-id="{{item._id}}" data-title="{{item.title}}" hover-class="btn-share--pressed" hover-stay-time="120" hover-stop-propagation>
+            <image class="action-icon action-icon--svg" src="/images/icons/share-luxury-node.svg" mode="aspectFit" />
             <text class="action-text">分享</text>
           </button>
-          <view class="deal-action-btn btn-join" data-id="{{item._id}}" bindtap="onDealTap">
+          <view class="deal-action-btn btn-join" data-id="{{item._id}}" bindtap="onDealTap" hover-class="btn-join--pressed" hover-stay-time="120" hover-stop-propagation>
             <text class="action-text-join">去跟团</text>
           </view>
         </view>
       </view>
 
       <view class="tuan-loading" wx:if="{{loading}}">
-        <view class="loading-dots">
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
-        </view>
+        <view class="lux-silk">
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 100ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 200ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 300ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 400ms;"></view>
+</view>
         <text class="loading-more-text">加载中</text>
       </view>
       <view class="tuan-no-more" wx:if="{{!hasMore && dealList.length > 0}}">没有更多了</view>
       <view class="tuan-empty" wx:if="{{!loading && dealList.length === 0}}">
-        <text class="empty-icon">🎁</text>
+        <image class="empty-icon empty-icon--svg" src="/images/icons/gift-luxury-line.svg" mode="aspectFit" />
         <text class="empty-text">暂无团购活动</text>
         <text class="empty-hint">敬请期待更多超值好物</text>
       </view>
     </view>
-  </scroll-view>
+  </view>
 
-  <!-- 优惠券弹窗 -->
-  <view class="coupon-popup-mask" wx:if="{{popupCoupon}}" bindtap="onClosePopupCoupon">
-    <view class="coupon-popup" catchtap="">
-      <view class="popup-close" bindtap="onClosePopupCoupon">✕</view>
-      <view class="popup-header">
-        <text class="popup-title">专属优惠</text>
-        <text class="popup-subtitle">限时福利，立即领取</text>
-      </view>
-      <view class="popup-coupon-card" style="--accent: {{popupCoupon.accentColor}}">
-        <view class="popup-coupon-ribbon"></view>
-        <view class="popup-coupon-body">
-          <view class="popup-coupon-main">
-            <view class="popup-coupon-value">
-              <block wx:if="{{popupCoupon.type === 'discount'}}">
-                <text class="popup-coupon-num">{{popupCoupon.rules.discountRate * 100}}</text>
-                <text class="popup-coupon-unit">折</text>
-              </block>
-              <block wx:else>
-                <text class="popup-coupon-unit">¥</text>
-                <text class="popup-coupon-num">{{popupCoupon.rules.reduceAmount || 0}}</text>
-              </block>
+  <!-- 优惠券弹窗（root-portal：Skyline 下保证 fixed 相对 viewport） -->
+  <root-portal wx:if="{{popupCoupon}}">
+    <view class="coupon-popup-mask" bindtap="onClosePopupCoupon">
+      <view class="coupon-popup" catchtap="">
+        <view class="popup-close" bindtap="onClosePopupCoupon" hover-class="popup-close--pressed" hover-stay-time="120"><image class="popup-close-icon" src="/images/icons/close-luxury-line.svg" mode="aspectFit" /></view>
+        <view class="popup-header">
+          <text class="popup-title">专属优惠</text>
+          <text class="popup-subtitle">限时福利，立即领取</text>
+        </view>
+        <view class="popup-coupon-card" style="--accent: {{popupCoupon.accentColor}}">
+          <view class="popup-coupon-ribbon"></view>
+          <view class="popup-coupon-body">
+            <view class="popup-coupon-main">
+              <view class="popup-coupon-value">
+                <block wx:if="{{popupCoupon.type === 'discount'}}">
+                  <text class="popup-coupon-num">{{popupCoupon.rules.discountRate * 100}}</text>
+                  <text class="popup-coupon-unit">折</text>
+                </block>
+                <block wx:else>
+                  <text class="popup-coupon-unit">¥</text>
+                  <text class="popup-coupon-num">{{popupCoupon.rules.reduceAmount || 0}}</text>
+                </block>
+              </view>
+              <view class="popup-coupon-threshold" wx:if="{{popupCoupon.rules.threshold > 0}}">满{{popupCoupon.rules.threshold}}元可用</view>
+              <view class="popup-coupon-threshold" wx:else>无门槛</view>
             </view>
-            <view class="popup-coupon-threshold" wx:if="{{popupCoupon.rules.threshold > 0}}">满{{popupCoupon.rules.threshold}}元可用</view>
-            <view class="popup-coupon-threshold" wx:else>无门槛</view>
-          </view>
-          <view class="popup-coupon-info">
-            <text class="popup-coupon-name">{{popupCoupon.name}}</text>
+            <view class="popup-coupon-info">
+              <text class="popup-coupon-name">{{popupCoupon.name}}</text>
+            </view>
           </view>
         </view>
+        <button class="popup-claim-btn" loading="{{popupClaiming}}" bindtap="onClaimPopupCoupon" hover-class="popup-claim-btn--pressed" hover-stay-time="120">立即领取</button>
       </view>
-      <button class="popup-claim-btn" loading="{{popupClaiming}}" bindtap="onClaimPopupCoupon">立即领取</button>
     </view>
-  </view>
+  </root-portal>
 </view>
+</scroll-view>

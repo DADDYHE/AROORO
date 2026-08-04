@@ -1,4 +1,5 @@
 const { ActivityService } = require('./services/ActivityService')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const { parseDate } = require('../../utils/dateUtils')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
@@ -24,7 +25,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
     activity: null,
     isLoading: true,
@@ -44,6 +45,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     if (options.id) {
       this._activityId = options.id
       this._loadActivity(options.id)
@@ -168,6 +170,14 @@ Page({
     if (activityStatus === 'ended') {
       return { btnStatus: 'ended', btnText: '已结束' }
     }
+    // P1-A: 数据库状态为草稿/已取消时禁止报名（后端已拦截，前端按钮同步置灰）
+    const dbStatus = this.data.activity && this.data.activity.status
+    if (dbStatus === 'cancelled') {
+      return { btnStatus: 'cancelled', btnText: '活动已取消' }
+    }
+    if (dbStatus === 'draft') {
+      return { btnStatus: 'cancelled', btnText: '活动未发布' }
+    }
     if (isRegistered) {
       return { btnStatus: 'registered', btnText: '已报名' }
     }
@@ -264,16 +274,6 @@ Page({
     return tags.slice(0, 5)
   },
 
-  onShare() {
-    const { activity } = this.data
-    if (!activity) {return}
-
-    wx.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline'],
-    })
-  },
-
   onContact() {
     const { activity } = this.data
     if (!activity) {return}
@@ -295,8 +295,12 @@ Page({
     }
 
     if (activity.latitude && activity.longitude) {
-      wx.navigateTo({
-        url: `/subpackages/activity/map-view?latitude=${activity.latitude}&longitude=${activity.longitude}&name=${encodeURIComponent(activity.location)}&address=${encodeURIComponent(activity.location)}`,
+      wx.openLocation({
+        latitude: parseFloat(activity.latitude),
+        longitude: parseFloat(activity.longitude),
+        name: activity.location,
+        address: activity.location,
+        scale: 18,
       })
     } else {
       this.error('LOCATION_PRECISE_MISSING')
@@ -337,7 +341,6 @@ Page({
   },
 
   onScroll(e) {
-    const scrollTop = e.detail.scrollTop
   },
 
   goBack() {

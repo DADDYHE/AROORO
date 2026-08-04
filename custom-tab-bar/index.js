@@ -66,6 +66,9 @@ Component({
         this.dismissSplash()
       }, 2800)
     }
+
+    // 初始化 worklet 按压弹性动效
+    this._initTabPressAnimation()
   },
   detached() {
     this._isAttached = false
@@ -73,6 +76,7 @@ Component({
       clearTimeout(this._splashTimer)
       this._splashTimer = null
     }
+    this._teardownTabPressAnimation()
   },
   methods: {
     dismissSplash() {
@@ -109,6 +113,71 @@ Component({
       if (index !== -1 && index !== this.data.selected) {
         this.setData({ selected: index })
       }
+    },
+
+    // ================================================================
+    // Worklet 按压弹性动效
+    // ----------------------------------------------------------------
+    // 按下：scale 缩小到 0.85（反馈按压）
+    // 松开：scale 回弹到 1.0（easeOutBack 缓动，轻微回弹）
+    // worklet 在 UI 线程同步驱动，无 setData 开销，60fps 流畅
+    // ================================================================
+    _initTabPressAnimation() {
+      if (!wx.worklet || !this.applyAnimatedStyle) return
+      const { shared, Easing } = wx.worklet
+      // easeOutBack：超过目标值后回弹，产生弹性反馈
+      this._pressEasing = Easing.cubicBezier(0.34, 1.56, 0.64, 1)
+      this._tabScales = []
+      this._tabCancels = []
+
+      // 为 5 个 tab item 各创建独立 SharedValue
+      for (let i = 0; i < 5; i++) {
+        const scale = shared(1)
+        this._tabScales[i] = scale
+        const scaleRef = scale
+        try {
+          const cancel = this.applyAnimatedStyle(`.tab-scale-${i}`, () => {
+            'worklet'
+            return { transform: `scale(${scaleRef.value})` }
+          })
+          this._tabCancels[i] = cancel
+        } catch (e) {
+          this._tabCancels[i] = null
+        }
+      }
+      this._workletReady = true
+    },
+
+    _teardownTabPressAnimation() {
+      if (this._tabCancels) {
+        this._tabCancels.forEach(c => c && c())
+        this._tabCancels = null
+      }
+      this._tabScales = null
+      this._workletReady = false
+    },
+
+    onTabTouchStart(e) {
+      if (!this._workletReady) return
+      const index = parseInt(e.currentTarget.dataset.index, 10)
+      this._animateTabScale(index, 0.92)
+    },
+
+    onTabTouchEnd(e) {
+      if (!this._workletReady) return
+      const index = parseInt(e.currentTarget.dataset.index, 10)
+      this._animateTabScale(index, 1)
+    },
+
+    _animateTabScale(index, target) {
+      const scale = this._tabScales && this._tabScales[index]
+      if (!scale) return
+      const { timing, runOnUI } = wx.worklet
+      const easing = this._pressEasing
+      runOnUI(() => {
+        'worklet'
+        scale.value = timing(target, { duration: target === 1 ? 320 : 160, easing })
+      })()
     },
   },
 })

@@ -1,227 +1,103 @@
-/* 设计系统变量 - PETLUX 橄榄绿治愈轻奢美学 */
+/* ============================================================
+   variables.wxss · 补充令牌层（任务 #10 去重后残余）
+   ------------------------------------------------------------
+   ⚠ 防复发约定（改动本文件前必读）
+   1. 本文件**不得声明 theme-teal.wxss 已有的令牌**。
+      theme-teal.wxss 是全站唯一的运行时生效层（app.wxss 中最后 import，
+      且 custom-tab-bar 单独 import 的也是它）。在本文件重复声明同名令牌，
+      运行时一定被 theme-teal 覆盖 = 纯冗余，还会让人误以为改这里有用。
+   2. 新增令牌请直接加到 styles/theme-teal.wxss，不要加在这里。
+   3. 守卫会拦：`node scripts/lint-tokens.js` 规则 C（同名跨文件冲突）应恒为 0；
+      层叠等价性由 `node scripts/verify-token-cascade.js` 验收。
+   ------------------------------------------------------------
+   历史：本文件原为 PETLUX 橄榄绿坐标系全量令牌（290 行），与 theme-teal
+   有 108 处同名取值冲突，仅靠 @import 顺序压制。#10 已按「theme-teal 有
+   同名即删」删除 157 行，只保留 theme-teal 未定义的独有令牌。
+   ============================================================ */
 
-/* 品牌颜色 */
 page {
-  /* 主色 — 橄榄绿（PETLUX 品牌锚点） */
-  --primary-color: #4F5E35;    /* 橄榄绿 */
-  /* 辅助色 */
-  --secondary-color: #3A4626;  /* 深橄榄 */
-  /* 点缀色 */
-  --accent-color: #B8893A;     /* 暖金 */
+  /* ---- 通用渐变 ----
+     注：原先此处有 --boarding/activity/feeding/tuan-gradient 四条「按板块分色」渐变，
+     全为旧橄榄/陶土坐标。唯一活体消费点是 order-detail 状态横幅误借 --feeding-gradient，
+     已改接 --status-progress 档位；四条降为零引用死码，#13 追加项①已整体删除。
+     业务线单色若日后需要，theme-teal 有 --boarding/activity/feeding-primary，不要在此重建渐变。 */
+  --gradient-accent: linear-gradient(135deg, #C9A24B 0%, #A8894A 100%);    /* 规范金，无需改 */
+  --gradient-light: linear-gradient(135deg, #F8FAF3 0%, #FFFFFF 100%);     /* 0 引用；#F8FAF3 为旧橄榄底 */
+  /* #10 已按裁定改值：原值为「墨黑 → 深橄榄」两段旧坐标写死色（桶①b 唯一命中项）。
+     改用 var() 引用 theme-teal 真值，从结构上杜绝再次漂移。
+     注：此处刻意不复述旧色号字面量，否则守卫的注释内扫描会把它重新计成一次旧坐标泄漏。 */
+  --gradient-dark: linear-gradient(135deg, var(--ink-black) 0%, var(--primary-deep) 100%);
 
-  /* 中性色 — 橄榄调暖白 */
-  --background-color: #F8FAF3;  /* 橄榄调暖白背景（已减淡） */
-  --card-color: #FFFFFF;        /* 卡片白色 */
-  --text-primary: #2A2823;      /* 主要文字 暖墨 */
-  --text-secondary: #635E54;    /* 次要文字 */
-  --text-tertiary: #9A9489;     /* 三级文字 */
-  --border-color: #D8DCCE;      /* 边框颜色 橄榄调 */
-  --divider-color: #EAEDDF;     /* 分割线颜色 */
-  --overlay-color: rgba(42, 40, 35, 0.5);  /* 遮罩颜色 */
-  
-  /* 扩展中性色 - 苹果风格精致灰阶 */
-  --gray-50: #F9F9F9;
-  --gray-100: #F5F5F7;
-  --gray-200: #E5E5EA;
-  --gray-300: #D2D2D7;
-  --gray-400: #C7C7CC;
-  --gray-500: #AEAEB2;
-  --gray-600: #86868B;
-  --gray-700: #636366;
-  --gray-800: #48484A;
-  --gray-900: #3A3A3C;
-  --gray-950: #2C2C2E;
-  
-  /* 功能色 — PETLUX 语义状态色 */
-  --success-color: #5B7C4A;
-  --warning-color: #B8893A;
-  --error-color: #A85B4A;
-  --info-color: #6B7D8C;
-
-  /* 订单状态色 */
-  --status-pending: #B8893A;
-  --status-active: #6B7D8C;
-  --status-completed: #5B7C4A;
-  --status-cancelled: #9A9489;
-  
-  /* 板块主题色 - 艺术展美学增强版 */
-  /* 寄养板块 — 暖陶土 */
-  --boarding-primary: #C08060;
-  --boarding-secondary: #D49E80;
-  --boarding-accent: #F0E0D4;
-  --boarding-gradient: linear-gradient(135deg, #C08060 0%, #D49E80 100%);
-
-  /* 活动板块 — 橄榄绿（品牌家族） */
-  --activity-primary: #7A8C5A;
-  --activity-secondary: #9AAB7A;
-  --activity-accent: #EAEDDF;
-  --activity-gradient: linear-gradient(135deg, #7A8C5A 0%, #9AAB7A 100%);
-
-  /* 商城板块 — 暖金 */
-  --mall-primary: #B8893A;
-  --mall-secondary: #D4A858;
-  --mall-accent: #F2E8D4;
-  --mall-gradient: linear-gradient(135deg, #B8893A 0%, #D4A858 100%);
-
-  /* 喂养板块 — 鼠尾草绿 */
-  --feeding-primary: #7C9468;
-  --feeding-secondary: #9AB488;
-  --feeding-accent: #E8EFE0;
-  --feeding-gradient: linear-gradient(135deg, #7C9468 0%, #9AB488 100%);
-
-  /* 团购板块 — 暖陶土玫瑰 */
-  --tuan-primary: #B07560;
-  --tuan-secondary: #C99480;
-  --tuan-accent: #F0DEDE;
-  --tuan-gradient: linear-gradient(135deg, #B07560 0%, #C99480 100%);
-
-  /* 板块色低透明度浅底 */
-  --boarding-tint: rgba(192, 128, 96, 0.10);
-  --activity-tint: rgba(122, 140, 90, 0.10);
-  --mall-tint: rgba(184, 137, 58, 0.10);
-  --feeding-tint: rgba(124, 148, 104, 0.10);
-  --tuan-tint: rgba(176, 117, 96, 0.10);
-  
-  /* 渐变色 - PETLUX 橄榄绿 */
-  --gradient-primary: linear-gradient(135deg, #4F5E35 0%, #3A4626 100%);
-  --gradient-secondary: linear-gradient(135deg, #7A8C5A 0%, #6B7D5A 100%);
-  --gradient-accent: linear-gradient(135deg, #B8893A 0%, #9A7430 100%);
-  --gradient-light: linear-gradient(135deg, #F8FAF3 0%, #FFFFFF 100%);
-  --gradient-dark: linear-gradient(135deg, #2A2823 0%, #3A4626 100%);
-  
-  /* 字体 - 系统字体栈（含中文，跨端稳定，2026-07-26 评审修正：原 SF Pro 为 iOS 私有且无法加载中文字形） */
-  --font-stack: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
-  --font-bold: var(--font-stack);
-  --font-regular: var(--font-stack);
-  --font-light: var(--font-stack);
-  --font-thin: var(--font-stack);
-  --font-semibold: var(--font-stack);
-  --font-heavy: var(--font-stack);
-  
-  /* 字号 */
-  --font-size-xxxl: 28px;
-  --font-size-xxl: 24px;
-  --font-size-xl: 20px;
-  --font-size-lg: 18px;
-  --font-size-md: 16px;
-  --font-size-sm: 14px;
-  --font-size-xs: 12px;
-  --font-size-xxs: 10px;
-  
-  /* 行高 */
-  --line-height-title: 1.05;
-  --line-height-text: 1.4;
-  --line-height-tight: 1.2;
-  --line-height-loose: 1.6;
-  
-  /* 字间距 */
-  --letter-spacing-tight: -0.02em;
-  --letter-spacing-normal: 0;
-  --letter-spacing-wide: 0.01em;
-  --letter-spacing-wider: 0.02em;
-  
-  /* 间距 - 统一 rpx（750 视口基准，1px≈2rpx，2026-07-26 评审修正：原 px 与页面 rpx 割裂） */
-  --spacing-xxxxs: 2rpx;
-  --spacing-xxxs: 4rpx;
-  --spacing-xxs: 8rpx;
-  --spacing-xs: 16rpx;
-  --spacing-sm: 24rpx;
-  --spacing-md: 32rpx;
-  --spacing-lg: 48rpx;
-  --spacing-xl: 64rpx;
-  --spacing-xxl: 80rpx;
-  --spacing-xxxl: 96rpx;
-  --spacing-xxxxl: 128rpx;
-  --spacing-xxxxxl: 160rpx;
-  
-  /* 圆角 - 统一 rpx（2026-07-26 评审修正） */
-  --border-radius-xs: 8rpx;
-  --border-radius-sm: 16rpx;
-  --border-radius-md: 24rpx;
-  --border-radius-lg: 32rpx;
-  --border-radius-xl: 40rpx;
-  --border-radius-2xl: 48rpx;
-  --border-radius-3xl: 56rpx;
-  --border-radius-4xl: 64rpx;
-  --border-radius-full: 9999rpx;
-  
-  /* 阴影 - 苹果风格自然阴影 */
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.02);
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.03);
-  --shadow-md: 0 4px 8px rgba(0,0,0,0.04);
-  --shadow-lg: 0 8px 16px rgba(0,0,0,0.06);
-  --shadow-xl: 0 16px 24px rgba(0,0,0,0.08);
-  --shadow-2xl: 0 24px 32px rgba(0,0,0,0.10);
+  /* ---- theme-teal 未覆盖的阴影档位 ---- */
   --shadow-3xl: 0 32px 48px rgba(0,0,0,0.12);
   --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.06);
-  --shadow-soft: 0 8px 32px rgba(0,0,0,0.08);
-  
-  /* 动画 - 已清除，时长归零（保留变量名避免引用断裂） */
-  --transition-fast: 0s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 0s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-bounce: 0s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --transition-smooth: 0s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --transition-elastic: 0s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  
-  /* 布局 */
-  --header-height: 44px;
-  --tabbar-height: 50px;
-  --list-item-height: 56px;
-  --card-padding: var(--spacing-lg);
-  --container-max-width: 750rpx;
-  
-  /* 安全区域 */
-  --safe-area-top: env(safe-area-inset-top, 0px);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  
-  /* Z-index层级 */
-  --z-index-dropdown: 1000;
-  --z-index-sticky: 1020;
-  --z-index-fixed: 1030;
-  --z-index-modal-backdrop: 1040;
-  --z-index-modal: 1050;
-  --z-index-popover: 1060;
-  --z-index-tooltip: 1070;
-  --z-index-toast: 1080;
 
-  /* 补充设计令牌 */
-  --metallic-gold-dark: #A88030;
-  --shadow-glow-primary: 0 8rpx 24rpx rgba(79, 94, 53, 0.35);
-  --shadow-glow-primary-soft: 0 4rpx 12rpx rgba(79, 94, 53, 0.2);
-  --shadow-glow-primary-lg: 0 16rpx 40rpx rgba(79, 94, 53, 0.45);
-  --shadow-glow-primary-btn: 0 6rpx 16rpx rgba(79, 94, 53, 0.3);
-  --shadow-glow-primary-xs: 0 2rpx 6rpx rgba(79, 94, 53, 0.18);
-  --shadow-glow-mall: 0 8rpx 24rpx rgba(184, 137, 58, 0.35);
-  --shadow-glow-coupon: 0 8rpx 24rpx rgba(184, 137, 58, 0.35);
-  --shadow-emboss: inset 0 1rpx 0 rgba(255, 255, 255, 0.6);
+  /* ---- 仅 web-admin(Vue) 引用，小程序侧无消费 ---- */
   --radius-lg: 32rpx;
-  --skeleton-base: #EAEAEF;
 
-  /* 语义 token（供 lint 收敛残留 hex） */
-  --surface-tint: #FAFAFA;          /* 近白卡片底，替代散落的 #FAFAFA */
-  --gray-450: #A0A0A0;              /* 替代 #a0a0a0 */
-  --gray-350: #C0C0C0;              /* 替代 #c0c0c0 */
-  --activity-primary-mid: #2AB7A9;  /* 活动渐变深停，替代 #2AB7A9/#3DB5AD/#45B7AA/#44a08d */
-  --text-gold: #C4843D;             /* 金色提示文案 */
-  --tap-target-min: 80rpx;          /* 最小可点击区（WCAG 亲和点） */
+  /* ================================================================
+     奢侈品级令牌 — Haute-Luxury Elevation Layer
+     ----------------------------------------------------------------
+     金属质感、层次阴影与编辑级排版细节。theme-teal 未定义 --lux-*，
+     故整层保留在此。partner 子包与高奢页面大量引用。
+     Skyline 兼容：仅用 transform/opacity 做过渡，无 backdrop-filter。
+     ================================================================ */
+
+  /* ---- 金属香槟金阶（用于强调数字、徽章描边、渐变高光） ---- */
+  --lux-gold-100: #FDF8EE;   /* 最浅：金箔底纹 */
+  --lux-gold-200: #F5EBD0;   /* 浅金：柔和高光 */
+  --lux-gold-300: #E8D5A8;   /* 中浅金：渐变中间值 */
+  --lux-gold-400: #D4B978;   /* 中金：主金属色 */
+  --lux-gold-500: #C9A24B;   /* 香槟金：品牌点缀锚点 */
+  --lux-gold-600: #B8923E;   /* 深金：描边/按下态 */
+  --lux-gold-700: #9A7430;   /* 最深金：文字/低光 */
+  --lux-gold-grad: linear-gradient(135deg, #E8D5A8 0%, #C9A24B 40%, #B8923E 100%);
+  --lux-gold-grad-soft: linear-gradient(135deg, #FDF8EE 0%, #F5EBD0 50%, #E8D5A8 100%);
+
+  /* ---- 深森林绿阶（用于深色卡片底、品牌头部、渐变深停） ---- */
+  --lux-green-900: #1A2E1A;  /* 极深：暗调底/深色卡 */
+  --lux-green-800: #1F3A1F;  /* 深森林 */
+  --lux-green-700: #2D4A2D;  /* 中深：按下态 */
+  --lux-green-600: #3D5A3D;  /* 中：结构色 */
+  --lux-green-grad: linear-gradient(160deg, #2D4A2D 0%, #1A2E1A 100%);
+  --lux-green-grad-rich: linear-gradient(135deg, #3D5A3D 0%, #1F3A1F 50%, #1A2E1A 100%);
+
+  /* ---- 层次阴影系统（取代单一 flat hairline，增加纵深） ---- */
+  --lux-shadow-card: 0 1rpx 2rpx rgba(26,26,23,0.03), 0 4rpx 16rpx rgba(26,26,23,0.05);
+  --lux-shadow-elevated: 0 2rpx 4rpx rgba(26,26,23,0.04), 0 8rpx 32rpx rgba(26,26,23,0.08);
+  --lux-shadow-gold: 0 2rpx 8rpx rgba(201,162,75,0.12), 0 8rpx 24rpx rgba(201,162,75,0.16);
+  --lux-shadow-green: 0 2rpx 8rpx rgba(31,58,31,0.12), 0 8rpx 24rpx rgba(31,58,31,0.18);
+  --lux-shadow-fab: 0 8rpx 32rpx rgba(31,58,31,0.30), 0 2rpx 8rpx rgba(31,58,31,0.15);
+
+  /* ---- 发丝描边渐变（卡片边框从纯线升级为微妙渐变） ---- */
+  --lux-hairline: rgba(26,26,23,0.06);
+  --lux-hairline-gold: rgba(201,162,75,0.18);
+  --lux-hairline-green: rgba(31,58,31,0.10);
+  --lux-border-grad: linear-gradient(180deg, rgba(26,26,23,0.06) 0%, rgba(26,26,23,0.04) 100%);
+
+  /* ---- 编辑级排版令牌 ---- */
+  --lux-ls-display: 0.16em;    /* 大标题：宽幅字距 */
+  --lux-ls-heading: 0.08em;    /* 标题 */
+  --lux-ls-label: 0.24em;      /* 小标签/eyebrow */
+  --lux-ls-caption: 0.04em;    /* 说明文字 */
+  --lux-ls-number: 0.01em;     /* 数字（紧凑） */
+
+  /* ---- 奢侈级圆角（更克制，配合层次阴影） ---- */
+  --lux-radius-card: 20rpx;       /* 主卡片 */
+  --lux-radius-inner: 16rpx;      /* 卡片内元素 */
+  --lux-radius-pill: 9999rpx;     /* 胶囊按钮 */
+
+  /* ---- 金线装饰令牌 ---- */
+  --lux-gold-line: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%);
+  --lux-gold-line-solid: linear-gradient(90deg, #E8D5A8 0%, #C9A24B 50%, #B8923E 100%);
+
+  /* ---- 卡片底纹令牌 ---- */
+  --lux-card-bg: #FFFFFF;
+  --lux-card-cream: #FDFAF3;      /* 暖奶油卡片底 */
+  --lux-card-gold-tint: #FDF8EE;  /* 金箔底纹卡 */
+  --lux-card-green-tint: #F5F8F2; /* 森林浅底卡 */
 }
 
-/* 暗色模式（手动切换 data-theme="dark"，PETLUX 暗色） */
-[data-theme="dark"] {
-  --primary-color: #7A8C5A;
-  --secondary-color: #9AAB7A;
-  --background-color: #1A1916;
-  --card-color: #262420;
-  --text-primary: #EDE9E0;
-  --text-secondary: #9A9489;
-  --text-tertiary: #635E54;
-  --border-color: #3A3830;
-  --divider-color: #2A2924;
-  --gray-50: #262420;
-  --gray-100: #1A1916;
-  --gray-200: #2A2924;
-  --gray-900: #EDE9E0;
-  --surface-tint: #262420;
-  --overlay-color: rgba(0, 0, 0, 0.7);
-}
+/* 暗色模式：原 .theme-dark 块的 15 条声明已全部由 theme-teal.wxss 的 .theme-dark
+   覆盖（同为类选择器，theme-teal 后声明胜出），属纯冗余，#10 已整块删除。
+   暗色令牌请统一改 styles/theme-teal.wxss 的 .theme-dark 块。 */

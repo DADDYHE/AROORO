@@ -4,6 +4,7 @@ const { BookingData } = require('../../utils/BookingDataService')
 const DEFAULT_AVATAR = '/images/default-avatar.svg'
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const { buildSharePath } = require('../../utils/share')
 const { isHoliday } = require('../../utils/holidays')
 
@@ -11,7 +12,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
     pets: [],
     selectedPets: [],
@@ -23,19 +24,35 @@ Page({
     serviceFeeding: true,
     walkMinutes: 0,
     selectedServiceDates: [],
-    minServiceDate: new Date().getTime(),
-    maxServiceDate: new Date(new Date().getFullYear() + 1, 11, 31).getTime(),
+    minServiceDate: 0,
+    maxServiceDate: 0,
+    selectableMinDate: 0,
+    selectableMaxDate: 0,
     defaultCalendarDates: [],
     calendarKey: 0,
     calendarFormatter: null,
-    iconService: '/images/icons/客服.svg',
+    iconService: '/images/icons/message-luxury-line.svg',
   },
 
   async onLoad(options) {
+    this._initNavbarHeight()
     const fromPage = options.from || 'booking'
+
+    // 显示范围：今天前7天到今天后60天；可选范围：今天到今天后60天
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const DAY = 24 * 60 * 60 * 1000
+    const minServiceDate = new Date(today.getTime() - 7 * DAY).getTime()
+    const maxServiceDate = new Date(today.getTime() + 60 * DAY).getTime()
+    const selectableMinDate = today.getTime()
+    const selectableMaxDate = maxServiceDate
 
     this.setData({
       fromPage,
+      minServiceDate,
+      maxServiceDate,
+      selectableMinDate,
+      selectableMaxDate,
       calendarFormatter: this._buildFormatter(0),
     })
 

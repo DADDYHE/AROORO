@@ -1,13 +1,15 @@
 const { ActivityService } = require('./services/ActivityService')
 const { CouponService } = require('../../services/CouponService')
 const PaymentService = require('../../services/PaymentService')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const countdownBehavior = require('../../behaviors/countdownBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
   data: {
     mode: 'new',
     registrationId: '',
@@ -30,9 +32,13 @@ Page({
     orderStatus: '',
     orderStatusText: '',
     isLoading: true,
+    // 支付倒计时计算用：原始创建时间戳 + 超时分钟（与后端 ORDER_TIMEOUT_MINUTES=30 对齐）
+    createdAtTs: 0,
+    timeoutMinutes: 30,
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     const app = getApp()
     const isLoggedIn = app && app.globalData && app.globalData.isLoggedIn
     if (!isLoggedIn) {
@@ -120,8 +126,18 @@ Page({
         orderStatus: registration.status || '',
         orderStatusText: statusMap[registration.status] || registration.status || '',
         activityExpired,
+        // 保留原始创建时间戳，供支付倒计时计算（与后端 ORDER_TIMEOUT_MINUTES=30 对齐）
+        createdAtTs: registration.createdAt ? new Date(registration.createdAt).getTime() : 0,
+        timeoutMinutes: 30,
         isLoading: false,
       })
+      this._loadedOnce = true
+      // 待支付订单启动支付倒计时（仅 detail 模式；与后端 30min 超时取消对齐）
+      if (this.data.mode === 'detail' && this.data.orderStatus === 'pending_payment') {
+        this._startPayCountdown((this.data.createdAtTs || 0) + (this.data.timeoutMinutes || 30) * 60 * 1000)
+      } else {
+        this._stopPayCountdown()
+      }
     } catch (e) {
       console.error('[Payment] 加载订单详情失败:', e)
       this.setData({ isLoading: false })
@@ -226,11 +242,15 @@ Page({
           description: `活动报名-${this.data.activity?.title || ''}`,
         })
 
-        if (lockedCouponId) {
-          await CouponService.useCoupon(lockedCouponId, registrationId, 'activity', totalAmount, couponDiscount, finalAmount)
-        }
+        // P0-B: 付费活动券核销改由 paymentService 支付回调（notify）完成，与 mall/tuan 对齐；
+        //   此处不再前端 useCoupon，避免"支付成功但回调未达"时券提前 used
         this._onSuccess()
       } catch (payErr) {
+        // P0-B: 支付取消/失败必须释放已锁定的券（lockCoupon 在 submitRegistration 前已调用），
+        //   否则券永久卡 locked
+        if (lockedCouponId) {
+          await CouponService.unlockCoupon(lockedCouponId).catch(() => {})
+        }
         if (payErr.isCancel) {
           this.error('PAYMENT_CANCELLED_KEPT')
         } else if (payErr.isPending) {
@@ -248,6 +268,21 @@ Page({
       console.error('[Payment] 支付流程失败:', error)
       this.error('OPERATION_RETRY_LATER')
     }
+  },
+
+  // 页面重新显示时刷新订单（支付/取消后返回需拿到最新状态），并重启倒计时
+  onShow() {
+    if (this._loadedOnce && this.data.mode === 'detail' && this.data.registrationId) {
+      this._loadRegistrationDetail(this.data.registrationId)
+    }
+  },
+
+  onHide() {
+    this._stopPayCountdown()
+  },
+
+  onUnload() {
+    this._stopPayCountdown()
   },
 
   _onSuccess() {

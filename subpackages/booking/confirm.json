@@ -1,8 +1,8 @@
 {
   "navigationBarTitleText": "确认订单",
   "usingComponents": {
-    "van-calendar": "@vant/weapp/calendar/index",
-    "van-loading": "@vant/weapp/loading/index"
+    "zy-calendar": "../../components/zy-calendar/index",
+    "zy-loading": "../../components/zy-loading/index"
   },
   "pageOrientation": "portrait"
 }

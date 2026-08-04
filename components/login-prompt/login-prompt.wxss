@@ -1,6 +1,8 @@
 /* ================================================================
-   login-prompt · PETLUX 橄榄绿治愈轻奢视觉语言
-   2026-07-28 按新设计系统重写 — 令牌化颜色/圆角/阴影
+   login-prompt · AROORO Haute-Luxury 登录提示弹层
+   ----------------------------------------------------------------
+   居中白卡 · 发丝描边 · 16rpx 圆角 · 克制无发光
+   深森林绿主色 + 香槟金点缀，Skyline 兼容
    ================================================================ */
 
 .login-overlay {
@@ -9,57 +11,83 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--overlay-color);
+  background: var(--overlay-color, rgba(26, 26, 23, 0.5));
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
+  opacity: 0;
+  animation-name: login-overlay-in;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+.login-overlay.leaving {
+  animation-name: login-overlay-out;
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  animation-fill-mode: forwards;
 }
 
 .login-card {
   width: 600rpx;
-  background: var(--card-color);
-  border-radius: var(--border-radius-md);
-  overflow: visible;
+  background: var(--card-color, #FFFFFF);
+  border-radius: var(--zy-radius-lg);
+  overflow: hidden;
   position: relative;
-  box-shadow: var(--zy-shadow-md);
+  border: 1rpx solid var(--hairline, rgba(26, 26, 23, 0.08));
+  box-shadow: var(--shadow-md, 0 2rpx 12rpx rgba(26, 26, 23, 0.04));
+  opacity: 0;
+  transform: scale(0.92) translateY(24rpx);
+  animation-name: login-card-in;
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+  animation-delay: 80ms;
 }
 
+.login-card.leaving {
+  animation-name: login-card-out;
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  animation-fill-mode: forwards;
+}
+
+/* 顶部发丝金/绿装饰条（克制，替代原大渐变） */
 .card-top-bar {
-  height: 3rpx;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  height: 4rpx;
+  background: var(--gradient-primary, linear-gradient(90deg, #1F3A1F 0%, #C9A24B 100%));
 }
 
 .card-content {
-  padding: 48rpx 40rpx 32rpx;
+  padding: 56rpx 48rpx 40rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16rpx;
 }
 
 .card-icon {
-  margin-bottom: 8rpx;
+  margin-bottom: 28rpx;
 }
 
 .icon-circle {
-  width: 112rpx;
-  height: 112rpx;
+  width: 104rpx;
+  height: 104rpx;
   border-radius: 50%;
-  background: var(--gradient-primary);
+  background: var(--primary-tint, #E8ECE2);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-glow-primary-soft);
   position: relative;
 }
 
+/* 克制的光晕（纯色极淡圈，非大发光） */
 .icon-gradient {
-  width: 160rpx;
-  height: 160rpx;
+  width: 140rpx;
+  height: 140rpx;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
+  background: var(--accent-wash, #F8F3E6);
   position: absolute;
   top: 50%;
   left: 50%;
@@ -70,48 +98,119 @@
 .card-text {
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+  gap: 12rpx;
   text-align: center;
 }
 
 .card-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 34rpx;
+  font-weight: 500;
+  color: var(--text-primary, #1A1A17);
   text-align: center;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
 }
 
 .card-subtitle {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #5A564C);
   text-align: center;
-  line-height: 1.55;
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: 0.02em;
 }
 
 .card-btn {
   width: 100%;
-  margin-top: 16rpx;
-  padding: 22rpx 0;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius-pill);
-  box-shadow: var(--shadow-glow-primary-btn);
+  margin-top: 36rpx;
+  padding: 24rpx 0;
+  background: var(--primary-color, #1F3A1F);
+  border-radius: var(--zy-radius-pill);
   text-align: center;
+  transition-property: transform, opacity;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.card-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.88;
 }
 
 .btn-text {
   font-size: 28rpx;
-  font-weight: 600;
-  color: #FAFAF6;
+  font-weight: 500;
+  color: var(--text-on-primary, #F7F5EF);
+  letter-spacing: 0.06em;
 }
 
 .card-skip {
-  margin-top: 8rpx;
-  padding: 12rpx 0;
+  margin-top: 16rpx;
+  padding: 16rpx 0;
   text-align: center;
+  transition-property: opacity;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.card-skip--pressed {
+  opacity: 0.5;
 }
 
 .skip-text {
   font-size: 24rpx;
   color: var(--text-tertiary);
+  letter-spacing: 0.04em;
 }
+
+/* ================================================================
+   奢侈品级入场 / 退场编排
+   分层：遮罩铺陈(0ms) → 卡片浮现(80ms) → 内容依次揭示(200-440ms)
+   退场：遮罩+卡片同步收缩(320ms, ease-exit)
+   Skyline 兼容：仅 transform + opacity
+   ================================================================ */
+
+/* 遮罩入场——暖墨色铺陈 */
+@keyframes login-overlay-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* 遮罩退场——优雅消散 */
+@keyframes login-overlay-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 卡片入场——珠宝浮现：0.92 缩放 + 24rpx 上浮漂移 */
+@keyframes login-card-in {
+  0% { opacity: 0; transform: scale(0.92) translateY(24rpx); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 卡片退场——珠宝收拢：轻微下沉 + 缩小 */
+@keyframes login-card-out {
+  0% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.94) translateY(16rpx); }
+}
+
+/* 内容依次揭示——如展览序幕，每个元素拥有登场时刻 */
+@keyframes login-content-reveal {
+  0% { opacity: 0; transform: translateY(20rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Skyline: animation-fill-mode: both 降级为 forwards（backwards 不支持）
+   → .login-reveal 已设 opacity:0 初始态，forwards 即可保持终态 */
+.login-reveal {
+  opacity: 0;
+  animation-name: login-content-reveal;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.login-reveal:nth-child(1) { animation-delay: 200ms; }
+.login-reveal:nth-child(2) { animation-delay: 280ms; }
+.login-reveal:nth-child(3) { animation-delay: 360ms; }
+.login-reveal:nth-child(4) { animation-delay: 440ms; }

@@ -1,9 +1,21 @@
+<zy-navbar title="购物车" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <view class="cart-list" wx:if="{{cartItems.length > 0}}">
     <view class="cart-item {{item._invalid ? 'invalid' : ''}}" wx:for="{{cartItems}}" wx:key="cartItemId">
       <view class="item-check" bindtap="onToggleCheck" data-id="{{item.cartItemId}}">
         <view class="check-circle {{item.checked ? 'checked' : ''}} {{item._invalid ? 'disabled' : ''}}">
-          <text wx:if="{{item.checked && !item._invalid}}">✓</text>
+          <image wx:if="{{item.checked && !item._invalid}}" src="/images/icons/check-luxury-line.svg" mode="aspectFit" class="cart-check-icon"></image>
         </view>
       </view>
       <image class="item-image" src="{{item.productImage}}" mode="aspectFill" data-id="{{item.productId}}" bindtap="onGoDetail" binderror="onCartImageError" data-index="{{index}}" />
@@ -31,16 +43,17 @@
   </view>
 
   <view class="empty-state" wx:if="{{cartItems.length === 0}}">
-    <text class="empty-icon">🛒</text>
+    <image class="empty-icon" src="/images/icons/cart-luxury-line.svg" mode="aspectFit"></image>
     <text class="empty-text">购物车是空的</text>
     <view class="empty-btn" bindtap="onGoShopping">去逛逛</view>
   </view>
 
+  <root-portal>
   <view class="bottom-bar" wx:if="{{cartItems.length > 0}}">
     <view class="bar-left">
       <view class="check-all" bindtap="onToggleCheckAll">
         <view class="check-circle {{isAllChecked ? 'checked' : ''}}">
-          <text wx:if="{{isAllChecked}}">✓</text>
+          <image wx:if="{{isAllChecked}}" src="/images/icons/check-luxury-line.svg" mode="aspectFit" class="cart-check-icon"></image>
         </view>
         <text class="check-all-text">全选</text>
       </view>
@@ -55,4 +68,6 @@
       </view>
     </view>
   </view>
+  </root-portal>
 </view>
+</scroll-view>

@@ -1,0 +1,74 @@
+<!-- zy-loading · Skyline Worklet 驱动加载组件 v2 -->
+<!-- worklet-driven class 用于在 worklet 启用时禁用 CSS animation，避免 transform 冲突 -->
+<!-- 奢侈级变体（tourbillon/cascade/silk/monogram）使用纯 CSS animation，不走 worklet -->
+<view class="zy-loading {{vertical ? 'zy-loading--vertical' : ''}}">
+
+  <!-- ============ 圆环型（默认） ============ -->
+  <view
+    wx:if="{{type === 'circular'}}"
+    class="zy-loading__circular {{_workletEnabled ? 'worklet-driven' : ''}}"
+    style="width: {{size}}rpx; height: {{size}}rpx; border-color: {{trackColor}}; border-top-color: {{color}}; border-width: {{strokeWidth}}rpx;"
+  ></view>
+
+  <!-- ============ 菊花型 ============ -->
+  <view
+    wx:elif="{{type === 'spinner'}}"
+    class="zy-loading__spinner {{_workletEnabled ? 'worklet-driven' : ''}}"
+    style="width: {{size}}rpx; height: {{size}}rpx;"
+  >
+    <view
+      wx:for="{{_leaves}}"
+      wx:key="*this"
+      class="zy-loading__leaf"
+      style="background: {{color}}; transform: rotate({{item * 30}}deg);"
+    ></view>
+  </view>
+
+  <!-- ============ 陀飞轮金环 Tourbillon Gold Rings ============ -->
+  <view wx:elif="{{type === 'tourbillon'}}" class="lux-tourbillon">
+    <view class="lux-ring lux-ring--outer"><view class="lux-ring-marker lux-ring-marker--outer"></view></view>
+    <view class="lux-ring lux-ring--middle"><view class="lux-ring-marker lux-ring-marker--middle"></view></view>
+    <view class="lux-ring lux-ring--inner"><view class="lux-ring-marker lux-ring-marker--inner"></view></view>
+    <view class="lux-ring-dot"></view>
+  </view>
+
+  <!-- ============ 金粒瀑布 Gold Cascade ============ -->
+  <view wx:elif="{{type === 'cascade'}}" class="lux-cascade">
+    <view
+      wx:for="{{_cascadeParticles}}"
+      wx:key="index"
+      class="lux-cascade-dot"
+      style="left: {{item.left}}rpx; background: {{item.color}}; animation-delay: {{item.delay}}ms;"
+    ></view>
+  </view>
+
+  <!-- ============ 丝缎波纹 Silk Wave ============ -->
+  <view wx:elif="{{type === 'silk'}}" class="lux-silk">
+    <view
+      wx:for="{{_silkLines}}"
+      wx:key="index"
+      class="lux-silk-line"
+      style="background: {{item.color}}; animation-delay: {{item.delay}}ms;"
+    ></view>
+  </view>
+
+  <!-- ============ 品牌呼吸 Monogram Breath ============ -->
+  <view wx:elif="{{type === 'monogram'}}" class="lux-monogram">
+    <view class="lux-monogram-rings">
+      <view
+        wx:for="{{_monogramRings}}"
+        wx:key="index"
+        class="lux-breath-ring"
+        style="animation-delay: {{item.delay}}ms;"
+      ></view>
+    </view>
+    <text class="lux-monogram-text">{{monogramText}}</text>
+  </view>
+
+  <!-- ============ 加载文字 ============ -->
+  <text
+    wx:if="{{text}}"
+    class="zy-loading__text"
+    style="font-size: {{textSize}}rpx; color: {{textColor}};"
+  >{{text}}</text>
+</view>

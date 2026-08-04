@@ -1,20 +1,29 @@
+/* ================================================================
+   AROORO 合伙人入驻申请 · 深森林绿 × 香槟金 × 奶油白 高奢风格
+   Skyline 兼容：无 :active / transition 仅 transform & opacity / 单行截断
+   ================================================================ */
 @import '../common.wxss';
 
+/* ============================================
+   表单页 — 步骤指示器 + 表单 + 提交按钮
+   ============================================ */
+
+/* ---------- 状态卡片色条 ---------- */
 .card-accent {
   width: 3rpx;
   height: 100%;
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
+  background: var(--primary-color);
 }
 
 .approved-accent {
-  background: linear-gradient(180deg, var(--success-color) 0%, #30D158 100%) !important;
+  background: var(--success-color);
 }
 
 .pending-accent {
-  background: linear-gradient(180deg, var(--warning-color) 0%, var(--boarding-primary) 100%) !important;
+  background: var(--warning-color);
 }
 
 .card-body {
@@ -22,12 +31,14 @@
   padding: 32rpx 36rpx;
 }
 
+/* ---------- 状态标题区 ---------- */
 .status-title {
-  font-size: 36rpx;
+  font-size: 34rpx;
   font-weight: 500;
   color: var(--text-primary);
   display: block;
   margin-bottom: 12rpx;
+  letter-spacing: 0.04em;
 }
 
 .status-desc {
@@ -35,8 +46,10 @@
   color: var(--text-secondary);
   display: block;
   margin-bottom: 24rpx;
+  line-height: 1.6;
 }
 
+/* ---------- 权限标签 ---------- */
 .perm-list {
   display: flex;
   flex-wrap: wrap;
@@ -46,11 +59,14 @@
 .perm-tag {
   font-size: 20rpx;
   padding: 8rpx 20rpx;
-  background: rgba(79, 94, 53, 0.12);
-  color: var(--activity-primary-mid);
-  border-radius: 8rpx;
+  background: var(--primary-tint);
+  color: var(--primary-color);
+  border-radius: var(--zy-radius-sm);
+  letter-spacing: 0.03em;
+  font-weight: 400;
 }
 
+/* ---------- 申请信息 ---------- */
 .app-info {
   margin-top: 16rpx;
   padding-top: 16rpx;
@@ -61,42 +77,52 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8rpx 0;
+  padding: 10rpx 0;
 }
 
 .info-key {
   font-size: 24rpx;
   color: var(--text-secondary);
-  letter-spacing: 2rpx;
+  letter-spacing: 0.03em;
+  font-weight: 400;
 }
 
 .info-val {
   font-size: 26rpx;
   color: var(--text-primary);
   text-align: right;
+  font-weight: 400;
+  max-width: 420rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* ---------- 申请按钮 ---------- */
 .apply-btn {
   display: inline-flex;
   padding: 20rpx 48rpx;
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  border-radius: 16rpx;
+  background: var(--gradient-primary);
+  border-radius: var(--lux-radius-pill);
   margin-top: 8rpx;
+  box-shadow: var(--lux-shadow-green);
 }
 
 .apply-btn-text {
   font-size: 26rpx;
-  color: var(--card-color);
+  color: var(--text-on-primary);
   font-weight: 500;
+  letter-spacing: 0.1em;
 }
 
+/* ---------- 弹窗 ---------- */
 .modal-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-color);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -105,9 +131,11 @@
 
 .modal-content {
   width: 600rpx;
-  background: var(--card-color);
-  border-radius: 24rpx;
+  background: var(--lux-card-bg);
+  border-radius: var(--zy-radius-xl);
   overflow: hidden;
+  border: 1rpx solid var(--lux-hairline);
+  box-shadow: var(--lux-shadow-elevated);
 }
 
 .modal-header {
@@ -116,9 +144,10 @@
 }
 
 .modal-title {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.05em;
 }
 
 .modal-body {
@@ -134,28 +163,35 @@
   color: var(--text-secondary);
   display: block;
   margin-bottom: 12rpx;
+  letter-spacing: 0.06em;
+  font-weight: 400;
 }
 
 .form-input {
   width: 100%;
   height: 72rpx;
   padding: 0 24rpx;
-  border: 1rpx solid var(--gray-200);
-  border-radius: 12rpx;
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-inner);
   font-size: 28rpx;
   color: var(--text-primary);
   box-sizing: border-box;
+  background: var(--lux-card-bg);
+  font-family: inherit;
 }
 
 .form-textarea {
   width: 100%;
   height: 160rpx;
   padding: 20rpx 24rpx;
-  border: 1rpx solid var(--gray-200);
-  border-radius: 12rpx;
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: var(--lux-radius-inner);
   font-size: 28rpx;
   color: var(--text-primary);
   box-sizing: border-box;
+  background: var(--lux-card-bg);
+  font-family: inherit;
+  line-height: 1.6;
 }
 
 .modal-footer {
@@ -174,11 +210,68 @@
 }
 
 .btn-confirm .modal-btn-text {
-  color: var(--activity-primary);
+  color: var(--primary-color);
   font-weight: 500;
 }
 
 .modal-btn-text {
   font-size: 28rpx;
   color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* ---------- 步骤指示器 ---------- */
+.steps-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+  margin-bottom: 8rpx;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.step-dot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  background: var(--border-color);
+  border: 2rpx solid var(--border-color);
+}
+
+.step-dot.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.step-dot.completed {
+  background: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.step-label {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+
+.step-label.active {
+  color: var(--primary-color);
+}
+
+.step-line {
+  width: 60rpx;
+  height: 2rpx;
+  background: var(--border-color);
+  margin: 0 8rpx;
+  margin-bottom: 28rpx;
+}
+
+.step-line.completed {
+  background: var(--success-color);
 }

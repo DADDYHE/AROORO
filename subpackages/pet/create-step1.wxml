@@ -1,3 +1,15 @@
+<zy-navbar title="创建宠物档案" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="gallery-container">
   <view class="gallery-header">
     <view class="brand-block">
@@ -40,144 +52,118 @@
       <view class="gallery-card">
         <view class="card-accent"></view>
         <view class="card-body">
-          <van-cell-group class="form-group" border="{{false}}">
-            <van-field
-              value="{{formData.name}}"
-              placeholder="请输入宠物昵称"
-              border="{{false}}"
-              bind:input="onNameInput"
-              extra-event-params="{{true}}"
-              class="form-field"
-              title-width="220rpx"
-              custom-class="field-cell"
-              required="{{false}}"
-            >
-              <view slot="label" class="field-label">宠物昵称<text class="label-required">（必填）</text></view>
-            </van-field>
+          <view class="form-group">
+            <!-- 宠物昵称 -->
+            <view class="form-row">
+              <view class="field-label"><text>宠物昵称</text><text class="label-required">（必填）</text></view>
+              <input
+                class="form-input"
+                value="{{formData.name}}"
+                placeholder="请输入宠物昵称"
+                placeholder-class="form-placeholder"
+                bindinput="onNameInput"
+              />
+            </view>
 
             <view class="field-divider"></view>
 
-            <van-field
-              value="{{formData.type === 'dog' ? '狗狗' : (formData.type === 'cat' ? '猫咪' : (formData.type === 'exotic' ? '异宠' : ''))}}"
-              placeholder="请选择宠物类型"
-              border="{{false}}"
-              bindtap="selectPetType"
-              class="form-field"
-              title-width="220rpx"
-              custom-class="field-cell"
-              readonly="{{true}}"
-              clickable="{{true}}"
-              required="{{false}}"
-            >
-              <view slot="label" class="field-label">宠物类型<text class="label-required">（必填）</text></view>
-              <view slot="right-icon" class="field-arrow">
+            <!-- 宠物类型（点击弹出 action-sheet） -->
+            <view class="form-row form-row--select" bindtap="selectPetType">
+              <view class="field-label"><text>宠物类型</text><text class="label-required">（必填）</text></view>
+              <view class="form-value {{formData.type ? '' : 'form-placeholder'}}">
+                <text class="form-value-text">{{formData.type === 'dog' ? '狗狗' : (formData.type === 'cat' ? '猫咪' : (formData.type === 'exotic' ? '异宠' : '请选择宠物类型'))}}</text>
+              </view>
+              <view class="field-arrow">
                 <view class="arrow-line"></view>
               </view>
-            </van-field>
+            </view>
 
             <view class="field-divider"></view>
 
-            <van-field
-              value="{{formData.breed}}"
-              placeholder="请输入品种"
-              border="{{false}}"
-              bind:input="onBreedInput"
-              extra-event-params="{{true}}"
-              class="form-field"
-              title-width="220rpx"
-              custom-class="field-cell"
-              required="{{false}}"
-            >
-              <view slot="label" class="field-label">品种<text class="label-required">（必填）</text></view>
-            </van-field>
+            <!-- 品种 -->
+            <view class="form-row">
+              <view class="field-label"><text>品种</text><text class="label-required">（必填）</text></view>
+              <input
+                class="form-input"
+                value="{{formData.breed}}"
+                placeholder="请输入品种"
+                placeholder-class="form-placeholder"
+                bindinput="onBreedInput"
+              />
+            </view>
 
             <view class="field-divider"></view>
 
-            <van-field
-              value="{{formData.gender === 'male' ? '弟弟' : (formData.gender === 'female' ? '妹妹' : (formData.gender === 'unknown' ? '不确定' : ''))}}"
-              placeholder="请选择性别"
-              border="{{false}}"
-              bindtap="selectGender"
-              class="form-field"
-              title-width="220rpx"
-              custom-class="field-cell"
-              readonly="{{true}}"
-              clickable="{{true}}"
-              required="{{false}}"
-            >
-              <view slot="label" class="field-label">性别<text class="label-required">（必填）</text></view>
-              <view slot="right-icon" class="field-arrow">
+            <!-- 性别（点击弹出 action-sheet） -->
+            <view class="form-row form-row--select" bindtap="selectGender">
+              <view class="field-label"><text>性别</text><text class="label-required">（必填）</text></view>
+              <view class="form-value {{formData.gender ? '' : 'form-placeholder'}}">
+                <text class="form-value-text">{{formData.gender === 'male' ? '弟弟' : (formData.gender === 'female' ? '妹妹' : (formData.gender === 'unknown' ? '不确定' : '请选择性别'))}}</text>
+              </view>
+              <view class="field-arrow">
                 <view class="arrow-line"></view>
               </view>
-            </van-field>
+            </view>
 
             <view class="field-divider"></view>
 
-            <van-field
-              value="{{formData.birthday}}"
-              placeholder="请选择出生日期"
-              border="{{false}}"
-              bindtap="selectBirthday"
-              class="form-field"
-              title-width="220rpx"
-              custom-class="field-cell"
-              readonly="{{true}}"
-              clickable="{{true}}"
-              required="{{false}}"
-            >
-              <view slot="label" class="field-label">出生日期</view>
-              <view slot="right-icon" class="field-arrow">
-                <view class="arrow-line"></view>
+            <!-- 出生日期（原生 picker mode="date"） -->
+            <picker mode="date" value="{{formData.birthday || todayStr}}" start="2000-01-01" end="{{todayStr}}" bindchange="onConfirmBirthday">
+              <view class="form-row form-row--select">
+                <view class="field-label"><text>出生日期</text></view>
+                <view class="form-value {{formData.birthday ? '' : 'form-placeholder'}}">
+                  <text class="form-value-text">{{formData.birthday || '请选择出生日期'}}</text>
+                </view>
+                <view class="field-arrow">
+                  <view class="arrow-line"></view>
+                </view>
               </view>
-            </van-field>
+            </picker>
 
             <view class="field-divider"></view>
 
-            <van-field
-              value="{{formData.weight}}"
-              placeholder="请输入体重（kg）"
-              border="{{false}}"
-              type="digit"
-              bind:input="onWeightInput"
-              extra-event-params="{{true}}"
-              class="form-field"
-              title-width="220rpx"
-              custom-class="field-cell"
-              required="{{false}}"
-            >
-              <view slot="label" class="field-label">体重</view>
-            </van-field>
+            <!-- 体重 -->
+            <view class="form-row">
+              <view class="field-label"><text>体重</text></view>
+              <input
+                class="form-input"
+                type="digit"
+                value="{{formData.weight}}"
+                placeholder="请输入体重（kg）"
+                placeholder-class="form-placeholder"
+                bindinput="onWeightInput"
+              />
+            </view>
 
             <view class="field-divider"></view>
 
-            <van-field
-              value="{{formData.note}}"
-              placeholder="性格傲娇还是可爱？还有生活习惯和饮食习惯描述一下吧"
-              border="{{false}}"
-              bind:input="onNoteInput"
-              extra-event-params="{{true}}"
-              class="form-field form-field-textarea"
-              title-width="220rpx"
-              custom-class="field-cell"
-              type="textarea"
-              autosize="{{ { maxHeight: 200, minHeight: 80 } }}"
-              required="{{false}}"
-            >
-              <view slot="label" class="field-label">备注</view>
-            </van-field>
-          </van-cell-group>
+            <!-- 备注 -->
+            <view class="form-row form-row--textarea">
+              <view class="field-label"><text>备注</text></view>
+              <textarea
+                class="form-textarea"
+                value="{{formData.note}}"
+                placeholder="性格傲娇还是可爱？还有生活习惯和饮食习惯描述一下吧"
+                placeholder-class="form-placeholder"
+                auto-height
+                maxlength="-1"
+                bindinput="onNoteInput"
+              />
+            </view>
+          </view>
         </view>
       </view>
     </view>
 
     <view class="gallery-footer">
       <view bindtap="completeCreate" class="footer-action {{(!formData.name || !formData.type || !formData.breed || !formData.gender) ? 'action-disabled' : 'action-active'}}">
-        完成创建
+        <text>完成创建</text>
       </view>
     </view>
   </view>
 
-  <van-action-sheet
+  <!-- 宠物类型选择 -->
+  <zy-action-sheet
     show="{{showTypeSheet}}"
     actions="{{petTypes}}"
     cancel-text="取消"
@@ -185,27 +171,13 @@
     bind:close="onCloseTypeSheet"
   />
 
-  <van-action-sheet
+  <!-- 性别选择 -->
+  <zy-action-sheet
     show="{{showGenderSheet}}"
     actions="{{petGenders}}"
     cancel-text="取消"
     bind:select="onSelectGender"
     bind:close="onCloseGenderSheet"
   />
-
-  <van-popup
-    show="{{showBirthdayPicker}}"
-    position="bottom"
-    round
-    bind:close="onCloseBirthday"
-  >
-    <van-datetime-picker
-      type="date"
-      value="{{currentDate}}"
-      min-date="{{minDate}}"
-      max-date="{{maxDate}}"
-      bind:confirm="onConfirmBirthday"
-      bind:cancel="onCloseBirthday"
-    />
-  </van-popup>
 </view>
+</scroll-view>

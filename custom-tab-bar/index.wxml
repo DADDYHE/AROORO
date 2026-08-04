@@ -1,37 +1,45 @@
 <!-- AROORO 启动屏：覆盖全屏（含 tabBar），冷启动仅显示一次 -->
-<view class="splash-overlay {{splashFading ? 'splash-fade-out' : ''}}" wx:if="{{showSplash}}" catchtap="dismissSplash">
-  <image class="splash-image" src="/images/splash/arooro-splash.jpg" mode="aspectFill" />
-</view>
+<!-- 用 root-portal 包裹，避免 Skyline 下 position:fixed 相对滚动容器失效 -->
+<root-portal wx:if="{{showSplash}}">
+  <view class="splash-overlay {{splashFading ? 'splash-fade-out' : ''}}" catchtap="dismissSplash">
+    <image class="splash-image" src="/images/splash/arooro-splash.jpg" mode="aspectFill" />
+  </view>
+</root-portal>
 
-<view class="tab-bar" style="padding-bottom: {{tabBarPadding}}rpx;">
-  <view class="tab-bar-item {{selected === 0 ? 'active' : ''}}" data-path="/pages/home/index" data-index="{{0}}" catchtap="switchTab">
-    <view class="tab-bar-icon-wrap">
-      <image class="tab-bar-icon" src="/images/icons/home-line.svg" mode="aspectFit" />
+<!-- 自定义 tabBar：用 root-portal 包裹，保证 Skyline 下 fixed 相对 viewport -->
+<!-- tab-scale-N class 用于 worklet 按压弹性动效绑定 -->
+<!-- bindtouchstart/touchend 驱动 spring 缩放反馈 -->
+<root-portal>
+  <view class="tab-bar" style="padding-bottom: {{tabBarPadding}}rpx;">
+    <view class="tab-bar-item {{selected === 0 ? 'active' : ''}}" data-path="/pages/home/index" data-index="{{0}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
+      <view class="tab-bar-icon-wrap tab-scale-0">
+        <image class="tab-bar-icon" src="/images/icons/home-line.svg" mode="aspectFit" />
+      </view>
+      <text class="tab-bar-text">首页</text>
     </view>
-    <text class="tab-bar-text">首页</text>
-  </view>
-  <view class="tab-bar-item {{selected === 1 ? 'active' : ''}}" data-path="/pages/quick-register/index" data-index="{{1}}" catchtap="switchTab">
-    <view class="tab-bar-icon-wrap">
-      <image class="tab-bar-icon" src="/images/icons/calendar-icon.svg" mode="aspectFit" />
+    <view class="tab-bar-item {{selected === 1 ? 'active' : ''}}" data-path="/pages/quick-register/index" data-index="{{1}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
+      <view class="tab-bar-icon-wrap tab-scale-1">
+        <image class="tab-bar-icon" src="/images/icons/calendar-icon.svg" mode="aspectFit" />
+      </view>
+      <text class="tab-bar-text">一键报名</text>
     </view>
-    <text class="tab-bar-text">一键报名</text>
-  </view>
-  <view class="tab-bar-item tab-bar-item-center {{selected === 2 ? 'active' : ''}}" data-path="/pages/discover/index" data-index="{{2}}" catchtap="switchTab">
-    <view class="center-button">
-      <image class="center-button-icon" src="/images/icons/discover-white.svg" mode="aspectFit" />
-      <text class="center-button-text">宠团团</text>
+    <view class="tab-bar-item tab-bar-item-center {{selected === 2 ? 'active' : ''}}" data-path="/pages/discover/index" data-index="{{2}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
+      <view class="center-button tab-scale-2">
+        <image class="center-button-icon" src="/images/icons/discover-white.svg" mode="aspectFit" />
+        <text class="center-button-text">宠团团</text>
+      </view>
+    </view>
+    <view class="tab-bar-item {{selected === 3 ? 'active' : ''}}" data-path="/pages/service/index" data-index="{{3}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
+      <view class="tab-bar-icon-wrap tab-scale-3">
+        <image class="tab-bar-icon" src="/images/icons/service-line.svg" mode="aspectFit" />
+      </view>
+      <text class="tab-bar-text">上门服务</text>
+    </view>
+    <view class="tab-bar-item {{selected === 4 ? 'active' : ''}}" data-path="/pages/profile/index" data-index="{{4}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
+      <view class="tab-bar-icon-wrap tab-scale-4">
+        <image class="tab-bar-icon" src="/images/icons/profile-line.svg" mode="aspectFit" />
+      </view>
+      <text class="tab-bar-text">我的</text>
     </view>
   </view>
-  <view class="tab-bar-item {{selected === 3 ? 'active' : ''}}" data-path="/pages/service/index" data-index="{{3}}" catchtap="switchTab">
-    <view class="tab-bar-icon-wrap">
-      <image class="tab-bar-icon" src="/images/icons/service-line.svg" mode="aspectFit" />
-    </view>
-    <text class="tab-bar-text">上门服务</text>
-  </view>
-  <view class="tab-bar-item {{selected === 4 ? 'active' : ''}}" data-path="/pages/profile/index" data-index="{{4}}" catchtap="switchTab">
-    <view class="tab-bar-icon-wrap">
-      <image class="tab-bar-icon" src="/images/icons/profile-line.svg" mode="aspectFit" />
-    </view>
-    <text class="tab-bar-text">我的</text>
-  </view>
-</view>
+</root-portal>

@@ -1,7 +1,7 @@
 const { ActivityService } = require('./services/ActivityService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const { transformActivityItem, sortActivities } = require('./utils/activityHelpers')
+const { transformActivityItem } = require('./utils/activityHelpers')
 
 Page({
   behaviors: [ListBehavior, cloudImageBehavior],
@@ -11,6 +11,7 @@ Page({
   },
 
   onLoad() {
+    this._initNavbarHeight()
     this._initListBehavior(
       params => this._doFetch(params),
       { pageSize: 10, listKey: 'activities', sortFn: (a, b) => {

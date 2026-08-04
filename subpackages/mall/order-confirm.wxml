@@ -1,10 +1,22 @@
+<zy-navbar title="确认订单" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container" wx:if="{{!isLoading && !error}}">
 
   <!-- 收货地址 -->
   <view class="info-card address-card" bindtap="onGoAddressEdit">
     <view wx:if="{{address}}" class="address-info">
       <view class="address-left">
-        <text class="address-location-icon">📍</text>
+        <image class="address-location-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image>
         <view class="address-detail">
           <view class="address-user">
             <text class="address-name">{{address.name}}</text>
@@ -88,7 +100,7 @@
           <text class="coupon-hint" wx:if="{{selectedCoupon}}">-¥{{couponDiscount}}</text>
           <text class="coupon-hint" wx:elif="{{availableCoupons.length > 0}}">{{availableCoupons.length}}张可用</text>
           <text class="coupon-hint" wx:else>暂无可用</text>
-          <text class="section-arrow">{{showCouponSelector ? '▴' : '▾'}}</text>
+          <image class="section-arrow" src="{{showCouponSelector ? '/images/icons/chevron-up-luxury-line.svg' : '/images/icons/chevron-down-luxury-line.svg'}}" mode="aspectFit"></image>
         </view>
       </view>
 
@@ -97,7 +109,7 @@
           <text class="coupon-name">{{selectedCoupon.templateName}}</text>
           <text class="coupon-desc">-¥{{couponDiscount}}</text>
         </view>
-        <text class="remove-coupon" bindtap="onRemoveCoupon">✕</text>
+        <image class="remove-coupon" src="/images/icons/close-luxury-line.svg" mode="aspectFit" bindtap="onRemoveCoupon"></image>
       </view>
 
       <view class="coupon-list" wx:if="{{showCouponSelector}}">
@@ -111,7 +123,7 @@
             <text class="coupon-item-rule" wx:if="{{item.rules.threshold > 0}}">满{{item.rules.threshold}}元可用</text>
             <text class="coupon-item-time">{{item.endTime}}</text>
           </view>
-          <view class="coupon-item-check" wx:if="{{selectedCouponId === item._id}}">✓</view>
+          <image class="coupon-item-check" src="/images/icons/check-luxury-line.svg" mode="aspectFit" wx:if="{{selectedCouponId === item._id}}"></image>
         </view>
         <view class="no-data" wx:if="{{availableCoupons.length === 0}}">
           <text>暂无可用优惠券</text>
@@ -141,6 +153,7 @@
   </view>
 
   <!-- 底部提交栏 -->
+  <root-portal>
   <view class="bottom-bar">
     <view class="bottom-left">
       <text class="bottom-total-label">合计</text>
@@ -150,20 +163,21 @@
       {{submitting ? '提交中...' : (fromTuan ? '提交团购订单' : '提交订单')}}
     </view>
   </view>
+  </root-portal>
 </view>
 
 <!-- 加载状态 -->
 <view wx:if="{{isLoading}}" class="loading-container">
   <view class="loading-content">
-    <view class="loading-brand-mark">
-      <view class="brand-ring"></view>
-      <view class="brand-ring brand-ring--delay"></view>
-      <view class="brand-dot"></view>
-    </view>
-    <view class="loading-dots">
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
+    <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
     </view>
     <text class="loading-text">加载中</text>
   </view>
@@ -171,7 +185,8 @@
 
 <!-- 错误状态 -->
 <view class="error-container" wx:if="{{error}}">
-  <text class="error-icon">◇</text>
+  <image class="error-icon" src="/images/icons/error-luxury-line.svg" mode="aspectFit"></image>
   <text class="error-text">{{error}}</text>
   <view class="retry-btn" bindtap="onRetry">RETRY</view>
 </view>
+</scroll-view>

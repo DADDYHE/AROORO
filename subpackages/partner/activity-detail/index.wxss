@@ -1,13 +1,23 @@
+/* ================================================================
+   AROORO 合伙人活动详情/管理 · 深森林绿 × 香槟金 × 奶油白 高奢风格
+   Skyline 兼容：无 :active / transition 仅 transform & opacity / 单行截断
+   ================================================================ */
 @import '../common.wxss';
+
+/* ============================================
+   详情管理页 — Hero + 信息卡 + 报名名单 + 操作栏
+   ============================================ */
 
 .page-content {
   padding-bottom: 180rpx;
 }
 
+/* ---------- Hero 封面 ---------- */
 .hero-section {
   position: relative;
-  height: 400rpx;
+  height: 360rpx;
   overflow: hidden;
+  margin: 0 calc(var(--page-padding) * -1);
 }
 
 .hero-cover {
@@ -20,17 +30,18 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 200rpx;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.4));
+  height: 160rpx;
+  background: linear-gradient(180deg, transparent 0%, var(--scrim-overlay) 100%);
 }
 
+/* ---------- 卡片色条 ---------- */
 .card-accent {
-  width: 4rpx;
+  width: 3rpx;
   height: 100%;
   position: absolute;
   left: 0;
   top: 0;
-  background: var(--activity-primary);
+  background: var(--primary-color);
 }
 
 .card-body {
@@ -38,6 +49,7 @@
   padding: 28rpx 32rpx;
 }
 
+/* ---------- 状态行 ---------- */
 .status-row {
   display: flex;
   align-items: center;
@@ -46,36 +58,43 @@
 }
 
 .status-badge {
-  font-size: 22rpx;
+  font-size: 20rpx;
   padding: 6rpx 16rpx;
-  border-radius: 8rpx;
-  font-weight: 500;
+  border-radius: var(--zy-radius-sm);
+  font-weight: 400;
+  letter-spacing: 0.04em;
 }
 
 .category-badge {
-  font-size: 22rpx;
+  font-size: 20rpx;
   padding: 6rpx 16rpx;
-  border-radius: 8rpx;
+  border-radius: var(--zy-radius-sm);
   background: var(--divider-color);
   color: var(--text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.04em;
 }
 
+/* ---------- 活动标题/描述 ---------- */
 .activity-title {
-  font-size: 36rpx;
+  font-size: 34rpx;
   font-weight: 500;
   color: var(--text-primary);
   display: block;
   margin-bottom: 12rpx;
   line-height: 1.4;
+  letter-spacing: 0.02em;
 }
 
 .activity-desc {
   font-size: 26rpx;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
   display: block;
+  font-weight: 400;
 }
 
+/* ---------- 信息网格 ---------- */
 .info-grid {
   display: flex;
   gap: 24rpx;
@@ -92,22 +111,26 @@
 
 .info-label {
   font-size: 22rpx;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   display: block;
   margin-bottom: 8rpx;
+  letter-spacing: 0.06em;
+  font-weight: 400;
 }
 
 .info-value {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-primary);
   display: block;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .price-value {
-  color: var(--activity-primary);
+  color: var(--primary-color);
+  font-feature-settings: 'tnum';
 }
 
+/* ---------- 分区标题 ---------- */
 .section-title-row {
   display: flex;
   align-items: center;
@@ -119,6 +142,7 @@
   font-size: 28rpx;
   font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.06em;
 }
 
 .view-reg-btn {
@@ -129,14 +153,16 @@
 
 .view-reg-text {
   font-size: 24rpx;
-  color: var(--activity-primary);
+  color: var(--primary-color);
+  font-weight: 400;
 }
 
 .view-reg-arrow {
-  font-size: 28rpx;
-  color: var(--activity-primary);
+  font-size: 26rpx;
+  color: var(--primary-color);
 }
 
+/* ---------- 参与者统计 ---------- */
 .participant-section {
   margin-top: 8rpx;
 }
@@ -149,28 +175,32 @@
 }
 
 .participant-label {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .participant-count {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 400;
+  font-feature-settings: 'tnum';
 }
 
 .participant-bar {
-  height: 8rpx;
+  height: 6rpx;
   background: var(--divider-color);
-  border-radius: 4rpx;
+  border-radius: 3rpx;
   overflow: hidden;
 }
 
 .participant-fill {
   height: 100%;
-  border-radius: 4rpx;
+  border-radius: 3rpx;
+  background: var(--gradient-primary);
 }
 
+/* ---------- 联系信息 ---------- */
 .contact-info {
   margin-top: 8rpx;
 }
@@ -179,8 +209,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12rpx 0;
-  border-bottom: 1rpx solid var(--divider-color);
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--lux-hairline);
 }
 
 .contact-row:last-child {
@@ -188,27 +218,39 @@
 }
 
 .contact-label {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .contact-value {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--text-primary);
+  font-weight: 400;
+  max-width: 400rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
 }
 
+/* ---------- 图片网格 ---------- */
 .image-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 12rpx;
   margin-top: 16rpx;
+}
+
+.image-grid > .image-grid-item {
+  flex: 0 0 calc((100% - 24rpx) / 3);
 }
 
 .image-grid-item {
   position: relative;
   width: 100%;
-  padding-bottom: 100%;
-  border-radius: 12rpx;
+  aspect-ratio: 1;
+  border-radius: var(--lux-radius-inner);
   overflow: hidden;
 }
 
@@ -224,6 +266,7 @@
   height: 40rpx;
 }
 
+/* ---------- 底部操作栏 ---------- */
 .action-bar {
   position: fixed;
   bottom: 0;
@@ -233,23 +276,29 @@
   gap: 16rpx;
   padding: 20rpx 32rpx;
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: var(--card-color);
-  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.06);
+  background: var(--lux-card-bg);
+  border-top: 1rpx solid var(--lux-hairline);
   z-index: 50;
 }
 
 .action-btn {
   flex: 1;
   height: 80rpx;
-  border-radius: 14rpx;
+  border-radius: var(--lux-radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+}
+
+.action-btn::after {
+  border: none;
 }
 
 .action-btn-text {
   font-size: 28rpx;
   font-weight: 500;
+  letter-spacing: 0.06em;
 }
 
 .action-btn-edit {
@@ -261,12 +310,12 @@
 }
 
 .action-btn-status {
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-primary-mid) 100%);
-  box-shadow: 0 4rpx 16rpx rgba(79, 94, 53, 0.3);
+  background: var(--gradient-primary);
+  box-shadow: var(--lux-shadow-green);
 }
 
 .action-btn-status .action-btn-text {
-  color: var(--card-color);
+  color: var(--text-on-primary);
 }
 
 .action-btn-full {
@@ -274,13 +323,14 @@
   width: 100%;
 }
 
+/* ---------- 报名名单弹层 ---------- */
 .reg-list-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-color);
   z-index: 1000;
   display: flex;
   align-items: flex-end;
@@ -288,12 +338,14 @@
 
 .reg-list-sheet {
   width: 100%;
-  background: var(--card-color);
-  border-radius: 24rpx 24rpx 0 0;
+  background: var(--lux-card-bg);
+  border-radius: var(--zy-radius-2xl) var(--zy-radius-2xl) 0 0;
   max-height: 70vh;
   display: flex;
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1rpx solid var(--lux-hairline);
+  box-shadow: var(--lux-shadow-elevated);
 }
 
 .reg-list-header {
@@ -302,24 +354,33 @@
   justify-content: space-between;
   padding: 28rpx 32rpx;
   border-bottom: 1rpx solid var(--divider-color);
+  flex-shrink: 0;
 }
 
 .reg-list-title {
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.06em;
 }
 
 .reg-list-close {
-  font-size: 28rpx;
-  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 8rpx;
+}
+
+.modal-close-icon {
+  width: 32rpx;
+  height: 32rpx;
 }
 
 .reg-list-body {
   flex: 1;
   padding: 12rpx 0;
   max-height: 60vh;
+  overflow-y: auto;
 }
 
 .reg-item {
@@ -327,6 +388,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 20rpx 32rpx;
+  border-bottom: 1rpx solid var(--lux-hairline);
+}
+
+.reg-item:last-child {
+  border-bottom: none;
 }
 
 .reg-info {
@@ -336,15 +402,16 @@
 .reg-name {
   font-size: 28rpx;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 400;
   display: block;
 }
 
 .reg-meta {
-  font-size: 24rpx;
-  color: var(--text-secondary);
+  font-size: 22rpx;
+  color: var(--text-tertiary);
   margin-top: 4rpx;
   display: block;
+  letter-spacing: 0.03em;
 }
 
 .reg-action {
@@ -352,12 +419,14 @@
 }
 
 .reg-call {
-  font-size: 32rpx;
+  width: 30rpx;
+  height: 30rpx;
 }
 
 .reg-empty {
   padding: 80rpx 0;
   text-align: center;
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.06em;
 }

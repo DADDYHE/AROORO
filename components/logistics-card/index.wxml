@@ -3,7 +3,7 @@
     <view class="logistics-info">
       <view class="logistics-line">
         <text class="logistics-label">快递单号</text>
-        <text class="logistics-value" catchtap="onCopyExpressNo">{{expressNo || '暂无'}}</text>
+        <text class="logistics-value copyable" catchtap="onCopyExpressNo" hover-class="logistics-value--pressed" hover-stay-time="120">{{expressNo || '暂无'}}</text>
       </view>
       <view class="logistics-line" wx:if="{{shippedAt}}">
         <text class="logistics-label">发货时间</text>

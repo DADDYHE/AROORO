@@ -1,21 +1,35 @@
-<view class="search-page">
-  <!-- 搜索栏 -->
-  <view class="search-header">
-    <view class="search-input-wrap">
-      <view class="search-icon"></view>
-      <input
-        class="search-input"
-        placeholder="搜索商品、团购、活动、寄养..."
-        value="{{keyword}}"
-        bindinput="handleInput"
-        bindconfirm="handleSearch"
-        confirm-type="search"
-        focus="{{true}}"
-      />
-      <view wx:if="{{keyword}}" class="clear-btn" catchtap="handleClearInput">×</view>
-    </view>
-    <text class="cancel-btn" catchtap="handleCancel">取消</text>
+<zy-navbar title="搜索" />
+
+<!-- 搜索栏：移至 scroll-view 外，避免 Skyline 下被裁剪 -->
+<view class="search-header">
+  <view class="search-input-wrap">
+    <view class="search-icon"></view>
+    <input
+      class="search-input"
+      placeholder="搜索商品、团购、活动、寄养..."
+      model:value="{{keyword}}"
+      bindinput="handleInput"
+      bindconfirm="handleSearch"
+      confirm-type="search"
+      focus="{{inputFocus}}"
+    />
+    <view wx:if="{{keyword}}" class="clear-btn" catchtap="handleClearInput">×</view>
   </view>
+  <text class="cancel-btn" catchtap="handleCancel">取消</text>
+</view>
+
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px - {{searchHeaderHeight}}px);"
+>
+<view class="search-page">
 
   <!-- 历史 & 热门（未输入时） -->
   <view wx:if="{{showHistory}}" class="suggest-section">
@@ -55,17 +69,6 @@
 
   <!-- 搜索结果 -->
   <view wx:if="{{searched}}" class="result-section">
-    <!-- 分类 Tab -->
-    <scroll-view class="tab-bar" scroll-x="true" enhanced="true" show-scrollbar="false">
-      <view
-        wx:for="{{tabs}}"
-        wx:key="key"
-        class="tab-item {{activeTab === item.key ? 'tab-active' : ''}}"
-        data-key="{{item.key}}"
-        catchtap="handleTabChange"
-      >{{item.label}}</view>
-    </scroll-view>
-
     <!-- 加载中 -->
     <view wx:if="{{loading}}" class="loading-state">
       <text>搜索中...</text>
@@ -99,9 +102,10 @@
 
     <!-- 空结果 -->
     <view wx:else class="empty-state">
-      <text class="empty-icon">🔍</text>
+      <image class="empty-icon" src="/images/icons/search-luxury-line.svg" mode="aspectFit"></image>
       <text class="empty-text">未找到相关结果</text>
       <text class="empty-sub">换个关键词试试吧</text>
     </view>
   </view>
 </view>
+</scroll-view>

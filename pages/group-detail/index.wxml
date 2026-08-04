@@ -1,3 +1,15 @@
+<zy-navbar title="团购详情" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="tuan-detail" wx:if="{{!loading && deal}}">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="detail-title-area">
@@ -5,11 +17,14 @@
   </view>
 
   <view class="detail-section">
-    <text class="section-title">团购商品 ({{totalSkuCount}}款)</text>
+    <view class="section-title">
+      <view class="label-accent"></view>
+      <text>团购商品 ({{totalSkuCount}}款)</text>
+    </view>
   </view>
 
   <view class="product-list">
-    <view class="product-card" wx:for="{{products}}" wx:key="index" data-index="{{index}}" bindtap="onProductTap">
+    <view class="product-card" wx:for="{{products}}" wx:key="index" data-index="{{index}}" hover-class="product-card--pressed" hover-stay-time="120" bindtap="onProductTap">
       <image class="product-img" src="{{item.image || '/images/default-product.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.image}}" data-path="products[{{index}}].image" />
       <view class="product-info">
         <text class="product-name">{{item.name}}</text>
@@ -18,11 +33,11 @@
             <text class="product-price-symbol">¥</text>
             <text class="product-price">{{item.displayPrice}}</text>
           </view>
-          <view class="product-buy-btn" catchtap="onBuyTap" data-index="{{index}}">
+          <view class="product-buy-btn" catchtap="onBuyTap" data-index="{{index}}" hover-class="product-buy-btn--pressed" hover-stay-time="80">
             <text>立即参团</text>
           </view>
         </view>
-        <text class="product-stock">库存 {{item.stock || item.tuanStock || 0}} 件</text>
+        <text class="product-stock">库存 {{item.tuanStock || item.stock || 0}} 件</text>
       </view>
     </view>
   </view>
@@ -37,28 +52,31 @@
       binderror="onCloudImageError" data-src="{{item}}" data-path="deal.images[{{index}}]" />
   </view>
 
-  <view class="detail-footer" wx:if="{{products.length > 0}}">
-    <view class="bar-actions">
-      <button class="bar-action-item contact-btn" open-type="contact">
-        <image class="bar-action-icon-img" src="{{iconService}}" mode="aspectFit" />
-        <text class="bar-action-text">客服</text>
-      </button>
+  <root-portal>
+    <view class="detail-footer" wx:if="{{products.length > 0}}">
+      <view class="bar-actions">
+        <view class="bar-action-item contact-wrap" hover-class="contact-wrap--pressed" hover-stay-time="120">
+          <image class="bar-action-icon-img" src="{{iconService}}" mode="aspectFit" />
+          <text class="bar-action-text">客服</text>
+          <button class="contact-overlay" open-type="contact"></button>
+        </view>
+      </view>
+      <view class="footer-btn" bindtap="onBuyTap" data-index="0" hover-class="footer-btn--pressed" hover-stay-time="120">立即参团</view>
     </view>
-    <view class="footer-btn" bindtap="onBuyTap" data-index="0">立即参团</view>
-  </view>
+  </root-portal>
 </view>
 
 <view class="loading-container" wx:if="{{loading}}">
   <view class="loading-content">
-    <view class="loading-brand-mark">
-      <view class="brand-ring"></view>
-      <view class="brand-ring brand-ring--delay"></view>
-      <view class="brand-dot"></view>
-    </view>
-    <view class="loading-dots">
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
-      <view class="loading-dot"></view>
+    <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
     </view>
     <text class="loading-text">加载中</text>
   </view>
@@ -68,18 +86,21 @@
   <text>团购不存在或已结束</text>
 </view>
 
+<root-portal>
 <view class="sku-popup-mask {{showBuyModal ? 'show' : ''}}" bindtap="onCloseBuyModal"></view>
-<view class="sku-popup {{showBuyModal ? 'show' : ''}}" hidden="{{!showBuyModal}}">
-  <view class="sku-popup-brand-bar">
+<view class="sku-popup {{showBuyModal ? 'show' : ''}}">
+  <view class="sku-popup-brand-bar popup-stagger">
+    <view class="brand-gold-thread"></view>
     <text class="sku-popup-brand-text">AROORO · 安心呼噜 放心托付</text>
+    <image class="brand-separator" src="/images/icons/separator-tuan-luxury.svg" mode="aspectFit"></image>
   </view>
-  <view class="sku-popup-close-btn" bindtap="onCloseBuyModal">✕</view>
+  <view class="sku-popup-close-btn popup-stagger" hover-class="sku-popup-close-btn--pressed" hover-stay-time="120" bindtap="onCloseBuyModal"><image class="sku-popup-close-icon" src="/images/icons/close-luxury-line.svg" mode="aspectFit"></image></view>
 
-  <view class="sku-popup-image-wrap">
+  <view class="sku-popup-image-wrap popup-stagger">
     <image class="sku-popup-image" src="{{skuPopupImage || (products[selectedProductIndex].image || '/images/default-product.svg')}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage}}" data-path="skuPopupImage" />
   </view>
 
-  <scroll-view class="sku-popup-body" scroll-y enhanced show-scrollbar="{{false}}">
+  <scroll-view class="sku-popup-body popup-stagger" scroll-y enhanced show-scrollbar="{{false}}">
     <view class="sku-popup-body-inner">
       <view class="sku-product-info">
         <text class="sku-product-name">{{products[selectedProductIndex].name}}</text>
@@ -91,10 +112,14 @@
       </view>
 
       <view class="sku-spec-section" wx:for="{{popupSpecGroups}}" wx:key="specId">
-        <text class="sku-spec-label">{{item.name}}</text>
+        <view class="sku-spec-label">
+          <view class="label-accent"></view>
+          <text>{{item.name}}</text>
+        </view>
         <view class="sku-spec-options">
           <view wx:for="{{item.values}}" wx:for-item="val" wx:key="*this"
             class="sku-spec-option {{item.selectedValue === val ? 'selected' : ''}} {{item.disabledValues && item.disabledValues[val] ? 'disabled' : ''}}"
+            hover-class="sku-spec-option--pressed" hover-stay-time="80"
             data-spec-id="{{item.specId}}" data-value="{{val}}" bindtap="onPopupSelectSpec">
             <text class="sku-spec-option-text">{{val}}</text>
           </view>
@@ -102,19 +127,24 @@
       </view>
 
       <view class="sku-quantity-section">
-        <text class="sku-spec-label">数量</text>
+        <view class="sku-spec-label">
+          <view class="label-accent"></view>
+          <text>数量</text>
+        </view>
         <view class="sku-quantity-row">
-          <view class="sku-qty-btn {{quantity <= 1 ? 'disabled' : ''}}" bindtap="onQuantityMinus">−</view>
+          <view class="sku-qty-btn {{quantity <= 1 ? 'disabled' : ''}}" hover-class="sku-qty-btn--pressed" hover-stay-time="80" bindtap="onQuantityMinus">−</view>
           <text class="sku-qty-value">{{quantity}}</text>
-          <view class="sku-qty-btn" bindtap="onQuantityPlus">+</view>
+          <view class="sku-qty-btn" hover-class="sku-qty-btn--pressed" hover-stay-time="80" bindtap="onQuantityPlus">+</view>
         </view>
       </view>
     </view>
   </scroll-view>
 
-  <view class="sku-popup-footer">
-    <view class="sku-confirm-btn {{!allSpecsSelected ? 'disabled' : ''}}" bindtap="onSubmitOrder">
+  <view class="sku-popup-footer popup-stagger">
+    <view class="sku-confirm-btn {{!allSpecsSelected ? 'disabled' : ''}}" hover-class="sku-confirm-btn--pressed" hover-stay-time="120" bindtap="onSubmitOrder">
       {{!allSpecsSelected ? '请选择完整规格' : '立即参团'}}
     </view>
   </view>
 </view>
+</root-portal>
+</scroll-view>

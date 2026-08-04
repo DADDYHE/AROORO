@@ -1,15 +1,21 @@
 const { authService } = require('../../../services/AuthService')
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     avatarUrl: '',
     nickName: '',
     canSubmit: false,
     isUploadingAvatar: false,
     uploadedAvatarId: '',
+  },
+
+  onLoad() {
+    this._initNavbarHeight()
   },
 
   onChooseAvatar(e) {

@@ -1,3 +1,10 @@
+<zy-navbar title="创建活动" />
+<scroll-view
+  scroll-y
+  enhanced
+  bindscroll="_onScroll"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="gallery-container">
   <view class="form-scroll">
     <view class="gallery-header">
@@ -49,13 +56,13 @@
           </view>
 
           <view class="form-field">
-            <text class="form-label">活动图片 (最多9张)</text>
+            <text class="form-label">活动图片 (最多15张)</text>
             <view class="image-grid">
               <view wx:for="{{formData.images}}" wx:key="*this" class="image-grid-item">
                 <image class="grid-image" src="{{item}}" mode="aspectFill" />
                 <view class="image-remove" catchtap="onRemoveImage" data-index="{{index}}">×</view>
               </view>
-              <view wx:if="{{formData.images.length < 9}}" class="image-grid-item image-add" bindtap="onChooseImages">
+              <view wx:if="{{formData.images.length < 15}}" class="image-grid-item image-add" bindtap="onChooseImages">
                 <text class="upload-icon-small">+</text>
               </view>
             </view>
@@ -171,6 +178,7 @@
       </view>
     </view>
 
+    <root-portal>
     <view class="action-bar">
       <view class="action-btn action-btn-draft" bindtap="onSubmit">
         <text class="action-btn-text">保存草稿</text>
@@ -179,8 +187,10 @@
         <text class="action-btn-text">立即发布</text>
       </view>
     </view>
+    </root-portal>
   </view>
 
+  <root-portal>
   <view class="picker-mask" wx:if="{{showCategoryPicker}}" bindtap="onCloseCategoryPicker">
     <view class="picker-sheet" catchtap="">
       <view class="picker-sheet-header">
@@ -195,9 +205,11 @@
           bindtap="onCategorySelect"
         >
           <text class="picker-sheet-item-text">{{item.label}}</text>
-          <text wx:if="{{formData.category === item.key}}" class="picker-check">✓</text>
+          <image wx:if="{{formData.category === item.key}}" class="picker-check" src="/images/icons/check-luxury-line.svg" mode="aspectFit"></image>
         </view>
       </view>
     </view>
   </view>
+  </root-portal>
 </view>
+</scroll-view>

@@ -1,6 +1,18 @@
+<zy-navbar title="宠物服务" showBack="{{false}}" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-  <view class="gallery-header">
+  <view class="gallery-header zy-enter">
     <view class="brand-block">
       <view class="brand-accent-bar"></view>
       <view class="brand-main">
@@ -13,53 +25,57 @@
     </view>
   </view>
 
-  <view class="selector-card">
+  <view class="selector-card zy-enter zy-enter--d1">
     <view class="selector-row location-row">
-      <view class="city-selector-inline" bindtap="handleCityTap">
+      <view class="city-selector-inline" bindtap="handleCityTap" hover-class="city-selector-inline--pressed" hover-stay-time="120">
         <text class="city-name {{city ? '' : 'placeholder'}}">{{city || '定位中'}}</text>
         <view class="city-arrow"></view>
       </view>
       <view class="location-divider"></view>
-      <view class="selector-left" bindtap="handleLocationTap">
+      <view class="selector-left" bindtap="handleLocationTap" hover-class="selector-left--pressed" hover-stay-time="120">
         <text class="selector-label">服务位置</text>
         <text class="selector-value {{locationText ? '' : 'secondary'}}">{{locationText || '请选择服务位置'}}</text>
       </view>
-      <view class="selector-right" bindtap="handleRelocate">
-        <view class="location-icon-wrap">
-          <view class="location-icon"></view>
-        </view>
+      <view class="selector-right" bindtap="handleRelocate" hover-class="selector-right--pressed" hover-stay-time="120">
         <text class="location-text">选择</text>
         <view class="selector-arrow"></view>
       </view>
     </view>
   </view>
 
-  <view class="book-btn-section">
-    <button class="book-btn" bindtap="handleBookTap">
+  <view class="book-btn-section zy-enter zy-enter--d2">
+    <button class="book-btn" bindtap="handleBookTap" hover-class="book-btn--pressed" hover-stay-time="120">
       <text class="book-text">立刻预约</text>
     </button>
   </view>
 
   <view class="quick-actions">
-    <view class="action-item" bindtap="handlePricingTap">
-      <view class="action-icon-wrap pricing-wrap">
-        <view class="action-icon pricing-icon"></view>
+    <view class="action-item-wrap zy-enter zy-enter--d3">
+      <view class="action-item" bindtap="handlePricingTap" hover-class="action-item--pressed" hover-stay-time="120">
+        <view class="action-icon-wrap pricing-wrap">
+          <view class="action-icon pricing-icon"></view>
+        </view>
+        <text class="action-text">服务收费</text>
       </view>
-      <text class="action-text">服务收费</text>
     </view>
-    <view class="action-item" bindtap="handleGuideTap">
-      <view class="action-icon-wrap guide-wrap">
-        <view class="action-icon guide-icon"></view>
+    <view class="action-item-wrap zy-enter zy-enter--d4">
+      <view class="action-item" bindtap="handleGuideTap" hover-class="action-item--pressed" hover-stay-time="120">
+        <view class="action-icon-wrap guide-wrap">
+          <view class="action-icon guide-icon"></view>
+        </view>
+        <text class="action-text">预约指引</text>
       </view>
-      <text class="action-text">预约指引</text>
     </view>
-    <view class="action-item" bindtap="handleFaqTap">
-      <view class="action-icon-wrap faq-wrap">
-        <view class="action-icon faq-icon"></view>
+    <view class="action-item-wrap zy-enter zy-enter--d5">
+      <view class="action-item" bindtap="handleFaqTap" hover-class="action-item--pressed" hover-stay-time="120">
+        <view class="action-icon-wrap faq-wrap">
+          <view class="action-icon faq-icon"></view>
+        </view>
+        <text class="action-text">常见问题</text>
       </view>
-      <text class="action-text">常见问题</text>
     </view>
   </view>
 
   <view class="bottom-spacer"></view>
 </view>
+</scroll-view>

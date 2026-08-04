@@ -1,1 +1,17 @@
+/* ================================================================
+   pet/create-step1.wxss · AROORO 创建宠物档案页 — Haute-Luxury Editorial
+   主色：深林绿家族 --primary-color
+   Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
+   ================================================================ */
 @import './common.wxss';
+
+/* ===== 创建页表单区（继承 common 表单样式，补充过渡） ===== */
+.form-row {
+  transition-property: background-color;
+  transition-duration: 240ms;
+  transition-timing-function: cubic-bezier(0.25,0.1,0.25,1);
+}
+
+.form-row--pressed {
+  background-color: var(--primary-wash);
+}

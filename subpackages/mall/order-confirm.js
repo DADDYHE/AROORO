@@ -3,6 +3,7 @@ const { CouponService } = require('../../services/CouponService')
 const { AddressService } = require('../../utils/AddressService')
 const { TuanService } = require('../../services/TuanService')
 const PaymentService = require('../../services/PaymentService')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const { computeFinalAmount } = require('../../utils/coupon-amount')
 const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
@@ -11,7 +12,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior, couponSelectorBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, couponSelectorBehavior],
   data: {
     isLoading: true,
     error: null,
@@ -42,6 +43,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     if (options.fromTuan === '1' && options.tuanData) {
       try {
         const tuanData = JSON.parse(decodeURIComponent(options.tuanData))
@@ -283,36 +285,38 @@ Page({
       let lastOrderNo = null
 
       if (fromCart) {
-        for (const item of cartItems) {
-          const result = await wx.cloud.callFunction({
-            name: 'mallService',
-            data: {
-              action: 'createOrder',
+        // P1-C: 购物车多商品合并成一单（createMultiOrder），一次支付全部商品；
+        //   原实现循环 createOrder 每件一单、只支付最后一单 → 多商品结算必失败
+        const result = await wx.cloud.callFunction({
+          name: 'mallService',
+          data: {
+            action: 'createMultiOrder',
+            items: cartItems.map(item => ({
               productId: item.productId,
               skuId: item.skuId || '',
               quantity: item.quantity,
-              receiverName: address.name,
-              receiverPhone: address.phone,
-              receiverAddress: address.fullAddress,
-              // Sprint 27: 透传 finalAmount / couponId / couponDiscount
-              totalAmount: finalAmount,
-              originalAmount: totalAmount,
-              couponId: selectedCouponId || '',
-              couponDiscount: couponDiscount || 0,
-            },
-            timeout: 20000,
-          })
-          if (!result.result || result.result.code !== 0) {
-            this.errorDynamic(result.result?.message, 'ORDER_PLACE_FAILED')
-            if (lockedCouponId) {
-              await CouponService.unlockCoupon(lockedCouponId).catch(() => {})
-            }
-            this.setData({ submitting: false })
-            return
+            })),
+            receiverName: address.name,
+            receiverPhone: address.phone,
+            receiverAddress: address.fullAddress,
+            // Sprint 27: 透传 finalAmount / couponId / couponDiscount
+            totalAmount: finalAmount,
+            originalAmount: totalAmount,
+            couponId: selectedCouponId || '',
+            couponDiscount: couponDiscount || 0,
+          },
+          timeout: 20000,
+        })
+        if (!result.result || result.result.code !== 0) {
+          this.errorDynamic(result.result?.message, 'ORDER_PLACE_FAILED')
+          if (lockedCouponId) {
+            await CouponService.unlockCoupon(lockedCouponId).catch(() => {})
           }
-          lastOrderId = result.result.data?.orderId
-          lastOrderNo = result.result.data?.orderNo
+          this.setData({ submitting: false })
+          return
         }
+        lastOrderId = result.result.data?.orderId
+        lastOrderNo = result.result.data?.orderNo
       } else {
         if (!product) {
           this.error('PRODUCT_INFO_INVALID')
@@ -350,12 +354,9 @@ Page({
         lastOrderNo = result.result.data?.orderNo
       }
 
-      if (lockedCouponId) {
-        await CouponService.useCoupon(
-          lockedCouponId, lastOrderId || orderId, 'mall', totalAmount, couponDiscount, finalAmount
-        )
-      }
-
+      // P1-1: 券核销时机改为支付成功后由 paymentService 回调统一核销（对齐 feeding）。
+      //   原逻辑此处立即 useCoupon 置 used，支付失败/取消时券不可退回。
+      //   现在券保持 locked，支付成功回调核销；失败由取消/超时路径解锁。
       if (lastOrderId && finalAmount > 0) {
         try {
           await PaymentService.pay({
@@ -377,7 +378,10 @@ Page({
           return
         }
       } else {
-        this.toast('ORDER_PLACE_SUCCESS')
+        // P3: 0 元订单不进入支付（会卡在 pending_payment），直接提示异常
+        this.errorDynamic('订单金额异常，请重新下单', 'ORDER_AMOUNT_INVALID')
+        setTimeout(() => wx.navigateBack(), 1500)
+        return
       }
       setTimeout(() => wx.navigateBack(), 1500)
     } catch (e) {
@@ -436,13 +440,8 @@ Page({
       if (res && res.code === 0) {
         const unifiedOrderId = res.data?.unifiedOrderId
 
-        // 核销优惠券
-        if (lockedCouponId) {
-          await CouponService.useCoupon(
-            lockedCouponId, unifiedOrderId || tempOrderId, 'tuan', totalAmount, couponDiscount, finalAmount || totalAmount
-          )
-        }
-
+        // P1-1: 券核销时机改为支付成功后由 paymentService 回调统一核销（对齐 feeding）。
+        //   券保持 locked，支付成功回调核销；失败由取消/超时路径解锁。
         const payAmount = finalAmount || totalAmount
         if (unifiedOrderId && payAmount > 0) {
           try {

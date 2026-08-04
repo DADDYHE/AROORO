@@ -1,78 +1,121 @@
+/* 服务订单详情 - AROORO 奢华宠物 */
 @import '../../../styles/loading-animation.wxss';
-
-@import '../../../styles/variables.wxss';
+/* 令牌由 app.wxss 全局注入到 page，页面不得再 import variables.wxss —
+   页面 wxss 在 app.wxss 之后加载，同为 page 选择器会反向覆盖 theme-teal，
+   把旧橄榄坐标系带回来（详见 #10）。 */
 
 .page {
   background: var(--background-color);
   min-height: 100vh;
-  padding-bottom: 140rpx;
+  padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
 }
 
-.loading-dot:nth-child(2) {
-}
+/* 状态横幅 —— 语义维度是「订单状态」，不是业务线。
+   原先这里还有 .boarding / .activity 两组「按板块分色」规则，已删除：
+   wxml 只输出 `status-banner status-{{order.status}}`，从不输出板块类名，
+   两组规则永不匹配（死代码），却让唯一生效的那条借用了 --feeding-gradient
+   （旧橄榄坐标，theme-teal 未覆盖）→ 所有进行中订单不分业务线统一渲橄榄绿。
+   现已改用补齐的 --status-progress 档位。
 
-.loading-dot:nth-child(3) {
-}
-
+   --banner-ink：本横幅内所有文字的墨色，与 background 写在同一条规则里，
+   避免「底色改了、字色没跟着改」的漂移。底色亮度 L≤0.1833 用白，否则用炭黑。 */
 .status-banner {
-  padding: 48rpx 32rpx 40rpx;
+  padding: 48rpx var(--page-padding) 40rpx;
   display: flex;
   flex-direction: column;
   gap: 8rpx;
+  --banner-ink: var(--card-color);
 }
 
+/* 待付款 - 金。例外档：金对白仅 2.40:1，故金底文字一律炭黑（5.27:1） */
 .status-banner.status-pending,
 .status-banner.status-pending_payment {
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  background: linear-gradient(135deg, var(--status-pending) 0%, var(--accent-deep) 100%);
+  --banner-ink: var(--text-primary);
 }
 
+/* 已付款/待确认 - 钢蓝，白字 4.56:1 */
 .status-banner.status-paid {
-  background: linear-gradient(135deg, var(--feeding-primary) 0%, #1976D2 100%);
+  background: linear-gradient(135deg, var(--status-active) 0%, var(--status-active-deep) 100%);
 }
 
+/* 已确认/进行中 - 状态绿，白字 6.23:1 */
 .status-banner.status-confirmed,
 .status-banner.status-in_progress,
 .status-banner.status-ongoing {
-  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
+  background: linear-gradient(135deg, var(--status-progress) 0%, var(--status-progress-deep) 100%);
 }
 
+/* 已完成 - 绿，白字 5.16:1 */
 .status-banner.status-completed {
-  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  background: linear-gradient(135deg, var(--status-completed) 0%, var(--status-completed-deep) 100%);
 }
 
+/* 已取消 - 暖灰，白字 4.59:1 */
 .status-banner.status-cancelled {
-  background: linear-gradient(135deg, #9E9E9E 0%, #757575 100%);
+  background: linear-gradient(135deg, var(--status-cancelled) 0%, var(--status-cancelled-deep) 100%);
 }
 
 .status-text {
   font-size: 36rpx;
-  font-weight: 700;
-  color: var(--card-color);
-  letter-spacing: 2rpx;
+  font-weight: 400;
+  color: var(--banner-ink);
+  letter-spacing: 0.06em;
 }
 
+/* 24rpx≈12px 属正文档位，门槛仍是 4.5:1。
+   原为 rgba(255,255,255,0.8)，在 5 种横幅里有 4 种不达标（金 2.04 / 钢蓝 3.55
+   / 完成 3.94 / 取消 3.58），故取消降透明，改为与标题同墨色，层级交给字号承担。 */
 .status-desc {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.4;
+  color: var(--banner-ink);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
 }
 
+/* 支付倒计时（待支付订单，与后端 ORDER_TIMEOUT_MINUTES=30 超时取消对齐）
+   wxml 限定 order.status === 'pending_payment' 才渲染 → 必然落在金底上。
+   原为 rgba(255,255,255,0.92)，金底白字 2.40:1；改用 --banner-ink（金底解析为炭黑）后 5.27:1。 */
+.pay-countdown {
+  margin-top: 14rpx;
+  display: flex;
+  align-items: baseline;
+  font-size: 24rpx;
+  color: var(--banner-ink);
+}
+
+/* 原有 opacity:0.85 会把炭黑压到 4.27:1 不达标；层级已由 .pay-countdown-time
+   的 600 字重 + 34rpx 字号承担，故去掉降透明。 */
+.pay-countdown-label {
+  margin-right: 10rpx;
+  letter-spacing: 0.04em;
+}
+
+.pay-countdown-time {
+  font-weight: 600;
+  font-size: 34rpx;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1rpx;
+}
+
+/* 通用区块 */
 .section {
-  margin: 16rpx 24rpx;
+  margin: 16rpx var(--page-padding, 48rpx);
   background: var(--card-color);
-  border-radius: 24rpx;
-  padding: 28rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border-radius: var(--zy-radius-lg);
+  padding: 32rpx;
+  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
 }
 
 .section-title {
   font-size: 26rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 20rpx;
-  letter-spacing: 1rpx;
+  letter-spacing: 0.04em;
 }
 
+/* 服务人员 */
 .host-row {
   display: flex;
   gap: 20rpx;
@@ -84,7 +127,8 @@
   height: 96rpx;
   border-radius: 50%;
   flex-shrink: 0;
-  background: var(--background-color);
+  background: var(--card-cream, #FBF9F4);
+  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
 }
 
 .host-avatar-placeholder {
@@ -92,7 +136,7 @@
   height: 96rpx;
   border-radius: 50%;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #E8DEF8, #D1C4E9);
+  background: var(--primary-tint, #E8ECE2);
 }
 
 .host-info {
@@ -104,7 +148,7 @@
 
 .host-name {
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-primary);
 }
 
@@ -116,18 +160,23 @@
 
 .host-phone {
   font-size: 24rpx;
-  color: var(--gray-700);
+  color: var(--text-secondary);
 }
 
 .call-btn {
   font-size: 22rpx;
-  color: var(--mall-primary);
+  color: var(--primary-color);
   padding: 6rpx 20rpx;
-  border: 1rpx solid rgba(156, 39, 176, 0.3);
-  border-radius: 20rpx;
-  background: rgba(156, 39, 176, 0.05);
+  border: 1rpx solid var(--primary-tint);
+  border-radius: var(--zy-radius-pill);
+  background: var(--primary-wash);
 }
 
+.call-btn.pressed {
+  opacity: 0.7;
+}
+
+/* 宠物列表 */
 .pet-list {
   display: flex;
   flex-direction: column;
@@ -145,7 +194,8 @@
   height: 72rpx;
   border-radius: 50%;
   flex-shrink: 0;
-  background: var(--background-color);
+  background: var(--card-cream, #FBF9F4);
+  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
 }
 
 .pet-avatar-placeholder {
@@ -153,7 +203,7 @@
   height: 72rpx;
   border-radius: 50%;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #FFE0B2, #FFCC80);
+  background: var(--accent-soft, #F0E6D0);
 }
 
 .pet-info {
@@ -164,13 +214,13 @@
 
 .pet-name {
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-primary);
 }
 
 .pet-breed {
   font-size: 22rpx;
-  color: var(--gray-500);
+  color: var(--text-tertiary);
 }
 
 .pet-summary {
@@ -180,8 +230,10 @@
 .pet-names {
   font-size: 28rpx;
   color: var(--text-primary);
+  font-weight: 400;
 }
 
+/* 日期/时间行 */
 .date-row {
   display: flex;
   align-items: center;
@@ -196,26 +248,28 @@
 
 .date-text {
   font-size: 28rpx;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-primary);
   flex: 1;
 }
 
 .date-days {
-  font-size: 24rpx;
-  color: var(--mall-primary);
-  font-weight: 600;
-  background: rgba(156, 39, 176, 0.08);
+  font-size: 22rpx;
+  color: var(--primary-color);
+  font-weight: 400;
+  background: var(--primary-tint);
   padding: 6rpx 16rpx;
-  border-radius: 16rpx;
+  border-radius: var(--zy-radius-sm);
+  letter-spacing: 0.04em;
 }
 
+/* 信息行 */
 .info-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16rpx 0;
-  border-bottom: 1rpx solid var(--divider-color);
+  border-bottom: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
 }
 
 .info-row:last-child {
@@ -230,14 +284,14 @@
 .info-value {
   font-size: 26rpx;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 400;
   max-width: 400rpx;
   text-align: right;
   word-break: break-all;
 }
 
 .info-value.discount {
-  color: #4CAF50;
+  color: var(--success-color);
 }
 
 .info-value-row {
@@ -248,26 +302,31 @@
 
 .copy-btn {
   font-size: 22rpx;
-  color: var(--mall-primary);
+  color: var(--primary-color);
   padding: 4rpx 16rpx;
-  border: 1rpx solid rgba(156, 39, 176, 0.3);
-  border-radius: 16rpx;
-  background: rgba(156, 39, 176, 0.05);
+  border: 1rpx solid var(--primary-tint);
+  border-radius: var(--zy-radius-pill);
+  background: var(--primary-wash);
+}
+
+.copy-btn.pressed {
+  opacity: 0.7;
 }
 
 .total-row {
   margin-top: 8rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid var(--gray-200);
+  border-top: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
   border-bottom: none;
 }
 
 .total-value {
   font-size: 32rpx;
-  font-weight: 700;
-  color: var(--mall-primary);
+  font-weight: 400;
+  color: var(--primary-color);
 }
 
+/* 底部操作栏 */
 .bottom-bar {
   position: fixed;
   bottom: 0;
@@ -277,31 +336,70 @@
   align-items: center;
   justify-content: flex-end;
   gap: 16rpx;
-  padding: 20rpx 32rpx;
+  padding: 20rpx var(--page-padding, 48rpx);
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   background: var(--card-color);
-  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+  border-top: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
 }
 
 .btn-primary {
-  padding: 18rpx 48rpx;
-  background: linear-gradient(135deg, var(--mall-primary) 0%, var(--mall-secondary) 100%);
-  color: var(--card-color);
+  padding: 20rpx 48rpx;
+  background: var(--gradient-primary);
+  color: var(--text-on-primary, #F7F5EF);
   font-size: 28rpx;
-  font-weight: 600;
-  border-radius: 36rpx;
-  letter-spacing: 1rpx;
+  font-weight: 400;
+  border-radius: var(--zy-radius-pill);
+  letter-spacing: 0.06em;
   text-align: center;
+  box-shadow: var(--shadow-glow-primary-btn);
+}
+
+.btn-primary.pressed {
+  opacity: 0.85;
+  transform: scale(0.98);
 }
 
 .btn-secondary {
-  padding: 18rpx 48rpx;
+  padding: 20rpx 48rpx;
   background: var(--card-color);
-  color: var(--gray-700);
+  color: var(--text-secondary);
   font-size: 28rpx;
-  font-weight: 500;
-  border-radius: 36rpx;
-  border: 1rpx solid #D1D1D6;
-  letter-spacing: 1rpx;
+  font-weight: 400;
+  border-radius: var(--zy-radius-pill);
+  border: 1rpx solid var(--border-color, #E2DED3);
+  letter-spacing: 0.06em;
   text-align: center;
+}
+
+.btn-secondary.pressed {
+  opacity: 0.7;
+}
+
+/* 入场动画 */
+.status-banner {
+  animation-name: fadeInDown;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+.section {
+  animation-name: fadeInUp;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+.section:nth-child(2) { animation-delay: 80ms; }
+.section:nth-child(3) { animation-delay: 160ms; }
+.section:nth-child(4) { animation-delay: 240ms; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20rpx); }
+  to { opacity: 1; transform: translateY(0); }
 }

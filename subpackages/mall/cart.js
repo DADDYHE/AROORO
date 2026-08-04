@@ -1,15 +1,21 @@
 const { CartService } = require('./CartService')
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { ListBehavior } = require('../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
+  behaviors: [ListBehavior],
   data: {
     cartItems: [],
     isAllChecked: false,
     checkedCount: 0,
     totalPrice: '0.00',
     invalidCount: 0,
+  },
+
+  onLoad() {
+    this._initNavbarHeight()
   },
 
   onShow() {

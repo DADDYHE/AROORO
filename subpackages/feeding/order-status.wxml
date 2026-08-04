@@ -1,3 +1,15 @@
+<zy-navbar title="订单状态" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <view class="gallery-header">
     <view class="brand-block">
@@ -15,15 +27,15 @@
   <view class="page-content">
     <view wx:if="{{isLoading}}" class="loading-container">
       <view class="loading-content">
-        <view class="loading-brand-mark">
-          <view class="brand-ring"></view>
-          <view class="brand-ring brand-ring--delay"></view>
-          <view class="brand-dot"></view>
-        </view>
-        <view class="loading-dots">
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
+        <view class="lux-cascade">
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+
         </view>
         <text class="loading-text">加载中</text>
       </view>
@@ -32,11 +44,15 @@
     <block wx:elif="{{orderInfo}}">
       <view class="status-card">
         <view class="status-icon-wrap">
-          <text class="status-icon">{{statusConfig.icon}}</text>
+          <image class="status-icon" src="{{statusConfig.icon}}" mode="aspectFit"></image>
         </view>
         <view class="status-info">
           <text class="status-title">{{statusConfig.title}}</text>
           <text class="status-subtitle" wx:if="{{statusConfig.subtitle}}">{{statusConfig.subtitle}}</text>
+          <view wx:if="{{orderInfo.status === 'pending_payment' && payCountdown}}" class="pay-countdown">
+            <text class="pay-countdown-label">支付剩余</text>
+            <text class="pay-countdown-time">{{payCountdown}}</text>
+          </view>
         </view>
       </view>
 
@@ -203,10 +219,11 @@
 
     <block wx:elif="{{!isLoading}}">
       <view class="empty-state">
-        <text class="empty-icon">📋</text>
+        <image class="empty-icon" src="/images/icons/clipboard-luxury-line.svg" mode="aspectFit"></image>
         <text class="empty-text">订单信息加载失败</text>
         <view class="retry-btn" bindtap="_fetchOrderStatus">重新加载</view>
       </view>
     </block>
   </view>
 </view>
+</scroll-view>

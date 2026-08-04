@@ -1,6 +1,8 @@
 const { OrderService } = require('../../../services/CloudFunctionService')
+const { TuanService } = require('../../../services/TuanService')
 const PaymentService = require('../../../services/PaymentService')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
+const countdownBehavior = require('../../../behaviors/countdownBehavior')
 const { MALL_STATUS_TEXT_MAP } = require('../utils/orderConstants')
 const { formatDate, formatDateTime } = require('../utils/dateUtils')
 
@@ -15,10 +17,11 @@ const STATUS_DESC_MAP = {
 }
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
   data: {
     isLoading: true,
     order: null,
@@ -26,6 +29,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     if (options.id) {
       this._loadOrder(options.id)
     } else {
@@ -41,6 +45,13 @@ Page({
       if (res && res.code === 0 && res.data) {
         const order = this._normalizeOrder(res.data)
         this.setData({ order, isLoading: false })
+        this._loadedOnce = true
+        // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
+        if (order.status === 'pending_payment') {
+          this._startPayCountdown((order.createdAtTs || 0) + (order.timeoutMinutes || 30) * 60 * 1000)
+        } else {
+          this._stopPayCountdown()
+        }
         // 异步拉一次 wx 平台发货状态并对齐本地显示
         // ——商家在 mp.weixin.qq.com 后台手动发货时，Plan A/B 兜底同步可能还有延迟，
         // 这里让订单详情页"实时感知"，避免用户看到几秒的 paid 旧状态。
@@ -117,6 +128,9 @@ Page({
       skuText: raw.skuText || '',
       unitPrice: raw.unitPrice || 0,
       quantity: raw.quantity || 1,
+      // P1-C: 合并单 items 透传（详情页列出全部商品）
+      items: Array.isArray(raw.items) ? raw.items : [],
+      itemCount: Array.isArray(raw.items) ? raw.items.length : 0,
       totalAmount: raw.totalAmount || 0,
       receiverName: raw.receiverName || '',
       receiverPhone: raw.receiverPhone || '',
@@ -133,6 +147,9 @@ Page({
       statusText: STATUS_TEXT_MAP[status] || status,
       statusDesc: STATUS_DESC_MAP[status] || '',
       createdAt: this._formatDateTime(raw.createdAt),
+      // 保留原始创建时间戳，供支付倒计时计算（与后端 ORDER_TIMEOUT_MINUTES=30 对齐）
+      createdAtTs: raw.createdAt ? new Date(raw.createdAt).getTime() : 0,
+      timeoutMinutes: 30,
     }
   },
 
@@ -164,7 +181,12 @@ Page({
 
   async _doCancelOrder(orderId) {
     try {
-      const res = await OrderService.cancelMallOrder(orderId)
+      // P1-2: 团购订单走 tuanService.cancelTuanOrder（含 tuan_orders 同步 + 库存回退 + 退款），
+      //   商城订单走 mallService.cancelOrder
+      const isTuan = this.data.order && this.data.order.type === 'group_buy'
+      const res = isTuan
+        ? await TuanService.cancelTuanOrder(orderId)
+        : await OrderService.cancelMallOrder(orderId)
       if (res && res.code === 0) {
         this.toast('CANCEL_SUCCESS')
         this._loadOrder(orderId)
@@ -181,11 +203,13 @@ Page({
     if (!order || !order._id) {return}
 
     try {
+      // P1-2: 团购订单按 type='tuan' 发起支付（pay.ts 按 orderId 查 orders，金额/前缀正确）
+      const isTuan = order.type === 'group_buy'
       await PaymentService.pay({
-        type: 'mall',
+        type: isTuan ? 'tuan' : 'mall',
         orderId: order._id,
         amount: Math.round((order.totalAmount || 0) * 100),
-        description: '商城订单',
+        description: isTuan ? '团购订单' : '商城订单',
       })
       this.toast('PAYMENT_SUCCESS')
       this._loadOrder(order._id)
@@ -264,7 +288,12 @@ Page({
     const orderTxId = order.wxTransactionId || order.transactionId
     // 防御：只处理当前页面订单的回调
     if (transactionId && orderTxId && transactionId !== orderTxId) {return}
-    OrderService.confirmMallReceive(order._id)
+    // P1-2: 团购订单走 tuanService.confirmReceiveTuanOrder（同步 tuan_orders），
+    //   商城订单走 mallService.confirmReceive
+    const confirmFn = order.type === 'group_buy'
+      ? TuanService.confirmReceiveTuanOrder(order._id)
+      : OrderService.confirmMallReceive(order._id)
+    confirmFn
       .then((res) => {
         if (res && res.code === 0) {
           this.toast('WXCONFIRM_SUCCESS')
@@ -311,6 +340,21 @@ Page({
     } catch (err) {
       this.errorDynamic((err && err.message) || '', 'DELETE_FAILED')
     }
+  },
+
+  // 页面重新显示时刷新订单（支付/取消后返回需拿到最新状态），并重启倒计时
+  onShow() {
+    if (this._loadedOnce && this.data.order && this.data.order._id) {
+      this._loadOrder(this.data.order._id)
+    }
+  },
+
+  onHide() {
+    this._stopPayCountdown()
+  },
+
+  onUnload() {
+    this._stopPayCountdown()
   },
 
   onPullDownRefresh() {

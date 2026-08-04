@@ -1,4 +1,7 @@
+const { ListBehavior } = require('../../behaviors/listBehavior')
+
 Page({
+  behaviors: [ListBehavior],
   data: {
     latitude: 0,
     longitude: 0,
@@ -8,6 +11,7 @@ Page({
   },
 
   onLoad(options) {
+    this._initNavbarHeight()
     const latitude = parseFloat(options.latitude)
     const longitude = parseFloat(options.longitude)
     const name = decodeURIComponent(options.name || '')

@@ -1,3 +1,15 @@
+<zy-navbar title="地址管理" />
+<scroll-view
+  scroll-y
+  enhanced
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{_refresherTriggered}}"
+  bindrefresherrefresh="_onRefresherRefresh"
+  bindscrolltolower="_onScrollToLower"
+  bindscroll="_onScroll"
+  lower-threshold="100"
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
 <view class="page-container">
   <view class="address-list">
     <block wx:if="{{ addresses.length > 0 }}">
@@ -6,6 +18,7 @@
         wx:for="{{ addresses }}"
         wx:key="_id"
         bindtap="selectAddress"
+        hover-class="address-item--pressed"
         data-id="{{ item._id }}"
       >
         <view class="address-header">
@@ -28,19 +41,22 @@
     </block>
   </view>
 
+  <root-portal>
   <view class="add-buttons-container">
-    <button class="add-btn add-btn-primary" bindtap="addManual">
+    <button class="add-btn add-btn-primary" hover-class="add-btn--pressed" bindtap="addManual">
       <text class="add-btn-icon">+</text>
       <text class="add-btn-text">新增地址</text>
     </button>
   </view>
+  </root-portal>
 
+  <root-portal>
   <view class="address-popup" wx:if="{{ showEditPopup }}">
     <view class="address-popup-mask" bindtap="closeEditPopup"></view>
     <view class="address-popup-content">
       <view class="address-popup-header">
         <view class="address-popup-title">{{ editingAddress._id ? '编辑地址' : '新增地址' }}</view>
-        <view class="address-popup-close" bindtap="closeEditPopup">×</view>
+        <view class="address-popup-close" hover-class="address-popup-close--pressed" bindtap="closeEditPopup">×</view>
       </view>
       <view class="address-popup-form">
         <view class="form-item">
@@ -89,9 +105,11 @@
         </view>
       </view>
       <view class="address-popup-footer">
-        <button class="address-popup-button address-popup-button-cancel" bindtap="closeEditPopup">取消</button>
-        <button class="address-popup-button address-popup-button-save" bindtap="saveAddress">保存</button>
+        <button class="address-popup-button address-popup-button-cancel" hover-class="address-popup-button--pressed" bindtap="closeEditPopup">取消</button>
+        <button class="address-popup-button address-popup-button-save" hover-class="address-popup-button--pressed" bindtap="saveAddress">保存</button>
       </view>
     </view>
   </view>
+  </root-portal>
 </view>
+</scroll-view>

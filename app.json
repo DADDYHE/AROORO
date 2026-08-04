@@ -4,7 +4,6 @@
     "pages/discover/index",
     "pages/service/index",
     "pages/quick-register/index",
-    "pages/messages/index",
     "pages/profile/index",
     "pages/group-detail/index"
   ],
@@ -12,7 +11,8 @@
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
     "navigationBarTitleText": "AROORO",
-    "navigationBarTextStyle": "black"
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
   },
   "tabBar": {
     "custom": true,
@@ -44,9 +44,19 @@
     ]
   },
   "style": "v2",
-  "renderer": "webview",
+  "renderer": "skyline",
+  "componentFramework": "glass-easel",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "disableABTest": true,
+      "defaultContentBox": true
+    }
+  },
   "lazyCodeLoading": "requiredComponents",
-  "usingComponents": {},
+  "usingComponents": {
+    "zy-navbar": "/components/zy-navbar/index"
+  },
   "sitemapLocation": "sitemap.json",
   "permission": {
     "scope.userFuzzyLocation": {
@@ -128,11 +138,7 @@
       "root": "subpackages/feeding",
       "name": "feeding",
       "pages": [
-        "feeder-detail",
         "service-detail",
-        "groomer-list",
-        "groomer-detail",
-        "order-confirm",
         "confirm-service",
         "order-status"
       ]
