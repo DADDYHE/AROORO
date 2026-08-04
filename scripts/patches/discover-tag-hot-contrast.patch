@@ -1,0 +1,28 @@
+# discover 热卖标签对比度（B2 · 1 处）
+#
+# 病根：pages/discover/index.wxss .tag-hot（font-size 20rpx 小字，需 4.5:1）
+#   底色 var(--tuan-accent) #F0DFD6，文字 var(--tuan-primary) #A86348 → 3.57:1 FAIL。
+#
+# 解：换字色，保持陶土色相族不变（最小改动）。取 #8B4A32 =
+#   --groupbuy-gradient 深停（system 内既有值），同色相族更深的陶土。
+#   实测 #8B4A32 on #F0DFD6 = 5.20 ✓。
+#   备选（未采用）：底改纯白 #A86348 on #FFFFFF = 4.62 ✓，但会失去"浅陶土洗底"标签
+#   的视觉识别；换底改动更大，故换字色。
+#
+# 渲染影响：热卖标签文字由浅陶土变深陶土，仅一处小标签，视觉扰动极小。
+#   在 pages 主包，不在 partner 边界，故出 patch 不 apply，待 team-lead 派单。
+#
+# 应用：git apply -p1 scripts/patches/discover-tag-hot-contrast.patch
+#
+diff -u -r a/pages/discover/index.wxss b/pages/discover/index.wxss
+--- a/pages/discover/index.wxss
++++ b/pages/discover/index.wxss
+@@ -182,7 +182,7 @@
+ /* 热门标签 — 使用团购板块陶土暖棕 */
+ .tag-hot {
+   background: var(--tuan-accent);
+-  color: var(--tuan-primary);
++  color: #8B4A32;  /* 原 var(--tuan-primary) #A86348：3.57 → 5.20（--groupbuy-gradient 深停，同色相族） */
+ }
+ 
+ /* 人数标签 — 浅金米底 */

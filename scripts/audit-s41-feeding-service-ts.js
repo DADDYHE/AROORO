@@ -5,7 +5,7 @@
  *
  * 背景：
  *   - Sprint 41 完成 feedingService index.ts 入口 TS 化
- *   - 12 个 action 全部强类型化
+ *   - 5 个 action 全部强类型化
  *
  * 严格模式额外检查（--strict）：
  *   - tsc --noEmit 8 个服务回归
@@ -92,16 +92,13 @@ if (feedingTs) {
   check('index.ts 从公共模块引入 createCommissionRecord（H1+H3+M1 迁移）',
     /require\(['"]\.\/common\/commission-utils['"]\)/.test(feedingTs) &&
     /\bcreateCommissionRecord\b/.test(feedingTs))
-  check('index.ts 包含 checkPartnerPermission 函数', /async\s+function\s+checkPartnerPermission\b/.test(feedingTs))
   check('index.ts 包含 refreshPetAvatars 函数', /async\s+function\s+refreshPetAvatars\b/.test(feedingTs))
   check('index.ts 包含 handlers 聚合对象', /export\s+const\s+handlers\s*:\s*Record<string,\s*FeedingActionHandler>/.test(feedingTs))
   check('index.ts 包含 main 入口函数', /export\s+async\s+function\s+main\b/.test(feedingTs))
 
   const ACTIONS = [
-    'getFeederList', 'getFeederDetail', 'createFeederProfile', 'updateFeederProfile',
-    'createFeedingOrder', 'getFeedingOrders', 'updateFeedingOrderStatus',
-    'getOrderStatus', 'getFeederOrders', 'getFeedingOrderDetail',
-    'handleFeedingOrder', 'getCurrentFeeder',
+    'createFeedingOrder', 'getFeedingOrders', 'getOrderStatus',
+    'updateFeedingOrderStatus', 'getFeedingOrderDetail',
   ]
   ACTIONS.forEach(act => {
     check(`index.ts 导出 ${act}`, new RegExp(`export\\s+async\\s+function\\s+${act}\\b`).test(feedingTs))

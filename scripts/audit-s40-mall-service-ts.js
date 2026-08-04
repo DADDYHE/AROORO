@@ -5,7 +5,7 @@
  *
  * 背景：
  *   - Sprint 40 完成 mallService index.ts 入口 TS 化
- *   - 17 个 action 全部强类型化
+ *   - 16 个 action 全部强类型化
  *
  * 严格模式额外检查（--strict）：
  *   - tsc --noEmit 7 个服务回归
@@ -89,19 +89,21 @@ if (mallTs) {
   check('index.ts 包含 RiskCheckResult 接口', /export\s+interface\s+RiskCheckResult\b/.test(mallTs))
   check('index.ts 包含 SkuSpec 接口', /export\s+interface\s+SkuSpec\b/.test(mallTs))
   check('index.ts 包含 performMallOrderRiskCheck 函数', /async\s+function\s+performMallOrderRiskCheck\b/.test(mallTs))
-  // H1: createCommissionRecord 已统一使用 common/commission-utils（含自购保护、system_config 配置、幂等）
-  check('index.ts 使用共享 createCommissionRecord（common/commission-utils）',
-    /sharedCreateCommissionRecord/.test(mallTs) && /common\/commission-utils/.test(mallTs))
+  // H1: mallService 的佣金职责仅为「取消订单时撤销 pending 佣金」，统一走 common/commission-utils；
+  //   佣金创建在支付回调（paymentService）与后台完成（adminService completeMallOrder），不在 mallService。
+  check('index.ts 使用共享 cancelCommissionRecord（common/commission-utils）',
+    /cancelCommissionRecord: sharedCancelCommissionRecord/.test(mallTs) &&
+    /sharedCancelCommissionRecord\(/.test(mallTs) &&
+    /common\/commission-utils/.test(mallTs))
   check('index.ts 包含 batchGetTempFileURL 函数', /async\s+function\s+batchGetTempFileURL\b/.test(mallTs))
   check('index.ts 包含 handlers 聚合对象', /export\s+const\s+handlers\s*:\s*Record<string,\s*MallActionHandler>/.test(mallTs))
   check('index.ts 包含 main 入口函数', /export\s+async\s+function\s+main\b/.test(mallTs))
 
   const ACTIONS = [
     'getProductList', 'getProductDetail', 'getCategoryStats', 'listCategories',
-    'checkCartItems', 'createProduct', 'updateProduct', 'deleteProduct',
-    'batchUpdateProducts', 'createOrder', 'createGroupBuyOrder',
+    'checkCartItems', 'createOrder', 'createMultiOrder',
     'getMyOrders', 'getGroupBuyOrders', 'getOrderDetail',
-    'cancelOrder', 'confirmReceive', 'deleteOrder',
+    'cancelOrder', 'confirmReceive', 'deleteOrder', 'getWxShippingStatus',
   ]
   ACTIONS.forEach(act => {
     check(`index.ts 导出 ${act}`, new RegExp(`export\\s+async\\s+function\\s+${act}\\b`).test(mallTs))

@@ -13,8 +13,9 @@
  *   node scripts/sync-cloud-common.js --service=<name>  # 只同步指定 service
  *
  * 同步规则：
- *   - 遍历 cloudfunctions/common/ 下所有 .js 文件
+ *   - 遍历 cloudfunctions/common/ 下所有 .js 与 .d.ts 文件（不同步 .ts 源码）
  *   - 对每个 service：复制 <file> 到 <service>/common/<file>
+ *   - .d.ts 缺失会导致引用方 tsc 报 TS7016（例：commission.ts 委托 commission-utils）
  *   - 同名同 md5 → 跳过
  *   - 目标存在但 md5 不同 → 覆盖
  *   - 目标存在但源文件已被删除 → 删除目标（可选）
@@ -73,12 +74,18 @@ function md5(content) {
   return crypto.createHash('md5').update(content).digest('hex')
 }
 
-/** 读取目录下的 .js 文件（不含子目录） */
-function listJsFiles(dir) {
+/**
+ * 读取目录下的可同步文件（不含子目录）
+ *   同步 .js（运行时消费）与 .d.ts（类型声明，供各 service 的 tsconfig 解析）。
+ *   注意：不同步 .ts 源码（service 仅消费编译产物 .js + 声明 .d.ts，不部署源码）。
+ *   .d.ts 缺失会导致引用方 tsc 报 TS7016（implicit any），例如委托层 commission.ts
+ *   通过 `import ... from '../common/commission-utils'` 解析时必须有 commission-utils.d.ts。
+ */
+function listSyncFiles(dir) {
   if (!fs.existsSync(dir)) {return []}
   return fs
     .readdirSync(dir, { withFileTypes: true })
-    .filter(d => d.isFile() && d.name.endsWith('.js'))
+    .filter(d => d.isFile() && (d.name.endsWith('.js') || d.name.endsWith('.d.ts')))
     .map(d => d.name)
 }
 
@@ -147,7 +154,7 @@ function main() {
     process.exit(1)
   }
 
-  const sourceFiles = listJsFiles(SOURCE)
+  const sourceFiles = listSyncFiles(SOURCE)
   if (sourceFiles.length === 0) {
     console.log('源目录为空，无需同步')
     return

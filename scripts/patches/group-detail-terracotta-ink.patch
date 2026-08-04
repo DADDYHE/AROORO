@@ -1,0 +1,46 @@
+# 团购页陶土压奶油 → 纯白（B1 · 3 处）
+#
+# 病根：pages/group-detail/index.wxss 三个按钮（.product-buy-btn / .footer-btn /
+#   .sku-confirm-btn）底色是 --groupbuy-gradient（陶土 #A86348 → #8B4A32），
+#   文字却写 var(--text-on-primary)（奶油 #F7F5EF）。陶土上奶油对比仅 4.24:1，
+#   差 0.26 不达标（WCAG AA 4.5:1）。
+#
+# 解：改压纯白 #FFFFFF。陶土首停 #A86348 上纯白 = 4.62 ✓，深停 #8B4A32 上 = 6.72 ✓。
+#   写法用令牌 var(--text-inverse)（= #FFFFFF，明暗两态恒定，theme-teal:374）。
+#   --text-on-primary 保留给绿面（主色 #1F3A1F 上奶油本就达标），不误伤。
+#
+# 渲染影响：按钮文字由奶油变纯白，陶土暖红底上更亮更醒目，方向与 B′ 金规范一致。
+#   3 处均在 pages 主包，不在 partner 边界，故出 patch 不 apply，待 team-lead 派单。
+#
+# 应用：git apply -p1 scripts/patches/group-detail-terracotta-ink.patch
+#
+diff -u -r a/pages/group-detail/index.wxss b/pages/group-detail/index.wxss
+--- a/pages/group-detail/index.wxss
++++ b/pages/group-detail/index.wxss
+@@ -203,7 +203,7 @@
+ 
+ .product-buy-btn {
+   background: var(--groupbuy-gradient);
+-  color: var(--text-on-primary);
++  color: var(--text-inverse);  /* 原 var(--text-on-primary)：陶土上奶油 4.24 → 纯白 4.62 */
+   font-size: 24rpx;
+   padding: 14rpx 28rpx;
+   border-radius: var(--border-radius-xs);
+@@ -349,7 +349,7 @@
+   flex: 1;
+   min-width: 0;
+   background: var(--groupbuy-gradient);
+-  color: var(--text-on-primary);
++  color: var(--text-inverse);  /* 原 var(--text-on-primary)：陶土上奶油 4.24 → 纯白 4.62 */
+   font-size: 30rpx;
+   font-weight: 500;
+   padding: 24rpx 0;
+@@ -674,7 +674,7 @@
+   text-align: center;
+   font-size: 28rpx;
+   font-weight: 500;
+-  color: var(--text-on-primary);
++  color: var(--text-inverse);  /* 原 var(--text-on-primary)：陶土上奶油 4.24 → 纯白 4.62 */
+   letter-spacing: 0.20em;
+   box-shadow: var(--shadow-glow-groupbuy);
+   font-family: var(--font-sans);

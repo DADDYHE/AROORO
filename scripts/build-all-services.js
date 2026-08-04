@@ -81,6 +81,15 @@ const SERVICES = [
       'cloudfunctions/common/validator.js',
       'cloudfunctions/common/verify-auth.js',
       'cloudfunctions/common/operation-log.js',
+      // 补齐：以下模块已在 tsconfig.common.json 的 include 中编译，
+      // 但历史上漏配 banner target，导致产物头部缺 eslint-disable。
+      'cloudfunctions/common/order-status.js',
+      'cloudfunctions/common/commission-utils.js',
+      'cloudfunctions/common/service-income-utils.js',
+      'cloudfunctions/common/wxAccessToken.js',
+      'cloudfunctions/common/alert.js',
+      'cloudfunctions/common/wxLogistics.js',
+      'cloudfunctions/common/expressCompanyCodes.js',
     ],
     staleDirs: [
       'cloudfunctions/common/common',

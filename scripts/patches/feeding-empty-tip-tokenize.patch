@@ -1,0 +1,27 @@
+# feeding/order-status .empty-tip 令牌化（B3 · 1 处）
+#
+# 病根：subpackages/feeding/order-status.wxss .empty-tip 文字写
+#   var(--gray-500)（#9E9889）——裸灰度令牌，非语义文本令牌；且 --gray-500 在
+#   .theme-dark 不被覆盖，暗色态会停留在浅灰上，不随主题收敛。
+#
+# 解：换 var(--text-tertiary)。light 下 = #9E9889（等值零视觉变化），dark 下 =
+#   #6E6A5E（随主题收紧）。纯令牌化，不改任何对比度数值（本处 2.64 是 #9E9889
+#   浅底灰字的既有水平，属"三级辅助文字"，不在本任务对比度修复范围）。
+#
+# 渲染影响：light 零变化；dark 下空提示文字随主题变深灰，更可读。
+#   在 partner 边界外（feeding 分包），故出 patch 不 apply，待 team-lead 派单。
+#
+# 应用：git apply -p1 scripts/patches/feeding-empty-tip-tokenize.patch
+#
+diff -u -r a/subpackages/feeding/order-status.wxss b/subpackages/feeding/order-status.wxss
+--- a/subpackages/feeding/order-status.wxss
++++ b/subpackages/feeding/order-status.wxss
+@@ -417,7 +417,7 @@
+   justify-content: center;
+   align-items: center;
+   padding: 60rpx 32rpx;
+-  color: var(--gray-500);
++  color: var(--text-tertiary);  /* 原 var(--gray-500)：令牌化，light 等值 #9E9889，dark 随主题 */
+   font-size: 26rpx;
+   background-color: var(--background-color);
+   border-radius: 16rpx;

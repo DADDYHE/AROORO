@@ -175,8 +175,21 @@ if (STRICT) {
     check('pay.js 静态可解析', false, 'js 文件不存在')
   }
 
-  // 8.6 pay.ts 不再调用 handleSuccess
-  check('pay.ts 不再调用 handleSuccess（已迁移为 withErrorHandling）', !/\bhandleSuccess\s*\(/.test(tsCode || ''))
+  // 8.6 pay.ts 的 handleSuccess 使用受控
+  //
+  // 原断言为「完全不再调用 handleSuccess」，但该断言与后续 H7 修复冲突：
+  //   createPayment 的返回值必须用 handleSuccess 包装，否则客户端
+  //   CloudFunctionService.call 会因 result.code !== 0 走错误分支，
+  //   抛出「云函数执行失败」（code 9999）。
+  // 故改为「受控使用」：至多 1 处且必须带 H7 说明注释，
+  // 防止其他 handler 退回旧范式。
+  const successCalls = (tsCode || '').match(/\bhandleSuccess\s*\(/g) || []
+  check(
+    'pay.ts 的 handleSuccess 受控使用（仅 createPayment 返回路径 / H7 修复）',
+    successCalls.length <= 1
+      && (successCalls.length === 0 || /H7 修复：必须用 handleSuccess 包装返回值/.test(tsCode || '')),
+    `实际调用 ${successCalls.length} 处`
+  )
 }
 
 // 总结

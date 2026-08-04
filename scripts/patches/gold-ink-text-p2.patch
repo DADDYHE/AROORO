@@ -1,0 +1,65 @@
+# 金面文字令牌化 · P2（选改：仅暗色态不达标）
+#
+# ✅ 已落地（2026-08-04 B2′ 直接应用，本文件仅作变更记录，勿再 apply）
+#
+# coupon 分包 4 处金面按钮写的是 color: var(--primary-deep)，方向本来是对的
+# （全仓 14 个金面消费者里，只有 coupon 这 4 处自发选了深色字），但踩到主题翻转：
+#
+#   --primary-deep  light = #0F2410  → 金族四停 11.34 / 6.84 / 5.64 / 4.95  最低 4.95 ✓
+#   --primary-deep  .theme-dark = #1F3A1F → 8.62 / 5.20 / 4.29 / 3.77  最低 3.77 ✗
+#
+# 关键：.theme-dark 不改 --accent-color / --gradient-secondary / --lux-gold-grad，
+#   金面在明暗两态完全一致；翻转的是文字令牌。所以这 4 处是「底不动、字变浅」，
+#   暗色态反而掉到不达标。规则 E 只扫 page 作用域，看不到这一层。
+#
+# 这也是 --text-on-accent 必须写死字面量、不能写成 var(--ink-black) 的原因：
+#   --ink-black 在 .theme-dark 翻成 #F0EDE4，会把金按钮直接打到 1.33:1。
+#
+# 取舍：light 下 4.95 已达标，改成炭墨是 #0F2410 → #1A1A17 的细微变化（都属深色系），
+#   视觉扰动极小。
+#   原"但若暗色主题短期不上线，可暂不 apply；coupon 分包不在我的边界内，需 team-lead 派单"——
+#   已于 2026-08-04 B2′ 由 prototype-builder-2 直接应用，本 P2 4 处全部落地为 var(--text-on-accent)。
+#
+# 应用：git apply -p1 scripts/patches/gold-ink-text-p2.patch
+#   ⚠ 本 patch 已应用（2026-08-04），勿再 apply（会因变更已存在而失败）。
+#   审计可用：git apply --reverse --check -p1 scripts/patches/gold-ink-text-p2.patch
+#
+diff -u -r a/subpackages/coupon/claim-center.wxss b/subpackages/coupon/claim-center.wxss
+--- a/subpackages/coupon/claim-center.wxss
++++ b/subpackages/coupon/claim-center.wxss
+@@ -189,7 +189,7 @@
+   font-size: 24rpx;
+   padding: 14rpx 36rpx;
+   background: var(--gradient-secondary);
+-  color: var(--primary-deep);
++  color: var(--text-on-accent);  /* 原 var(--primary-deep) */
+   border-radius: var(--border-radius-full);
+   font-weight: 500;
+   letter-spacing: 0.08em;
+diff -u -r a/subpackages/coupon/my-coupons.wxss b/subpackages/coupon/my-coupons.wxss
+--- a/subpackages/coupon/my-coupons.wxss
++++ b/subpackages/coupon/my-coupons.wxss
+@@ -49,7 +49,7 @@
+   height: 56rpx;
+   border-radius: 50%;
+   background: var(--gradient-secondary);
+-  color: var(--primary-deep);
++  color: var(--text-on-accent);  /* 原 var(--primary-deep) */
+   font-size: 30rpx;
+   line-height: 56rpx;
+   text-align: center;
+@@ -321,12 +321,12 @@
+ .card-use-btn.pressed {
+   transform: scale(0.95);
+   background: var(--accent-color);
+-  color: var(--primary-deep);
++  color: var(--text-on-accent);  /* 原 var(--primary-deep) */
+ }
+ 
+ .card-use-btn {
+   background: var(--gradient-secondary);
+-  color: var(--primary-deep);
++  color: var(--text-on-accent);  /* 原 var(--primary-deep) */
+   border-color: transparent;
+   box-shadow: var(--shadow-glow-mall);
+   font-weight: 500;

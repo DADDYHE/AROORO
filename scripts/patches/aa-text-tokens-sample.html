@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  aa-text-tokens 改前/改后对比样张
+  设计系统：theme-teal.wxss（深森林绿 + 金 REV.4）
+  配套补丁：scripts/patches/aa-text-tokens.patch（未 apply，看完此页再定）
+
+  样张里除 --text-tertiary / --error-color 两个值之外，
+  其余令牌、字号、间距、圆角全部照抄 theme-teal.wxss 真值，
+  rpx 按 750 设计稿宽度折算（1rpx = 0.5px），保证观感与真机一致。
+  三个场景取自真实页面，不是造出来的示意图。
+  纯静态单文件，无 CDN、无外部资源。
+  ============================================================================
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aa-text-tokens 改前 / 改后对比样张</title>
+<style>
+/* ========== 设计令牌（照抄 theme-teal.wxss 亮色 page{} 块） ========== */
+:root{
+  --primary-color:#1F3A1F;
+  --background-color:#F7F5EF;
+  --card-color:#FFFFFF;
+  --card-cream:#FBF9F4;
+  --text-primary:#1A1A17;
+  --text-secondary:#5A564C;
+  --text-on-primary:#F7F5EF;
+  --border-color:#E2DED3;
+  --divider-color:#ECE8DE;
+  --hairline:rgba(26,26,23,0.08);
+  --accent:#C9A24B;
+  --accent-wash:#F8F3E6;
+  --primary-wash:#F2F5EC;
+  --surface-tint:#F2F0E8;
+  --success-color:#3D7A45;
+  --warning-color:#C9A24B;
+  --wash-success-08:rgba(61,122,69,0.08);
+  --wash-error-08:rgba(184,92,60,0.08);
+  --wash-neutral-10:rgba(158,152,137,0.10);
+  --font-sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+  --font-serif:"Songti SC","STSong","Songti TC","SimSun",serif;
+}
+/* 两个待定令牌：由 .pane 作用域分别注入旧值 / 新值 */
+.pane-before{ --text-tertiary:#9E9889; --error-color:#B85C3C; }
+.pane-after { --text-tertiary:#736D5F; --error-color:#A45236; }
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--background-color);
+  color:var(--text-primary);
+  font-family:var(--font-sans);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.5;
+  padding:56px 32px 96px;
+}
+.wrap{max-width:1120px;margin:0 auto}
+
+/* ========== 页头 ========== */
+.masthead{margin-bottom:56px;padding-bottom:28px;border-bottom:1px solid var(--border-color)}
+.eyebrow{
+  font-size:11px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--accent);font-weight:600;margin-bottom:14px;
+}
+h1{
+  font-family:var(--font-serif);font-size:34px;font-weight:400;
+  letter-spacing:0.04em;margin-bottom:14px;
+}
+.lede{font-size:14px;color:var(--text-secondary);max-width:64ch;line-height:1.75}
+.lede code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+  background:var(--surface-tint);padding:1px 6px;border-radius:3px;
+}
+
+/* ========== 令牌读数表 ========== */
+.readout{margin:0 0 56px;border:1px solid var(--border-color);background:var(--card-color)}
+.readout-hd{
+  padding:16px 22px;border-bottom:1px solid var(--hairline);
+  font-size:12px;letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--text-secondary);font-weight:600;
+}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:11px 22px;text-align:left;border-bottom:1px solid var(--hairline)}
+th{
+  font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--text-secondary);font-weight:600;background:var(--card-cream);
+}
+tbody tr:last-child td{border-bottom:none}
+td.num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:right;font-size:12.5px}
+.swatch{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:8px;
+  vertical-align:-1px;border:1px solid var(--hairline)}
+.tok{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.fail{color:#A45236;font-weight:600}
+.pass{color:#3D7A45;font-weight:600}
+.rowhead{font-weight:600}
+.note-cell{color:var(--text-secondary);font-size:12px}
+
+/* ========== 对比栅格 ========== */
+.scene{margin-bottom:64px}
+.scene-hd{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.scene-no{
+  font-family:var(--font-serif);font-size:13px;color:var(--accent);
+  letter-spacing:0.1em;font-weight:600;
+}
+.scene-hd h2{font-size:19px;font-weight:600;letter-spacing:0.02em}
+.scene-src{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11.5px;color:var(--text-secondary);margin-bottom:24px;
+}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.pane{border:1px solid var(--border-color);background:var(--card-color)}
+.pane-hd{
+  padding:11px 18px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
+  font-weight:600;border-bottom:1px solid var(--hairline);
+}
+.pane-before .pane-hd{color:#A45236;background:rgba(184,92,60,0.05)}
+.pane-after  .pane-hd{color:#3D7A45;background:rgba(61,122,69,0.05)}
+.pane-body{padding:22px 20px;background:var(--background-color)}
+
+/* ========== 场景 1：订单详情（真实结构） ========== */
+.card{background:var(--card-color);border:1px solid var(--hairline);padding:20px 18px;margin-bottom:14px}
+.card-title{
+  font-size:14px;font-weight:600;letter-spacing:0.04em;
+  padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--divider-color);
+}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;gap:20px}
+.row-label{font-size:12px;color:var(--text-tertiary);flex-shrink:0}   /* ← 受影响 */
+.row-value{font-size:13px;color:var(--text-primary);text-align:right}
+.row-value.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.meta-line{font-size:12px;color:var(--text-tertiary);margin-top:10px;line-height:1.7}  /* ← 受影响 */
+.amount-row{display:flex;justify-content:space-between;align-items:baseline;
+  padding-top:14px;margin-top:8px;border-top:1px solid var(--divider-color)}
+.amount-label{font-size:13px;color:var(--text-secondary)}
+.amount{font-family:var(--font-serif);font-size:24px;color:var(--primary-color);letter-spacing:0.02em}
+.amount small{font-size:13px;margin-right:2px}
+
+/* ========== 场景 2：商城购物车（.item-sku 压 accent-wash） ========== */
+.cart-item{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--hairline)}
+.cart-item:last-child{border-bottom:none}
+.thumb{width:64px;height:64px;flex-shrink:0;background:var(--surface-tint);
+  border:1px solid var(--hairline);display:flex;align-items:center;justify-content:center}
+.thumb svg{opacity:0.32}
+.cart-info{flex:1;min-width:0}
+.item-name{font-size:13px;font-weight:500;letter-spacing:0.02em;margin-bottom:7px}
+.item-sku{                                       /* ← 受影响：tertiary on accent-wash */
+  display:inline-block;font-size:11px;color:var(--text-tertiary);
+  background:var(--accent-wash);padding:2px 7px;border-radius:4px;
+}
+.item-foot{display:flex;justify-content:space-between;align-items:baseline;margin-top:9px}
+.item-price{font-family:var(--font-serif);font-size:15px;color:var(--primary-color)}
+.item-qty{font-size:11px;color:var(--text-tertiary)}   /* ← 受影响 */
+.stock-warn{font-size:11px;color:var(--error-color);margin-top:6px;display:block}  /* ← 受影响 */
+.empty-tip{                                      /* ← 受影响：tertiary on primary-wash */
+  margin-top:16px;padding:14px;background:var(--primary-wash);
+  font-size:12px;color:var(--text-tertiary);text-align:center;
+}
+
+/* ========== 场景 3：合伙人状态徽章族 ========== */
+.badges{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:18px}
+.badge{font-size:11px;padding:4px 11px;border-radius:4px;letter-spacing:0.04em;font-weight:500}
+.status-success {background:var(--wash-success-08);color:var(--success-color)}
+.status-warning {background:var(--accent-wash);   color:var(--warning-color)}
+.status-error   {background:var(--wash-error-08); color:var(--error-color)}    /* ← 受影响 */
+.status-neutral {background:var(--wash-neutral-10);color:var(--text-secondary)}
+.status-disabled{background:var(--wash-neutral-10);color:var(--text-tertiary)} /* ← 受影响 */
+.ledger{margin-top:6px}
+.ledger-row{display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--hairline)}
+.ledger-row:last-child{border-bottom:none}
+.ledger-main{font-size:13px}
+.ledger-sub{font-size:11px;color:var(--text-tertiary);margin-top:3px}  /* ← 受影响 */
+.ledger-amt{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+.ledger-amt.out{color:var(--error-color)}   /* ← 受影响 */
+.ledger-amt.in{color:var(--success-color)}
+
+/* ========== 脚注 ========== */
+.footnote{
+  margin-top:12px;padding:18px 20px;background:var(--card-cream);
+  border-left:2px solid var(--accent);font-size:12.5px;
+  color:var(--text-secondary);line-height:1.85;
+}
+.footnote strong{color:var(--text-primary);font-weight:600}
+.footnote code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.legend{font-size:11.5px;color:var(--text-secondary);margin-top:10px}
+.legend .dot{display:inline-block;width:7px;height:7px;background:var(--accent);
+  border-radius:50%;margin-right:6px;vertical-align:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Accessibility Patch · Sample Sheet</div>
+    <h1>两个文字令牌的 AA 改造对比</h1>
+    <p class="lede">
+      左列是当前线上取值，右列是补丁取值。除
+      <code>--text-tertiary</code> 与 <code>--error-color</code> 两个值以外，
+      其余令牌、字号、间距、圆角均照抄 <code>theme-teal.wxss</code> 真值，
+      rpx 按 1:0.5 折算。三个场景取自真实页面结构，非示意图。
+      看完右列若认可，执行 <code>git apply scripts/patches/aa-text-tokens.patch</code>。
+    </p>
+  </header>
+
+  <!-- ============ 令牌读数 ============ -->
+  <section class="readout">
+    <div class="readout-hd">对比度读数 · 门槛 4.5:1（WCAG AA 正文）</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:26%">令牌 / 取值</th>
+          <th class="num">白卡</th>
+          <th class="num">奶油卡</th>
+          <th class="num">页面底</th>
+          <th class="num">金洗底</th>
+          <th class="num">绿洗底</th>
+          <th class="num">表面色</th>
+          <th class="num">最低</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rowhead"><span class="swatch" style="background:#9E9889"></span><span class="tok">#9E9889</span> 现值</td>
+          <td class="num fail">2.87</td><td class="num fail">2.73</td><td class="num fail">2.64</td>
+          <td class="num fail">2.59</td><td class="num fail">2.61</td><td class="num fail">2.52</td>
+          <td class="num fail">2.52 ✗</td>
+        </tr>
+        <tr>
+          <td class="rowhead"><span class="swatch" style="background:#736D5F"></span><span class="tok">#736D5F</span> 补丁</td>
+          <td class="num pass">5.14</td><td class="num pass">4.89</td><td class="num pass">4.72</td>
+          <td class="num pass">4.64</td><td class="num pass">4.67</td><td class="num pass">4.51</td>
+          <td class="num pass">4.51 ✓</td>
+        </tr>
+        <tr><td colspan="8" class="note-cell">
+          <code>--text-tertiary</code>　色相 H=42.9° 不变，仅明度 L 0.578→0.412。全仓 291 处引用。
+        </td></tr>
+        <tr>
+          <td class="rowhead"><span class="swatch" style="background:#B85C3C"></span><span class="tok">#B85C3C</span> 现值</td>
+          <td class="num fail">4.53</td><td class="num fail">4.31</td><td class="num fail">4.16</td>
+          <td class="num note-cell" colspan="3" style="text-align:right">自身 8% 洗底上：4.09 / 3.89 / 3.78</td>
+          <td class="num fail">3.78 ✗</td>
+        </tr>
+        <tr>
+          <td class="rowhead"><span class="swatch" style="background:#A45236"></span><span class="tok">#A45236</span> 补丁</td>
+          <td class="num pass">5.47</td><td class="num pass">5.20</td><td class="num pass">5.02</td>
+          <td class="num note-cell" colspan="3" style="text-align:right">自身 8% 洗底上：4.90 / 4.68 / 4.51</td>
+          <td class="num pass">4.51 ✓</td>
+        </tr>
+        <tr><td colspan="8" class="note-cell">
+          <code>--error-color</code>　色相 H=15.5° 不变，仅明度 L 0.478→0.427。全仓 23 处引用。
+        </td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 场景 1 ============ -->
+  <section class="scene">
+    <div class="scene-hd"><span class="scene-no">场景 一</span><h2>订单详情 · 信息密集型长表</h2></div>
+    <div class="scene-src">subpackages/profile/order-detail/index.wxss　—— 左列标签全部走 --text-tertiary</div>
+    <div class="grid">
+
+      <div class="pane pane-before">
+        <div class="pane-hd">改前 · #9E9889（2.52:1 不达标）</div>
+        <div class="pane-body">
+          <div class="card">
+            <div class="card-title">服务信息</div>
+            <div class="row"><span class="row-label">服务类型</span><span class="row-value">上门喂养 · 标准</span></div>
+            <div class="row"><span class="row-label">服务地址</span><span class="row-value">朝阳区将台路 甲 2 号院 3 号楼</span></div>
+            <div class="row"><span class="row-label">服务时段</span><span class="row-value">每日 09:00 — 10:00</span></div>
+            <div class="row"><span class="row-label">服务周期</span><span class="row-value">连续 6 天</span></div>
+            <div class="row"><span class="row-label">宠物</span><span class="row-value">布偶 · 团子（3 岁 / 绝育）</span></div>
+            <p class="meta-line">备注：猫粮在玄关柜第二层，湿粮每日一袋。请顺手换水，猫砂两天铲一次。</p>
+          </div>
+          <div class="card">
+            <div class="card-title">订单信息</div>
+            <div class="row"><span class="row-label">订单编号</span><span class="row-value mono">FD20260315004127</span></div>
+            <div class="row"><span class="row-label">下单时间</span><span class="row-value mono">2026-03-15 21:04</span></div>
+            <div class="row"><span class="row-label">支付方式</span><span class="row-value">微信支付</span></div>
+            <div class="amount-row">
+              <span class="amount-label">实付金额</span>
+              <span class="amount"><small>¥</small>—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane pane-after">
+        <div class="pane-hd">改后 · #736D5F（4.51:1 达标）</div>
+        <div class="pane-body">
+          <div class="card">
+            <div class="card-title">服务信息</div>
+            <div class="row"><span class="row-label">服务类型</span><span class="row-value">上门喂养 · 标准</span></div>
+            <div class="row"><span class="row-label">服务地址</span><span class="row-value">朝阳区将台路 甲 2 号院 3 号楼</span></div>
+            <div class="row"><span class="row-label">服务时段</span><span class="row-value">每日 09:00 — 10:00</span></div>
+            <div class="row"><span class="row-label">服务周期</span><span class="row-value">连续 6 天</span></div>
+            <div class="row"><span class="row-label">宠物</span><span class="row-value">布偶 · 团子（3 岁 / 绝育）</span></div>
+            <p class="meta-line">备注：猫粮在玄关柜第二层，湿粮每日一袋。请顺手换水，猫砂两天铲一次。</p>
+          </div>
+          <div class="card">
+            <div class="card-title">订单信息</div>
+            <div class="row"><span class="row-label">订单编号</span><span class="row-value mono">FD20260315004127</span></div>
+            <div class="row"><span class="row-label">下单时间</span><span class="row-value mono">2026-03-15 21:04</span></div>
+            <div class="row"><span class="row-label">支付方式</span><span class="row-value">微信支付</span></div>
+            <div class="amount-row">
+              <span class="amount-label">实付金额</span>
+              <span class="amount"><small>¥</small>—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p class="footnote">
+      这是改动<strong>影响面最大</strong>的一类页面：左栏标签是「可略读但必须能读」的信息，
+      现值 2.52:1 意味着在户外强光或低亮度屏幕下基本消失。
+      改后标签与右侧数值形成清晰的<strong>两级</strong>层次，
+      而不是「一级清楚 + 一级发灰」。注意主文字、金额、分割线均未变动。
+    </p>
+  </section>
+
+  <!-- ============ 场景 2 ============ -->
+  <section class="scene">
+    <div class="scene-hd"><span class="scene-no">场景 二</span><h2>商城购物车 · 文字压洗底</h2></div>
+    <div class="scene-src">subpackages/mall/cart.wxss:141　.item-sku 把 tertiary 压在 --accent-wash 上 —— 全仓最不利底之一</div>
+    <div class="grid">
+
+      <div class="pane pane-before">
+        <div class="pane-hd">改前 · sku 2.59:1 / 缺货提示 4.53:1</div>
+        <div class="pane-body">
+          <div class="card">
+            <div class="cart-item">
+              <div class="thumb"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A17" stroke-width="1.2"><rect x="3" y="7" width="18" height="13" rx="1"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg></div>
+              <div class="cart-info">
+                <div class="item-name">冻干鸡肉粒 · 无谷配方</div>
+                <span class="item-sku">规格 120g / 罐装</span>
+                <div class="item-foot"><span class="item-price">¥—</span><span class="item-qty">× 2</span></div>
+              </div>
+            </div>
+            <div class="cart-item">
+              <div class="thumb"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A17" stroke-width="1.2"><path d="M4 8h16l-1.5 12h-13z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></div>
+              <div class="cart-info">
+                <div class="item-name">陶瓷双碗架 · 胡桃木</div>
+                <span class="item-sku">规格 中号 / 15cm</span>
+                <span class="stock-warn">库存仅剩 1 件，下单后不支持退换</span>
+                <div class="item-foot"><span class="item-price">¥—</span><span class="item-qty">× 1</span></div>
+              </div>
+            </div>
+            <p class="empty-tip">满 ¥— 可用一张同城配送券，去凑单</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane pane-after">
+        <div class="pane-hd">改后 · sku 4.64:1 / 缺货提示 5.47:1</div>
+        <div class="pane-body">
+          <div class="card">
+            <div class="cart-item">
+              <div class="thumb"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A17" stroke-width="1.2"><rect x="3" y="7" width="18" height="13" rx="1"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg></div>
+              <div class="cart-info">
+                <div class="item-name">冻干鸡肉粒 · 无谷配方</div>
+                <span class="item-sku">规格 120g / 罐装</span>
+                <div class="item-foot"><span class="item-price">¥—</span><span class="item-qty">× 2</span></div>
+              </div>
+            </div>
+            <div class="cart-item">
+              <div class="thumb"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A17" stroke-width="1.2"><path d="M4 8h16l-1.5 12h-13z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></div>
+              <div class="cart-info">
+                <div class="item-name">陶瓷双碗架 · 胡桃木</div>
+                <span class="item-sku">规格 中号 / 15cm</span>
+                <span class="stock-warn">库存仅剩 1 件，下单后不支持退换</span>
+                <div class="item-foot"><span class="item-price">¥—</span><span class="item-qty">× 1</span></div>
+              </div>
+            </div>
+            <p class="empty-tip">满 ¥— 可用一张同城配送券，去凑单</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p class="footnote">
+      这一格是<strong>初版取值 <code>#747065</code> 会漏掉的场景</strong>。
+      只在纯白卡上验，<code>#747065</code> 得 4.94 看着很安全；
+      但 <code>.item-sku</code> 的底是 <code>--accent-wash #F8F3E6</code>，
+      实际只有 4.46 —— 差 0.04 不达标。
+      同类还有 <code>.empty-tip</code> 压绿洗底（4.48）与 <code>.brand-slogan</code> 压表面色（4.33）。
+      补丁取 <code>#736D5F</code> 就是为了把这三格一起兜住。
+    </p>
+  </section>
+
+  <!-- ============ 场景 3 ============ -->
+  <section class="scene">
+    <div class="scene-hd"><span class="scene-no">场景 三</span><h2>合伙人后台 · 状态徽章族与流水</h2></div>
+    <div class="scene-src">subpackages/partner/common.wxss:242-274　—— error 与 disabled 两档同时受影响</div>
+    <div class="grid">
+
+      <div class="pane pane-before">
+        <div class="pane-hd">改前 · error 压洗底 4.09:1</div>
+        <div class="pane-body">
+          <div class="card">
+            <div class="card-title">申请状态</div>
+            <div class="badges">
+              <span class="badge status-success">已通过</span>
+              <span class="badge status-warning">待审核</span>
+              <span class="badge status-error">已驳回</span>
+              <span class="badge status-neutral">草稿</span>
+              <span class="badge status-disabled">已停用</span>
+            </div>
+            <div class="ledger">
+              <div class="ledger-row">
+                <div><div class="ledger-main">喂养服务结算</div><div class="ledger-sub">2026-03-14 · 订单 FD…4127</div></div>
+                <span class="ledger-amt in">+—</span>
+              </div>
+              <div class="ledger-row">
+                <div><div class="ledger-main">提现手续费</div><div class="ledger-sub">2026-03-12 · 到账银行卡尾号 8842</div></div>
+                <span class="ledger-amt out">-—</span>
+              </div>
+              <div class="ledger-row">
+                <div><div class="ledger-main">违约扣款</div><div class="ledger-sub">2026-03-09 · 服务超时 42 分钟</div></div>
+                <span class="ledger-amt out">-—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane pane-after">
+        <div class="pane-hd">改后 · error 压洗底 4.90:1</div>
+        <div class="pane-body">
+          <div class="card">
+            <div class="card-title">申请状态</div>
+            <div class="badges">
+              <span class="badge status-success">已通过</span>
+              <span class="badge status-warning">待审核</span>
+              <span class="badge status-error">已驳回</span>
+              <span class="badge status-neutral">草稿</span>
+              <span class="badge status-disabled">已停用</span>
+            </div>
+            <div class="ledger">
+              <div class="ledger-row">
+                <div><div class="ledger-main">喂养服务结算</div><div class="ledger-sub">2026-03-14 · 订单 FD…4127</div></div>
+                <span class="ledger-amt in">+—</span>
+              </div>
+              <div class="ledger-row">
+                <div><div class="ledger-main">提现手续费</div><div class="ledger-sub">2026-03-12 · 到账银行卡尾号 8842</div></div>
+                <span class="ledger-amt out">-—</span>
+              </div>
+              <div class="ledger-row">
+                <div><div class="ledger-main">违约扣款</div><div class="ledger-sub">2026-03-09 · 服务超时 42 分钟</div></div>
+                <span class="ledger-amt out">-—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p class="footnote">
+      <strong>「待审核」那枚金色徽章两列都没变，是故意的。</strong>
+      它是 <code>--warning-color #C9A24B</code> 压金洗底，只有 2.17:1，
+      比这次改的两个都差 —— 但它属 B′「金在浅底不可作文字色」冻结项，
+      不在本补丁范围内，需要单独裁决（金色是品牌锚点，动它是品牌决策不是无障碍决策）。
+      放在这里是为了让你一眼看到：改完之后，<strong>这一族里最扎眼的短板会变成它</strong>。<br>
+      另：「已停用」按 WCAG 1.4.3「非活动 UI 组件文字无对比度要求」可豁免，
+      未参与取值卡点，但会顺带变清楚 —— 本样张的白卡底上 2.63→4.71，
+      放到页面底（最不利）是 2.43→4.18。
+    </p>
+    <p class="legend"><span class="dot"></span>样张内所有金额一律以 <code>—</code> 占位，不编造数字。</p>
+  </section>
+
+  <section class="scene">
+    <div class="scene-hd"><span class="scene-no">场景 四</span><h2>金色主按钮 · 全仓最低 1.45:1</h2></div>
+    <div class="scene-src">
+      partner/common.wxss:307,796 · mall/cart · mall/order-confirm · mall/product-detail · profile/mall-order-detail
+      　—— 属 gold-ink-text-p1.patch，非本补丁，但同批决策
+    </div>
+    <div class="grid">
+
+      <div class="pane pane-before">
+        <div class="pane-hd">改前 · 金底压白字 1.45 ~ 2.40:1</div>
+        <div class="pane-body">
+          <div class="card">
+            <div class="card-title">合伙人 · 待办</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 18px">
+              <span style="display:inline-flex;align-items:center;padding:10px 24px;border-radius:999px;font-size:13px;letter-spacing:.04em;background:linear-gradient(135deg,#E8D5A8 0%,#C9A24B 40%,#B8923E 100%);color:#FFFFFF">接受订单</span>
+              <span style="display:inline-flex;align-items:center;padding:10px 24px;border-radius:999px;font-size:13px;letter-spacing:.04em;background:linear-gradient(135deg,#C9A24B 0%,#A8894A 100%);color:#F7F5EF">去结算</span>
+            </div>
+            <div style="font-size:12px;color:#5A564C;line-height:1.9">
+              浅金停 <code>#E8D5A8</code> 上白字 <b style="color:#B85C3C">1.45:1</b><br>
+              主金 <code>#C9A24B</code> 上白字 <b style="color:#B85C3C">2.40:1</b><br>
+              深金停 <code>#B8923E</code> 上白字 <b style="color:#B85C3C">2.91:1</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane pane-after">
+        <div class="pane-hd">改后 · 金底压炭墨 5.27 ~ 12.05:1</div>
+        <div class="pane-body">
+          <div class="card">
+            <div class="card-title">合伙人 · 待办</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 18px">
+              <span style="display:inline-flex;align-items:center;padding:10px 24px;border-radius:999px;font-size:13px;letter-spacing:.04em;background:linear-gradient(135deg,#E8D5A8 0%,#C9A24B 40%,#B8923E 100%);color:#1A1A17">接受订单</span>
+              <span style="display:inline-flex;align-items:center;padding:10px 24px;border-radius:999px;font-size:13px;letter-spacing:.04em;background:linear-gradient(135deg,#C9A24B 0%,#A8894A 100%);color:#1A1A17">去结算</span>
+            </div>
+            <div style="font-size:12px;color:#5A564C;line-height:1.9">
+              浅金停 <code>#E8D5A8</code> 上炭墨 <b style="color:#3D7A45">12.05:1</b><br>
+              主金 <code>#C9A24B</code> 上炭墨 <b style="color:#3D7A45">7.27:1</b><br>
+              深金停 <code>#B8923E</code> 上炭墨 <b style="color:#3D7A45">6.00:1</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p class="footnote">
+      <strong>这一处不是"某个页面写错了"，是令牌层缺了一格。</strong>
+      令牌里有 <code>--text-on-primary</code>（绿面反白）、有 <code>--text-gold</code>（浅底金字改深绿），
+      唯独没有「金面上的字」。结果 14 个金面消费者各自就近抓了个名字像的令牌，
+      同一个面上出现 <strong>5 种写法</strong>：<code>--text-inverse</code>×5、<code>--text-on-primary</code>×2、
+      <code>--primary-deep</code>×4、<code>--card-color</code>×1、硬编码 <code>#FFFFFF</code>×2。
+      现已补上 <code>--text-on-accent: #1A1A17</code>（已落 theme-teal.wxss:57，纯新增、当前无人消费、零渲染变化）。<br>
+      <strong>为什么只能是炭墨：</strong>金族四个色停相对亮度 L = 0.271~0.676，
+      全部高于「白字要达 4.5:1」所要求的 L ≤ 0.1833 —— 意味着<em>金面上任何反白都不可能达标</em>，
+      这不是调深一点就能救的。候选里深绿 <code>#1F3A1F</code> 最低 3.77 也不够，只有炭墨全通（最低 5.27）。<br>
+      <strong>取舍点在这里：</strong>金按钮从白字变炭墨字，是本轮视觉变化最大的一处。
+      但它和 B′ 已经拍过的「浅底金字改深绿」是同一条逻辑的另一半 —— 金是<em>面</em>，不是<em>字</em>。
+    </p>
+    <p class="legend"><span class="dot"></span>渐变按真实三色停逐一计算，非取首停近似。</p>
+  </section>
+
+</div>
+</body>
+</html>

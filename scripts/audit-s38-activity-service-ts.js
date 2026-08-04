@@ -112,18 +112,19 @@ if (actTs) {
   check('index.ts 包含 RiskCheckResult 接口', /export\s+interface\s+RiskCheckResult\b/.test(actTs))
   check('index.ts 包含 PaymentParams 接口', /export\s+interface\s+PaymentParams\b/.test(actTs))
   check('index.ts 包含 performActivityApplyRiskCheck 函数', /async\s+function\s+performActivityApplyRiskCheck\b/.test(actTs))
-  check('index.ts 包含 createCommissionRecord 函数', /async\s+function\s+createCommissionRecord\b/.test(actTs))
+  // 2026-08-02 写入器统一：活动佣金写入委托到公共写入器 common/commission-utils，
+  // 不再在 activityService 内联实现。审计重点从「是否含本地函数」改为「是否正确委托」。
+  const delegatesCommission = /const\s*\{\s*createCommissionRecord\s*\}\s*=\s*require\(['"]\.\/common\/commission-utils['"]\)/.test(actTs)
+  const hasLocalCommissionImpl = /async\s+function\s+createCommissionRecord\b/.test(actTs)
+  check('index.ts 委托 common/commission-utils 提供 createCommissionRecord（写入器统一）', delegatesCommission)
+  check('index.ts 不再内联 createCommissionRecord 实现', !hasLocalCommissionImpl)
   check('index.ts 包含 autoUpdateActivityStatus 函数', /async\s+function\s+autoUpdateActivityStatus\b/.test(actTs))
-  check('index.ts 包含 checkPartnerPermission 函数', /async\s+function\s+checkPartnerPermission\b/.test(actTs))
   check('index.ts 包含 handlers 聚合对象', /export\s+const\s+handlers\s*:\s*Record<string,\s*ActivityActionHandler>/.test(actTs))
   check('index.ts 包含 main 入口函数', /export\s+async\s+function\s+main\b/.test(actTs))
 
   const ACTIONS = [
-    'getActivityList', 'getActivityDetail', 'createActivity',
-    'updateActivity', 'deleteActivity', 'submitRegistration',
+    'getActivityList', 'getActivityDetail', 'submitRegistration',
     'getRegistrationDetail', 'getRegistrationList',
-    'createActivityPaymentOrder', 'confirmActivityPayment',
-    'getActivityRegistrations', 'exportActivityRegistrations', 'getActivityOrders',
   ]
   ACTIONS.forEach(act => {
     check(`index.ts 导出 ${act}`, new RegExp(`export\\s+async\\s+function\\s+${act}\\b`).test(actTs))

@@ -11,10 +11,10 @@
  *   5. scripts/build-all-services.js TARGETS 包含 commission.js
  *   6. package.json 注册 audit:s27-payment-commission-ts + strict
  *   7. ci:check 包含 audit:s27-payment-commission-ts:strict
- *   8. commission.ts 强类型化 4 个核心接口
- *   9. commission.ts 实现 best-effort 错误处理（catch unknown）
- *  10. commission.ts 引用 generateId 工具
- *  11. commission.ts 写入 tuan_commissions 集合
+ *   8. commission.ts 委托公共写入器 common/commission-utils（写入器统一后）
+ *   9. commission.ts 不内联业务逻辑（不直接读 system_config / 写 commissions）
+ *  10. 公共写入器强类型化 4 个核心接口 + best-effort 错误处理（catch unknown）
+ *  11. 公共写入器写入 commissions 集合、确定性 _id 幂等、含 RATE_KEY_ALIASES（P0 护栏）
  *  12. pay.ts 使用解构风格 require commission（与原 .js 兼容）
  *  13. notify.ts 使用解构风格 require commission（Sprint 27 调整）
  *  14. 测试存在
@@ -96,17 +96,48 @@ if (pkg) {
 check('package.json 解析正常', pkgOk)
 
 // 5. commission.ts 内容
-check('commission.ts 强类型化 CommissionOrderType', /export\s+type\s+CommissionOrderType\b/.test(tsCode || ''))
-check('commission.ts 强类型化 CommissionOrderDoc', /export\s+interface\s+CommissionOrderDoc\b/.test(tsCode || ''))
-check('commission.ts 强类型化 CommissionConfig', /export\s+interface\s+CommissionConfig\b/.test(tsCode || ''))
-check('commission.ts 强类型化 CommissionRecordPayload', /export\s+interface\s+CommissionRecordPayload\b/.test(tsCode || ''))
+//
+// 写入器统一后（见 cloudfunctions/common/commission-utils.ts）：
+//   commission.ts 退化为「薄委托层」，仅保留对外调用契约
+//   （pay.ts / notify.ts 的 require('./commission') 不变），
+//   全部业务逻辑收敛到公共写入器。
+// 因此本节拆成两段：
+//   5a. 委托层契约：必须委托、且不得内联业务逻辑
+//   5b. 公共写入器：原 Sprint 27 的强类型 / 业务保障在新位置继续成立
 check('commission.ts 包含 createCommissionRecord handler', /export\s+(async\s+)?function\s+createCommissionRecord\b/.test(tsCode || ''))
 check('commission.ts 默认导出 createCommissionRecord', /export\s+default\s+createCommissionRecord/.test(tsCode || ''))
-check('commission.ts 引用 generateId 工具', /generateId/.test(tsCode || ''))
-check('commission.ts 写入 commissions 集合', /commissions/.test(tsCode || ''))
-check('commission.ts 读取 system_config.commission_rates', /system_config.*commission_rates|commission_rates.*system_config/s.test(tsCode || ''))
-check('commission.ts 幂等检查（orderId + inviterId）', /orderId[\s\S]{0,80}inviterId[\s\S]{0,80}count|count[\s\S]{0,80}orderId[\s\S]{0,80}inviterId/.test(tsCode || ''))
-check('commission.ts 错误处理使用 catch (error: unknown)', /catch\s*\(\s*\w+\s*:\s*unknown\s*\)/.test(tsCode || ''))
+
+// 5a. 委托层契约
+check('commission.ts 委托公共写入器 common/commission-utils',
+  /from\s*['"]\.\.\/common\/commission-utils['"]/.test(tsCode || ''))
+check('commission.ts 再导出 cancelCommissionRecord',
+  /cancelCommissionRecord/.test(tsCode || ''))
+check('commission.ts 不内联业务逻辑（不直接读 system_config / 不直接写 commissions 集合）',
+  !/collection\(\s*['"]system_config['"]\s*\)/.test(tsCode || '')
+  && !/collection\(\s*['"]commissions['"]\s*\)/.test(tsCode || ''))
+
+// 5b. 公共写入器（Single Source of Truth）
+const SHARED = path.join(ROOT, 'cloudfunctions', 'common', 'commission-utils.ts')
+const sharedCode = readSafe(SHARED)
+check('公共写入器 common/commission-utils.ts 存在', Boolean(sharedCode))
+check('公共写入器 强类型化 CommissionOrderType', /export\s+type\s+CommissionOrderType\b/.test(sharedCode || ''))
+check('公共写入器 强类型化 CommissionOrderDoc', /export\s+interface\s+CommissionOrderDoc\b/.test(sharedCode || ''))
+check('公共写入器 强类型化 CommissionConfig', /export\s+interface\s+CommissionConfig\b/.test(sharedCode || ''))
+check('公共写入器 强类型化 CommissionRecordPayload', /export\s+interface\s+CommissionRecordPayload\b/.test(sharedCode || ''))
+check('公共写入器 写入 commissions 集合', /collection\(\s*['"]commissions['"]\s*\)/.test(sharedCode || ''))
+check('公共写入器 读取 system_config.commission_rates',
+  /system_config[\s\S]{0,200}commission_rates|commission_rates[\s\S]{0,200}system_config/.test(sharedCode || ''))
+check('公共写入器 幂等检查（orderId + inviterId）',
+  /orderId[\s\S]{0,120}inviterId[\s\S]{0,120}count|count[\s\S]{0,120}orderId[\s\S]{0,120}inviterId/.test(sharedCode || ''))
+check('公共写入器 确定性 _id 兜底幂等（buildCommissionId）',
+  /export\s+function\s+buildCommissionId\b/.test(sharedCode || ''))
+check('公共写入器 错误处理使用 catch (error: unknown)',
+  /catch\s*\(\s*\w+\s*:\s*unknown\s*\)/.test(sharedCode || ''))
+// P0 回归护栏：寄养费率键别名（boarding/hosting/order）必须存在，
+// 否则线上 system_config 用 hosting 键时寄养佣金会静默归零。
+check('公共写入器 含费率键别名表 RATE_KEY_ALIASES（P0 回归护栏）',
+  /export\s+const\s+RATE_KEY_ALIASES\b/.test(sharedCode || '')
+  && /hosting/.test(sharedCode || ''))
 check('commission.ts 注释包含 "Sprint 27"', /Sprint\s*27/.test(tsCode || ''))
 
 // 6. pay.ts / notify.ts 使用解构风格 require commission
@@ -151,8 +182,9 @@ if (STRICT) {
   if (jsCode) {
     check('commission.js 导出 createCommissionRecord',
       /exports\.(createCommissionRecord|default)/.test(jsCode))
-    check('commission.js 引用 generateId 工具',
-      /generateId/.test(jsCode))
+    // 写入器统一后，commission.js 应为委托产物而非本地实现
+    check('commission.js 委托公共写入器 common/commission-utils',
+      /require\(\s*['"]\.\.\/common\/commission-utils['"]\s*\)/.test(jsCode))
   } else {
     check('commission.js 静态可解析', false, 'js 文件不存在')
   }

@@ -1,0 +1,31 @@
+# app.wxss .status-cancelled 徽章修达标（B4 · 1 处）
+#
+# 病根：app.wxss:243 .status-cancelled 是"独立写法"——浅洗底
+#   rgba(158,152,137,0.10) + 文字 var(--status-cancelled)（#7A7568）。
+#   实测 #7A7568 在洗底上（白卡口径 ≈#F5F5F3）仅 4.21:1，FAIL。
+#   theme-teal 里 --status-cancelled（#7A7568）的设计语义是"深底反白"：
+#   白字压 #7A7568 = 4.59 ✓（theme-teal:128 注释）。app.wxss 把它当浅底文字用，
+#   是用法失配。
+#
+# 解：文字换 --status-cancelled-deep（#5A564C，theme-teal:129 = --text-secondary）。
+#   深档在浅洗底上 = 6.19~6.70 ✓（按奶油/白卡口径均过）。保持"浅洗底+同族文字"的
+#   徽章视觉形态不变（与 .status-active/.status-completed 一致），仅加深字色一档。
+#   联动判断：不引用 #7A7568 的反白语义，而是用其 deep 配对档做浅底文字，达标。
+#
+# 渲染影响：取消状态徽章文字由 #7A7568 变 #5A564C（略深暖灰），可读性提升。
+#   app.wxss 主包，不在 partner 边界，故出 patch 不 apply，待 team-lead 派单。
+#
+# 应用：git apply -p1 scripts/patches/app-status-cancelled-deep.patch
+#
+diff -u -r a/app.wxss b/app.wxss
+--- a/app.wxss
++++ b/app.wxss
+@@ -240,7 +240,7 @@
+ .status-pending { background-color: var(--accent-wash); color: #1F3A1F; }
+ .status-active { background-color: rgba(92, 122, 138, 0.08); color: var(--status-active); }
+ .status-completed { background-color: rgba(61, 122, 69, 0.08); color: var(--status-completed); }
+-.status-cancelled { background-color: rgba(158, 152, 137, 0.10); color: var(--status-cancelled); }
++.status-cancelled { background-color: rgba(158, 152, 137, 0.10); color: var(--status-cancelled-deep); }  /* 原 var(--status-cancelled)：wash 上 4.21 → 深档 6.2+（联动 theme-teal #7A7568 白字 4.59 语义） */
+ 
+ /* ========== 加载状态 ========== */
+ .loading {
