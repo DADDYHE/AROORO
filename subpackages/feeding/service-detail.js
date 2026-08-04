@@ -137,7 +137,8 @@ Page({
         if (!this._cardProgress) return
         this._cardProgress.forEach(p => {
           if (p && p.value < 1) {
-            const { runOnUI } = wx.worklet
+            const { runOnUI } = wx.worklet || {}
+            if (!runOnUI) { p.value = 1; return }
             runOnUI(() => {
               'worklet'
               p.value = 1
@@ -175,7 +176,8 @@ Page({
     if (!progress) return
     // 已入场则跳过
     if (progress.value >= 1) return
-    const { spring, runOnUI } = wx.worklet
+    const { spring, runOnUI } = wx.worklet || {}
+    if (!runOnUI) { progress.value = 1; return }
     runOnUI(() => {
       'worklet'
       progress.value = spring(1, {
@@ -236,6 +238,8 @@ Page({
 
   _moveTabIndicator(tabIndex, animated) {
     if (!this._tabPos) return
+    const { spring, runOnUI } = wx.worklet || {}
+    if (!runOnUI) return  // 非 Skyline 模式跳过 worklet 动画
     const target = tabIndex
     if (animated) {
       // spring 动画：带轻微弹性的丝滑滑动

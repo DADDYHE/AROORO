@@ -249,7 +249,8 @@ Page({
 
   _animateRefreshBack() {
     if (!this._refreshY) return
-    const { spring, runOnUI } = wx.worklet
+    const { spring, runOnUI } = wx.worklet || {}
+    if (!runOnUI) return
     runOnUI(() => {
       'worklet'
       this._refreshY.value = spring(0, {

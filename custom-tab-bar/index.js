@@ -172,7 +172,8 @@ Component({
     _animateTabScale(index, target) {
       const scale = this._tabScales && this._tabScales[index]
       if (!scale) return
-      const { timing, runOnUI } = wx.worklet
+      const { timing, runOnUI } = wx.worklet || {}
+      if (!runOnUI) return
       const easing = this._pressEasing
       runOnUI(() => {
         'worklet'
