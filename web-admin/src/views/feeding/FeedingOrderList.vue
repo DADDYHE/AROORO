@@ -35,7 +35,8 @@ import OrderTable from '@/components/OrderTable.vue'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
 
-const FEEDING_STATUS = { pending_payment: '待支付', paid: '已支付', pending: '待确认', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝', cancelled: '已取消' }
+// 实际状态集：支付回调直接置 confirmed（无 paid 残留）；pending 为历史遗留无写入方
+const FEEDING_STATUS = { pending_payment: '待支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝', cancelled: '已取消' }
 const statusFilter = ref('')
 
 function fetchFn(params) {
