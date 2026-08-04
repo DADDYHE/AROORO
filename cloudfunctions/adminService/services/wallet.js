@@ -3,6 +3,8 @@ const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES } = requi
 const { createLogger } = require('../common/logger')
 // P0-6: 资金事务失败主动告警
 const { recordAlert } = require('../common/alert')
+// 推广/邀请统计统一口径（板块→权威集合→状态集→金额字段）
+const { REFERRAL_BOARDS, resolveOrderAmount, fetchBoardOrders } = require('./referralStats')
 
 const { cloud, db } = initCloud()
 const _ = db.command
@@ -20,23 +22,19 @@ async function getMyIncomeOverview(event, context, auth) {
     } catch (e) {
       logger.warn('getMyIncomeOverview.users.fetch', { openid, code: e.errCode, msg: e.message })
     }
-    if (!user) {return handleSuccess({ commission: { total: 0, pending: 0, settled: 0, monthly: 0, today: 0 }, activity: { total: 0, monthly: 0, today: 0 }, hosting: { total: 0, monthly: 0, today: 0 }, feeding: { total: 0, monthly: 0, today: 0 }, wallet: { commission: { balance: 0, totalIncome: 0, totalWithdrawn: 0, frozenAmount: 0 }, serviceIncome: { balance: 0, totalIncome: 0, totalWithdrawn: 0, frozenAmount: 0 } } })}
+    if (!user) {return handleSuccess({ commission: { total: 0, pending: 0, settled: 0, monthly: 0, today: 0 }, activity: { total: 0, monthly: 0, today: 0 }, boarding: { total: 0, monthly: 0, today: 0 }, feeding: { total: 0, monthly: 0, today: 0 }, wallet: { commission: { balance: 0, totalIncome: 0, totalWithdrawn: 0, frozenAmount: 0 }, serviceIncome: { balance: 0, totalIncome: 0, totalWithdrawn: 0, frozenAmount: 0 } } })}
 
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
     // inviterId 现在存的是 openid，commissions 中也存 openid
-    const [commissionRes, activityRes, hostingRes, feedingRes, commissionWalletRes, serviceIncomeWalletRes] = await Promise.all([
+    // L6: 喂养师体系已废弃——feedingOrders 直接按 ownerId（合作伙伴 openid）查询，不再中转 feeders 集合
+    const [commissionRes, activityRes, boardingRes, feedingRes, commissionWalletRes, serviceIncomeWalletRes] = await Promise.all([
       db.collection('commissions').where({ inviterId: openid }).limit(500).get(),
       db.collection('orders').where({ organizerId: openid, status: 'confirmed', orderType: 'activity' }).limit(500).get(),
       db.collection('orders').where({ organizerId: openid, status: 'completed', type: 'boarding' }).limit(500).get(),
-      (async () => {
-        const feederRes = await db.collection('feeders').where({ createdBy: openid }).limit(1).get()
-        if (!feederRes.data.length) {return { data: [] }}
-        const feederId = feederRes.data[0]._id
-        return db.collection('feedingOrders').where({ feederId, status: 'completed' }).limit(500).get()
-      })(),
+      db.collection('feedingOrders').where({ ownerId: openid, status: 'completed' }).limit(500).get(),
       db.collection('wallets').where({ openid, type: 'commission' }).limit(1).get(),
       db.collection('wallets').where({ openid, type: 'serviceIncome' }).limit(1).get(),
     ])
@@ -51,12 +49,12 @@ async function getMyIncomeOverview(event, context, auth) {
       if (c.createdAt && new Date(c.createdAt) >= todayStart) {commissionToday += amt}
     })
 
-    let hostingTotal = 0, hostingMonthly = 0, hostingToday = 0
-    ;(hostingRes.data || []).forEach(o => {
+    let boardingTotal = 0, boardingMonthly = 0, boardingToday = 0
+    ;(boardingRes.data || []).forEach(o => {
       const amt = Number(o.totalPrice) || Number(o.price) || 0
-      hostingTotal += amt
-      if (o.completedAt && new Date(o.completedAt) >= monthStart) {hostingMonthly += amt} else if (o.updatedAt && new Date(o.updatedAt) >= monthStart) {hostingMonthly += amt}
-      if (o.completedAt && new Date(o.completedAt) >= todayStart) {hostingToday += amt} else if (o.updatedAt && new Date(o.updatedAt) >= todayStart) {hostingToday += amt}
+      boardingTotal += amt
+      if (o.completedAt && new Date(o.completedAt) >= monthStart) {boardingMonthly += amt} else if (o.updatedAt && new Date(o.updatedAt) >= monthStart) {boardingMonthly += amt}
+      if (o.completedAt && new Date(o.completedAt) >= todayStart) {boardingToday += amt} else if (o.updatedAt && new Date(o.updatedAt) >= todayStart) {boardingToday += amt}
     })
 
     let activityTotal = 0, activityMonthly = 0, activityToday = 0
@@ -91,7 +89,7 @@ async function getMyIncomeOverview(event, context, auth) {
     return handleSuccess({
       commission: { total: commissionTotal, pending: commissionPending, settled: commissionSettled, monthly: commissionMonthly, today: commissionToday },
       activity: { total: activityTotal, monthly: activityMonthly, today: activityToday },
-      hosting: { total: hostingTotal, monthly: hostingMonthly, today: hostingToday },
+      boarding: { total: boardingTotal, monthly: boardingMonthly, today: boardingToday },
       feeding: { total: feedingTotal, monthly: feedingMonthly, today: feedingToday },
       wallet,
     })
@@ -118,8 +116,13 @@ async function getMyIncomeDetails(event, context, auth) {
     const allItems = []
 
     // inviterId 现在存的是 openid，commissions 中也存 openid
-    if (type === 'all' || type === 'commission') {
-      const res = await db.collection('commissions').where({ inviterId: openid }).limit(500).get()
+    // 佣金类（团购/商城）按 orderType 细分；all/commission 查全部
+    if (type === 'all' || type === 'commission' || type === 'tuan' || type === 'mall') {
+      const commissionQuery = { inviterId: openid }
+      if (type === 'tuan' || type === 'mall') {
+        commissionQuery.orderType = type
+      }
+      const res = await db.collection('commissions').where(commissionQuery).limit(500).get()
       ;(res.data || []).forEach(c => {
         allItems.push({
           id: c._id, type: 'commission', typeName: '佣金',
@@ -144,11 +147,11 @@ async function getMyIncomeDetails(event, context, auth) {
       })
     }
 
-    if (type === 'all' || type === 'hosting') {
+    if (type === 'all' || type === 'boarding' || type === 'hosting') {
       const res = await db.collection('orders').where({ organizerId: openid, status: 'completed', type: 'boarding' }).limit(500).get()
       ;(res.data || []).forEach(o => {
         allItems.push({
-          id: o._id, type: 'hosting', typeName: '寄养',
+          id: o._id, type: 'boarding', typeName: '寄养',
           amount: Number(o.totalPrice) || Number(o.price) || 0,
           orderNo: o.orderNo || '', description: '寄养订单收入',
           status: 'completed', createdAt: o.completedAt || o.updatedAt || o.createdAt,
@@ -158,20 +161,17 @@ async function getMyIncomeDetails(event, context, auth) {
     }
 
     if (type === 'all' || type === 'feeding') {
-      const feederRes = await db.collection('feeders').where({ createdBy: openid }).limit(1).get()
-      if (feederRes.data.length) {
-        const feederId = feederRes.data[0]._id
-        const res = await db.collection('feedingOrders').where({ feederId, status: 'completed' }).limit(500).get()
-        ;(res.data || []).forEach(o => {
-          allItems.push({
-            id: o._id, type: 'feeding', typeName: '服务',
-            amount: Number(o.totalPrice) || 0,
-            orderNo: o.orderNo || '', description: '上门服务收入',
-            status: 'completed', createdAt: o.completedAt || o.updatedAt || o.createdAt,
-            buyerId: o.ownerId || '',
-          })
+      // L6: 喂养师体系已废弃——feedingOrders 直接按 ownerId（合作伙伴 openid）查询，不再中转 feeders 集合
+      const res = await db.collection('feedingOrders').where({ ownerId: openid, status: 'completed' }).limit(500).get()
+      ;(res.data || []).forEach(o => {
+        allItems.push({
+          id: o._id, type: 'feeding', typeName: '服务',
+          amount: Number(o.totalPrice) || 0,
+          orderNo: o.orderNo || '', description: '上门服务收入',
+          status: 'completed', createdAt: o.completedAt || o.updatedAt || o.createdAt,
+          buyerId: o.ownerId || '',
         })
-      }
+      })
     }
 
     // 批量查询下单用户昵称/头像，回填到明细项
@@ -381,37 +381,14 @@ async function getMyInvitedUsers(event, context, auth) {
       let totalSpent = 0
 
       try {
-        const [mallRes, feedingRes, tuanRes, activityRes, boardingRes] = await Promise.all([
-          db.collection('orders').where({ ownerId: u._id, type: 'mall', status: _.in(['paid', 'shipped', 'completed']) }).get(),
-          db.collection('feedingOrders').where({ ownerId: u._id, status: 'completed' }).get(),
-          db.collection('tuan_orders').where({ ownerId: u._id, status: _.in(['pending', 'paid', 'completed']) }).get(),
-          db.collection('activity_registrations').where({ ownerId: u._id, status: 'completed' }).get(),
-          db.collection('orders').where({ ownerId: u._id, status: _.in(['paid', 'shipped', 'completed']), type: 'boarding' }).get(),
-        ])
-
-        logger.info('getMyInvitedUsers.orderQuery', {
-          userId: u._id,
-          mall: mallRes.data?.length || 0,
-          feeding: feedingRes.data?.length || 0,
-          tuan: tuanRes.data?.length || 0,
-          activity: activityRes.data?.length || 0,
-          boarding: boardingRes.data?.length || 0
-        })
-
-        const countAndSum = res => {
-          let c = 0, s = 0
-          ;(res.data || []).forEach(o => { c++; s += Number(o.totalPrice) || Number(o.totalAmount) || Number(o.price) || 0 })
-          return { c, s }
+        // 统一口径：每个板块只从一个权威集合取数，状态=已支付且未取消，金额 totalAmount || totalPrice || price
+        for (const board of REFERRAL_BOARDS) {
+          const list = await fetchBoardOrders(board, [u._id])
+          for (const o of list) {
+            orderCount += 1
+            totalSpent += resolveOrderAmount(o)
+          }
         }
-
-        const mall = countAndSum(mallRes)
-        const feeding = countAndSum(feedingRes)
-        const tuan = countAndSum(tuanRes)
-        const activity = countAndSum(activityRes)
-        const boarding = countAndSum(boardingRes)
-
-        orderCount = mall.c + feeding.c + tuan.c + activity.c + boarding.c
-        totalSpent = mall.s + feeding.s + tuan.s + activity.s + boarding.s
 
         logger.info('getMyInvitedUsers.orderStats', { userId: u._id, orderCount, totalSpent })
       } catch (e) {

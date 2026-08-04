@@ -17,6 +17,7 @@
  *   （运行时仍消费 .js 编译产物）
  */
 import { type WrappedHandler } from '../common/errors';
+import { type SuccessResult } from '../common/utils';
 type OrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'feeding';
 interface CreatePaymentResult {
     orderId: string;
@@ -63,7 +64,7 @@ export declare function getOrderType(outTradeNo: string): OrderType | null;
  * @throws BusinessError AUTH_REQUIRED / INVALID_PARAMS / WECHAT_API_ERROR / ORDER_NOT_FOUND
  *         ORDER_ALREADY_PAID / PAYMENT_AMOUNT_MISMATCH / PAYMENT_CREATE_FAILED / RATE_LIMITED
  */
-export declare const createPayment: WrappedHandler<CreatePaymentResult>;
+export declare const createPayment: WrappedHandler<SuccessResult<CreatePaymentResult>>;
 /**
  * 查询微信支付单
  *
@@ -92,7 +93,7 @@ export declare const closePayment: WrappedHandler<null>;
  */
 export declare const confirmPayment: WrappedHandler<ConfirmPaymentResult>;
 declare const _default: {
-    createPayment: WrappedHandler<CreatePaymentResult>;
+    createPayment: WrappedHandler<SuccessResult<CreatePaymentResult>>;
     queryPayment: WrappedHandler<WechatPayQueryResult>;
     closePayment: WrappedHandler<null>;
     confirmPayment: WrappedHandler<ConfirmPaymentResult>;

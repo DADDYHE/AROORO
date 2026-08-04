@@ -8,7 +8,7 @@
  *   - 关闭微信支付未支付订单
  *
  * 覆盖 5 类订单：
- *   1. 寄养订单（orders collection，type=hosting 或无 type）
+ *   1. 寄养订单（orders collection，type=boarding 或无 type）
  *   2. 喂养订单（feedingOrders collection）
  *   3. 商城订单（orders collection，type=mall）
  *   4. 团购订单（orders collection，type=group_buy）
@@ -85,7 +85,7 @@ export type OrderStatus = 'pending' | 'pending_payment' | 'paid' | 'cancelled';
 /** 支付状态 */
 export type PaymentStatus = 'unpaid' | 'paid' | 'refunded';
 /** 订单类型（业务类型） */
-export type OrderType = 'hosting' | 'feeding' | 'activity' | 'group_buy' | 'mall';
+export type OrderType = 'boarding' | 'feeding' | 'activity' | 'group_buy' | 'mall';
 /** 通用订单文档基类（按业务投影字段） */
 export interface OrderDoc {
     _id: string;
@@ -142,11 +142,28 @@ export interface UserCouponUnlock {
     status?: 'locked' | 'unused' | 'used' | 'expired';
     [k: string]: unknown;
 }
+/** 团购 SKU 快照（tuan_deals.products[].skus[]） */
+export interface TuanSkuDoc {
+    skuId?: string;
+    stock?: number;
+    sold?: number;
+    [k: string]: unknown;
+}
+/** 团购商品快照（tuan_deals.products[]，下单/取消时库存扣减与回补的字段） */
+export interface TuanProductDoc {
+    productId?: string;
+    stock?: number;
+    sold?: number;
+    skuType?: string;
+    skus?: TuanSkuDoc[];
+    [k: string]: unknown;
+}
 /** 团购团单 */
 export interface TuanDealDoc {
     _id: string;
     totalStock?: number;
     soldCount?: number;
+    products?: TuanProductDoc[];
     [k: string]: unknown;
 }
 /** 活动 */
@@ -176,6 +193,7 @@ export interface TimeoutResult {
     cancelledGroupBuyOrders: number;
     cancelledActivityOrders: number;
     closedWechatOrders: number;
+    closeOrderFailed: number;
     errors: Array<{
         type?: string;
         orderId?: string;
@@ -232,11 +250,21 @@ export declare function restoreProductStock(productId: string | undefined, skuId
  *   - 已过期 → status='expired'
  *   - 未过期 → status='unused'
  */
-export declare function unlockOrderCoupons(orderId: string): Promise<void>;
+export declare function unlockOrderCoupons(orderId: string, couponId?: string): Promise<void>;
 /**
- * 取消团购订单时恢复 tuan_deals 集合的 totalStock / soldCount。
+ * 取消团购订单时恢复 tuan_deals 集合中 **商品快照** 的库存。
+ *
+ * P0-2 修复：下单时扣减的是 `tuan_deals.products[i].stock/sold`
+ * （tuanService.createTuanOrder 事务内），SKU 模式为
+ * `products[i].skus[j].stock/sold`。旧实现回补 `totalStock/soldCount`
+ * 顶层字段——从未被扣减过，导致 deal 商品快照库存永久丢失、
+ * 顶层 totalStock/soldCount 虚增。
+ *
+ * 与下单逻辑对称：
+ *   - SKU 模式（skuId 命中）：只回补 skus[j].stock/sold，不动顶层 product.stock
+ *   - 非 SKU 模式：回补 products[i].stock/sold
  */
-export declare function restoreTuanDealStock(dealId: string | undefined, quantity: number | undefined): Promise<void>;
+export declare function restoreTuanDealStock(dealId: string | undefined, productId: string | undefined, skuId: string | null | undefined, quantity: number | undefined): Promise<void>;
 /**
  * 取消 orders 中 type=group_buy 记录时，同步把 tuan_orders 表对应记录也置为 cancelled。
  *

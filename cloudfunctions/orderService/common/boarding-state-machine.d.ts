@@ -23,7 +23,7 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.orderService.json
  *   （运行时仍消费 .js 编译产物）
  */
-import type { StateMachine } from '../../common/types';
+import type { StateMachine } from './types';
 /**
  * 寄养订单状态枚举
  */

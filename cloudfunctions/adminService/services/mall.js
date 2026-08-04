@@ -538,11 +538,23 @@ async function getCategoryStats() {
 
 async function listCategories() {
   try {
-    const res = await db.collection('categories')
-      .orderBy('sortOrder', 'asc')
-      .limit(100)
-      .get()
-    return handleSuccess(res.data, '获取成功')
+    // M9 对齐 mallService：分页拉取直到拉完，避免分类膨胀时 limit(100) 静默截断
+    const all = []
+    const PAGE_SIZE = 100
+    let page = 0
+    while (true) {
+      const res = await db.collection('categories')
+        .orderBy('sortOrder', 'asc')
+        .skip(page * PAGE_SIZE)
+        .limit(PAGE_SIZE)
+        .get()
+      const data = res.data || []
+      all.push(...data)
+      if (data.length < PAGE_SIZE) {break}
+      page++
+      if (page >= 10) {break}
+    }
+    return handleSuccess(all, '获取成功')
   } catch (error) {
     logger.error('listCategories', error)
     return handleError(error, '获取分类列表失败', ERROR_CODES.DATA)
@@ -587,7 +599,10 @@ async function deleteCategory(event) {
 
   const categoryKey = key
   if (categoryKey) {
-    const productCount = await db.collection('products').where({ category: categoryKey }).count()
+    // 同时检查一级分类（category）与子分类（categoryId），防止商品挂在子分类时误删一级分类
+    const productCount = await db.collection('products')
+      .where(_.or([{ category: categoryKey }, { categoryId: categoryKey }]))
+      .count()
     if (productCount.total > 0) {
       throw err('CATEGORY_HAS_PRODUCTS', `该分类下有 ${productCount.total} 个商品，无法删除`)
     }

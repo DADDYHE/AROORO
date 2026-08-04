@@ -87,7 +87,7 @@ exports.BUSINESS_TYPE_DEFAULT_CONFIG = Object.freeze({
     // M3: 喂养下单限流（参考 mall_order 调整为 6/3，防止刷单）
     feeding_order: Object.freeze({
         perUserPerMinute: 6,
-        perUserPerTargetPerMinute: 3, // 同一喂养师最多 3 次/分钟
+        perUserPerTargetPerMinute: 3, // 同一订单最多 3 次/分钟
         windowMs: 60 * 1000,
     }),
     activity_apply: Object.freeze({

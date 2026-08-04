@@ -46,15 +46,11 @@ import { initCloud, handleSuccess, generateId, paginate, type PaginatedResult } 
 import { createLogger, type ServiceLogger } from './common/logger'
 import type {
   CloudBaseDB,
-  CloudBaseQuery,
   OrderDoc,
   OrderStatus,
   OrderType,
   UserDoc,
-  HostProfileDoc,
-  EvaluationDoc,
   ApiResponse,
-  Logger,
 } from './common/types'
 
 // service 内部 .js 模块走 CommonJS require
@@ -80,7 +76,6 @@ type AuthLike = { openid?: string, [k: string]: unknown }
 type EventLike = Record<string, unknown>
 type ContextLike = Record<string, unknown>
 type HandlerResult = Promise<ApiResponse<unknown> | unknown>
-type WrappedHandler<T = unknown> = (event: EventLike, context: ContextLike, auth: AuthLike | null) => Promise<ApiResponse<T>>
 
 /**
  * 寄养订单状态语义：
@@ -411,7 +406,9 @@ async function validateAndLockCoupon(
   if (coupon.ownerId !== openid) {
     throw err('PERMISSION_DENIED', '无权使用他人优惠券')
   }
-  if (coupon.status !== 'unused') {
+  // P0-A 修复：状态允许 unused|locked（前端 confirm.js 已用临时单号 lockCoupon 锁定，
+  //   原仅允许 'unused' 会拒绝已锁券导致带券下单必失败；服务端只做只读校验防金额伪造）
+  if (coupon.status !== 'unused' && coupon.status !== 'locked') {
     throw err('COUPON_STATUS_INVALID', `优惠券当前状态不可用：${coupon.status}`)
   }
 
@@ -428,22 +425,8 @@ async function validateAndLockCoupon(
     throw err('BUSINESS_ERROR', `优惠券不可用：${calc.message || '不满足使用条件'}`)
   }
 
-  // 调 couponService.lockCoupon 锁定（跨函数调用）
-  try {
-    const callRes = await cloud.callFunction({
-      name: 'couponService',
-      data: { action: 'lockCoupon', couponId, orderId, orderType, business: orderType },
-    })
-    const result = (callRes.result || {}) as { code?: number, message?: string, error?: { type?: string, details?: unknown } }
-    if (result.code && result.code !== 0) {
-      throw err('COUPON_LOCK_FAILED', result.message || '优惠券锁定失败', { couponError: result.error })
-    }
-  } catch (e: unknown) {
-    if (isBusinessError(e)) {throw e}
-    // 网络错误兜底：couponService 不可达时拒绝下单（fail-closed，防止券未锁定却下单）
-    logger.error('validateAndLockCoupon.callFunction', { couponId, orderId, msg: (e as Error)?.message })
-    throw err('COUPON_LOCK_FAILED', '优惠券锁定失败，请重试', { originalMessage: (e as Error)?.message })
-  }
+  // P0-A 修复：不再调 couponService.lockCoupon（前端已锁定，避免双重锁/幂等拒绝）；
+  //   对齐 tuan/mall 模式：前端 lock + 支付成功回调核销，服务端只防金额伪造
 
   // snapshot 用于写入订单（便于后续 useCoupon 核销校验）
   const couponSnapshot: Record<string, unknown> = {
@@ -837,6 +820,9 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
   const order: Record<string, unknown> = {
     ownerId,
     hostId,
+    // 阶段2（2026-08-02 类型字段治理）：寄养订单补 type:'boarding'，与 mall/group_buy 的 type 字段对齐，
+    // 使所有按 type 查寄养单的聚合（合作伙伴收入/用户统计等）生效；历史无 type 的寄养单由迁移脚本补齐。
+    type: 'boarding',
     organizerId: (hostInfo.openid as string) || hostId,
     petIds,
     startDate,
@@ -939,10 +925,6 @@ export async function updateOrderStatus(event: EventLike, _context: ContextLike,
     throw err('ORDER_ALREADY_REFUNDED', '订单已退款，不能再次取消')
   }
 
-  if (od.status === 'pending_payment' && od.timeoutAt && Date.now() > od.timeoutAt) {
-    throw err('ORDER_TIMEOUT', '订单已超时未支付')
-  }
-
   const { boardingOrderStateMachine } = require('./common/boarding-state-machine')
   if (!boardingOrderStateMachine.canTransition(od.status, status)) {
     throw err('BUSINESS_ERROR', '状态变更无效')
@@ -997,6 +979,16 @@ export async function updateOrderStatus(event: EventLike, _context: ContextLike,
   await db.collection('orders').doc(orderId).update({
     data: { status, updatedAt: db.serverDate() },
   })
+
+  // P0-4 修复：主动取消未支付订单时解锁被锁定的优惠券，避免用户券资产永久卡在 locked 丢失。
+  // 仅对未支付（非 paid）的取消做解锁；已支付订单走退款流程，券状态由退款逻辑处理。
+  if (status === 'cancelled' && od.paymentStatus !== 'paid') {
+    try {
+      await unlockOrderCoupons(orderId, (od as { couponId?: string }).couponId)
+    } catch (couponErr) {
+      logger.warn('updateOrderStatus.unlockCoupons', { orderId, msg: (couponErr as Error)?.message })
+    }
+  }
 
   // P2 修复（M9）：通知改为 await，避免云函数返回后未 await 的 Promise 被 runtime 截断
   //   通知失败不影响主流程（sendOrderNotification 内部已 try/catch）
@@ -1061,6 +1053,55 @@ export async function getActivityOrderDetail(event: EventLike, _context: Context
   }
 
   return handleSuccess(od, '获取成功')
+}
+
+/**
+ * P0-4 修复：取消订单时解锁 user_coupons 中 status='locked' 且 lockedOrderId=orderId 的记录。
+ *   - 已过期 → status='expired'
+ *   - 未过期 → status='unused'
+ * 复制自 orderTimeoutService 同款实现（各云函数独立部署，未抽到 common）。
+ */
+async function unlockOrderCoupons(orderId: string, couponId?: string): Promise<void> {
+  if (!orderId && !couponId) { return }
+  try {
+    // P0-B: 优先按订单内 couponId 直解——前端 lockCoupon 传的是临时订单号，
+    //   与真实订单 _id 不匹配，按 orderId 查恒空；couponId 直解最可靠
+    if (couponId) {
+      await db.collection('user_coupons').where({ _id: couponId, status: 'locked' })
+        .update({ data: { status: 'unused', updatedAt: db.serverDate() } })
+      return
+    }
+    // P1-2: couponService.lockCoupon 写入的关联字段是 orderId（非 lockedOrderId），
+    //   原查询恒空导致券永不自动解锁；用 or 兼容历史 lockedOrderId 数据
+    const lockedCoupons = await db.collection('user_coupons')
+      .where((db.command as unknown as { or: (arr: Array<Record<string, unknown>>) => Record<string, unknown> }).or([
+        { orderId, status: 'locked' },
+        { lockedOrderId: orderId, status: 'locked' },
+      ] as Array<Record<string, unknown>>))
+      .field({ _id: true, endTime: true })
+      .limit(20)
+      .get()
+    const lockedList = (lockedCoupons.data || []) as Array<{ _id: string, endTime?: string | number | Date }>
+    const now = new Date()
+    const expiredIds: string[] = []
+    const unusedIds: string[] = []
+    for (const coupon of lockedList) {
+      const isExpired = coupon.endTime ? new Date(coupon.endTime) < now : false
+      ;(isExpired ? expiredIds : unusedIds).push(coupon._id)
+    }
+    if (expiredIds.length > 0) {
+      await db.collection('user_coupons')
+        .where({ _id: (db.command as { in: (arr: string[]) => unknown }).in(expiredIds), status: 'locked' })
+        .update({ data: { status: 'expired', updatedAt: db.serverDate() } })
+    }
+    if (unusedIds.length > 0) {
+      await db.collection('user_coupons')
+        .where({ _id: (db.command as { in: (arr: string[]) => unknown }).in(unusedIds), status: 'locked' })
+        .update({ data: { status: 'unused', updatedAt: db.serverDate() } })
+    }
+  } catch (e) {
+    logger.error('unlockOrderCoupons', e)
+  }
 }
 
 /**

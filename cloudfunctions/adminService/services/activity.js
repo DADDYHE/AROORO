@@ -47,6 +47,49 @@ function _parseDate(dateStr) {
   }
 }
 
+// P2-4 修复：与 activityService 对齐的活动状态机 + 关键字段校验（活跃管理路径此前缺失）
+const ACTIVITY_CREATE_STATUS = ['draft', 'published']
+const ACTIVITY_STATUS_TRANSITIONS = {
+  draft: ['published', 'cancelled', 'deleted'],
+  published: ['registration_stopped', 'cancelled'],
+  registration_stopped: ['ended', 'cancelled'],
+  ended: [],
+  cancelled: ['deleted'],
+}
+
+function validateActivityFields(data) {
+  const parseTime = (v) => {
+    if (v === undefined || v === null || v === '') {return null}
+    const d = new Date(String(v).replace(/-/g, '/'))
+    return isNaN(d.getTime()) ? null : d
+  }
+  if (data.startTime !== undefined && data.startTime !== '' && !parseTime(data.startTime)) {
+    throw err('INVALID_PARAMS', '活动开始时间格式无效')
+  }
+  if (data.endTime !== undefined && data.endTime !== '' && !parseTime(data.endTime)) {
+    throw err('INVALID_PARAMS', '活动结束时间格式无效')
+  }
+  const st = parseTime(data.startTime)
+  const et = parseTime(data.endTime)
+  if (st && et && et <= st) {
+    throw err('INVALID_PARAMS', '活动结束时间必须晚于开始时间')
+  }
+  for (const key of ['price', 'pricePerPerson', 'pricePerPet']) {
+    if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
+      const n = Number(data[key])
+      if (isNaN(n) || n < 0) {
+        throw err('INVALID_PARAMS', `${key} 必须为不小于 0 的数字`)
+      }
+    }
+  }
+  if (data.maxParticipants !== undefined && data.maxParticipants !== null && data.maxParticipants !== '') {
+    const n = Number(data.maxParticipants)
+    if (isNaN(n) || n < 0 || !Number.isInteger(n)) {
+      throw err('INVALID_PARAMS', 'maxParticipants 必须为非负整数')
+    }
+  }
+}
+
 async function getActivityList(event, context, auth) {
   const { page = 1, pageSize = 20, status, keyword } = event
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 100)
@@ -79,8 +122,12 @@ async function getActivityDetail(event, context, auth) {
 async function createActivity(event, context, auth) {
   const { title, category, description, price, maxParticipants, location, latitude, longitude, startTime, endTime, coverUrl, images, contactName, contactPhone, wechatId } = event
   if (!title) {throw err('INVALID_PARAMS', '缺少活动标题')}
-  if (price !== undefined && Number(price) < 0) {throw err('INVALID_PARAMS', '活动价格不能为负')}
-  if (maxParticipants !== undefined && Number(maxParticipants) < 0) {throw err('INVALID_PARAMS', '参与人数不能为负')}
+  // P2-4 修复：状态白名单 + 时间/价格/名额校验（与 activityService 对齐）
+  const requestedStatus = String(event.status || 'draft')
+  if (!ACTIVITY_CREATE_STATUS.includes(requestedStatus)) {
+    throw err('INVALID_PARAMS', `无效的活动状态: ${requestedStatus}`)
+  }
+  validateActivityFields({ startTime, endTime, price, pricePerPerson: event.pricePerPerson, pricePerPet: event.pricePerPet, maxParticipants })
 
   let organizer = null
   try {
@@ -106,7 +153,7 @@ async function createActivity(event, context, auth) {
       name: organizer.nickName || '宠团团',
       avatar: organizer.avatarUrl || '/images/default-avatar.svg',
     } : { name: '宠团团', avatar: '/images/default-avatar.svg' },
-    status: event.status || 'draft', createdAt: db.serverDate(), updatedAt: db.serverDate(),
+    status: requestedStatus, createdAt: db.serverDate(), updatedAt: db.serverDate(),
   }
 
   activity._id = generateId('activity', auth.openid || auth.adminId)
@@ -128,6 +175,33 @@ async function updateActivity(event, context, auth) {
   const { filterFields, FIELD_WHITELISTS } = require('../common/validator')
   const filteredFields = filterFields(FIELD_WHITELISTS.activity, event)
   logger.info('updateActivity', { activityId, fields: Object.keys(filteredFields) })
+
+  // P2-4 修复：状态迁移走状态机 + 时间/价格/名额校验
+  if (filteredFields.status !== undefined) {
+    const nextStatus = String(filteredFields.status)
+    const currStatus = String(existing.data.status || 'draft')
+    if (nextStatus !== currStatus) {
+      const allowed = ACTIVITY_STATUS_TRANSITIONS[currStatus] || []
+      if (!allowed.includes(nextStatus)) {
+        throw err('INVALID_PARAMS', `活动状态不允许从 ${currStatus} 变更为 ${nextStatus}`)
+      }
+    } else {
+      delete filteredFields.status
+    }
+  }
+  validateActivityFields({
+    startTime: filteredFields.startTime !== undefined ? filteredFields.startTime : event.startTime,
+    endTime: filteredFields.endTime !== undefined ? filteredFields.endTime : event.endTime,
+    price: filteredFields.price,
+    pricePerPerson: filteredFields.pricePerPerson,
+    pricePerPet: filteredFields.pricePerPet,
+    maxParticipants: filteredFields.maxParticipants,
+  })
+  const effStart = filteredFields.startTime !== undefined ? filteredFields.startTime : existing.data.startTime
+  const effEnd = filteredFields.endTime !== undefined ? filteredFields.endTime : existing.data.endTime
+  if (effStart && effEnd) {
+    validateActivityFields({ startTime: effStart, endTime: effEnd })
+  }
 
   const updateData = { updatedAt: db.serverDate(), ...filteredFields }
 
@@ -197,13 +271,23 @@ async function exportActivityRegistrations(event, context, auth) {
     throw err('PERMISSION_DENIED', '无权操作他人资源')
   }
 
-  const registrationsRes = await db.collection('activity_registrations')
-    .where({ activityId })
-    .orderBy('createdAt', 'desc')
-    .limit(1000)
-    .get()
-
-  let registrations = registrationsRes.data || []
+  // P3 修复：分页拉取全量，避免 limit(1000) 静默截断大活动报名
+  let registrations = []
+  const PAGE_SIZE = 100
+  let page = 0
+  while (true) {
+    const res = await db.collection('activity_registrations')
+      .where({ activityId })
+      .orderBy('createdAt', 'desc')
+      .skip(page * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+      .get()
+    const data = res.data || []
+    registrations.push(...data)
+    if (data.length < PAGE_SIZE) {break}
+    page++
+    if (page >= 50) {break} // 安全上限 5000
+  }
 
   if (registrations.length > 0) {
     const openids = registrations.map(r => r.ownerId).filter(Boolean)

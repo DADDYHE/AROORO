@@ -1,25 +1,17 @@
 /**
  * feedingService/index.ts - 喂养服务主入口（TypeScript 源文件 - Sprint 41 迁移）
  *
- * 业务功能：
- *   - 喂养师管理（CRUD + 列表筛选）
+ * 业务功能（平台统一接单模式，喂养师体系已废弃）：
  *   - 喂养下单（多宠物 + 上门 + 钥匙 + 熟悉度 + 多次访问）
- *   - 订单管理（我的订单 / 详情 / 状态流转 / 喂养师视角订单）
+ *   - 订单管理（我的订单 / 详情 / 状态流转）
  *   - 佣金记录（status=completed 触发）
  *
- * 共 12 个 action：
- *   1. getFeederList - 喂养师列表
- *   2. getFeederDetail - 喂养师详情
- *   3. createFeederProfile - 创建喂养师档案
- *   4. updateFeederProfile - 更新喂养师档案
- *   5. createFeedingOrder - 创建喂养订单
- *   6. getFeedingOrders - 我的喂养订单
- *   7. getOrderStatus - 获取订单状态
- *   8. updateFeedingOrderStatus - 更新订单状态
- *   9. getFeederOrders - 喂养师视角订单列表
- *  10. getFeedingOrderDetail - 喂养师视角订单详情
- *  11. handleFeedingOrder - 喂养师接单/完成操作
- *  12. getCurrentFeeder - 获取当前用户喂养师档案
+ * 共 5 个 action：
+ *   1. createFeedingOrder - 创建喂养订单
+ *   2. getFeedingOrders - 我的喂养订单
+ *   3. getOrderStatus - 获取订单状态
+ *   4. updateFeedingOrderStatus - 更新订单状态
+ *   5. getFeedingOrderDetail - 订单详情（管理员）
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
@@ -130,7 +122,6 @@ export interface FeedingOrderRecord {
     orderNo?: string;
     orderType?: string;
     ownerId?: string;
-    feederId?: string;
     petIds?: string[];
     petDetails?: PetDetailInput[];
     petServices?: Record<string, unknown>;
@@ -205,34 +196,20 @@ export interface CommissionRecord {
 export interface SystemConfig {
     [key: string]: unknown;
 }
-export declare function getFeederList(event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
-export declare function getFeederDetail(event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
-export declare function createFeederProfile(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function updateFeederProfile(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function createFeedingOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getFeedingOrders(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function updateFeedingOrderStatus(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getOrderStatus(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function getFeederOrders(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getFeedingOrderDetail(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function handleFeedingOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function getCurrentFeeder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare const handlers: Record<string, FeedingActionHandler>;
 export declare function main(event: CloudEvent, context: CloudContext): Promise<unknown>;
 declare const _default: {
     main: typeof main;
-    getFeederList: typeof getFeederList;
-    getFeederDetail: typeof getFeederDetail;
-    createFeederProfile: typeof createFeederProfile;
-    updateFeederProfile: typeof updateFeederProfile;
     createFeedingOrder: typeof createFeedingOrder;
     getFeedingOrders: typeof getFeedingOrders;
     getOrderStatus: typeof getOrderStatus;
     updateFeedingOrderStatus: typeof updateFeedingOrderStatus;
-    getFeederOrders: typeof getFeederOrders;
     getFeedingOrderDetail: typeof getFeedingOrderDetail;
-    handleFeedingOrder: typeof handleFeedingOrder;
-    getCurrentFeeder: typeof getCurrentFeeder;
     handlers: Record<string, FeedingActionHandler>;
 };
 export default _default;

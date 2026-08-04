@@ -8,6 +8,16 @@ const { withRateLimit } = require('../common/risk-rate-limit')
 const { db } = initCloud()
 const logger = createLogger('adminService.application')
 
+// 权限门禁与 ACTION_PERMISSIONS（super_admin）对齐：
+// 允许超级管理员（HTTP 路径 roles 含 super_admin / 小程序路径 isSuperAdmin）与合作伙伴审批。
+function canApproveApplications(auth) {
+  return Boolean(auth && (
+    auth.isPartner === true ||
+    auth.isSuperAdmin === true ||
+    (Array.isArray(auth.roles) && auth.roles.includes('super_admin'))
+  ))
+}
+
 async function submitApplication(event, context, auth) {
   const { realName, phone, reason } = event
   const { openid } = auth
@@ -73,8 +83,8 @@ async function getApplicationStatus(event, context, auth) {
 }
 
 async function approveApplication(event, context, auth) {
-  if (!auth.isPartner) {
-    throw err('PERMISSION_DENIED', '需要合作伙伴权限')
+  if (!canApproveApplications(auth)) {
+    throw err('PERMISSION_DENIED', '需要管理员权限')
   }
 
   const { applicationId } = event
@@ -149,8 +159,8 @@ async function approveApplication(event, context, auth) {
 }
 
 async function rejectApplication(event, context, auth) {
-  if (!auth.isPartner) {
-    throw err('PERMISSION_DENIED', '需要合作伙伴权限')
+  if (!canApproveApplications(auth)) {
+    throw err('PERMISSION_DENIED', '需要管理员权限')
   }
 
   const { applicationId, rejectReason } = event

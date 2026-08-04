@@ -3,26 +3,20 @@
  * activityService/index.ts - 活动服务主入口（TypeScript 源文件 - Sprint 38 迁移）
  *
  * 业务功能：
- *   - 活动管理（CRUD + 自动状态更新）
- *   - 活动报名（带风控前置 + 优惠券）
- *   - 活动支付订单（创建 + 确认）
- *   - 报名管理（详情、列表、导出）
- *   - 合作伙伴视角（活动报名列表、活动订单列表、CSV 导出）
+ *   - 活动列表 / 详情（用户端）
+ *   - 活动报名（带风控前置 + 优惠券，支付走 paymentService 回调闭环）
+ *   - 我的报名（详情、列表）
+ *   - 定时状态自动更新（published → registration_stopped → ended + 佣金/收入）
  *
- * 共 13 个 action：
+ * 注（P3-7 清理）：活动管理（CRUD/报名列表/导出/活动订单）已统一走
+ *   adminService（合作伙伴端）与 orderService（订单列表），本服务不再承载。
+ *
+ * 共 5 个 action：
  *   1. getActivityList - 活动列表
  *   2. getActivityDetail - 活动详情
- *   3. createActivity - 创建活动
- *   4. updateActivity - 更新活动
- *   5. deleteActivity - 删除活动
- *   6. submitRegistration - 提交报名（含风控前置）
- *   7. getRegistrationDetail - 报名详情
- *   8. getRegistrationList - 报名列表
- *   9. createActivityPaymentOrder - 创建活动支付订单
- *  10. confirmActivityPayment - 确认活动支付
- *  11. getActivityRegistrations - 活动报名列表（合作伙伴）
- *  12. exportActivityRegistrations - 导出活动报名（CSV）
- *  13. getActivityOrders - 活动订单列表（合作伙伴）
+ *   3. submitRegistration - 提交报名（含风控前置）
+ *   4. getRegistrationDetail - 报名详情
+ *   5. getRegistrationList - 报名列表
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
@@ -33,7 +27,7 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.activityService.json
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.handlers = exports.getActivityOrders = exports.exportActivityRegistrations = exports.getActivityRegistrations = exports.confirmActivityPayment = exports.createActivityPaymentOrder = exports.getRegistrationList = exports.getRegistrationDetail = exports.submitRegistration = exports.deleteActivity = exports.updateActivity = exports.createActivity = exports.getActivityDetail = exports.getActivityList = void 0;
+exports.main = exports.handlers = exports.getRegistrationList = exports.getRegistrationDetail = exports.submitRegistration = exports.getActivityDetail = exports.getActivityList = void 0;
 // =====================================================================
 // 内部模块初始化（require CommonJS 模块）
 // =====================================================================
@@ -41,14 +35,13 @@ exports.main = exports.handlers = exports.getActivityOrders = exports.exportActi
 const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES, paginate, escapeRegExp } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger');
+// 2026-08-02 写入器统一：佣金写入委托 common/commission-utils（全局唯一实现）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { createCommissionRecord } = require('./common/commission-utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { verifyAuth } = require('./common/auth-middleware');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { filterFields, FIELD_WHITELISTS } = require('./common/validator');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, isBusinessError } = require('./common/errors');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { ENDPOINTS, WECHAT_PAY } = require('./common/config');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { detectActivityApplyRisk, mapActionToErrorCode } = require('./common/risk-control');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -56,11 +49,6 @@ const { withRateLimit } = require('./common/risk-rate-limit');
 // Sprint 50: 限流统一 bootstrap
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap');
-// H1/H6 修复：crypto、https 提升到模块级（避免函数内重复 require，并供微信查单复用）
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const crypto = require('crypto');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const https = require('https');
 const { cloud, db } = initCloud();
 const logger = createLogger('activityService');
 const _ = db.command;
@@ -125,107 +113,11 @@ async function performActivityApplyRiskCheck(ctx) {
 // =====================================================================
 // 辅助函数：佣金记录
 // =====================================================================
-async function createCommissionRecord(orderType, order) {
-    try {
-        if (!order.ownerId) {
-            return;
-        }
-        let user = null;
-        try {
-            const userRes = await db.collection('users').doc(order.ownerId).field({ _id: true, inviterId: true }).get();
-            user = userRes.data;
-        }
-        catch (e) {
-            logger.warn('commission.users.fetch', { ownerId: order.ownerId, code: e.errCode, msg: e.message });
-            return;
-        }
-        if (!user || !user.inviterId) {
-            return;
-        }
-        // 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
-        let rate = 0;
-        try {
-            const adminRes = await db.collection('admins').doc(user.inviterId).get();
-            const admin = adminRes.data;
-            if (admin && admin.commissionRates && admin.commissionRates[orderType] !== undefined) {
-                rate = Number(admin.commissionRates[orderType]);
-            }
-        }
-        catch (e) {
-            logger.warn('commission.admins.fetch', { inviterId: user.inviterId, msg: e.message });
-        }
-        if (rate <= 0) {
-            try {
-                const configRes = await db.collection('system_config').doc('commission_rates').get();
-                const config = configRes.data || {};
-                rate = config[orderType] !== undefined ? Number(config[orderType]) : 0;
-            }
-            catch (e) {
-                logger.warn('commission.system_config', { code: e.errCode, msg: e.message });
-                return;
-            }
-        }
-        if (!rate || rate <= 0) {
-            return;
-        }
-        const orderAmount = Number(order.totalAmount || order.totalPrice || order.basicPrice || 0);
-        if (orderAmount <= 0) {
-            return;
-        }
-        const commissionAmount = Math.round(orderAmount * rate / 100 * 100) / 100;
-        let inviter = null;
-        try {
-            const inviterRes = await db.collection('users').doc(user.inviterId).field({ _id: true, nickName: true }).get();
-            inviter = inviterRes.data;
-        }
-        catch (e) {
-            logger.warn('commission.inviter.fetch', { inviterId: user.inviterId, code: e.errCode, msg: e.message });
-            return;
-        }
-        if (!inviter) {
-            return;
-        }
-        const orderNo = String(order.orderId || order._id || '');
-        const existRes = await db.collection('commissions').where({ orderNo, inviterId: user.inviterId }).count();
-        if (existRes.total > 0) {
-            return;
-        }
-        // M6 修复：确定性 _id（orderNo + inviterId 派生），并发下同键 add 触发主键冲突
-        // 而非产生重复佣金；count 查重仅作为快速路径保留
-        const idempotentId = `comm_${orderNo}_${String(user.inviterId).slice(-12)}`.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
-        const commissionData = {
-            _id: idempotentId,
-            inviterId: user.inviterId,
-            inviterNickName: inviter.nickName || '',
-            ownerId: user._id || order.ownerId,
-            orderType,
-            orderId: order._id,
-            orderNo,
-            orderAmount,
-            commissionRate: rate,
-            commissionAmount,
-            status: 'pending',
-            createdAt: db.serverDate(),
-            updatedAt: db.serverDate(),
-        };
-        try {
-            await db.collection('commissions').add({ data: commissionData });
-        }
-        catch (addErr) {
-            // M6 修复：主键冲突 = 并发下已有同单同人佣金，静默幂等返回
-            const msg = addErr.message || '';
-            const code = addErr.errCode;
-            if (code === -502001 || /exist|duplicate/i.test(msg)) {
-                logger.info('commission.idempotent.skip', { orderNo, inviterId: user.inviterId });
-                return;
-            }
-            throw addErr;
-        }
-    }
-    catch (e) {
-        logger.error('commission_error', e);
-    }
-}
+// 2026-08-02 写入器统一：原本地实现（费率键 config[orderType] 同样踩中
+// hosting/boarding 键不匹配的 P0，且金额/幂等口径与另两套实现漂移）已删除，
+// 统一委托 common/commission-utils（全局唯一写入器）。
+// 公共版已包含本地版的全部能力：确定性 _id 幂等、主键冲突静默跳过、
+// 活动金额优先取 finalAmount → totalAmount → totalPrice。
 // =====================================================================
 // 辅助函数：活动状态自动更新
 // =====================================================================
@@ -290,17 +182,15 @@ async function generateActivityCommissions(activityId) {
             logger.info('generateActivityCommissions.noRegistrations', { activityId });
             return;
         }
-        // 获取所有报名对应的订单ID
-        const orderIds = registrations.map((r) => r.orderId).filter(Boolean);
-        if (orderIds.length === 0)
+        // P1-1 修复：镜像单统一按 activityId + orderType='activity' 查询（原实现用报名单 orderId
+        //   查 orders._id，而活跃路径报名单无 orderId 字段 → 恒空，活动佣金从未生成）
+        const ordersRes = await db.collection('orders')
+            .where({ activityId, orderType: 'activity', status: 'confirmed' })
+            .get();
+        const orders = ordersRes.data || [];
+        if (orders.length === 0) {
+            logger.info('generateActivityCommissions.noOrders', { activityId, registrations: registrations.length });
             return;
-        // M6 修复：_.in 大数组分批查询（每批 100）
-        const orders = [];
-        for (let i = 0; i < orderIds.length; i += 100) {
-            const ordersRes = await db.collection('orders')
-                .where({ _id: _.in(orderIds.slice(i, i + 100)), status: 'confirmed' })
-                .get();
-            orders.push(...(ordersRes.data || []));
         }
         // M6 修复：分批限流（每批 5）创建佣金，替代无上限 Promise.all
         await runInBatches(orders, 5, async (order) => {
@@ -315,24 +205,6 @@ async function generateActivityCommissions(activityId) {
 // =====================================================================
 // 辅助函数：合作伙伴权限校验
 // =====================================================================
-async function checkPartnerPermission(openid, permission) {
-    const adminRes = await db.collection('admins')
-        .where({ _id: openid, status: 'active' })
-        .limit(1).get();
-    if (!adminRes.data || adminRes.data.length === 0) {
-        throw err('PARTNER_REQUIRED', '无合作伙伴权限');
-    }
-    const admin = adminRes.data[0];
-    const roles = admin.roles || [];
-    if (roles.includes('super_admin')) {
-        return admin;
-    }
-    const perms = admin.permissions || [];
-    if (!perms.includes(permission)) {
-        throw err('PERMISSION_DENIED', `权限不足：需要 ${permission} 权限`);
-    }
-    return admin;
-}
 function calculateActivityCouponDiscount(type, rules, orderAmount) {
     if (!rules) {
         return { eligible: false, message: '优惠券规则缺失' };
@@ -380,37 +252,39 @@ async function resolveCoupon(openid, couponId, calculatedAmount) {
         const couponRes = await db.collection('user_coupons').where({ _id: couponId }).limit(1).get();
         const coupon = (couponRes.data || [])[0];
         if (!coupon) {
-            logger.warn('resolveCoupon.notFound', { couponId, openid: maskOpenid(openid) });
-            return { couponId: '', discount: 0 };
+            throw err('COUPON_NOT_FOUND', '优惠券不存在');
         }
         if (coupon.ownerId !== openid) {
-            logger.warn('resolveCoupon.ownerMismatch', { couponId, openid: maskOpenid(openid) });
-            return { couponId: '', discount: 0 };
+            throw err('PERMISSION_DENIED', '无权使用他人优惠券');
         }
         if (coupon.status && coupon.status !== 'unused' && coupon.status !== 'locked') {
-            logger.warn('resolveCoupon.statusInvalid', { couponId, status: coupon.status });
-            return { couponId: '', discount: 0 };
+            throw err('COUPON_STATUS_INVALID', `优惠券当前状态不可用：${coupon.status}`);
         }
         const now = new Date();
         if (coupon.startTime && now < new Date(coupon.startTime)) {
-            return { couponId: '', discount: 0 };
+            throw err('BUSINESS_ERROR', '优惠券尚未生效');
         }
         if (coupon.endTime && now > new Date(coupon.endTime)) {
-            return { couponId: '', discount: 0 };
+            throw err('BUSINESS_ERROR', '优惠券已过期');
         }
         const scopes = coupon.applicableScopes || [];
-        if (scopes.length > 0 && !scopes.includes('activity')) {
-            return { couponId: '', discount: 0 };
+        // P1-3 修复：放行全品类券（all），无效券 fail-closed 抛错（不再静默降级导致按原价收费）
+        if (scopes.length > 0 && !scopes.includes('all') && !scopes.includes('activity')) {
+            throw err('BUSINESS_ERROR', '该优惠券不适用于活动报名');
         }
         const result = calculateActivityCouponDiscount(coupon.type, coupon.rules, calculatedAmount);
         if (!result.eligible || result.discountAmount === undefined) {
-            return { couponId: '', discount: 0 };
+            throw err('BUSINESS_ERROR', `优惠券不可用：${result.message || '不满足使用条件'}`);
         }
         return { couponId, discount: result.discountAmount };
     }
     catch (e) {
+        // P1-3 修复：券异常必须让用户感知（不再静默降级）
+        if (e && typeof e === 'object' && e.name === 'BusinessError') {
+            throw e;
+        }
         logger.warn('resolveCoupon.error', { couponId, msg: e.message });
-        return { couponId: '', discount: 0 };
+        throw err('BUSINESS_ERROR', '优惠券校验失败，请重试');
     }
 }
 // 手机号脱敏（H5：列表/订单场景不直接暴露完整号码）
@@ -434,54 +308,6 @@ function maskOpenid(openid) {
         return s;
     }
     return `${s.slice(0, 6)}***`;
-}
-// =====================================================================
-// M7 修复：活动状态枚举 + 状态机 + 关键字段校验
-// =====================================================================
-/** 创建时允许指定的状态（其余一律拒绝，防止绕过流程直接进入任意状态） */
-const ACTIVITY_CREATE_STATUS = ['draft', 'published'];
-/** 活动状态转移表：key=当前状态，value=允许迁入的目标状态 */
-const ACTIVITY_STATUS_TRANSITIONS = {
-    draft: ['published', 'cancelled', 'deleted'],
-    published: ['registration_stopped', 'cancelled'],
-    registration_stopped: ['ended', 'cancelled'],
-    ended: [],
-    cancelled: ['deleted'],
-};
-/** 校验活动关键字段（创建/更新共用；字段未提供时跳过对应校验） */
-function validateActivityFields(data) {
-    const parseTime = (v) => {
-        if (v === undefined || v === null || v === '') {
-            return null;
-        }
-        const d = new Date(String(v).replace(/-/g, '/'));
-        return isNaN(d.getTime()) ? null : d;
-    };
-    if (data.startTime !== undefined && data.startTime !== '' && !parseTime(data.startTime)) {
-        throw err('INVALID_PARAMS', '活动开始时间格式无效');
-    }
-    if (data.endTime !== undefined && data.endTime !== '' && !parseTime(data.endTime)) {
-        throw err('INVALID_PARAMS', '活动结束时间格式无效');
-    }
-    const st = parseTime(data.startTime);
-    const et = parseTime(data.endTime);
-    if (st && et && et <= st) {
-        throw err('INVALID_PARAMS', '活动结束时间必须晚于开始时间');
-    }
-    for (const key of ['price', 'pricePerPerson', 'pricePerPet']) {
-        if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
-            const n = Number(data[key]);
-            if (isNaN(n) || n < 0) {
-                throw err('INVALID_PARAMS', `${key} 必须为不小于 0 的数字`);
-            }
-        }
-    }
-    if (data.maxParticipants !== undefined && data.maxParticipants !== null && data.maxParticipants !== '') {
-        const n = Number(data.maxParticipants);
-        if (isNaN(n) || n < 0 || !Number.isInteger(n)) {
-            throw err('INVALID_PARAMS', 'maxParticipants 必须为非负整数');
-        }
-    }
 }
 /**
  * M3 修复：循环分页拉取集合全量数据，规避 CloudBase 单次 get 上限静默截断
@@ -511,13 +337,6 @@ async function fetchAllPaged(collection, where, orderByField, maxTotal = 5000) {
  * M3 修复：CSV 公式注入防护——以 = + - @ 及制表符/回车开头的单元格加单引号前缀，
  * 防止 Excel/WPS 打开时把用户可控内容当公式执行
  */
-function sanitizeCsvCell(value) {
-    const str = String(value ?? '');
-    if (/^[=+\-@\t\r]/.test(str)) {
-        return `'${str}`;
-    }
-    return str;
-}
 /**
  * M6 修复：并发批处理限流——分批执行异步任务，避免 Promise.all 无上限打满数据库连接
  */
@@ -527,171 +346,6 @@ async function runInBatches(items, batchSize, worker) {
         await Promise.all(batch.map((item) => worker(item).catch((e) => {
             logger.warn('runInBatches.item', { msg: e.message });
         })));
-    }
-}
-// =====================================================================
-// 辅助函数：微信支付 V3 工具
-// 升级说明：与 paymentService/services/wechatPayUtils.js 的签名规则保持一致
-//   - Authorization: WECHATPAY2-SHA256-RSA2048（RSA-SHA256 商户私钥签名）
-//   - 报文: JSON（替代 V2 XML + MD5）
-//   - 配置来源: WECHAT_PAY（WECHAT_APPID / WECHAT_MCHID / WECHAT_SERIAL_NO / WECHAT_PRIVATE_KEY / WECHAT_NOTIFY_URL）
-// =====================================================================
-function _wxRandomString(length = 32) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const bytes = crypto.randomBytes(length);
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(bytes[i] % chars.length);
-    }
-    return result;
-}
-/** 商户私钥归一化：支持原始 PEM / base64 编码 PEM / 字面量 \n 三种形态 */
-function _normalizeWxPrivateKey(key) {
-    const trimmed = String(key || '').trim();
-    if (!trimmed) {
-        return '';
-    }
-    if (trimmed.includes('-----BEGIN')) {
-        return trimmed.replace(/\\n/g, '\n');
-    }
-    try {
-        const decoded = Buffer.from(trimmed, 'base64').toString('utf8');
-        if (decoded.includes('-----BEGIN')) {
-            return decoded;
-        }
-    }
-    catch (_) { /* fallthrough */ }
-    return trimmed.replace(/\\n/g, '\n');
-}
-function _wxRsaSign(privateKey, data) {
-    const sign = crypto.createSign('RSA-SHA256');
-    sign.update(data);
-    sign.end();
-    return sign.sign(_normalizeWxPrivateKey(privateKey), 'base64');
-}
-function _wxGenerateAuthorization(method, path, body) {
-    const timestamp = String(Math.floor(Date.now() / 1000));
-    const nonceStr = _wxRandomString(32);
-    const message = `${[method, path, timestamp, nonceStr, body].join('\n')}\n`;
-    const signature = _wxRsaSign(WECHAT_PAY.privateKey, message);
-    return `WECHATPAY2-SHA256-RSA2048 mchid="${WECHAT_PAY.mchId}",nonce_str="${nonceStr}",timestamp="${timestamp}",serial_no="${WECHAT_PAY.serialNo}",signature="${signature}"`;
-}
-/** 微信支付 V3 JSON 请求（5s 超时，非 2xx 抛错） */
-function _wxPayV3Request(method, path, bodyObj) {
-    return new Promise((resolve, reject) => {
-        const bodyStr = method === 'GET' ? '' : JSON.stringify(bodyObj || {});
-        const authorization = _wxGenerateAuthorization(method, path, bodyStr);
-        const urlObj = new URL(`${ENDPOINTS.WECHAT_PAY_API_BASE}${path}`);
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': authorization,
-            'User-Agent': 'WeChat-Mini-Program-Pay',
-        };
-        if (method === 'POST') {
-            headers['Content-Length'] = Buffer.byteLength(bodyStr);
-        }
-        const req = https.request({
-            hostname: urlObj.hostname,
-            port: 443,
-            path: urlObj.pathname + urlObj.search,
-            method,
-            headers,
-            timeout: 5000,
-        }, (res) => {
-            let chunks = '';
-            res.on('data', (chunk) => { chunks += chunk ? chunk.toString() : ''; });
-            res.on('end', () => {
-                try {
-                    const json = JSON.parse(chunks || '{}');
-                    const status = res.statusCode || 0;
-                    if (status >= 200 && status < 300) {
-                        resolve(json);
-                    }
-                    else {
-                        reject(new Error(`微信支付V3 HTTP ${status}: ${json.message || chunks}`));
-                    }
-                }
-                catch (e) {
-                    reject(new Error(`微信支付V3响应解析失败：${chunks}`));
-                }
-            });
-        });
-        req.on('error', reject);
-        req.on('timeout', () => { req.destroy(); reject(new Error('微信支付V3请求超时')); });
-        if (method === 'POST') {
-            req.write(bodyStr);
-        }
-        req.end();
-    });
-}
-// =====================================================================
-// 辅助函数：支付参数创建（微信支付 V3 JSAPI 下单）
-// =====================================================================
-async function _createPaymentParams(openid, orderId, outTradeNo, amount, description) {
-    const config = WECHAT_PAY;
-    if (!config.appId || !config.mchId || !config.serialNo || !config.privateKey) {
-        throw new Error('微信支付V3未配置（需 WECHAT_APPID / WECHAT_MCHID / WECHAT_SERIAL_NO / WECHAT_PRIVATE_KEY）');
-    }
-    const cloudEnv = cloud.env;
-    // notify_url 配置化；未配置时回退到当前云环境回调地址（应指向 paymentService 的 paymentNotify HTTP 触发地址）
-    const notifyUrl = config.notifyUrl || `https://${cloudEnv}.ap-shanghai.tencentscf.com/payment/notify`;
-    // time_expire 需为北京时间（+08:00）：UTC 时刻先 +8h 再打 +08:00 标签，保证过期时刻正确
-    const timeExpire = new Date(Date.now() + 30 * 60 * 1000 + 8 * 3600 * 1000)
-        .toISOString().replace(/\.\d{3}Z$/, '+08:00');
-    const requestBody = {
-        appid: config.appId,
-        mchid: config.mchId,
-        description,
-        out_trade_no: outTradeNo,
-        time_expire: timeExpire,
-        notify_url: notifyUrl,
-        attach: JSON.stringify({ type: 'activity', orderId }),
-        amount: { total: Math.round(amount * 100), currency: 'CNY' },
-        payer: { openid },
-    };
-    try {
-        const result = await _wxPayV3Request('POST', ENDPOINTS.WECHAT_PAY_JSAPI, requestBody);
-        const prepayId = result.prepay_id;
-        if (!prepayId) {
-            logger.error('_createPaymentParams.v3.noPrepayId', { outTradeNo, result });
-            throw new Error(`微信支付V3下单失败：${result.message || '未返回 prepay_id'}`);
-        }
-        // 小程序调起支付签名：appId\ntimeStamp\nnonceStr\npackage\n（RSA-SHA256）
-        const timeStamp = String(Math.floor(Date.now() / 1000));
-        const nonceStr = _wxRandomString(32);
-        const packageStr = `prepay_id=${prepayId}`;
-        const paySign = _wxRsaSign(config.privateKey, `${[config.appId, timeStamp, nonceStr, packageStr].join('\n')}\n`);
-        return { timeStamp, nonceStr, package: packageStr, signType: 'RSA', paySign };
-    }
-    catch (e) {
-        logger.error('创建支付参数失败:', e);
-        throw new Error(`创建支付参数失败: ${e.message}`);
-    }
-}
-// =====================================================================
-// 辅助函数：微信支付 V3 查单（H2 修复：confirm 前核实真实支付状态）
-// =====================================================================
-async function _queryWechatOrder(outTradeNo) {
-    try {
-        const config = WECHAT_PAY;
-        if (!config.mchId || !config.privateKey) {
-            return { paid: false, tradeState: 'NOT_CONFIGURED' };
-        }
-        const path = `/v3/pay/transactions/out-trade-no/${encodeURIComponent(outTradeNo)}?mchid=${config.mchId}`;
-        const result = await _wxPayV3Request('GET', path);
-        const tradeState = result.trade_state;
-        const amountInfo = (result.amount || {});
-        return {
-            paid: tradeState === 'SUCCESS',
-            totalFee: typeof amountInfo.total === 'number' ? amountInfo.total : undefined,
-            tradeState,
-            transactionId: result.transaction_id,
-        };
-    }
-    catch (e) {
-        logger.error('_queryWechatOrder.failed', { outTradeNo, msg: e.message });
-        return { paid: false, tradeState: 'QUERY_FAILED' };
     }
 }
 // =====================================================================
@@ -717,7 +371,9 @@ async function getActivityList(event, context, auth) {
         where.status = status;
     }
     else {
-        where.status = _.neq('deleted');
+        // P1-A 修复：默认只展示"对用户可见"的活动（已发布/报名截止/已结束），
+        //   原 _.neq('deleted') 会把草稿（draft）与已取消（cancelled）活动外露给用户列表
+        where.status = _.in(['published', 'registration_stopped', 'ended']);
     }
     if (category && category !== 'all') {
         where.category = category;
@@ -860,170 +516,6 @@ async function getActivityDetail(event, context, auth) {
 }
 exports.getActivityDetail = getActivityDetail;
 // =====================================================================
-// Handler 3: createActivity - 创建活动
-// =====================================================================
-async function createActivity(event, context, auth) {
-    const { openid } = auth;
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const { title, description, coverUrl, startTime, endTime, location, latitude, longitude, maxParticipants, category, price } = event;
-    if (!title) {
-        throw err('INVALID_PARAMS', '缺少活动标题');
-    }
-    // M7 修复：status 枚举白名单（仅 draft/published），杜绝直接创建任意状态
-    const requestedStatus = String(event.status || 'draft');
-    if (!ACTIVITY_CREATE_STATUS.includes(requestedStatus)) {
-        throw err('INVALID_PARAMS', `无效的活动状态: ${requestedStatus}`);
-    }
-    // M7 修复：直接创建 published 活动时要求关键信息完整
-    if (requestedStatus === 'published') {
-        if (!startTime || !endTime || !location) {
-            throw err('INVALID_PARAMS', '发布活动必须填写开始时间、结束时间和地点');
-        }
-    }
-    // M7 修复：时间格式/先后关系、价格、名额校验
-    validateActivityFields({ startTime, endTime, price, pricePerPerson: event.pricePerPerson, pricePerPet: event.pricePerPet, maxParticipants });
-    let organizer = null;
-    try {
-        const userRes = await db.collection('users').doc(openid).get();
-        organizer = userRes.data;
-    }
-    catch (e) {
-        logger.warn('createActivity.users.fetch', { openid: maskOpenid(openid), msg: e.message });
-    }
-    const activity = {
-        title,
-        description: description || '',
-        coverUrl: coverUrl || '',
-        images: event.images || [],
-        startTime: startTime || '',
-        endTime: endTime || '',
-        location: location || '',
-        latitude: latitude || null,
-        longitude: longitude || null,
-        maxParticipants: maxParticipants || 0,
-        currentParticipants: 0,
-        category: category || 'outdoor',
-        price: (Number(event.pricePerPerson) || 0) + (Number(event.pricePerPet) || 0) || Number(price) || 0,
-        pricePerPerson: Number(event.pricePerPerson) || 0,
-        pricePerPet: Number(event.pricePerPet) || 0,
-        contactName: event.contactName || '',
-        contactPhone: event.contactPhone || '',
-        wechatId: event.wechatId || '',
-        status: requestedStatus,
-        createdBy: openid,
-        organizer: organizer ? {
-            name: organizer.nickName || '宠团团',
-            avatar: organizer.avatarUrl || '/images/default-avatar.svg',
-        } : { name: '宠团团', avatar: '/images/default-avatar.svg' },
-        createdAt: db.serverDate(),
-        updatedAt: db.serverDate(),
-    };
-    activity._id = generateId('activity', openid);
-    const res = await db.collection('activities').add({ data: activity });
-    return handleSuccess({ id: res._id }, '创建成功');
-}
-exports.createActivity = createActivity;
-// =====================================================================
-// Handler 4: updateActivity - 更新活动
-// =====================================================================
-async function updateActivity(event, context, auth) {
-    const { activityId } = event;
-    const { openid } = auth;
-    if (!activityId) {
-        throw err('INVALID_PARAMS', '缺少活动ID');
-    }
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const updateData = { updatedAt: db.serverDate(), ...filterFields(FIELD_WHITELISTS.activity, event) };
-    const existRes = await db.collection('activities').doc(activityId).get();
-    const existData = existRes.data;
-    if (!existData) {
-        throw err('NOT_FOUND', '活动不存在');
-    }
-    if (existData.createdBy !== openid) {
-        try {
-            await checkPartnerPermission(openid, 'activity');
-        }
-        catch (e) {
-            throw err('PERMISSION_DENIED', '无权修改此活动');
-        }
-    }
-    // M7 修复：status 变更走状态机校验，杜绝任意状态跳转（如 ended 改回 published）
-    if (updateData.status !== undefined) {
-        const nextStatus = String(updateData.status);
-        const currStatus = String(existData.status || 'draft');
-        if (nextStatus !== currStatus) {
-            const allowed = ACTIVITY_STATUS_TRANSITIONS[currStatus] || [];
-            if (!allowed.includes(nextStatus)) {
-                throw err('INVALID_PARAMS', `活动状态不允许从 ${currStatus} 变更为 ${nextStatus}`);
-            }
-        }
-        else {
-            delete updateData.status;
-        }
-    }
-    // M7 修复：更新时同样校验时间/价格/名额字段合法性
-    validateActivityFields({
-        startTime: updateData.startTime ?? (event.startTime !== undefined ? event.startTime : undefined),
-        endTime: updateData.endTime ?? (event.endTime !== undefined ? event.endTime : undefined),
-        price: updateData.price,
-        pricePerPerson: updateData.pricePerPerson,
-        pricePerPet: updateData.pricePerPet,
-        maxParticipants: updateData.maxParticipants,
-    });
-    // 时间只改其一时，与库中另一端做先后关系校验
-    const effStart = updateData.startTime !== undefined ? updateData.startTime : existData.startTime;
-    const effEnd = updateData.endTime !== undefined ? updateData.endTime : existData.endTime;
-    if (effStart && effEnd) {
-        validateActivityFields({ startTime: effStart, endTime: effEnd });
-    }
-    await db.collection('activities').doc(activityId).update({ data: updateData });
-    return handleSuccess(null, '更新成功');
-}
-exports.updateActivity = updateActivity;
-// =====================================================================
-// Handler 5: deleteActivity - 删除活动
-// =====================================================================
-async function deleteActivity(event, context, auth) {
-    const { activityId } = event;
-    const { openid } = auth;
-    if (!activityId) {
-        throw err('INVALID_PARAMS', '缺少活动ID');
-    }
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const existRes = await db.collection('activities').doc(activityId).get();
-    const existData = existRes.data;
-    if (!existData) {
-        throw err('ACTIVITY_NOT_FOUND', '活动不存在');
-    }
-    if (existData.status === 'published') {
-        throw err('INVALID_PARAMS', '已发布的活动不能删除');
-    }
-    if (existData.createdBy !== openid) {
-        try {
-            await checkPartnerPermission(openid, 'activity');
-        }
-        catch (e) {
-            throw err('PERMISSION_DENIED', '无权删除此活动');
-        }
-    }
-    const regCountRes = await db.collection('activity_registrations')
-        .where({ activityId })
-        .count();
-    const regCount = regCountRes.total || 0;
-    if (regCount > 0) {
-        throw err('ACTIVITY_HAS_REGISTRATIONS', `该活动已有 ${regCount} 人报名，无法删除`, { regCount });
-    }
-    await db.collection('activities').doc(activityId).remove();
-    return handleSuccess(null, '删除成功');
-}
-exports.deleteActivity = deleteActivity;
-// =====================================================================
 // Handler 6: submitRegistration - 提交报名（含风控前置）
 // =====================================================================
 async function submitRegistration(event, context, auth) {
@@ -1031,7 +523,7 @@ async function submitRegistration(event, context, auth) {
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
     }
-    const { activityId, pets, phone, notes, friends, petIds, totalAmount, originalAmount, couponId, couponDiscount, participantCount } = event;
+    const { activityId, pets, phone, notes, friends, petIds, couponId, participantCount } = event;
     if (!activityId) {
         throw err('INVALID_PARAMS', '缺少活动ID');
     }
@@ -1044,7 +536,7 @@ async function submitRegistration(event, context, auth) {
     // M1 修复：查重前置到事务外（CloudBase 事务内不支持 where 查询），
     // 名额检查移入事务内基于快照读，避免"读-判-写"跨事务竞态
     const existReg = await db.collection('activity_registrations')
-        .where({ activityId, ownerId: openid, status: 'confirmed' })
+        .where({ activityId, ownerId: openid, status: _.in(['confirmed', 'pending_payment']) })
         .count();
     if (existReg.total > 0) {
         throw err('BUSINESS_ERROR', '您已报名此活动');
@@ -1057,6 +549,10 @@ async function submitRegistration(event, context, auth) {
         const activity = activityRes.data;
         if (!activity) {
             throw err('NOT_FOUND', '活动不存在');
+        }
+        // P1-A 修复：仅"已发布"状态可报名——草稿/报名截止/已取消/已结束活动一律拒绝
+        if (activity.status !== 'published') {
+            throw err('BUSINESS_ERROR', `活动当前状态不可报名：${activity.status || '未知'}`);
         }
         const pricePerPerson = activity.pricePerPerson || 0;
         const pricePerPet = activity.pricePerPet || 0;
@@ -1096,6 +592,9 @@ async function submitRegistration(event, context, auth) {
             notes: notes || '',
             friends: friendsArray,
             status: isPaid ? 'pending_payment' : 'confirmed',
+            // P0-A 修复：报名单补写 paymentStatus（付费=pending 中间态 / 免费=paid 无支付流程），
+            //   paymentService.createPayment 条件更新与 orderTimeoutService 超时扫描均依赖该字段
+            paymentStatus: isPaid ? 'pending' : 'paid',
             participantCount: pCount,
             petCount,
             pricePerPerson,
@@ -1132,6 +631,7 @@ async function submitRegistration(event, context, auth) {
             const activityOrder = {
                 ownerId: openid,
                 orderType: 'activity',
+                type: 'activity',
                 activityId,
                 activityTitle: activity.title || '',
                 activityCoverUrl: activity.coverUrl || '',
@@ -1417,423 +917,23 @@ async function getRegistrationList(event, context, auth) {
 }
 exports.getRegistrationList = getRegistrationList;
 // =====================================================================
-// Handler 9: createActivityPaymentOrder - 创建活动支付订单
-// =====================================================================
-async function createActivityPaymentOrder(event, context, auth) {
-    const { openid } = auth;
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const { activityId, pets, phone, notes, friends, petIds, totalAmount, originalAmount, couponId, couponDiscount, orderId, participantCount } = event;
-    if (!activityId) {
-        throw err('INVALID_PARAMS', '缺少活动ID');
-    }
-    if (!pets || !Array.isArray(pets) || pets.length === 0) {
-        throw err('INVALID_PARAMS', '请选择参与的宠物');
-    }
-    if (!phone) {
-        throw err('INVALID_PARAMS', '请填写联系电话');
-    }
-    if (!orderId) {
-        throw err('INVALID_PARAMS', '缺少订单ID');
-    }
-    try {
-        const activityRes = await db.collection('activities').doc(activityId).get();
-        const activity = activityRes.data;
-        if (!activity) {
-            throw err('NOT_FOUND', '活动不存在');
-        }
-        if (activity.maxParticipants && (activity.currentParticipants || 0) >= activity.maxParticipants) {
-            throw err('BUSINESS_ERROR', '报名人数已满');
-        }
-        const existReg = await db.collection('activity_registrations')
-            .where({ activityId, ownerId: openid, status: _.in(['confirmed', 'pending_payment']) })
-            .count();
-        if (existReg.total > 0) {
-            throw err('BUSINESS_ERROR', '您已报名此活动');
-        }
-        const petsArray = pets;
-        const friendsArray = Array.isArray(friends) ? friends : [];
-        // M2 修复：participantCount 服务端规范化（≥1 的整数）
-        const pCount = Math.max(1, Math.floor(Number(participantCount) || 1));
-        const petCount = petsArray.length + friendsArray.length;
-        // H3 修复：金额服务端重算，不信任前端 totalAmount
-        const calculatedAmount = computeActivityAmount(activity, pCount, petCount);
-        const coupon = await resolveCoupon(openid, couponId, calculatedAmount);
-        const finalAmount = Math.max(0, Math.round((calculatedAmount - coupon.discount) * 100) / 100);
-        if (finalAmount <= 0) {
-            throw err('INVALID_PARAMS', '订单金额异常，请联系客服');
-        }
-        const now = db.serverDate();
-        const petsInfo = petsArray.map((p) => ({
-            name: p.petName || p.name || '',
-            gender: p.petGender || p.gender || 'male',
-            breed: p.petBreed || p.breed || '',
-            petId: p.petId || '',
-        }));
-        // V3 升级：生成 ACT_ 前缀商户单号（与 paymentService 的 outTradeNo 路由约定一致，
-        // paymentNotify 回调按前缀识别订单类型、按 outTradeNo 字段查 activity_registrations）
-        const outTradeNo = `ACT_${Date.now()}_${_wxRandomString(6).toUpperCase()}`;
-        const pendingRegistration = {
-            _id: generateId('registration', openid),
-            activityId,
-            ownerId: openid,
-            openid,
-            orderId,
-            outTradeNo,
-            pets: petsInfo,
-            petIds: petIds || [],
-            phone: phone || '',
-            notes: notes || '',
-            friends: friendsArray,
-            status: 'pending_payment',
-            participantCount: pCount,
-            petCount,
-            totalAmount: calculatedAmount,
-            originalAmount: calculatedAmount,
-            couponId: coupon.couponId,
-            couponDiscount: coupon.discount,
-            finalAmount,
-            createdAt: now,
-            updatedAt: now,
-        };
-        const regResult = await db.collection('activity_registrations').add({ data: pendingRegistration });
-        const orderDoc = {
-            ownerId: openid,
-            orderType: 'activity',
-            orderId,
-            outTradeNo,
-            activityId,
-            activityTitle: activity.title || '',
-            activityCoverUrl: activity.coverUrl || '',
-            activityStartTime: activity.startTime || '',
-            activityEndTime: activity.endTime || '',
-            activityLocation: activity.location || '',
-            organizerId: activity.createdBy || '',
-            petIds: petIds || [],
-            petsInfo,
-            startDate: activity.startTime || '',
-            endDate: activity.endTime || '',
-            duration: 1,
-            pricePerDay: activity.price || 0,
-            participantCount: pCount,
-            petCount,
-            basicPrice: calculatedAmount,
-            totalPrice: finalAmount,
-            originalAmount: calculatedAmount,
-            couponId: coupon.couponId,
-            couponDiscount: coupon.discount,
-            phone: phone || '',
-            notes: notes || '',
-            status: 'pending_payment',
-            paymentStatus: 'pending',
-            createdAt: now,
-            updatedAt: now,
-        };
-        // H7: idx_bookingKey_unique 唯一索引要求 orders 全文档 bookingKey 唯一
-        //   活动订单无寄养业务键,用 _id 占位保证唯一性,避免 null 冲突导致 -502001 DuplicateKey
-        orderDoc._id = generateId('order', openid);
-        orderDoc.bookingKey = `nb_${orderDoc._id}`;
-        await db.collection('orders').add({ data: orderDoc });
-        const paymentParams = await _createPaymentParams(openid, orderId || '', outTradeNo, finalAmount, activity.title || '活动报名');
-        return handleSuccess({
-            orderId,
-            outTradeNo,
-            registrationId: regResult._id,
-            paymentParams,
-        }, '订单创建成功');
-    }
-    catch (error) {
-        return handleError(error, '创建订单失败', ERROR_CODES.DATA);
-    }
-}
-exports.createActivityPaymentOrder = createActivityPaymentOrder;
-// =====================================================================
-// Handler 10: confirmActivityPayment - 确认活动支付
-// =====================================================================
-async function confirmActivityPayment(event, context, auth) {
-    const { openid } = auth;
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const { orderId } = event;
-    if (!orderId) {
-        throw err('INVALID_PARAMS', '缺少订单ID');
-    }
-    // 事务前：查询订单（CloudBase 事务内不支持 where().get()/update()，必须先查 _id）
-    const orderRes = await db.collection('orders').where({ orderId, ownerId: openid }).limit(1).get();
-    const orderList = (orderRes.data || []);
-    if (orderList.length === 0) {
-        throw err('NOT_FOUND', '订单不存在');
-    }
-    const order = orderList[0];
-    // V3 升级：幂等互斥——paymentNotify 回调可能已先行确认（status=confirmed + paymentStatus=paid），
-    // 此时直接返回成功，避免重复递增活动名额
-    if (order.paymentStatus === 'paid' || order.status === 'confirmed') {
-        return handleSuccess({ orderId, alreadyConfirmed: true }, '支付成功');
-    }
-    if (order.status !== 'pending_payment') {
-        throw err('BUSINESS_ERROR', '订单状态异常');
-    }
-    // H2 修复：向微信查单核实真实支付状态，杜绝 0 元"确认支付"
-    // V3 升级：查单改用 V3 商户单号 outTradeNo（旧数据无 outTradeNo 时回退 orderId 兼容 V2 存量单）
-    const wxQuery = await _queryWechatOrder(order.outTradeNo || orderId);
-    if (!wxQuery.paid) {
-        throw err('BUSINESS_ERROR', '支付未完成或支付状态未确认，请稍后重试');
-    }
-    const expectedFee = Math.round((order.totalPrice || order.basicPrice || 0) * 100);
-    if (wxQuery.totalFee !== undefined && expectedFee > 0 && wxQuery.totalFee !== expectedFee) {
-        logger.error('confirmActivityPayment.amountMismatch', { orderId, expectedFee, actualFee: wxQuery.totalFee });
-        throw err('BUSINESS_ERROR', '支付金额与订单不一致，请联系客服');
-    }
-    // 事务前：查询需要更新的 activity_registrations _id 列表
-    let registrationIds = [];
-    try {
-        const regRes = await db.collection('activity_registrations')
-            .where({ orderId, ownerId: openid, status: 'pending_payment' })
-            .field({ _id: true })
-            .limit(10)
-            .get();
-        registrationIds = ((regRes && regRes.data) || []).map((r) => r._id);
-    }
-    catch (e) {
-        // 查询失败不阻塞流程，但记录日志
-        logger.warn('confirmActivityPayment.queryRegistrations.failed', {
-            orderId, openid, msg: e?.message,
-        });
-    }
-    const transaction = await db.startTransaction();
-    try {
-        const now = db.serverDate();
-        // 1) 更新订单状态（V3 升级：落库微信交易号 transactionId）
-        await transaction.collection('orders').doc(order._id || '').update({
-            data: {
-                status: 'confirmed',
-                paymentStatus: 'paid',
-                transactionId: wxQuery.transactionId || '',
-                paidAt: now,
-                updatedAt: now,
-            },
-        });
-        // 2) 同步 activity_registrations 状态（事务内逐个 doc(id).update()）
-        // 同时置 paymentStatus='paid'：与 paymentNotify 回调的幂等守卫（读报名单 paymentStatus==='paid' 直接返回）对齐，
-        // 避免"前端主动确认 + 微信回调"两条路径对同一订单重复递增 currentParticipants。
-        for (const regId of registrationIds) {
-            await transaction.collection('activity_registrations').doc(regId).update({
-                data: { status: 'confirmed', paymentStatus: 'paid', updatedAt: now },
-            });
-        }
-        // 3) 活动名额递增
-        // M2 修复：口径统一为"人数"（与 submitRegistration 免费路径一致），不再误用宠物数
-        await transaction.collection('activities').doc(order.activityId || '').update({
-            data: {
-                currentParticipants: _.inc(order.participantCount || 1),
-                updatedAt: now,
-            },
-        });
-        await transaction.commit();
-        // 活动佣金在活动结束时生成，不在支付时生成
-        // 佣金由 autoUpdateActivityStatus 在活动时间到达 endTime 时触发
-        return handleSuccess({ orderId }, '支付成功');
-    }
-    catch (error) {
-        try {
-            await transaction.rollback();
-        }
-        catch (_) { /* ignore rollback error */ }
-        logger.error('confirmActivityPayment.transaction.failed', {
-            orderId, openid, msg: error?.message,
-            alert: '活动支付确认 DB 状态同步失败，需人工对账',
-        });
-        return handleError(error, '支付确认失败', ERROR_CODES.DATA);
-    }
-}
-exports.confirmActivityPayment = confirmActivityPayment;
-// =====================================================================
-// Handler 11: getActivityRegistrations - 活动报名列表（合作伙伴）
-// =====================================================================
-async function getActivityRegistrations(event, context, auth) {
-    const { openid } = auth;
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const { activityId, page = 1, pageSize = 20 } = event;
-    if (!activityId) {
-        throw err('INVALID_PARAMS', '缺少活动ID');
-    }
-    const admin = await checkPartnerPermission(openid, 'activity');
-    const isSuperAdmin = (admin.roles || []).includes('super_admin');
-    // H5 修复：非超级管理员强制校验活动归属，防止横向越权查看他人活动报名
-    if (!isSuperAdmin) {
-        const actRes = await db.collection('activities').doc(activityId).get();
-        const act = actRes.data;
-        if (!act || act.createdBy !== openid) {
-            throw err('PERMISSION_DENIED', '无权查看该活动的报名信息');
-        }
-    }
-    const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 100);
-    const result = await paginate(db, 'activity_registrations', {
-        page, pageSize: safePageSize,
-        where: { activityId },
-        orderBy: { field: 'createdAt', direction: 'desc' },
-    });
-    if (result.list && result.list.length > 0) {
-        const openids = result.list.map((r) => r.ownerId).filter((id) => Boolean(id));
-        if (openids.length > 0) {
-            const usersRes = await db.collection('users').where({ _id: _.in(openids) }).get();
-            const userMap = {};
-            (usersRes.data || []).forEach((u) => { if (u._id) {
-                userMap[u._id] = u;
-            } });
-            result.list = result.list.map((r) => {
-                const user = userMap[r.ownerId || ''] || {};
-                return {
-                    ...r,
-                    phone: maskPhone(r.phone),
-                    userNickName: user.nickName || '',
-                    userAvatar: user.avatarUrl || '',
-                    displayName: user.nickName || '未知用户',
-                };
-            });
-        }
-        else {
-            result.list = result.list.map((r) => ({
-                ...r,
-                phone: maskPhone(r.phone),
-                userNickName: '',
-                userAvatar: '',
-                displayName: '未知用户',
-            }));
-        }
-    }
-    return handleSuccess(result, '获取成功');
-}
-exports.getActivityRegistrations = getActivityRegistrations;
-// =====================================================================
-// Handler 12: exportActivityRegistrations - 导出活动报名（CSV）
-// =====================================================================
-async function exportActivityRegistrations(event, context, auth) {
-    const { openid } = auth;
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const { activityId } = event;
-    if (!activityId) {
-        throw err('INVALID_PARAMS', '缺少活动ID');
-    }
-    const admin = await checkPartnerPermission(openid, 'activity');
-    const isSuperAdmin = (admin.roles || []).includes('super_admin');
-    const activityRes = await db.collection('activities').doc(activityId).get();
-    const activity = activityRes.data;
-    if (!activity) {
-        throw err('NOT_FOUND', '活动不存在');
-    }
-    // H5 修复：非超级管理员强制校验活动归属，防止横向越权导出全平台报名数据
-    if (!isSuperAdmin && activity.createdBy !== openid) {
-        throw err('PERMISSION_DENIED', '无权导出该活动的报名信息');
-    }
-    // M3 修复：循环分页拉取全量报名，规避单次 get 上限静默截断（大活动导出不全）
-    let registrations = await fetchAllPaged('activity_registrations', { activityId }, 'createdAt');
-    if (registrations.length > 0) {
-        const openids = [...new Set(registrations.map((r) => r.ownerId).filter((id) => Boolean(id)))];
-        if (openids.length > 0) {
-            // M3 修复：_.in 大数组分批查询（每批 100），规避服务端 in 数组上限
-            const userMap = {};
-            for (let i = 0; i < openids.length; i += 100) {
-                const idBatch = openids.slice(i, i + 100);
-                const usersRes = await db.collection('users').where({ _id: _.in(idBatch) }).field({ nickName: true }).get();
-                (usersRes.data || []).forEach((u) => { if (u._id) {
-                    userMap[u._id] = u;
-                } });
-            }
-            registrations = registrations.map((r) => ({
-                ...r,
-                userNickName: (r.ownerId && userMap[r.ownerId]?.nickName) || '',
-            }));
-        }
-    }
-    const headers = ['序号', '宠物昵称', '报名时间', '用户昵称', '联系电话', '备注', '签到'];
-    const rows = registrations.map((reg, index) => [
-        index + 1,
-        (reg.pets && reg.pets.map((p) => p.name).join(', ')) || '',
-        reg.createdAt ? new Date(reg.createdAt).toLocaleString('zh-CN') : '',
-        reg.userNickName || '',
-        reg.phone || '',
-        reg.notes || '',
-        '',
-    ]);
-    // M3 修复：sanitizeCsvCell 防公式注入（= + - @ 开头的用户可控内容）
-    const csvContent = [headers.join(','), ...rows.map((row) => row.map((cell) => {
-            const str = sanitizeCsvCell(cell).replace(/"/g, '""');
-            return `"${str}"`;
-        }).join(','))].join('\n');
-    const exportResult = {
-        activityTitle: activity.title || '',
-        totalCount: registrations.length,
-        csvContent,
-    };
-    return handleSuccess(exportResult, '导出成功');
-}
-exports.exportActivityRegistrations = exportActivityRegistrations;
-// =====================================================================
-// Handler 13: getActivityOrders - 活动订单列表（合作伙伴）
-// =====================================================================
-async function getActivityOrders(event, context, auth) {
-    const { openid } = auth;
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const admin = await checkPartnerPermission(openid, 'activity');
-    const isSuperAdmin = (admin.roles || []).includes('super_admin');
-    const { status, page = 1, pageSize = 20 } = event;
-    const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 100);
-    const where = { orderType: 'activity' };
-    if (status) {
-        where.status = status;
-    }
-    // H5 修复：非超级管理员仅能查看自己创建的活动订单，防止全平台订单泄露
-    if (!isSuperAdmin) {
-        where.organizerId = openid;
-    }
-    const result = await paginate(db, 'orders', {
-        page, pageSize: safePageSize,
-        where,
-        orderBy: { field: 'createdAt', direction: 'desc' },
-    });
-    const list = (result.list || []);
-    const enrichedList = list.map((order) => ({
-        ...order,
-        buyerNickName: order.ownerInfo?.nickName || '',
-        productName: order.activityTitle || '',
-        ownerInfo: order.ownerInfo ? { ...order.ownerInfo, phone: maskPhone(order.ownerInfo.phone) } : order.ownerInfo,
-    }));
-    return handleSuccess({ ...result, list: enrichedList }, '获取成功');
-}
-exports.getActivityOrders = getActivityOrders;
-// =====================================================================
 // 入口聚合：handlers 路由表
 // =====================================================================
+// P3-7 清理：活动管理走 adminService、活动支付走 paymentService；
+//   遗留 handler（create/update/deleteActivity、直连支付、报名导出/订单列表）已彻底删除。
 exports.handlers = {
     getActivityList,
     getActivityDetail,
-    createActivity,
-    updateActivity,
-    deleteActivity,
     submitRegistration,
     getRegistrationDetail,
     getRegistrationList,
-    createActivityPaymentOrder,
-    confirmActivityPayment,
-    getActivityRegistrations,
-    exportActivityRegistrations,
-    getActivityOrders,
 };
 // =====================================================================
 // Main 入口（云函数调用）
 // =====================================================================
 // P3-010: 写操作和登录校验 action 列表提升为模块级常量，避免每次调用重新创建数组
-const WRITE_ACTIONS = ['createActivity', 'updateActivity', 'deleteActivity', 'submitRegistration', 'createActivityPaymentOrder', 'confirmActivityPayment'];
-const LOGIN_REQUIRED_ACTIONS = [...WRITE_ACTIONS, 'getActivityDetail', 'getRegistrationDetail', 'getRegistrationList', 'getActivityRegistrations', 'exportActivityRegistrations', 'getActivityOrders'];
+const WRITE_ACTIONS = ['submitRegistration'];
+const LOGIN_REQUIRED_ACTIONS = [...WRITE_ACTIONS, 'getActivityDetail', 'getRegistrationDetail', 'getRegistrationList'];
 async function main(event, context) {
     // M4 修复：定时触发器入口（config.json triggers: activityStatusTrigger）
     // 仅接受平台 Timer 事件，不暴露为外部可调 action
@@ -1868,17 +968,9 @@ _mod.exports = {
     main,
     getActivityList,
     getActivityDetail,
-    createActivity,
-    updateActivity,
-    deleteActivity,
     submitRegistration,
     getRegistrationDetail,
     getRegistrationList,
-    createActivityPaymentOrder,
-    confirmActivityPayment,
-    getActivityRegistrations,
-    exportActivityRegistrations,
-    getActivityOrders,
     handlers: exports.handlers,
 };
 _mod.exports.default = _mod.exports;
@@ -1886,16 +978,8 @@ exports.default = {
     main,
     getActivityList,
     getActivityDetail,
-    createActivity,
-    updateActivity,
-    deleteActivity,
     submitRegistration,
     getRegistrationDetail,
     getRegistrationList,
-    createActivityPaymentOrder,
-    confirmActivityPayment,
-    getActivityRegistrations,
-    exportActivityRegistrations,
-    getActivityOrders,
     handlers: exports.handlers,
 };

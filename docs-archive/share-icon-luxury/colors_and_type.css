@@ -1,0 +1,154 @@
+/* ============================================================
+   AROORO Share Icon · Haute-Luxury Icon Study
+   Brand prefix: aroo
+   Palette source: styles/theme-teal.wxss (Haute-Luxury v2)
+   Forest green + champagne gold + cream — Hermès/Chanel/Galerie Claire
+   ============================================================ */
+
+:root {
+  /* ---------- Brand Primary: Deep Forest Green ---------- */
+  --aroo-forest: #1F3A1F;          /* brand anchor — deep forest green */
+  --aroo-forest-deep: #0F2410;     /* pressed / darkest */
+  --aroo-forest-mid: #2D4F2D;      /* hover / mid */
+  --aroo-forest-soft: #3D6B3D;     /* icon stroke soft */
+  --aroo-forest-tint: #E8ECE2;     /* chip / soft fill */
+  --aroo-forest-wash: #F2F5EC;     /* wash background */
+
+  /* ---------- Accent: Champagne Gold (restrained, <5%) ---------- */
+  --aroo-gold: #C9A24B;            /* champagne accent */
+  --aroo-gold-deep: #A8894A;       /* pressed gold */
+  --aroo-gold-soft: #F0E6D0;       /* gold tint */
+  --aroo-gold-wash: #F8F3E6;       /* gold wash */
+  --aroo-gold-glow: rgba(201, 169, 110, 0.20);
+
+  /* ---------- Surfaces: Cream paper white ---------- */
+  --aroo-bg: #F7F5EF;              /* cream page base — Hermès paper */
+  --aroo-bg-warm: #F3F0E8;         /* warm cream — section base */
+  --aroo-surface: #FFFFFF;         /* white card */
+  --aroo-surface-cream: #FBF9F4;   /* cream card */
+
+  /* ---------- Ink: warm charcoal text ---------- */
+  --aroo-ink: #1A1A17;             /* primary text — charcoal */
+  --aroo-ink-2: #5A564C;           /* secondary text */
+  --aroo-ink-3: #9E9889;           /* tertiary text */
+
+  /* ---------- Lines & Dividers ---------- */
+  --aroo-line: #E2DED3;            /* hairline divider */
+  --aroo-line-soft: #EDEAE1;       /* soft divider */
+  --aroo-hairline: rgba(26, 26, 23, 0.08); /*发丝线 */
+  --aroo-hairline-strong: rgba(26, 26, 23, 0.14);
+
+  /* ---------- Action bar (in-context reconstruction) ---------- */
+  --aroo-bar-bg: rgba(255, 255, 255, 0.96);
+  --aroo-bar-border: rgba(26, 26, 23, 0.08);
+  --aroo-cta-grad: linear-gradient(180deg, #2D4F2D 0%, #0F2410 100%);
+  --aroo-cta-shadow: 0 6px 18px rgba(31, 58, 31, 0.22);
+
+  /* ---------- On-dark tokens (forest green ground) ---------- */
+  --aroo-cream-on-dark: #F7F5EF;
+  --aroo-gold-on-dark: rgba(201, 169, 110, 0.92);
+  --aroo-line-on-dark: rgba(247, 245, 239, 0.18);
+
+  /* ---------- Radius (luxury micro-radius, near-square) ---------- */
+  --aroo-radius-xs: 4px;
+  --aroo-radius-sm: 8px;
+  --aroo-radius-md: 12px;
+  --aroo-radius-lg: 16px;
+  --aroo-radius-pill: 999px;
+
+  /* ---------- Shadow (extreme restraint, hairlines replace shadow) ---------- */
+  --aroo-shadow-1: 0 1px 3px rgba(26,26,23,0.04);
+  --aroo-shadow-2: 0 8px 24px -8px rgba(26,26,23,0.12);
+  --aroo-shadow-3: 0 16px 48px -16px rgba(26,26,23,0.20);
+
+  /* ---------- Spacing (8pt grid) ---------- */
+  --aroo-s-1: 4px;
+  --aroo-s-2: 8px;
+  --aroo-s-3: 12px;
+  --aroo-s-4: 16px;
+  --aroo-s-5: 24px;
+  --aroo-s-6: 32px;
+  --aroo-s-7: 48px;
+  --aroo-s-8: 64px;
+  --aroo-s-9: 96px;
+
+  /* ---------- Typography ---------- */
+  --aroo-font-sans: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --aroo-font-serif: "Songti SC", "STSong", "Songti TC", "SimSun", serif;
+  --aroo-font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --aroo-text-display: 30px;
+  --aroo-text-h1: 24px;
+  --aroo-text-h2: 20px;
+  --aroo-text-h3: 17px;
+  --aroo-text-body: 15px;
+  --aroo-text-body-sm: 13px;
+  --aroo-text-caption: 12px;
+  --aroo-text-eyebrow: 11px;
+
+  --aroo-leading-tight: 1.2;
+  --aroo-leading-normal: 1.6;
+  --aroo-leading-relaxed: 1.8;
+
+  --aroo-weight-regular: 400;
+  --aroo-weight-medium: 500;
+  --aroo-weight-semibold: 600;
+
+  --aroo-tracking-tight: -0.01em;
+  --aroo-tracking-normal: 0.01em;
+  --aroo-tracking-wide: 0.05em;
+  --aroo-tracking-wider: 0.12em;
+  --aroo-tracking-display: 0.2em;
+
+  /* ============================================================
+     Semantic Aliases — required by apply-html-head-contract.mjs
+     ============================================================ */
+  --aroo-background: var(--aroo-bg);
+  --aroo-foreground: var(--aroo-ink);
+
+  --aroo-card: var(--aroo-surface);
+  --aroo-card-foreground: var(--aroo-ink);
+
+  --aroo-popover: var(--aroo-surface);
+  --aroo-popover-foreground: var(--aroo-ink);
+
+  --aroo-primary: var(--aroo-forest);
+  --aroo-primary-foreground: var(--aroo-cream-on-dark);
+
+  --aroo-secondary: var(--aroo-forest-tint);
+  --aroo-secondary-foreground: var(--aroo-forest);
+
+  --aroo-muted: var(--aroo-bg-warm);
+  --aroo-muted-foreground: var(--aroo-ink-2);
+
+  --aroo-accent: var(--aroo-gold-soft);
+  --aroo-accent-foreground: var(--aroo-gold-deep);
+
+  --aroo-destructive: #B85C3C;
+  --aroo-destructive-foreground: #F7F5EF;
+
+  --aroo-border: var(--aroo-line);
+  --aroo-input: var(--aroo-line);
+  --aroo-ring: var(--aroo-forest);
+
+  --aroo-radius-small: var(--aroo-radius-sm);
+  --aroo-radius-medium: var(--aroo-radius-md);
+  --aroo-radius-large: var(--aroo-radius-lg);
+}
+
+/* ---------- Dark mode (reserved — project is light-only) ---------- */
+.dark {
+  --aroo-background: #121310;
+  --aroo-foreground: #F0EDE4;
+  --aroo-card: #1E1F1B;
+  --aroo-card-foreground: #F0EDE4;
+  --aroo-popover: #1E1F1B;
+  --aroo-popover-foreground: #F0EDE4;
+  --aroo-primary: #3D6B3D;
+  --aroo-primary-foreground: #121310;
+  --aroo-muted: #252621;
+  --aroo-muted-foreground: #9E9889;
+  --aroo-border: #2E2F29;
+  --aroo-input: #2E2F29;
+  --aroo-ring: #3D6B3D;
+}

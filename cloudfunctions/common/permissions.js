@@ -86,7 +86,7 @@ function isSuperAdmin(doc) {
 }
 exports.isSuperAdmin = isSuperAdmin;
 /**
- * 是否是合作伙伴（含寄养家庭、上门喂养师、团长、活动主等业务伙伴）
+ * 是否是合作伙伴（含寄养家庭、团长、活动主等业务伙伴）
  */
 function isPartner(doc) {
     if (!doc) {

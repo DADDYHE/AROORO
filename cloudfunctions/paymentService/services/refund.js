@@ -1,4 +1,3 @@
-/* eslint-disable */
 "use strict";
 /**
  * paymentService/refund.ts - 退款服务（TypeScript 源文件 - Sprint 24 迁移）
@@ -183,7 +182,7 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
                 data: {
                     status: 'refunded',
                     paymentStatus: 'refunded',
-                    refundAmount: Number(refundAmount) / 100,
+                    refundAmount: Number((Number(refundAmount) / 100).toFixed(2)),
                     refundedAt: db.serverDate(),
                     updatedAt: db.serverDate(),
                 },
@@ -209,6 +208,47 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
                 await transaction.collection('commissions').doc(cid).update({
                     data: { status: 'cancelled', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
                 });
+            }
+            // 4) 商城订单全额退款：回退商品库存（与下单扣减/取消回退对称；部分退款不退库存）
+            //    仅当退款金额 >= 订单实付金额时才视为全额退款
+            if (orderType === 'mall' && orderDoc.productId) {
+                const paidAmountYuan = Number(orderDoc.paidAmount || orderDoc.totalAmount || orderDoc.totalPrice || 0);
+                const isFullRefund = paidAmountYuan <= 0 || Number(refundAmount) >= Math.round(paidAmountYuan * 100);
+                if (isFullRefund) {
+                    const restoreStock = async (productId, skuId, qty) => {
+                        const stockUpdateData = {
+                            totalStock: db.command.inc(qty),
+                            soldCount: db.command.inc(-qty),
+                            updatedAt: db.serverDate(),
+                        };
+                        let skuIndex = -1;
+                        if (skuId) {
+                            const pRes = await db.collection('products').doc(productId).get();
+                            const pd = pRes.data;
+                            if (pd && pd.skus) {
+                                skuIndex = pd.skus.findIndex((s) => s.skuId === skuId);
+                            }
+                        }
+                        if (skuId && skuIndex >= 0) {
+                            stockUpdateData[`skus.${skuIndex}.stock`] = db.command.inc(qty);
+                            stockUpdateData[`skus.${skuIndex}.soldCount`] = db.command.inc(-qty);
+                        }
+                        else {
+                            stockUpdateData.stock = db.command.inc(qty);
+                        }
+                        await transaction.collection('products').doc(productId).update({ data: stockUpdateData });
+                    };
+                    const mallItems = Array.isArray(orderDoc.items) && orderDoc.items.length > 0 ? orderDoc.items : null;
+                    if (mallItems && mallItems.length > 0) {
+                        for (const it of mallItems) {
+                            if (!it.productId) { continue; }
+                            await restoreStock(it.productId, it.skuId || '', Number(it.quantity) || 1);
+                        }
+                    }
+                    else {
+                        await restoreStock(orderDoc.productId, orderDoc.skuId || '', Number(orderDoc.quantity) || 1);
+                    }
+                }
             }
             await transaction.commit();
             logger.info('createRefund.transaction.success', {
@@ -236,7 +276,7 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
                 orderType,
                 outTradeNo,
                 outRefundNo,
-                refundAmount: Number(refundAmount) / 100,
+                refundAmount: Number((Number(refundAmount) / 100).toFixed(2)),
                 error: txError?.message,
             });
         }

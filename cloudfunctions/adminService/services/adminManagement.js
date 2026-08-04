@@ -29,9 +29,18 @@ const { db } = (0, utils_1.initCloud)();
  * Handlers
  * ============================================================ */
 const VALID_STATUSES = ['active', 'suspended', 'disabled'];
+// 权限门禁与 ACTION_PERMISSIONS（super_admin）对齐：
+// 允许超级管理员（HTTP 路径 roles 含 super_admin / 小程序路径 isSuperAdmin）与合作伙伴。
+function canManageAdmins(auth) {
+    return Boolean(auth && (
+        auth.isPartner === true ||
+        auth.isSuperAdmin === true ||
+        (Array.isArray(auth.roles) && auth.roles.includes('super_admin'))
+    ));
+}
 async function getAdminList(event, _context, auth) {
-    if (!auth?.isPartner) {
-        throw (0, errors_1.err)('SUPER_ADMIN_REQUIRED', '需要合作伙伴权限');
+    if (!canManageAdmins(auth)) {
+        throw (0, errors_1.err)('PERMISSION_DENIED', '需要管理员权限');
     }
     const page = Number(event.page) || 1;
     const rawPageSize = Number(event.pageSize) || 20;
@@ -41,8 +50,8 @@ async function getAdminList(event, _context, auth) {
 }
 exports.getAdminList = getAdminList;
 async function getAdminDetail(event, _context, auth) {
-    if (!auth?.isPartner) {
-        throw (0, errors_1.err)('PERMISSION_DENIED', '需要合作伙伴权限');
+    if (!canManageAdmins(auth)) {
+        throw (0, errors_1.err)('PERMISSION_DENIED', '需要管理员权限');
     }
     const { openid } = event;
     if (!openid) {
@@ -53,8 +62,8 @@ async function getAdminDetail(event, _context, auth) {
 }
 exports.getAdminDetail = getAdminDetail;
 async function updateAdminStatus(event, _context, auth) {
-    if (!auth?.isPartner) {
-        throw (0, errors_1.err)('PERMISSION_DENIED', '需要合作伙伴权限');
+    if (!canManageAdmins(auth)) {
+        throw (0, errors_1.err)('PERMISSION_DENIED', '需要管理员权限');
     }
     const { openid, status } = event;
     if (!openid) {

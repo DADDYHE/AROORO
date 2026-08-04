@@ -33,7 +33,7 @@
 
 import { initCloud, handleSuccess, handleError, ERROR_CODES } from './common/utils'
 import { createLogger, type ServiceLogger } from './common/logger'
-import type { CloudBaseDB, ApiResponse, Logger } from './common/types'
+import type { CloudBaseDB, ApiResponse } from './common/types'
 
 // service 内部 .js 模块走 CommonJS require
 // eslint-disable-next-line @typescript-eslint/no-var-requires

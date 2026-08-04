@@ -3,10 +3,11 @@
  *
  * 业务功能：
  *   - 合作伙伴小程序端统一入口：申请 / 状态 / 权限 / 收入 / 钱包 / 提现 / 邀请
- *   - 3 个服务子模块：application / wallet / referral
- *   - 共 12 个 action：
+ *   - 4 个服务子模块：application / wallet / referral / income
+ *   - 共 14 个 action：
  *     * 申请（3 个）：submitApplication / getApplicationStatus / getMyPermissions
  *     * 收入 / 钱包（5 个）：getMyIncomeOverview / getMyIncomeDetails / getMyWallet / getMyWithdrawals / requestWithdrawal
+ *     * 服务收入（2 个）：getServiceIncomeOverview / getServiceIncomeDetails
  *     * 邀请（4 个）：getReferralStats / getMyInvitedUsers / getReferralOrders / getReferralOrderStats
  *
  * 迁移目标：
@@ -108,6 +109,8 @@ const applicationHandlers: Record<string, PartnerActionHandler> = require('./ser
 const walletHandlers: Record<string, PartnerActionHandler> = require('./services/wallet')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const referralHandlers: Record<string, PartnerActionHandler> = require('./services/referral')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const incomeHandlers: Record<string, PartnerActionHandler> = require('./services/income')
 
 // =====================================================================
 // 类型定义
@@ -134,6 +137,10 @@ export interface PartnerHandlers {
   getMyWithdrawals: PartnerActionHandler
   requestWithdrawal: PartnerActionHandler
 
+  // 服务收入（service_incomes 概览 / 明细）
+  getServiceIncomeOverview: PartnerActionHandler
+  getServiceIncomeDetails: PartnerActionHandler
+
   // 邀请
   getReferralStats: PartnerActionHandler
   getMyInvitedUsers: PartnerActionHandler
@@ -158,6 +165,10 @@ export const handlers: PartnerHandlers = {
   getMyWithdrawals: walletHandlers.getMyWithdrawals,
   requestWithdrawal: walletHandlers.requestWithdrawal,
 
+  // 服务收入（service_incomes 概览 / 明细）
+  getServiceIncomeOverview: incomeHandlers.getServiceIncomeOverview,
+  getServiceIncomeDetails: incomeHandlers.getServiceIncomeDetails,
+
   // 邀请
   getReferralStats: referralHandlers.getReferralStats,
   getMyInvitedUsers: referralHandlers.getMyInvitedUsers,
@@ -181,6 +192,10 @@ const ACTION_PERMISSIONS: Record<keyof PartnerHandlers, PartnerPermission> = {
   getMyWallet: 'partner',
   getMyWithdrawals: 'partner',
   requestWithdrawal: 'partner',
+
+  // 服务收入：需要合作伙伴身份
+  getServiceIncomeOverview: 'partner',
+  getServiceIncomeDetails: 'partner',
 
   // 推广/邀请：需要合作伙伴身份
   getReferralStats: 'partner',

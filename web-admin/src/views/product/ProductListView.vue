@@ -20,7 +20,7 @@
           <el-input v-model="keyword" placeholder="搜索商品名称/ID" style="width:220px" clearable @clear="onSearch" @keyup.enter="onSearch">
             <template #prefix><el-icon><Search /></el-icon></template>
           </el-input>
-          <el-cascader v-model="categoryFilter" :options="CATEGORY_CASCADER_OPTIONS" :props="{ checkStrictly: true }" placeholder="选择分类" clearable style="width:200px" @change="onSearch" />
+          <el-cascader v-model="categoryFilter" :options="categoryOptions" :props="{ checkStrictly: true }" placeholder="选择分类" clearable style="width:200px" @change="onSearch" />
           <el-button type="primary" @click="onSearch">搜索</el-button>
           <el-button @click="onResetFilter">重置</el-button>
         </div>
@@ -58,7 +58,7 @@
           </template>
         </el-table-column>
         <el-table-column label="分类" width="120">
-          <template #default="{ row }">{{ getCategoryLabel(row.category, row.categoryId) }}</template>
+          <template #default="{ row }">{{ row.categoryName || getCategoryLabel(row.category, row.categoryId) }}</template>
         </el-table-column>
         <el-table-column label="价格" width="140">
           <template #default="{ row }">
@@ -96,7 +96,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getProductList, deleteProduct, cloneProduct, batchUpdateProducts, getProductStats } from '@/api/product'
+import { getProductList, deleteProduct, cloneProduct, batchUpdateProducts, getProductStats, listCategories } from '@/api/product'
 import { usePagination } from '@/composables/usePagination'
 import { PRODUCT_STATUS, CATEGORY_CASCADER_OPTIONS, getCategoryLabel, formatPrice } from '@/constants/product'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -107,6 +107,8 @@ const activeTab = ref('all')
 const categoryFilter = ref([])
 const selectedIds = ref([])
 const stats = ref({ total: 0, on_sale: 0, off_sale: 0, draft: 0 })
+// 分类筛选项：优先使用后端动态分类（与分类管理/小程序保持一致），失败时回退静态配置
+const categoryOptions = ref(CATEGORY_CASCADER_OPTIONS)
 
 const statCards = ref([
   { key: 'all', label: '商品总数', value: 0 },
@@ -155,8 +157,8 @@ async function onBatch(action) {
 }
 
 async function onToggleStatus(row) {
-  const newStatus = row.status === 'on_sale' ? 'off_sale' : 'on_sale'
-  const label = newStatus === 'on_sale' ? '上架' : '下架'
+  const newStatus = row.status === 'on_sale' ? 'off_shelf' : 'on_shelf'
+  const label = newStatus === 'on_shelf' ? '上架' : '下架'
   await ElMessageBox.confirm(`确定${label}「${row.name}」？`, label)
   await batchUpdateProducts([row._id], newStatus)
   ElMessage.success(`${label}成功`)
@@ -165,7 +167,7 @@ async function onToggleStatus(row) {
 }
 
 async function onToggleFeatured(row) {
-  const action = row.isFeatured ? 'unfeature' : 'feature'
+  const action = row.isFeatured ? 'unset_featured' : 'set_featured'
   await batchUpdateProducts([row._id], action)
   ElMessage.success(row.isFeatured ? '已取消推荐' : '已设为推荐')
   onSearch()
@@ -199,7 +201,25 @@ async function loadStats() {
   } catch (e) { /* ignore */ }
 }
 
-onMounted(() => { onSearch(); loadStats() })
+async function loadCategoryOptions() {
+  try {
+    const res = await listCategories()
+    if (res.code === 0 && res.data && res.data.length > 0) {
+      categoryOptions.value = res.data.map(cat => ({
+        value: cat.key,
+        label: cat.label,
+        children: (cat.subcats || []).map(sub => ({
+          value: sub.key,
+          label: sub.label,
+        })),
+      }))
+    }
+  } catch (e) {
+    // 动态分类加载失败时保留静态兜底，不阻断列表加载
+  }
+}
+
+onMounted(() => { loadCategoryOptions(); onSearch(); loadStats() })
 </script>
 
 <style scoped>

@@ -121,22 +121,19 @@ describe('Sprint 38: activityService TypeScript 迁移', () => {
     })
   })
 
-  describe('5. 13 个 action handler', () => {
+  describe('5. 5 个 action handler', () => {
     let code
     beforeAll(() => {
       code = readFileSafe(path.join(ACT_DIR, 'index.ts'))
     })
 
     const ACTIONS = [
-      'getActivityList', 'getActivityDetail', 'createActivity',
-      'updateActivity', 'deleteActivity', 'submitRegistration',
+      'getActivityList', 'getActivityDetail', 'submitRegistration',
       'getRegistrationDetail', 'getRegistrationList',
-      'createActivityPaymentOrder', 'confirmActivityPayment',
-      'getActivityRegistrations', 'exportActivityRegistrations', 'getActivityOrders',
     ]
 
-    test('共 13 个 action', () => {
-      expect(ACTIONS.length).toBe(13)
+    test('共 5 个 action', () => {
+      expect(ACTIONS.length).toBe(5)
     })
 
     ACTIONS.forEach(act => {
@@ -158,9 +155,7 @@ describe('Sprint 38: activityService TypeScript 迁移', () => {
 
     const HELPERS = [
       'performActivityApplyRiskCheck',
-      'createCommissionRecord',
       'autoUpdateActivityStatus',
-      'checkPartnerPermission',
     ]
 
     HELPERS.forEach(fn => {
@@ -169,21 +164,29 @@ describe('Sprint 38: activityService TypeScript 迁移', () => {
       })
     })
 
-    test('包含 _createPaymentParams 私有函数', () => {
-      expect(code).toMatch(/async\s+function\s+_createPaymentParams\b/)
+    test('佣金写入委托 common/commission-utils（写入器统一，2026-08-02）', () => {
+      // activityService 不再内联 createCommissionRecord 实现，改为从公共写入器引入
+      expect(code).toMatch(
+        /const\s*\{\s*createCommissionRecord\s*\}\s*=\s*require\(['"]\.\/common\/commission-utils['"]\)/
+      )
+      expect(code).not.toMatch(/async\s+function\s+createCommissionRecord\b/)
+    })
+
+    test('直连微信支付遗留代码已清理（P3-7）', () => {
+      expect(code).not.toMatch(/_createPaymentParams|_queryWechatOrder|_wxPayV3Request|createActivityPaymentOrder|confirmActivityPayment/)
     })
   })
 
-  describe('7. 13 个 action 强类型化', () => {
+  describe('7. 5 个 action 强类型化', () => {
     let code
     beforeAll(() => {
       code = readFileSafe(path.join(ACT_DIR, 'index.ts'))
     })
 
-    test('强类型化 13 个 action', () => {
+    test('强类型化 5 个 action', () => {
       // 全部 action 都是 export async function
       const matches = code.match(/export\s+async\s+function\s+\w+/g) || []
-      expect(matches.length).toBeGreaterThanOrEqual(13)
+      expect(matches.length).toBeGreaterThanOrEqual(5)
     })
 
     test('包含风控前置调用', () => {

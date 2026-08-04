@@ -111,7 +111,7 @@ describe('Sprint 40: mallService TypeScript 迁移', () => {
     })
   })
 
-  describe('5. 17 个 action handler', () => {
+  describe('5. 14 个 action handler', () => {
     let code
     beforeAll(() => {
       code = readFileSafe(path.join(MALL_DIR, 'index.ts'))
@@ -119,14 +119,13 @@ describe('Sprint 40: mallService TypeScript 迁移', () => {
 
     const ACTIONS = [
       'getProductList', 'getProductDetail', 'getCategoryStats', 'listCategories',
-      'checkCartItems', 'createProduct', 'updateProduct', 'deleteProduct',
-      'batchUpdateProducts', 'createOrder', 'createGroupBuyOrder',
+      'checkCartItems', 'createOrder', 'createMultiOrder',
       'getMyOrders', 'getGroupBuyOrders', 'getOrderDetail',
-      'cancelOrder', 'confirmReceive', 'deleteOrder',
+      'cancelOrder', 'confirmReceive', 'deleteOrder', 'getWxShippingStatus',
     ]
 
-    test('共 17 个 action', () => {
-      expect(ACTIONS.length).toBe(17)
+    test('共 14 个 action', () => {
+      expect(ACTIONS.length).toBe(14)
     })
 
     ACTIONS.forEach(act => {
@@ -157,30 +156,33 @@ describe('Sprint 40: mallService TypeScript 迁移', () => {
       })
     })
 
-    // H1: createCommissionRecord 已统一使用 common/commission-utils（含自购保护、system_config 配置、幂等）
-    test('使用共享 createCommissionRecord（common/commission-utils）', () => {
-      expect(code).toMatch(/sharedCreateCommissionRecord/)
+    // H1: mallService 的佣金职责仅为「取消订单时撤销 pending 佣金」，统一走 common/commission-utils；
+    //   佣金创建在支付回调（paymentService）与后台完成（adminService completeMallOrder），不在 mallService。
+    test('使用共享 cancelCommissionRecord（common/commission-utils）', () => {
+      expect(code).toMatch(/cancelCommissionRecord: sharedCancelCommissionRecord/)
+      expect(code).toMatch(/sharedCancelCommissionRecord\(/)
       expect(code).toMatch(/common\/commission-utils/)
     })
   })
 
-  describe('7. 17 个 action 强类型化', () => {
+  describe('7. 14 个 action 强类型化', () => {
     let code
     beforeAll(() => {
       code = readFileSafe(path.join(MALL_DIR, 'index.ts'))
     })
 
-    test('强类型化 17 个 action', () => {
+    test('强类型化 14 个 action', () => {
       const matches = code.match(/export\s+async\s+function\s+\w+/g) || []
-      expect(matches.length).toBeGreaterThanOrEqual(17)
+      expect(matches.length).toBeGreaterThanOrEqual(14)
     })
 
     test('包含风控前置调用', () => {
       expect(code).toMatch(/performMallOrderRiskCheck/)
     })
 
-    test('包含 commission 记录调用', () => {
-      expect(code).toMatch(/createCommissionRecord/)
+    test('包含佣金撤销调用（共享 cancelCommissionRecord）', () => {
+      expect(code).toMatch(/cancelCommissionRecord/)
+      expect(code).toMatch(/sharedCancelCommissionRecord\(/)
     })
   })
 

@@ -143,7 +143,8 @@ describe('集成测试：团长结算子链路', () => {
   } = {}) => {
     mockDb._collections.users = { docs: [...leaders, ...invited] }
     mockDb._collections.system_config = { docs: [{ _id: 'commission_rates', ...config }] }
-    mockDb._collections.tuan_commissions = { docs: commissions }
+    // 佣金已统一写入 commissions 集合（原 tuan_commissions 已废弃）
+    mockDb._collections.commissions = { docs: commissions }
   }
 
   // ============ getTuanLeaderList ============
@@ -202,9 +203,10 @@ describe('集成测试：团长结算子链路', () => {
       expect(l.totalCommission).toBe(200)
       expect(l.pendingAmount).toBe(80)
       expect(l.settledAmount).toBe(120)
-      expect(l.orderTypeStats.hosting.totalAmount).toBe(150)
-      expect(l.orderTypeStats.hosting.pendingAmount).toBe(50)
-      expect(l.orderTypeStats.hosting.settledAmount).toBe(100)
+      // 历史 hosting 文档经 normalizeOrderType 归并到 boarding 口径
+      expect(l.orderTypeStats.boarding.totalAmount).toBe(150)
+      expect(l.orderTypeStats.boarding.pendingAmount).toBe(50)
+      expect(l.orderTypeStats.boarding.settledAmount).toBe(100)
       expect(l.orderTypeStats.mall.totalAmount).toBe(30)
       expect(l.orderTypeStats.activity.totalAmount).toBe(20)
     })
@@ -305,7 +307,7 @@ describe('集成测试：团长结算子链路', () => {
       expect(res.data.pendingAmount).toBe(130)
       expect(res.data.settledCount).toBe(1)
       expect(res.data.settledAmount).toBe(50)
-      expect(res.data.orderTypeStats.hosting.totalAmount).toBe(150)
+      expect(res.data.orderTypeStats.boarding.totalAmount).toBe(150)
       expect(res.data.orderTypeStats.mall.totalAmount).toBe(30)
     })
 
@@ -316,12 +318,12 @@ describe('集成测试：团长结算子链路', () => {
         ],
       })
       const res = await tuanAdmin.getTuanCommissionStats({}, {}, {})
-      const hosting = res.data.orderTypeStats.hosting
-      expect(hosting.rate).toBe(10)
-      expect(hosting.totalCount).toBe(1)
-      expect(hosting.pendingCount).toBe(1)
-      expect(hosting.settledCount).toBe(0)
-      expect(hosting.totalAmount).toBe(100)
+      const boarding = res.data.orderTypeStats.boarding
+      expect(boarding.rate).toBe(10)
+      expect(boarding.totalCount).toBe(1)
+      expect(boarding.pendingCount).toBe(1)
+      expect(boarding.settledCount).toBe(0)
+      expect(boarding.totalAmount).toBe(100)
     })
 
     test('金额小数位精度：0.1 + 0.2 不应等于 0.30000000000000004', async () => {
@@ -353,7 +355,7 @@ describe('集成测试：团长结算子链路', () => {
       )
       expect(res.code).toBe(0)
       expect(res.data.settledCount).toBe(2)
-      const c1 = mockDb._collections.tuan_commissions.docs.find(d => d._id === 'c1')
+      const c1 = mockDb._collections.commissions.docs.find(d => d._id === 'c1')
       expect(c1.status).toBe('settled')
       expect(c1.settledBy).toBe('admin001')
       expect(c1.settledAt).toBeDefined()
@@ -396,7 +398,7 @@ describe('集成测试：团长结算子链路', () => {
         ],
       })
       await tuanAdmin.settleTuanCommissions({ ids: ['c1'] }, {}, { openid: 'newAdmin' })
-      const c1 = mockDb._collections.tuan_commissions.docs.find(d => d._id === 'c1')
+      const c1 = mockDb._collections.commissions.docs.find(d => d._id === 'c1')
       expect(c1.status).toBe('settled')
       // P1-B: 已结算记录被跳过（where status=pending 命中 0 条），原 settledBy 保留
       expect(c1.settledBy).toBe('old')
@@ -411,8 +413,8 @@ describe('集成测试：团长结算子链路', () => {
         ],
       })
       await tuanAdmin.settleTuanCommissions({ ids: ['c1', 'c2'] }, {}, { openid: 'adminX' })
-      const c1 = mockDb._collections.tuan_commissions.docs.find(d => d._id === 'c1')
-      const c2 = mockDb._collections.tuan_commissions.docs.find(d => d._id === 'c2')
+      const c1 = mockDb._collections.commissions.docs.find(d => d._id === 'c1')
+      const c2 = mockDb._collections.commissions.docs.find(d => d._id === 'c2')
       // c1 之前是 pending，现在有 settledAt/settledBy
       expect(c1.settledBy).toBe('adminX')
       expect(c1.settledAt).toBeDefined()
@@ -446,7 +448,7 @@ describe('集成测试：团长结算子链路', () => {
         ownerId: 'oBuyer1',
         totalPrice: 2000,
       })
-      const comms = mockDb._collections.tuan_commissions.docs
+      const comms = mockDb._collections.commissions.docs
       expect(comms.length).toBe(2)
       expect(comms.every(c => c.status === 'pending')).toBe(true)
 
@@ -500,7 +502,7 @@ describe('集成测试：团长结算子链路', () => {
       await createCommission('hosting', { _id: 'o1', ownerId: 'oBuyer1', totalPrice: 1000 })
       await createCommission('mall', { _id: 'o2', ownerId: 'oBuyer2', totalPrice: 2000 })
 
-      const comms = mockDb._collections.tuan_commissions.docs
+      const comms = mockDb._collections.commissions.docs
       expect(comms.length).toBe(2)
       const l1CommId = comms.find(c => c.inviterId === 'L1')._id
 
@@ -530,9 +532,9 @@ describe('集成测试：团长结算子链路', () => {
           { _id: 'c1', inviterId: 'L1', status: 'settled', commissionAmount: 50, settledBy: 'old' },
         ],
       })
-      const before = mockDb._collections.tuan_commissions.docs[0]
+      const before = mockDb._collections.commissions.docs[0]
       await tuanAdmin.settleTuanCommissions({ ids: ['c1'] }, {}, { openid: 'new' })
-      const after = mockDb._collections.tuan_commissions.docs[0]
+      const after = mockDb._collections.commissions.docs[0]
       expect(after.status).toBe('settled')
       expect(after.status).not.toBe('pending')
     })

@@ -8,9 +8,9 @@
         <el-descriptions-item label="用户">{{ order.userName || order.ownerName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="联系电话">{{ order.contactPhone || order.userPhone || order.buyerPhone || '-' }}</el-descriptions-item>
         <el-descriptions-item label="服务地址" :span="2">{{ order.address || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="服务时间">{{ order.serviceDate ? formatDate(order.serviceDate) : '-' }}</el-descriptions-item>
+        <el-descriptions-item label="服务时间">{{ order.startDate ? formatDate(order.startDate) : '-' }}</el-descriptions-item>
         <el-descriptions-item label="金额">{{ formatMoney(order.totalPrice || order.totalAmount) }}</el-descriptions-item>
-        <el-descriptions-item label="宠物">{{ order.petName || order.petNames || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="宠物">{{ petNamesText }}</el-descriptions-item>
         <el-descriptions-item label="下单时间">{{ formatDate(order.createdAt) }}</el-descriptions-item>
         <el-descriptions-item label="备注" :span="2">{{ order.note || order.remark || '-' }}</el-descriptions-item>
       </el-descriptions>
@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getFeedingOrderDetail, handleFeedingOrder } from '@/api/feeding'
 import { formatDate, formatMoney } from '@/utils/format'
@@ -41,6 +41,14 @@ const FEEDING_STATUS = { pending_payment: '待支付', paid: '已支付', pendin
 const route = useRoute()
 const loading = ref(false)
 const order = ref({})
+// P3-6 修复：feedingOrders 实际字段为 petDetails（数组），startDate 为服务开始日期
+const petNamesText = computed(() => {
+  const details = order.value.petDetails || []
+  if (details.length > 0) {
+    return details.map(p => p.name || p.petName || p.nickName || '').filter(Boolean).join('、') || '-'
+  }
+  return order.value.petName || order.value.petNames || '-'
+})
 
 async function fetchDetail() {
   loading.value = true

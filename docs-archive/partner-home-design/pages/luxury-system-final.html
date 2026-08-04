@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AROORO · 奢华系统完整方案</title>
+    <style id="theme-vars">
+/* ================================================================
+   colors_and_type.css · AROORO 设计系统令牌
+   Olive Green × Healing Light-Luxury × Haute-Luxury Elevation
+   ================================================================ */
+
+:root {
+  /* 品牌主色：橄榄绿 */
+  --color-primary: #4F5E35;
+  --color-primary-dark: #3A4626;
+  --color-primary-light: #6B7D5A;
+  --color-primary-100: #EAEDDF;
+
+  /* 点缀色：香槟金（全站唯一点缀金 · P1③ 已并入原偏橙深金变体，野金值全仓清零） */
+  --color-accent: #C9A24B;
+  --color-accent-soft: #F2E8D4;
+
+  /* 中性色 */
+  --color-background: #F8FAF3;
+  --color-surface: #FFFFFF;
+  --color-border: #D8DCCE;
+  --color-divider: #EAEDDF;
+
+  /* 文字色 */
+  --color-foreground: #2A2823;
+  --color-text-primary: #2A2823;
+  --color-text-secondary: #635E54;
+  --color-text-tertiary: #9A9489;
+  --color-text-on-primary: #FAFAF6;
+
+  /* 语义别名 */
+  --color-card: #FFFFFF;
+  --color-muted: #9A9489;
+  --color-muted-foreground: #9A9489;
+
+  /* 圆角 */
+  --color-radius-sm: 8px;
+  --color-radius-md: 12px;
+  --color-radius-lg: 16px;
+
+  /* 字体 */
+  --color-font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+
+  /* ================================================================
+     奢侈品级令牌 — Haute-Luxury Elevation Layer
+     金属香槟金阶 · 深森林绿阶 · 层次阴影 · 金线装饰
+     ================================================================ */
+
+  /* 金属香槟金阶 */
+  --lux-gold-100: #FDF8EE;
+  --lux-gold-200: #F5EBD0;
+  /* REV.5 P1 金漂移清零：删除未被引用的中间档 -300 / -400 / -700，
+     梯级只保留「两档高光浅色（-100/-200，仅作渐变高光）+ 主金 -500 + 按下深态 -600」 */
+  --lux-gold-500: #C9A24B;  /* 唯一主金 */
+  --lux-gold-600: #A8894A;  /* REV.5 P1 按下深态归位 B′ 规范值，供 cascade 等填充/渐变终点引用 */
+  --lux-gold-grad: linear-gradient(135deg, #C9A24B 0%, #A8894A 100%);  /* REV.5 P1 渐变终点用按下深态，去多档金 */
+  --lux-gold-grad-soft: linear-gradient(135deg, #FDF8EE 0%, #F5EBD0 100%);  /* REV.5 P1 去中间漂移档 */
+
+  /* 深森林绿阶 */
+  --lux-green-900: #1A2E1A;
+  --lux-green-800: #1F3A1F;
+  --lux-green-700: #2D4A2D;
+  --lux-green-600: #3D5A3D;
+  --lux-green-grad: linear-gradient(160deg, #2D4A2D 0%, #1A2E1A 100%);
+  --lux-green-grad-rich: linear-gradient(135deg, #3D5A3D 0%, #1F3A1F 50%, #1A2E1A 100%);
+
+  /* 层次阴影系统 */
+  --lux-shadow-card: 0 1px 2px rgba(26,26,23,0.03), 0 4px 16px rgba(26,26,23,0.05);
+  --lux-shadow-elevated: 0 2px 4px rgba(26,26,23,0.04), 0 8px 32px rgba(26,26,23,0.08);
+  --lux-shadow-gold: 0 2px 8px rgba(201,162,75,0.12), 0 8px 24px rgba(201,162,75,0.16);  /* REV.5 P2 十进制野金归一到规范金 #C9A24B */
+  --lux-shadow-green: 0 2px 8px rgba(31,58,31,0.12), 0 8px 24px rgba(31,58,31,0.18);
+
+  /* 发丝描边 */
+  --lux-hairline: rgba(26,26,23,0.06);
+  --lux-hairline-gold: rgba(201,162,75,0.18);  /* REV.5 P2 同上，归一到规范金 */
+  --lux-hairline-green: rgba(31,58,31,0.10);
+
+  /* 编辑级排版令牌 */
+  --lux-ls-display: 0.16em;
+  --lux-ls-heading: 0.08em;
+  --lux-ls-label: 0.24em;
+  --lux-ls-caption: 0.04em;
+  --lux-ls-number: 0.01em;
+
+  /* 奢侈级圆角 */
+  --lux-radius-card: 20px;
+  --lux-radius-inner: 16px;
+  --lux-radius-pill: 9999px;
+
+  /* 金线装饰令牌 */
+  --lux-gold-line: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%);
+  --lux-gold-line-solid: linear-gradient(90deg, #C9A24B 0%, #A8894A 100%);  /* REV.5 P1 同上 */
+
+  /* 卡片底纹令牌 */
+  --lux-card-bg: #FFFFFF;
+  --lux-card-cream: #FDFAF3;
+  --lux-card-gold-tint: #FDF8EE;
+  --lux-card-green-tint: #F5F8F2;
+
+  /* ================================================================
+     页面演示层令牌 — Page Demo Layer（REV.3 P2 并入单一 :root）
+     暖石金底 + 香槟金线 + 深绿基座，仅本提案页使用
+     ================================================================ */
+  --bg-main: #ECE4D4;
+  --bg-section: #E5DCC8;
+  --bg-card: #FFFFFF;
+  --gold: #C9A24B;
+  --gold-soft: #8A7E5C;
+  --gold-bg-tag: rgba(201,162,75,0.10);
+  --green-deep: #1F3A1F;
+  --green-bar-a: #2D4A2D;
+  --green-bar-b: #1A2E1A;
+  --text-body: #4A4742;
+  --text-sub: #635E54;      /* 浅暖灰 次要 · REV.4 P1-1 加深过 AA（5.10:1 on #ECE4D4） */
+  --border-gold: rgba(201,162,75,0.12);
+  --zy-paper-noise: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAQtUlEQVR4nDXZB9iX8xcG8IdQHSMUKaPMSlFaZgohqyEpZZQITXtHsqOQWWiHtMuIsoXQIBQNQtl7K/yvz7n+z3td7/W+7/P7Pt/vOfe57/uc53mLVq1axemnnx7jxo2LbbbZJnbYYYc466yzombNmnHjjTfGtddeG+3bt4+BAwfG2rVr8vvvv/+Oo446KnbZZZfo0aNHfPjhhzFgwIB49dVXc92tt94a33zzTey///6xdOnSmDFjRmyyySZx6aWXxrvvvhs77rhjTJ48OerWrRt9+/aN8ePHR+/evaN69erx0ksvZSwnn3xyrFy5Ms4777xYsGBBPPbYY3HuuefGp59+GjfffHM888wzuW/x888/R/fu3ePss8/OwLfddtvYbrvt4swzz8wgf/nll/B15ZVXxk8//RQPPvhgnHHGGbF+/fq8p23btnHqqafGs88+G7fffnsm3Lx58xg2bFiCILGHH344xowZk3u8/PLLMXz48Dj44IPj+++/j0033TTvO/HEE+PYY4+NP/74I3799df48ssv47TTTovRo0fn+mXLlkXPnj2jTZs2sW7dukzgxx9/jKJFixYhiffeey8Pt1DWm2++edSqVSuatWsXO++8c2YN2QMOOCA+/vjjREdwVapUicqVK8fs2bPjuOOOy2pKbPXq1VGxYsUEQMUEVa1atfj333+zKhdccEHcf//9cdBBB8Vvv/2W66dNm5ZgzZs3L/o06dNvv/12vPDCC4n8Pffck+d36dIl41K9m266KQqlgsp3332XGbt56tSpmZDSHnjggYlCgwYN4oEHHsgq+KxXr15RqVKleOONN2K//faLiRMnJgXuuOOODGLUqFHxzjvvZMUcDtGPPvoo9t1336y0v6GOSpKpXbt2vPnmm/HDDz/EEUcckRVDt0suuSRWrFiRqKOPqm299dZx+OGHZ9JJIYfvtttuicSiRYsS4bvuuis++OCDvBl3cf3rr7/OzX19++23yflTTjklrrvuuqwIRG+77bakoGv//fdfBqCKDpswYULSSgKvvfZaFEWRyaEI2l100UVxxRVXJP+xQYWfe+652GKLLXK/jh075nWUVQWAFE2aNEkuOQRqUL/33nsTZUFWqFAhUVF+Xy+++GK8/vrrSSUHHHPMMVl6Zd59992Tal999VUsXrw49tprr3jrrbfyGs43atQo5s6dGx06dEjkBQxlFaxXr1588sknyQRaEAc9+p2JoJTkP//887jwwgvjpJNOyiSKo48+Om655ZYMdsstt8wyqQShWjhkyJCsCmpwg1KgvqDIxRo3bpzI+fzII49MMPr3758uhBoC2GmnnWLs2LFJuY033jgpsWTJktwDbYEhkcsvvzzq1KmTYErw+eefTwdTKU702WefZazTp09PzRWCX7NmTXJVuXyhi8MhJhn2ym0cTIB+QkOyI0aMSHTYJvRatmyZ7oXjjEB10fHOO++Myy67LPbZZ5+kJrtV3T322COr8dBDD2UlBw8enJ/TxTnnnJMOefXVV6fYmQFdXXPNNQlqaoDjKBehKj174s1PP/10OguvF4QABMV1qlatmlUjdghKyseatG7dOpo1a5a8Boq1qjxnzpykg8D8vP7661OITz31VLrWxRdfnLTl7SyZA6Hln3/+mZTbaKONMsm99947NYn/KlNAnx3JUAUgiSJudriyn3/++Wl/NtfolFHDsX758uXpzTyeTgi3NAWHopIqchXoCfb9999PJ0FT151HP8QNbUC+8soryYxu3brlnnTJ+QDE7ewtyQJSeMnLJfHkk08mpzWfRx99NJ0HFwWhpJtttlkG17Vr17jqqquyoQnS3wLSMwQqSQkDgfUJjrupmnsErgKcqUaNGrkvZPUN4GmkkiByRkBfNIOyeoEvrCjQA2I2VkYcVtZdd901+WgRekHeF+/ffvvtY9WqVTlqQN96NsqSHW4v9tu0adOkkb3oCnX0EZ9bK1mURRkJ6BEnnHBCaoEuWPTChQuTFRICCgputdVWGROKF3zaB7zbDYQla+jinvLRA5TNKCiA82hHB0pvDUpB9LDDDktxszgzkj2IDl9RB8/tL3n641iS4ICECUDjhQmBU82fPz9/6jnYofkRM4uVdNooRyEOHksobI09Tpo0KTZs2JAiRzX81BNYnPscRmSoI3l64OcCpofSonVYTsQS2Sku4zGDYM8oyTqt0fmBJwa9BsW4nv0wBeAqigXOK6AKCdwyJZpfHCpLgxXk8PuRRx5Ja9W4oK6hSRZ1oHHooYfmOsEQoUC5liAk6XP2yMNRk3s5QyIoxVU0P6LlWAY8NJKs9Tqw8+gSjZiAdYVSos2UKVOSBtxEgxAIUeOjRKCIZkpuY2s0E50c6q5bCwxiJHr8hxJdqJyfyi54PUEyGiPK+VtlNU+UYcn6j3ED9SCPkp06dUrtWK/fFMpBvPfdd1+irLHwaAh88cUX2QMIhpB0SoOfjdwnCQkTuk4qyN9//z2eeOKJ+Oeff3IuEjBqoqIgdHbduX79+gkAqvbr1y8rTYsSJ3BTqHWABZCqE6/7aZAjAbhgkTbHP+KxwMFKylqNsBzFgUZt3HMjahA3xIgY6hJwuLL7nEYkrTqcRmcHFJoyBWiqGlo6C6roJxnXnOVBB83ZMV1wvxtuuCHNQVIFYZr08Apn+b/hiyj5tYbBrnRgaLNG6Hi4QC004ddESCM0IVloo4jKqYrDBaRaaHb33XdntVGYNRvXNUvNi5YAqH+gmKHQGYZI1bWeGwKm8AzAn2V5/PHH501Ew1lwkMgMUeYaGVsnyccffzy7IuT1AXYnMbwkRDznbrQEcYGqiMBUB7IC5lSalyprqL6gr7/43Lyj4xuhiR04eoVnEyAVuqVRwRSJt741FLwzE/H1hg0bJjV0w86dO6cw0c3nkPUcYDgTsMB4NsdBBXv7CXXICp4dogxkaccwyDrtT7QcjtvYUwIcDWhiRTvAYg76FgSKU7iJEh4e8NX0qeHooHRgJIYSQXItHRLieGvdX3/9lXbJaQDAAJRYxXi7YGlGtfUDjUsfoKtZs2Zlr1FtQOrWEkdTYzRbV2HCNZsBSYxGm0ID8xxrbBWUrgg9bx8MWZCWKR+2jisIUMDKaI1DlR0dIMmjhw4dnusMXOWTll7gHGIWgN95P12omiSB5HmXSM1OXA94rJPwzUGStl/aqAuEgU+UrgojR45ML0YjJSdU4oWczdkZgaKbGYUB0If1OC4ZbiZpTQ53jRkGOFatMvZg0XqARPUT+9EL5FkokDgiStGaarJeCXM8LCk0DDQxKuhsGhb38ezLWcwuKuMgtMB5fQLqEMNFpfWggqcci/drSoROP4MGDUq9mGXMOJxJlfzOknVYNFMFdm4t50Kt8o2EvmNKBoDk2G12YqOqeYMtsU6HCcqDNUeCLItDHyXTvGjCQ4vO7BBCtDHklZrlERxtONg6QRjW7OMeQLFv9II62nIa6zke9Mvp1T4qzghYObNQWVUrlIgNOpzIiMQ1DUNlbAoR1gghyUGJyJRc8GioCkZu3EQZzU1FVIL7sFwUZM8mVYH7phGTgB7EIs1HKocZkPYgwzgwhLUCFfVoDE1zmGOVhOEG/NRwyjdyknPdKw0jBAtVLRuhi0Oh4qEE6u6TpBdZJk3eb1CkJQ/s7neeRPQIifqMabgX31VYciijJ6EzO7Wv4DkS19TxC1lAmTOYf8oOesghh2QXlKkK+NtaB0Pb4IdGDpUInUDfbOOLe3j1ISm0hD6X4nLEp2ujKcOAMnfTmfUbnRbHBWhC1gfYNTpjhuTQkCsVXMNjo8U4x2WMD7xW08LV8m+PhSrmkVGZaQdHaYMzOIAWiNtgJjl0gbqEWabAmQS3U2lgqCaBOx/dfMZlOA8joVMgmJsInyMCh24KWQie+IhVJ1R6UyHRaOcalER0RzQwF9GMYHVLOvCZDskCJYWzhIa3qCBB1OBqHIfLoI9eotfQCooAlCZMnMDS4HRqovY0hhHcEGNorZClJKCBqzNnzkzKuK5ts0EziiTK95auC7p8hypRqKKCsQH1BC4Z99iTOAWhwnTDLPDdFOAnpxK0hGiNW2lkJmWV0dhYtzjci1a0UECDgHDcT/wSjGz5eTmtChgaAlQ6L7G4lFletTQzn5dupMNLVM8gaI3LsOjLIydbRT1VNxfZE2U1TVTzEGNm0mQBIWBV0s1VQDK0WuCVCzInYqgaBwgTF80b/oaoDbiNpoVmmpqN2CVPVgGzlemRmxEonVgvCEkQOfq5zh75fjlS4DbNABIoqOVsILF2wx7UVUFshF8QDYs0BggAT6HpJSzhQYbIlF8TsxEeWksXgjCNcihlNsvQAMfRgMz3nIevl69SOJLEjRAcR4WBp5/QFI2phPOs4WjsWDVQjluhEYfK/w+UbxQgoK0LTgKyNcPQh3KihdITss38TsioYg+bE6Bky/f7rJWDoaLZSCW8YUAzgWhkNIAJ9lF5FVBx13zr1JhhPYrq9PSqcgVf11HNJ4L2O6QISnJ4qYxGaMiaTTQ2sxFB+sy06gmLEAmPjRoMjceSkqhq0Y9r1miGHkzQShVUhlNxIWM6wLiaVzsp1qJIsMoXYBgDyILDCAISyo4C+K0xEaWAZcw5JIGPGp9qecoyjFlH9ByKa6CZ0QMIBMuKTa06tiYmIfMM0OiHQ0EYrcQiSQnSJTobcfg/oACjerSiIvk8YDMPGC5oGlo9/kF5zz33zObD1sxAOM8WVYpPS1a5JY463IyDmPchba1K4jWdEJ6qSwrqEmQA1gCA5gSHxtyr/MeGNSrG+eiKW4o1E/ABQQjcQdBHFw/ognGwEQMfIc/KWKAewQA4Du/2BgKHUQHS5f8MzFMCNh5AUJ8geBbraQvnaQg9WKpRGw1Rx7mcEP00XJXmRoZJTlZQPRqZLTQv5SE+NgYJM7cuq7NKQLAsDLoO1upxFdcFqzKoABgBmoU0SpXU/o0gXIirqLgKoAd++8w56Ap9DcxLNHaq8qqBooZA1+1XcA2lUD4bCFzQJkQjgIxdVxVlhL7goAk1IwF0vIqRmIAkpwM7TJAOth8gVEq1Cd5sBYSSjsATnIqZBjyfEzUXUjWTKX3Zhy70k4JQbCA4BzrcApz0u8yJ1mKHoYmK2ZyoWCyEebkeQpT6B4SVHKIcih3TiLJzEPQTkIqaa9CNQeT/vf7vOPoLx7GWvXMn3Vy8miqLLiwoO6YAIYmXgpG9idJQJlHjM3pJDE+hgCboY/o06vocsvTjc+LGf4ga3lg0lCXpGQSFy/ne7zQEHGcSqwcdVAFEOVqgozcaYiyUBo2I14ZEa+4w+3AXYyxO836lhKaGQzPopCLGaPSBMjeDoP8fSFrjMuwBQ9Bsmb0KgCPpqCqlyTm3nGid5TNAqQprVSGjP+SNP5IuvHWDskqYY1TAAewKJwUjGXbJxwWu7UtKc1I9Vmkd5xGgez1BmYGU3sSKKl6PqAqw0I+uJM19II12NIWyegsdWcO+oU2PKuNM93mrWGgUyiNLFgZV1wRHbCyRO+Fo+ZZaSfHWJAsVQZmpDHqSLvuK4PG1/J+bh3qV4PHQoyXXvSpBPRXXe1TGT9WAuG/g0QLj4GyA8o+PwuYylT1rEohEBKs7mx6VXtsWsApwJaMsoQsGzfQFARKoGUXg7BGa5ixOp0mppNkIFSXoHNXjVnqD8YTHs1q9yCDH952hAqgFBL3LmPM/SCL4mhjuP8cAAAAASUVORK5CYII=");
+  --zy-paper-fallback: #ECE4D4;
+}
+
+    </style>
+    <!-- REV.5 P1 死依赖清除：本页未使用任何 utility class，也未引用任何图标库，
+         已移除两处外链脚本、主题映射块与 semantic-token 兜底类，
+         预览现为完全自包含（无外链、无 JS）。随之失效的图标遮罩脚手架
+         与一处非标准 word-break 值一并删除。 -->
+</head>
+<body>
+<div class="page paper-texture">
+
+  <!-- ============ 顶部标题区 ============ -->
+  <header class="hero">
+    <h1>AROORO · 奢华系统</h1>
+    <p class="sub">色值 × 材质 × 构图 × 纪律 — 四维叠加，不是又一块颜色</p>
+    <div class="dim-tags">
+      <span class="dim-tag"><span class="k">色值</span><span class="v mono">#ECE4D4</span></span>
+      <span class="dim-tag"><span class="k">材质</span><span class="v">纸纹 4%</span></span>
+      <span class="dim-tag"><span class="k">构图</span><span class="v">底部深绿</span></span>
+      <span class="dim-tag"><span class="k">纪律</span><span class="v">一支金</span></span>
+    </div>
+    <hr class="gold-rule">
+    <div class="fix-log">
+      <span class="fix-log-cap mono">REV.4 修正</span>
+      <span class="fix-item"><b>P0-1</b>全仓金统一 #C9A24B</span>
+      <span class="fix-item"><b>P0-2</b>纸纹 base64 内联</span>
+      <span class="fix-item"><b>P0-3</b>4 处对比度清零</span>
+      <span class="fix-item"><b>P1-1</b>text-sub 加深 #635E54</span>
+    </div>
+  </header>
+
+  <!-- ============ 第一部分：纸纹材质对比 ============ -->
+  <section class="section">
+    <div class="sec-head">
+      <span class="sec-no mono">PART 01</span>
+      <h3 class="sec-title">纸纹材质对比</h3>
+      <p class="sec-desc">同样的暖石金底色，平涂与纸纹之间的材质差异。</p>
+    </div>
+
+    <div class="compare">
+      <!-- 左列：无纸纹 -->
+      <div class="compare-col plain">
+        <span class="col-tag">PLAIN · 平涂</span>
+        <div class="col-inner">
+          <div class="mini-head">
+            <span class="mini-accent"></span>
+            <span class="t">宠团团</span>
+          </div>
+          <div class="mini-card">
+            <div class="mini-thumb"><i></i></div>
+            <div class="mini-name">精品猫粮 5kg</div>
+            <div class="mini-price">¥39<span class="mini-del">¥89</span></div>
+          </div>
+          <div class="mini-btn">去跟团</div>
+        </div>
+      </div>
+
+      <!-- 右列：有纸纹 -->
+      <div class="compare-col paper paper-texture">
+        <span class="col-tag">PAPER · 纸纹</span>
+        <div class="col-inner">
+          <div class="mini-head">
+            <span class="mini-accent"></span>
+            <span class="t">宠团团</span>
+          </div>
+          <div class="mini-card">
+            <div class="mini-thumb"><i></i></div>
+            <div class="mini-name">精品猫粮 5kg</div>
+            <div class="mini-price">¥39<span class="mini-del">¥89</span></div>
+          </div>
+          <div class="mini-btn">去跟团</div>
+        </div>
+      </div>
+
+      <div class="compare-divider"><span>← 材质差异 →</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 第二部分：完整页面模拟 ============ -->
+  <section class="section">
+    <div class="sec-head">
+      <span class="sec-no mono">PART 02</span>
+      <h3 class="sec-title">完整页面模拟</h3>
+      <p class="sec-desc">四维叠加的最终效果：色值 + 纸纹 + 底部深绿基座 + 一支金。</p>
+    </div>
+
+    <div class="sim-stage">
+      <div class="sim-phone paper-texture">
+
+        <!-- 品牌头部区 -->
+        <div class="brand-head">
+          <span class="accent"></span>
+          <div class="titles">
+            <h2>宠团团</h2>
+            <p>超值宠物好物，限时团购</p>
+          </div>
+        </div>
+        <div class="hair-line"></div>
+
+        <!-- 产品卡片 -->
+        <div class="prod-list">
+          <div class="prod-card">
+            <div class="prod-thumb"><i></i></div>
+            <div class="prod-info">
+              <div class="prod-name">精品猫粮 5kg</div>
+              <div class="prod-price">
+                <span class="now">¥39</span><span class="qi">起</span>
+                <span class="old">¥89</span>
+              </div>
+              <span class="prod-tag">热卖 23 单</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="btn-group">
+          <div class="btn-primary">去跟团</div>
+          <div class="btn-outline">分享</div>
+        </div>
+
+        <!-- 金粒瀑布 · 加载态专用，不做首页常驻装饰（P1④） -->
+        <div class="cascade-wrap">
+          <span class="label mono">CASCADE · 金粒瀑布（加载态专用 · 非首页常驻）</span>
+          <!-- REV.5 P1 金漂移收敛：只用两支规范金填充 —— 主金 var(--gold)=#C9A24B、按下深态 var(--lux-gold-600)=#A8894A -->
+          <div class="lux-cascade">
+            <span class="lux-cascade-dot" style="left:20px;background:var(--lux-gold-600);animation-delay:0ms;"></span>
+            <span class="lux-cascade-dot" style="left:36px;background:var(--gold);animation-delay:150ms;"></span>
+            <span class="lux-cascade-dot" style="left:52px;background:var(--gold);animation-delay:300ms;"></span>
+            <span class="lux-cascade-dot" style="left:68px;background:var(--lux-gold-600);animation-delay:450ms;"></span>
+            <span class="lux-cascade-dot" style="left:84px;background:var(--gold);animation-delay:600ms;"></span>
+            <span class="lux-cascade-dot" style="left:100px;background:var(--lux-gold-600);animation-delay:750ms;"></span>
+            <span class="lux-cascade-dot" style="left:48px;background:var(--gold);animation-delay:900ms;"></span>
+          </div>
+          <span class="cascade-note">仅用于「加载中 / 开屏」瞬态，数据就绪即卸载，避免常驻耗电与挤占内容</span>
+        </div>
+
+        <!-- 状态标签行 -->
+        <div class="status-row">
+          <span class="status-tag running"><span class="dot"></span>进行中 · 限时 02:15:30</span>
+          <span class="status-tag done"><span class="dot"></span>已完成 · 328 单成交</span>
+          <span class="status-tag cancel"><span class="dot"></span>已取消 · 未达成团人数</span>
+        </div>
+
+        <!-- 底部深绿地基 -->
+        <div class="tab-bar">
+          <div class="tab-item">
+            <div class="tab-circle"></div>
+            <span class="tab-label">首页</span>
+          </div>
+          <div class="tab-item active">
+            <div class="tab-circle"></div>
+            <span class="tab-label">宠团团</span>
+          </div>
+          <div class="tab-item">
+            <div class="tab-circle"></div>
+            <span class="tab-label">我的</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 第三部分：四维拆解 ============ -->
+  <section class="section">
+    <div class="sec-head">
+      <span class="sec-no mono">PART 03</span>
+      <h3 class="sec-title">四维拆解</h3>
+      <p class="sec-desc">每个维度独立可验证，叠加才成系统。</p>
+    </div>
+
+    <div class="dim-grid">
+      <div class="dim-card">
+        <div class="num mono">α</div>
+        <div class="name">色值</div>
+        <div class="demo demo-color"><span class="mono">#ECE4D4</span></div>
+        <p class="desc">暖石金，比当前暖一档</p>
+      </div>
+      <div class="dim-card">
+        <div class="num mono">β</div>
+        <div class="name">材质</div>
+        <div class="demo demo-paper paper-texture"></div>
+        <p class="desc">4% 噪点，平涂变特种纸</p>
+      </div>
+      <div class="dim-card">
+        <div class="num mono">γ</div>
+        <div class="name">构图</div>
+        <div class="demo demo-comp">
+          <div class="body"></div>
+          <div class="base"></div>
+        </div>
+        <p class="desc">品牌仪式感藏在交互终点</p>
+      </div>
+      <div class="dim-card">
+        <div class="num mono">δ</div>
+        <div class="name">纪律</div>
+        <div class="demo demo-gold"></div>
+        <p class="desc">金色上前，绿色退后，中性填空</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 第四部分：与当前系统对比 ============ -->
+  <section class="section">
+    <div class="sec-head">
+      <span class="sec-no mono">PART 04</span>
+      <h3 class="sec-title">与当前系统对比</h3>
+      <p class="sec-desc">从「多彩平铺」走向「克制叠加」。</p>
+    </div>
+
+    <div class="vs-row">
+      <div class="vs-col cur">
+        <div class="cap mono">CURRENT · 当前</div>
+        <ul>
+          <li>绿主角</li>
+          <li>多彩标签</li>
+          <li>平涂底</li>
+          <li>无材质</li>
+        </ul>
+      </div>
+      <div class="vs-col new">
+        <div class="cap mono">NEW · 新系统</div>
+        <ul>
+          <li>金主角</li>
+          <li>统一金灰</li>
+          <li>纸纹底</li>
+          <li>底部深绿基座</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot mono">AROORO LUXURY SYSTEM · 色值 × 材质 × 构图 × 纪律</footer>
+
+</div>
+
+    <style>
+  /* 页面演示层令牌已并入 <style id="theme-vars"> 的 :root（REV.3 P2 双 root 合并） */
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-main);
+    color: var(--text-body);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono { font-family: "SF Mono", "Menlo", "Consolas", monospace; }
+
+  .page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 56px 28px 0;
+  }
+
+  /* ============ 纸纹肌理 ============
+     REV.4 P0-2 生产规范：base64 PNG（48×48 · 4% alpha）平铺，
+     与 design-tokens.wxss --zy-paper-noise 同源，纯色 #ECE4D4 兜底。
+     移除 mix-blend-mode（PNG alpha 已内联），移除 SVG feTurbulence。 */
+  .paper-texture { position: relative; }
+  .paper-texture::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: var(--zy-paper-noise);
+    background-repeat: repeat;
+    opacity: 1;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .paper-texture > * { position: relative; z-index: 1; }
+
+  /* ============ 顶部标题区 ============ */
+  .hero {
+    text-align: center;
+    padding-bottom: 44px;
+  }
+  .hero h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--green-deep);
+  }
+  .hero .sub {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-sub);
+    letter-spacing: 0.04em;
+  }
+  .dim-tags {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 26px;
+  }
+  .dim-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--border-gold);
+    font-size: 12px;
+    color: var(--text-body);
+  }
+  .dim-tag .k { color: var(--text-sub); }
+  .dim-tag .v { color: var(--green-deep); font-weight: 600; }
+  .gold-rule {
+    width: 96px;
+    height: 2px;
+    margin: 26px auto 0;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+    border: none;
+  }
+  .fix-log {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 14px;
+    margin-top: 18px; padding: 12px 16px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--border-gold);
+    border-radius: 12px;
+    font-size: 11px; color: var(--text-body);
+  }
+  .fix-log-cap { color: var(--green-deep); letter-spacing: 0.2em; } /* REV.3 P0 */
+  .fix-item b { color: var(--green-deep); margin-right: 4px; }
+
+  /* ============ 分区通用 ============ */
+  .section {
+    padding: 40px 0;
+  }
+  .section + .section { border-top: 1px solid rgba(201,162,75,0.18); }
+  .sec-head { margin-bottom: 26px; }
+  .sec-no { /* REV.3 P0 金小字退深绿，过 WCAG AA */
+    display: inline-block;
+    font-size: 12px;
+    color: var(--green-deep);
+    letter-spacing: 0.3em;
+    margin-bottom: 8px;
+  }
+  .sec-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green-deep);
+    letter-spacing: 0.06em;
+  }
+  .sec-desc {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-sub);
+  }
+
+  /* ============ 第一部分：纸纹对比 ============ */
+  .compare {
+    position: relative; /* REV.5 P0 分隔线含块锚定：.compare-divider 绝对定位须以本容器为含块，否则贯穿全页 */
+    display: flex;
+    gap: 4%;
+    align-items: stretch;
+  }
+  .compare-col {
+    width: 48%;
+    position: relative;
+  }
+  .compare-col.plain { background: var(--bg-main); border-radius: 16px; overflow: hidden; }
+  .compare-col.paper { background: var(--bg-main); border-radius: 16px; overflow: hidden; }
+  .compare-col .col-tag {
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--green-deep); /* REV.3 P0 金小字退深绿 */
+    padding: 10px 0;
+    background: rgba(255,255,255,0.4);
+  }
+  .col-inner { padding: 18px 16px 20px; }
+  .mini-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .mini-accent {
+    width: 3px; height: 26px;
+    background: var(--green-deep);
+    border-radius: 2px;
+  }
+  .mini-head .t { font-size: 16px; font-weight: 700; color: var(--green-deep); letter-spacing: 0.06em; }
+  .mini-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .mini-thumb { /* REV.3 P2 占位改奶油+小金点 */
+    width: 100%; height: 64px;
+    background: linear-gradient(160deg, var(--lux-card-cream), var(--bg-main));
+    border: 1px solid var(--border-gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .mini-thumb i {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--gold);
+  }
+  .mini-name { font-size: 13px; color: var(--green-deep); font-weight: 600; }
+  .mini-price { font-size: 15px; color: var(--green-deep); font-weight: 700; margin-top: 2px; } /* P0② 价格退深绿 */
+  .mini-del { font-size: 11px; color: var(--text-sub); text-decoration: line-through; margin-left: 6px; }
+  .mini-btn { /* REV.3 P1 纯规范金平涂 + 高光线 */
+    display: block;
+    text-align: center;
+    padding: 8px;
+    border-radius: 9999px;
+    border: 1px solid var(--green-deep);
+    background: var(--gold);
+    color: var(--green-deep);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-btn::before {
+    content: '';
+    position: absolute;
+    top: 1px; left: 16%; right: 16%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--lux-gold-200), transparent);
+    border-radius: 1px;
+    pointer-events: none;
+  }
+  .compare-divider {
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    transform: translateX(-50%);
+    width: 0;
+    border-left: 1px dashed rgba(201,162,75,0.45);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .compare-divider span {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    background: var(--bg-main);
+    padding: 6px 4px;
+    font-size: 10px;
+    color: var(--green-deep);
+    letter-spacing: 0.15em;
+    white-space: nowrap;
+  }
+
+  /* ============ 第二部分：完整页面模拟 ============ */
+  .sim-stage {
+    background: var(--bg-section);
+    border-radius: 20px;
+    padding: 22px;
+  }
+  .sim-phone {
+    background: var(--bg-main);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(31,58,31,0.08);
+  }
+
+  /* 品牌头部区 */
+  .brand-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 22px 20px 16px;
+  }
+  .brand-head .accent {
+    width: 4px; height: 40px;
+    background: var(--green-deep);
+    border-radius: 2px;
+  }
+  .brand-head .titles h2 {
+    font-size: 24px;
+    color: var(--green-deep);
+    letter-spacing: 0.08em;
+    font-weight: 700;
+  }
+  .brand-head .titles p {
+    font-size: 14px;
+    color: var(--text-sub);
+    margin-top: 2px;
+  }
+  .hair-line {
+    height: 1px;
+    margin: 0 20px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+    opacity: 0.7;
+  }
+
+  /* 产品卡片 */
+  .prod-list { padding: 18px 20px 6px; }
+  .prod-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  /* REV.3 P2 占位改奶油+小金点，深绿只留基座，消除"深绿发声"矛盾 */
+  .prod-thumb {
+    width: 120px; height: 120px;
+    flex-shrink: 0;
+    background: linear-gradient(160deg, var(--lux-card-cream), var(--bg-main));
+    border: 1px solid var(--border-gold);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .prod-thumb i {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 0 4px rgba(201,162,75,0.18);
+  }
+  .prod-info { flex: 1; min-width: 0; }
+  .prod-name {
+    font-size: 16px; font-weight: 700;
+    color: var(--green-deep);
+    letter-spacing: 0.04em;
+  }
+  .prod-price { margin-top: 6px; display: flex; align-items: baseline; gap: 4px; }
+  .prod-price .now { font-size: 20px; color: var(--green-deep); font-weight: 700; } /* P0② 价格退深绿，金只守 CTA/标签点/选中态 */
+  .prod-price .qi { font-size: 12px; color: var(--green-deep); }
+  .prod-price .old { font-size: 13px; color: var(--text-sub); text-decoration: line-through; margin-left: 8px; }
+  .prod-tag {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: var(--gold-bg-tag);
+    color: var(--green-deep);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  /* 按钮组 */
+  .btn-group { padding: 6px 20px 18px; display: flex; gap: 12px; }
+  .btn-primary { /* REV.3 P1 CTA 改纯规范金平涂 + 顶部高光线，消除金漂移 */
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    border-radius: 9999px;
+    border: 1px solid var(--green-deep);
+    background: var(--gold);
+    color: var(--green-deep);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before { /* 顶部高光线 · 装饰豁免，暗示金属感 */
+    content: '';
+    position: absolute;
+    top: 1px; left: 14%; right: 14%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--lux-gold-200), transparent);
+    border-radius: 1px;
+    pointer-events: none;
+  }
+  .btn-outline {
+    padding: 12px 24px;
+    border-radius: 9999px;
+    border: 1px solid var(--green-deep);
+    background: transparent;
+    color: var(--green-deep);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+
+  /* 金粒瀑布 */
+  .cascade-wrap {
+    padding: 8px 20px 22px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .cascade-wrap .label {
+    font-size: 11px; color: var(--text-sub);
+    letter-spacing: 0.2em; margin-bottom: 10px;
+  }
+  .lux-cascade { position: relative; width: 120px; height: 200px; overflow: hidden; }
+  .lux-cascade-dot {
+    position: absolute; top: 0;
+    width: 6px; height: 6px; border-radius: 50%;
+    animation: lux-cascade-fall 1600ms linear infinite;
+  }
+  @keyframes lux-cascade-fall {
+    0%   { transform: translateY(0); opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translateY(200px); opacity: 0; }
+  }
+  .cascade-note {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-sub);
+    letter-spacing: 0.04em;
+    text-align: center;
+    max-width: 220px;
+    line-height: 1.5;
+  }
+
+  /* 状态标签行 */
+  .status-row { padding: 0 20px 22px; display: flex; flex-direction: column; gap: 10px; }
+  .status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    background: var(--gold-bg-tag);
+    color: var(--green-deep);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+  .status-tag .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+  .status-tag.running .dot { background: var(--gold); }
+  .status-tag.done .dot { background: rgba(201,162,75,0.4); }
+  .status-tag.cancel .dot { background: rgba(138,126,92,0.3); }
+
+  /* 底部深绿地基 */
+  /* REV.3 P1 基座示意 · 降高 + safe-area；生产 tabBar 另遵循原生 ~50px + safe-area */
+  .tab-bar {
+    position: relative;
+    margin-top: 18px;
+    min-height: 76px;
+    background: linear-gradient(160deg, var(--green-bar-a) 0%, var(--green-bar-b) 100%);
+    box-shadow: 0 -4px 24px rgba(26,46,26,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 14px 30px calc(14px + env(safe-area-inset-bottom));
+  }
+  .tab-bar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+  }
+  .tab-item {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .tab-circle {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(201,162,75,0.2);
+  }
+  .tab-item.active .tab-circle {
+    background: var(--gold);
+    border-color: transparent;
+    box-shadow: 0 0 0 4px rgba(201,162,75,0.12);
+  }
+  .tab-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: rgba(247,245,239,0.7); /* REV.5 P1 非选中态 0.55→0.7，深绿 tabBar 上 ≈5.95:1，11px 小字过 AA */
+  }
+  .tab-item.active .tab-label { color: var(--gold); font-weight: 600; }
+
+  /* ============ 第三部分：四维拆解 ============ */
+  .dim-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .dim-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+    border-radius: 20px;
+    padding: 18px 14px;
+    text-align: center;
+  }
+  .dim-card .num { /* REV.3 P0 金小字退深绿 */
+    font-size: 11px;
+    color: var(--green-deep);
+    letter-spacing: 0.3em;
+    opacity: 0.7;
+  }
+  .dim-card .name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--green-deep);
+    margin-top: 6px;
+    letter-spacing: 0.08em;
+  }
+  .dim-card .demo {
+    height: 76px;
+    border-radius: 10px;
+    margin: 14px 0;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .dim-card .desc {
+    font-size: 12px;
+    color: var(--text-sub);
+    line-height: 1.5;
+  }
+  /* 维度1 色块 */
+  .demo-color { background: var(--bg-main); }
+  .demo-color span { font-size: 11px; color: var(--text-sub); } /* REV.3 P0 */
+  /* 维度2 纸纹 */
+  .demo-paper { background: var(--bg-main); }
+  /* 维度3 构图示意 */
+  .demo-comp {
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    background: var(--bg-main);
+  }
+  .demo-comp .body { flex: 1; width: 100%; }
+  .demo-comp .base { width: 100%; height: 22px; background: linear-gradient(160deg, var(--green-bar-a), var(--green-bar-b)); }
+  /* 维度4 一支金 */
+  .demo-gold { background: var(--gold); } /* REV.3 一支金纯色 */
+
+  /* ============ 第四部分：对比 ============ */
+  .vs-row {
+    display: flex;
+    gap: 14px;
+  }
+  .vs-col {
+    flex: 1;
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .vs-col.cur {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(138,133,128,0.2);
+  }
+  .vs-col.new {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+  }
+  .vs-col .cap {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    margin-bottom: 14px;
+  }
+  .vs-col.cur .cap { color: var(--text-sub); }
+  .vs-col.new .cap { color: var(--green-deep); } /* REV.3 P0 */
+  .vs-col ul { list-style: none; }
+  .vs-col li {
+    font-size: 13px;
+    padding: 7px 0;
+    border-bottom: 1px dashed rgba(138,133,128,0.18);
+    color: var(--text-body);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .vs-col li:last-child { border-bottom: none; }
+  .vs-col li::before {
+    content: '';
+    width: 5px; height: 5px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .vs-col.cur li::before { background: rgba(138,133,128,0.4); }
+  .vs-col.new li::before { background: var(--gold); }
+  .vs-col.new li { color: var(--green-deep); font-weight: 500; }
+
+  /* ============ 页脚 ============ */
+  .foot {
+    text-align: center;
+    padding: 30px 0 10px;
+    font-size: 11px;
+    color: var(--text-sub);
+    letter-spacing: 0.2em;
+  }
+
+  /* ============ 响应式 ============ */
+  @media (max-width: 640px) {
+    .dim-grid { grid-template-columns: repeat(2, 1fr); }
+    .compare { flex-direction: column; gap: 24px; }
+    .compare-col { width: 100%; }
+    .compare-divider { display: none; }
+    .vs-row { flex-direction: column; }
+  }
+</style>
+</body>
+</html>

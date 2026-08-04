@@ -17,7 +17,7 @@ const TEMPLATE_STATUS_TRANSITIONS = {
   ended: [],
 }
 
-const ALL_BUSINESS_SCOPES = ['activity', 'mall', 'feeding', 'hosting', 'tuan']
+const ALL_BUSINESS_SCOPES = ['activity', 'mall', 'feeding', 'boarding', 'tuan']
 
 function generateCouponCode() {
   const prefix = 'CP'
@@ -821,7 +821,7 @@ module.exports = {
   // 用户优惠券
   getUserCouponList, grantCouponToUser, revokeUserCoupon, batchRevokeUserCoupons,
   // 统计
-  getScopeStatistics, getOperationLogList,
+  getScopeStatistics, getCouponStatistics: getScopeStatistics, getOperationLogList,
   // 工具函数导出（供 couponService 使用）
   generateCouponCode, calculateCouponDiscount,
   // 索引初始化
@@ -867,6 +867,17 @@ async function initIndexes() {
       collection: 'user_coupons',
       indexName: 'idx_status_endTime',
       keys: [{ Name: 'status', Direction: '1' }, { Name: 'endTime', Direction: '1' }],
+      unique: false,
+    },
+    {
+      // P1-2: unlockOrderCoupons 主查询路径 where({ orderId, status: 'locked' })
+      //   couponService.lockCoupon 写入 orderId（非 lockedOrderId），2026-08-02 修复后
+      //   mallService/orderTimeoutService/orderService 的 unlockOrderCoupons 均按
+      //   db.command.or([{orderId},{lockedOrderId}]) 查询，此索引覆盖 orderId 主路径
+      //   （lockedOrderId 兼容路径命中旧 idx_lockedOrderId_status，由运维在存量环境保留）
+      collection: 'user_coupons',
+      indexName: 'idx_orderId_status',
+      keys: [{ Name: 'orderId', Direction: '1' }, { Name: 'status', Direction: '1' }],
       unique: false,
     },
     {

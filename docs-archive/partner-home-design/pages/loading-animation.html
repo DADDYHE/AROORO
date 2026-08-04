@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AROORO 奢侈品级加载动画设计</title>
+    <style id="theme-vars">
+/* ================================================================
+   colors_and_type.css · AROORO 设计系统令牌
+   Olive Green × Healing Light-Luxury × Haute-Luxury Elevation
+   ================================================================ */
+
+:root {
+  /* 品牌主色：橄榄绿 */
+  --color-primary: #4F5E35;
+  --color-primary-dark: #3A4626;
+  --color-primary-light: #6B7D5A;
+  --color-primary-100: #EAEDDF;
+
+  /* 点缀色：暖金 */
+  --color-accent: #B8893A;
+  --color-accent-soft: #F2E8D4;
+
+  /* 中性色 */
+  --color-background: #F8FAF3;
+  --color-surface: #FFFFFF;
+  --color-border: #D8DCCE;
+  --color-divider: #EAEDDF;
+
+  /* 文字色 */
+  --color-foreground: #2A2823;
+  --color-text-primary: #2A2823;
+  --color-text-secondary: #635E54;
+  --color-text-tertiary: #9A9489;
+  --color-text-on-primary: #FAFAF6;
+
+  /* 语义别名 */
+  --color-card: #FFFFFF;
+  --color-muted: #9A9489;
+  --color-muted-foreground: #9A9489;
+
+  /* 圆角 */
+  --color-radius-sm: 8px;
+  --color-radius-md: 12px;
+  --color-radius-lg: 16px;
+
+  /* 字体 */
+  --color-font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+
+  /* ================================================================
+     奢侈品级令牌 — Haute-Luxury Elevation Layer
+     金属香槟金阶 · 深森林绿阶 · 层次阴影 · 金线装饰
+     ================================================================ */
+
+  /* 金属香槟金阶 */
+  --lux-gold-100: #FDF8EE;
+  --lux-gold-200: #F5EBD0;
+  --lux-gold-300: #E8D5A8;
+  --lux-gold-400: #D4B978;
+  --lux-gold-500: #C9A24B;
+  --lux-gold-600: #B8923E;
+  --lux-gold-700: #9A7430;
+  --lux-gold-grad: linear-gradient(135deg, #E8D5A8 0%, #C9A24B 40%, #B8923E 100%);
+  --lux-gold-grad-soft: linear-gradient(135deg, #FDF8EE 0%, #F5EBD0 50%, #E8D5A8 100%);
+
+  /* 深森林绿阶 */
+  --lux-green-900: #1A2E1A;
+  --lux-green-800: #1F3A1F;
+  --lux-green-700: #2D4A2D;
+  --lux-green-600: #3D5A3D;
+  --lux-green-grad: linear-gradient(160deg, #2D4A2D 0%, #1A2E1A 100%);
+  --lux-green-grad-rich: linear-gradient(135deg, #3D5A3D 0%, #1F3A1F 50%, #1A2E1A 100%);
+
+  /* 层次阴影系统 */
+  --lux-shadow-card: 0 1px 2px rgba(26,26,23,0.03), 0 4px 16px rgba(26,26,23,0.05);
+  --lux-shadow-elevated: 0 2px 4px rgba(26,26,23,0.04), 0 8px 32px rgba(26,26,23,0.08);
+  --lux-shadow-gold: 0 2px 8px rgba(201,169,110,0.12), 0 8px 24px rgba(201,169,110,0.16);
+  --lux-shadow-green: 0 2px 8px rgba(31,58,31,0.12), 0 8px 24px rgba(31,58,31,0.18);
+
+  /* 发丝描边 */
+  --lux-hairline: rgba(26,26,23,0.06);
+  --lux-hairline-gold: rgba(201,169,110,0.18);
+  --lux-hairline-green: rgba(31,58,31,0.10);
+
+  /* 编辑级排版令牌 */
+  --lux-ls-display: 0.16em;
+  --lux-ls-heading: 0.08em;
+  --lux-ls-label: 0.24em;
+  --lux-ls-caption: 0.04em;
+  --lux-ls-number: 0.01em;
+
+  /* 奢侈级圆角 */
+  --lux-radius-card: 20px;
+  --lux-radius-inner: 16px;
+  --lux-radius-pill: 9999px;
+
+  /* 金线装饰令牌 */
+  --lux-gold-line: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%);
+  --lux-gold-line-solid: linear-gradient(90deg, #E8D5A8 0%, #C9A24B 50%, #B8923E 100%);
+
+  /* 卡片底纹令牌 */
+  --lux-card-bg: #FFFFFF;
+  --lux-card-cream: #FDFAF3;
+  --lux-card-gold-tint: #FDF8EE;
+  --lux-card-green-tint: #F5F8F2;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--color-background);
+    --color-foreground: var(--color-foreground);
+    --color-card: var(--color-card);
+    --color-primary: var(--color-primary);
+    --color-muted: var(--color-muted);
+    --color-muted-foreground: var(--color-muted-foreground);
+    --color-accent: var(--color-accent);
+    --color-border: var(--color-border);
+    --radius-sm: var(--color-radius-sm);
+    --radius-md: var(--color-radius-md);
+    --radius-lg: var(--color-radius-lg);
+  }
+  @layer base {
+    body { background: var(--color-background); color: var(--color-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--color-background); }
+      .text-background { color: var(--color-background); }
+      .border-background { border-color: var(--color-background); }
+      .ring-background { --tw-ring-color: var(--color-background); }
+      .bg-foreground { background-color: var(--color-foreground); }
+      .text-foreground { color: var(--color-foreground); }
+      .border-foreground { border-color: var(--color-foreground); }
+      .ring-foreground { --tw-ring-color: var(--color-foreground); }
+      .bg-card { background-color: var(--color-card); }
+      .text-card { color: var(--color-card); }
+      .border-card { border-color: var(--color-card); }
+      .ring-card { --tw-ring-color: var(--color-card); }
+      .bg-primary { background-color: var(--color-primary); }
+      .text-primary { color: var(--color-primary); }
+      .border-primary { border-color: var(--color-primary); }
+      .ring-primary { --tw-ring-color: var(--color-primary); }
+      .bg-muted { background-color: var(--color-muted); }
+      .text-muted { color: var(--color-muted); }
+      .border-muted { border-color: var(--color-muted); }
+      .ring-muted { --tw-ring-color: var(--color-muted); }
+      .bg-muted-foreground { background-color: var(--color-muted-foreground); }
+      .text-muted-foreground { color: var(--color-muted-foreground); }
+      .border-muted-foreground { border-color: var(--color-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--color-muted-foreground); }
+      .bg-accent { background-color: var(--color-accent); }
+      .text-accent { color: var(--color-accent); }
+      .border-accent { border-color: var(--color-accent); }
+      .ring-accent { --tw-ring-color: var(--color-accent); }
+      .bg-border { background-color: var(--color-border); }
+      .text-border { color: var(--color-border); }
+      .border-border { border-color: var(--color-border); }
+      .ring-border { --tw-ring-color: var(--color-border); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+
+  <!-- Page Title -->
+  <h1 class="page-title">AROORO 奢侈品级加载动画设计</h1>
+  <p class="page-subtitle">Haute Horlogerie · 高级制表美学加载动效</p>
+
+  <!-- Mockups 2x2 Grid -->
+  <div class="mockups">
+
+    <!-- ============ Variant 1: 陀飞轮金环 ============ -->
+    <div class="mockup-cell">
+      <div class="mockup-label">
+        陀飞轮金环
+        <span class="label-en">Tourbillon Gold Rings</span>
+      </div>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="tourbillon-stage">
+            <div class="ring-outer"></div>
+            <div class="ring-middle"></div>
+            <div class="ring-inner"></div>
+            <div class="ring-center-dot"></div>
+          </div>
+          <div class="loading-text">加载中</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Variant 2: 金粒瀑布 ============ -->
+    <div class="mockup-cell">
+      <div class="mockup-label">
+        金粒瀑布
+        <span class="label-en">Gold Cascade</span>
+      </div>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="cascade-stage">
+            <div class="cascade-dot" style="--dot-color: #E8D5A8; animation-delay: 0ms;"></div>
+            <div class="cascade-dot" style="--dot-color: #D4B978; animation-delay: 150ms;"></div>
+            <div class="cascade-dot" style="--dot-color: #C9A24B; animation-delay: 300ms;"></div>
+            <div class="cascade-dot" style="--dot-color: #D4B978; animation-delay: 450ms;"></div>
+            <div class="cascade-dot" style="--dot-color: #E8D5A8; animation-delay: 600ms;"></div>
+            <div class="cascade-dot" style="--dot-color: #C9A24B; animation-delay: 750ms;"></div>
+            <div class="cascade-dot" style="--dot-color: #D4B978; animation-delay: 900ms;"></div>
+          </div>
+          <div class="loading-text">加载中</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Variant 3: 丝缎波纹 ============ -->
+    <div class="mockup-cell">
+      <div class="mockup-label">
+        丝缎波纹
+        <span class="label-en">Silk Wave</span>
+      </div>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="silk-stage">
+            <div class="silk-line" style="background: #E8D5A8; animation-delay: 0ms;"></div>
+            <div class="silk-line" style="background: #D4B978; animation-delay: 100ms;"></div>
+            <div class="silk-line" style="background: #C9A24B; animation-delay: 200ms;"></div>
+            <div class="silk-line" style="background: #D4B978; animation-delay: 300ms;"></div>
+            <div class="silk-line" style="background: #E8D5A8; animation-delay: 400ms;"></div>
+          </div>
+          <div class="loading-text">加载中</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Variant 4: 品牌呼吸 ============ -->
+    <div class="mockup-cell">
+      <div class="mockup-label">
+        品牌呼吸
+        <span class="label-en">Monogram Breath</span>
+      </div>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="monogram-stage">
+            <div class="breath-ring" style="animation-delay: 0ms;"></div>
+            <div class="breath-ring" style="animation-delay: 800ms;"></div>
+            <div class="breath-ring" style="animation-delay: 1600ms;"></div>
+            <div class="monogram-text">AROORO</div>
+          </div>
+          <div class="loading-text">加载中</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ Design Specification Section ============ -->
+  <section class="spec-section">
+
+    <h2 class="spec-title">设计规范</h2>
+
+    <!-- Color Palette -->
+    <h3 class="spec-subtitle">色彩面板</h3>
+    <div class="color-palette">
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #4F5E35;"></div>
+        <span class="swatch-hex">#4F5E35</span>
+        <span class="swatch-label">橄榄绿 - 品牌主色</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #C9A24B;"></div>
+        <span class="swatch-hex">#C9A24B</span>
+        <span class="swatch-label">香槟金 - 金属点缀</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #E8D5A8;"></div>
+        <span class="swatch-hex">#E8D5A8</span>
+        <span class="swatch-label">浅金 - 高光渐变</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #B8923E;"></div>
+        <span class="swatch-hex">#B8923E</span>
+        <span class="swatch-label">深金 - 描边按下</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #1F3A1F;"></div>
+        <span class="swatch-hex">#1F3A1F</span>
+        <span class="swatch-label">深森林绿 - 深色底</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background: #F8FAF3; border: 1px solid #E0E0D8;"></div>
+        <span class="swatch-hex">#F8FAF3</span>
+        <span class="swatch-label">橄榄调暖白 - 背景</span>
+      </div>
+    </div>
+
+    <!-- Animation Tokens -->
+    <h3 class="spec-subtitle">动画令牌</h3>
+    <div class="token-list">
+      <div class="token-row">
+        <span class="token-name">--lux-dur-ring-spin</span>
+        <span class="token-value">2400ms linear infinite</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">--lux-dur-ring-reverse</span>
+        <span class="token-value">3000ms linear infinite</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">--lux-dur-dot-pulse</span>
+        <span class="token-value">2000ms cubic-bezier(0.25,0.1,0.25,1)</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">--lux-dur-cascade</span>
+        <span class="token-value">1600ms linear infinite</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">--lux-dur-silk-wave</span>
+        <span class="token-value">1400ms cubic-bezier(0.25,0.1,0.25,1)</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">--lux-dur-breath</span>
+        <span class="token-value">2400ms cubic-bezier(0.25,0.1,0.25,1)</span>
+      </div>
+      <div class="token-row">
+        <span class="token-name">--lux-dur-text-pulse</span>
+        <span class="token-value">2400ms cubic-bezier(0.25,0.1,0.25,1)</span>
+      </div>
+    </div>
+
+    <!-- Effect Descriptions -->
+    <h3 class="spec-subtitle">效果说明</h3>
+    <div class="effect-list">
+      <div class="effect-item tourbillon">
+        <span class="effect-label">陀飞轮金环</span>
+        <span class="effect-desc">三层同心金环以不同速度正反向旋转，模拟陀飞轮机械结构；中心金色渐变点呼吸缩放，营造钟表级精密感</span>
+      </div>
+      <div class="effect-item cascade">
+        <span class="effect-label">金粒瀑布</span>
+        <span class="effect-desc">七颗金粒以错落延迟垂直坠落，透明度渐入渐出，形成香槟金粒子瀑布流效果</span>
+      </div>
+      <div class="effect-item silk">
+        <span class="effect-label">丝缎波纹</span>
+        <span class="effect-desc">五条金色横线以波浪式缩放和透明度变化，模拟丝绸缎面的流动质感</span>
+      </div>
+      <div class="effect-item monogram">
+        <span class="effect-label">品牌呼吸</span>
+        <span class="effect-desc">品牌名称呼吸式明暗变化，三层金色涟漪由内向外扩散消散，营造静谧的品牌仪式感</span>
+      </div>
+    </div>
+
+  </section>
+
+
+    <style>
+    /* ============ Animation Duration Tokens (restored) ============ */
+    :root {
+      --lux-dur-ring-spin: 2400ms;
+      --lux-dur-ring-reverse: 3000ms;
+      --lux-dur-dot-pulse: 2000ms;
+      --lux-dur-cascade: 1600ms;
+      --lux-dur-silk-wave: 1400ms;
+      --lux-dur-breath: 2400ms;
+      --lux-dur-text-pulse: 2400ms;
+      --lux-ease-soft: cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    /* ============ Base ============ */
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+      background: #F0F0F0;
+      color: var(--color-text-primary);
+      padding: 0 0 60px;
+      min-height: 100vh;
+    }
+
+    /* ============ Page Title ============ */
+    .page-title {
+      font-size: 24px;
+      color: var(--color-text-primary);
+      text-align: center;
+      padding: 40px 0 8px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .page-subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: var(--color-text-tertiary);
+      letter-spacing: 0.5px;
+      padding-bottom: 32px;
+    }
+
+    /* ============ Mockups Container ============ */
+    .mockups {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      padding: 0 24px;
+    }
+
+    .mockup-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .mockup-label {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-primary);
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    .mockup-label .label-en {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--color-text-tertiary);
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    /* ============ Phone Mockup ============ */
+    .phone {
+      width: 375px;
+      height: 600px;
+      background: var(--color-background);
+      border-radius: 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      border: 8px solid #2A2823;
+    }
+
+    .phone-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: var(--color-background);
+      gap: 36px;
+      position: relative;
+    }
+
+    /* ============ Shared loading text ============ */
+    .loading-text {
+      font-size: 13px;
+      font-weight: 300;
+      letter-spacing: 0.32em;
+      color: var(--color-text-secondary);
+      text-indent: 0.32em;
+      animation: lux-text-pulse var(--lux-dur-text-pulse) var(--lux-ease-soft) infinite;
+    }
+
+    /* ============ Variant 1 · 陀飞轮金环 Tourbillon Gold Rings ============ */
+    .tourbillon-stage {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+    .ring-outer,
+    .ring-middle,
+    .ring-inner,
+    .ring-center-dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      border-radius: 50%;
+    }
+    .ring-outer {
+      width: 100px;
+      height: 100px;
+      margin-top: -50px;
+      margin-left: -50px;
+      border: 2px solid transparent;
+      border-top-color: #D4B978;
+      border-right-color: #E8D5A8;
+      animation: lux-ring-spin var(--lux-dur-ring-spin) linear infinite;
+    }
+    .ring-middle {
+      width: 72px;
+      height: 72px;
+      margin-top: -36px;
+      margin-left: -36px;
+      border: 2px solid transparent;
+      border-bottom-color: #3D5A3D;
+      border-left-color: #2D4A2D;
+      animation: lux-ring-spin-reverse var(--lux-dur-ring-reverse) linear infinite;
+    }
+    .ring-inner {
+      width: 48px;
+      height: 48px;
+      margin-top: -24px;
+      margin-left: -24px;
+      border: 2px solid transparent;
+      border-top-color: #C9A24B;
+      animation: lux-ring-spin-inner 1800ms linear infinite;
+    }
+    .ring-center-dot {
+      width: 10px;
+      height: 10px;
+      margin-top: -5px;
+      margin-left: -5px;
+      background: var(--lux-gold-grad);
+      box-shadow: 0 0 8px rgba(201, 169, 110, 0.5);
+      animation: lux-dot-pulse var(--lux-dur-dot-pulse) var(--lux-ease-soft) infinite;
+    }
+
+    /* ============ Variant 2 · 金粒瀑布 Gold Cascade ============ */
+    .cascade-stage {
+      width: 120px;
+      height: 200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0 6px;
+    }
+    .cascade-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--dot-color, #C9A24B);
+      animation: lux-cascade-fall var(--lux-dur-cascade) linear infinite;
+    }
+
+    /* ============ Variant 3 · 丝缎波纹 Silk Wave ============ */
+    .silk-stage {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+    .silk-line {
+      width: 80px;
+      height: 2px;
+      border-radius: 1px;
+      animation: lux-silk-wave var(--lux-dur-silk-wave) var(--lux-ease-soft) infinite;
+    }
+
+    /* ============ Variant 4 · 品牌呼吸 Monogram Breath ============ */
+    .monogram-stage {
+      position: relative;
+      width: 120px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .breath-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 40px;
+      height: 40px;
+      margin-top: -20px;
+      margin-left: -20px;
+      border: 1px solid #C9A24B;
+      border-radius: 50%;
+      animation: lux-ring-expand var(--lux-dur-breath) var(--lux-ease-soft) infinite;
+    }
+    .monogram-text {
+      position: relative;
+      z-index: 2;
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: 0.24em;
+      text-indent: 0.24em;
+      color: var(--color-text-primary);
+      animation: lux-breath var(--lux-dur-breath) var(--lux-ease-soft) infinite;
+    }
+
+    /* ============ Keyframes ============ */
+    @keyframes lux-ring-spin {
+      from { transform: rotate(0deg); opacity: 0.7; }
+      50% { opacity: 1; }
+      to { transform: rotate(360deg); opacity: 0.7; }
+    }
+
+    @keyframes lux-ring-spin-reverse {
+      from { transform: rotate(360deg); opacity: 0.5; }
+      50% { opacity: 0.9; }
+      to { transform: rotate(0deg); opacity: 0.5; }
+    }
+
+    @keyframes lux-ring-spin-inner {
+      from { transform: rotate(0deg); opacity: 0.6; }
+      50% { opacity: 1; }
+      to { transform: rotate(360deg); opacity: 0.6; }
+    }
+
+    @keyframes lux-dot-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.4); opacity: 1; }
+    }
+
+    @keyframes lux-cascade-fall {
+      0% { transform: translateY(0); opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { transform: translateY(200px); opacity: 0; }
+    }
+
+    @keyframes lux-silk-wave {
+      0%, 100% { transform: scaleX(0.3); opacity: 0.3; }
+      50% { transform: scaleX(1); opacity: 1; }
+    }
+
+    @keyframes lux-ring-expand {
+      0% { transform: scale(0.5); opacity: 0.8; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    @keyframes lux-text-pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes lux-breath {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    /* ============ Specification Section ============ */
+    .spec-section {
+      background: var(--color-surface);
+      border-radius: 16px;
+      padding: 32px;
+      margin: 48px auto;
+      max-width: 900px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .spec-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--color-divider);
+    }
+
+    .spec-subtitle {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-primary);
+      margin: 24px 0 14px;
+    }
+
+    /* Color Palette */
+    .color-palette {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .color-swatch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .swatch-block {
+      width: 72px;
+      height: 72px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .swatch-hex {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+    .swatch-label {
+      font-size: 11px;
+      color: var(--color-text-tertiary);
+      text-align: center;
+      max-width: 96px;
+      line-height: 1.4;
+    }
+
+    /* Animation Tokens */
+    .token-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .token-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--lux-card-cream);
+      border-radius: 8px;
+      border: 1px solid var(--color-divider);
+    }
+    .token-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-primary);
+      font-family: "SF Mono", "Fira Code", monospace;
+      white-space: nowrap;
+    }
+    .token-value {
+      font-size: 13px;
+      color: var(--color-text-primary);
+      font-family: "SF Mono", "Fira Code", monospace;
+      margin-left: auto;
+    }
+
+    /* Effect Description */
+    .effect-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .effect-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border-left: 3px solid;
+      background: var(--lux-card-cream);
+    }
+    .effect-item.tourbillon { border-left-color: #C9A24B; }
+    .effect-item.cascade { border-left-color: #D4B978; }
+    .effect-item.silk { border-left-color: #E8D5A8; }
+    .effect-item.monogram { border-left-color: #4F5E35; }
+
+    .effect-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      white-space: nowrap;
+      min-width: 72px;
+    }
+    .effect-desc {
+      font-size: 13px;
+      color: #5A5853;
+      line-height: 1.6;
+    }
+  </style>
+</body>
+</html>

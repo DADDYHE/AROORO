@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AROORO · 融合方案探索</title>
+    <style id="theme-vars">
+/* ================================================================
+   colors_and_type.css · AROORO 设计系统令牌
+   Olive Green × Healing Light-Luxury × Haute-Luxury Elevation
+   ================================================================ */
+
+:root {
+  /* 品牌主色：橄榄绿 */
+  --color-primary: #4F5E35;
+  --color-primary-dark: #3A4626;
+  --color-primary-light: #6B7D5A;
+  --color-primary-100: #EAEDDF;
+
+  /* 点缀色：暖金 */
+  --color-accent: #B8893A;
+  --color-accent-soft: #F2E8D4;
+
+  /* 中性色 */
+  --color-background: #F8FAF3;
+  --color-surface: #FFFFFF;
+  --color-border: #D8DCCE;
+  --color-divider: #EAEDDF;
+
+  /* 文字色 */
+  --color-foreground: #2A2823;
+  --color-text-primary: #2A2823;
+  --color-text-secondary: #635E54;
+  --color-text-tertiary: #9A9489;
+  --color-text-on-primary: #FAFAF6;
+
+  /* 语义别名 */
+  --color-card: #FFFFFF;
+  --color-muted: #9A9489;
+  --color-muted-foreground: #9A9489;
+
+  /* 圆角 */
+  --color-radius-sm: 8px;
+  --color-radius-md: 12px;
+  --color-radius-lg: 16px;
+
+  /* 字体 */
+  --color-font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+
+  /* ================================================================
+     奢侈品级令牌 — Haute-Luxury Elevation Layer
+     金属香槟金阶 · 深森林绿阶 · 层次阴影 · 金线装饰
+     ================================================================ */
+
+  /* 金属香槟金阶 */
+  --lux-gold-100: #FDF8EE;
+  --lux-gold-200: #F5EBD0;
+  --lux-gold-300: #E8D5A8;
+  --lux-gold-400: #D4B978;
+  --lux-gold-500: #C9A24B;
+  --lux-gold-600: #B8923E;
+  --lux-gold-700: #9A7430;
+  --lux-gold-grad: linear-gradient(135deg, #E8D5A8 0%, #C9A24B 40%, #B8923E 100%);
+  --lux-gold-grad-soft: linear-gradient(135deg, #FDF8EE 0%, #F5EBD0 50%, #E8D5A8 100%);
+
+  /* 深森林绿阶 */
+  --lux-green-900: #1A2E1A;
+  --lux-green-800: #1F3A1F;
+  --lux-green-700: #2D4A2D;
+  --lux-green-600: #3D5A3D;
+  --lux-green-grad: linear-gradient(160deg, #2D4A2D 0%, #1A2E1A 100%);
+  --lux-green-grad-rich: linear-gradient(135deg, #3D5A3D 0%, #1F3A1F 50%, #1A2E1A 100%);
+
+  /* 层次阴影系统 */
+  --lux-shadow-card: 0 1px 2px rgba(26,26,23,0.03), 0 4px 16px rgba(26,26,23,0.05);
+  --lux-shadow-elevated: 0 2px 4px rgba(26,26,23,0.04), 0 8px 32px rgba(26,26,23,0.08);
+  --lux-shadow-gold: 0 2px 8px rgba(201,169,110,0.12), 0 8px 24px rgba(201,169,110,0.16);
+  --lux-shadow-green: 0 2px 8px rgba(31,58,31,0.12), 0 8px 24px rgba(31,58,31,0.18);
+
+  /* 发丝描边 */
+  --lux-hairline: rgba(26,26,23,0.06);
+  --lux-hairline-gold: rgba(201,169,110,0.18);
+  --lux-hairline-green: rgba(31,58,31,0.10);
+
+  /* 编辑级排版令牌 */
+  --lux-ls-display: 0.16em;
+  --lux-ls-heading: 0.08em;
+  --lux-ls-label: 0.24em;
+  --lux-ls-caption: 0.04em;
+  --lux-ls-number: 0.01em;
+
+  /* 奢侈级圆角 */
+  --lux-radius-card: 20px;
+  --lux-radius-inner: 16px;
+  --lux-radius-pill: 9999px;
+
+  /* 金线装饰令牌 */
+  --lux-gold-line: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%);
+  --lux-gold-line-solid: linear-gradient(90deg, #E8D5A8 0%, #C9A24B 50%, #B8923E 100%);
+
+  /* 卡片底纹令牌 */
+  --lux-card-bg: #FFFFFF;
+  --lux-card-cream: #FDFAF3;
+  --lux-card-gold-tint: #FDF8EE;
+  --lux-card-green-tint: #F5F8F2;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--color-background);
+    --color-foreground: var(--color-foreground);
+    --color-card: var(--color-card);
+    --color-primary: var(--color-primary);
+    --color-muted: var(--color-muted);
+    --color-muted-foreground: var(--color-muted-foreground);
+    --color-accent: var(--color-accent);
+    --color-border: var(--color-border);
+    --radius-sm: var(--color-radius-sm);
+    --radius-md: var(--color-radius-md);
+    --radius-lg: var(--color-radius-lg);
+  }
+  @layer base {
+    body { background: var(--color-background); color: var(--color-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--color-background); }
+      .text-background { color: var(--color-background); }
+      .border-background { border-color: var(--color-background); }
+      .ring-background { --tw-ring-color: var(--color-background); }
+      .bg-foreground { background-color: var(--color-foreground); }
+      .text-foreground { color: var(--color-foreground); }
+      .border-foreground { border-color: var(--color-foreground); }
+      .ring-foreground { --tw-ring-color: var(--color-foreground); }
+      .bg-card { background-color: var(--color-card); }
+      .text-card { color: var(--color-card); }
+      .border-card { border-color: var(--color-card); }
+      .ring-card { --tw-ring-color: var(--color-card); }
+      .bg-primary { background-color: var(--color-primary); }
+      .text-primary { color: var(--color-primary); }
+      .border-primary { border-color: var(--color-primary); }
+      .ring-primary { --tw-ring-color: var(--color-primary); }
+      .bg-muted { background-color: var(--color-muted); }
+      .text-muted { color: var(--color-muted); }
+      .border-muted { border-color: var(--color-muted); }
+      .ring-muted { --tw-ring-color: var(--color-muted); }
+      .bg-muted-foreground { background-color: var(--color-muted-foreground); }
+      .text-muted-foreground { color: var(--color-muted-foreground); }
+      .border-muted-foreground { border-color: var(--color-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--color-muted-foreground); }
+      .bg-accent { background-color: var(--color-accent); }
+      .text-accent { color: var(--color-accent); }
+      .border-accent { border-color: var(--color-accent); }
+      .ring-accent { --tw-ring-color: var(--color-accent); }
+      .bg-border { background-color: var(--color-border); }
+      .text-border { color: var(--color-border); }
+      .border-border { border-color: var(--color-border); }
+      .ring-border { --tw-ring-color: var(--color-border); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ============ 顶部标题区 ============ -->
+    <header class="page-header">
+      <h1>AROORO · 融合方案探索</h1>
+      <p class="subtitle">结合纸感暖调 × 深绿戏剧感 × 金色质感的三种融合路径</p>
+    </header>
+
+    <!-- ================================================================
+         融合方案 I：分层纸感系统 Layered Paper System
+         ================================================================ -->
+    <section class="scheme-block scheme-i">
+      <div class="scheme-head">
+        <div class="scheme-num">I</div>
+        <div class="scheme-head-body">
+          <div class="scheme-names">
+            <h2>分层纸感系统</h2>
+            <span class="en">Layered Paper System</span>
+          </div>
+          <p class="scheme-inspo">不是单一背景色，而是模拟真实高端包装纸的层次系统：暖象牙纸感作主底，香槟雾米作分区，深森林绿仅在品牌头部做局部强调。</p>
+          <div class="color-tags">
+            <span class="color-tag"><i class="sw" style="background:#F5F0E6"></i>#F5F0E6 主底</span>
+            <span class="color-tag"><i class="sw" style="background:#F1E9DB"></i>#F1E9DB 分区</span>
+            <span class="color-tag"><i class="sw" style="background:#FFFFFF"></i>#FFFFFF 卡片</span>
+            <span class="color-tag"><i class="sw" style="background:#1A2E1A"></i>深绿渐变 头部</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scheme-rule"></div>
+
+      <div class="scheme-stage">
+        <!-- 品牌头部（深绿局部强调） -->
+        <div class="brand-header">
+          <div class="accent-bar"></div>
+          <span class="brand-kicker">AROORO BRAND</span>
+          <h3>鲜食跟团 · 限时好物</h3>
+          <p class="brand-sub">为爱宠甄选，每一口皆有来处</p>
+        </div>
+
+        <!-- 产品卡片 -->
+        <div class="product-card">
+          <div class="product-thumb">
+            <span class="product-thumb-mark">AROORO</span>
+          </div>
+          <div class="product-body">
+            <div class="product-tags">
+              <span class="product-tag product-tag-gold">限时团购</span>
+              <span class="product-tag product-tag-olive">包邮</span>
+            </div>
+            <h4 class="product-name">冻干主食猫粮 · 鸡肉配方 1kg</h4>
+            <div class="product-price-row">
+              <span class="price-current">¥39<span class="price-unit">起</span></span>
+              <span class="price-original">¥89</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="btn-row">
+          <button class="btn btn-primary">去跟团</button>
+          <button class="btn btn-outline">分享</button>
+        </div>
+
+        <!-- 金粒瀑布加载动画 -->
+        <div class="cascade-section">
+          <div class="section-label">金粒瀑布加载</div>
+          <div class="cascade-frame">
+            <div class="lux-cascade">
+              <span class="lux-cascade-dot" style="left:20px;background:#E8D5A8;animation-delay:0ms"></span>
+              <span class="lux-cascade-dot" style="left:36px;background:#D4B978;animation-delay:150ms"></span>
+              <span class="lux-cascade-dot" style="left:52px;background:#C9A24B;animation-delay:300ms"></span>
+              <span class="lux-cascade-dot" style="left:68px;background:#D4B978;animation-delay:450ms"></span>
+              <span class="lux-cascade-dot" style="left:84px;background:#E8D5A8;animation-delay:600ms"></span>
+              <span class="lux-cascade-dot" style="left:100px;background:#C9A24B;animation-delay:750ms"></span>
+              <span class="lux-cascade-dot" style="left:48px;background:#D4B978;animation-delay:900ms"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 状态标签 -->
+        <div>
+          <div class="section-label">状态标签</div>
+          <div class="tag-row">
+            <span class="status-tag tag-active">进行中</span>
+            <span class="status-tag tag-done">已完成</span>
+            <span class="status-tag tag-cancel">已取消</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设计说明 -->
+      <div class="scheme-notes">
+        <div class="notes-label">设计说明</div>
+        <ul>
+          <li>三层颜色递进 #F5F0E6 → #F1E9DB → #FFFFFF，模拟高端包装纸的层次，分区之间以金色发丝线收边。</li>
+          <li>品牌头部仅局部使用深森林绿渐变，既保留深色质感又不喧宾夺主，香槟金文字在深底上自然发光。</li>
+          <li>卡片保持纯白，与分区底色拉开一档，确保信息层级清晰、长时间阅读不疲劳。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 分隔 ============ -->
+    <div class="scheme-divider">
+      <div class="line"></div>
+      <div class="num">II</div>
+      <div class="line"></div>
+    </div>
+
+    <!-- ================================================================
+         融合方案 II：双色温对比 Dual Temperature Contrast
+         ================================================================ -->
+    <section class="scheme-block scheme-ii">
+      <div class="scheme-head">
+        <div class="scheme-num">II</div>
+        <div class="scheme-head-body">
+          <div class="scheme-names">
+            <h2>双色温对比</h2>
+            <span class="en">Dual Temperature Contrast</span>
+          </div>
+          <p class="scheme-inspo">把深色画廊方案的戏剧感融入暖纸感——不是全暗，而是"局部暗"。内容区用暖纸感保持亲和，品牌展示区用深森林绿创造戏剧性对比，像精品店里展柜灯光打在深色绒布上。</p>
+          <div class="color-tags">
+            <span class="color-tag"><i class="sw" style="background:#F5F0E6"></i>#F5F0E6 内容</span>
+            <span class="color-tag"><i class="sw" style="background:#1A2E1A"></i>深绿渐变 Hero</span>
+            <span class="color-tag"><i class="sw" style="background:#E8E5DC"></i>#E8E5DC 暖白</span>
+            <span class="color-tag"><i class="sw" style="background:#C9A24B"></i>#C9A24B 金点</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scheme-rule"></div>
+
+      <div class="scheme-stage">
+        <!-- 品牌头部（大面积深绿 Hero） -->
+        <div class="brand-header">
+          <div class="accent-bar"></div>
+          <span class="brand-kicker">AROORO BRAND</span>
+          <h3>鲜食跟团 · 限时好物</h3>
+          <p class="brand-sub">为爱宠甄选，每一口皆有来处</p>
+        </div>
+
+        <!-- 产品卡片 -->
+        <div class="product-card">
+          <div class="product-thumb">
+            <span class="product-thumb-mark">AROORO</span>
+          </div>
+          <div class="product-body">
+            <div class="product-tags">
+              <span class="product-tag product-tag-gold">限时团购</span>
+              <span class="product-tag product-tag-olive">包邮</span>
+            </div>
+            <h4 class="product-name">冻干主食猫粮 · 鸡肉配方 1kg</h4>
+            <div class="product-price-row">
+              <span class="price-current">¥39<span class="price-unit">起</span></span>
+              <span class="price-original">¥89</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="btn-row">
+          <button class="btn btn-primary">去跟团</button>
+          <button class="btn btn-outline">分享</button>
+        </div>
+
+        <!-- 金粒瀑布加载动画 -->
+        <div class="cascade-section">
+          <div class="section-label">金粒瀑布加载</div>
+          <div class="cascade-frame">
+            <div class="lux-cascade">
+              <span class="lux-cascade-dot" style="left:20px;background:#E8D5A8;animation-delay:0ms"></span>
+              <span class="lux-cascade-dot" style="left:36px;background:#D4B978;animation-delay:150ms"></span>
+              <span class="lux-cascade-dot" style="left:52px;background:#C9A24B;animation-delay:300ms"></span>
+              <span class="lux-cascade-dot" style="left:68px;background:#D4B978;animation-delay:450ms"></span>
+              <span class="lux-cascade-dot" style="left:84px;background:#E8D5A8;animation-delay:600ms"></span>
+              <span class="lux-cascade-dot" style="left:100px;background:#C9A24B;animation-delay:750ms"></span>
+              <span class="lux-cascade-dot" style="left:48px;background:#D4B978;animation-delay:900ms"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 状态标签 -->
+        <div>
+          <div class="section-label">状态标签</div>
+          <div class="tag-row">
+            <span class="status-tag tag-active">进行中</span>
+            <span class="status-tag tag-done">已完成</span>
+            <span class="status-tag tag-cancel">已取消</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设计说明 -->
+      <div class="scheme-notes">
+        <div class="notes-label">设计说明</div>
+        <ul>
+          <li>大面积深绿 Hero 与大面积暖纸内容区并置，制造"展柜灯光打在深色绒布上"的戏剧张力，视觉冲击最强。</li>
+          <li>深绿区与暖纸区以金色发丝线 + 8px 阴影渐变过渡，避免硬切，冷暖交接自然柔和。</li>
+          <li>内容区保持亲和暖纸感，CTA 主按钮延续深绿渐变，统一视觉语境而不破坏对比。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 分隔 ============ -->
+    <div class="scheme-divider">
+      <div class="line"></div>
+      <div class="num">III</div>
+      <div class="line"></div>
+    </div>
+
+    <!-- ================================================================
+         融合方案 III：纸感金纹 Paper with Gold Vein
+         ================================================================ -->
+    <section class="scheme-block scheme-iii">
+      <div class="scheme-head">
+        <div class="scheme-num">III</div>
+        <div class="scheme-head-body">
+          <div class="scheme-names">
+            <h2>纸感金纹</h2>
+            <span class="en">Paper with Gold Vein</span>
+          </div>
+          <p class="scheme-inspo">在暖象牙纸感底上叠加极淡的金色渐变纹理，模拟特种纸的金属光泽。不是纯色背景，而是有微妙光影变化的"金属纸"——最克制的方案，改动最小但质感提升最大。</p>
+          <div class="color-tags">
+            <span class="color-tag"><i class="sw" style="background:#F5F0E6"></i>#F5F0E6 主底</span>
+            <span class="color-tag"><i class="sw" style="background:#F3EBDA"></i>金纹渐变 纹理</span>
+            <span class="color-tag"><i class="sw" style="background:#EFE8DA"></i>#EFE8DA 分区</span>
+            <span class="color-tag"><i class="sw" style="background:#C9A24B"></i>金边 0.12 卡片</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scheme-rule"></div>
+
+      <div class="scheme-stage">
+        <!-- 品牌头部（浅色 + 金色竖条 + 金色渐变标题） -->
+        <div class="brand-header">
+          <div class="accent-bar"></div>
+          <span class="brand-kicker">AROORO BRAND</span>
+          <h3>鲜食跟团 · 限时好物</h3>
+          <p class="brand-sub">为爱宠甄选，每一口皆有来处</p>
+        </div>
+
+        <!-- 产品卡片（极淡金色边框） -->
+        <div class="product-card">
+          <div class="product-thumb">
+            <span class="product-thumb-mark">AROORO</span>
+          </div>
+          <div class="product-body">
+            <div class="product-tags">
+              <span class="product-tag product-tag-gold">限时团购</span>
+              <span class="product-tag product-tag-olive">包邮</span>
+            </div>
+            <h4 class="product-name">冻干主食猫粮 · 鸡肉配方 1kg</h4>
+            <div class="product-price-row">
+              <span class="price-current">¥39<span class="price-unit">起</span></span>
+              <span class="price-original">¥89</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="btn-row">
+          <button class="btn btn-primary">去跟团</button>
+          <button class="btn btn-outline">分享</button>
+        </div>
+
+        <!-- 金粒瀑布加载动画 -->
+        <div class="cascade-section">
+          <div class="section-label">金粒瀑布加载</div>
+          <div class="cascade-frame">
+            <div class="lux-cascade">
+              <span class="lux-cascade-dot" style="left:20px;background:#E8D5A8;animation-delay:0ms"></span>
+              <span class="lux-cascade-dot" style="left:36px;background:#D4B978;animation-delay:150ms"></span>
+              <span class="lux-cascade-dot" style="left:52px;background:#C9A24B;animation-delay:300ms"></span>
+              <span class="lux-cascade-dot" style="left:68px;background:#D4B978;animation-delay:450ms"></span>
+              <span class="lux-cascade-dot" style="left:84px;background:#E8D5A8;animation-delay:600ms"></span>
+              <span class="lux-cascade-dot" style="left:100px;background:#C9A24B;animation-delay:750ms"></span>
+              <span class="lux-cascade-dot" style="left:48px;background:#D4B978;animation-delay:900ms"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 状态标签 -->
+        <div>
+          <div class="section-label">状态标签</div>
+          <div class="tag-row">
+            <span class="status-tag tag-active">进行中</span>
+            <span class="status-tag tag-done">已完成</span>
+            <span class="status-tag tag-cancel">已取消</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设计说明 -->
+      <div class="scheme-notes">
+        <div class="notes-label">设计说明</div>
+        <ul>
+          <li>暖象牙底叠加极淡金纹渐变，模拟特种纸金属光泽，改动最小而质感提升最大。</li>
+          <li>卡片以 1px 极淡金色边框统一质感，品牌头部保持浅色，以金色竖条 + 金色渐变标题装饰，避免深绿带来的视觉重压。</li>
+          <li>文字主色加深至 #2C2C2A 增加对比度，整体最克制、最统一，适合追求一致性的全局场景。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 三向对比页脚 ============ -->
+    <footer class="page-footer">
+      <div class="footer-title">三向对比 · At a Glance</div>
+      <div class="footer-grid">
+        <div class="footer-card">
+          <div class="fc-num">I</div>
+          <div class="fc-name">分层纸感</div>
+          <div class="fc-desc">三层颜色递进 + 头部深绿局部强调，层次最丰富。</div>
+        </div>
+        <div class="footer-card">
+          <div class="fc-num">II</div>
+          <div class="fc-name">双色温对比</div>
+          <div class="fc-desc">深绿 Hero × 暖纸内容，冷暖戏剧张力最强。</div>
+        </div>
+        <div class="footer-card">
+          <div class="fc-num">III</div>
+          <div class="fc-name">纸感金纹</div>
+          <div class="fc-desc">极淡金纹 + 金边卡片，最克制最统一。</div>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+    <style>
+    /* ================================================================
+       基础重置与排版
+       ================================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", "Menlo", "Consolas", monospace;
+
+      /* 品牌令牌（来自 colors_and_type.css） */
+      --olive: #4F5E35;
+      --olive-dark: #3A4626;
+      --accent: #B8893A;
+
+      --gold-1: #E8D5A8;
+      --gold-2: #D4B978;
+      --gold-3: #C9A24B;
+      --gold-4: #B8923E;
+      --gold-grad: linear-gradient(135deg, #E8D5A8 0%, #C9A24B 40%, #B8923E 100%);
+      --gold-line: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%);
+
+      --forest-900: #1A2E1A;
+      --forest-800: #1F3A1F;
+      --forest-700: #2D4A2D;
+      --forest-grad: linear-gradient(160deg, #2D4A2D 0%, #1A2E1A 100%);
+      --forest-grad-ii: linear-gradient(160deg, #1F3A1F 0%, #1A2E1A 100%);
+
+      --ivory: #F5F0E6;
+      --champagne-mist: #F1E9DB;
+      --paper-vein: #EFE8DA;
+      --warm-white: #E8E5DC;
+      --cream-wall: #ECE8DE;
+    }
+
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    body {
+      font-family: var(--font-sans);
+      color: #2A2823;
+      background: var(--cream-wall);
+      line-height: 1.6;
+      padding: 56px 22px 88px;
+    }
+
+    .page { max-width: 800px; margin: 0 auto; }
+
+    /* ================================================================
+       顶部标题区
+       ================================================================ */
+    .page-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .page-header h1 {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #2A2823;
+      display: inline-block;
+      padding-bottom: 16px;
+      position: relative;
+    }
+    .page-header h1::after {
+      content: "";
+      position: absolute;
+      left: 50%; bottom: 0;
+      transform: translateX(-50%);
+      width: 104px; height: 2px;
+      background: var(--gold-grad);
+      border-radius: 2px;
+    }
+    .page-header .subtitle {
+      margin-top: 18px;
+      font-size: 14px;
+      letter-spacing: 0.06em;
+      color: #635E54;
+    }
+
+    /* ================================================================
+       方案区块容器（每方案独立背景系统）
+       ================================================================ */
+    .scheme-block {
+      background: var(--bg);
+      color: var(--fg);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(26,26,23,0.05);
+    }
+
+    /* —— 融合方案 I：分层纸感系统 —— */
+    .scheme-i {
+      --bg: #F5F0E6;
+      --section: #F1E9DB;
+      --card: #FFFFFF;
+      --fg: #2A2823;
+      --fg-2: #635E54;
+      --fg-3: #9A9489;
+      --hairline: rgba(26,26,23,0.06);
+      --hairline-gold: rgba(201,169,110,0.18);
+      --card-border: rgba(26,26,23,0.06);
+      --header-bg: linear-gradient(160deg, #2D4A2D 0%, #1A2E1A 100%);
+      --header-fg: #E8D5A8;
+      --header-sub: rgba(232,213,168,0.72);
+      --header-kicker: #C9A24B;
+      --header-bar: linear-gradient(180deg, #E8D5A8 0%, #C9A24B 100%);
+    }
+
+    /* —— 融合方案 II：双色温对比 —— */
+    .scheme-ii {
+      --bg: #F5F0E6;
+      --section: #F5F0E6;
+      --card: #FFFFFF;
+      --fg: #2A2823;
+      --fg-2: #635E54;
+      --fg-3: #9A9489;
+      --hairline: rgba(26,26,23,0.06);
+      --hairline-gold: rgba(201,169,110,0.18);
+      --card-border: rgba(26,26,23,0.06);
+      --header-bg: linear-gradient(160deg, #1F3A1F 0%, #1A2E1A 100%);
+      --header-fg: #E8E5DC;
+      --header-sub: rgba(232,229,220,0.66);
+      --header-kicker: #C9A24B;
+      --header-bar: linear-gradient(180deg, #E8D5A8 0%, #C9A24B 100%);
+    }
+
+    /* —— 融合方案 III：纸感金纹 —— */
+    .scheme-iii {
+      --bg: linear-gradient(135deg, #F5F0E6 0%, #F3EBDA 40%, #F5F0E6 100%);
+      --section: #EFE8DA;
+      --card: #FFFFFF;
+      --fg: #2C2C2A;
+      --fg-2: #5A564E;
+      --fg-3: #8E8A80;
+      --hairline: rgba(26,26,23,0.06);
+      --hairline-gold: rgba(201,169,110,0.18);
+      --card-border: rgba(201,169,110,0.12);
+      --header-bg: #FFFFFF;
+      --header-fg: #B8923E;
+      --header-sub: #5A564E;
+      --header-kicker: #B8923E;
+      --header-bar: linear-gradient(180deg, #E8D5A8 0%, #C9A24B 100%);
+    }
+
+    /* ================================================================
+       方案标题栏
+       ================================================================ */
+    .scheme-head {
+      display: flex;
+      gap: 22px;
+      align-items: flex-start;
+      padding: 46px 40px 30px;
+    }
+    .scheme-num {
+      font-size: 60px;
+      font-weight: 200;
+      line-height: 0.9;
+      background: var(--gold-grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
+    }
+    .scheme-head-body { flex: 1; min-width: 0; }
+    .scheme-names {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .scheme-names h2 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--fg);
+      line-height: 1.2;
+    }
+    .scheme-names .en {
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--fg-3);
+    }
+    .scheme-inspo {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--fg-2);
+      line-height: 1.75;
+      max-width: 560px;
+    }
+    .color-tags {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .color-tag {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      padding: 5px 11px;
+      border-radius: 7px;
+      background: rgba(26,26,23,0.04);
+      color: var(--fg-2);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      letter-spacing: 0.01em;
+    }
+    .color-tag .sw {
+      width: 13px; height: 13px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.12);
+      flex-shrink: 0;
+    }
+
+    /* 标题栏与舞台之间的金色发丝线 */
+    .scheme-rule {
+      height: 1px;
+      margin: 0 40px;
+      background: var(--gold-line);
+      opacity: 0.85;
+    }
+
+    /* ================================================================
+       舞台（分区底色，承载真实 UI 元素）
+       ================================================================ */
+    .scheme-stage {
+      background: var(--section);
+      border-radius: 22px;
+      padding: 30px 26px;
+      margin: 26px 40px 28px;
+      border: 1px solid var(--hairline);
+    }
+
+    /* —— 品牌头部 —— */
+    .brand-header {
+      position: relative;
+      background: var(--header-bg);
+      border-radius: 20px;
+      padding: 26px 26px 26px 36px;
+      margin-bottom: 26px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+    .brand-header .accent-bar {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--header-bar);
+    }
+    .brand-kicker {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--header-kicker);
+      margin-bottom: 8px;
+    }
+    .brand-header h3 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--header-fg);
+      line-height: 1.2;
+    }
+    .brand-header .brand-sub {
+      margin-top: 6px;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      color: var(--header-sub);
+    }
+
+    /* 方案 II：Hero 戏剧化 + 深绿/暖纸过渡（金色发丝线 + 8px 阴影） */
+    .scheme-ii .brand-header {
+      padding: 46px 30px 46px 40px;
+      box-shadow: 0 10px 28px -8px rgba(26,46,26,0.30);
+    }
+    .scheme-ii .brand-header::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 1px;
+      background: var(--gold-line);
+    }
+    .scheme-ii .brand-header h3 { font-size: 24px; }
+
+    /* 方案 III：浅色头部 + 金色渐变标题 */
+    .scheme-iii .brand-header h3 {
+      background: var(--gold-grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    /* —— 产品卡片 —— */
+    .product-card {
+      background: var(--card);
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      overflow: hidden;
+      margin-bottom: 26px;
+      box-shadow: 0 1px 2px rgba(26,26,23,0.03), 0 6px 20px rgba(26,26,23,0.05);
+    }
+    .product-thumb {
+      height: 132px;
+      background: var(--forest-grad);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .product-thumb-mark {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      color: rgba(232,213,168,0.85);
+    }
+    .product-body { padding: 18px 20px 20px; }
+    .product-tags {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 11px;
+    }
+    .product-tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 3px 10px;
+      border-radius: 9999px;
+    }
+    .product-tag-gold {
+      background: rgba(201,169,110,0.16);
+      color: #9A7430;
+    }
+    .product-tag-olive {
+      background: rgba(79,94,53,0.12);
+      color: #4F5E35;
+    }
+    .product-name {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--fg);
+      line-height: 1.45;
+      margin-bottom: 13px;
+    }
+    .product-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .price-current {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.01em;
+    }
+    .price-unit {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-left: 2px;
+    }
+    .price-original {
+      font-size: 13px;
+      color: var(--fg-3);
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+    }
+
+    /* —— 按钮组 —— */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+    .btn {
+      flex: 1;
+      height: 48px;
+      border: none;
+      border-radius: 9999px;
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .btn-primary {
+      background: var(--forest-grad);
+      color: var(--gold-1);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--fg);
+      border: 1.5px solid var(--hairline-gold);
+    }
+    .btn:hover { opacity: 0.92; }
+
+    /* —— 区段小标签 —— */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::before {
+      content: "";
+      width: 18px; height: 1px;
+      background: var(--fg-3);
+      opacity: 0.5;
+    }
+
+    /* —— 金粒瀑布加载动画 —— */
+    .cascade-section { margin-bottom: 30px; }
+    .cascade-frame {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lux-cascade {
+      position: relative;
+      width: 120px;
+      height: 200px;
+      overflow: hidden;
+    }
+    .lux-cascade-dot {
+      position: absolute;
+      top: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      animation: lux-cascade-fall 1600ms linear infinite;
+    }
+    @keyframes lux-cascade-fall {
+      0%   { transform: translateY(0); opacity: 0; }
+      20%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(200px); opacity: 0; }
+    }
+
+    /* —— 状态标签 —— */
+    .tag-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .status-tag {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 7px 18px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .status-tag::before {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+    .tag-active { background: rgba(201,169,110,0.16); color: #9A7430; }
+    .tag-active::before { background: var(--gold-3); }
+    .tag-done { background: rgba(79,94,53,0.12); color: #4F5E35; }
+    .tag-done::before { background: var(--olive); }
+    .tag-cancel { background: rgba(26,26,23,0.05); color: var(--fg-3); }
+    .tag-cancel::before { background: var(--fg-3); opacity: 0.6; }
+
+    /* ================================================================
+       设计说明
+       ================================================================ */
+    .scheme-notes {
+      margin: 0 40px 44px;
+      padding-top: 24px;
+      border-top: 1px solid var(--hairline);
+    }
+    .notes-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      margin-bottom: 14px;
+    }
+    .scheme-notes ul { list-style: none; }
+    .scheme-notes li {
+      font-size: 13px;
+      color: var(--fg-2);
+      line-height: 1.78;
+      padding-left: 20px;
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .scheme-notes li::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 9px;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--gold-grad);
+    }
+
+    /* ================================================================
+       方案间分隔（金色渐变线 + 半透明编号大字）
+       ================================================================ */
+    .scheme-divider {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      padding: 40px 0;
+    }
+    .scheme-divider .line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,169,110,0.45), transparent);
+    }
+    .scheme-divider .num {
+      font-size: 56px;
+      font-weight: 200;
+      color: rgba(201,169,110,0.30);
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+
+    /* ================================================================
+       页脚三向对比
+       ================================================================ */
+    .page-footer {
+      margin-top: 56px;
+      padding: 36px 32px;
+      background: #FFFFFF;
+      border-radius: 24px;
+      border: 1px solid rgba(26,26,23,0.06);
+      box-shadow: 0 2px 10px rgba(26,26,23,0.04);
+    }
+    .footer-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #9A9489;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .footer-card {
+      padding: 18px 16px;
+      border-radius: 16px;
+      background: #F7F5EF;
+      border: 1px solid rgba(26,26,23,0.05);
+    }
+    .footer-card .fc-num {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: #B8923E;
+      margin-bottom: 4px;
+    }
+    .footer-card .fc-name {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #2A2823;
+      margin-bottom: 8px;
+    }
+    .footer-card .fc-desc {
+      font-size: 12px;
+      line-height: 1.7;
+      color: #635E54;
+    }
+
+    /* ================================================================
+       响应式
+       ================================================================ */
+    @media (max-width: 640px) {
+      body { padding: 36px 14px 64px; }
+      .page-header h1 { font-size: 25px; }
+      .scheme-head { padding: 34px 22px 24px; gap: 16px; }
+      .scheme-num { font-size: 46px; }
+      .scheme-names h2 { font-size: 23px; }
+      .scheme-rule { margin: 0 22px; }
+      .scheme-stage { margin: 22px 22px 24px; padding: 24px 18px; }
+      .scheme-notes { margin: 0 22px 34px; }
+      .btn-row { flex-direction: column; }
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</body>
+</html>

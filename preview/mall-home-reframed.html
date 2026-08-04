@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZUOYOU 左右 · 商城首页 · 色彩权力重构预览</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F0E6;
+  --paper-mist:#F1E9DB;
+  --gold:#C9A24B;
+  --gold-deep:#B8923D;
+  --gold-soft:rgba(201,169,75,0.14);
+  --green:#1F3A1F;
+  --green-line:rgba(31,58,31,0.40);
+  --ink:#2C2C2A;
+  --ink-soft:#6B6A64;
+  --card:#FFFFFF;
+  --tag-bg:#E8E2D5;
+  --serif:'Noto Serif SC','Songti SC',serif;
+  --sans:-apple-system,'PingFang SC',system-ui,'Helvetica Neue',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+body{
+  font-family:var(--sans);
+  background:#E7E4DD;
+  display:flex;justify-content:center;align-items:flex-start;
+  min-height:100vh;padding:32px 16px;
+}
+/* ===== phone shell ===== */
+.phone{
+  width:390px;height:844px;background:var(--paper);
+  border-radius:46px;overflow:hidden;position:relative;flex:none;
+  box-shadow:0 36px 70px -24px rgba(31,58,31,0.45),0 0 0 11px var(--green),0 0 0 13px #142314;
+  display:flex;flex-direction:column;
+}
+.phone::before{ /* paper texture */
+  content:"";position:absolute;inset:0;z-index:6;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:0.05;mix-blend-mode:multiply;
+}
+/* ===== navbar (green structure, gold signal) ===== */
+.nav{flex:0 0 auto;background:var(--green);color:var(--gold);position:relative;z-index:3;}
+.statusbar{height:46px;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:13px;font-weight:500;letter-spacing:.3px;}
+.statusbar .dots{display:flex;gap:3px;align-items:flex-end;}
+.statusbar .dots i{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.85;display:block;}
+.statusbar .dots i:nth-child(2){height:6px;}
+.statusbar .dots i:nth-child(3){height:8px;}
+.statusbar .bat{width:22px;height:11px;border:1.4px solid var(--gold);border-radius:3px;position:relative;opacity:.85;}
+.statusbar .bat::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:var(--gold);border-radius:0 1px 1px 0;}
+.statusbar .bat::before{content:"";position:absolute;left:1.5px;top:1.5px;bottom:1.5px;width:60%;background:var(--gold);border-radius:1px;}
+.nav-main{height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;}
+.brand{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:3px;color:var(--gold);}
+.nav-icons{display:flex;gap:16px;}
+.nav-icons .ic{width:20px;height:20px;border:1.6px solid var(--gold);border-radius:50%;opacity:.85;position:relative;}
+.nav-icons .ic.search::after{content:"";position:absolute;right:3px;bottom:3px;width:7px;height:1.6px;background:var(--gold);transform:rotate(45deg);}
+/* ===== search ===== */
+.search{flex:0 0 auto;background:var(--green);padding:0 16px 14px;position:relative;z-index:3;}
+.search-pill{background:#fff;border-radius:20px;height:38px;display:flex;align-items:center;padding:0 14px;gap:9px;border:1px solid var(--gold-soft);}
+.search-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);}
+.search-pill .txt{color:var(--ink-soft);font-size:13px;letter-spacing:.5px;}
+/* ===== content ===== */
+.content{flex:1 1 auto;overflow-y:auto;position:relative;z-index:2;padding:12px 14px 0;}
+.content::-webkit-scrollbar{width:0;}
+/* hero — green structure + gold signal */
+.hero{margin:2px 2px 14px;padding:15px 17px;border-left:3px solid var(--green);background:linear-gradient(90deg,rgba(31,58,31,0.05),transparent 70%);border-radius:0 12px 12px 0;}
+.hero .kicker{font-size:9px;letter-spacing:3px;color:var(--gold-deep);text-transform:uppercase;font-weight:600;}
+.hero h1{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--green);margin-top:5px;letter-spacing:1px;}
+.hero p{font-size:11px;color:var(--ink-soft);margin-top:4px;letter-spacing:.5px;}
+/* section bar — mist下沉 */
+.section{display:flex;align-items:center;gap:10px;margin:4px 2px 12px;}
+.section .tick{width:3px;height:17px;background:var(--green);border-radius:2px;}
+.section h2{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--green);letter-spacing:1px;}
+.section .more{margin-left:auto;font-size:11px;color:var(--gold-deep);}
+/* grid */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.card{background:var(--card);border:1px solid rgba(201,169,75,0.38);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:7px;position:relative;animation:rise .5s ease both;}
+.card:nth-child(2){animation-delay:.05s;}
+.card:nth-child(3){animation-delay:.10s;}
+.card:nth-child(4){animation-delay:.15s;}
+@keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.card .thumb{aspect-ratio:1/1;border-radius:12px;background:linear-gradient(135deg,#EFE7D6,#E2D9C2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.card .thumb::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 32% 28%,rgba(201,169,75,0.20),transparent 62%);}
+.card .thumb .mark{font-family:var(--serif);font-size:38px;color:var(--green);opacity:.28;line-height:1;}
+.card h3{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--green);line-height:1.3;letter-spacing:.5px;}
+.card .desc{font-size:11px;color:var(--ink-soft);margin-top:-3px;}
+.card .price{font-size:16px;font-weight:600;color:var(--green);font-family:var(--serif);}
+.card .price small{font-size:10px;font-weight:400;color:var(--ink-soft);font-family:var(--sans);margin-left:2px;}
+/* tags — gold-gray base + gold dot */
+.tags{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{display:inline-flex;align-items:center;gap:4px;background:var(--tag-bg);border-radius:10px;padding:2px 8px;font-size:10px;color:#5F5E5A;letter-spacing:.3px;}
+.tag .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);}
+.tag.soft .dot{opacity:.45;}
+.tag.mute .dot{background:#B4B2A9;}
+/* cta — gold button + wax seal */
+.cta{margin-top:1px;display:flex;align-items:center;gap:8px;}
+.btn-gold{flex:1;background:var(--gold);color:var(--green);border:none;border-radius:10px;height:34px;font-size:13px;font-weight:600;font-family:var(--sans);display:flex;align-items:center;justify-content:center;cursor:pointer;letter-spacing:1px;box-shadow:0 2px 0 var(--green-line);transition:background .15s,transform .15s;}
+.btn-gold:active{background:var(--gold-deep);transform:translateY(1px);box-shadow:0 1px 0 var(--green-line);}
+.seal{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;color:var(--green);font-family:var(--serif);font-size:12px;font-weight:700;flex:0 0 auto;box-shadow:inset 0 0 0 1.6px rgba(31,58,31,0.28);letter-spacing:0;}
+/* load more — gold spinner */
+.loadmore{display:flex;align-items:center;justify-content:center;gap:8px;padding:20px 0 24px;color:var(--ink-soft);font-size:12px;letter-spacing:.5px;}
+.spinner{width:17px;height:17px;border:2px solid rgba(201,169,75,0.3);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* ===== tabbar — green base, gold selected ===== */
+.tabbar{flex:0 0 auto;background:var(--green);display:flex;padding:9px 0 11px;position:relative;z-index:3;border-top:1px solid rgba(201,169,75,0.18);}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:rgba(255,255,255,0.45);font-size:10px;letter-spacing:.5px;}
+.tab.active{color:var(--gold);}
+.tab .ic{width:23px;height:23px;border:1.6px solid currentColor;border-radius:7px;position:relative;}
+.tab.active .ic{background:rgba(201,169,75,0.16);}
+.tab .ic::after{content:"";position:absolute;inset:5px;border:1.4px solid currentColor;border-radius:3px;opacity:.7;}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="phone">
+  <!-- navbar -->
+  <div class="nav">
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="bat"></span>
+    </div>
+    <div class="nav-main">
+      <span class="brand">左右 ZUOYOU</span>
+      <span class="nav-icons"><span class="ic search"></span><span class="ic"></span></span>
+    </div>
+  </div>
+  <!-- search -->
+  <div class="search">
+    <div class="search-pill"><span class="dot"></span><span class="txt">搜索寄养 / 鲜食 / 护理</span></div>
+  </div>
+  <!-- content -->
+  <div class="content">
+    <div class="hero">
+      <div class="kicker">Curated for your pet</div>
+      <h1>匠心照护 · 如待家人</h1>
+      <p>严选寄养家庭与低温鲜食，金标认证每一程陪伴</p>
+    </div>
+    <div class="section">
+      <span class="tick"></span><h2>甄选推荐</h2><span class="more">查看全部 &rsaquo;</span>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="thumb"><span class="mark">犬</span></div>
+        <h3>雪纳瑞·周末寄养</h3>
+        <div class="desc">专业陪护 · 每日遛弯</div>
+        <div class="price">¥288<small>/ 天</small></div>
+        <div class="tags"><span class="tag"><span class="dot"></span>热销</span></div>
+        <div class="cta"><button class="btn-gold">立即预订</button><span class="seal">印</span></div>
+      </div>
+      <div class="card">
+        <div class="thumb"><span class="mark">宠</span></div>
+        <h3>柯基·日间托管</h3>
+        <div class="desc">零食玩具自由 · 全程直播</div>
+        <div class="price">¥128<small>/ 次</small></div>
+        <div class="tags"><span class="tag soft"><span class="dot"></span>新品</span></div>
+        <div class="cta"><button class="btn-gold">立即预订</button><span class="seal">印</span></div>
+      </div>
+      <div class="card">
+        <div class="thumb"><span class="mark">食</span></div>
+        <h3>有机鲜食礼盒</h3>
+        <div class="desc">低温慢煮 · 七日配方</div>
+        <div class="price">¥168<small>/ 盒</small></div>
+        <div class="tags"><span class="tag mute"><span class="dot"></span>限时</span></div>
+        <div class="cta"><button class="btn-gold">立即预订</button><span class="seal">印</span></div>
+      </div>
+      <div class="card">
+        <div class="thumb"><span class="mark">浴</span></div>
+        <h3>贵宾·SPA 护理</h3>
+        <div class="desc">精油舒缓 · 柔顺沐浴</div>
+        <div class="price">¥218<small>/ 次</small></div>
+        <div class="tags"><span class="tag"><span class="dot"></span>热销</span></div>
+        <div class="cta"><button class="btn-gold">立即预订</button><span class="seal">印</span></div>
+      </div>
+    </div>
+    <div class="loadmore"><span class="spinner"></span>金标甄选 · 持续上新</div>
+  </div>
+  <!-- tabbar -->
+  <div class="tabbar">
+    <div class="tab active"><span class="ic"></span>首页</div>
+    <div class="tab"><span class="ic"></span>寄养</div>
+    <div class="tab"><span class="ic"></span>商城</div>
+    <div class="tab"><span class="ic"></span>我的</div>
+  </div>
+</div>
+</body>
+</html>

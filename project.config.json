@@ -8,6 +8,30 @@
         "type": "file"
       },
       {
+        "value": "cloudfunctions",
+        "type": "folder"
+      },
+      {
+        "value": "web-admin",
+        "type": "folder"
+      },
+      {
+        "value": "docs-archive",
+        "type": "folder"
+      },
+      {
+        "value": "coverage",
+        "type": "folder"
+      },
+      {
+        "value": "dist",
+        "type": "folder"
+      },
+      {
+        "value": "deliverables",
+        "type": "folder"
+      },
+      {
         "value": "node_modules",
         "type": "folder"
       },
@@ -37,6 +61,34 @@
       },
       {
         "value": "oneclick-*.js",
+        "type": "file"
+      },
+      {
+        "value": "package-lock.json",
+        "type": "file"
+      },
+      {
+        "value": "AROORO_BP_Mimo.html",
+        "type": "file"
+      },
+      {
+        "value": "AROORO_GroupOwner_Recruit.html",
+        "type": "file"
+      },
+      {
+        "value": "content.js",
+        "type": "file"
+      },
+      {
+        "value": "jest.config.js",
+        "type": "file"
+      },
+      {
+        "value": "eslint.unused.audit.json",
+        "type": "file"
+      },
+      {
+        "value": "tsconfig.*.json",
         "type": "file"
       },
       {
@@ -223,7 +275,7 @@
     "swc": false,
     "disableSWC": true,
     "ignoreApiDeprecatedError": true,
-    "compileWorklet": false,
+    "compileWorklet": true,
     "babelSetting": {
       "ignore": [],
       "disablePlugins": [],

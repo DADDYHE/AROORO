@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分享图标 · Haute-Luxury Icon Study</title>
+    <style id="theme-vars">
+/* ============================================================
+   AROORO Share Icon · Haute-Luxury Icon Study
+   Brand prefix: aroo
+   Palette source: styles/theme-teal.wxss (Haute-Luxury v2)
+   Forest green + champagne gold + cream — Hermès/Chanel/Galerie Claire
+   ============================================================ */
+
+:root {
+  /* ---------- Brand Primary: Deep Forest Green ---------- */
+  --aroo-forest: #1F3A1F;          /* brand anchor — deep forest green */
+  --aroo-forest-deep: #0F2410;     /* pressed / darkest */
+  --aroo-forest-mid: #2D4F2D;      /* hover / mid */
+  --aroo-forest-soft: #3D6B3D;     /* icon stroke soft */
+  --aroo-forest-tint: #E8ECE2;     /* chip / soft fill */
+  --aroo-forest-wash: #F2F5EC;     /* wash background */
+
+  /* ---------- Accent: Champagne Gold (restrained, <5%) ---------- */
+  --aroo-gold: #C9A24B;            /* champagne accent */
+  --aroo-gold-deep: #A8894A;       /* pressed gold */
+  --aroo-gold-soft: #F0E6D0;       /* gold tint */
+  --aroo-gold-wash: #F8F3E6;       /* gold wash */
+  --aroo-gold-glow: rgba(201, 169, 110, 0.20);
+
+  /* ---------- Surfaces: Cream paper white ---------- */
+  --aroo-bg: #F7F5EF;              /* cream page base — Hermès paper */
+  --aroo-bg-warm: #F3F0E8;         /* warm cream — section base */
+  --aroo-surface: #FFFFFF;         /* white card */
+  --aroo-surface-cream: #FBF9F4;   /* cream card */
+
+  /* ---------- Ink: warm charcoal text ---------- */
+  --aroo-ink: #1A1A17;             /* primary text — charcoal */
+  --aroo-ink-2: #5A564C;           /* secondary text */
+  --aroo-ink-3: #9E9889;           /* tertiary text */
+
+  /* ---------- Lines & Dividers ---------- */
+  --aroo-line: #E2DED3;            /* hairline divider */
+  --aroo-line-soft: #EDEAE1;       /* soft divider */
+  --aroo-hairline: rgba(26, 26, 23, 0.08); /*发丝线 */
+  --aroo-hairline-strong: rgba(26, 26, 23, 0.14);
+
+  /* ---------- Action bar (in-context reconstruction) ---------- */
+  --aroo-bar-bg: rgba(255, 255, 255, 0.96);
+  --aroo-bar-border: rgba(26, 26, 23, 0.08);
+  --aroo-cta-grad: linear-gradient(180deg, #2D4F2D 0%, #0F2410 100%);
+  --aroo-cta-shadow: 0 6px 18px rgba(31, 58, 31, 0.22);
+
+  /* ---------- On-dark tokens (forest green ground) ---------- */
+  --aroo-cream-on-dark: #F7F5EF;
+  --aroo-gold-on-dark: rgba(201, 169, 110, 0.92);
+  --aroo-line-on-dark: rgba(247, 245, 239, 0.18);
+
+  /* ---------- Radius (luxury micro-radius, near-square) ---------- */
+  --aroo-radius-xs: 4px;
+  --aroo-radius-sm: 8px;
+  --aroo-radius-md: 12px;
+  --aroo-radius-lg: 16px;
+  --aroo-radius-pill: 999px;
+
+  /* ---------- Shadow (extreme restraint, hairlines replace shadow) ---------- */
+  --aroo-shadow-1: 0 1px 3px rgba(26,26,23,0.04);
+  --aroo-shadow-2: 0 8px 24px -8px rgba(26,26,23,0.12);
+  --aroo-shadow-3: 0 16px 48px -16px rgba(26,26,23,0.20);
+
+  /* ---------- Spacing (8pt grid) ---------- */
+  --aroo-s-1: 4px;
+  --aroo-s-2: 8px;
+  --aroo-s-3: 12px;
+  --aroo-s-4: 16px;
+  --aroo-s-5: 24px;
+  --aroo-s-6: 32px;
+  --aroo-s-7: 48px;
+  --aroo-s-8: 64px;
+  --aroo-s-9: 96px;
+
+  /* ---------- Typography ---------- */
+  --aroo-font-sans: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --aroo-font-serif: "Songti SC", "STSong", "Songti TC", "SimSun", serif;
+  --aroo-font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --aroo-text-display: 30px;
+  --aroo-text-h1: 24px;
+  --aroo-text-h2: 20px;
+  --aroo-text-h3: 17px;
+  --aroo-text-body: 15px;
+  --aroo-text-body-sm: 13px;
+  --aroo-text-caption: 12px;
+  --aroo-text-eyebrow: 11px;
+
+  --aroo-leading-tight: 1.2;
+  --aroo-leading-normal: 1.6;
+  --aroo-leading-relaxed: 1.8;
+
+  --aroo-weight-regular: 400;
+  --aroo-weight-medium: 500;
+  --aroo-weight-semibold: 600;
+
+  --aroo-tracking-tight: -0.01em;
+  --aroo-tracking-normal: 0.01em;
+  --aroo-tracking-wide: 0.05em;
+  --aroo-tracking-wider: 0.12em;
+  --aroo-tracking-display: 0.2em;
+
+  /* ============================================================
+     Semantic Aliases — required by apply-html-head-contract.mjs
+     ============================================================ */
+  --aroo-background: var(--aroo-bg);
+  --aroo-foreground: var(--aroo-ink);
+
+  --aroo-card: var(--aroo-surface);
+  --aroo-card-foreground: var(--aroo-ink);
+
+  --aroo-popover: var(--aroo-surface);
+  --aroo-popover-foreground: var(--aroo-ink);
+
+  --aroo-primary: var(--aroo-forest);
+  --aroo-primary-foreground: var(--aroo-cream-on-dark);
+
+  --aroo-secondary: var(--aroo-forest-tint);
+  --aroo-secondary-foreground: var(--aroo-forest);
+
+  --aroo-muted: var(--aroo-bg-warm);
+  --aroo-muted-foreground: var(--aroo-ink-2);
+
+  --aroo-accent: var(--aroo-gold-soft);
+  --aroo-accent-foreground: var(--aroo-gold-deep);
+
+  --aroo-destructive: #B85C3C;
+  --aroo-destructive-foreground: #F7F5EF;
+
+  --aroo-border: var(--aroo-line);
+  --aroo-input: var(--aroo-line);
+  --aroo-ring: var(--aroo-forest);
+
+  --aroo-radius-small: var(--aroo-radius-sm);
+  --aroo-radius-medium: var(--aroo-radius-md);
+  --aroo-radius-large: var(--aroo-radius-lg);
+}
+
+/* ---------- Dark mode (reserved — project is light-only) ---------- */
+.dark {
+  --aroo-background: #121310;
+  --aroo-foreground: #F0EDE4;
+  --aroo-card: #1E1F1B;
+  --aroo-card-foreground: #F0EDE4;
+  --aroo-popover: #1E1F1B;
+  --aroo-popover-foreground: #F0EDE4;
+  --aroo-primary: #3D6B3D;
+  --aroo-primary-foreground: #121310;
+  --aroo-muted: #252621;
+  --aroo-muted-foreground: #9E9889;
+  --aroo-border: #2E2F29;
+  --aroo-input: #2E2F29;
+  --aroo-ring: #3D6B3D;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--aroo-background);
+    --color-foreground: var(--aroo-foreground);
+    --color-card: var(--aroo-card);
+    --color-card-foreground: var(--aroo-card-foreground);
+    --color-popover: var(--aroo-popover);
+    --color-popover-foreground: var(--aroo-popover-foreground);
+    --color-primary: var(--aroo-primary);
+    --color-primary-foreground: var(--aroo-primary-foreground);
+    --color-secondary: var(--aroo-secondary);
+    --color-secondary-foreground: var(--aroo-secondary-foreground);
+    --color-muted: var(--aroo-muted);
+    --color-muted-foreground: var(--aroo-muted-foreground);
+    --color-accent: var(--aroo-accent);
+    --color-accent-foreground: var(--aroo-accent-foreground);
+    --color-destructive: var(--aroo-destructive);
+    --color-destructive-foreground: var(--aroo-destructive-foreground);
+    --color-border: var(--aroo-border);
+    --color-input: var(--aroo-input);
+    --color-ring: var(--aroo-ring);
+    --radius-sm: var(--aroo-radius-sm);
+    --radius-md: var(--aroo-radius-md);
+    --radius-lg: var(--aroo-radius-lg);
+  }
+  @layer base {
+    body { background: var(--aroo-background); color: var(--aroo-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--aroo-background); }
+      .text-background { color: var(--aroo-background); }
+      .border-background { border-color: var(--aroo-background); }
+      .ring-background { --tw-ring-color: var(--aroo-background); }
+      .bg-foreground { background-color: var(--aroo-foreground); }
+      .text-foreground { color: var(--aroo-foreground); }
+      .border-foreground { border-color: var(--aroo-foreground); }
+      .ring-foreground { --tw-ring-color: var(--aroo-foreground); }
+      .bg-card { background-color: var(--aroo-card); }
+      .text-card { color: var(--aroo-card); }
+      .border-card { border-color: var(--aroo-card); }
+      .ring-card { --tw-ring-color: var(--aroo-card); }
+      .bg-card-foreground { background-color: var(--aroo-card-foreground); }
+      .text-card-foreground { color: var(--aroo-card-foreground); }
+      .border-card-foreground { border-color: var(--aroo-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--aroo-card-foreground); }
+      .bg-popover { background-color: var(--aroo-popover); }
+      .text-popover { color: var(--aroo-popover); }
+      .border-popover { border-color: var(--aroo-popover); }
+      .ring-popover { --tw-ring-color: var(--aroo-popover); }
+      .bg-popover-foreground { background-color: var(--aroo-popover-foreground); }
+      .text-popover-foreground { color: var(--aroo-popover-foreground); }
+      .border-popover-foreground { border-color: var(--aroo-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--aroo-popover-foreground); }
+      .bg-primary { background-color: var(--aroo-primary); }
+      .text-primary { color: var(--aroo-primary); }
+      .border-primary { border-color: var(--aroo-primary); }
+      .ring-primary { --tw-ring-color: var(--aroo-primary); }
+      .bg-primary-foreground { background-color: var(--aroo-primary-foreground); }
+      .text-primary-foreground { color: var(--aroo-primary-foreground); }
+      .border-primary-foreground { border-color: var(--aroo-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--aroo-primary-foreground); }
+      .bg-secondary { background-color: var(--aroo-secondary); }
+      .text-secondary { color: var(--aroo-secondary); }
+      .border-secondary { border-color: var(--aroo-secondary); }
+      .ring-secondary { --tw-ring-color: var(--aroo-secondary); }
+      .bg-secondary-foreground { background-color: var(--aroo-secondary-foreground); }
+      .text-secondary-foreground { color: var(--aroo-secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--aroo-secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--aroo-secondary-foreground); }
+      .bg-muted { background-color: var(--aroo-muted); }
+      .text-muted { color: var(--aroo-muted); }
+      .border-muted { border-color: var(--aroo-muted); }
+      .ring-muted { --tw-ring-color: var(--aroo-muted); }
+      .bg-muted-foreground { background-color: var(--aroo-muted-foreground); }
+      .text-muted-foreground { color: var(--aroo-muted-foreground); }
+      .border-muted-foreground { border-color: var(--aroo-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--aroo-muted-foreground); }
+      .bg-accent { background-color: var(--aroo-accent); }
+      .text-accent { color: var(--aroo-accent); }
+      .border-accent { border-color: var(--aroo-accent); }
+      .ring-accent { --tw-ring-color: var(--aroo-accent); }
+      .bg-accent-foreground { background-color: var(--aroo-accent-foreground); }
+      .text-accent-foreground { color: var(--aroo-accent-foreground); }
+      .border-accent-foreground { border-color: var(--aroo-accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--aroo-accent-foreground); }
+      .bg-destructive { background-color: var(--aroo-destructive); }
+      .text-destructive { color: var(--aroo-destructive); }
+      .border-destructive { border-color: var(--aroo-destructive); }
+      .ring-destructive { --tw-ring-color: var(--aroo-destructive); }
+      .bg-destructive-foreground { background-color: var(--aroo-destructive-foreground); }
+      .text-destructive-foreground { color: var(--aroo-destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--aroo-destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--aroo-destructive-foreground); }
+      .bg-border { background-color: var(--aroo-border); }
+      .text-border { color: var(--aroo-border); }
+      .border-border { border-color: var(--aroo-border); }
+      .ring-border { --tw-ring-color: var(--aroo-border); }
+      .bg-input { background-color: var(--aroo-input); }
+      .text-input { color: var(--aroo-input); }
+      .border-input { border-color: var(--aroo-input); }
+      .ring-input { --tw-ring-color: var(--aroo-input); }
+      .bg-ring { background-color: var(--aroo-ring); }
+      .text-ring { color: var(--aroo-ring); }
+      .border-ring { border-color: var(--aroo-ring); }
+      .ring-ring { --tw-ring-color: var(--aroo-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+      <div class="study-frame">
+
+        <!-- A. Masthead / eyebrow -->
+        <header>
+          <div class="eyebrow">AROORO · ICON STUDY Nº01</div>
+          <hr class="hairline-rule" />
+          <h1 class="display-title">分享</h1>
+          <p class="display-sub">A Haute-Luxury Share Glyph</p>
+          <p class="dek">为活动详情页底栏的分享按钮设计的三组发丝线图标方案，取代现用的链接 emoji。</p>
+        </header>
+
+        <!-- B. Design rationale (gallery placard) -->
+        <section class="placard">
+          <p class="placard-text">三组方案皆在 24×24 网格上以 1.5 发丝线勾勒，弃填色而由 currentColor 承色——浅底继承森林绿，深绿底转为奶油白。香槟金仅作点缀，发丝线取代投影，使每一枚图标如画廊墙面上的孤品，与页面其余排版共呼吸。</p>
+        </section>
+
+        <!-- C. The three concepts — gallery wall -->
+        <section class="gallery">
+
+          <!-- Concept A — Node (RECOMMENDED) -->
+          <article>
+            <div class="concept-head">
+              <span class="ordinal">01</span>
+              <h2 class="concept-name">Node · 节点<span class="rec-tag">RECOMMENDED</span></h2>
+            </div>
+            <p class="concept-role">三节点 + 连线 — 经典克制，画廊中性</p>
+            <div class="tile-row">
+              <div class="tile">
+                <span class="icon-24" style="color:var(--aroo-forest)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                    <circle cx="6" cy="12" r="2.3"/>
+                    <circle cx="17.5" cy="6.5" r="2.3"/>
+                    <circle cx="17.5" cy="17.5" r="2.3"/>
+                    <line x1="8.08" y1="11.01" x2="15.43" y2="7.49"/>
+                    <line x1="8.08" y1="12.99" x2="15.43" y2="17.01"/>
+                  </svg>
+                </span>
+                <span class="tile-cap">24 · in-bar</span>
+              </div>
+              <div class="tile">
+                <span class="icon-48" style="color:var(--aroo-forest)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                    <circle cx="6" cy="12" r="2.3"/>
+                    <circle cx="17.5" cy="6.5" r="2.3"/>
+                    <circle cx="17.5" cy="17.5" r="2.3"/>
+                    <line x1="8.08" y1="11.01" x2="15.43" y2="7.49"/>
+                    <line x1="8.08" y1="12.99" x2="15.43" y2="17.01"/>
+                  </svg>
+                </span>
+                <span class="tile-cap">48 · detail</span>
+              </div>
+              <div class="tile tile-forest">
+                <span class="icon-64" style="color:var(--aroo-cream-on-dark)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                    <circle cx="6" cy="12" r="2.3"/>
+                    <circle cx="17.5" cy="6.5" r="2.3"/>
+                    <circle cx="17.5" cy="17.5" r="2.3"/>
+                    <line x1="8.08" y1="11.01" x2="15.43" y2="7.49"/>
+                    <line x1="8.08" y1="12.99" x2="15.43" y2="17.01"/>
+                  </svg>
+                </span>
+                <span class="tile-cap tile-cap-dark">64 · on forest</span>
+              </div>
+            </div>
+            <p class="spec-line">stroke 1.5 · 24×24 grid · currentColor</p>
+          </article>
+
+          <!-- Concept B — Vessel Arrow -->
+          <article>
+            <div class="concept-head">
+              <span class="ordinal">02</span>
+              <h2 class="concept-name">Vessel Arrow · 寄出</h2>
+            </div>
+            <p class="concept-role">器皿 + 上升箭头 — 寄出之意，略带诗性</p>
+            <div class="tile-row">
+              <div class="tile">
+                <span class="icon-24" style="color:var(--aroo-forest)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                    <path d="M4 15 V19 H12 V15"/>
+                    <path d="M8 17 L17.5 7.5"/>
+                    <path d="M17.5 7.5 L17.5 12 M17.5 7.5 L13 7.5"/>
+                  </svg>
+                </span>
+                <span class="tile-cap">24 · in-bar</span>
+              </div>
+              <div class="tile">
+                <span class="icon-48" style="color:var(--aroo-forest)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                    <path d="M4 15 V19 H12 V15"/>
+                    <path d="M8 17 L17.5 7.5"/>
+                    <path d="M17.5 7.5 L17.5 12 M17.5 7.5 L13 7.5"/>
+                  </svg>
+                </span>
+                <span class="tile-cap">48 · detail</span>
+              </div>
+              <div class="tile tile-forest">
+                <span class="icon-64" style="color:var(--aroo-cream-on-dark)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                    <path d="M4 15 V19 H12 V15"/>
+                    <path d="M8 17 L17.5 7.5"/>
+                    <path d="M17.5 7.5 L17.5 12 M17.5 7.5 L13 7.5"/>
+                  </svg>
+                </span>
+                <span class="tile-cap tile-cap-dark">64 · on forest</span>
+              </div>
+            </div>
+            <p class="spec-line">stroke 1.5 · 24×24 grid · currentColor</p>
+          </article>
+
+          <!-- Concept C — Paper Plane -->
+          <article>
+            <div class="concept-head">
+              <span class="ordinal">03</span>
+              <h2 class="concept-name">Paper Plane · 纸鸢</h2>
+            </div>
+            <p class="concept-role">折纸飞机 — 最通用的「发送 / 分享」意象</p>
+            <div class="tile-row">
+              <div class="tile">
+                <span class="icon-24" style="color:var(--aroo-forest)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                    <path d="M22 2 L11 13"/>
+                    <path d="M22 2 L15 22 L11 13 L2 9 Z"/>
+                  </svg>
+                </span>
+                <span class="tile-cap">24 · in-bar</span>
+              </div>
+              <div class="tile">
+                <span class="icon-48" style="color:var(--aroo-forest)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                    <path d="M22 2 L11 13"/>
+                    <path d="M22 2 L15 22 L11 13 L2 9 Z"/>
+                  </svg>
+                </span>
+                <span class="tile-cap">48 · detail</span>
+              </div>
+              <div class="tile tile-forest">
+                <span class="icon-64" style="color:var(--aroo-cream-on-dark)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                    <path d="M22 2 L11 13"/>
+                    <path d="M22 2 L15 22 L11 13 L2 9 Z"/>
+                  </svg>
+                </span>
+                <span class="tile-cap tile-cap-dark">64 · on forest</span>
+              </div>
+            </div>
+            <p class="spec-line">stroke 1.5 · 24×24 grid · currentColor</p>
+          </article>
+
+        </section>
+
+        <!-- D. In-context comparison — bottom action bar -->
+        <section class="compare">
+          <div class="eyebrow">IN CONTEXT · 底栏实景</div>
+          <h2 class="compare-sub">emoji 与发丝线图标的对照</h2>
+
+          <div class="cmp-grid">
+
+            <!-- Tile 1 — CURRENT (emoji) -->
+            <div class="cmp-tile">
+              <div class="cmp-label"><span class="cmp-tag cmp-tag-current">现状 · CURRENT</span></div>
+              <div class="action-bar">
+                <button type="button" class="act-btn">
+                  <span class="act-icon emoji-icon" aria-label="分享">🔗</span>
+                  <span class="act-label">分享</span>
+                </button>
+                <button type="button" class="act-btn">
+                  <span class="act-icon" style="color:var(--aroo-forest)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+                    </svg>
+                  </span>
+                  <span class="act-label">联系团长</span>
+                </button>
+                <button type="button" class="cta-pill">立即报名</button>
+              </div>
+            </div>
+
+            <!-- Tile 2 — PROPOSED (Concept A) -->
+            <div class="cmp-tile">
+              <div class="cmp-label"><span class="cmp-tag cmp-tag-proposed">方案 A · PROPOSED</span></div>
+              <div class="action-bar">
+                <button type="button" class="act-btn">
+                  <span class="act-icon" style="color:var(--aroo-forest)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                      <circle cx="6" cy="12" r="2.3"/>
+                      <circle cx="17.5" cy="6.5" r="2.3"/>
+                      <circle cx="17.5" cy="17.5" r="2.3"/>
+                      <line x1="8.08" y1="11.01" x2="15.43" y2="7.49"/>
+                      <line x1="8.08" y1="12.99" x2="15.43" y2="17.01"/>
+                    </svg>
+                  </span>
+                  <span class="act-label">分享</span>
+                </button>
+                <button type="button" class="act-btn">
+                  <span class="act-icon" style="color:var(--aroo-forest)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+                    </svg>
+                  </span>
+                  <span class="act-label">联系团长</span>
+                </button>
+                <button type="button" class="cta-pill">立即报名</button>
+              </div>
+            </div>
+
+          </div>
+
+          <p class="compare-note">发丝线图标与页面其余排版同属一种画廊语言；emoji 则在其中显得突兀，破坏整体的克制气质。</p>
+        </section>
+
+        <!-- E. Spec footer -->
+        <footer class="spec-footer">
+          <hr class="hairline-rule" />
+          <dl class="spec-dl">
+            <div class="spec-row"><dt>STROKE</dt><dd>1.5px round-cap</dd></div>
+            <div class="spec-row"><dt>GRID</dt><dd>24 × 24</dd></div>
+            <div class="spec-row"><dt>COLOR</dt><dd>currentColor → --aroo-forest (light) / --aroo-cream-on-dark (forest ground)</dd></div>
+            <div class="spec-row"><dt>VARIANTS</dt><dd>A node · B vessel-arrow · C paper-plane</dd></div>
+            <div class="spec-row"><dt>FILE</dt><dd>images/icons/share-luxury-node.svg (+ -arrow, -plane)</dd></div>
+            <div class="spec-row"><dt>RECOMMENDED</dt><dd>A · Node</dd></div>
+          </dl>
+          <p class="spec-sign">AROORO · Galerie Claire · 2026</p>
+        </footer>
+
+      </div>
+    </main>
+    <style id="critical-layout">
+      /* ---- Mobile gallery frame ---- */
+      .study-frame {
+        max-width: 420px;
+        margin: 0 auto;
+        padding: 56px 24px 96px;
+        background: var(--aroo-bg);
+        min-height: 100vh;
+        font-family: var(--aroo-font-sans);
+        color: var(--aroo-ink);
+        overflow-x: hidden;
+      }
+      .study-frame * { box-sizing: border-box; }
+
+      /* ---- Typography primitives ---- */
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: var(--aroo-tracking-wider);
+        text-transform: uppercase;
+        color: var(--aroo-ink-3);
+        font-weight: var(--aroo-weight-medium);
+      }
+      .hairline-rule {
+        border: 0;
+        border-top: 1px solid var(--aroo-hairline);
+        margin: 16px 0 0;
+      }
+      .display-title {
+        font-family: var(--aroo-font-serif);
+        font-size: 30px;
+        font-weight: var(--aroo-weight-medium);
+        color: var(--aroo-ink);
+        margin: 24px 0 0;
+        letter-spacing: var(--aroo-tracking-tight);
+        line-height: var(--aroo-leading-tight);
+      }
+      .display-sub {
+        font-family: var(--aroo-font-serif);
+        font-size: 15px;
+        color: var(--aroo-ink-2);
+        margin: 6px 0 0;
+        letter-spacing: var(--aroo-tracking-wide);
+      }
+      .dek {
+        font-size: 15px;
+        color: var(--aroo-ink-2);
+        line-height: var(--aroo-leading-normal);
+        margin: 20px 0 0;
+      }
+
+      /* ---- Gallery placard ---- */
+      .placard { margin-top: 40px; max-width: 32ch; }
+      .placard-text {
+        font-size: 14px;
+        color: var(--aroo-ink-2);
+        line-height: var(--aroo-leading-relaxed);
+      }
+
+      /* ---- Gallery wall ---- */
+      .gallery {
+        margin-top: 64px;
+        display: flex;
+        flex-direction: column;
+        gap: 64px;
+      }
+      .concept-head {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .ordinal {
+        font-family: var(--aroo-font-mono);
+        font-size: 12px;
+        color: var(--aroo-gold-deep);
+        letter-spacing: var(--aroo-tracking-wide);
+      }
+      .concept-name {
+        font-family: var(--aroo-font-serif);
+        font-size: 20px;
+        font-weight: var(--aroo-weight-medium);
+        color: var(--aroo-ink);
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        line-height: var(--aroo-leading-tight);
+      }
+      .rec-tag {
+        font-family: var(--aroo-font-mono);
+        font-size: 10px;
+        letter-spacing: var(--aroo-tracking-wider);
+        text-transform: uppercase;
+        color: var(--aroo-gold-deep);
+        background: var(--aroo-gold-soft);
+        border-radius: var(--aroo-radius-xs);
+        padding: 2px 6px;
+        font-weight: var(--aroo-weight-semibold);
+      }
+      .concept-role {
+        font-size: 13px;
+        color: var(--aroo-ink-2);
+        margin: 8px 0 0;
+        line-height: var(--aroo-leading-normal);
+      }
+
+      /* ---- Icon tile row ---- */
+      .tile-row {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .tile {
+        aspect-ratio: 1 / 1;
+        border: 1px solid var(--aroo-hairline);
+        border-radius: var(--aroo-radius-sm);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: var(--aroo-surface);
+        min-width: 0;
+      }
+      .tile-forest {
+        background: var(--aroo-forest);
+        border-color: var(--aroo-forest);
+      }
+      .icon-24, .icon-48, .icon-64, .act-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .icon-24 { width: 24px; height: 24px; }
+      .icon-48 { width: 48px; height: 48px; }
+      .icon-64 { width: 64px; height: 64px; }
+      .icon-24 svg, .icon-48 svg, .icon-64 svg, .act-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .tile-cap {
+        font-family: var(--aroo-font-mono);
+        font-size: 9px;
+        color: var(--aroo-ink-3);
+        letter-spacing: var(--aroo-tracking-wide);
+      }
+      .tile-cap-dark { color: var(--aroo-line-on-dark); }
+      .spec-line {
+        font-family: var(--aroo-font-mono);
+        font-size: 11px;
+        color: var(--aroo-ink-3);
+        margin: 14px 0 0;
+        letter-spacing: var(--aroo-tracking-wide);
+      }
+
+      /* ---- In-context comparison ---- */
+      .compare { margin-top: 72px; }
+      .compare-sub {
+        font-family: var(--aroo-font-serif);
+        font-size: 20px;
+        font-weight: var(--aroo-weight-medium);
+        color: var(--aroo-ink);
+        margin: 10px 0 0;
+        line-height: var(--aroo-leading-tight);
+      }
+      .cmp-grid {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .cmp-tile {
+        border: 1px solid var(--aroo-hairline);
+        border-radius: var(--aroo-radius-sm);
+        padding: 16px;
+        background: var(--aroo-surface-cream);
+      }
+      .cmp-label { margin-bottom: 12px; }
+      .cmp-tag {
+        font-family: var(--aroo-font-mono);
+        font-size: 10px;
+        letter-spacing: var(--aroo-tracking-wider);
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: var(--aroo-radius-xs);
+        font-weight: var(--aroo-weight-semibold);
+        display: inline-block;
+      }
+      .cmp-tag-current {
+        color: var(--aroo-ink-3);
+        background: var(--aroo-bg-warm);
+        border: 1px solid var(--aroo-hairline);
+      }
+      .cmp-tag-proposed {
+        color: var(--aroo-gold-deep);
+        background: var(--aroo-gold-soft);
+      }
+
+      /* ---- Action bar reconstruction ---- */
+      .action-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid var(--aroo-hairline);
+        border-radius: var(--aroo-radius-sm);
+        background: var(--aroo-bar-bg);
+      }
+      .act-btn {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        background: transparent;
+        border: 0;
+        padding: 2px 4px;
+        cursor: pointer;
+        flex: 0 0 auto;
+        font-family: inherit;
+      }
+      .act-icon { width: 24px; height: 24px; }
+      .emoji-icon {
+        font-size: 24px;
+        line-height: 1;
+        font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+      }
+      .act-label {
+        font-size: 11px;
+        color: var(--aroo-ink-2);
+        letter-spacing: var(--aroo-tracking-wide);
+      }
+      .cta-pill {
+        margin-left: auto;
+        background: var(--aroo-cta-grad);
+        color: var(--aroo-cream-on-dark);
+        border: 0;
+        border-radius: var(--aroo-radius-pill);
+        padding: 10px 18px;
+        font-size: 13px;
+        font-weight: var(--aroo-weight-semibold);
+        letter-spacing: var(--aroo-tracking-wide);
+        box-shadow: var(--aroo-cta-shadow);
+        cursor: pointer;
+        flex: 0 0 auto;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .compare-note {
+        margin-top: 18px;
+        font-size: 13px;
+        color: var(--aroo-ink-2);
+        line-height: var(--aroo-leading-normal);
+      }
+
+      /* ---- Spec footer ---- */
+      .spec-footer { margin-top: 72px; }
+      .spec-dl {
+        margin: 20px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .spec-row {
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        gap: 12px;
+        font-family: var(--aroo-font-mono);
+        font-size: 12px;
+        line-height: var(--aroo-leading-normal);
+      }
+      .spec-row dt {
+        color: var(--aroo-ink-3);
+        letter-spacing: var(--aroo-tracking-wide);
+        margin: 0;
+      }
+      .spec-row dd {
+        margin: 0;
+        color: var(--aroo-ink-2);
+        word-break: break-word;
+      }
+      .spec-sign {
+        margin-top: 28px;
+        text-align: center;
+        font-family: var(--aroo-font-mono);
+        font-size: 10px;
+        color: var(--aroo-ink-3);
+        letter-spacing: var(--aroo-tracking-wide);
+      }
+
+      /* ---- Guard against horizontal overflow on small viewports ---- */
+      .study-frame, .tile-row, .action-bar, .cmp-grid, .spec-row { max-width: 100%; }
+    </style>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

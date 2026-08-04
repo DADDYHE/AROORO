@@ -24,7 +24,7 @@
  * 后续计划：
  *   - Sprint 31: orderService 完成 TS 迁移
  */
-import type { ApiResponse } from '../common/types';
+import type { ApiResponse } from './common/types';
 /** 通用 handler 签名（event / context / auth） */
 type AuthLike = {
     openid?: string;

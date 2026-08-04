@@ -1,4 +1,3 @@
-/* eslint-disable */
 "use strict";
 /**
  * paymentService/index.ts - 支付服务统一入口（TypeScript 源文件 - Sprint 47 迁移）
@@ -45,7 +44,7 @@ const errors_1 = require("./common/errors");
 const { verifyAuth } = require('./common/auth-middleware');
 // Sprint 50: 限流统一 bootstrap
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { bootstrapRateLimit, BootstrapError } = require("./common/rate-limit-bootstrap");
+const { bootstrapRateLimit } = require("./common/rate-limit-bootstrap");
 // H1: 引入 recordAlert 用于 bootstrap 失败持久化告警
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { recordAlert } = require("./common/alert");

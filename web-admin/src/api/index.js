@@ -61,12 +61,18 @@ async function callAction(action, data = {}, options = {}) {
         action,
         data,
       }
-      if (token) payload.accessToken = token
+      if (token) {payload.accessToken = token}
       console.log('[callAction]', action, 'hasToken:', !!token)
 
+      // 认证契约：
+      //   - X-User-Token 始终携带用户 JWT（后端 parseHttpAuth 优先读取）
+      //   - Authorization 在生产环境携带 CloudBase 网关 API Key（开发环境由 Vite 代理注入）
+      const headers = {}
+      if (token) {headers['X-User-Token'] = token}
+      if (import.meta.env.PROD) {headers.Authorization = API_KEY}
       const response = await axios.post(API_BASE, payload, {
         timeout: 15000,
-        headers: import.meta.env.PROD ? { 'Authorization': API_KEY } : {},
+        headers,
       })
 
       const res = response.data || {}

@@ -21,7 +21,7 @@
  *   commissions: { inviterId: 1, status: 1, createdAt: -1 } - 覆盖 getMyIncomeOverview/Details
  *   commissions: { inviterId: 1, orderType: 1, status: 1 } - 覆盖 byOrderType 双维度 aggregate（M5）
  *   orders: { organizerId: 1, status: 1, type: 1 }               - 覆盖 boarding 寄养收入查询
- *   feedingOrders: { feederId: 1, status: 1 }                    - 覆盖 feeding 服务收入查询
+ *   feedingOrders: { ownerId: 1, status: 1 }                     - 覆盖 feeding 服务收入查询
  */
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -135,7 +135,7 @@ export interface WalletSummary {
 
 export interface IncomeOverview {
   commission: CommissionOverview
-  hosting: OrderAggregate
+  boarding: OrderAggregate
   feeding: OrderAggregate
   // H3: 硬约束 #19——serviceIncome 按 type 分组独立返回
   serviceIncome: ServiceIncomeOverview
@@ -144,7 +144,7 @@ export interface IncomeOverview {
 
 export interface IncomeDetailItem {
   id: string
-  type: 'commission' | 'hosting' | 'feeding' | 'tuan' | 'mall' | 'activity'
+  type: 'commission' | 'hosting' | 'boarding' | 'feeding' | 'tuan' | 'mall' | 'activity'
   typeName: string
   amount: number
   orderNo: string
@@ -159,18 +159,6 @@ export interface IncomeDetailsResult {
   totalAmount: number
 }
 
-interface OrderLike {
-  _id?: string
-  ownerId?: string
-  totalPrice?: number | string
-  price?: number | string
-  totalAmount?: number | string
-  completedAt?: Date | string
-  updatedAt?: Date | string
-  createdAt?: Date | string
-  hostId?: string
-  [k: string]: unknown
-}
 
 // =====================================================================
 // 辅助函数
@@ -184,7 +172,7 @@ const EMPTY_WALLET: WalletSummary = { balance: 0, totalIncome: 0, totalWithdrawn
 
 const EMPTY_OVERVIEW: IncomeOverview = {
   commission: EMPTY_COMMISSION_OVERVIEW,
-  hosting: EMPTY_AGGREGATE,
+  boarding: EMPTY_AGGREGATE,
   feeding: EMPTY_AGGREGATE,
   serviceIncome: EMPTY_SERVICE_INCOME_OVERVIEW,
   wallet: { ...EMPTY_WALLET, commission: EMPTY_WALLET, serviceIncome: EMPTY_WALLET },
@@ -309,24 +297,14 @@ export async function getMyIncomeOverview(
     // boarding 已完成订单状态白名单——兼容 status='completed' 与历史 'finished' 状态
     const COMPLETED_BOARDING_STATUSES = ['completed', 'finished']
 
-    // 先查询 feederId（feeding 查询依赖）
-    let feederId: string | null = null
-    try {
-      const feederRes = await db.collection('feeders').where({ createdBy: openid }).limit(1).get()
-      if (feederRes.data && feederRes.data.length > 0) {
-        feederId = feederRes.data[0]._id
-      }
-    } catch (e) {
-      logger.warn('getMyIncomeOverview.feeders.fetch', { openid, msg: (e as Error).message })
-    }
-
     // H1+H3: 并行执行所有 aggregate 查询
     //   commission: total/byOrderType/pending/settled/monthly/today 共 5 次 aggregate
     //   boarding/feeding: total/monthly/today 各 3 次 aggregate
     //   wallets: 直接 get（单文档，无截断风险）
+    // L6: 喂养师体系已废弃——feedingOrders 直接按 ownerId（合作伙伴 openid）查询
     const commissionMatch = { inviterId: openid, status: _.neq('cancelled') }
     const boardingMatch = { organizerId: openid, status: _.in(COMPLETED_BOARDING_STATUSES), type: 'boarding' }
-    const feedingMatch = feederId ? { feederId, status: 'completed' } : null
+    const feedingMatch = { ownerId: openid, status: 'completed' }
 
     const [
       commissionByOrderTypeAgg,
@@ -349,10 +327,10 @@ export async function getMyIncomeOverview(
       safeAggSum('orders', boardingMatch, null, 'totalPrice'),
       safeAggSum('orders', { ...boardingMatch, completedAt: _.gte(monthStart) }, null, 'totalPrice'),
       safeAggSum('orders', { ...boardingMatch, completedAt: _.gte(todayStart) }, null, 'totalPrice'),
-      // feeding 三维度（feederId 为空时返回空数组）
-      feedingMatch ? safeAggSum('feedingOrders', feedingMatch, null, 'totalPrice') : Promise.resolve([]),
-      feedingMatch ? safeAggSum('feedingOrders', { ...feedingMatch, completedAt: _.gte(monthStart) }, null, 'totalPrice') : Promise.resolve([]),
-      feedingMatch ? safeAggSum('feedingOrders', { ...feedingMatch, completedAt: _.gte(todayStart) }, null, 'totalPrice') : Promise.resolve([]),
+      // feeding 三维度（按 ownerId 查询）
+      safeAggSum('feedingOrders', feedingMatch, null, 'totalPrice'),
+      safeAggSum('feedingOrders', { ...feedingMatch, completedAt: _.gte(monthStart) }, null, 'totalPrice'),
+      safeAggSum('feedingOrders', { ...feedingMatch, completedAt: _.gte(todayStart) }, null, 'totalPrice'),
       // wallets 直接 get
       safeGet('wallets', { openid, type: 'commission' }),
       safeGet('wallets', { openid, type: 'serviceIncome' }),
@@ -461,8 +439,8 @@ export async function getMyIncomeOverview(
       serviceIncome: serviceIncomeWallet,
     }
 
-    // L1: API 字段名保留为 hosting（前端 overview.hosting 已依赖），值指向 boarding 局部变量
-    return handleSuccess({ commission, hosting: boarding, feeding, serviceIncome, wallet })
+    // L1: API 字段名改为 boarding（与 commissions.orderType / orders.type 规范值一致），值指向 boarding 局部变量
+    return handleSuccess({ commission, boarding, feeding, serviceIncome, wallet })
   } catch (error) {
     logger.error('getMyIncomeOverview', error)
     return handleError(error, '获取收入概览失败', ERROR_CODES.DATA)
@@ -475,10 +453,10 @@ export async function getMyIncomeDetails(
   auth: AuthLike
 ): Promise<unknown> {
   const { openid } = auth
-  // H4: type 参数白名单校验——删除 'commission' 选项（与 'all' 行为重复）
-  //   原：['all', 'commission', 'tuan', 'mall']，type='commission' 不应用 orderType 过滤，等同 'all'
-  //   新：['all', 'tuan', 'mall']，避免 API 语义混淆
-  const ALLOWED_TYPES = ['all', 'tuan', 'mall']
+  // H4: type 参数白名单——收入明细页（partner/income）仅统计佣金（H7），
+  //   而佣金覆盖团购/商城/活动/寄养/服务全类型，故白名单需包含全部 5 类 + all。
+  //   不再保留 'commission'（与 'all' 行为重复：all 已仅查 commissions 集合）。
+  const ALLOWED_TYPES = ['all', 'tuan', 'mall', 'activity', 'boarding', 'hosting', 'feeding']
   const rawType = typeof event.type === 'string' ? event.type : 'all'
   if (!ALLOWED_TYPES.includes(rawType)) {
     throw err('INVALID_PARAMS', `无效的 type，仅支持：${ALLOWED_TYPES.join(', ')}`)
@@ -501,9 +479,11 @@ export async function getMyIncomeDetails(
       status: _.neq('cancelled'),
     }
     if (type !== 'all') {
-      // type 映射到 orderType：tuan/mall 直接用
-      if (type === 'tuan') where.orderType = 'tuan'
-      else if (type === 'mall') where.orderType = 'mall'
+      // 标签键与 commissions.orderType 规范值一致（统一为 'boarding'）；
+      // 历史数据里寄养佣金仍可能存在旧值 'hosting'（早期 hosting.js 完成路径写入），
+      // 故统一用 _.in(['hosting','boarding']) 纳入过滤，确保"寄养"标签查全且兼容旧数据。
+      if (type === 'boarding' || type === 'hosting') where.orderType = _.in(['hosting', 'boarding'])
+      else where.orderType = type
     }
 
     // M3: 使用数据库分页（skip/limit/orderBy）替代内存分页
@@ -520,18 +500,28 @@ export async function getMyIncomeDetails(
         .count(),
     ])
 
+    const TYPE_LABELS: Record<string, string> = {
+      tuan: '团购', mall: '商城', activity: '活动', hosting: '寄养', boarding: '寄养', feeding: '服务',
+    }
+    // type 字段需在 IncomeDetailItem 联合类型内：寄养佣金的 'hosting'/'boarding' 统一归一为 'boarding'
+    const NORMALIZED_TYPE: Record<string, IncomeDetailItem['type']> = {
+      tuan: 'tuan', mall: 'mall', activity: 'activity', hosting: 'boarding', boarding: 'boarding', feeding: 'feeding',
+    }
     const list = ((listRes.data || []) as Array<Record<string, unknown>>).map((c) => {
       const orderType = (c.orderType as string) || ''
-      const subType = orderType === 'mall' ? 'mall' : 'tuan'
-      // L2: description 空尾巴容错——orderType 为空时不再显示 "带货佣金-"
-      const typeLabel = orderType === 'tuan' ? '团购' : orderType === 'mall' ? '商城' : '通用'
+      const typeLabel = TYPE_LABELS[orderType] || '通用'
+      const normType = NORMALIZED_TYPE[orderType] || 'tuan'
+      // 团购/商城属"带货"，其余为服务类佣金，文案区分
+      const description = (orderType === 'tuan' || orderType === 'mall')
+        ? `带货佣金-${typeLabel}`
+        : `${typeLabel}佣金`
       return {
         id: (c._id as string) || '',
-        type: subType,
+        type: normType,
         typeName: typeLabel,
         amount: Number(c.commissionAmount) || 0,
         orderNo: (c.orderNo as string) || '',
-        description: `带货佣金-${typeLabel}`,
+        description,
         status: (c.status as string) || 'pending',
         createdAt: c.createdAt as Date,
       } as IncomeDetailItem

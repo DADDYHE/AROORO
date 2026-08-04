@@ -36,12 +36,10 @@ import {
   consumeGlobalRateLimit,
   peekGlobalRateLimit,
   type GlobalRateLimitStore,
-  type GlobalRateLimitResult,
 } from './rate-limit-store'
 import {
   getRateLimitConfig,
   getRateLimitConfigSync,
-  type RateLimitConfigResult,
 } from './rate-limit-config'
 
 // ===== 类型定义 =====

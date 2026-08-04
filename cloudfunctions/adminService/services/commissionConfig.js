@@ -21,6 +21,10 @@ const utils_1 = require("../common/utils");
 const logger_1 = require("../common/logger");
 const errors_1 = require("../common/errors");
 const constants_1 = require("../constants");
+// 复用统一佣金写入器的费率键别名工具（与 services/tuan.js 同源问题）：
+//   线上 system_config.commission_rates 历史上用 hosting 键，而 ORDER_TYPES 用
+//   boarding，直接 config['boarding'] 取不到 → 配置页寄养费率恒显示 0（假 0）。
+const commission_utils_1 = require("../common/commission-utils");
 const logger = (0, logger_1.createLogger)('adminService.commissionConfig');
 /* ============================================================
  * Handlers
@@ -37,8 +41,16 @@ exports.getCommissionConfig = (0, errors_1.withErrorHandling)(async (_event, _co
     }
     const rates = {};
     for (const type of constants_1.ORDER_TYPES) {
-        const value = config[type];
-        rates[type] = typeof value === 'number' ? value : 0;
+        // pickRate 会按 RATE_KEY_ALIASES 依次尝试 boarding/hosting/order 等别名键，
+        // 取到第一个非零值；全部缺失或为 0 时返回 0。
+        const value = (0, commission_utils_1.pickRate)(config, type);
+        rates[type] = value;
+        // 与合作伙伴层(getPartnerCommissionRates/getMyCommissionRates)保持一致：
+        // 寄养同时下发 boarding 与 hosting 两个键，兼容「读 boarding」与「读 hosting」的
+        // 调用方，消除全局配置接口只返回 boarding 导致读 hosting 的页面/端显示 0 的残留问题。
+        if (type === 'boarding') {
+            rates['hosting'] = value;
+        }
     }
     return (0, utils_1.handleSuccess)({ rates, updatedAt: config.updatedAt, updatedBy: config.updatedBy });
 });
@@ -48,10 +60,23 @@ exports.updateCommissionConfig = (0, errors_1.withErrorHandling)(async (event, _
     if (!rates || typeof rates !== 'object') {
         throw (0, errors_1.err)('INVALID_PARAMS', '配置格式错误');
     }
+    // P0 修复：原实现直接 .set({ data }) 整文档覆盖，而 data 只包含本次提交且命中
+    // ORDER_TYPES 的键 —— 前端若只提交部分字段（如仅改 mall），其余类型的费率会被
+    // 整体清空。改为「读现有配置 → 增量合并 → 写回」。
+    let existing = {};
+    try {
+        const res = await db.collection('system_config').doc('commission_rates').get();
+        existing = (res.data || {});
+    }
+    catch (e) {
+        // 文档不存在（首次配置）走空对象，等价于原 set 语义
+        logger.warn('updateCommissionConfig.read_existing', { code: e?.errCode, msg: e?.message });
+    }
     const data = {
         updatedBy: auth?.openid,
         updatedAt: new Date(),
     };
+    let changed = 0;
     for (const type of Object.keys(rates)) {
         if (!constants_1.ORDER_TYPES.includes(type)) {
             continue;
@@ -61,11 +86,22 @@ exports.updateCommissionConfig = (0, errors_1.withErrorHandling)(async (event, _
             throw (0, errors_1.err)('INVALID_PARAMS', `${constants_1.ORDER_TYPE_NAMES[type] || type}分佣比例须在0-100之间`);
         }
         data[type] = rate;
+        changed++;
+        // 键漂移防护：线上历史文档用别名键（如 hosting），只写 canonical 键（boarding）
+        // 会让同一类型两个键并存且值分裂，读侧 pickRate 可能取到过期的非零旧值。
+        // 仅同步「文档中已存在」的别名键，不新增冗余键。
+        for (const alias of (commission_utils_1.RATE_KEY_ALIASES[type] || [])) {
+            if (alias !== type && Object.prototype.hasOwnProperty.call(existing, alias)) {
+                data[alias] = rate;
+            }
+        }
     }
-    if (Object.keys(data).length <= 2) {
+    if (!changed) {
         throw (0, errors_1.err)('INVALID_PARAMS', '没有需要更新的字段');
     }
-    await db.collection('system_config').doc('commission_rates').set({ data });
+    const merged = { ...existing, ...data };
+    delete merged._id;
+    await db.collection('system_config').doc('commission_rates').set({ data: merged });
     return (0, utils_1.handleSuccess)(data);
 });
 /* ============================================================

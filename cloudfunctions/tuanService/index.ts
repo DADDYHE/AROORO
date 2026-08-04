@@ -320,14 +320,15 @@ function computeCouponDiscount(
 }
 
 /**
- * H3: 服务端校验优惠券并锁定（fail-closed）
+ * H3: 服务端校验优惠券（只读，不锁定——fail-closed 折扣防伪造）
  *
- * 安全设计：
- *   - 不信任客户端传入的 couponDiscount
- *   - 服务端查 user_coupons 校验：归属 / 状态=unused / 有效期
- *   - 服务端按 coupon.rules 计算 discount
- *   - 调用 couponService.lockCoupon 锁定券（防重复使用）
- *   - 锁定失败时拒绝下单（fail-closed，防止券未锁定却下单）
+ * 安全设计（P0-1 修复：对齐 mall 模式，前端负责 lock，后端只做只读校验）：
+ *   - 券的锁定由前端 order-confirm 负责（lockCoupon 用 tempOrderId）。
+ *     后端若再调 lockCoupon，会因 orderId 不一致（tempOrderId vs 后端空串）
+ *     触发 couponService 幂等拒绝，导致带券团购下单必失败。
+ *   - 不信任客户端传入的 couponDiscount，服务端查 user_coupons 校验：
+ *     归属 / 状态=unused 或 locked（前端已锁）/ 有效期
+ *   - 服务端按 coupon.rules 计算 discount（防金额伪造）
  *
  * @returns { discount, couponSnapshot } - discount 单位为元
  */
@@ -351,7 +352,9 @@ async function validateAndLockCoupon(
   if (coupon.ownerId !== openid) {
     throw err('PERMISSION_DENIED', '无权使用他人优惠券')
   }
-  if (coupon.status !== 'unused') {
+  // P0-1: 允许 unlocked 与前端已锁定的 locked 状态（前端 lockCoupon 成功后进入下单流程，
+  //   券已置 locked；此处只读校验不再重复 lock，避免 orderId 幂等冲突）
+  if (coupon.status !== 'unused' && coupon.status !== 'locked') {
     throw err('COUPON_STATUS_INVALID', `优惠券当前状态不可用：${coupon.status}`)
   }
 
@@ -366,23 +369,6 @@ async function validateAndLockCoupon(
   const calc = computeCouponDiscount(coupon, orderAmount)
   if (!calc.eligible) {
     throw err('BUSINESS_ERROR', `优惠券不可用：${calc.message || '不满足使用条件'}`)
-  }
-
-  // 调 couponService.lockCoupon 锁定（跨函数调用）
-  try {
-    const callRes = await cloud.callFunction({
-      name: 'couponService',
-      data: { action: 'lockCoupon', couponId, orderId, orderType, business: orderType },
-    })
-    const result = (callRes.result || {}) as { code?: number; message?: string; error?: { type?: string; details?: unknown } }
-    if (result.code && result.code !== 0) {
-      throw err('COUPON_LOCK_FAILED', result.message || '优惠券锁定失败', { couponError: result.error })
-    }
-  } catch (e: unknown) {
-    if (e && typeof e === 'object' && (e as { name?: string }).name === 'BusinessError') {throw e}
-    // 网络错误兜底：couponService 不可达时拒绝下单（fail-closed）
-    logger.error('validateAndLockCoupon.callFunction', { couponId, orderId, msg: (e as Error)?.message })
-    throw err('COUPON_LOCK_FAILED', '优惠券锁定失败，请重试', { originalMessage: (e as Error)?.message })
   }
 
   // snapshot 用于写入订单（便于后续 useCoupon 核销校验）
@@ -404,6 +390,66 @@ async function unlockCouponBestEffort(couponId: string, orderId: string): Promis
     })
   } catch (e: unknown) {
     logger.warn('unlockCouponBestEffort', { couponId, orderId, msg: (e as Error)?.message })
+  }
+}
+
+/**
+ * P0-2: 取消团购订单时恢复 tuan_deals.products 快照库存。
+ * 与 createTuanOrder 下单扣减对称：
+ *   - SKU 模式回补 products[i].skus[j].stock/sold
+ *   - 非 SKU 模式回补 products[i].stock/sold
+ */
+async function restoreTuanDealStock(
+  dealId: string,
+  productId: string,
+  skuId: string,
+  quantity: number
+): Promise<void> {
+  try {
+    const dealRes = await db.collection('tuan_deals').doc(dealId).get()
+    const deal = dealRes.data as TuanDeal | null
+    if (!deal || !Array.isArray(deal.products)) { return }
+
+    const productIndex = deal.products.findIndex(p => p.productId === productId)
+    if (productIndex < 0) { return }
+
+    const product = deal.products[productIndex]
+    const updateData: Record<string, unknown> = { updatedAt: db.serverDate() }
+
+    if (skuId && product.skuType === 'multi' && Array.isArray(product.skus)) {
+      const skuIndex = product.skus.findIndex(s => s.skuId === skuId)
+      if (skuIndex >= 0) {
+        // 与下单扣减字段对称：优先回补团购配额 tuanStock，历史无 tuanStock 的 SKU 回补 stock
+        const sku = product.skus[skuIndex]
+        const stockField = (sku.tuanStock !== undefined && sku.tuanStock !== null) ? 'tuanStock' : 'stock'
+        updateData[`products.${productIndex}.skus.${skuIndex}.${stockField}`] = _.inc(quantity)
+        updateData[`products.${productIndex}.skus.${skuIndex}.sold`] = _.inc(-quantity)
+        await db.collection('tuan_deals').doc(dealId).update({ data: updateData })
+        return
+      }
+    }
+
+    updateData[`products.${productIndex}.stock`] = _.inc(quantity)
+    updateData[`products.${productIndex}.sold`] = _.inc(-quantity)
+    await db.collection('tuan_deals').doc(dealId).update({ data: updateData })
+  } catch (e: unknown) {
+    logger.warn('cancelTuanOrder.restoreTuanDealStock', { dealId, productId, msg: (e as Error)?.message })
+  }
+}
+/** P1-3: 取消订单时回退 tuan_deals 累计单数/金额（与下单 inc 对称，防止列表统计虚高） */
+async function rollbackTuanDealTotals(dealId: string, amount: number): Promise<void> {
+  if (!dealId) { return }
+  try {
+    const dealRes = await db.collection('tuan_deals').doc(dealId).get()
+    const deal = dealRes.data as TuanDeal | null
+    if (!deal) { return }
+    const nextOrders = Math.max(0, (Number(deal.totalOrders) || 0) - 1)
+    const nextAmount = Math.max(0, (Number(deal.totalAmount) || 0) - (Number(amount) || 0))
+    await db.collection('tuan_deals').doc(dealId).update({
+      data: { totalOrders: nextOrders, totalAmount: nextAmount, updatedAt: db.serverDate() },
+    })
+  } catch (e: unknown) {
+    logger.warn('rollbackTuanDealTotals', { dealId, amount, msg: (e as Error)?.message })
   }
 }
 
@@ -550,6 +596,11 @@ export async function createTuanOrder(
   const { dealId, productId, skuId, quantity = 1, originalAmount, couponId, specText, receiverName, receiverPhone, receiverAddress, remark } = event
   if (!dealId) { throw err('INVALID_PARAMS', '缺少dealId') }
   if (!productId) { throw err('INVALID_PARAMS', '缺少productId') }
+  // P1-4: 数量服务端校验（防 0/负数/非数字下单）
+  const qty = Number(quantity)
+  if (!Number.isInteger(qty) || qty < 1 || qty > 999) {
+    throw err('INVALID_PARAMS', '购买数量无效')
+  }
 
   // M2: 下单风控前置（限流 + 反刷单）
   try {
@@ -589,7 +640,8 @@ export async function createTuanOrder(
     if (!sku) { throw err('INVALID_PARAMS', 'SKU不存在') }
     if (sku.enabled === false) { throw err('BUSINESS_ERROR', '该规格已下架') }
     finalPrice = Number(sku.tuanPrice) || Number(sku.price) || finalPrice
-    finalStock = Number(sku.stock) || 0
+    // P1-1: 团购限量以团购配额 tuanStock 为准（历史无 tuanStock 时回退商品快照 stock）
+    finalStock = Number(sku.tuanStock) || Number(sku.stock) || 0
     if (finalStock < (quantity as number)) { throw err('BUSINESS_ERROR', '库存不足') }
   } else {
     if (finalStock < (quantity as number)) { throw err('BUSINESS_ERROR', '库存不足') }
@@ -598,9 +650,9 @@ export async function createTuanOrder(
   // 金额始终从数据库价格计算，忽略客户端传入的 totalAmount（防止金额篡改）
   const grossAmount = finalPrice * (quantity as number)
 
-  // H3: 优惠券校验与锁定（fail-closed）
+  // H3: 优惠券只读校验（P0-1: 不再锁定——券已由前端 order-confirm 锁定，
+  //   后端重复 lock 会因 orderId 不一致触发幂等拒绝导致下单失败）
   //   - 不信任客户端传入的 couponDiscount，服务端按 coupon.rules 计算
-  //   - 校验通过后调 couponService.lockCoupon 锁定券
   //   - finalAmount = grossAmount - couponDiscount（服务端计算）
   let validatedCouponDiscount = 0
   let couponSnapshot: Record<string, unknown> | undefined
@@ -609,7 +661,7 @@ export async function createTuanOrder(
       openid,
       couponId as string,
       grossAmount,
-      '', // orderId 稍后由事务生成，lockCoupon 内部会用 orderId 关联，这里先空，事务提交后回写
+      '',
       'tuan'
     )
     validatedCouponDiscount = lockResult.discount
@@ -675,7 +727,8 @@ export async function createTuanOrder(
         await transaction.rollback()
         throw err('BUSINESS_ERROR', 'SKU不存在')
       }
-      const freshSkuStock = Number(freshSku.stock) || 0
+      // P1-1: 事务内同样按 tuanStock（团购配额）校验
+      const freshSkuStock = Number(freshSku.tuanStock) || Number(freshSku.stock) || 0
       if (freshSkuStock < (quantity as number)) {
         await transaction.rollback()
         throw err('BUSINESS_ERROR', '库存不足')
@@ -751,7 +804,10 @@ export async function createTuanOrder(
       // Multi-SKU 商品：只扣减 SKU 级库存，不扣减商品级库存（避免双重扣减）
       const skuIndex = freshProduct.skus.findIndex(s => s.skuId === skuId)
       if (skuIndex >= 0) {
-        updateData[`products.${freshProductIndex}.skus.${skuIndex}.stock`] = _.inc(-(quantity as number))
+        // P1-1: 扣减团购配额 tuanStock（历史无 tuanStock 的 SKU 扣减商品快照 stock）
+        const sku = freshProduct.skus[skuIndex]
+        const stockField = (sku.tuanStock !== undefined && sku.tuanStock !== null) ? 'tuanStock' : 'stock'
+        updateData[`products.${freshProductIndex}.skus.${skuIndex}.${stockField}`] = _.inc(-(quantity as number))
         updateData[`products.${freshProductIndex}.skus.${skuIndex}.sold`] = _.inc(quantity as number)
       }
     } else {
@@ -1144,6 +1200,34 @@ async function cancelTuanOrder(event: CloudEvent, _context: CloudContext, auth: 
       try { await transaction.rollback() } catch (_) { /* ignore rollback error */ }
       throw error
     }
+  }
+
+  // P0-2: 无论已支付（退款）还是未支付取消，都回退 tuan_deals.products 快照库存
+  //   （下单在 createTuanOrder 事务内扣减，取消时须对称回补，否则库存越卖越少）
+  try {
+    await restoreTuanDealStock(
+      order.dealId,
+      order.productId,
+      order.skuId || '',
+      Number(order.quantity) || 1
+    )
+  } catch (stockErr) {
+    logger.warn('cancelTuanOrder.restoreStock.failed', {
+      orderId, dealId: order.dealId, productId: order.productId,
+      msg: (stockErr as Error)?.message,
+    })
+    await recordFailedOperation('restore_tuan_deal_stock',
+      { orderId, dealId: order.dealId, productId: order.productId, skuId: order.skuId, quantity: order.quantity },
+      stockErr)
+  }
+  // P1-3: 回退 deal 累计单数/金额（与下单事务 inc 对称）
+  try {
+    await rollbackTuanDealTotals(order.dealId, Number(order.totalAmount) || 0)
+  } catch (totalsErr) {
+    logger.warn('cancelTuanOrder.rollbackTotals.failed', { orderId, dealId: order.dealId, msg: (totalsErr as Error)?.message })
+    await recordFailedOperation('rollback_tuan_deal_totals',
+      { orderId, dealId: order.dealId, totalAmount: order.totalAmount },
+      totalsErr)
   }
 
   // L1: 写操作审计日志（best-effort）

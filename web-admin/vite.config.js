@@ -28,10 +28,11 @@ export default defineConfig(({ command, mode }) => {
           rewrite: (path) => '/v1/functions/adminService',
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq, req) => {
-              // 1. 先提取原始请求中的用户 JWT
+              // 1. 提取原始请求中的用户 JWT（优先 X-User-Token，兼容旧的 Authorization 约定）
               const origAuth = req.headers.authorization || ''
-              let userJwt = ''
-              if (origAuth.startsWith('Bearer ')) {
+              const origXUserToken = req.headers['x-user-token'] || ''
+              let userJwt = origXUserToken || ''
+              if (!userJwt && origAuth.startsWith('Bearer ')) {
                 const token = origAuth.replace('Bearer ', '')
                 try {
                   const payload = JSON.parse(atob(token.split('.')[1]))

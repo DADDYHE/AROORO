@@ -1,4 +1,3 @@
-/* eslint-disable */
 "use strict";
 /**
  * paymentService/notify.ts - 微信支付回调服务（TypeScript 源文件 - Sprint 26 迁移）
@@ -214,7 +213,7 @@ function verifySignature(rawBody, timestamp, nonce, signature, certificate) {
  * 新实现：事务前查询 _id 列表（CloudBase 事务内不支持 where().update()），
  * 然后在单一事务内逐个 doc(id).update()，任一失败整体回滚。
  */
-async function applyPaidStatus(orderType, existingOrder, transactionId) {
+async function applyPaidStatus(orderType, existingOrder, transactionId, paidAmountYuan) {
     const collection = ORDER_TYPE_COLLECTION[orderType];
     const serverDate = db.serverDate();
     const updateData = {
@@ -223,6 +222,10 @@ async function applyPaidStatus(orderType, existingOrder, transactionId) {
         paidAt: serverDate,
         updatedAt: serverDate,
     };
+    // P1-3: 写入实付金额（微信回调 amount.total 为分，转元）——供退款上限校验与佣金实付口径使用
+    if (typeof paidAmountYuan === 'number' && Number.isFinite(paidAmountYuan) && paidAmountYuan >= 0) {
+        updateData.paidAmount = Math.round(paidAmountYuan * 100) / 100;
+    }
     if (orderType === 'order' || orderType === 'mall') {
         updateData.status = 'paid';
     }
@@ -262,7 +265,24 @@ async function applyPaidStatus(orderType, existingOrder, transactionId) {
     const transaction = await db.startTransaction();
     try {
         // 1) 更新主集合文档（activity_registrations / orders / feedingOrders）
-        await transaction.collection(collection).doc(existingOrder._id).update({ data: updateData });
+        // P1 资损竞态双保险：仅当订单未被取消且未支付时才更新。
+        // 若状态已为 cancelled（超时/主动取消）或已 paid，条件更新使 updated=0，
+        // 后续名额/库存同步全部跳过，杜绝回退后的订单被重复置 paid 造成超卖。
+        // 注：CloudBase 事务集合运行时支持 .where()，但当前 SDK 类型定义未暴露该方法，故用受控类型断言。
+        const txCol = transaction.collection(collection);
+        const mainUpd = await txCol
+            .where({ _id: existingOrder._id, status: db.command.neq('cancelled'), paymentStatus: db.command.neq('paid') })
+            .update({ data: updateData });
+        if (!mainUpd || mainUpd.updated === 0) {
+            logger.warn('applyPaidStatus.skipped_by_condition', {
+                orderId: existingOrder._id,
+                orderType,
+                status: existingOrder.status,
+                paymentStatus: existingOrder.paymentStatus,
+            });
+            await transaction.rollback().catch(() => { });
+            return false;
+        }
         // 2) 同步业务表
         if (orderType === 'tuan' && tuanOrderId) {
             await transaction.collection('tuan_orders').doc(tuanOrderId).update({
@@ -343,27 +363,44 @@ async function triggerCommission(orderType, order) {
     }
 }
 /**
- * H2: 核销 feeding 订单关联的优惠券（best-effort）
+ * H2+P1-1: 支付成功后核销订单关联优惠券（best-effort）
  *
  * 流程：
- *   - 仅 feeding 类型订单需要在此核销（mall/tuan 由前端在支付成功后调用 useCoupon）
- *   - feedingService.createFeedingOrder 已在订单创建时锁定券（lockCoupon）
+ *   - feeding/mall/tuan 三类订单在此统一核销（P1-1: mall/tuan 原由前端支付前
+ *     useCoupon，支付失败/取消时券已置 used 不可退回，改为支付成功回调后核销）
+ *   - feedingService.createFeedingOrder / mallService.createOrder / tuanService.createTuanOrder
+ *     已在订单创建时写入 couponId（feeding 后端 lock；mall/tuan 前端 lock）
  *   - 此处在支付成功后调用 couponService.useCoupon 完成「锁定 → 已使用」状态转换
  *   - 失败不阻塞回调返回，仅记日志 + 告警，避免微信支付重复通知
  *
  * 注意：
  *   - 跨云函数调用使用 cloud.callFunction（paymentService 内已有 cloud 实例）
- *   - orderId 必须为 feedingOrders 集合的 _id，与 lockCoupon 时传入的 orderId 一致
+ *   - orderId 必须为业务集合的 _id，与 lockCoupon 时传入的 orderId 一致
+ *     （mall/tuan 前端 lock 用临时 orderId，此处 useCoupon 用真实订单 _id——
+ *       couponService.useCoupon 仅校验 status=locked 与归属，不校验 orderId 匹配）
  */
-async function triggerFeedingCouponUse(order) {
+async function triggerOrderCouponUse(order, business) {
     const couponId = order.couponId;
     if (!couponId) {
         return;
     }
     const orderId = order._id;
-    const originalAmount = Number(order.originalAmount) || 0;
-    const couponDiscount = Number(order.couponDiscount) || 0;
-    const finalAmount = Number(order.totalAmount) || 0;
+    // P1-3: 券折扣以订单内冗余字段为准（mall/tuan 下单时透传 couponDiscount）
+    const orderAny = order;
+    const originalAmount = Number(orderAny.originalAmount) || 0;
+    const couponDiscount = Number(orderAny.couponDiscount) || 0;
+    // P0-B 修复：finalAmount 取值按类型区分——
+    //   activity 报名单存 finalAmount 字段（实付）；feeding 的 totalAmount 即实付；
+    //   mall/tuan 的 totalAmount 为原价，需减去 couponDiscount
+    const rawFinal = Number(orderAny.finalAmount);
+    const rawTotal = Number(orderAny.totalAmount) || 0;
+    let finalAmount = rawTotal;
+    if (Number.isFinite(rawFinal) && rawFinal > 0) {
+        finalAmount = rawFinal;
+    }
+    else if (business === 'mall' || business === 'tuan') {
+        finalAmount = Math.max(0, rawTotal - couponDiscount);
+    }
     try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { initCloud } = require('../common/utils');
@@ -374,7 +411,7 @@ async function triggerFeedingCouponUse(order) {
                 action: 'useCoupon',
                 couponId,
                 orderId,
-                business: 'feeding',
+                business,
                 originalAmount,
                 discountAmount: couponDiscount,
                 finalAmount,
@@ -382,11 +419,11 @@ async function triggerFeedingCouponUse(order) {
         });
         const useRes = useResult && useResult.result;
         if (!useRes || useRes.code !== 0) {
-            logger.warn('paymentNotify.feeding.useCoupon.failed', {
+            logger.warn(`paymentNotify.${business}.useCoupon.failed`, {
                 orderId, couponId, msg: useRes && useRes.message,
             });
             try {
-                await recordAlert('warning', 'paymentNotify.feeding.useCoupon.failed', '喂养订单优惠券核销失败，需人工核对', {
+                await recordAlert('warning', `paymentNotify.${business}.useCoupon.failed`, `${business}订单优惠券核销失败，需人工核对`, {
                     orderId, outTradeNo: order.outTradeNo, couponId,
                     message: useRes && useRes.message,
                 });
@@ -395,11 +432,11 @@ async function triggerFeedingCouponUse(order) {
         }
     }
     catch (useErr) {
-        logger.error('paymentNotify.feeding.useCoupon.exception', {
+        logger.error(`paymentNotify.${business}.useCoupon.exception`, {
             orderId, couponId, msg: useErr?.message,
         });
         try {
-            await recordAlert('warning', 'paymentNotify.feeding.useCoupon.exception', '喂养订单优惠券核销异常，需人工核对', {
+            await recordAlert('warning', `paymentNotify.${business}.useCoupon.exception`, `${business}订单优惠券核销异常，需人工核对`, {
                 orderId, outTradeNo: order.outTradeNo, couponId,
                 error: useErr?.message,
             });
@@ -512,13 +549,57 @@ async function paymentNotify(event, _context, _auth) {
                 if (existingOrder.paymentStatus === 'paid') {
                     return httpResponse(200, 'SUCCESS', 'OK');
                 }
-                const paidSuccess = await applyPaidStatus(orderType, existingOrder, transaction_id);
+                // P1 资损竞态防护：订单已被取消（超时自动取消或用户主动取消），支付回调不应再置 paid。
+                // 否则库存/名额/优惠券已在取消时回退，此处强改 paid 会造成超卖（一货两卖）。
+                // 微信侧订单由 orderTimeoutService 调 closeWechatOrder 关闭；若关单失败致用户仍支付成功，
+                // 此处安全拒绝并告警，由人工对账退款（宁可少卖不可超卖）。
+                if (existingOrder.status === 'cancelled') {
+                    logger.warn('paymentNotify.applyPaidStatus.skipped_cancelled_order', {
+                        outTradeNo: out_trade_no,
+                        orderType,
+                        orderId: existingOrder._id,
+                    });
+                    try {
+                        await recordAlert('warning', 'paymentNotify.skipped_cancelled_order', '支付回调命中已取消订单（可能关单失败导致用户仍可付款），需人工对账退款', { outTradeNo: out_trade_no, orderType, orderId: existingOrder._id });
+                    }
+                    catch { /* 告警失败不影响 ACK */ }
+                    return httpResponse(200, 'SUCCESS', 'OK');
+                }
+                // P1-3: 微信回调 amount.total 为实付金额（分）→ 转元传入，落 paidAmount 字段
+                const amountObj = (orderInfo.amount || {});
+                const paidAmountYuan = typeof amountObj.total === 'number' ? amountObj.total / 100 : undefined;
+                const paidSuccess = await applyPaidStatus(orderType, existingOrder, transaction_id, paidAmountYuan);
                 // 仅当支付状态同步成功后才触发佣金记录，避免为未确认的订单创建佣金
                 if (paidSuccess) {
                     await triggerCommission(orderType, existingOrder);
-                    // H2: feeding 订单支付成功后核销优惠券（mall/tuan 由前端调用 useCoupon）
-                    if (orderType === 'feeding') {
-                        await triggerFeedingCouponUse(existingOrder);
+                    // P1-2 修复：活动创建者服务收入在活跃支付回调中补录
+                    //   （原实现只在 activityService 死代码 confirmActivityPayment 中调用，导致活动服务收入从未生成）
+                    if (orderType === 'activity' && existingOrder.activityId) {
+                        Promise.resolve()
+                            .then(async () => {
+                                const actRes = await db.collection('activities').doc(existingOrder.activityId).get();
+                                const creatorId = actRes.data && actRes.data.createdBy;
+                                if (creatorId) {
+                                    const { createActivityIncomeRecords } = require('../common/service-income-utils');
+                                    await createActivityIncomeRecords(existingOrder.activityId, creatorId);
+                                }
+                            })
+                            .catch((incomeErr) => {
+                                logger.error('paymentNotify.activityIncome.failed', {
+                                    orderId: existingOrder._id,
+                                    activityId: existingOrder.activityId,
+                                    msg: incomeErr && incomeErr.message,
+                                });
+                            });
+                    }
+                    // P1-1: 支付成功后统一核销优惠券（mall/tuan/feeding/activity/order(寄养) 五类订单）
+                    //   mall/tuan/activity/order 原由前端支付成功后 useCoupon，支付失败/取消时券已 used 不可退回
+                    //   （活动免费单仍在前端核销，见 payment.js 免费分支）；
+                    //   改为回调核销后，券在支付成功前保持 locked，失败由取消/超时路径解锁
+                    if (orderType === 'feeding' || orderType === 'mall' || orderType === 'tuan' || orderType === 'activity' || orderType === 'order') {
+                        const business = orderType === 'feeding' ? 'feeding'
+                            : (orderType === 'mall' ? 'mall' : (orderType === 'tuan' ? 'tuan' : (orderType === 'activity' ? 'activity' : 'boarding')));
+                        await triggerOrderCouponUse(existingOrder, business);
                     }
                 }
             }

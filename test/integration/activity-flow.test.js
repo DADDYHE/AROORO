@@ -121,7 +121,7 @@ describe('集成测试：活动报名子链路', () => {
     test('返回 published/ongoing 等非 deleted 活动', async () => {
       mockDb._collections.activities = { docs: [
         { _id: 'a1', title: '宠物聚会', status: 'published', createdBy: 'admin1' },
-        { _id: 'a2', title: '训练营', status: 'ongoing', createdBy: 'admin1' },
+        { _id: 'a2', title: '训练营', status: 'registration_stopped', createdBy: 'admin1' },
         { _id: 'a3', title: '已删除', status: 'deleted', createdBy: 'admin1' },
       ] }
       const res = await callActivity('getActivityList', {}, null)

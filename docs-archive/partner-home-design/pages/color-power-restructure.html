@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AROORO · 色彩权力重构</title>
+    <style id="theme-vars">
+/* ================================================================
+   colors_and_type.css · AROORO 设计系统令牌
+   Olive Green × Healing Light-Luxury × Haute-Luxury Elevation
+   ================================================================ */
+
+:root {
+  /* 品牌主色：橄榄绿 */
+  --color-primary: #4F5E35;
+  --color-primary-dark: #3A4626;
+  --color-primary-light: #6B7D5A;
+  --color-primary-100: #EAEDDF;
+
+  /* 点缀色：暖金 */
+  --color-accent: #B8893A;
+  --color-accent-soft: #F2E8D4;
+
+  /* 中性色 */
+  --color-background: #F8FAF3;
+  --color-surface: #FFFFFF;
+  --color-border: #D8DCCE;
+  --color-divider: #EAEDDF;
+
+  /* 文字色 */
+  --color-foreground: #2A2823;
+  --color-text-primary: #2A2823;
+  --color-text-secondary: #635E54;
+  --color-text-tertiary: #9A9489;
+  --color-text-on-primary: #FAFAF6;
+
+  /* 语义别名 */
+  --color-card: #FFFFFF;
+  --color-muted: #9A9489;
+  --color-muted-foreground: #9A9489;
+
+  /* 圆角 */
+  --color-radius-sm: 8px;
+  --color-radius-md: 12px;
+  --color-radius-lg: 16px;
+
+  /* 字体 */
+  --color-font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+
+  /* ================================================================
+     奢侈品级令牌 — Haute-Luxury Elevation Layer
+     金属香槟金阶 · 深森林绿阶 · 层次阴影 · 金线装饰
+     ================================================================ */
+
+  /* 金属香槟金阶 */
+  --lux-gold-100: #FDF8EE;
+  --lux-gold-200: #F5EBD0;
+  --lux-gold-300: #E8D5A8;
+  --lux-gold-400: #D4B978;
+  --lux-gold-500: #C9A24B;
+  --lux-gold-600: #B8923E;
+  --lux-gold-700: #9A7430;
+  --lux-gold-grad: linear-gradient(135deg, #E8D5A8 0%, #C9A24B 40%, #B8923E 100%);
+  --lux-gold-grad-soft: linear-gradient(135deg, #FDF8EE 0%, #F5EBD0 50%, #E8D5A8 100%);
+
+  /* 深森林绿阶 */
+  --lux-green-900: #1A2E1A;
+  --lux-green-800: #1F3A1F;
+  --lux-green-700: #2D4A2D;
+  --lux-green-600: #3D5A3D;
+  --lux-green-grad: linear-gradient(160deg, #2D4A2D 0%, #1A2E1A 100%);
+  --lux-green-grad-rich: linear-gradient(135deg, #3D5A3D 0%, #1F3A1F 50%, #1A2E1A 100%);
+
+  /* 层次阴影系统 */
+  --lux-shadow-card: 0 1px 2px rgba(26,26,23,0.03), 0 4px 16px rgba(26,26,23,0.05);
+  --lux-shadow-elevated: 0 2px 4px rgba(26,26,23,0.04), 0 8px 32px rgba(26,26,23,0.08);
+  --lux-shadow-gold: 0 2px 8px rgba(201,169,110,0.12), 0 8px 24px rgba(201,169,110,0.16);
+  --lux-shadow-green: 0 2px 8px rgba(31,58,31,0.12), 0 8px 24px rgba(31,58,31,0.18);
+
+  /* 发丝描边 */
+  --lux-hairline: rgba(26,26,23,0.06);
+  --lux-hairline-gold: rgba(201,169,110,0.18);
+  --lux-hairline-green: rgba(31,58,31,0.10);
+
+  /* 编辑级排版令牌 */
+  --lux-ls-display: 0.16em;
+  --lux-ls-heading: 0.08em;
+  --lux-ls-label: 0.24em;
+  --lux-ls-caption: 0.04em;
+  --lux-ls-number: 0.01em;
+
+  /* 奢侈级圆角 */
+  --lux-radius-card: 20px;
+  --lux-radius-inner: 16px;
+  --lux-radius-pill: 9999px;
+
+  /* 金线装饰令牌 */
+  --lux-gold-line: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%);
+  --lux-gold-line-solid: linear-gradient(90deg, #E8D5A8 0%, #C9A24B 50%, #B8923E 100%);
+
+  /* 卡片底纹令牌 */
+  --lux-card-bg: #FFFFFF;
+  --lux-card-cream: #FDFAF3;
+  --lux-card-gold-tint: #FDF8EE;
+  --lux-card-green-tint: #F5F8F2;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--color-background);
+    --color-foreground: var(--color-foreground);
+    --color-card: var(--color-card);
+    --color-primary: var(--color-primary);
+    --color-muted: var(--color-muted);
+    --color-muted-foreground: var(--color-muted-foreground);
+    --color-accent: var(--color-accent);
+    --color-border: var(--color-border);
+    --radius-sm: var(--color-radius-sm);
+    --radius-md: var(--color-radius-md);
+    --radius-lg: var(--color-radius-lg);
+  }
+  @layer base {
+    body { background: var(--color-background); color: var(--color-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--color-background); }
+      .text-background { color: var(--color-background); }
+      .border-background { border-color: var(--color-background); }
+      .ring-background { --tw-ring-color: var(--color-background); }
+      .bg-foreground { background-color: var(--color-foreground); }
+      .text-foreground { color: var(--color-foreground); }
+      .border-foreground { border-color: var(--color-foreground); }
+      .ring-foreground { --tw-ring-color: var(--color-foreground); }
+      .bg-card { background-color: var(--color-card); }
+      .text-card { color: var(--color-card); }
+      .border-card { border-color: var(--color-card); }
+      .ring-card { --tw-ring-color: var(--color-card); }
+      .bg-primary { background-color: var(--color-primary); }
+      .text-primary { color: var(--color-primary); }
+      .border-primary { border-color: var(--color-primary); }
+      .ring-primary { --tw-ring-color: var(--color-primary); }
+      .bg-muted { background-color: var(--color-muted); }
+      .text-muted { color: var(--color-muted); }
+      .border-muted { border-color: var(--color-muted); }
+      .ring-muted { --tw-ring-color: var(--color-muted); }
+      .bg-muted-foreground { background-color: var(--color-muted-foreground); }
+      .text-muted-foreground { color: var(--color-muted-foreground); }
+      .border-muted-foreground { border-color: var(--color-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--color-muted-foreground); }
+      .bg-accent { background-color: var(--color-accent); }
+      .text-accent { color: var(--color-accent); }
+      .border-accent { border-color: var(--color-accent); }
+      .ring-accent { --tw-ring-color: var(--color-accent); }
+      .bg-border { background-color: var(--color-border); }
+      .text-border { color: var(--color-border); }
+      .border-border { border-color: var(--color-border); }
+      .ring-border { --tw-ring-color: var(--color-border); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ============ 顶部标题区 ============ -->
+    <header class="page-header">
+      <h1>色彩权力重构</h1>
+      <p class="subtitle">不是换背景，是换主角 — 金色上前，绿色退后，中性填空</p>
+    </header>
+
+    <!-- ================================================================
+         第一部分：前后对比
+         ================================================================ -->
+    <div class="section-title">PART 01 · 前后对比</div>
+
+    <div class="compare-wrapper">
+      <div class="compare-divider"></div>
+
+      <!-- ===== 左列：现状 绿主角 ===== -->
+      <div class="compare-col col-old">
+        <div class="col-label">
+          <span class="dot"></span>
+          CURRENT · 绿色主导
+        </div>
+        <div class="col-body">
+
+          <!-- 品牌头部 -->
+          <div class="brand-head">
+            <div class="accent-bar"></div>
+            <span class="kicker">AROORO BRAND</span>
+            <h3>宠团团</h3>
+            <p class="sub">为爱宠甄选，每一口皆有来处</p>
+          </div>
+
+          <!-- 产品卡片 -->
+          <div class="prod-card">
+            <div class="prod-thumb">
+              <span class="prod-thumb-mark">AROORO</span>
+            </div>
+            <div class="prod-body">
+              <div class="prod-name">冻干主食猫粮 · 鸡肉配方 1kg</div>
+              <div class="prod-meta">
+                <span class="price-now">¥39<span class="unit">起</span></span>
+                <span class="price-old">¥89</span>
+                <span class="hot-tag">热卖23单</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 按钮组 -->
+          <div class="btn-row">
+            <button class="btn btn-primary">去跟团</button>
+            <button class="btn btn-outline">分享</button>
+          </div>
+
+          <!-- 状态标签 -->
+          <div class="mini-label">状态标签 · 多彩</div>
+          <div class="tag-row">
+            <span class="status-tag tag-active">进行中</span>
+            <span class="status-tag tag-done">已完成</span>
+            <span class="status-tag tag-cancel">已取消</span>
+          </div>
+
+          <!-- 金粒瀑布 -->
+          <div class="mini-label">金粒瀑布加载</div>
+          <div class="cascade-box">
+            <div class="lux-cascade">
+              <span class="lux-cascade-dot" style="left:20px;background:#E8D5A8;animation-delay:0ms"></span>
+              <span class="lux-cascade-dot" style="left:36px;background:#D4B978;animation-delay:150ms"></span>
+              <span class="lux-cascade-dot" style="left:52px;background:#C9A24B;animation-delay:300ms"></span>
+              <span class="lux-cascade-dot" style="left:68px;background:#D4B978;animation-delay:450ms"></span>
+              <span class="lux-cascade-dot" style="left:84px;background:#E8D5A8;animation-delay:600ms"></span>
+              <span class="lux-cascade-dot" style="left:100px;background:#C9A24B;animation-delay:750ms"></span>
+              <span class="lux-cascade-dot" style="left:48px;background:#D4B978;animation-delay:900ms"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ===== 右列：重构 金主角 ===== -->
+      <div class="compare-col col-new">
+        <div class="col-label">
+          <span class="dot"></span>
+          RESTRUCTURED · 金色主导
+        </div>
+        <div class="col-body">
+
+          <!-- 品牌头部 -->
+          <div class="brand-head">
+            <div class="accent-bar"></div>
+            <span class="kicker">AROORO BRAND</span>
+            <h3>宠团团</h3>
+            <p class="sub">为爱宠甄选，每一口皆有来处</p>
+          </div>
+
+          <!-- 产品卡片 -->
+          <div class="prod-card">
+            <div class="prod-thumb">
+              <span class="prod-thumb-mark">AROORO</span>
+            </div>
+            <div class="prod-body">
+              <div class="prod-name">冻干主食猫粮 · 鸡肉配方 1kg</div>
+              <div class="prod-meta">
+                <span class="price-now">¥39<span class="unit">起</span></span>
+                <span class="price-old">¥89</span>
+                <span class="hot-tag">热卖23单</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 按钮组 -->
+          <div class="btn-row">
+            <button class="btn btn-primary">去跟团</button>
+            <button class="btn btn-outline">分享</button>
+          </div>
+
+          <!-- 状态标签 -->
+          <div class="mini-label">状态标签 · 统一金灰 + 圆点</div>
+          <div class="tag-row">
+            <span class="status-tag tag-active">进行中</span>
+            <span class="status-tag tag-done">已完成</span>
+            <span class="status-tag tag-cancel">已取消</span>
+          </div>
+
+          <!-- 金粒瀑布 -->
+          <div class="mini-label">金粒瀑布加载</div>
+          <div class="cascade-box">
+            <div class="lux-cascade">
+              <span class="lux-cascade-dot" style="left:20px;background:#E8D5A8;animation-delay:0ms"></span>
+              <span class="lux-cascade-dot" style="left:36px;background:#D4B978;animation-delay:150ms"></span>
+              <span class="lux-cascade-dot" style="left:52px;background:#C9A24B;animation-delay:300ms"></span>
+              <span class="lux-cascade-dot" style="left:68px;background:#D4B978;animation-delay:450ms"></span>
+              <span class="lux-cascade-dot" style="left:84px;background:#E8D5A8;animation-delay:600ms"></span>
+              <span class="lux-cascade-dot" style="left:100px;background:#C9A24B;animation-delay:750ms"></span>
+              <span class="lux-cascade-dot" style="left:48px;background:#D4B978;animation-delay:900ms"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         第二部分：三色背景适配
+         ================================================================ -->
+    <div class="section-title">PART 02 · 三色背景适配</div>
+
+    <div class="bg-adapt-list">
+
+      <!-- 1. 暖石金 旗舰推荐 -->
+      <div class="bg-adapt-item adapt-stone">
+        <div class="bg-adapt-head">
+          <div>
+            <span class="bg-adapt-name">暖石金</span>
+            <span class="bg-adapt-hex" style="margin-left:10px">#ECE4D4</span>
+          </div>
+          <span class="bg-adapt-scene">旗舰推荐</span>
+        </div>
+        <div class="bg-adapt-stage">
+          <div class="bg-adapt-card">
+            <div class="ac-name">冻干主食猫粮 · 鸡肉配方</div>
+            <div class="ac-price">¥39<span class="unit">起</span></div>
+            <div class="bg-adapt-btns">
+              <button class="btn btn-primary">去跟团</button>
+              <button class="btn btn-outline">分享</button>
+            </div>
+            <div class="bg-adapt-tags">
+              <span class="status-tag tag-active">进行中</span>
+              <span class="status-tag tag-done">已完成</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 雾金象牙 保守升级 -->
+      <div class="bg-adapt-item adapt-ivory">
+        <div class="bg-adapt-head">
+          <div>
+            <span class="bg-adapt-name">雾金象牙</span>
+            <span class="bg-adapt-hex" style="margin-left:10px">#EDE7D9</span>
+          </div>
+          <span class="bg-adapt-scene">保守升级</span>
+        </div>
+        <div class="bg-adapt-stage">
+          <div class="bg-adapt-card">
+            <div class="ac-name">冻干主食猫粮 · 鸡肉配方</div>
+            <div class="ac-price">¥39<span class="unit">起</span></div>
+            <div class="bg-adapt-btns">
+              <button class="btn btn-primary">去跟团</button>
+              <button class="btn btn-outline">分享</button>
+            </div>
+            <div class="bg-adapt-tags">
+              <span class="status-tag tag-active">进行中</span>
+              <span class="status-tag tag-done">已完成</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 暖墨石绿 深色模式 -->
+      <div class="bg-adapt-item adapt-dark">
+        <div class="bg-adapt-head">
+          <div>
+            <span class="bg-adapt-name">暖墨石绿</span>
+            <span class="bg-adapt-hex" style="margin-left:10px">#283024</span>
+          </div>
+          <span class="bg-adapt-scene">深色模式</span>
+        </div>
+        <div class="bg-adapt-stage">
+          <div class="bg-adapt-card">
+            <div class="ac-name">冻干主食猫粮 · 鸡肉配方</div>
+            <div class="ac-price">¥39<span class="unit">起</span></div>
+            <div class="bg-adapt-btns">
+              <button class="btn btn-primary">去跟团</button>
+              <button class="btn btn-outline">分享</button>
+            </div>
+            <div class="bg-adapt-tags">
+              <span class="status-tag tag-active">进行中</span>
+              <span class="status-tag tag-done">已完成</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================================================================
+         第三部分：色彩纪律对照表
+         ================================================================ -->
+    <div class="section-title">PART 03 · 色彩纪律对照表</div>
+
+    <div class="discipline-block">
+
+      <!-- 留（升级） -->
+      <div class="discipline-group">
+        <div class="discipline-group-head">
+          <span class="discipline-mark mark-keep">&#10003;</span>
+          <span class="discipline-group-title" style="color:#1F3A1F">留 · 升级</span>
+          <span class="discipline-group-sub">这些颜色进入新系统，角色重新定义</span>
+        </div>
+        <div class="discipline-list">
+          <div class="discipline-row discipline-row-keep">
+            <div class="dr-swatch" style="background:#C9A24B"></div>
+            <span class="dr-hex">#C9A24B</span>
+            <span class="dr-name">香槟金</span>
+            <span class="dr-action">升为主角，唯一点缀色 — 按钮、CTA、品牌强调</span>
+          </div>
+          <div class="discipline-row discipline-row-keep">
+            <div class="dr-swatch" style="background:#1F3A1F"></div>
+            <span class="dr-hex">#1F3A1F</span>
+            <span class="dr-name">深森林绿</span>
+            <span class="dr-action">退为结构色 — 文字、标题、导航条、accent bar</span>
+          </div>
+          <div class="discipline-row discipline-row-keep">
+            <div class="dr-swatch" style="background:#ECE4D4"></div>
+            <span class="dr-hex">#ECE4D4</span>
+            <span class="dr-name">暖石金</span>
+            <span class="dr-action">新背景 — 替代原 #F7F5EF，温润纸感底色</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 退（消失） -->
+      <div class="discipline-group">
+        <div class="discipline-group-head">
+          <span class="discipline-mark mark-retire">&#10007;</span>
+          <span class="discipline-group-title" style="color:#9A9489">退 · 消失</span>
+          <span class="discipline-group-sub">这些颜色不再出现，被新系统替代</span>
+        </div>
+        <div class="discipline-list">
+          <div class="discipline-row discipline-row-retire">
+            <div class="dr-swatch" style="background:#4F5E35"></div>
+            <span class="dr-hex">#4F5E35</span>
+            <span class="dr-name">橄榄绿</span>
+            <span class="dr-action">不再作为按钮色 — 被 #C9A24B 金色替代</span>
+          </div>
+          <div class="discipline-row discipline-row-retire">
+            <div class="dr-swatch" style="background:#B8893A"></div>
+            <span class="dr-hex">#B8893A</span>
+            <span class="dr-name">暖金</span>
+            <span class="dr-action">被统一的 #C9A24B 替代 — 收敛为唯一点缀金</span>
+          </div>
+          <div class="discipline-row discipline-row-retire">
+            <div class="dr-swatch" style="background:#5C7A8A"></div>
+            <span class="dr-hex">#5C7A8A</span>
+            <span class="dr-name">状态蓝</span>
+            <span class="dr-action">退为中性灰 — 不再以色彩区分功能状态</span>
+          </div>
+          <div class="discipline-row discipline-row-retire">
+            <div class="dr-swatch" style="background:#3D7A45"></div>
+            <span class="dr-hex">#3D7A45</span>
+            <span class="dr-name">状态绿</span>
+            <span class="dr-action">退为中性灰 — 以金色圆点透明度区分状态</span>
+          </div>
+          <div class="discipline-row discipline-row-retire">
+            <div class="dr-swatch" style="background:linear-gradient(135deg,#5C7A8A,#3D7A45,#9E9889)"></div>
+            <span class="dr-hex">多彩标签</span>
+            <span class="dr-name">状态色组</span>
+            <span class="dr-action">统一中性金灰底 #8A7E5C + 金色圆点指示</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+    <style>
+    /* ================================================================
+       基础重置
+       ================================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", "Menlo", "Consolas", monospace;
+
+      /* —— 重构前（绿主角系统）令牌 —— */
+      --old-bg: #F7F5EF;
+      --old-btn-grad: linear-gradient(135deg, #6B7D5A, #4F5E35);
+      --old-btn-text: #FAFAF6;
+      --old-accent-bar: #4F5E35;
+      --old-tag-active-bg: rgba(92,122,138,0.08);
+      --old-tag-active-text: #5C7A8A;
+      --old-tag-done-bg: rgba(61,122,69,0.08);
+      --old-tag-done-text: #3D7A45;
+      --old-tag-cancel-bg: rgba(158,152,137,0.10);
+      --old-tag-cancel-text: #9E9889;
+      --old-fg: #2A2823;
+      --old-fg-2: #635E54;
+      --old-card: #FFFFFF;
+      --old-hairline: rgba(26,26,23,0.06);
+
+      /* —— 重构后（金主角系统）令牌 —— */
+      --new-bg: #ECE4D4;
+      --new-section: #E5DCC8;
+      --new-btn-grad: linear-gradient(135deg, #D4B978, #B8923E);
+      --new-btn-text: #1F3A1F;
+      --new-accent-bar: #1F3A1F;
+      --new-title: #1F3A1F;
+      --new-body: #4A4742;
+      --new-tag-bg: rgba(201,162,75,0.10);
+      --new-tag-text: #8A7E5C;
+      --new-card: #FFFFFF;
+      --new-card-border: 1px solid rgba(201,162,75,0.12);
+      --new-hairline: rgba(31,58,31,0.08);
+      --new-gold: #C9A24B;
+      --new-forest: #1F3A1F;
+      --new-forest-grad: linear-gradient(160deg, #2D4A2D 0%, #1A2E1A 100%);
+
+      /* —— 深色模式令牌 —— */
+      --dark-bg: #283024;
+      --dark-section: #2D3528;
+      --dark-card: #323B2C;
+      --dark-btn-grad: linear-gradient(135deg, #D4B978, #B8923E);
+      --dark-btn-text: #1F3A1F;
+      --dark-accent-bar: #C9A24B;
+      --dark-title: #E8E5DC;
+      --dark-body: #B5B0A4;
+      --dark-tag-bg: rgba(201,162,75,0.15);
+      --dark-tag-text: #C9A24B;
+      --dark-card-border: 1px solid rgba(201,162,75,0.15);
+      --dark-hairline: rgba(255,255,255,0.06);
+
+      /* —— 金色阶 —— */
+      --gold-light: #E8D5A8;
+      --gold-mid: #D4B978;
+      --gold-soft: #C9A24B;
+      --gold-grad-line: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%);
+      --gold-grad-solid: linear-gradient(90deg, #E8D5A8 0%, #C9A24B 50%, #B8923E 100%);
+      --gold-grad-v: linear-gradient(180deg, transparent 0%, #C9A24B 50%, transparent 100%);
+    }
+
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    body {
+      font-family: var(--font-sans);
+      color: #2A2823;
+      background: #F2EDE0;
+      line-height: 1.6;
+      padding: 56px 22px 88px;
+    }
+
+    .page { max-width: 800px; margin: 0 auto; }
+
+    /* ================================================================
+       顶部标题区
+       ================================================================ */
+    .page-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: #1F3A1F;
+      display: inline-block;
+      padding-bottom: 16px;
+      position: relative;
+    }
+    .page-header h1::after {
+      content: "";
+      position: absolute;
+      left: 50%; bottom: 0;
+      transform: translateX(-50%);
+      width: 96px; height: 2px;
+      background: var(--gold-grad-solid);
+      border-radius: 2px;
+    }
+    .page-header .subtitle {
+      margin-top: 16px;
+      font-size: 14px;
+      letter-spacing: 0.06em;
+      color: #635E54;
+    }
+
+    /* ================================================================
+       区块标题
+       ================================================================ */
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #9A9489;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-title::before {
+      content: "";
+      width: 24px; height: 1px;
+      background: #C9A24B;
+      opacity: 0.6;
+    }
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(31,58,31,0.08);
+    }
+
+    /* ================================================================
+       第一部分：前后对比
+       ================================================================ */
+    .compare-wrapper {
+      display: flex;
+      gap: 4%;
+      align-items: stretch;
+      position: relative;
+      margin-bottom: 64px;
+    }
+
+    /* 金色渐变竖线分隔 */
+    .compare-divider {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--gold-grad-v);
+      transform: translateX(-50%);
+      z-index: 0;
+    }
+
+    .compare-col {
+      width: 48%;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 列标签 */
+    .col-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .col-label .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+
+    /* —— 左列：现状 绿主角 —— */
+    .col-old {
+      background: var(--old-bg);
+      border: 1px solid var(--old-hairline);
+    }
+    .col-old .col-label {
+      color: #4F5E35;
+      background: rgba(79,94,53,0.06);
+    }
+    .col-old .col-label .dot { background: #4F5E35; }
+
+    /* —— 右列：重构 金主角 —— */
+    .col-new {
+      background: var(--new-bg);
+      border: 1px solid rgba(201,162,75,0.12);
+    }
+    .col-new .col-label {
+      color: var(--new-gold);
+      background: rgba(201,162,75,0.08);
+    }
+    .col-new .col-label .dot { background: var(--new-gold); }
+
+    /* 列内容区 */
+    .col-body {
+      padding: 20px 18px 24px;
+    }
+
+    /* —— 品牌头部 —— */
+    .brand-head {
+      position: relative;
+      padding: 18px 18px 18px 28px;
+      border-radius: 16px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .brand-head .accent-bar {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+    }
+    .brand-head .kicker {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .brand-head h3 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      line-height: 1.2;
+    }
+    .brand-head .sub {
+      margin-top: 5px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    /* 现状品牌头部 */
+    .col-old .brand-head {
+      background: #FFFFFF;
+      border: 1px solid var(--old-hairline);
+    }
+    .col-old .brand-head .accent-bar { background: var(--old-accent-bar); }
+    .col-old .brand-head .kicker { color: #B8893A; }
+    .col-old .brand-head h3 { color: var(--old-fg); }
+    .col-old .brand-head .sub { color: var(--old-fg-2); }
+
+    /* 重构品牌头部 */
+    .col-new .brand-head {
+      background: #FFFFFF;
+      border: 1px solid rgba(201,162,75,0.12);
+    }
+    .col-new .brand-head .accent-bar { background: var(--new-accent-bar); }
+    .col-new .brand-head .kicker { color: var(--new-gold); }
+    .col-new .brand-head h3 { color: var(--new-title); }
+    .col-new .brand-head .sub { color: var(--new-body); }
+
+    /* —— 产品卡片 —— */
+    .prod-card {
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .prod-thumb {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .prod-thumb-mark {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+    }
+    .prod-body {
+      padding: 14px 16px 16px;
+    }
+    .prod-name {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+    .prod-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .price-now {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .price-now .unit {
+      font-size: 12px;
+      font-weight: 500;
+      margin-left: 2px;
+    }
+    .price-old {
+      font-size: 12px;
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+    }
+    .hot-tag {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      display: inline-block;
+    }
+
+    /* 现状产品卡片 */
+    .col-old .prod-card {
+      background: var(--old-card);
+      border: 1px solid var(--old-hairline);
+    }
+    .col-old .prod-thumb {
+      background: var(--old-btn-grad);
+    }
+    .col-old .prod-thumb-mark { color: rgba(250,250,246,0.85); }
+    .col-old .prod-name { color: var(--old-fg); }
+    .col-old .price-now { color: #B8893A; }
+    .col-old .price-now .unit { color: #B8893A; }
+    .col-old .price-old { color: #9E9889; }
+    .col-old .hot-tag {
+      background: rgba(92,122,138,0.10);
+      color: #5C7A8A;
+    }
+
+    /* 重构产品卡片 */
+    .col-new .prod-card {
+      background: var(--new-card);
+      border: 1px solid rgba(201,162,75,0.12);
+    }
+    .col-new .prod-thumb {
+      background: var(--new-forest-grad);
+    }
+    .col-new .prod-thumb-mark { color: rgba(232,213,168,0.85); }
+    .col-new .prod-name { color: var(--new-title); }
+    .col-new .price-now { color: var(--new-gold); }
+    .col-new .price-now .unit { color: var(--new-gold); }
+    .col-new .price-old { color: #8A7E5C; }
+    .col-new .hot-tag {
+      background: rgba(201,162,75,0.14);
+      color: #9A7430;
+    }
+
+    /* —— 按钮组 —— */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .btn {
+      flex: 1;
+      height: 42px;
+      border: none;
+      border-radius: 9999px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s ease;
+    }
+    .btn:hover { opacity: 0.90; }
+
+    /* 现状按钮 */
+    .col-old .btn-primary {
+      background: var(--old-btn-grad);
+      color: var(--old-btn-text);
+    }
+    .col-old .btn-outline {
+      background: transparent;
+      color: var(--old-fg);
+      border: 1.5px solid rgba(79,94,53,0.25);
+    }
+
+    /* 重构按钮 */
+    .col-new .btn-primary {
+      background: var(--new-btn-grad);
+      color: var(--new-btn-text);
+      box-shadow: 0 2px 8px rgba(201,162,75,0.20);
+    }
+    .col-new .btn-outline {
+      background: transparent;
+      color: var(--new-forest);
+      border: 1.5px solid rgba(31,58,31,0.20);
+    }
+
+    /* —— 状态标签 —— */
+    .mini-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .col-old .mini-label { color: #9E9889; }
+    .col-new .mini-label { color: #8A7E5C; }
+
+    .tag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .status-tag {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .status-tag::before {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* 现状状态标签 — 多彩 */
+    .col-old .tag-active {
+      background: var(--old-tag-active-bg);
+      color: var(--old-tag-active-text);
+    }
+    .col-old .tag-active::before { background: #5C7A8A; }
+    .col-old .tag-done {
+      background: var(--old-tag-done-bg);
+      color: var(--old-tag-done-text);
+    }
+    .col-old .tag-done::before { background: #3D7A45; }
+    .col-old .tag-cancel {
+      background: var(--old-tag-cancel-bg);
+      color: var(--old-tag-cancel-text);
+    }
+    .col-old .tag-cancel::before { background: #9E9889; }
+
+    /* 重构状态标签 — 统一金灰底 + 金色圆点 */
+    .col-new .status-tag {
+      background: var(--new-tag-bg);
+      color: var(--new-tag-text);
+    }
+    .col-new .tag-active::before { background: #C9A24B; }
+    .col-new .tag-done::before { background: rgba(201,162,75,0.4); }
+    .col-new .tag-cancel::before { background: rgba(138,126,92,0.3); }
+
+    /* —— 金粒瀑布加载动画 —— */
+    .cascade-box {
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .col-old .cascade-box {
+      background: #FFFFFF;
+      border: 1px solid var(--old-hairline);
+    }
+    .col-new .cascade-box {
+      background: #FFFFFF;
+      border: 1px solid rgba(201,162,75,0.12);
+    }
+    .lux-cascade {
+      position: relative;
+      width: 120px;
+      height: 140px;
+      overflow: hidden;
+    }
+    .lux-cascade-dot {
+      position: absolute;
+      top: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      animation: lux-cascade-fall 1600ms linear infinite;
+    }
+    @keyframes lux-cascade-fall {
+      0%   { transform: translateY(0); opacity: 0; }
+      20%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(140px); opacity: 0; }
+    }
+
+    /* ================================================================
+       第二部分：三色背景适配
+       ================================================================ */
+    .bg-adapt-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 64px;
+    }
+    .bg-adapt-item {
+      border-radius: 20px;
+      padding: 24px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .bg-adapt-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .bg-adapt-name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .bg-adapt-hex {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .bg-adapt-scene {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 9999px;
+    }
+    .bg-adapt-stage {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .bg-adapt-card {
+      flex: 1;
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+    .bg-adapt-card .ac-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .bg-adapt-card .ac-price {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .bg-adapt-card .ac-price .unit {
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .bg-adapt-btns {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .bg-adapt-btns .btn {
+      height: 36px;
+      font-size: 13px;
+      flex: 1;
+    }
+    .bg-adapt-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .bg-adapt-tags .status-tag {
+      font-size: 11px;
+      padding: 4px 10px;
+    }
+
+    /* —— 1. 暖石金 旗舰推荐 —— */
+    .adapt-stone {
+      background: #ECE4D4;
+      border: 1px solid rgba(201,162,75,0.12);
+    }
+    .adapt-stone .bg-adapt-name { color: #1F3A1F; }
+    .adapt-stone .bg-adapt-hex { color: #8A7E5C; }
+    .adapt-stone .bg-adapt-scene {
+      background: linear-gradient(135deg, #D4B978, #B8923E);
+      color: #1F3A1F;
+    }
+    .adapt-stone .bg-adapt-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(201,162,75,0.12);
+    }
+    .adapt-stone .ac-name { color: #1F3A1F; }
+    .adapt-stone .ac-price { color: #C9A24B; }
+    .adapt-stone .ac-price .unit { color: #C9A24B; }
+    .adapt-stone .btn-primary {
+      background: linear-gradient(135deg, #D4B978, #B8923E);
+      color: #1F3A1F;
+    }
+    .adapt-stone .btn-outline {
+      background: transparent;
+      color: #1F3A1F;
+      border: 1.5px solid rgba(31,58,31,0.20);
+    }
+    .adapt-stone .status-tag {
+      background: rgba(201,162,75,0.10);
+      color: #8A7E5C;
+    }
+    .adapt-stone .tag-active::before { background: #C9A24B; }
+    .adapt-stone .tag-done::before { background: rgba(201,162,75,0.4); }
+    .adapt-stone .tag-cancel::before { background: rgba(138,126,92,0.3); }
+
+    /* —— 2. 雾金象牙 保守升级 —— */
+    .adapt-ivory {
+      background: #EDE7D9;
+      border: 1px solid rgba(201,162,75,0.10);
+    }
+    .adapt-ivory .bg-adapt-name { color: #1F3A1F; }
+    .adapt-ivory .bg-adapt-hex { color: #8A7E5C; }
+    .adapt-ivory .bg-adapt-scene {
+      background: rgba(31,58,31,0.10);
+      color: #1F3A1F;
+    }
+    .adapt-ivory .bg-adapt-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(201,162,75,0.10);
+    }
+    .adapt-ivory .ac-name { color: #1F3A1F; }
+    .adapt-ivory .ac-price { color: #C9A24B; }
+    .adapt-ivory .ac-price .unit { color: #C9A24B; }
+    .adapt-ivory .btn-primary {
+      background: linear-gradient(135deg, #D4B978, #B8923E);
+      color: #1F3A1F;
+    }
+    .adapt-ivory .btn-outline {
+      background: transparent;
+      color: #1F3A1F;
+      border: 1.5px solid rgba(31,58,31,0.18);
+    }
+    .adapt-ivory .status-tag {
+      background: rgba(201,162,75,0.10);
+      color: #8A7E5C;
+    }
+    .adapt-ivory .tag-active::before { background: #C9A24B; }
+    .adapt-ivory .tag-done::before { background: rgba(201,162,75,0.4); }
+    .adapt-ivory .tag-cancel::before { background: rgba(138,126,92,0.3); }
+
+    /* —— 3. 暖墨石绿 深色模式 —— */
+    .adapt-dark {
+      background: #283024;
+      border: 1px solid rgba(201,162,75,0.15);
+    }
+    .adapt-dark .bg-adapt-name { color: #E8E5DC; }
+    .adapt-dark .bg-adapt-hex { color: #C9A24B; }
+    .adapt-dark .bg-adapt-scene {
+      background: rgba(201,162,75,0.15);
+      color: #C9A24B;
+    }
+    .adapt-dark .bg-adapt-card {
+      background: #323B2C;
+      border: 1px solid rgba(201,162,75,0.15);
+    }
+    .adapt-dark .ac-name { color: #E8E5DC; }
+    .adapt-dark .ac-price { color: #C9A24B; }
+    .adapt-dark .ac-price .unit { color: #C9A24B; }
+    .adapt-dark .btn-primary {
+      background: linear-gradient(135deg, #D4B978, #B8923E);
+      color: #1F3A1F;
+      box-shadow: 0 2px 8px rgba(201,162,75,0.25);
+    }
+    .adapt-dark .btn-outline {
+      background: transparent;
+      color: #E8E5DC;
+      border: 1.5px solid rgba(201,162,75,0.25);
+    }
+    .adapt-dark .status-tag {
+      background: rgba(201,162,75,0.15);
+      color: #C9A24B;
+    }
+    .adapt-dark .tag-active::before { background: #C9A24B; }
+    .adapt-dark .tag-done::before { background: rgba(201,162,75,0.4); }
+    .adapt-dark .tag-cancel::before { background: rgba(138,126,92,0.3); }
+
+    /* ================================================================
+       第三部分：色彩纪律对照表
+       ================================================================ */
+    .discipline-block {
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid rgba(201,162,75,0.12);
+      overflow: hidden;
+    }
+    .discipline-group {
+      padding: 28px 28px 24px;
+    }
+    .discipline-group + .discipline-group {
+      border-top: 1px solid rgba(31,58,31,0.08);
+    }
+    .discipline-group-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .discipline-group-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .discipline-group-sub {
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: #9A9489;
+    }
+    .discipline-mark {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .mark-keep {
+      background: rgba(31,58,31,0.10);
+      color: #1F3A1F;
+    }
+    .mark-retire {
+      background: rgba(138,134,124,0.12);
+      color: #9A9489;
+    }
+
+    .discipline-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .discipline-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      border-radius: 12px;
+    }
+    .discipline-row-keep {
+      background: #FDF9EF;
+      border: 1px solid rgba(201,162,75,0.10);
+    }
+    .discipline-row-retire {
+      background: #F7F5EF;
+      border: 1px solid rgba(26,26,23,0.05);
+    }
+    .dr-swatch {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .dr-hex {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      min-width: 100px;
+    }
+    .discipline-row-keep .dr-hex { color: #1F3A1F; }
+    .discipline-row-retire .dr-hex {
+      color: #9A9489;
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+      text-decoration-color: rgba(154,148,137,0.4);
+    }
+    .dr-name {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      min-width: 90px;
+    }
+    .discipline-row-keep .dr-name { color: #2A2823; }
+    .discipline-row-retire .dr-name { color: #9A9489; }
+    .dr-action {
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      flex: 1;
+      line-height: 1.5;
+    }
+    .discipline-row-keep .dr-action { color: #4A4742; }
+    .discipline-row-retire .dr-action { color: #9A9489; }
+
+    /* ================================================================
+       响应式
+       ================================================================ */
+    @media (max-width: 640px) {
+      body { padding: 36px 14px 64px; }
+      .page-header h1 { font-size: 24px; }
+      .compare-wrapper {
+        flex-direction: column;
+        gap: 20px;
+      }
+      .compare-divider { display: none; }
+      .compare-col { width: 100%; }
+      .btn-row { flex-direction: column; }
+      .bg-adapt-stage { flex-direction: column; align-items: stretch; }
+      .discipline-row {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .dr-hex { min-width: auto; }
+      .dr-name { min-width: auto; }
+    }
+  </style>
+</body>
+</html>

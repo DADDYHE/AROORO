@@ -1,4 +1,3 @@
-/* eslint-disable */
 "use strict";
 /**
  * paymentService/pay.ts - 支付服务（TypeScript 源文件 - Sprint 25 迁移）
@@ -70,11 +69,13 @@ const ORDER_TYPE_DESC = {
     feeding: '上门喂养服务',
 };
 const ORDER_TYPE_AMOUNT_FIELD = {
+    // P0-A: mall 改 finalAmount（实付）——原 totalPrice 字段 mall 订单不写、fallback 到 totalAmount(原价)，
+    //   与前端支付折后价不匹配导致有券下单必失败；老单无 finalAmount 时 fallback totalPrice/totalAmount（P1-3 前无券记录=实付）
     order: 'totalPrice',
-    mall: 'totalPrice',
+    mall: 'finalAmount',
     tuan: 'totalPrice',
     activity: 'finalAmount',
-    feeding: 'totalPrice',
+    feeding: 'totalAmount',
 };
 // H4+M15: 导出供 refund.ts 复用，避免 orderType 推断逻辑双份漂移
 //   refund 旧实现 `outTradeNo.split('_')[0].toLowerCase()`：
@@ -167,7 +168,9 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
     //   该校验与下方 actualAmount 比对语义重复，统一在下方 actualAmount 校验中处理
     //   避免 totalPrice 与 amountField 字段不一致时双重判断产生分歧
     // Sprint 25: 旧预付单回收（如果订单有 outTradeNo 且 paymentStatus=paying，先关掉）
-    if (orderData.outTradeNo && orderData.paymentStatus === 'paying') {
+    // P0-A: activity 中间态为 'pending'，同样纳入旧单回收
+    const oldPayingStatus = orderType === 'activity' ? 'pending' : 'paying';
+    if (orderData.outTradeNo && orderData.paymentStatus === oldPayingStatus) {
         try {
             await closePaymentInternal({ outTradeNo: orderData.outTradeNo }, context, auth, config);
             logger.info('createPayment: 关闭旧支付单', { outTradeNo: orderData.outTradeNo });
@@ -248,9 +251,16 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
     //   - 同一订单两次 createPayment 同时进行，outTradeNo 被后写入覆盖，旧 prepay 单泄漏
     //   新逻辑：where paymentStatus in ['unpaid','paying'] 条件更新，
     //   更新失败说明订单已被其他流程推进，需回滚微信侧预付单
+    // P0-A 修复：activity 报名单支付中间态为 'pending'（activityService 写入），
+    //   且历史单可能字段缺失，故 activity 条件放宽到 in(['unpaid','pending',null])、
+    //   写回 'pending'（保持活动口径统一，orderTimeoutService 超时扫描 in(['unpaid','pending',null]) 才能命中）
+    const allowedPaymentStatus = orderType === 'activity'
+        ? ['unpaid', 'paying', 'pending', null]
+        : ['unpaid', 'paying'];
+    const targetPaymentStatus = orderType === 'activity' ? 'pending' : 'paying';
     const updateRes = await db.collection(orderCollection)
-        .where({ _id: orderId, paymentStatus: _.in(['unpaid', 'paying']) })
-        .update({ data: { outTradeNo, paymentStatus: 'paying', updatedAt: db.serverDate() } });
+        .where({ _id: orderId, paymentStatus: _.in(allowedPaymentStatus) })
+        .update({ data: { outTradeNo, paymentStatus: targetPaymentStatus, updatedAt: db.serverDate() } });
     // H5: 更新未命中（订单已被并发推进为 paid/cancelled 等）
     //   此时微信侧 prepay_id 已生成，必须主动关闭避免泄漏
     if (!updateRes.stats || updateRes.stats.updated === 0) {

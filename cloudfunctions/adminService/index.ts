@@ -122,7 +122,7 @@ export interface HttpResponse {
 // =====================================================================
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError, ERROR_CODES, convertCloudUrls, revertCloudUrls } = require('./common/utils')
+const { handleError, ERROR_CODES, convertCloudUrls, revertCloudUrls } = require('./common/utils')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -289,6 +289,7 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getActivityDetail: 'partner',
   createActivity: 'partner',
   updateActivity: 'partner',
+  deleteActivity: 'partner',
   getActivityRegistrations: 'partner',
   exportActivityRegistrations: 'partner',
   getActivityOrders: 'partner',
@@ -315,15 +316,9 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   deleteCategory: 'partner',
 
   // 上门喂养业务
-  getFeederList: 'partner',
-  getFeederDetail: 'partner',
-  getCurrentFeeder: 'partner',
-  createFeederProfile: 'partner',
-  updateFeederProfile: 'partner',
   getFeedingOrders: 'partner',
-  getFeederOrders: 'partner',
-  handleFeedingOrder: 'partner',
   getFeedingOrderDetail: 'partner',
+  handleFeedingOrder: 'partner',
 
   // Banner / 营销
   getBannerList: 'partner',
@@ -361,6 +356,8 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getTuanDealList: 'partner',
   getTuanDealDetail: 'partner',
   getTuanDealOrders: 'partner',
+  getTuanDealOrderDetail: 'partner',
+  handleTuanOrder: 'partner',
   getTuanLeaderList: 'partner',
   getTuanLeaderCommissions: 'partner',
   getTuanCommissionStats: 'partner',
@@ -452,7 +449,10 @@ export function parseHttpEvent(event: CloudEvent, context: CloudContext): HttpIn
 }
 
 export function parseHttpAuth(httpContext: { headers: Record<string, string | undefined> }): JwtDecodedToken | null {
-  const authHeader = httpContext?.headers?.authorization || httpContext?.headers?.Authorization || ''
+  // 认证契约：优先读取 X-User-Token（web 端用户 JWT），
+  // 兼容旧约定从 Authorization 头读取（注意 Authorization 在生产环境可能被网关 API Key 占用）。
+  const headers = httpContext?.headers || {}
+  const authHeader = headers['x-user-token'] || headers['X-User-Token'] || headers.authorization || headers.Authorization || ''
   const token = authHeader.replace(/^Bearer\s+/i, '').trim()
   if (!token) {return null}
   try {
@@ -561,7 +561,7 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Token',
           'Access-Control-Max-Age': '86400',
         },
         body: '',
@@ -751,4 +751,3 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
 // 直接通过 exports.main 暴露 main（不要重新赋值 module.exports，避免运行时框架
 // 加载 userFunction 时对 main.toString() 返回 undefined 的兼容问题）
 export { main as default }
-

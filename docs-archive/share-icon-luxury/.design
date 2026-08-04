@@ -1,0 +1,33 @@
+{
+  "data": [
+    {
+      "id": "page-showcase",
+      "title": "分享图标 · Haute-Luxury Icon Study",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785500000000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 2204,
+          "viewportWidth": 375,
+          "sourceHash": "fnv1a-a8fe5a23",
+          "measuredAt": 1785402519694
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/showcase.html",
+        "interactions": []
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "mobile",
+    "projectName": "AROORO · Share Icon",
+    "visualEditorEnabled": false
+  }
+}

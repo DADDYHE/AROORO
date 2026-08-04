@@ -34,7 +34,7 @@
           <el-checkbox label="商城" value="mall" :disabled="form.applicableScopes.includes('all')" />
           <el-checkbox label="团购" value="tuan" :disabled="form.applicableScopes.includes('all')" />
           <el-checkbox label="上门服务" value="feeding" :disabled="form.applicableScopes.includes('all')" />
-          <el-checkbox label="寄养" value="hosting" :disabled="form.applicableScopes.includes('all')" />
+          <el-checkbox label="寄养" value="boarding" :disabled="form.applicableScopes.includes('all')" />
           <el-checkbox label="活动" value="activity" :disabled="form.applicableScopes.includes('all')" />
         </el-checkbox-group>
       </el-form-item>
@@ -50,7 +50,7 @@
           <el-option label="宠团团" value="tuan" />
           <el-option label="商城首页" value="mall" />
           <el-option label="上门服务" value="feeding" />
-          <el-option label="寄养" value="hosting" />
+          <el-option label="寄养" value="boarding" />
           <el-option label="首页" value="home" />
         </el-select>
       </el-form-item>

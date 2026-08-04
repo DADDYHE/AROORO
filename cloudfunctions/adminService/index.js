@@ -27,7 +27,7 @@ exports.default = exports.main = exports.enrichAuthFromAdmin = exports.getEnrich
 // 内部模块初始化（require CommonJS 模块）
 // =====================================================================
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError, ERROR_CODES, convertCloudUrls, revertCloudUrls } = require('./common/utils');
+const { handleError, ERROR_CODES, convertCloudUrls, revertCloudUrls } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('./common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -184,6 +184,7 @@ const ACTION_PERMISSIONS = {
     getActivityDetail: 'partner',
     createActivity: 'partner',
     updateActivity: 'partner',
+    deleteActivity: 'partner',
     getActivityRegistrations: 'partner',
     exportActivityRegistrations: 'partner',
     getActivityOrders: 'partner',
@@ -208,15 +209,9 @@ const ACTION_PERMISSIONS = {
     updateCategory: 'partner',
     deleteCategory: 'partner',
     // 上门喂养业务
-    getFeederList: 'partner',
-    getFeederDetail: 'partner',
-    getCurrentFeeder: 'partner',
-    createFeederProfile: 'partner',
-    updateFeederProfile: 'partner',
     getFeedingOrders: 'partner',
-    getFeederOrders: 'partner',
-    handleFeedingOrder: 'partner',
     getFeedingOrderDetail: 'partner',
+    handleFeedingOrder: 'partner',
     // Banner / 营销
     getBannerList: 'partner',
     getBannerDetail: 'partner',
@@ -251,6 +246,8 @@ const ACTION_PERMISSIONS = {
     getTuanDealList: 'partner',
     getTuanDealDetail: 'partner',
     getTuanDealOrders: 'partner',
+    getTuanDealOrderDetail: 'partner',
+    handleTuanOrder: 'partner',
     getTuanLeaderList: 'partner',
     getTuanLeaderCommissions: 'partner',
     getTuanCommissionStats: 'partner',
@@ -324,7 +321,10 @@ function parseHttpEvent(event, context) {
 }
 exports.parseHttpEvent = parseHttpEvent;
 function parseHttpAuth(httpContext) {
-    const authHeader = httpContext?.headers?.authorization || httpContext?.headers?.Authorization || '';
+    // 认证契约：优先读取 X-User-Token（web 端用户 JWT），
+    // 兼容旧约定从 Authorization 头读取（注意 Authorization 在生产环境可能被网关 API Key 占用）。
+    const headers = httpContext?.headers || {};
+    const authHeader = headers['x-user-token'] || headers['X-User-Token'] || headers.authorization || headers.Authorization || '';
     const token = authHeader.replace(/^Bearer\s+/i, '').trim();
     if (!token) {
         return null;
@@ -448,7 +448,7 @@ const main = async (event, context) => {
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Token',
                     'Access-Control-Max-Age': '86400',
                 },
                 body: '',

@@ -76,7 +76,6 @@ const TYPE_MAPPING = {
     tuan: 'tn',
     activity: 'act',
     registration: 'reg',
-    feeder: 'fdr',
     product: 'prd',
     banner: 'bnr',
     address: 'addr',

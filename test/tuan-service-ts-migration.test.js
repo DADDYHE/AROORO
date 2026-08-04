@@ -80,8 +80,9 @@ describe('Sprint 46: tuanService TypeScript 迁移', () => {
       expect(code).toMatch(/db\.collection\(['"]tuan_orders['"]\)/)
       expect(code).toMatch(/db\.collection\(['"]orders['"]\)/)
     })
-    test('SKU 维度库存扣减点号路径', () => {
-      expect(code).toMatch(/skus\.\$\{skuIndex\}\.stock/)
+    test('SKU 维度库存扣减点号路径（优先团购配额 tuanStock）', () => {
+      expect(code).toMatch(/skus\.\$\{skuIndex\}\./)
+      expect(code).toMatch(/stockField\s*=\s*\(sku\.tuanStock/)
     })
     test('订单号生成', () => { expect(code).toMatch(/orderNo\s*=/) })
   })

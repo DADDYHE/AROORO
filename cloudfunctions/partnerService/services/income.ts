@@ -84,7 +84,6 @@ export interface ServiceIncomeDetailItem {
 // 辅助函数
 // =====================================================================
 
-const EMPTY_AGGREGATE: ServiceIncomeAggregate = { total: 0, monthly: 0, today: 0, count: 0 }
 
 /** 计算月度/当日收入统计 */
 function calculateAggregate(
@@ -123,6 +122,9 @@ function calculateAggregate(
 /**
  * 获取服务收入概览
  * 包含：活动收入、寄养收入、上门服务收入
+ *
+ * L6: 喂养师体系已废弃——统一从 service_incomes 集合查询（providerId = openid），
+ *   不再中转 feeders 集合，也不再直接查 feedingOrders.ownerId
  */
 export async function getServiceIncomeOverview(
   event: CloudEvent,
@@ -136,90 +138,60 @@ export async function getServiceIncomeOverview(
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-    // 并行查询三种收入
+    // 从 service_incomes 表统一查询，确保与明细查询数据源一致
     const [activityRes, boardingRes, feedingRes] = await Promise.all([
-      // 活动收入：查询该用户创建的活动的所有已支付订单
-      (async () => {
-        const activitiesRes = await db.collection('activities')
-          .where({ createdBy: openid, status: _.in(['published', 'registration_stopped', 'ended']) })
-          .field({ _id: true })
-          .get()
-
-        if (!activitiesRes.data || activitiesRes.data.length === 0) {
-          return { data: [] }
-        }
-
-        const activityIds = activitiesRes.data.map((a: { _id: string }) => a._id)
-
-        // 查询这些活动的所有已支付订单
-        const ordersRes = await db.collection('orders')
-          .where({
-            activityId: _.in(activityIds),
-            orderType: 'activity',
-            paymentStatus: 'paid',
-          })
-          .field({ _id: true, totalPrice: true, paidAt: true, createdAt: true })
-          .get()
-
-        return ordersRes
-      })(),
-
-      // 寄养收入：查询该用户作为寄养家庭的已完成订单
-      db.collection('orders')
+      // 活动收入
+      db.collection('service_incomes')
         .where({
-          type: 'boarding',
-          status: 'completed',
-          organizerId: openid, // 寄养家庭是订单的服务提供者
+          providerId: openid,
+          type: 'activity',
+          status: _.neq('cancelled')
         })
-        .field({ _id: true, totalPrice: true, completedAt: true, updatedAt: true })
+        .field({ amount: true, createdAt: true, settledAt: true })
+        .limit(500)
         .get(),
 
-      // 上门服务收入：查询该用户作为服务师的已完成订单
-      (async () => {
-        // 先查询该用户创建的服务师记录
-        const feederRes = await db.collection('feeders')
-          .where({ createdBy: openid })
-          .field({ _id: true })
-          .limit(1)
-          .get()
+      // 寄养收入
+      db.collection('service_incomes')
+        .where({
+          providerId: openid,
+          type: 'boarding',
+          status: _.neq('cancelled')
+        })
+        .field({ amount: true, createdAt: true, settledAt: true })
+        .limit(500)
+        .get(),
 
-        if (!feederRes.data || feederRes.data.length === 0) {
-          return { data: [] }
-        }
-
-        const feederId = feederRes.data[0]._id
-
-        // 查询该服务师的已完成订单
-        const ordersRes = await db.collection('feedingOrders')
-          .where({
-            feederId,
-            status: 'completed',
-          })
-          .field({ _id: true, totalPrice: true, completedAt: true, updatedAt: true })
-          .get()
-
-        return ordersRes
-      })(),
+      // 上门服务收入
+      db.collection('service_incomes')
+        .where({
+          providerId: openid,
+          type: 'feeding',
+          status: _.neq('cancelled')
+        })
+        .field({ amount: true, createdAt: true, settledAt: true })
+        .limit(500)
+        .get()
     ])
 
-    // 处理活动收入
+    // 处理活动收入（使用 settledAt 或 createdAt）
     const activityItems = (activityRes.data || []).map((o: Record<string, unknown>) => ({
-      amount: Number(o.totalPrice) || 0,
-      date: (o.paidAt || o.createdAt) as Date,
+      amount: Number(o.amount) || 0,
+      date: (o.settledAt || o.createdAt) as Date,
     }))
     const activity = calculateAggregate(activityItems, monthStart, todayStart)
 
     // 处理寄养收入
     const boardingItems = (boardingRes.data || []).map((o: Record<string, unknown>) => ({
-      amount: Number(o.totalPrice) || 0,
-      date: (o.completedAt || o.updatedAt) as Date,
+      amount: Number(o.amount) || 0,
+      date: (o.settledAt || o.createdAt) as Date,
     }))
     const boarding = calculateAggregate(boardingItems, monthStart, todayStart)
 
     // 处理上门服务收入
     const feedingItems = (feedingRes.data || []).map((o: Record<string, unknown>) => ({
-      amount: Number(o.totalPrice) || 0,
-      date: (o.completedAt || o.updatedAt) as Date,
+      amount: Number(o.amount) || 0,
+      date: (o.settledAt || o.createdAt) as Date,
     }))
     const feeding = calculateAggregate(feedingItems, monthStart, todayStart)
 
@@ -242,6 +214,11 @@ export async function getServiceIncomeOverview(
 /**
  * 获取服务收入明细
  * @param event.type - 收入类型筛选：all | activity | boarding | feeding
+ * @param event.page - 页码（从1开始）
+ * @param event.pageSize - 每页数量
+ *
+ * L6: 喂养师体系已废弃——统一从 service_incomes 集合查询（providerId = openid），
+ *   不再中转 feeders 集合，也不再直接查 feedingOrders.ownerId
  */
 export async function getServiceIncomeDetails(
   event: CloudEvent,
@@ -252,117 +229,60 @@ export async function getServiceIncomeDetails(
   const { type = 'all', page = 1, pageSize = 20 } = event
 
   try {
-    const allItems: ServiceIncomeDetailItem[] = []
-
-    // 活动收入明细
-    if (type === 'all' || type === 'activity') {
-      const activitiesRes = await db.collection('activities')
-        .where({ createdBy: openid, status: _.in(['published', 'registration_stopped', 'ended']) })
-        .field({ _id: true, title: true })
-        .get()
-
-      if (activitiesRes.data && activitiesRes.data.length > 0) {
-        const activityIds = activitiesRes.data.map((a: { _id: string }) => a._id)
-        const activityMap = new Map(activitiesRes.data.map((a: { _id: string; title: string }) => [a._id, a.title]))
-
-        const ordersRes = await db.collection('orders')
-          .where({
-            activityId: _.in(activityIds),
-            orderType: 'activity',
-            paymentStatus: 'paid',
-          })
-          .field({ _id: true, activityId: true, totalPrice: true, orderNo: true, paidAt: true, createdAt: true })
-          .get()
-
-        ;(ordersRes.data || []).forEach((o: Record<string, unknown>) => {
-          const activityTitle = activityMap.get(o.activityId as string) || '活动'
-          allItems.push({
-            id: o._id as string,
-            type: 'activity',
-            typeName: '活动',
-            amount: Number(o.totalPrice) || 0,
-            orderNo: (o.orderNo as string) || '',
-            description: `活动收入-${activityTitle}`,
-            status: 'completed',
-            createdAt: (o.paidAt || o.createdAt) as Date,
-            orderId: o._id as string,
-          })
-        })
-      }
+    // 构建查询条件（排除已取消的收入）
+    const where: Record<string, unknown> = {
+      providerId: openid,
+      status: _.neq('cancelled')
+    }
+    if (type !== 'all') {
+      where.type = type
     }
 
-    // 寄养收入明细
-    if (type === 'all' || type === 'boarding') {
-      const ordersRes = await db.collection('orders')
-        .where({
-          type: 'boarding',
-          status: 'completed',
-          organizerId: openid,
-        })
-        .field({ _id: true, totalPrice: true, orderNo: true, completedAt: true, updatedAt: true, createdAt: true })
-        .get()
+    // 查询总数
+    const countRes = await db.collection('service_incomes')
+      .where(where)
+      .count()
+    const total = countRes.total
 
-      ;(ordersRes.data || []).forEach((o: Record<string, unknown>) => {
-        allItems.push({
-          id: o._id as string,
-          type: 'boarding',
-          typeName: '寄养',
-          amount: Number(o.totalPrice) || 0,
-          orderNo: (o.orderNo as string) || '',
-          description: '寄养服务收入',
-          status: 'completed',
-          createdAt: (o.completedAt || o.updatedAt || o.createdAt) as Date,
-          orderId: o._id as string,
-        })
-      })
+    // 查询分页数据
+    const skip = (page - 1) * pageSize
+    const incomesRes = await db.collection('service_incomes')
+      .where(where)
+      .orderBy('createdAt', 'desc')
+      .skip(skip)
+      .limit(pageSize)
+      .get()
+
+    // 格式化返回数据
+    const typeNameMap: Record<string, string> = {
+      'activity': '活动',
+      'boarding': '寄养',
+      'feeding': '上门服务'
     }
-
-    // 上门服务收入明细
-    if (type === 'all' || type === 'feeding') {
-      const feederRes = await db.collection('feeders')
-        .where({ createdBy: openid })
-        .field({ _id: true })
-        .limit(1)
-        .get()
-
-      if (feederRes.data && feederRes.data.length > 0) {
-        const feederId = feederRes.data[0]._id
-
-        const ordersRes = await db.collection('feedingOrders')
-          .where({
-            feederId,
-            status: 'completed',
-          })
-          .field({ _id: true, totalPrice: true, orderNo: true, completedAt: true, updatedAt: true, createdAt: true })
-          .get()
-
-        ;(ordersRes.data || []).forEach((o: Record<string, unknown>) => {
-          allItems.push({
-            id: o._id as string,
-            type: 'feeding',
-            typeName: '上门服务',
-            amount: Number(o.totalPrice) || 0,
-            orderNo: (o.orderNo as string) || '',
-            description: '上门服务收入',
-            status: 'completed',
-            createdAt: (o.completedAt || o.updatedAt || o.createdAt) as Date,
-            orderId: o._id as string,
-          })
-        })
-      }
-    }
-
-    // 按时间倒序排序
-    allItems.sort((a, b) => {
-      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
-      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
-      return tb - ta
+    const list = ((incomesRes.data || []) as Array<Record<string, unknown>>).map(income => {
+      const incomeType = (income.type as string) || ''
+      return {
+        id: (income._id as string) || '',
+        type: incomeType,
+        typeName: typeNameMap[incomeType] || incomeType,
+        amount: Number(income.amount) || 0,
+        orderNo: (income.orderNo as string) || '',
+        description: (income.description as string) || `${typeNameMap[incomeType] || incomeType}收入`,
+        status: (income.status as string) || '',
+        createdAt: income.createdAt as Date,
+        orderId: (income.orderId as string) || '',
+      } as ServiceIncomeDetailItem
     })
 
-    const total = allItems.length
-    const totalAmount = allItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
-    const start = (page - 1) * pageSize
-    const list = allItems.slice(start, start + pageSize)
+    // 计算总金额（所有符合条件的记录）
+    const allIncomesRes = await db.collection('service_incomes')
+      .where(where)
+      .field({ amount: true })
+      .limit(500)
+      .get()
+    const totalAmount = ((allIncomesRes.data || []) as Array<Record<string, unknown>>).reduce((sum, item) => {
+      return sum + (Number(item.amount) || 0)
+    }, 0)
 
     return handleSuccess({ list, total, totalAmount })
   } catch (error) {

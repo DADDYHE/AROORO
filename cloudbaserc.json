@@ -134,6 +134,13 @@
       "envVariables": {},
       "runtime": "Nodejs18.15",
       "memorySize": 128
+    },
+    {
+      "name": "searchService",
+      "timeout": 15,
+      "envVariables": {},
+      "runtime": "Nodejs18.15",
+      "memorySize": 256
     }
   ],
   "framework": {
@@ -237,6 +244,11 @@
               "name": "rateLimitCleanup",
               "path": "cloudfunctions/rateLimitCleanup",
               "timeout": 30
+            },
+            {
+              "name": "searchService",
+              "path": "cloudfunctions/searchService",
+              "timeout": 15
             }
           ]
         }

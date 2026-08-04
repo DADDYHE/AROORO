@@ -8,6 +8,9 @@
     "lint:fix": "eslint . --ext .js --fix",
     "lint:cloudfunctions": "eslint cloudfunctions/ --ext .js",
     "lint:cloudfunctions:fix": "eslint cloudfunctions/ --ext .js --fix",
+    "lint:tokens": "node scripts/lint-tokens.js",
+    "lint:tokens:strict": "node scripts/lint-tokens.js --strict",
+    "verify:token-cascade": "node scripts/verify-token-cascade.js",
     "format": "prettier --write \"**/*.js\" \"**/*.json\"",
     "format:check": "prettier --check \"**/*.js\" \"**/*.json\"",
     "test": "jest",
@@ -141,8 +144,5 @@
   },
   "engines": {
     "node": ">=16.0.0"
-  },
-  "dependencies": {
-    "@vant/weapp": "^1.11.7"
   }
 }

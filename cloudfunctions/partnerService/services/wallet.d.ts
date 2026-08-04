@@ -21,7 +21,7 @@
  *   commissions: { inviterId: 1, status: 1, createdAt: -1 } - 覆盖 getMyIncomeOverview/Details
  *   commissions: { inviterId: 1, orderType: 1, status: 1 } - 覆盖 byOrderType 双维度 aggregate（M5）
  *   orders: { organizerId: 1, status: 1, type: 1 }               - 覆盖 boarding 寄养收入查询
- *   feedingOrders: { feederId: 1, status: 1 }                    - 覆盖 feeding 服务收入查询
+ *   feedingOrders: { ownerId: 1, status: 1 }                     - 覆盖 feeding 服务收入查询
  */
 export interface AuthLike {
     openid?: string;
@@ -99,7 +99,7 @@ export interface WalletSummary {
 }
 export interface IncomeOverview {
     commission: CommissionOverview;
-    hosting: OrderAggregate;
+    boarding: OrderAggregate;
     feeding: OrderAggregate;
     serviceIncome: ServiceIncomeOverview;
     wallet: WalletSummary & {
@@ -109,7 +109,7 @@ export interface IncomeOverview {
 }
 export interface IncomeDetailItem {
     id: string;
-    type: 'commission' | 'hosting' | 'feeding' | 'tuan' | 'mall' | 'activity';
+    type: 'commission' | 'hosting' | 'boarding' | 'feeding' | 'tuan' | 'mall' | 'activity';
     typeName: string;
     amount: number;
     orderNo: string;

@@ -6,10 +6,8 @@ export function createProduct(data) { return callAction('createProduct', data) }
 export function updateProduct(data) { return callAction('updateProduct', data) }
 export function deleteProduct(productId) { return callAction('deleteProduct', { productId }) }
 export function cloneProduct(productId) { return callAction('cloneProduct', { productId }) }
-export function batchUpdateProducts(productIds, status) {
-  const operation = status === 'on_sale' ? 'on_shelf' : 'off_shelf'
-  return callAction('batchUpdateProducts', { productIds, operation })
-}
+// operation 直接透传后端操作名（on_shelf / off_shelf / set_featured / unset_featured / delete）
+export function batchUpdateProducts(productIds, operation) { return callAction('batchUpdateProducts', { productIds, operation }) }
 export function getCategoryStats() { return callAction('getCategoryStats') }
 export function getProductStats() { return callAction('getProductStats') }
 export function listCategories() { return callAction('listCategories') }

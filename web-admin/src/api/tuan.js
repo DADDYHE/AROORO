@@ -6,4 +6,3 @@ export function updateTuanDeal(data) { return callAction('updateTuanDeal', data)
 export function deleteTuanDeal(id) { return callAction('deleteTuanDeal', { id }) }
 export function publishTuanDeal(id) { return callAction('publishTuanDeal', { id }) }
 export function endTuanDeal(id) { return callAction('endTuanDeal', { id }) }
-export function getTuanLeaderList(params) { return callAction('getTuanLeaderList', params) }

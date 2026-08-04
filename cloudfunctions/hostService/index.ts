@@ -545,8 +545,10 @@ export async function getHostDetail(
   if (cachedHost) { return handleSuccess(cachedHost, '获取成功') }
 
   try {
+    // P2-A 修复：仅 active/approved 状态家庭详情可公开访问，
+    //   原 where({_id}) 会把未审核（pending）/已拒绝/已下架家庭的信息暴露给用户
     const result = await db.collection('hostProfiles')
-      .where({ _id: hostId })
+      .where({ _id: hostId, status: _.in(['active', 'approved']) })
       .limit(1)
       .field(HOST_DETAIL_PUBLIC_FIELDS)
       .get()

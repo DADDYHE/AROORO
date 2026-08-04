@@ -1,4 +1,3 @@
-/* eslint-disable */
 "use strict";
 /**
  * orderService/index.ts - 订单服务统一入口（TypeScript 源文件 - Sprint 47 迁移）

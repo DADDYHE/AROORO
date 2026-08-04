@@ -45,6 +45,16 @@ exports.MALL_ORDER_TRANSITIONS = {
     completed: [],
     cancelled: [],
 };
+exports.TUAN_ORDER_TRANSITIONS = {
+    pending_payment: ['confirmed', 'cancelled'],
+    paid: ['shipped', 'cancelled'],
+    pending_shipment: ['shipped', 'cancelled'],
+    confirmed: ['shipped', 'cancelled'],
+    shipped: ['completed'],
+    completed: [],
+    cancelled: [],
+    refunded: [],
+};
 exports.HOST_SERVICE_TRANSITIONS = {
     pending_review: ['active', 'rejected'],
     active: ['suspended', 'inactive'],
@@ -98,6 +108,11 @@ exports.MALL_STATUS_MAP = {
     complete: 'completed',
     cancel: 'cancelled',
 };
+exports.TUAN_STATUS_MAP = {
+    ship: 'shipped',
+    complete: 'completed',
+    cancel: 'cancelled',
+};
 /* ============================================================
  * 工具函数
  * ============================================================ */
@@ -131,12 +146,14 @@ const _exports = {
     BOARDING_ORDER_TRANSITIONS: exports.BOARDING_ORDER_TRANSITIONS,
     FEEDING_ORDER_TRANSITIONS: exports.FEEDING_ORDER_TRANSITIONS,
     MALL_ORDER_TRANSITIONS: exports.MALL_ORDER_TRANSITIONS,
+    TUAN_ORDER_TRANSITIONS: exports.TUAN_ORDER_TRANSITIONS,
     HOST_SERVICE_TRANSITIONS: exports.HOST_SERVICE_TRANSITIONS,
     STATUS_LABELS: exports.STATUS_LABELS,
     BOARDING_STATUS_MAP: exports.BOARDING_STATUS_MAP,
     FEEDING_STATUS_MAP: exports.FEEDING_STATUS_MAP,
     FEEDING_OPERATION_LABELS: exports.FEEDING_OPERATION_LABELS,
     MALL_STATUS_MAP: exports.MALL_STATUS_MAP,
+    TUAN_STATUS_MAP: exports.TUAN_STATUS_MAP,
     canTransition,
     validateTransition,
 };

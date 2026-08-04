@@ -11,17 +11,9 @@
  * 共 13 个 action：
  *   1. getActivityList - 活动列表
  *   2. getActivityDetail - 活动详情
- *   3. createActivity - 创建活动
- *   4. updateActivity - 更新活动
- *   5. deleteActivity - 删除活动
  *   6. submitRegistration - 提交报名（含风控前置）
  *   7. getRegistrationDetail - 报名详情
  *   8. getRegistrationList - 报名列表
- *   9. createActivityPaymentOrder - 创建活动支付订单
- *  10. confirmActivityPayment - 确认活动支付
- *  11. getActivityRegistrations - 活动报名列表（合作伙伴）
- *  12. exportActivityRegistrations - 导出活动报名（CSV）
- *  13. getActivityOrders - 活动订单列表（合作伙伴）
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
@@ -268,34 +260,18 @@ export interface ActivityDetailResult extends ActivityRecord {
 }
 export declare function getActivityList(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getActivityDetail(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function createActivity(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function updateActivity(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function deleteActivity(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function submitRegistration(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getRegistrationDetail(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getRegistrationList(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function createActivityPaymentOrder(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function confirmActivityPayment(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function getActivityRegistrations(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function exportActivityRegistrations(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function getActivityOrders(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare const handlers: Record<string, ActivityActionHandler>;
 export declare function main(event: CloudEvent, context: CloudContext): Promise<unknown>;
 declare const _default: {
     main: typeof main;
     getActivityList: typeof getActivityList;
     getActivityDetail: typeof getActivityDetail;
-    createActivity: typeof createActivity;
-    updateActivity: typeof updateActivity;
-    deleteActivity: typeof deleteActivity;
     submitRegistration: typeof submitRegistration;
     getRegistrationDetail: typeof getRegistrationDetail;
     getRegistrationList: typeof getRegistrationList;
-    createActivityPaymentOrder: typeof createActivityPaymentOrder;
-    confirmActivityPayment: typeof confirmActivityPayment;
-    getActivityRegistrations: typeof getActivityRegistrations;
-    exportActivityRegistrations: typeof exportActivityRegistrations;
-    getActivityOrders: typeof getActivityOrders;
     handlers: Record<string, ActivityActionHandler>;
 };
 export default _default;

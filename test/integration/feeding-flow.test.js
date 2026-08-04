@@ -115,16 +115,10 @@ function call(action, params, openid = 'oOwner') {
 describe('Sprint 12: 喂食服务子链路', () => {
   describe('createFeedingOrder', () => {
     test('完整参数创建成功', async () => {
-      // P0-5: 服务端根据 feeder.pricePerVisit 重算金额，需先设置 feeder 数据
-      // pricePerVisit=125 × visitCount=1 × petCount=2 × multiVisitFactor=1 = 250（originalAmount）
-      // finalAmount = max(0, 250 - 50券) = 200
-      mockDb._collections.feeders.docs = [
-        { _id: 'feeder_1', pricePerVisit: 125, status: 'active' },
-      ]
-
+      // P0-5: 服务端按平台价目表重算金额（无 petDetails/petServices → originalAmount=0）
+      // finalAmount = max(0, 0 - 50券) = 0
       const res = await call('createFeedingOrder', {
         petIds: ['pet_1', 'pet_2'],
-        feederId: 'feeder_1',
         startDate: '2026-06-10',
         endDate: '2026-06-13',
         visitTimes: [{ date: '2026-06-11', time: '10:00' }],
@@ -135,13 +129,13 @@ describe('Sprint 12: 喂食服务子链路', () => {
       })
 
       expect(res.code).toBe(0)
-      // P0-5: totalAmount 来自服务端重算（125×1×2 - 50 = 200），非客户端传入
-      expect(res.data.totalAmount).toBe(200)
+      // P0-5: totalAmount 来自服务端重算（无 petDetails/petServices → 0），非客户端传入
+      expect(res.data.totalAmount).toBe(0)
       expect(mockDb._collections.feedingOrders.docs.length).toBe(1)
 
       const saved = mockDb._collections.feedingOrders.docs[0]
-      // P0-5: originalAmount 也由服务端重算（125×1×2 = 250）
-      expect(saved.originalAmount).toBe(250)
+      // P0-5: originalAmount 也由服务端重算（无 petDetails/petServices → 0）
+      expect(saved.originalAmount).toBe(0)
       expect(saved.orderType).toBe('feeding')
       expect(saved.ownerId).toBe('oOwner')
       expect(saved.status).toBe('pending_payment')
@@ -152,7 +146,6 @@ describe('Sprint 12: 喂食服务子链路', () => {
 
     test('缺 petIds 应 INVALID_PARAMS', async () => {
       const res = await call('createFeedingOrder', {
-        feederId: 'feeder_1',
         startDate: '2026-06-10',
         endDate: '2026-06-13',
       })
@@ -181,7 +174,8 @@ describe('Sprint 12: 喂食服务子链路', () => {
 
       expect(res.code).toBe(0)
       const saved = mockDb._collections.feedingOrders.docs[0]
-      expect(saved.feederId).toBe('')
+      // 喂养师体系已废弃：订单不再写入 feederId 字段
+      expect(saved.feederId).toBeUndefined()
     })
 
     test('带优惠券的订单字段填充', async () => {
@@ -250,7 +244,7 @@ describe('Sprint 12: 喂食服务子链路', () => {
         { _id: 'oOwner', status: 'active', roles: ['super_admin'] },
       ] }
       mockDb._collections.feedingOrders.docs = [
-        { _id: 'fd_1', ownerId: 'oOwner', feederId: 'feeder_1', totalAmount: 200, status: 'paid' },
+        { _id: 'fd_1', ownerId: 'oOwner', totalAmount: 200, status: 'paid' },
       ]
 
       const res = await call('getFeedingOrderDetail', { orderId: 'fd_1' })

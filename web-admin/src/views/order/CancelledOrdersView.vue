@@ -46,7 +46,7 @@
       </el-table-column>
       <el-table-column label="操作" width="100" fixed="right">
         <template #default="{ row }">
-          <el-button v-if="row._orderType" link type="primary" @click="goDetail(row)">详情</el-button>
+          <el-button v-if="['mall','tuan','feeding'].includes(row._orderType)" link type="primary" @click="goDetail(row)">详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -131,11 +131,9 @@ function goDetail(row) {
   const type = row._orderType
   const id = row._id || row.orderId
   const routeMap = {
-    boarding: `/order/boarding/${id}`,
     mall: `/order/mall/${id}`,
     feeding: `/order/feeding/${id}`,
     tuan: `/order/tuan/${id}`,
-    activity: `/order/activity/${id}`,
   }
   if (routeMap[type]) {
     router.push(routeMap[type])

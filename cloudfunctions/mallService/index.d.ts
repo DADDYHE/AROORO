@@ -13,12 +13,7 @@
  *   3. getCategoryStats - 分类统计
  *   4. listCategories - 分类列表
  *   5. checkCartItems - 购物车状态检查
- *   6. createProduct - 创建商品
- *   7. updateProduct - 更新商品
- *   8. deleteProduct - 下架商品
- *   9. batchUpdateProducts - 批量操作商品
  *  10. createOrder - 商城下单
- *  11. createGroupBuyOrder - 团购下单
  *  12. getMyOrders - 我的商城订单
  *  13. getGroupBuyOrders - 我的团购订单
  *  14. getOrderDetail - 订单详情
@@ -43,7 +38,6 @@
  * 数据库索引建议（运维需在对应集合上创建）：
  *   products:
  *     - { status: 1, categoryId: 1 }               - 覆盖 getProductList / getCategoryStats
- *     - { createdBy: 1, updatedAt: -1 }             - 覆盖 batchUpdateProducts 权限校验
  *   orders:
  *     - { ownerId: 1, type: 1, status: 1, createdAt: -1 } - 覆盖 getMyOrders / getGroupBuyOrders
  *     - { orderNo: 1 }                              - 覆盖佣金记录查询
@@ -187,10 +181,6 @@ export interface PaginateResult<T> {
     page: number;
     pageSize: number;
 }
-export interface BatchUpdateResult {
-    success: number;
-    failed: number;
-}
 export interface CartItemStatus {
     status: string;
     coverUrl: string;
@@ -205,12 +195,8 @@ export declare function getCategoryStats(_event: CloudEvent, _context: CloudCont
 export declare function listCategories(_event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
 export declare function checkCartItems(event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
 export declare function getProductDetail(event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
-export declare function createProduct(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function updateProduct(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function deleteProduct(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function batchUpdateProducts(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
-export declare function createGroupBuyOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function createOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
+export declare function createMultiOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getMyOrders(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getGroupBuyOrders(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function cancelOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
@@ -227,12 +213,8 @@ declare const _default: {
     getCategoryStats: typeof getCategoryStats;
     listCategories: typeof listCategories;
     checkCartItems: typeof checkCartItems;
-    createProduct: typeof createProduct;
-    updateProduct: typeof updateProduct;
-    deleteProduct: typeof deleteProduct;
-    batchUpdateProducts: typeof batchUpdateProducts;
     createOrder: typeof createOrder;
-    createGroupBuyOrder: typeof createGroupBuyOrder;
+    createMultiOrder: typeof createMultiOrder;
     getMyOrders: typeof getMyOrders;
     getGroupBuyOrders: typeof getGroupBuyOrders;
     getOrderDetail: typeof getOrderDetail;

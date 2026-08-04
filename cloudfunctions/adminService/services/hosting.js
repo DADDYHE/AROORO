@@ -181,7 +181,7 @@ async function handleBoardingOrder(event, context, auth) {
     data: { status: newStatus, updatedAt: db.serverDate() },
   })
 
-  if (newStatus === 'completed') {await createCommissionRecord('hosting', orderRes.data)}
+  if (newStatus === 'completed') {await createCommissionRecord('boarding', orderRes.data)}
 
   return handleSuccess(null, '操作成功')
 }
@@ -264,7 +264,7 @@ async function getPendingHostReviews(event, context, auth) {
 
   const result = await paginate(db, 'hostProfiles', {
     page, pageSize: safePageSize,
-    where: { status: 'pending' },
+    where: { status: 'pending_review' },
     orderBy: { field: 'createdAt', direction: 'desc' },
   })
   return handleSuccess(result)

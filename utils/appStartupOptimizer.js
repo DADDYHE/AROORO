@@ -153,11 +153,14 @@ class AppStartupOptimizer {
       }
 
       // 清理可能过期的本地缓存键，防止"幽灵数据"在首屏出现
-      const { AUTH: authKeys } = STORAGE_KEYS
-      const loginExpiry = wx.getStorageSync(authKeys.LOGIN_EXPIRY)
-      if (loginExpiry && Date.now() >= loginExpiry) {
-        wx.removeStorageSync(authKeys.USER_INFO)
-        wx.removeStorageSync(authKeys.LOGIN_EXPIRY)
+      // 守卫：若 AuthService.tryRestoreSession 已校验过登录态，跳过重复检查
+      if (!app.globalData.isLoggedIn) {
+        const { AUTH: authKeys } = STORAGE_KEYS
+        const loginExpiry = wx.getStorageSync(authKeys.LOGIN_EXPIRY)
+        if (loginExpiry && Date.now() >= loginExpiry) {
+          wx.removeStorageSync(authKeys.USER_INFO)
+          wx.removeStorageSync(authKeys.LOGIN_EXPIRY)
+        }
       }
 
       console.log('[StartupOptimizer] 最小化核心模块初始化完成')
@@ -169,6 +172,11 @@ class AppStartupOptimizer {
 
   _fastRestoreUserInfo(app) {
     try {
+      // 守卫：如果 AuthService.tryRestoreSession 已恢复会话，跳过重复的 storage 读取
+      if (app.globalData.isLoggedIn && app.globalData.userInfo) {
+        return
+      }
+
       const { AUTH: authKeys } = STORAGE_KEYS
       const isLogout = wx.getStorageSync(authKeys.IS_LOGOUT)
       if (isLogout) {

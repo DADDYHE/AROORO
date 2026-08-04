@@ -1,4 +1,3 @@
-/* eslint-disable */
 "use strict";
 /**
  * orderService/stats.ts - 统计服务（TypeScript 源文件 - Sprint 30 迁移）

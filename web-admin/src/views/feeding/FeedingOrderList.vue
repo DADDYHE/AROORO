@@ -35,7 +35,7 @@ import OrderTable from '@/components/OrderTable.vue'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
 
-const FEEDING_STATUS = { pending: '待确认', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝' }
+const FEEDING_STATUS = { pending_payment: '待支付', paid: '已支付', pending: '待确认', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝', cancelled: '已取消' }
 const statusFilter = ref('')
 
 function fetchFn(params) {
@@ -43,7 +43,11 @@ function fetchFn(params) {
   if (statusFilter.value) p.status = statusFilter.value
   return getFeedingOrders(p).then(res => {
     const rawList = res.data?.list || res.data || []
-    return { data: { list: rawList.filter(item => item.status !== 'cancelled'), total: res.data?.total || 0 } }
+    // 默认隐藏已取消订单；主动选择 cancelled 筛选时不过滤
+    const list = statusFilter.value === 'cancelled'
+      ? rawList
+      : rawList.filter(item => item.status !== 'cancelled')
+    return { data: { list, total: res.data?.total || 0 } }
   })
 }
 

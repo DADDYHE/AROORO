@@ -144,6 +144,13 @@ App({
     try {
       // 会话恢复已提升至 _executeCriticalStartup，此处不再重复执行。
 
+      // 合作伙伴状态刷新为网络请求，放在后台启动阶段执行，避免阻塞首屏
+      if (authService && this.globalData.isLoggedIn) {
+        authService._refreshAdminStatus(this).catch(e => {
+          console.warn('[APP] 后台刷新合作伙伴状态失败:', e.message)
+        })
+      }
+
       await appStartupOptimizer.executeDeferredTasks()
       appStartupOptimizer.printPerformanceReport()
     } catch (error) {

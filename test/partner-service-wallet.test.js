@@ -263,7 +263,7 @@ describe('partnerService/wallet', () => {
       mockDb._collections.users = { docs: [] }
       const result = await wallet.getMyIncomeOverview({}, {}, { openid: 'oTest_openid' })
       expect(result.data.commission.total).toBe(0)
-      expect(result.data.hosting.total).toBe(0)
+      expect(result.data.boarding.total).toBe(0)
       expect(result.data.feeding.total).toBe(0)
       expect(result.data.wallet.balance).toBe(0)
     })
@@ -291,7 +291,7 @@ describe('partnerService/wallet', () => {
       expect(result.data.commission.byOrderType.tuan.total).toBe(10)
       expect(result.data.commission.byOrderType.mall.total).toBe(30)
       // hosting/feeding
-      expect(result.data.hosting.total).toBe(200)
+      expect(result.data.boarding.total).toBe(200)
       // H3: serviceIncome 按 type 分组
       expect(result.data.serviceIncome.total).toBe(200) // 仅 hosting（无 feeding）
       expect(result.data.serviceIncome.byType.boarding.total).toBe(200)
@@ -337,6 +337,32 @@ describe('partnerService/wallet', () => {
       const result = await wallet.getMyIncomeDetails({ type: 'all', page: 2, pageSize: 10 }, {}, { openid: 'oTest_openid' })
       expect(result.data.list.length).toBe(10)
       expect(result.data.total).toBe(25)
+    })
+
+    test('全类型佣金应按 orderType 正确过滤（含寄养 hosting/boarding 双值）', async () => {
+      mockDb._collections.users = { docs: [{ _id: 'oTest_openid' }] }
+      mockDb._collections.commissions = { docs: [
+        { _id: 'c1', inviterId: 'oTest_openid', commissionAmount: 10, status: 'settled', orderType: 'activity', createdAt: new Date() },
+        { _id: 'c2', inviterId: 'oTest_openid', commissionAmount: 20, status: 'settled', orderType: 'hosting', createdAt: new Date() },
+        { _id: 'c3', inviterId: 'oTest_openid', commissionAmount: 30, status: 'settled', orderType: 'boarding', createdAt: new Date() },
+        { _id: 'c4', inviterId: 'oTest_openid', commissionAmount: 40, status: 'settled', orderType: 'feeding', createdAt: new Date() },
+      ] }
+      // 寄养标签应同时命中 hosting + boarding 两种 orderType
+      const hostingRes = await wallet.getMyIncomeDetails({ type: 'boarding' }, {}, { openid: 'oTest_openid' })
+      expect(hostingRes.data.list.length).toBe(2)
+      expect(hostingRes.data.total).toBe(2)
+      hostingRes.data.list.forEach((it) => expect(it.typeName).toBe('寄养'))
+      // 活动 / 服务 标签
+      const actRes = await wallet.getMyIncomeDetails({ type: 'activity' }, {}, { openid: 'oTest_openid' })
+      expect(actRes.data.list.length).toBe(1)
+      expect(actRes.data.list[0].typeName).toBe('活动')
+      const feedRes = await wallet.getMyIncomeDetails({ type: 'feeding' }, {}, { openid: 'oTest_openid' })
+      expect(feedRes.data.list.length).toBe(1)
+      expect(feedRes.data.list[0].typeName).toBe('服务')
+      // 非法类型仍应被拒绝
+      await expect(
+        wallet.getMyIncomeDetails({ type: 'commission' }, {}, { openid: 'oTest_openid' })
+      ).rejects.toThrow(/无效的 type/)
     })
   })
 

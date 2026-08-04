@@ -14,12 +14,7 @@
  *   3. getCategoryStats - 分类统计
  *   4. listCategories - 分类列表
  *   5. checkCartItems - 购物车状态检查
- *   6. createProduct - 创建商品
- *   7. updateProduct - 更新商品
- *   8. deleteProduct - 下架商品
- *   9. batchUpdateProducts - 批量操作商品
  *  10. createOrder - 商城下单
- *  11. createGroupBuyOrder - 团购下单
  *  12. getMyOrders - 我的商城订单
  *  13. getGroupBuyOrders - 我的团购订单
  *  14. getOrderDetail - 订单详情
@@ -44,13 +39,12 @@
  * 数据库索引建议（运维需在对应集合上创建）：
  *   products:
  *     - { status: 1, categoryId: 1 }               - 覆盖 getProductList / getCategoryStats
- *     - { createdBy: 1, updatedAt: -1 }             - 覆盖 batchUpdateProducts 权限校验
  *   orders:
  *     - { ownerId: 1, type: 1, status: 1, createdAt: -1 } - 覆盖 getMyOrders / getGroupBuyOrders
  *     - { orderNo: 1 }                              - 覆盖佣金记录查询
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.handlers = exports.getWxShippingStatus = exports.deleteOrder = exports.confirmReceive = exports.getOrderDetail = exports.cancelOrder = exports.getGroupBuyOrders = exports.getMyOrders = exports.createOrder = exports.createGroupBuyOrder = exports.batchUpdateProducts = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductDetail = exports.checkCartItems = exports.listCategories = exports.getCategoryStats = exports.getProductList = void 0;
+exports.main = exports.handlers = exports.getWxShippingStatus = exports.deleteOrder = exports.confirmReceive = exports.getOrderDetail = exports.cancelOrder = exports.getGroupBuyOrders = exports.getMyOrders = exports.createMultiOrder = exports.createOrder = exports.getProductDetail = exports.checkCartItems = exports.listCategories = exports.getCategoryStats = exports.getProductList = void 0;
 // =====================================================================
 // 内部模块初始化（require CommonJS 模块）
 // =====================================================================
@@ -60,8 +54,6 @@ const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES, paginate
 const { createLogger } = require('./common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { verifyAuth } = require('./common/auth-middleware');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { filterFields, FIELD_WHITELISTS } = require('./common/validator');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, isBusinessError } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -73,12 +65,11 @@ const { withRateLimit } = require('./common/risk-rate-limit');
 const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap');
 // H1: 佣金记录统一使用 common/commission-utils（含自购保护、system_config 配置、幂等）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createCommissionRecord: sharedCreateCommissionRecord, cancelCommissionRecord: sharedCancelCommissionRecord } = require('./common/commission-utils');
+const { cancelCommissionRecord: sharedCancelCommissionRecord } = require('./common/commission-utils');
 // M6: 静态 require 替代动态 import，减少冷启动开销并保留类型推断
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { reconcileOrderWithWx } = require('./common/wxOrderSync');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { getWxOrderStatus } = require('./common/wxAccessToken');
 const { cloud, db } = initCloud();
 const logger = createLogger('mallService');
 const _ = db.command;
@@ -135,30 +126,96 @@ async function performMallOrderRiskCheck(ctx) {
     return { pendingReview, reasons: riskReasons, decision: riskDecision };
 }
 // =====================================================================
-// 辅助函数：批量获取临时文件 URL
+// 辅助函数：服务端优惠券校验（P0-1：与 tuanService 对齐，防下单金额伪造）
 // =====================================================================
 /**
- * 有限并发执行器（M4: 用于 batchUpdateProducts 替代串行 await）
- * @param tasks 任务函数数组
- * @param concurrency 并发上限
- * @returns 按 tasks 顺序返回结果
+ * 计算优惠券折扣（整数分计算，防浮点）——与 tuanService 同款实现
  */
-async function runWithConcurrency(tasks, concurrency) {
-    const results = new Array(tasks.length);
-    let cursor = 0;
-    async function worker() {
-        while (cursor < tasks.length) {
-            const idx = cursor++;
-            results[idx] = await tasks[idx]();
+function computeCouponDiscount(coupon, orderAmount) {
+    const { type, rules } = coupon;
+    if (!rules) {
+        return { eligible: false, discount: 0, message: '优惠券规则缺失' };
+    }
+    const orderAmountInFen = Math.round(orderAmount * 100);
+    if (orderAmountInFen < 0) {
+        return { eligible: false, discount: 0, message: '订单金额异常' };
+    }
+    if (rules.threshold) {
+        const thresholdInFen = Math.round(rules.threshold * 100);
+        if (orderAmountInFen < thresholdInFen) {
+            return { eligible: false, discount: 0, message: `订单金额未达到满${rules.threshold}元使用门槛` };
         }
     }
-    const workers = [];
-    for (let i = 0; i < Math.min(concurrency, tasks.length); i++) {
-        workers.push(worker());
+    let discountInFen = 0;
+    switch (type) {
+    case 'fixed_amount':
+    case 'full_reduction':
+        discountInFen = Math.round((rules.reduceAmount || 0) * 100);
+        break;
+    case 'discount': {
+        const rate = Number(rules.discountRate) || 1;
+        if (rate <= 0 || rate > 1) {
+            return { eligible: false, discount: 0, message: '折扣率无效' };
+        }
+        discountInFen = Math.round(orderAmountInFen * (1 - rate));
+        if (rules.maxReduceAmount && rules.maxReduceAmount > 0) {
+            discountInFen = Math.min(discountInFen, Math.round(rules.maxReduceAmount * 100));
+        }
+        break;
     }
-    await Promise.all(workers);
-    return results;
+    default:
+        return { eligible: false, discount: 0, message: '未知优惠券类型' };
+    }
+    discountInFen = Math.min(discountInFen, orderAmountInFen);
+    return { eligible: true, discount: discountInFen / 100 };
 }
+/**
+ * 服务端只读校验商城优惠券：
+ *   - 归属 / 状态(unused|locked) / 有效期 / 适用范围（all|mall）
+ *   - 折扣按 coupon.rules 服务端重算，不信任客户端 couponDiscount（防金额伪造）
+ */
+async function validateMallCoupon(openid, couponId, orderAmount) {
+    if (typeof couponId !== 'string' || couponId.length < 1 || couponId.length > 128) {
+        throw err('INVALID_PARAMS', '优惠券ID格式错误');
+    }
+    const couponRes = await db.collection('user_coupons').doc(couponId).get();
+    const coupon = couponRes.data;
+    if (!coupon) {
+        throw err('COUPON_NOT_FOUND', '优惠券不存在');
+    }
+    if (coupon.ownerId !== openid) {
+        throw err('PERMISSION_DENIED', '无权使用他人优惠券');
+    }
+    if (coupon.status !== 'unused' && coupon.status !== 'locked') {
+        throw err('COUPON_STATUS_INVALID', `优惠券当前状态不可用：${coupon.status}`);
+    }
+    const now = new Date();
+    if (coupon.startTime && now < new Date(coupon.startTime)) {
+        throw err('BUSINESS_ERROR', '优惠券尚未生效');
+    }
+    if (coupon.endTime && now > new Date(coupon.endTime)) {
+        throw err('BUSINESS_ERROR', '优惠券已过期');
+    }
+    const scopes = Array.isArray(coupon.applicableScopes) ? coupon.applicableScopes : [];
+    if (scopes.length > 0 && !scopes.includes('all') && !scopes.includes('mall')) {
+        throw err('BUSINESS_ERROR', '该优惠券不适用于商城订单');
+    }
+    const calc = computeCouponDiscount(coupon, orderAmount);
+    if (!calc.eligible) {
+        throw err('BUSINESS_ERROR', `优惠券不可用：${calc.message || '不满足使用条件'}`);
+    }
+    return {
+        discount: calc.discount,
+        couponSnapshot: {
+            couponId,
+            templateName: coupon.templateName || '',
+            type: coupon.type || '',
+            rules: coupon.rules || {},
+        },
+    };
+}
+// =====================================================================
+// 辅助函数：批量获取临时文件 URL
 async function batchGetTempFileURL(fileIds) {
     const BATCH_SIZE = 50;
     const urlMap = {};
@@ -461,154 +518,6 @@ async function getProductDetail(event, _context, _auth) {
 }
 exports.getProductDetail = getProductDetail;
 // =====================================================================
-// Handler 6: createProduct
-// =====================================================================
-async function createProduct(event, _context, auth) {
-    const { openid } = auth;
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const { name, description, price, originalPrice, coverUrl, images, category, stock, specs } = event;
-    if (!name) {
-        throw err('INVALID_PARAMS', '缺少商品名称');
-    }
-    if (price === undefined || price === null) {
-        throw err('INVALID_PARAMS', '缺少商品价格');
-    }
-    const product = {
-        name,
-        description: description || '',
-        price: Number(price),
-        // L1: 移除双重类型断言，使用条件表达式
-        originalPrice: originalPrice ? Number(originalPrice) : undefined,
-        coverUrl: coverUrl || '',
-        images: images || [],
-        category: category || 'general',
-        stock: Number(stock) || 0,
-        soldCount: 0,
-        specs: specs || [],
-        status: 'draft',
-        isFeatured: false,
-        createdBy: openid,
-        createdAt: db.serverDate(),
-        updatedAt: db.serverDate(),
-    };
-    product._id = generateId('product', openid);
-    const res = await db.collection('products').add({ data: product });
-    return handleSuccess({ id: res._id }, '创建成功');
-}
-exports.createProduct = createProduct;
-// =====================================================================
-// Handler 7: updateProduct
-// =====================================================================
-async function updateProduct(event, _context, auth) {
-    const { productId } = event;
-    const { openid } = auth;
-    if (!productId) {
-        throw err('INVALID_PARAMS', '缺少商品ID');
-    }
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const updateData = { updatedAt: db.serverDate(), ...filterFields(FIELD_WHITELISTS.product, event) };
-    const existRes = await db.collection('products').doc(productId).get();
-    const existData = existRes.data;
-    if (!existData) {
-        throw err('NOT_FOUND', '商品不存在');
-    }
-    if (existData.createdBy !== openid) {
-        throw err('PERMISSION_DENIED', '无权修改此商品');
-    }
-    await db.collection('products').doc(productId).update({ data: updateData });
-    return handleSuccess(null, '更新成功');
-}
-exports.updateProduct = updateProduct;
-// =====================================================================
-// Handler 8: deleteProduct
-// =====================================================================
-async function deleteProduct(event, _context, auth) {
-    const { productId } = event;
-    const { openid } = auth;
-    if (!productId) {
-        throw err('INVALID_PARAMS', '缺少商品ID');
-    }
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const existRes = await db.collection('products').doc(productId).get();
-    const existData = existRes.data;
-    if (!existData) {
-        throw err('NOT_FOUND', '商品不存在');
-    }
-    if (existData.createdBy !== openid) {
-        throw err('PERMISSION_DENIED', '无权下架此商品');
-    }
-    await db.collection('products').doc(productId).update({
-        data: { status: 'off_sale', updatedAt: db.serverDate() },
-    });
-    return handleSuccess(null, '下架成功');
-}
-exports.deleteProduct = deleteProduct;
-// =====================================================================
-// Handler 9: batchUpdateProducts
-// =====================================================================
-async function batchUpdateProducts(event, _context, auth) {
-    const { productIds, operation } = event;
-    const { openid } = auth;
-    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
-        throw err('INVALID_PARAMS', '缺少商品ID列表');
-    }
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const VALID_OPERATIONS = ['on_shelf', 'off_shelf', 'delete', 'set_featured', 'unset_featured'];
-    if (!VALID_OPERATIONS.includes(operation || '')) {
-        throw err('INVALID_PARAMS', '无效的操作类型');
-    }
-    const STATUS_MAP = { on_shelf: 'on_sale', off_shelf: 'off_sale' };
-    const results = { success: 0, failed: 0 };
-    // M4: 改为有限并发，避免串行 await 在批量操作时触发云函数超时
-    const BATCH_CONCURRENCY = 6;
-    const tasks = productIds.map((productId) => async () => {
-        try {
-            // 验证商品归属权（防止操作其他用户的商品）
-            const productRes = await db.collection('products').doc(productId).get();
-            const product = productRes.data;
-            if (!product || product.createdBy !== openid) {
-                logger.warn('batchUpdateProducts: permission denied', { productId, openid });
-                results.failed++;
-                return;
-            }
-            if (operation === 'delete') {
-                await db.collection('products').doc(productId).remove();
-            }
-            else if (operation === 'set_featured') {
-                await db.collection('products').doc(productId).update({
-                    data: { isFeatured: true, updatedAt: db.serverDate() },
-                });
-            }
-            else if (operation === 'unset_featured') {
-                await db.collection('products').doc(productId).update({
-                    data: { isFeatured: false, updatedAt: db.serverDate() },
-                });
-            }
-            else if (operation) {
-                await db.collection('products').doc(productId).update({
-                    data: { status: STATUS_MAP[operation], updatedAt: db.serverDate() },
-                });
-            }
-            results.success++;
-        }
-        catch (e) {
-            logger.error('batchUpdateProducts', { productId, error: e });
-            results.failed++;
-        }
-    });
-    await runWithConcurrency(tasks, BATCH_CONCURRENCY);
-    return handleSuccess(results, `操作完成: 成功${results.success}个, 失败${results.failed}个`);
-}
-exports.batchUpdateProducts = batchUpdateProducts;
-// =====================================================================
 // 事务重试辅助：仅对「瞬时事务错误」重试，业务错误立即上抛，绝不遮蔽真因
 // =====================================================================
 function isTransientTransactionError(error) {
@@ -759,99 +668,6 @@ async function withRetryableTransaction(body, label, maxAttempts = 3) {
     throw lastErr;
 }
 // =====================================================================
-// Handler 10: createGroupBuyOrder（团购下单）
-// =====================================================================
-async function createGroupBuyOrder(event, _context, auth) {
-    const { openid } = auth;
-    if (!openid) {
-        throw err('AUTH_REQUIRED', '未登录');
-    }
-    const { productId, quantity = 1, receiverName, receiverPhone, receiverAddress } = event;
-    if (!productId) {
-        throw err('INVALID_PARAMS', '缺少商品ID');
-    }
-    if (!receiverName) {
-        throw err('INVALID_PARAMS', '请填写收货人姓名');
-    }
-    if (!receiverPhone) {
-        throw err('INVALID_PARAMS', '请填写联系电话');
-    }
-    if (!receiverAddress) {
-        throw err('INVALID_PARAMS', '请填写收货地址');
-    }
-    // Sprint 22: 团购下单前先做商品/库存预读 + 大额风控
-    const productRes = await db.collection('products').doc(productId).get();
-    const previewProduct = productRes.data;
-    if (!previewProduct || previewProduct.status !== 'on_sale') {
-        throw err('BUSINESS_ERROR', '商品已下架或不可购买');
-    }
-    const previewUnitPrice = Number(previewProduct.price) || 0;
-    const previewTotalAmount = Math.round(previewUnitPrice * Number(quantity) * 100);
-    const groupRisk = await performMallOrderRiskCheck({
-        openid,
-        productId,
-        amountFen: previewTotalAmount,
-    });
-    return withRetryableTransaction(async (transaction) => {
-        // H4: 事务内重新读取商品并校验库存，避免 TOCTOU 超卖竞态
-        const txProductRes = await transaction.collection('products').doc(productId).get();
-        const product = txProductRes.data;
-        if (!product || product.status !== 'on_sale') {
-            throw err('BUSINESS_ERROR', '商品已下架或不可购买');
-        }
-        const availableStock = product.totalStock || product.stock || 0;
-        if (availableStock < Number(quantity)) {
-            throw err('STOCK_INSUFFICIENT', `库存不足，仅剩${availableStock}件`);
-        }
-        const unitPrice = product.price || 0;
-        // M1: 团购下单金额精度统一——使用整数分计算后转回元，避免浮点误差
-        const totalAmount = Math.round(unitPrice * 100 * Number(quantity)) / 100;
-        const orderNo = `G${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-        const order = {
-            orderNo,
-            productId,
-            productName: product.name || '',
-            productImage: product.coverUrl || (product.images && product.images[0]) || '',
-            unitPrice,
-            quantity: Number(quantity),
-            totalAmount,
-            receiverName,
-            receiverPhone,
-            receiverAddress,
-            ownerId: openid,
-            ownerName: auth.nickName || '',
-            sellerId: product.createdBy || '',
-            status: 'pending_payment',
-            type: 'group_buy',
-            // H6: 与其他服务一致，待支付订单初始化 paymentStatus='unpaid'
-            paymentStatus: 'unpaid',
-            pendingReview: groupRisk.pendingReview,
-            riskDecision: groupRisk.decision,
-            riskReasons: groupRisk.reasons,
-            createdAt: db.serverDate(),
-            updatedAt: db.serverDate(),
-        };
-        order._id = generateId('order', openid);
-        // H7: idx_bookingKey_unique 唯一索引要求 orders 全文档 bookingKey 唯一
-        //   团购商品订单无寄养业务键,用 _id 占位保证唯一性,避免 null 冲突导致 -502001 DuplicateKey
-        order.bookingKey = `nb_${order._id}`;
-        const addRes = await transaction.collection('orders').add({ data: order });
-        await transaction.collection('products').doc(productId).update({
-            data: {
-                totalStock: _.inc(-Number(quantity)),
-                stock: _.inc(-Number(quantity)),
-                soldCount: _.inc(Number(quantity)),
-                joinCount: _.inc(Number(quantity)),
-                updatedAt: db.serverDate(),
-            },
-        });
-        // H8: commit 由 withRetryableTransaction 统一管理,body 内不能再调 transaction.commit()
-        //   否则会触发 double commit,第二次 commit 报 TransactionNotExist
-        return handleSuccess({ orderId: addRes._id, ...order }, '下单成功');
-    }, 'createGroupBuyOrder');
-}
-exports.createGroupBuyOrder = createGroupBuyOrder;
-// =====================================================================
 // Handler 11: createOrder（商城下单）
 // =====================================================================
 async function createOrder(event, _context, auth) {
@@ -859,12 +675,22 @@ async function createOrder(event, _context, auth) {
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
     }
-    const { productId, skuId, quantity = 1, receiverName, receiverPhone, receiverAddress } = event;
+    const { productId, skuId, quantity = 1, receiverName, receiverPhone, receiverAddress, couponId, couponDiscount, originalAmount } = event;
     if (!productId) {
         throw err('INVALID_PARAMS', '缺少商品ID');
     }
     if (!receiverAddress) {
         throw err('INVALID_PARAMS', '缺少收货地址');
+    }
+    // P2-2: 数量服务端校验（防 0/负数/非数字下单）
+    const qty = Number(quantity);
+    if (!Number.isInteger(qty) || qty < 1 || qty > 999) {
+        throw err('INVALID_PARAMS', '购买数量无效');
+    }
+    // P0-1: 客户端 couponDiscount 仅作冗余校验（无券时必须为 0，有券时以服务端重算为准）
+    const couponDiscountNum = Number(couponDiscount) || 0;
+    if (couponDiscount != null && (Number(couponDiscount) < 0 || !Number.isFinite(Number(couponDiscount)))) {
+        throw err('INVALID_PARAMS', '优惠券折扣金额必须为非负数');
     }
     // Sprint 22: 商城下单前先做商品预读 + 大额风控
     const productRes = await db.collection('products').doc(productId).get();
@@ -902,7 +728,10 @@ async function createOrder(event, _context, auth) {
                 throw err('BUSINESS_ERROR', 'SKU不存在');
             }
             const sku = product.skus && product.skus[skuIndex];
-            if (!sku || (sku.stock !== undefined && sku.stock < Number(quantity))) {
+            if (!sku || sku.enabled === false) {
+                throw err('BUSINESS_ERROR', sku && sku.enabled === false ? '该规格已下架' : 'SKU不存在');
+            }
+            if (!sku || Number(sku.stock) < Number(quantity)) {
                 throw err('BUSINESS_ERROR', '库存不足');
             }
             unitPrice = sku.price || 0;
@@ -915,6 +744,20 @@ async function createOrder(event, _context, auth) {
                 throw err('BUSINESS_ERROR', '库存不足');
             }
         }
+        // P0-1: 服务端校验优惠券并计算折扣（不信任客户端 couponDiscount，防金额伪造）
+        const grossAmount = Math.round(unitPrice * 100 * Number(quantity)) / 100;
+        let validatedCouponDiscount = 0;
+        if (couponId) {
+            const lockResult = await validateMallCoupon(openid, couponId, grossAmount);
+            validatedCouponDiscount = lockResult.discount;
+        }
+        else if (couponDiscountNum > 0) {
+            throw err('INVALID_PARAMS', '未选择优惠券时不允许折扣');
+        }
+        const finalAmount = Math.max(0, Math.round(grossAmount * 100 - validatedCouponDiscount * 100) / 100);
+        if (couponId && finalAmount < 0.1) {
+            throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元');
+        }
         const orderNo = `M${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
         const order = {
             orderNo,
@@ -926,7 +769,13 @@ async function createOrder(event, _context, auth) {
             unitPrice,
             quantity: Number(quantity),
             // P0-3: 使用整数分计算避免浮点精度
-            totalAmount: Math.round(unitPrice * 100 * Number(quantity)) / 100,
+            totalAmount: grossAmount,
+            // P0-1: 实付金额 = 服务端原价 - 服务端校验后的券折扣（客户端折扣不再参与计算）
+            finalAmount,
+            // P1-3: 冗余记录券信息（折扣以服务端重算为准）
+            couponId: couponId || '',
+            couponDiscount: validatedCouponDiscount,
+            originalAmount: Number(originalAmount) || grossAmount,
             receiverName: receiverName || '',
             receiverPhone: receiverPhone || '',
             receiverAddress,
@@ -969,6 +818,194 @@ async function createOrder(event, _context, auth) {
     }, 'createOrder');
 }
 exports.createOrder = createOrder;
+// =====================================================================
+// Handler 11.5: createMultiOrder - 多商品合并下单（购物车一次支付多件）
+//   P1-C: 支持用户一次性支付购买多件产品（单订单多 items，避免"多单只支付一单"断裂）
+// =====================================================================
+async function createMultiOrder(event, _context, auth) {
+    const { openid } = auth;
+    if (!openid) {
+        throw err('AUTH_REQUIRED', '未登录');
+    }
+    const { items, receiverName, receiverPhone, receiverAddress, couponId, couponDiscount, originalAmount } = event;
+    if (!items || !Array.isArray(items) || items.length === 0) {
+        throw err('INVALID_PARAMS', '缺少商品列表');
+    }
+    if (items.length > 20) {
+        throw err('INVALID_PARAMS', '单笔订单商品数不能超过 20');
+    }
+    if (!receiverAddress) {
+        throw err('INVALID_PARAMS', '缺少收货地址');
+    }
+    // P0-1: 客户端 couponDiscount 仅作冗余校验（无券时必须为 0，有券时以服务端重算为准）
+    const couponDiscountNum = Number(couponDiscount) || 0;
+    if (couponDiscount != null && (Number(couponDiscount) < 0 || !Number.isFinite(Number(couponDiscount)))) {
+        throw err('INVALID_PARAMS', '优惠券折扣金额必须为非负数');
+    }
+    // 归一化 items 并去重（productId+skuId）
+    const normItems = [];
+    const seen = new Set();
+    for (const it of items) {
+        const pid = String(it?.productId || '');
+        const sid = String(it?.skuId || '');
+        // P2-2: 数量服务端校验（防 0/负数/非数字下单）
+        const qtyNum = Number(it?.quantity);
+        if (!Number.isInteger(qtyNum) || qtyNum < 1 || qtyNum > 999) {
+            throw err('INVALID_PARAMS', '购买数量无效');
+        }
+        const qty = qtyNum;
+        if (!pid) {
+            throw err('INVALID_PARAMS', '商品ID缺失');
+        }
+        const key = `${pid}_${sid}`;
+        if (seen.has(key)) {
+            throw err('INVALID_PARAMS', '商品存在重复');
+        }
+        seen.add(key);
+        normItems.push({ productId: pid, skuId: sid, quantity: qty });
+    }
+    // 预读 + 大额风控（金额预估）
+    let previewTotalFen = 0;
+    for (const it of normItems) {
+        const pRes = await db.collection('products').doc(it.productId).get();
+        const p = pRes.data;
+        if (!p || p.status !== 'on_sale') {
+            throw err('BUSINESS_ERROR', '商品不可购买');
+        }
+        let unit = Number(p.price) || 0;
+        if (p.skuType === 'multi' && it.skuId) {
+            const sku = (p.skus || []).find((s) => s.skuId === it.skuId);
+            if (!sku) {
+                throw err('BUSINESS_ERROR', 'SKU不存在');
+            }
+            unit = Number(sku.price) || 0;
+        }
+        previewTotalFen += Math.round(unit * it.quantity * 100);
+    }
+    const orderRisk = await performMallOrderRiskCheck({
+        openid,
+        productId: normItems[0].productId,
+        amountFen: previewTotalFen,
+    });
+    return withRetryableTransaction(async (transaction) => {
+        // 事务内逐项校验 + 扣库存（与 createOrder 单商品逻辑对称，防 TOCTOU 超卖）
+        let totalAmount = 0;
+        let totalQty = 0;
+        const orderItems = [];
+        let firstProduct = null;
+        for (const it of normItems) {
+            const txRes = await transaction.collection('products').doc(it.productId).get();
+            const product = txRes.data;
+            if (!product || product.status !== 'on_sale') {
+                throw err('BUSINESS_ERROR', '商品不可购买');
+            }
+            if (!firstProduct) {
+                firstProduct = product;
+            }
+            let unitPrice = product.price || 0;
+            let skuText = '';
+            let stockKey = 'stock';
+            if (product.skuType === 'multi' && it.skuId) {
+                const skuIndex = product.skus ? product.skus.findIndex((s) => s.skuId === it.skuId) : -1;
+                if (skuIndex < 0) {
+                    throw err('BUSINESS_ERROR', 'SKU不存在');
+                }
+                const sku = product.skus && product.skus[skuIndex];
+                if (!sku || sku.enabled === false) {
+                    throw err('BUSINESS_ERROR', sku && sku.enabled === false ? '该规格已下架' : 'SKU不存在');
+                }
+                if (!sku || Number(sku.stock) < it.quantity) {
+                    throw err('BUSINESS_ERROR', '库存不足');
+                }
+                unitPrice = sku.price || 0;
+                skuText = sku.specText || '';
+                stockKey = `skus.${skuIndex}.stock`;
+            }
+            else {
+                const availableStock = product.totalStock || product.stock || 0;
+                if (availableStock < it.quantity) {
+                    throw err('BUSINESS_ERROR', '库存不足');
+                }
+            }
+            const itemAmount = Math.round(unitPrice * 100 * it.quantity) / 100;
+            totalAmount += itemAmount;
+            totalQty += it.quantity;
+            orderItems.push({
+                productId: it.productId,
+                skuId: it.skuId || '',
+                skuText,
+                quantity: it.quantity,
+                unitPrice,
+                productName: product.name || '',
+                productImage: product.coverImage || product.coverUrl || (product.images && product.images[0]) || '',
+                amount: itemAmount,
+            });
+            const updateData = {
+                totalStock: _.inc(-it.quantity),
+                soldCount: _.inc(it.quantity),
+                updatedAt: db.serverDate(),
+            };
+            if (product.skuType === 'multi' && it.skuId) {
+                updateData[stockKey] = _.inc(-it.quantity);
+                const skuIndex = product.skus ? product.skus.findIndex((s) => s.skuId === it.skuId) : -1;
+                if (skuIndex >= 0) {
+                    updateData[`skus.${skuIndex}.soldCount`] = _.inc(it.quantity);
+                }
+            }
+            else {
+                updateData.stock = _.inc(-it.quantity);
+            }
+            await transaction.collection('products').doc(it.productId).update({ data: updateData });
+        }
+        totalAmount = Math.round(totalAmount * 100) / 100;
+        // P0-1: 服务端校验优惠券并计算折扣（不信任客户端 couponDiscount，防金额伪造）
+        let validatedCouponDiscount = 0;
+        if (couponId) {
+            const lockResult = await validateMallCoupon(openid, couponId, totalAmount);
+            validatedCouponDiscount = lockResult.discount;
+        }
+        else if (couponDiscountNum > 0) {
+            throw err('INVALID_PARAMS', '未选择优惠券时不允许折扣');
+        }
+        const finalAmount = Math.max(0, Math.round(totalAmount * 100 - validatedCouponDiscount * 100) / 100);
+        if (couponId && finalAmount < 0.1) {
+            throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元');
+        }
+        const orderNo = `M${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        const order = {
+            orderNo,
+            productId: normItems[0].productId,
+            productName: (firstProduct && firstProduct.name) || '',
+            productImage: (firstProduct && (firstProduct.coverImage || firstProduct.coverUrl || (firstProduct.images && firstProduct.images[0]))) || '',
+            skuId: normItems[0].skuId || '',
+            quantity: totalQty,
+            items: orderItems,
+            totalAmount,
+            finalAmount,
+            couponId: couponId || '',
+            couponDiscount: validatedCouponDiscount,
+            originalAmount: Number(originalAmount) || totalAmount,
+            receiverName: receiverName || '',
+            receiverPhone: receiverPhone || '',
+            receiverAddress,
+            ownerId: openid,
+            ownerName: auth.nickName || '',
+            status: 'pending_payment',
+            type: 'mall',
+            paymentStatus: 'unpaid',
+            pendingReview: orderRisk.pendingReview,
+            riskDecision: orderRisk.decision,
+            riskReasons: orderRisk.reasons,
+            createdAt: db.serverDate(),
+            updatedAt: db.serverDate(),
+        };
+        order._id = generateId('order', openid);
+        order.bookingKey = `nb_${order._id}`;
+        const orderAddRes = await transaction.collection('orders').add({ data: order });
+        return handleSuccess({ orderId: orderAddRes._id, orderNo }, '下单成功');
+    }, 'createMultiOrder');
+}
+exports.createMultiOrder = createMultiOrder;
 // =====================================================================
 // Handler 12: getMyOrders
 // =====================================================================
@@ -1033,6 +1070,54 @@ async function getGroupBuyOrders(event, _context, auth) {
     }
 }
 exports.getGroupBuyOrders = getGroupBuyOrders;
+/**
+ * P0-4 修复：取消订单时解锁 user_coupons 中 status='locked' 且 lockedOrderId=orderId 的记录。
+ * 复制自 orderTimeoutService 同款实现（各云函数独立部署）。
+ */
+async function unlockOrderCoupons(orderId, couponId) {
+    if (!orderId && !couponId) {
+        return;
+    }
+    try {
+        // P1-2/P0-B: 优先按订单内 couponId 直解——
+        //   前端 lockCoupon 时传的是临时订单号（mall_xxx），与真实订单 _id 不匹配，
+        //   原按 orderId 查 user_coupons 恒空导致券永不自动解锁；couponId 直解最可靠
+        if (couponId) {
+            await db.collection('user_coupons').where({ _id: couponId, status: 'locked' })
+                .update({ data: { status: 'unused', updatedAt: db.serverDate() } });
+            return;
+        }
+        // P1-2: couponService.lockCoupon 写入的关联字段是 orderId（非 lockedOrderId），
+        //   原查询恒空导致券永不自动解锁；用 _.or 兼容历史 lockedOrderId 数据
+        const lockedCoupons = await db.collection('user_coupons')
+            .where(_.or([
+            { orderId, status: 'locked' },
+            { lockedOrderId: orderId, status: 'locked' },
+        ]))
+            .field({ _id: true, endTime: true })
+            .limit(20)
+            .get();
+        const lockedList = (lockedCoupons.data || []);
+        const now = new Date();
+        const expiredIds = [];
+        const unusedIds = [];
+        for (const coupon of lockedList) {
+            const isExpired = coupon.endTime ? new Date(coupon.endTime) < now : false;
+            (isExpired ? expiredIds : unusedIds).push(coupon._id);
+        }
+        if (expiredIds.length > 0) {
+            await db.collection('user_coupons').where({ _id: _.in(expiredIds), status: 'locked' })
+                .update({ data: { status: 'expired', updatedAt: db.serverDate() } });
+        }
+        if (unusedIds.length > 0) {
+            await db.collection('user_coupons').where({ _id: _.in(unusedIds), status: 'locked' })
+                .update({ data: { status: 'unused', updatedAt: db.serverDate() } });
+        }
+    }
+    catch (e) {
+        logger.error('unlockOrderCoupons', e);
+    }
+}
 // =====================================================================
 // Handler 14: cancelOrder
 // =====================================================================
@@ -1085,20 +1170,56 @@ async function cancelOrder(event, _context, auth) {
                 data: { status: 'cancelled', cancelReason: '买家主动取消', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
             });
             if (orderData.productId) {
-                const qty = orderData.quantity || 1;
-                const stockUpdateData = {
-                    totalStock: _.inc(qty),
-                    soldCount: _.inc(-qty),
-                    stock: _.inc(qty),
-                    updatedAt: db.serverDate(),
-                };
-                if (orderData.skuId && skuIndex >= 0) {
-                    stockUpdateData[`skus.${skuIndex}.stock`] = _.inc(qty);
-                    stockUpdateData[`skus.${skuIndex}.soldCount`] = _.inc(-qty);
+                // P1-C: 合并单（items）逐项回退；单商品回退顶层/SKU（与下单扣减逻辑对称）
+                const items = orderData.items;
+                if (items && items.length > 0) {
+                    for (const it of items) {
+                        if (!it.productId) {
+                            continue;
+                        }
+                        const qty = it.quantity || 1;
+                        const stockUpdateData = {
+                            totalStock: _.inc(qty),
+                            soldCount: _.inc(-qty),
+                            updatedAt: db.serverDate(),
+                        };
+                        let itSkuIndex = -1;
+                        if (it.skuId) {
+                            const pRes = await db.collection('products').doc(it.productId).get();
+                            const pd = pRes.data;
+                            if (pd && pd.skus) {
+                                itSkuIndex = pd.skus.findIndex((s) => s.skuId === it.skuId);
+                            }
+                        }
+                        if (it.skuId && itSkuIndex >= 0) {
+                            stockUpdateData[`skus.${itSkuIndex}.stock`] = _.inc(qty);
+                            stockUpdateData[`skus.${itSkuIndex}.soldCount`] = _.inc(-qty);
+                        }
+                        else {
+                            stockUpdateData.stock = _.inc(qty);
+                        }
+                        await transaction.collection('products').doc(it.productId).update({ data: stockUpdateData });
+                    }
                 }
-                await transaction.collection('products').doc(orderData.productId).update({
-                    data: stockUpdateData,
-                });
+                else {
+                    // 单商品订单：回退原商品库存（P0-4(b): SKU 模式只回退 skus[i].stock 不回退顶层）
+                    const qty = orderData.quantity || 1;
+                    const stockUpdateData = {
+                        totalStock: _.inc(qty),
+                        soldCount: _.inc(-qty),
+                        updatedAt: db.serverDate(),
+                    };
+                    if (orderData.skuId && skuIndex >= 0) {
+                        stockUpdateData[`skus.${skuIndex}.stock`] = _.inc(qty);
+                        stockUpdateData[`skus.${skuIndex}.soldCount`] = _.inc(-qty);
+                    }
+                    else {
+                        stockUpdateData.stock = _.inc(qty);
+                    }
+                    await transaction.collection('products').doc(orderData.productId).update({
+                        data: stockUpdateData,
+                    });
+                }
             }
             await transaction.commit();
         }
@@ -1115,6 +1236,13 @@ async function cancelOrder(event, _context, auth) {
         }
         catch (commissionErr) {
             logger.warn('cancelCommissionRecord', { msg: commissionErr?.message });
+        }
+        // P0-4 修复：主动取消未支付订单时解锁被锁定的优惠券（与 orderTimeoutService 超时路径一致）
+        try {
+            await unlockOrderCoupons(orderId, orderData.couponId);
+        }
+        catch (couponErr) {
+            logger.warn('cancelOrder.unlockCoupons', { orderId, msg: couponErr?.message });
         }
         return handleSuccess(null, '取消成功');
     }
@@ -1325,12 +1453,8 @@ exports.handlers = {
     getCategoryStats,
     listCategories,
     checkCartItems,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    batchUpdateProducts,
     createOrder,
-    createGroupBuyOrder,
+    createMultiOrder,
     getMyOrders,
     getGroupBuyOrders,
     getOrderDetail,
@@ -1348,15 +1472,12 @@ async function main(event, context) {
         throw err('INVALID_PARAMS', '无效的操作类型');
     }
     const WRITE_ACTIONS = [
-        'createOrder', 'createGroupBuyOrder', 'cancelOrder', 'confirmReceive',
+        'createOrder', 'createMultiOrder', 'cancelOrder', 'confirmReceive',
         'deleteOrder',
     ];
-    // H3: 商品管理操作需要 admin 权限，防止任意用户创建/修改/删除商品
-    const ADMIN_ACTIONS = ['createProduct', 'updateProduct', 'deleteProduct', 'batchUpdateProducts'];
-    const requireLogin = WRITE_ACTIONS.includes(action) || ADMIN_ACTIONS.includes(action);
-    const requireAdmin = ADMIN_ACTIONS.includes(action);
+    const requireLogin = WRITE_ACTIONS.includes(action);
     try {
-        const auth = await verifyAuth(event, { requireLogin, ...(requireAdmin ? { permission: 'admin' } : {}) });
+        const auth = await verifyAuth(event, { requireLogin });
         logger.info(action, { openid: auth.openid, isAdmin: !!auth.isAdmin });
         return await exports.handlers[action](event, context, auth);
     }
@@ -1368,7 +1489,7 @@ async function main(event, context) {
         if (isTransactionError && WRITE_ACTIONS.includes(action)) {
             logger.warn(`${action}.retry`, { reason: 'transaction_error', error: errStr });
             try {
-                const auth = await verifyAuth(event, { requireLogin, ...(requireAdmin ? { permission: 'admin' } : {}) });
+                const auth = await verifyAuth(event, { requireLogin });
                 return await exports.handlers[action](event, context, auth);
             }
             catch (retryError) {
@@ -1395,12 +1516,8 @@ _mod.exports = {
     getCategoryStats,
     listCategories,
     checkCartItems,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    batchUpdateProducts,
     createOrder,
-    createGroupBuyOrder,
+    createMultiOrder,
     getMyOrders,
     getGroupBuyOrders,
     getOrderDetail,
@@ -1417,12 +1534,8 @@ exports.default = {
     getCategoryStats,
     listCategories,
     checkCartItems,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    batchUpdateProducts,
     createOrder,
-    createGroupBuyOrder,
+    createMultiOrder,
     getMyOrders,
     getGroupBuyOrders,
     getOrderDetail,

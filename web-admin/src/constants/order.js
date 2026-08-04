@@ -55,6 +55,7 @@ export const HOST_SERVICE_STATUS_LABELS = {
   active: '正常',
   suspended: '已暂停',
   inactive: '已停用',
+  disabled: '已停用',
   rejected: '已拒绝',
 }
 
@@ -101,7 +102,6 @@ export const SIDEBAR_MENUS = [
     { title: '家庭审核', path: '/hosting/review' },
     { title: '档案管理', path: '/hosting/profile' },
   ] },
-  { title: '服务师管理', icon: 'UserFilled', path: '/feeding/feeders' },
   { title: '合作伙伴管理', icon: 'Share', path: '/referral', children: [
     { title: '审批中心', path: '/admin/approval' },
     { title: '伙伴管理', path: '/referral' },

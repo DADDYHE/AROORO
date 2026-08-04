@@ -1,4 +1,3 @@
-/* eslint-disable */
 "use strict";
 /**
  * orderTimeoutService/index.ts - 订单超时自动取消服务（TypeScript 源文件 - Sprint 45 迁移）
@@ -10,7 +9,7 @@
  *   - 关闭微信支付未支付订单
  *
  * 覆盖 5 类订单：
- *   1. 寄养订单（orders collection，type=hosting 或无 type）
+ *   1. 寄养订单（orders collection，type=boarding 或无 type）
  *   2. 喂养订单（feedingOrders collection）
  *   3. 商城订单（orders collection，type=mall）
  *   4. 团购订单（orders collection，type=group_buy）
@@ -213,13 +212,15 @@ async function closeWechatOrder(outTradeNo) {
         return false;
     }
     catch (e) {
-        const isAbort = e.name === 'AbortError' || e.name === 'TimeoutError' ||
-            (e.cause && (e.cause.name === 'AbortError' || e.cause.name === 'TimeoutError'));
+        const err = e;
+        const cause = err.cause;
+        const isAbort = err.name === 'AbortError' || err.name === 'TimeoutError' ||
+            (cause?.name === 'AbortError' || cause?.name === 'TimeoutError');
         if (isAbort) {
-            logger.warn('closeWechatOrder.timeout', { outTradeNo, msg: e.message });
+            logger.warn('closeWechatOrder.timeout', { outTradeNo, msg: err.message });
         }
         else {
-            logger.warn('closeWechatOrder.exception', { outTradeNo, msg: e.message });
+            logger.warn('closeWechatOrder.exception', { outTradeNo, msg: err.message });
         }
         return false;
     }
@@ -290,13 +291,25 @@ exports.restoreProductStock = restoreProductStock;
  *   - 已过期 → status='expired'
  *   - 未过期 → status='unused'
  */
-async function unlockOrderCoupons(orderId) {
-    if (!orderId) {
+async function unlockOrderCoupons(orderId, couponId) {
+    if (!orderId && !couponId) {
         return;
     }
     try {
+        // P0-B: 优先按订单内 couponId 直解——前端 lockCoupon 传的是临时订单号，
+        //   与真实订单 _id 不匹配，按 orderId 查恒空；couponId 直解最可靠
+        if (couponId) {
+            await db.collection('user_coupons').where({ _id: couponId, status: 'locked' })
+                .update({ data: { status: 'unused', updatedAt: db.serverDate() } });
+            return;
+        }
+        // P1-2: couponService.lockCoupon 写入的关联字段是 orderId（非 lockedOrderId），
+        //   原查询恒空导致券永不自动解锁；用 or 兼容历史 lockedOrderId 数据
         const lockedCoupons = await db.collection('user_coupons')
-            .where({ lockedOrderId: orderId, status: 'locked' })
+            .where(db.command.or([
+            { orderId, status: 'locked' },
+            { lockedOrderId: orderId, status: 'locked' },
+        ]))
             .field({ _id: true, endTime: true })
             .limit(20)
             .get();
@@ -323,30 +336,89 @@ async function unlockOrderCoupons(orderId) {
 }
 exports.unlockOrderCoupons = unlockOrderCoupons;
 // =====================================================================
-// 辅助函数 6：恢复团购名额
+// 辅助函数 6：恢复团购商品库存（tuan_deals.products 快照）
 // =====================================================================
 /**
- * 取消团购订单时恢复 tuan_deals 集合的 totalStock / soldCount。
+ * 取消团购订单时恢复 tuan_deals 集合中 **商品快照** 的库存。
+ *
+ * P0-2 修复：下单时扣减的是 `tuan_deals.products[i].stock/sold`
+ * （tuanService.createTuanOrder 事务内），SKU 模式为
+ * `products[i].skus[j].stock/sold`。旧实现回补 `totalStock/soldCount`
+ * 顶层字段——从未被扣减过，导致 deal 商品快照库存永久丢失、
+ * 顶层 totalStock/soldCount 虚增。
+ *
+ * 与下单逻辑对称：
+ *   - SKU 模式（skuId 命中）：只回补 skus[j].stock/sold，不动顶层 product.stock
+ *   - 非 SKU 模式：回补 products[i].stock/sold
  */
-async function restoreTuanDealStock(dealId, quantity) {
+async function restoreTuanDealStock(dealId, productId, skuId, quantity) {
     if (!dealId) {
         return;
     }
     try {
         const qty = quantity || 1;
-        await db.collection('tuan_deals').doc(dealId).update({
-            data: {
-                totalStock: _.inc(qty),
-                soldCount: _.inc(-qty),
-                updatedAt: db.serverDate(),
-            },
-        });
+        const dealRes = await db.collection('tuan_deals').doc(dealId).get();
+        const deal = dealRes.data;
+        if (!deal || !Array.isArray(deal.products)) {
+            return;
+        }
+        const productIndex = productId
+            ? deal.products.findIndex((p) => p.productId === productId)
+            : -1;
+        if (productIndex < 0) {
+            return;
+        }
+        const product = deal.products[productIndex];
+        const updateData = {
+            updatedAt: db.serverDate(),
+        };
+        // SKU 模式：回补 skus[j].stock/sold（与下单扣减对称，不动顶层 stock）
+        if (skuId && Array.isArray(product.skus)) {
+            const skuIndex = product.skus.findIndex((s) => s.skuId === skuId);
+            if (skuIndex >= 0) {
+                // 与下单扣减字段对称：优先回补团购配额 tuanStock，历史无 tuanStock 的 SKU 回补 stock
+                const sku = product.skus[skuIndex];
+                const stockField = (sku.tuanStock !== undefined && sku.tuanStock !== null) ? 'tuanStock' : 'stock';
+                updateData[`products.${productIndex}.skus.${skuIndex}.${stockField}`] = _.inc(qty);
+                updateData[`products.${productIndex}.skus.${skuIndex}.sold`] = _.inc(-qty);
+                await db.collection('tuan_deals').doc(dealId).update({ data: updateData });
+                return;
+            }
+        }
+        // 非 SKU 模式：回补 products[i].stock/sold
+        updateData[`products.${productIndex}.stock`] = _.inc(qty);
+        updateData[`products.${productIndex}.sold`] = _.inc(-qty);
+        await db.collection('tuan_deals').doc(dealId).update({ data: updateData });
     }
     catch (e) {
         logger.error('restoreTuanDealStock', e);
     }
 }
 exports.restoreTuanDealStock = restoreTuanDealStock;
+/**
+ * P1-3: 取消订单时回退 tuan_deals 累计单数/金额（与下单事务 inc 对称）
+ */
+async function rollbackTuanDealTotals(dealId, amount) {
+    if (!dealId) {
+        return;
+    }
+    try {
+        const dealRes = await db.collection('tuan_deals').doc(dealId).get();
+        const deal = dealRes.data;
+        if (!deal) {
+            return;
+        }
+        const nextOrders = Math.max(0, (Number(deal.totalOrders) || 0) - 1);
+        const nextAmount = Math.max(0, (Number(deal.totalAmount) || 0) - (Number(amount) || 0));
+        await db.collection('tuan_deals').doc(dealId).update({
+            data: { totalOrders: nextOrders, totalAmount: nextAmount, updatedAt: db.serverDate() },
+        });
+    }
+    catch (e) {
+        logger.error('rollbackTuanDealTotals', e);
+    }
+}
+exports.rollbackTuanDealTotals = rollbackTuanDealTotals;
 // =====================================================================
 // 辅助函数 7：取消团订单（同步 tuan_orders 状态）
 // =====================================================================
@@ -457,6 +529,14 @@ async function fetchAllExpired(collection, where, fields) {
         if (data.length < exports.BATCH_SIZE) {
             break;
         }
+        // 已达最大批次数且本批仍满 → 可能还有超时订单超出 1000 单上限被静默截断，告警避免漏处理
+        if (batch === exports.MAX_BATCHES - 1) {
+            logger.warn('fetchAllExpired.reached_scan_limit', { collection, scanned: allOrders.length });
+            try {
+                await recordAlert('warning', 'fetchAllExpired.reached_scan_limit', `超时订单扫描达 ${exports.MAX_BATCHES * exports.BATCH_SIZE} 单上限，可能存在未处理订单`, { collection, scanned: allOrders.length });
+            }
+            catch { /* ignore */ }
+        }
     }
     return allOrders;
 }
@@ -466,15 +546,15 @@ exports.fetchAllExpired = fetchAllExpired;
 // =====================================================================
 async function cancelBoardingOrders(result, boardingTimeout) {
     try {
-        // H1: 补充 type 过滤——仅查寄养订单（type='hosting' 或历史无 type 字段）
+        // H1: 补充 type 过滤——仅查寄养订单（type='boarding' 或历史无 type 字段）
         //   原查询缺 type 过滤，会误扫到 mall/group_buy 订单并标记 cancelled，
         //   但不触发 restoreProductStock，导致后续 cancelMallOrders/cancelGroupBuyOrders
         //   扫描时 status 已变 cancelled 而漏处理，库存/团名额永久丢失
         const expiredBoardingOrders = await fetchAllExpired('orders', {
             status: 'pending_payment',
-            paymentStatus: 'unpaid',
+            paymentStatus: _.in(['unpaid', 'paying', null]),
             createdAt: _.lte(boardingTimeout),
-            type: _.in(['hosting', null]),
+            type: _.in(['boarding', null]),
         }, { _id: true, outTradeNo: true });
         for (const order of expiredBoardingOrders) {
             try {
@@ -500,8 +580,11 @@ async function cancelBoardingOrders(result, boardingTimeout) {
                     if (closed) {
                         result.closedWechatOrders++;
                     }
+                    else {
+                        result.closeOrderFailed++;
+                    }
                 }
-                await unlockOrderCoupons(order._id);
+                await unlockOrderCoupons(order._id, order.couponId);
                 result.cancelledBoardingOrders++;
             }
             catch (error) {
@@ -520,7 +603,7 @@ async function cancelFeedingOrders(result, feedingTimeout) {
     try {
         const expiredFeedingOrders = await fetchAllExpired('feedingOrders', {
             status: 'pending_payment',
-            paymentStatus: 'unpaid',
+            paymentStatus: _.in(['unpaid', 'paying', null]),
             createdAt: _.lte(feedingTimeout),
         }, { _id: true, outTradeNo: true });
         for (const order of expiredFeedingOrders) {
@@ -545,8 +628,11 @@ async function cancelFeedingOrders(result, feedingTimeout) {
                     if (closed) {
                         result.closedWechatOrders++;
                     }
+                    else {
+                        result.closeOrderFailed++;
+                    }
                 }
-                await unlockOrderCoupons(order._id);
+                await unlockOrderCoupons(order._id, order.couponId);
                 result.cancelledFeedingOrders++;
             }
             catch (error) {
@@ -567,9 +653,9 @@ async function cancelMallOrders(result, mallTimeout) {
         const expiredMallOrders = await fetchAllExpired('orders', {
             type: 'mall',
             status: 'pending_payment',
-            paymentStatus: 'unpaid',
+            paymentStatus: _.in(['unpaid', 'paying', null]),
             createdAt: _.lte(mallTimeout),
-        }, { _id: true, productId: true, skuId: true, quantity: true, outTradeNo: true });
+        }, { _id: true, productId: true, skuId: true, quantity: true, outTradeNo: true, items: true });
         for (const order of expiredMallOrders) {
             try {
                 // H2: 幂等保护，仅当 status 仍为 pending_payment 时才更新
@@ -592,14 +678,28 @@ async function cancelMallOrders(result, mallTimeout) {
                     if (closed) {
                         result.closedWechatOrders++;
                     }
+                    else {
+                        result.closeOrderFailed++;
+                    }
                 }
                 try {
-                    await restoreProductStock(order.productId, order.skuId, order.quantity);
+                    // P1-C: 合并单（items）逐项回退；单商品走原逻辑
+                    const items = order.items;
+                    if (items && items.length > 0) {
+                        for (const it of items) {
+                            if (it.productId) {
+                                await restoreProductStock(it.productId, it.skuId, it.quantity);
+                            }
+                        }
+                    }
+                    else {
+                        await restoreProductStock(order.productId, order.skuId, order.quantity);
+                    }
                 }
                 catch (stockErr) {
                     pushError(result, { orderId: order._id, stockRestoreError: stockErr.message });
                 }
-                await unlockOrderCoupons(order._id);
+                await unlockOrderCoupons(order._id, order.couponId);
                 result.cancelledMallOrders++;
             }
             catch (error) {
@@ -617,12 +717,13 @@ async function cancelMallOrders(result, mallTimeout) {
 async function cancelGroupBuyOrders(result, groupBuyTimeout) {
     try {
         // P2-011: 补充 paymentStatus: 'unpaid' 过滤，防止取消已支付订单（与 cancelBoardingOrders 一致）
+        // P1-3: 回退 deal 累计需要订单金额 totalAmount
         const expiredGroupBuyOrders = await fetchAllExpired('orders', {
             type: 'group_buy',
             status: 'pending_payment',
-            paymentStatus: 'unpaid',
+            paymentStatus: _.in(['unpaid', 'paying', null]),
             createdAt: _.lte(groupBuyTimeout),
-        }, { _id: true, productId: true, quantity: true, dealId: true, outTradeNo: true, tuanOrderId: true });
+        }, { _id: true, productId: true, skuId: true, quantity: true, dealId: true, outTradeNo: true, tuanOrderId: true, totalAmount: true });
         for (const order of expiredGroupBuyOrders) {
             try {
                 // H2: 幂等保护，仅当 status 仍为 pending_payment 时才更新
@@ -645,18 +746,29 @@ async function cancelGroupBuyOrders(result, groupBuyTimeout) {
                     if (closed) {
                         result.closedWechatOrders++;
                     }
+                    else {
+                        result.closeOrderFailed++;
+                    }
                 }
                 try {
-                    await restoreProductStock(order.productId, null, order.quantity);
+                    // P0-2: 团购下单只扣 tuan_deals.products 快照库存（不扣 products 集合），
+                    //   取消时按快照字段回补；不再误调 restoreProductStock（products 集合从未被扣，回补会虚增）
+                    await restoreTuanDealStock(order.dealId, order.productId, order.skuId, order.quantity);
                 }
                 catch (stockErr) {
                     pushError(result, { orderId: order._id, stockRestoreError: stockErr.message });
                 }
-                await restoreTuanDealStock(order.dealId, order.quantity);
+                // P1-3: 回退 deal 累计单数/金额（与下单事务 inc 对称）
+                try {
+                    await rollbackTuanDealTotals(order.dealId, Number(order.totalAmount) || 0);
+                }
+                catch (totalsErr) {
+                    pushError(result, { orderId: order._id, totalsRollbackError: totalsErr.message });
+                }
                 // ★ 同步取消 tuan_orders 集合（避免管理后台显示"待确认"幽灵订单）
                 // H3: 仅传 tuanOrderId，删除无效的 outTradeNo fallback
                 await cancelTuanOrder(order.tuanOrderId);
-                await unlockOrderCoupons(order._id);
+                await unlockOrderCoupons(order._id, order.couponId);
                 result.cancelledGroupBuyOrders++;
             }
             catch (error) {
@@ -675,9 +787,13 @@ async function cancelActivityOrders(result, activityTimeout) {
     try {
         const expiredActivityOrders = await fetchAllExpired('activity_registrations', {
             status: 'pending_payment',
-            paymentStatus: 'unpaid',
+            // P0-2b 修复：活动报名创建时实际写 paymentStatus='pending'（activityService 两条写入路径），
+            // 故原 'unpaid' 或 _.in(['unpaid', null]) 均因实际值为 'pending' 而恒扫 0 → 活动超时取消一直失效。
+            // 现放宽到 _.in(['unpaid', 'pending', null]) 覆盖"显式 unpaid / 活动实际 pending / 字段缺失"三种待支付报名。
+            // 回退名额仍仅在 paymentStatus==='paid' 时执行（见下），pending 单从未占名额，绝不回退，名额不会变负。
+            paymentStatus: _.in(['unpaid', 'pending', null]),
             createdAt: _.lte(activityTimeout),
-        }, { _id: true, activityId: true, participantCount: true, outTradeNo: true });
+        }, { _id: true, activityId: true, ownerId: true, participantCount: true, outTradeNo: true, paymentStatus: true, orderId: true, couponId: true });
         for (const order of expiredActivityOrders) {
             try {
                 // H2: 幂等保护，仅当 status 仍为 pending_payment 时才更新
@@ -700,9 +816,52 @@ async function cancelActivityOrders(result, activityTimeout) {
                     if (closed) {
                         result.closedWechatOrders++;
                     }
+                    else {
+                        result.closeOrderFailed++;
+                    }
                 }
-                await restoreActivityQuota(order.activityId, order.participantCount);
-                await unlockOrderCoupons(order._id);
+                // P0-3 修复：付费活动名额仅在支付回调成功时递增（paymentService/notify.ts applyPaidStatus），
+                // 处于 pending_payment 的报名从未占用名额，超时取消时若回退会把 currentParticipants 扣成负数。
+                // 因此仅当报名已支付（paymentStatus==='paid'）才回退名额；超时取消的 pending 单一律不回退。
+                if (order.paymentStatus === 'paid') {
+                    await restoreActivityQuota(order.activityId, order.participantCount);
+                }
+                // P0-2 修复：同步取消关联的 orders 镜像（orderType='activity'），避免管理后台/我的订单出现
+                // 状态仍为 pending_payment 的"幽灵"活动订单（该镜像不参与任何 cron 分支扫描）。
+                // P2-5 修复：按 activityId+ownerId+orderType 同步（原按 registration.orderId 查，
+                //   活跃路径报名单无 orderId 字段 → 镜像单永不取消）。
+                if (order.activityId && order.ownerId) {
+                    try {
+                        await db.collection('orders')
+                            .where({ activityId: order.activityId, ownerId: order.ownerId, orderType: 'activity', status: 'pending_payment' })
+                            .update({
+                            data: {
+                                status: 'cancelled',
+                                cancelReason: '超时未支付，系统自动取消',
+                                cancelledAt: db.serverDate(),
+                                updatedAt: db.serverDate(),
+                            },
+                        });
+                    }
+                    catch (mirrorErr) {
+                        logger.warn('cancelActivityOrders.mirror_update_failed', { orderId: order.orderId, msg: mirrorErr?.message });
+                    }
+                }
+                // P0-B 修复：活动券按报名单 couponId 直解（unlockCoupon 按 couponId 幂等直解，
+                //   不依赖 orderId 匹配——前端 lockCoupon 传的是空 orderId，unlockOrderCoupons 按 orderId 查不到）
+                if (order.couponId) {
+                    try {
+                        const couponCloud = cloud;
+                        await couponCloud.callFunction({
+                            name: 'couponService',
+                            data: { action: 'unlockCoupon', couponId: order.couponId, orderId: order._id },
+                        });
+                    }
+                    catch (couponErr) {
+                        logger.warn('cancelActivityOrders.unlockCoupon.failed', { orderId: order._id, msg: couponErr?.message });
+                    }
+                }
+                await unlockOrderCoupons(order._id, order.couponId);
                 result.cancelledActivityOrders++;
             }
             catch (error) {
@@ -818,6 +977,7 @@ async function main(event, _context) {
         cancelledGroupBuyOrders: 0,
         cancelledActivityOrders: 0,
         closedWechatOrders: 0,
+        closeOrderFailed: 0,
         errors: [],
     };
     // L6: 优先使用 cron 触发时间作为超时基准，避免 cron 调度延迟导致的时间偏差

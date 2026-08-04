@@ -1,0 +1,159 @@
+{
+  "data": [
+    {
+      "id": "image-001",
+      "title": "AROORO 小程序开屏图",
+      "type": "image",
+      "version": 5,
+      "createdAt": 1785254336000,
+      "canvasData": {
+        "x": 0,
+        "y": 289,
+        "naturalSize": {
+          "width": 1440,
+          "height": 2560
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/arooro-splash-gucci-style.jpg"
+      }
+    },
+    {
+      "id": "page-tabbar-effects",
+      "title": "TabBar 选中/未选中效果设计",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785772800000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 2679,
+          "viewportWidth": 800,
+          "sourceHash": "fnv1a-6aaf0640",
+          "measuredAt": 1785335957495
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/tabbar-effects.html"
+      }
+    },
+    {
+      "id": "page-loading-animation",
+      "title": "奢侈品级加载动画设计",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785556800000,
+      "canvasData": {
+        "x": 433,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 4052,
+          "viewportWidth": 800,
+          "sourceHash": "fnv1a-af1ff9ad",
+          "measuredAt": 1785747827877
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/loading-animation.html"
+      }
+    },
+    {
+      "id": "page-bg-color-preview",
+      "title": "背景配色方案探索",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785732364198,
+      "canvasData": {
+        "x": 866,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 6478,
+          "viewportWidth": 800,
+          "sourceHash": "fnv1a-692a712f",
+          "measuredAt": 1785747827877
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/bg-color-preview.html"
+      }
+    },
+    {
+      "id": "page-bg-color-fusion",
+      "title": "融合配色方案探索",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785733282560,
+      "canvasData": {
+        "x": 1299,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 5307,
+          "viewportWidth": 800,
+          "sourceHash": "fnv1a-b6d045c6",
+          "measuredAt": 1785747827877
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/bg-color-fusion.html"
+      }
+    },
+    {
+      "id": "page-color-power-restructure",
+      "title": "色彩权力重构",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785733605557,
+      "canvasData": {
+        "x": 1732,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 2851,
+          "viewportWidth": 800,
+          "sourceHash": "fnv1a-dd3c99ee",
+          "measuredAt": 1785747827877
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/color-power-restructure.html"
+      }
+    },
+    {
+      "id": "page-luxury-system-final",
+      "title": "奢华系统完整方案",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785735416440,
+      "canvasData": {
+        "x": 2165,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 2899,
+          "viewportWidth": 800,
+          "sourceHash": "fnv1a-0f34995f",
+          "measuredAt": 1785747827877
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/luxury-system-final.html"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "freeSize",
+    "projectName": "AROORO 开屏设计"
+  }
+}

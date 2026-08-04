@@ -3,6 +3,12 @@ const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
 const { err } = require('../common/errors')
 const { ORDER_TYPES, ORDER_TYPE_NAMES } = require('../constants')
+// 复用统一佣金写入器的键规范化/别名工具，修复寄养 boarding↔hosting 键分裂：
+//   前端(web-admin/小程序)与线上存储均用 hosting 键，而 ORDER_TYPES 用 boarding，
+//   直接 customRates['boarding'] 取不到 → 寄养费率恒显示/计算为 0（与 commissionConfig.js 同源问题）。
+const commission_utils_1 = require('../common/commission-utils')
+// 推广/邀请统计统一口径（板块→权威集合→状态集→金额字段）
+const { REFERRAL_BOARDS, resolveOrderAmount, fetchBoardOrders } = require('./referralStats')
 
 const { db, cloud } = initCloud()
 const logger = createLogger('adminService')
@@ -136,10 +142,20 @@ async function getUserDetail(event, context, auth) {
     db.collection('pets').where({ ownerId: uid }).count(),
     db.collection('orders').where({ ownerId: uid }).count(),
     db.collection('admins').where({ _id: uid }).field({ isPartner: true, permissions: true }).limit(1).get(),
-    db.collection('orders').aggregate().match({ ownerId: uid, status: _.neq('cancelled') }).group({ _id: null, total: { $sum: '$totalAmount' } }).end(),
-    db.collection('tuan_orders').aggregate().match({ userId: uid, status: _.neq('cancelled') }).group({ _id: null, total: { $sum: '$tuanPrice' } }).end(),
-    db.collection('feedingOrders').aggregate().match({ userId: uid, status: _.neq('cancelled') }).group({ _id: null, total: { $sum: '$totalPrice' } }).end(),
-    db.collection('activity_registrations').aggregate().match({ userId: uid, status: _.neq('cancelled') }).group({ _id: null, total: { $sum: '$totalAmount' } }).end(),
+    // P1-5: 统一口径——商城/寄养/活动镜像从 orders（排除 group_buy，团购单独成桶），
+    //   团购从 orders(type='group_buy')，喂养/活动从各自集合；字段 ownerId + totalAmount 优先
+    db.collection('orders').aggregate()
+      .match({ ownerId: uid, status: _.neq('cancelled'), type: _.neq('group_buy') })
+      .group({ _id: null, total: { $sum: { $toDouble: { $ifNull: ['$totalAmount', { $ifNull: ['$totalPrice', 0] }] } } } }).end(),
+    db.collection('orders').aggregate()
+      .match({ ownerId: uid, status: _.neq('cancelled'), type: 'group_buy' })
+      .group({ _id: null, total: { $sum: { $toDouble: { $ifNull: ['$totalAmount', 0] } } } }).end(),
+    db.collection('feedingOrders').aggregate()
+      .match({ ownerId: uid, status: _.neq('cancelled') })
+      .group({ _id: null, total: { $sum: { $toDouble: { $ifNull: ['$totalAmount', { $ifNull: ['$totalPrice', 0] }] } } } }).end(),
+    db.collection('activity_registrations').aggregate()
+      .match({ ownerId: uid, status: _.neq('cancelled') })
+      .group({ _id: null, total: { $sum: { $toDouble: { $ifNull: ['$totalAmount', 0] } } } }).end(),
   ])
   const extractSum = (res) => (res.list && res.list[0] && res.list[0].total) || 0
   userData.totalSpent = extractSum(ordersSum) + extractSum(tuanSum) + extractSum(feedSum) + extractSum(actSum)
@@ -220,8 +236,8 @@ async function getEnhancedDashboardStats(event, context, auth) {
 
     // 今日各渠道订单数
     const [todayMallOrders, todayTuanOrders, todayFeedingOrders, todayActivityOrders] = await Promise.all([
-      db.collection('orders').where({ createdAt: _.gte(todayStart) }).count(),
-      db.collection('tuan_orders').where({ createdAt: _.gte(todayStart) }).count(),
+      db.collection('orders').where({ createdAt: _.gte(todayStart), type: 'mall' }).count(),
+      db.collection('orders').where({ createdAt: _.gte(todayStart), type: 'group_buy', status: _.neq('cancelled') }).count(),
       db.collection('feedingOrders').where({ createdAt: _.gte(todayStart) }).count(),
       db.collection('activity_registrations').where({ createdAt: _.gte(todayStart) }).count(),
     ])
@@ -230,11 +246,11 @@ async function getEnhancedDashboardStats(event, context, auth) {
     // 今日各渠道收入
     const [todayMallRevenue, todayTuanRevenue, todayFeedingRevenue, todayActivityRevenue] = await Promise.all([
       db.collection('orders').aggregate()
-        .match({ createdAt: _.gte(todayStart) })
+        .match({ createdAt: _.gte(todayStart), type: 'mall' })
         .group({ _id: null, total: { $sum: { $toDouble: { $ifNull: ['$totalPrice', { $ifNull: ['$price', 0] }] } } } })
         .end(),
-      db.collection('tuan_orders').aggregate()
-        .match({ createdAt: _.gte(todayStart), status: _.neq('cancelled') })
+      db.collection('orders').aggregate()
+        .match({ createdAt: _.gte(todayStart), type: 'group_buy', status: _.neq('cancelled') })
         .group({ _id: null, total: { $sum: { $toDouble: { $ifNull: ['$totalAmount', 0] } } } })
         .end(),
       db.collection('feedingOrders').aggregate()
@@ -252,11 +268,11 @@ async function getEnhancedDashboardStats(event, context, auth) {
     // 30天订单趋势（各渠道合并）
     const [mallTrend, tuanTrend, feedingTrend, activityTrend] = await Promise.all([
       db.collection('orders').aggregate()
-        .match({ createdAt: _.gte(thirtyDaysAgo) })
-        .group({ _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 }, revenue: { $sum: { $toDouble: { $ifNull: ['$totalPrice', { $ifNull: ['$price', 0] }] } } } })
+        .match({ createdAt: _.gte(thirtyDaysAgo), type: 'mall' })
+        .group({ _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 }, revenue: { $sum: { $toDouble: { $ifNull: ['$totalAmount', { $ifNull: ['$totalPrice', { $ifNull: ['$price', 0] }] }] } } } })
         .end(),
-      db.collection('tuan_orders').aggregate()
-        .match({ createdAt: _.gte(thirtyDaysAgo), status: _.neq('cancelled') })
+      db.collection('orders').aggregate()
+        .match({ createdAt: _.gte(thirtyDaysAgo), type: 'group_buy', status: _.neq('cancelled') })
         .group({ _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 }, revenue: { $sum: { $toDouble: { $ifNull: ['$totalAmount', 0] } } } })
         .end(),
       db.collection('feedingOrders').aggregate()
@@ -301,8 +317,8 @@ async function getEnhancedDashboardStats(event, context, auth) {
         .match({ createdAt: _.gte(thirtyDaysAgo), type: 'boarding' })
         .group({ _id: null, count: { $sum: 1 } })
         .end(),
-      db.collection('tuan_orders').aggregate()
-        .match({ createdAt: _.gte(thirtyDaysAgo), status: _.neq('cancelled') })
+      db.collection('orders').aggregate()
+        .match({ createdAt: _.gte(thirtyDaysAgo), type: 'group_buy', status: _.neq('cancelled') })
         .group({ _id: null, count: { $sum: 1 } }).end(),
       db.collection('feedingOrders').aggregate()
         .match({ createdAt: _.gte(thirtyDaysAgo), status: _.neq('cancelled') })
@@ -333,11 +349,11 @@ async function getEnhancedDashboardStats(event, context, auth) {
     // orders 集合按 type 分组：mall 归类为商城，group_buy 归类为团购，其余归类为寄养
     const [mallRevAgg, tuanRevAgg, feedingRevAgg, activityRevAgg] = await Promise.all([
       db.collection('orders').aggregate()
-        .match({ createdAt: _.gte(thirtyDaysAgo) })
+        .match({ createdAt: _.gte(thirtyDaysAgo), type: _.neq('group_buy') })
         .group({ _id: '$type', revenue: { $sum: { $toDouble: { $ifNull: ['$totalAmount', { $ifNull: ['$totalPrice', { $ifNull: ['$price', 0] }] }] } } } })
         .end(),
-      db.collection('tuan_orders').aggregate()
-        .match({ createdAt: _.gte(thirtyDaysAgo), status: _.neq('cancelled') })
+      db.collection('orders').aggregate()
+        .match({ createdAt: _.gte(thirtyDaysAgo), type: 'group_buy', status: _.neq('cancelled') })
         .group({ _id: null, revenue: { $sum: { $toDouble: { $ifNull: ['$totalAmount', 0] } } } }).end(),
       db.collection('feedingOrders').aggregate()
         .match({ createdAt: _.gte(thirtyDaysAgo), status: _.neq('cancelled') })
@@ -350,12 +366,14 @@ async function getEnhancedDashboardStats(event, context, auth) {
     const revenueByType = {}
     let boardingRevenue = 0
     ;(mallRevAgg.data || []).forEach(t => {
-      const typeName = t._id || 'mall'
+      const typeName = t._id || ''
       if (typeName === 'mall') {
         revenueByType.mall = { name: 'mall', amount: Number((t.revenue || 0).toFixed(2)) }
-      } else if (typeName === 'group_buy') {
-        revenueByType.tuan = { name: 'tuan', amount: Number(((revenueByType.tuan?.amount || 0) + (t.revenue || 0)).toFixed(2)) }
+      } else if (typeName === 'activity') {
+        // 活动镜像单不参与订单侧收入（活动收入以 activity_registrations 为准，避免重复统计）
+        return
       } else {
+        // boarding 与历史无 type 订单（按治理口径归为寄养）计入寄养桶
         boardingRevenue += t.revenue || 0
       }
     })
@@ -418,14 +436,14 @@ async function getFinanceOverview(event, context, auth) {
     // 各订单类型的查询配置，与实际数据库集合结构对齐：
     // - orders 集合：用 type 字段区分（mall / group_buy / boarding）
     // - feedingOrders 集合：有 orderType='feeding'
-    // - tuan_orders 集合：独立集合
+    // - 团购订单统一从 orders(type='group_buy') 取数（tuan_orders 仅为同步镜像，不再作为统计来源）
     // - activity_registrations 集合：独立集合
     // 金额字段统一用 totalAmount，状态用 completed / paid 表示已完成
     const ORDER_TYPE_MAP = {
       mall: { collection: 'orders', where: { type: 'mall', status: _.in(['completed', 'paid']) } },
       boarding: { collection: 'orders', where: { type: 'boarding', status: _.in(['completed', 'paid']) } },
       activity: { collection: 'activity_registrations', where: { status: _.in(['completed', 'paid']) } },
-      tuan: { collection: 'tuan_orders', where: { status: _.in(['completed', 'paid']) } },
+      tuan: { collection: 'orders', where: { type: 'group_buy', status: _.in(['completed', 'paid']) } },
       feeding: { collection: 'feedingOrders', where: { status: _.in(['completed', 'paid']) } },
     }
 
@@ -523,62 +541,17 @@ async function getReferralStats(event, context, auth) {
 
       if (invitedOpenids.length > 0) {
         const spenderOpenids = new Set()
-
-        const ordersRes = await db.collection('orders')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(ordersRes.data || []).forEach(o => {
-          if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-          totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-
-        const mallOrdersRes = await db.collection('orders')
-          .where({ ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(mallOrdersRes.data || []).forEach(o => {
-          if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-          totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-
-        try {
-          const feedRes = await db.collection('feedingOrders')
-            .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-            .limit(1000)
-            .get()
-          ;(feedRes.data || []).forEach(o => {
-            if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-            totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-          })
-        } catch (e) {
-          logger.warn('getReferralStats.feedingOrders', { code: e.errCode, msg: e.message })
-        }
-
-        try {
-          const tuanRes = await db.collection('tuan_orders')
-            .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-            .limit(1000)
-            .get()
-          ;(tuanRes.data || []).forEach(o => {
-            if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-            totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-          })
-        } catch (e) {
-          logger.warn('getReferralStats.tuan_orders', { code: e.errCode, msg: e.message })
-        }
-
-        try {
-          const actRes = await db.collection('activity_registrations')
-            .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-            .limit(1000)
-            .get()
-          ;(actRes.data || []).forEach(o => {
-            if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-            totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-          })
-        } catch (e) {
-          logger.warn('getReferralStats.activity_registrations', { code: e.errCode, msg: e.message })
+        // 统一口径：每个板块只从一个权威集合取数，金额按 totalAmount || totalPrice || price 解析
+        for (const board of REFERRAL_BOARDS) {
+          try {
+            const list = await fetchBoardOrders(board, invitedOpenids)
+            for (const o of list) {
+              if (o.ownerId) {spenderOpenids.add(o.ownerId)}
+              totalSpent += resolveOrderAmount(o)
+            }
+          } catch (e) {
+            logger.warn(`getReferralStats.${board.type}`, { code: e.errCode, msg: e.message })
+          }
         }
 
         consumingCount = spenderOpenids.size
@@ -607,62 +580,17 @@ async function getReferralStats(event, context, auth) {
 
     if (invitedOpenids.length > 0) {
       const spenderOpenids = new Set()
-
-      const ordersRes = await db.collection('orders')
-        .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-        .limit(1000)
-        .get()
-      ;(ordersRes.data || []).forEach(o => {
-        if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-        totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-      })
-
-      const mallOrdersRes = await db.collection('orders')
-        .where({ ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' })
-        .limit(1000)
-        .get()
-      ;(mallOrdersRes.data || []).forEach(o => {
-        if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-        totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-      })
-
-      try {
-        const feedRes = await db.collection('feedingOrders')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-          ;(feedRes.data || []).forEach(o => {
-          if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-          totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-      } catch (e) {
-        logger.warn('getReferralStats.feedingOrders(2)', { code: e.errCode, msg: e.message })
-      }
-
-      try {
-        const tuanRes = await db.collection('tuan_orders')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-          ;(tuanRes.data || []).forEach(o => {
-          if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-          totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-      } catch (e) {
-        logger.warn('getReferralStats.tuan_orders(2)', { code: e.errCode, msg: e.message })
-      }
-
-      try {
-        const actRes = await db.collection('activity_registrations')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-          ;(actRes.data || []).forEach(o => {
-          if (o.ownerId) {spenderOpenids.add(o.ownerId)}
-          totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-      } catch (e) {
-        logger.warn('getReferralStats.activity_registrations(2)', { code: e.errCode, msg: e.message })
+      // 统一口径：每个板块只从一个权威集合取数，金额按 totalAmount || totalPrice || price 解析
+      for (const board of REFERRAL_BOARDS) {
+        try {
+          const list = await fetchBoardOrders(board, invitedOpenids)
+          for (const o of list) {
+            if (o.ownerId) {spenderOpenids.add(o.ownerId)}
+            totalSpent += resolveOrderAmount(o)
+          }
+        } catch (e) {
+          logger.warn(`getReferralStats.${board.type}(2)`, { code: e.errCode, msg: e.message })
+        }
       }
 
       consumingCount = spenderOpenids.size
@@ -708,62 +636,19 @@ async function getReferralList(event, context, auth) {
         if (openids.length === 0) {continue}
         let orderCount = 0
         let totalSpent = 0
-
-        const ordersRes = await db.collection('orders')
-          .where({ ownerId: _.in(openids), status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(ordersRes.data || []).forEach(o => {
-          orderCount += 1
-          totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-
-        const mallRes = await db.collection('orders')
-          .where({ ownerId: _.in(openids), type: 'mall', status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(mallRes.data || []).forEach(o => {
-          orderCount += 1
-          totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-
-        try {
-          const feedRes = await db.collection('feedingOrders')
-            .where({ ownerId: _.in(openids), status: 'completed' })
-            .limit(1000)
-            .get()
-          ;(feedRes.data || []).forEach(o => {
-            orderCount += 1
-            totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-          })
-        } catch (e) {
-          logger.warn('getReferralList.feedingOrders', { inviterId, code: e.errCode, msg: e.message })
-        }
-
-        try {
-          const tuanRes = await db.collection('tuan_orders')
-            .where({ ownerId: _.in(openids), status: 'completed' })
-            .limit(1000)
-            .get()
-          ;(tuanRes.data || []).forEach(o => {
-            orderCount += 1
-            totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-          })
-        } catch (e) {
-          logger.warn('getReferralList.tuan_orders', { inviterId, code: e.errCode, msg: e.message })
-        }
-
-        try {
-          const actRes = await db.collection('activity_registrations')
-            .where({ ownerId: _.in(openids), status: 'completed' })
-            .limit(1000)
-            .get()
-          ;(actRes.data || []).forEach(o => {
-            orderCount += 1
-            totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-          })
-        } catch (e) {
-          logger.warn('getReferralList.activity_registrations', { inviterId, code: e.errCode, msg: e.message })
+        // 统一口径（2026-08-04 治理）：每个板块只从一个权威集合取数，
+        //   团购从 orders.type='group_buy'（不再双查 tuan_orders），
+        //   状态=已支付且未取消，金额 totalAmount || totalPrice || price。
+        for (const board of REFERRAL_BOARDS) {
+          try {
+            const list = await fetchBoardOrders(board, openids)
+            for (const o of list) {
+              orderCount += 1
+              totalSpent += resolveOrderAmount(o)
+            }
+          } catch (e) {
+            logger.warn(`getReferralList.${board.type}`, { inviterId, code: e.errCode, msg: e.message })
+          }
         }
 
         orderMap[inviterId] = { orderCount, totalSpent }
@@ -827,72 +712,19 @@ async function getInvitedUsersByAdmin(event, context, auth) {
     const orderMap = {}
     if (invitedUsers.length > 0) {
       const invitedOpenids = invitedUsers.map(u => u._id).filter(Boolean)
-
-      const ordersRes = await db.collection('orders')
-        .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-        .limit(1000)
-        .get()
-      ;(ordersRes.data || []).forEach(o => {
-        const key = o.ownerId
-        if (!orderMap[key]) {orderMap[key] = { orderCount: 0, totalSpent: 0 }}
-        orderMap[key].orderCount += 1
-        orderMap[key].totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-      })
-
-      const mallRes = await db.collection('orders')
-        .where({ ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' })
-        .limit(1000)
-        .get()
-      ;(mallRes.data || []).forEach(o => {
-        const key = o.ownerId
-        if (!orderMap[key]) {orderMap[key] = { orderCount: 0, totalSpent: 0 }}
-        orderMap[key].orderCount += 1
-        orderMap[key].totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-      })
-
-      try {
-        const feedRes = await db.collection('feedingOrders')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(feedRes.data || []).forEach(o => {
-          const key = o.ownerId
-          if (!orderMap[key]) {orderMap[key] = { orderCount: 0, totalSpent: 0 }}
-          orderMap[key].orderCount += 1
-          orderMap[key].totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-      } catch (e) {
-        logger.warn('getInvitedUsersByAdmin.feedingOrders', { targetOpenid, code: e.errCode, msg: e.message })
-      }
-
-      try {
-        const tuanRes = await db.collection('tuan_orders')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(tuanRes.data || []).forEach(o => {
-          const key = o.ownerId
-          if (!orderMap[key]) {orderMap[key] = { orderCount: 0, totalSpent: 0 }}
-          orderMap[key].orderCount += 1
-          orderMap[key].totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-      } catch (e) {
-        logger.warn('getInvitedUsersByAdmin.tuan_orders', { targetOpenid, code: e.errCode, msg: e.message })
-      }
-
-      try {
-        const actRes = await db.collection('activity_registrations')
-          .where({ ownerId: _.in(invitedOpenids), status: 'completed' })
-          .limit(1000)
-          .get()
-        ;(actRes.data || []).forEach(o => {
-          const key = o.ownerId
-          if (!orderMap[key]) {orderMap[key] = { orderCount: 0, totalSpent: 0 }}
-          orderMap[key].orderCount += 1
-          orderMap[key].totalSpent += (Number(o.totalPrice) || Number(o.price) || 0)
-        })
-      } catch (e) {
-        logger.warn('getInvitedUsersByAdmin.activity_registrations', { targetOpenid, code: e.errCode, msg: e.message })
+      // 统一口径：每个板块只从一个权威集合取数，金额按 totalAmount || totalPrice || price 解析
+      for (const board of REFERRAL_BOARDS) {
+        try {
+          const list = await fetchBoardOrders(board, invitedOpenids)
+          for (const o of list) {
+            const key = o.ownerId
+            if (!orderMap[key]) {orderMap[key] = { orderCount: 0, totalSpent: 0 }}
+            orderMap[key].orderCount += 1
+            orderMap[key].totalSpent += resolveOrderAmount(o)
+          }
+        } catch (e) {
+          logger.warn(`getInvitedUsersByAdmin.${board.type}`, { targetOpenid, code: e.errCode, msg: e.message })
+        }
       }
     }
 
@@ -997,7 +829,7 @@ async function getReferralOrders(event, context, auth) {
           .orderBy('createdAt', 'desc').skip((page - 1) * pageSize).limit(pageSize).get()
         ;(tuanRes.data || []).forEach(o => orders.push({ ...o, orderType: 'tuan', buyerNick: nickMap[o.ownerId] || '' }))
       } catch (e) {
-        logger.warn('getReferralOrders.tuan_orders', { code: e.errCode, msg: e.message })
+        logger.warn('getReferralOrders.tuan', { code: e.errCode, msg: e.message })
       }
     }
 
@@ -1052,96 +884,32 @@ async function getReferralOrderStats(event, context, auth) {
     let totalCount = 0
     let typeBreakdown = {} // 记录各类型订单金额（用于 type === 'all' 时分别计算佣金）
 
-    const sumOrders = (res) => {
-      let c = 0, s = 0
-      ;(res.data || []).forEach(o => { c++; s += Number(o.totalPrice) || Number(o.totalAmount) || Number(o.price) || 0 })
-      return { c, s }
-    }
-
+    // 统一口径：每个板块只从一个权威集合取数（团购从 orders.type='group_buy'），
+    // 状态集=已支付且未取消，金额按 totalAmount || totalPrice || price 解析。
+    const boardByType = REFERRAL_BOARDS.find(b => b.type === type)
     if (type === 'all') {
-      try {
-        const [mallRes, boardingRes, feedingRes, tuanRes, activityRes] = await Promise.all([
-          db.collection('orders').where({ ownerId: _.in(invitedOpenids), type: 'mall', status: _.in(['paid', 'shipped', 'completed']) }).get(),
-          db.collection('orders').where({ ownerId: _.in(invitedOpenids), type: 'boarding', status: _.in(['paid', 'shipped', 'completed']) }).get(),
-          db.collection('feedingOrders').where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) }).get(),
-          db.collection('tuan_orders').where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) }).get(),
-          db.collection('activity_registrations').where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'confirmed', 'completed']) }).get(),
-        ])
-        const mall = sumOrders(mallRes)
-        const boarding = sumOrders(boardingRes)
-        const feeding = sumOrders(feedingRes)
-        const tuan = sumOrders(tuanRes)
-        const activity = sumOrders(activityRes)
-        
-        totalCount = mall.c + boarding.c + feeding.c + tuan.c + activity.c
-        totalAmount = mall.s + boarding.s + feeding.s + tuan.s + activity.s
-        
-        // 记录各类型金额，用于后续分别计算佣金
-        typeBreakdown = {
-          mall: mall.s,
-          boarding: boarding.s,
-          feeding: feeding.s,
-          tuan: tuan.s,
-          activity: activity.s,
+      for (const board of REFERRAL_BOARDS) {
+        try {
+          const list = await fetchBoardOrders(board, invitedOpenids)
+          let c = 0
+          let s = 0
+          for (const o of list) {c++; s += resolveOrderAmount(o)}
+          typeBreakdown[board.type] = s
+          totalCount += c
+          totalAmount += s
+        } catch (e) {
+          logger.warn(`getReferralOrderStats.${board.type}`, { type, code: e.errCode, msg: e.message })
         }
-      } catch (e) {
-        logger.warn('getReferralOrderStats.all', { code: e.errCode, msg: e.message })
       }
-    } else if (type === 'mall') {
+    } else if (boardByType) {
       try {
-        const res = await db.collection('orders')
-          .where({ type: 'mall', ownerId: _.in(invitedOpenids), status: _.in(['paid', 'shipped', 'completed']) })
-          .get()
-        const { c, s } = sumOrders(res)
-        totalCount += c
-        totalAmount += s
+        const list = await fetchBoardOrders(boardByType, invitedOpenids)
+        for (const o of list) {totalCount++; totalAmount += resolveOrderAmount(o)}
       } catch (e) {
-        logger.warn('getReferralOrderStats.mall', { type, code: e.errCode, msg: e.message })
+        logger.warn(`getReferralOrderStats.${boardByType.type}`, { type, code: e.errCode, msg: e.message })
       }
-    } else if (type === 'boarding') {
-      try {
-        const res = await db.collection('orders')
-          .where({ type: 'boarding', ownerId: _.in(invitedOpenids), status: _.in(['paid', 'confirmed', 'completed']) })
-          .get()
-        const { c, s } = sumOrders(res)
-        totalCount += c
-        totalAmount += s
-      } catch (e) {
-        logger.warn('getReferralOrderStats.boarding', { type, code: e.errCode, msg: e.message })
-      }
-    } else if (type === 'feeding') {
-      try {
-        const res = await db.collection('feedingOrders')
-          .where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) })
-          .get()
-        const { c, s } = sumOrders(res)
-        totalCount += c
-        totalAmount += s
-      } catch (e) {
-        logger.warn('getReferralOrderStats.feedingOrders', { type, code: e.errCode, msg: e.message })
-      }
-    } else if (type === 'tuan') {
-      try {
-        const res = await db.collection('tuan_orders')
-          .where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) })
-          .get()
-        const { c, s } = sumOrders(res)
-        totalCount += c
-        totalAmount += s
-      } catch (e) {
-        logger.warn('getReferralOrderStats.tuan_orders', { type, code: e.errCode, msg: e.message })
-      }
-    } else if (type === 'activity') {
-      try {
-        const res = await db.collection('activity_registrations')
-          .where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'confirmed', 'completed']) })
-          .get()
-        const { c, s } = sumOrders(res)
-        totalCount += c
-        totalAmount += s
-      } catch (e) {
-        logger.warn('getReferralOrderStats.activity_registrations', { type, code: e.errCode, msg: e.message })
-      }
+    } else {
+      return handleSuccess({ totalAmount: 0, totalCount: 0, commissionRate: 0, estimatedCommission: 0 })
     }
 
     totalAmount = Math.round(totalAmount * 100) / 100
@@ -1244,7 +1012,13 @@ async function getPartnerCommissionRates(event, context, auth) {
     const customRates = (admin && admin.commissionRates) || {}
     const rates = {}
     ORDER_TYPES.forEach(type => {
-      rates[type] = customRates[type] !== undefined ? Number(customRates[type]) : (globalRates[type] !== undefined ? Number(globalRates[type]) : 0)
+      // pickRate 按 RATE_KEY_ALIASES 依次尝试 boarding/hosting/order，取首个非零值；
+      // 同时把结果写入 boarding 与 hosting 两个键，兼容前端(用 hosting)与未来(用 boarding)读侧。
+      const custom = (0, commission_utils_1.pickRate)(customRates, type)
+      const global = (0, commission_utils_1.pickRate)(globalRates, type)
+      const value = custom > 0 ? custom : (global > 0 ? global : 0)
+      rates[type] = value
+      if (type === 'boarding') { rates['hosting'] = value }
     })
 
     return handleSuccess({ rates, hasCustomRates: Boolean(admin && admin.commissionRates) })
@@ -1263,25 +1037,46 @@ async function updatePartnerCommissionRates(event, context, auth) {
   try {
     logger.info('updatePartnerCommissionRates', { targetOpenid, rates, authOpenid: auth.openid })
     // targetOpenid 是 openid（admins 集合 _id = openid）
-    const commissionRates = {}
+    // 读取现有配置用于合并（避免只提交部分字段时清空其它费率类型）
+    let existing = {}
+    try {
+      const res = await db.collection('admins').doc(targetOpenid).get()
+      existing = (res.data || {})
+    } catch (e) {
+      logger.warn('updatePartnerCommissionRates.read_existing', { targetOpenid, code: e?.errCode, msg: e?.message })
+    }
+    const existingRates = existing.commissionRates || {}
 
-    for (const type of Object.keys(rates)) {
-      if (!ORDER_TYPES.includes(type)) {continue}
-      const rate = Number(rates[type])
+    const data = {}
+    for (const rawKey of Object.keys(rates)) {
+      // 归一化：hosting/group_buy/order 等别名键统一收敛到 canonical（boarding/tuan）
+      const canonical = (0, commission_utils_1.normalizeOrderType)(rawKey)
+      if (!ORDER_TYPES.includes(canonical)) {continue}
+      const rate = Number(rates[rawKey])
       if (isNaN(rate) || rate < 0 || rate > 100) {
-        throw err('INVALID_PARAMS', `${ORDER_TYPE_NAMES[type]}分佣比例须在0-100之间`)
+        throw err('INVALID_PARAMS', `${ORDER_TYPE_NAMES[canonical] || rawKey}分佣比例须在0-100之间`)
       }
-      commissionRates[type] = rate
+      data[canonical] = rate
+      // 键漂移防护：仅同步文档中已存在的别名键（如 hosting），不新增冗余键
+      for (const alias of ((0, commission_utils_1.RATE_KEY_ALIASES)[canonical] || [])) {
+        if (alias !== canonical && Object.prototype.hasOwnProperty.call(existingRates, alias)) {
+          data[alias] = rate
+        }
+      }
+    }
+    if (!Object.keys(data).length) {
+      throw err('INVALID_PARAMS', '没有需要更新的字段')
     }
 
+    const merged = { ...existingRates, ...data }
     await db.collection('admins').doc(targetOpenid).update({
       data: {
-        commissionRates,
+        commissionRates: merged,
         commissionRatesUpdatedAt: new Date(),
       },
     })
 
-    return handleSuccess({ commissionRates })
+    return handleSuccess({ commissionRates: merged })
   } catch (error) {
     logger.error('updatePartnerCommissionRates', error)
     return handleError(error, '更新合作伙伴佣金比例失败', ERROR_CODES.DATA)
@@ -1313,7 +1108,13 @@ async function getMyCommissionRates(event, context, auth) {
     const customRates = (admin && admin.commissionRates) || {}
     const rates = {}
     ORDER_TYPES.forEach(type => {
-      rates[type] = customRates[type] !== undefined ? Number(customRates[type]) : (globalRates[type] !== undefined ? Number(globalRates[type]) : 0)
+      // pickRate 按 RATE_KEY_ALIASES 依次尝试 boarding/hosting/order，取首个非零值；
+      // 同时把结果写入 boarding 与 hosting 两个键，兼容前端(用 hosting)与未来(用 boarding)读侧。
+      const custom = (0, commission_utils_1.pickRate)(customRates, type)
+      const global = (0, commission_utils_1.pickRate)(globalRates, type)
+      const value = custom > 0 ? custom : (global > 0 ? global : 0)
+      rates[type] = value
+      if (type === 'boarding') { rates['hosting'] = value }
     })
 
     return handleSuccess({ rates, hasCustomRates: Boolean(admin && admin.commissionRates) })

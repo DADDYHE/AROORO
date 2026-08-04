@@ -35,7 +35,7 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.orderService.json
  *   （运行时仍消费 .js 编译产物）
  */
-import type { OrderDoc, UserDoc, ApiResponse } from '../common/types';
+import type { OrderDoc, UserDoc, ApiResponse } from './common/types';
 /** 通用 handler 签名（event / context / auth） */
 type AuthLike = {
     openid?: string;

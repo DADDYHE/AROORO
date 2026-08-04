@@ -256,7 +256,6 @@ class CloudFunctionService {
 
       const code = error.code || 9999
       const errorTypeKey = ERROR_CODE_MAP[code] || 'BUSINESS'
-      const errorType = ERROR_TYPES[errorTypeKey] || ERROR_TYPES.BUSINESS
       const level = [1003, 1005].includes(code) ? ERROR_LEVELS.WARNING : ERROR_LEVELS.ERROR
 
       globalErrorManager.handleError(error, {
@@ -519,26 +518,6 @@ class AdminService {
 
   async handleBoardingOrder(orderId, operation) {
     return this.cloud.post('adminService', { action: 'handleBoardingOrder', orderId, operation })
-  }
-
-  async getCurrentFeeder(data = {}) {
-    return this.cloud.call('adminService', { action: 'getCurrentFeeder', ...data }, { useCache: false })
-  }
-
-  async createFeederProfile(data) {
-    return this.cloud.post('adminService', { action: 'createFeederProfile', ...data })
-  }
-
-  async updateFeederProfile(data) {
-    return this.cloud.post('adminService', { action: 'updateFeederProfile', ...data })
-  }
-
-  async getFeederOrders(data = {}) {
-    return this.cloud.call('adminService', { action: 'getFeederOrders', ...data }, { useCache: false })
-  }
-
-  async handleFeedingOrder(orderId, operation) {
-    return this.cloud.post('adminService', { action: 'handleFeedingOrder', orderId, operation })
   }
 
   async getMyIncomeOverview() {

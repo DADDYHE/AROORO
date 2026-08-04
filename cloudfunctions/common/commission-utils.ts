@@ -1,19 +1,25 @@
 /**
- * common/commission-utils.ts - 共享佣金记录工具
+ * common/commission-utils.ts - 全局唯一佣金写入器（Single Source of Truth）
  *
  * 业务功能：
- *   - createCommissionRecord：订单支付成功后创建佣金记录（best-effort）
- *     1) 读取 system_config.commission_rates[orderType]
- *     2) 查询订单买家（users._id = openid）
- *     3) 查找邀请人（inviterId）
- *     4) 计算佣金金额 = 订单金额 × 佣金率 / 100
- *     5) 幂等检查（已存在则跳过）
- *     6) 写入 commissions 集合
+ *   - createCommissionRecord：订单支付/完成后创建佣金记录（best-effort）
+ *     1) 规范化 orderType（order/hosting → boarding，group_buy → tuan）
+ *     2) 查询订单买家（users._id = openid）→ 邀请人（inviterId）
+ *     3) 解析佣金率：admins[inviterId].commissionRates → system_config.commission_rates
+ *        ⭐ 支持费率键别名（boarding ↔ hosting ↔ order），修复寄养佣金恒为 0 的 P0
+ *     4) 按 orderType 路由金额字段（activity=finalAmount / feeding=totalAmount / 其余 totalPrice）
+ *     5) 幂等：确定性 _id + 先查后写 + 唯一索引冲突优雅恢复
+ *     6) 写入 commissions 集合，失败落 alerts
+ *   - cancelCommissionRecord：订单取消/退款时把 pending 佣金置为 cancelled
  *
- * 使用方式：
- *   - 各云函数通过 require('../../common/commission-utils').createCommissionRecord 调用
- *   - 所有异常都被吞掉（best-effort），仅记录日志
- *   - 无需鉴权 / 无需返回结构
+ * 统一说明（2026-08-02 写入器合并）：
+ *   - 本模块是**唯一**佣金写入实现；
+ *     paymentService/services/commission.ts 与 activityService 本地实现均委托到此
+ *   - 各云函数通过 require('./common/commission-utils') 调用（common 自包含约定）
+ *   - 所有异常都被吞掉（best-effort），仅记录日志 + 告警，不影响主业务
+ *
+ * 编译方式：
+ *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.common.json
  */
 
 import { initCloud } from './utils'
@@ -24,8 +30,8 @@ import type { CloudBaseDB } from './types'
 // 类型定义
 // =====================================================================
 
-/** 订单类型 */
-export type CommissionOrderType = 'order' | 'mall' | 'tuan' | 'activity' | 'boarding' | 'feeding'
+/** 佣金记录使用的规范订单类型（写入 commissions.orderType 的值域） */
+export type CommissionOrderType = 'boarding' | 'mall' | 'tuan' | 'activity' | 'feeding'
 
 /** 订单文档（最小子集） */
 export interface CommissionOrderDoc {
@@ -35,18 +41,14 @@ export interface CommissionOrderDoc {
   orderNo?: string
   totalPrice?: number
   totalAmount?: number
+  finalAmount?: number
   basicPrice?: number
+  paidAmount?: number
   [k: string]: unknown
 }
 
-/** 系统配置（佣金率） */
+/** 系统配置（佣金率），键可能是 hosting 或 boarding，故用索引签名 */
 export interface CommissionConfig {
-  order?: number
-  mall?: number
-  tuan?: number
-  activity?: number
-  boarding?: number
-  feeding?: number
   [k: string]: number | undefined
 }
 
@@ -71,10 +73,71 @@ export interface CommissionRecordPayload {
   commissionRate: number
   commissionAmount: number
   status: 'pending'
-  createdAt: Date
-  updatedAt: Date
+  // db.serverDate() 返回 Command 对象，运行时非 Date
+  createdAt: unknown
+  updatedAt: unknown
   [k: string]: unknown
 }
+
+// =====================================================================
+// 常量表（订单类型 / 费率键 / 金额字段）
+// =====================================================================
+
+/**
+ * 订单类型规范化表
+ *   历史上同一业务有多种写法：寄养=order/hosting/boarding，团购=tuan/group_buy
+ *   统一收敛后写入 commissions.orderType，保证读侧（wallet/partner）口径一致
+ */
+export const ORDER_TYPE_CANONICAL: Record<string, CommissionOrderType> = {
+  order: 'boarding',
+  hosting: 'boarding',
+  boarding: 'boarding',
+  mall: 'mall',
+  tuan: 'tuan',
+  group_buy: 'tuan',
+  activity: 'activity',
+  feeding: 'feeding',
+}
+
+/**
+ * ⭐ P0 修复：费率键别名表
+ *   线上 system_config.commission_rates 与 admins.commissionRates 的寄养键名是 `hosting`，
+ *   而写入器一直用 `rates['boarding']` 查询 → undefined → rate=0 → 永不建佣。
+ *   这里按候选顺序依次查找，任一命中且 > 0 即采用。
+ */
+export const RATE_KEY_ALIASES: Record<CommissionOrderType, string[]> = {
+  boarding: ['boarding', 'hosting', 'order'],
+  mall: ['mall'],
+  tuan: ['tuan', 'group_buy'],
+  activity: ['activity'],
+  feeding: ['feeding'],
+}
+
+/**
+ * 金额字段路由表（按优先级取第一个 > 0 的字段）
+ *   - 首选字段与 paymentService/pay.ts 的 ORDER_TYPE_AMOUNT_FIELD 对齐：
+ *     activity=finalAmount（优惠后实付）、feeding=totalAmount、其余=totalPrice
+ *   - P2-1: mall/tuan 加 paidAmount 为首选（支付成功回调写入的实付金额，
+ *     用券订单 totalPrice/totalAmount 是原价，佣金应按实付计提）
+ *   - 次选字段保留各业务历史写法（如 activity 镜像单可能只有 totalAmount），
+ *     避免写入器统一后金额口径发生漂移
+ */
+export const AMOUNT_FIELD_BY_TYPE: Record<CommissionOrderType, string[]> = {
+  boarding: ['totalPrice', 'totalAmount'],
+  mall: ['paidAmount', 'totalPrice'],
+  tuan: ['paidAmount', 'totalPrice', 'totalAmount'],
+  activity: ['finalAmount', 'totalAmount', 'totalPrice'],
+  feeding: ['totalAmount', 'totalPrice'],
+}
+
+/** 主字段缺失时的兼容回退链（历史订单字段不规范） */
+const AMOUNT_FALLBACK_FIELDS = ['totalPrice', 'totalAmount', 'finalAmount', 'basicPrice']
+
+/** 项目硬约束：佣金计算的最低订单金额为 ¥1 */
+const MIN_ORDER_AMOUNT = 1
+
+/** system_config 缓存 TTL（避免高并发回调反复读配置） */
+const CONFIG_CACHE_TTL_MS = 5 * 60 * 1000
 
 // =====================================================================
 // 模块初始化
@@ -87,55 +150,78 @@ const logger = createLogger('commission-utils')
 // 内部辅助
 // =====================================================================
 
-/**
- * 读取系统佣金率配置
- */
+/** 规范化订单类型（未知类型原样返回，便于排查） */
+export function normalizeOrderType(orderType: string): CommissionOrderType {
+  return ORDER_TYPE_CANONICAL[String(orderType)] || (String(orderType) as CommissionOrderType)
+}
+
+let _cachedConfig: { data: CommissionConfig; expiresAt: number } | null = null
+
+/** 读取系统佣金率配置（带 5 分钟缓存，失败回退旧缓存） */
 async function loadCommissionConfig(dbInstance: CloudBaseDB): Promise<CommissionConfig> {
+  if (_cachedConfig && _cachedConfig.expiresAt > Date.now()) {
+    return _cachedConfig.data
+  }
   try {
     const configRes = await dbInstance.collection('system_config').doc('commission_rates').get()
-    return (configRes.data || {}) as CommissionConfig
+    const data = (configRes.data || {}) as CommissionConfig
+    _cachedConfig = { data, expiresAt: Date.now() + CONFIG_CACHE_TTL_MS }
+    return data
   } catch (e) {
     logger.warn('loadCommissionConfig: 读取 system_config 失败', { msg: (e as Error)?.message })
-    return {}
+    return _cachedConfig ? _cachedConfig.data : {}
   }
 }
 
-/**
- * 查询买家档案（users._id = openid）
- */
-async function loadBuyer(dbInstance: CloudBaseDB, ownerId: string): Promise<CommissionUserDoc | null> {
+/** 查询用户档案（买家 / 邀请人共用，users._id = openid） */
+async function loadUser(
+  dbInstance: CloudBaseDB,
+  userId: string,
+  scene: string
+): Promise<CommissionUserDoc | null> {
   try {
-    const buyerRes = await dbInstance.collection('users').doc(ownerId).get()
-    return (buyerRes.data || null) as CommissionUserDoc | null
+    const res = await dbInstance.collection('users').doc(userId).get()
+    return (res.data || null) as CommissionUserDoc | null
   } catch (e) {
-    logger.warn('loadBuyer: 查询买家失败', { ownerId, msg: (e as Error)?.message })
+    logger.warn('loadUser: 查询用户失败', { scene, userId, msg: (e as Error)?.message })
     return null
   }
 }
 
 /**
- * 查询邀请人档案
+ * 从费率来源中按别名候选顺序取费率
+ * @param source admins.commissionRates 或 system_config.commission_rates
+ * @param canonicalType 规范化后的订单类型
+ * @param rawType 调用方传入的原始类型（优先命中）
  */
-async function loadInviter(dbInstance: CloudBaseDB, inviterId: string): Promise<CommissionUserDoc | null> {
-  try {
-    const inviterLookup = await dbInstance.collection('users').doc(inviterId).get()
-    return (inviterLookup.data || null) as CommissionUserDoc | null
-  } catch (e) {
-    logger.warn('loadInviter: 查询邀请人失败', { inviterId, msg: (e as Error)?.message })
-    return null
+export function pickRate(
+  source: Record<string, unknown> | null | undefined,
+  canonicalType: CommissionOrderType,
+  rawType?: string
+): number {
+  if (!source) { return 0 }
+  const candidates = [rawType, ...(RATE_KEY_ALIASES[canonicalType] || [canonicalType])]
+  for (const key of candidates) {
+    if (!key) { continue }
+    const raw = source[key]
+    if (raw === undefined || raw === null) { continue }
+    const value = Number(raw)
+    if (Number.isFinite(value) && value > 0) { return value }
   }
+  return 0
 }
 
-/**
- * 计算订单金额（兼容 totalPrice / totalAmount / basicPrice 三种字段）
- */
-function resolveOrderAmount(order: CommissionOrderDoc): number {
-  return Number(order.totalPrice) || Number(order.totalAmount) || Number(order.basicPrice) || 0
+/** 按 orderType 路由金额字段（优先级列表），全部无效时走通用兼容回退链 */
+export function resolveOrderAmount(order: CommissionOrderDoc, canonicalType: CommissionOrderType): number {
+  const fields = [...(AMOUNT_FIELD_BY_TYPE[canonicalType] || []), ...AMOUNT_FALLBACK_FIELDS]
+  for (const field of fields) {
+    const value = Number(order[field])
+    if (Number.isFinite(value) && value > 0) { return value }
+  }
+  return 0
 }
 
-/**
- * 检查是否已存在佣金记录（幂等保护）
- */
+/** 幂等预检（配合唯一索引 idx_orderId_inviterId 双保险） */
 async function hasExistingCommission(
   dbInstance: CloudBaseDB,
   orderId: string,
@@ -153,12 +239,39 @@ async function hasExistingCommission(
 }
 
 /**
- * 生成唯一 ID
+ * 确定性 _id（同一订单 + 同一邀请人恒定），并发下由 _id 冲突兜底去重
+ *   仅保留 [A-Za-z0-9_-]，避免非法 _id 字符；长度上限 120
  */
-function generateId(prefix: string, seed: string): string {
-  const timestamp = Date.now().toString(36)
-  const random = Math.random().toString(36).substring(2, 8)
-  return `${prefix}_${timestamp}_${random}_${seed.substring(0, 8)}`
+export function buildCommissionId(orderId: string, inviterId: string): string {
+  const raw = `commission_${orderId}_${inviterId}`.replace(/[^A-Za-z0-9_-]/g, '')
+  return raw.length > 120 ? raw.slice(0, 120) : raw
+}
+
+/**
+ * 检测唯一约束 / 主键冲突（CloudBase -502019、MongoDB 11000）
+ *   并发双写时视为"已存在"，静默跳过而非记 error
+ */
+export function isDuplicateKeyError(e: unknown): boolean {
+  const err = e as { errCode?: number | string; code?: number | string; message?: string } | null
+  if (!err) { return false }
+  // CloudBase：-502019 唯一索引冲突 / -502001 文档 _id 已存在
+  const codes = [Number(err.errCode), Number(err.code)]
+  if (codes.includes(-502019) || codes.includes(-502001)) { return true }
+  // MongoDB 11000
+  if (codes.includes(11000)) { return true }
+  const msg = err.message || ''
+  return /duplicate key|E11000|already exist/i.test(msg)
+}
+
+/** 持久化告警（懒加载，避免 common 副本缺 alert 模块时崩溃） */
+async function safeAlert(action: string, message: string, context: Record<string, unknown>): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { recordAlert } = require('./alert')
+    await recordAlert('warning', action, message, context)
+  } catch (e) {
+    logger.warn('safeAlert failed', { action, msg: (e as Error)?.message })
+  }
 }
 
 // =====================================================================
@@ -166,92 +279,93 @@ function generateId(prefix: string, seed: string): string {
 // =====================================================================
 
 /**
- * 创建佣金记录（best-effort）
+ * 创建佣金记录（best-effort，全局唯一实现）
  *
  * 调用时机：
- *   - 支付成功后（paymentService / mallService / activityService / feedingService）
+ *   - 寄养：orderService.handleBoardingOrder / adminService.hosting 完成
+ *   - 商城：paymentService.confirmPayment|notify / adminService.completeMallOrder
+ *   - 团购：paymentService.confirmPayment|notify
+ *   - 活动：activityService 报名支付成功
+ *   - 喂养：feedingService / paymentService.notify
+ *   - 补偿：orderTimeoutService.dispatchRetry（failed_operations 重试）
  *
- * 流程：
- *   1. 读取 system_config.commission_rates[orderType]
- *   2. 若 rate <= 0 → 跳过（无佣金）
- *   3. 若 order.ownerId 缺失 → 跳过
- *   4. 查询买家（users._id = ownerId）
- *   5. 若买家 inviterId 缺失 → 跳过
- *   6. 查询邀请人档案
- *   7. 计算佣金金额（orderAmount × rate / 100，保留 2 位小数）
- *   8. 幂等检查（orderId + inviterId 已存在 → 跳过）
- *   9. 写入 commissions
+ * 跳过条件（均为静默 return，仅 debug 级日志）：
+ *   ownerId 缺失 / 买家不存在 / 无邀请人 / 自购 / 邀请人不存在
+ *   / 费率 <= 0 / 订单金额 < ¥1 / 佣金额 <= 0 / 已存在佣金记录
  *
- * 错误处理：
- *   - 任何异常都被吞掉，仅记录日志
- *   - 不影响主业务（支付成功）的响应
- *
- * @param orderType 订单类型
+ * @param orderType 订单类型（接受 order/hosting/boarding/group_buy 等别名）
  * @param order 订单文档
- * @returns 始终返回 void；失败仅记日志
  */
 export async function createCommissionRecord(
   orderType: CommissionOrderType | string,
   order: CommissionOrderDoc
 ): Promise<void> {
+  const rawType = String(orderType || '')
+  const canonicalType = normalizeOrderType(rawType)
   try {
-    if (!order.ownerId) { return }
+    if (!order || !order._id || !order.ownerId) { return }
 
-    // 1. 查询买家
-    const buyerData = await loadBuyer(db, order.ownerId)
+    // 1. 买家 → 邀请人
+    const buyerData = await loadUser(db, order.ownerId, 'buyer')
     if (!buyerData) { return }
 
-    // 2. 查询邀请人
     const inviterId = buyerData.inviterId
     if (!inviterId) { return }
 
-    // P0-8: 自购订单不触发佣金（防止 inviterId === ownerId 时给自己发佣金）
+    // 自购订单不发佣（防止用自己的邀请码下单套佣）
     if (inviterId === order.ownerId) {
       logger.info('commission_skipped_self_purchase', { orderId: order._id, ownerId: order.ownerId })
       return
     }
 
-    const inviterData = await loadInviter(db, inviterId)
+    const inviterData = await loadUser(db, inviterId, 'inviter')
     if (!inviterData) { return }
 
-    // 3. 读取佣金率：优先合作伙伴自定义配置，fallback 到系统默认
+    // 2. 费率：合作伙伴自定义优先，回退系统默认（均支持键别名）
     let rate = 0
+    let rateSource = 'none'
     try {
       const adminRes = await db.collection('admins').doc(inviterId).get()
       const admin = adminRes.data as Record<string, unknown> | null
-      const rates = (admin?.commissionRates as Record<string, number>) || {}
-      if (rates[orderType as string] !== undefined) {
-        rate = Number(rates[orderType as string])
-      }
+      rate = pickRate(admin?.commissionRates as Record<string, unknown>, canonicalType, rawType)
+      if (rate > 0) { rateSource = 'admin' }
     } catch (e) {
       logger.warn('loadAdminCommissionRates', { inviterId, msg: (e as Error)?.message })
     }
     if (rate <= 0) {
       const config = await loadCommissionConfig(db)
-      rate = Number(config[orderType as string]) || 0
+      rate = pickRate(config as Record<string, unknown>, canonicalType, rawType)
+      if (rate > 0) { rateSource = 'system' }
     }
-    if (rate <= 0) { return }
+    if (rate <= 0) {
+      logger.info('commission_skipped_zero_rate', { orderId: order._id, orderType: canonicalType, rawType })
+      return
+    }
 
-    // 4. 计算订单金额 + 佣金金额
-    const orderAmount = resolveOrderAmount(order)
-    if (orderAmount <= 0) { return }
+    // 3. 金额（按类型路由字段）+ 佣金额（整数分计算，杜绝浮点漂移）
+    const orderAmount = resolveOrderAmount(order, canonicalType)
+    if (orderAmount < MIN_ORDER_AMOUNT) {
+      logger.info('commission_skipped_amount_too_small', {
+        orderId: order._id, orderType: canonicalType, orderAmount,
+      })
+      return
+    }
 
-    // P0-3: 使用整数分计算佣金，避免浮点精度误差
     const orderAmountFen = Math.round(orderAmount * 100)
     const commissionAmountFen = Math.round(orderAmountFen * rate / 100)
     const commissionAmount = commissionAmountFen / 100
     if (commissionAmount <= 0) { return }
 
-    // 5. 幂等检查
+    // 4. 幂等预检
     if (await hasExistingCommission(db, order._id, inviterId)) { return }
 
-    // 6. 写入佣金记录
+    // 5. 写入（确定性 _id + 唯一索引冲突恢复）
     const payload: CommissionRecordPayload = {
-      _id: generateId('commission', order.ownerId),
+      _id: buildCommissionId(order._id, inviterId),
       inviterId,
       inviterNickName: inviterData.nickName || '',
       ownerId: buyerData._id,
-      orderType: orderType as CommissionOrderType,
+      orderType: canonicalType,
       orderId: order._id,
       orderNo: order.outTradeNo || order.orderNo || '',
       orderAmount,
@@ -262,30 +376,34 @@ export async function createCommissionRecord(
       updatedAt: db.serverDate(),
     }
 
-    await db.collection('commissions').add({ data: payload })
-    logger.info('commission_created', { orderType, orderId: order._id, amount: orderAmount, rate, commission: commissionAmount })
+    try {
+      await db.collection('commissions').add({ data: payload })
+    } catch (addError) {
+      if (isDuplicateKeyError(addError)) {
+        logger.info('commission_duplicate_recovered', { orderId: order._id, inviterId, orderType: canonicalType })
+        return
+      }
+      throw addError
+    }
+
+    logger.info('commission_created', {
+      orderType: canonicalType, rawType, orderId: order._id,
+      amount: orderAmount, rate, rateSource, commission: commissionAmount,
+    })
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : '未知错误'
-    logger.error('createCommissionRecord', { msg, orderType, orderId: order?._id })
+    logger.error('createCommissionRecord', { msg, orderType: canonicalType, rawType, orderId: order?._id })
+    await safeAlert('commission.create.failed', `佣金记录创建失败：${msg}`, {
+      orderType: canonicalType, rawType, orderId: order?._id, error: msg,
+    })
   }
 }
 
 /**
  * 取消佣金记录（best-effort）
  *
- * 调用时机：
- *   - 订单取消/退款时
- *
- * 流程：
- *   1. 查找 commissions 中 orderId 对应的所有记录
- *   2. 将 status 从 'pending' 更新为 'cancelled'
- *
- * 错误处理：
- *   - 任何异常都被吞掉，仅记录日志
- *   - 不影响主业务（订单取消）的响应
- *
- * @param orderId 订单ID
- * @returns 始终返回 void；失败仅记日志
+ * 调用时机：订单取消 / 退款
+ * 行为：将该订单下所有 pending 佣金置为 cancelled（已结算的 settled 不动）
  */
 export async function cancelCommissionRecord(orderId: string): Promise<void> {
   try {
@@ -305,6 +423,7 @@ export async function cancelCommissionRecord(orderId: string): Promise<void> {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : '未知错误'
     logger.error('cancelCommissionRecord', { msg, orderId })
+    await safeAlert('commission.cancel.failed', `佣金记录取消失败：${msg}`, { orderId, error: msg })
   }
 }
 

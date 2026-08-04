@@ -24,10 +24,24 @@ function makeCommand() {
       sum: (arg) =>
         typeof arg === 'number'
           ? { _agg: 'sum', const: arg }
-          : { _agg: 'sum', field: String(arg).replace(/^\$/, '') },
+          : (arg && typeof arg === 'object' && arg.$ifNull)
+            ? { _agg: 'sum', ifNullExpr: arg }
+            : { _agg: 'sum', field: String(arg).replace(/^\$/, '') },
       addToSet: (arg) => ({ _agg: 'addToSet', field: String(arg).replace(/^\$/, '') }),
     },
   }
+}
+
+// 解析聚合金额表达式 totalAmount || totalPrice || price（模拟 $ifNull 链）
+function resolveExpr(doc, expr) {
+  if (expr && typeof expr === 'object' && expr.$ifNull) {
+    const [primary, fallback] = expr.$ifNull
+    const field = String(primary).replace(/^\$/, '')
+    const val = doc[field]
+    if (val !== undefined && val !== null) {return Number(val) || 0}
+    return resolveExpr(doc, fallback)
+  }
+  return 0
 }
 
 function matchDoc(doc, query) {
@@ -66,6 +80,7 @@ function applyAgg(agg, docs) {
   if (!agg || !agg._agg) return 0
   if (agg._agg === 'sum') {
     if (agg.const !== undefined) return docs.length
+    if (agg.ifNullExpr) return docs.reduce((s, d) => s + resolveExpr(d, agg.ifNullExpr), 0)
     return docs.reduce((s, d) => s + (Number(d[agg.field]) || 0), 0)
   }
   if (agg._agg === 'addToSet') {
@@ -230,12 +245,13 @@ beforeEach(() => {
 
 describe('getReferralStats - 邀请统计核心断言', () => {
   test('a. 同一邀请人多个被邀请人：totalInvited 正确；consumingCount 按去重消费用户计；totalSpent 跨集合聚合', async () => {
-    // inv_u1 有两笔已完成订单（normal + mall），inv_u2 一笔 mall 完成，inv_u3 仅一笔未完成（应被排除）
+    // 2026-08-04 治理：orders 用 type 字段区分板块（mall / group_buy / boarding），金额统一 totalAmount
+    // inv_u1 有两笔已完成寄养单，inv_u2 一笔已完成商城单，inv_u3 仅一笔未完成（应被排除）
     mockDb._store('orders').docs = [
-      { _id: 'o1', ownerId: 'inv_u1', status: 'completed', orderType: 'normal', totalPrice: 100 },
-      { _id: 'o2', ownerId: 'inv_u1', status: 'completed', orderType: 'normal', totalPrice: 50 },
-      { _id: 'o3', ownerId: 'inv_u2', status: 'completed', orderType: 'mall', totalPrice: 30 },
-      { _id: 'o4', ownerId: 'inv_u3', status: 'pending', totalPrice: 999 },
+      { _id: 'o1', ownerId: 'inv_u1', status: 'completed', type: 'boarding', totalAmount: 100 },
+      { _id: 'o2', ownerId: 'inv_u1', status: 'completed', type: 'boarding', totalAmount: 50 },
+      { _id: 'o3', ownerId: 'inv_u2', status: 'completed', type: 'mall', totalAmount: 30 },
+      { _id: 'o4', ownerId: 'inv_u3', status: 'pending', type: 'mall', totalAmount: 999 },
     ]
 
     const res = await referral.getReferralStats({}, {}, AUTH)
@@ -298,10 +314,11 @@ describe('getInvitedUsers - 分页不丢不重复 + 每用户订单聚合', () =
   })
 
   test('b. 每用户 orderCount / totalSpent 由 per-user 聚合得出', async () => {
+    // 2026-08-04 治理：orders 用 type 字段区分板块（mall / group_buy / boarding），金额统一 totalAmount
     mockDb._store('orders').docs = [
-      { _id: 'o1', ownerId: 'inv_u1', status: 'completed', orderType: 'normal', totalPrice: 100 },
-      { _id: 'o2', ownerId: 'inv_u1', status: 'completed', orderType: 'normal', totalPrice: 50 },
-      { _id: 'o3', ownerId: 'inv_u2', status: 'completed', orderType: 'mall', totalPrice: 30 },
+      { _id: 'o1', ownerId: 'inv_u1', status: 'completed', type: 'boarding', totalAmount: 100 },
+      { _id: 'o2', ownerId: 'inv_u1', status: 'completed', type: 'boarding', totalAmount: 50 },
+      { _id: 'o3', ownerId: 'inv_u2', status: 'completed', type: 'mall', totalAmount: 30 },
     ]
     const res = await referral.getInvitedUsers({ page: 1, pageSize: 20 }, {}, AUTH)
     expect(res.code).toBe(0)

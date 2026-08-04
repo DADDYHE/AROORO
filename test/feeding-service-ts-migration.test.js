@@ -6,7 +6,7 @@
  *   2. 验证 tsconfig.feedingService.json include 包含 index.ts
  *   3. 验证 build-all-services.js 包含 index.js target
  *   4. 验证 index.ts 类型定义完整
- *   5. 验证 12 个 handler 导出
+ *   5. 验证 5 个 handler 导出
  *   6. 验证 Runtime shim 兼容 CommonJS
  *   7. 验证 package.json 注册 audit 脚本
  *   8. 验证 audit 脚本可成功运行
@@ -109,21 +109,19 @@ describe('Sprint 41: feedingService TypeScript 迁移', () => {
     })
   })
 
-  describe('5. 12 个 action handler', () => {
+  describe('5. 5 个 action handler', () => {
     let code
     beforeAll(() => {
       code = readFileSafe(path.join(FEEDING_DIR, 'index.ts'))
     })
 
     const ACTIONS = [
-      'getFeederList', 'getFeederDetail', 'createFeederProfile', 'updateFeederProfile',
-      'createFeedingOrder', 'getFeedingOrders', 'updateFeedingOrderStatus',
-      'getOrderStatus', 'getFeederOrders', 'getFeedingOrderDetail',
-      'handleFeedingOrder', 'getCurrentFeeder',
+      'createFeedingOrder', 'getFeedingOrders', 'getOrderStatus',
+      'updateFeedingOrderStatus', 'getFeedingOrderDetail',
     ]
 
-    test('共 12 个 action', () => {
-      expect(ACTIONS.length).toBe(12)
+    test('共 5 个 action', () => {
+      expect(ACTIONS.length).toBe(5)
     })
 
     ACTIONS.forEach(act => {
@@ -144,7 +142,6 @@ describe('Sprint 41: feedingService TypeScript 迁移', () => {
     })
 
     const HELPERS = [
-      'checkPartnerPermission',
       'refreshPetAvatars',
     ]
 
@@ -162,19 +159,19 @@ describe('Sprint 41: feedingService TypeScript 迁移', () => {
     })
   })
 
-  describe('7. 12 个 action 强类型化', () => {
+  describe('7. 5 个 action 强类型化', () => {
     let code
     beforeAll(() => {
       code = readFileSafe(path.join(FEEDING_DIR, 'index.ts'))
     })
 
-    test('强类型化 12 个 action', () => {
+    test('强类型化 5 个 action', () => {
       const matches = code.match(/export\s+async\s+function\s+\w+/g) || []
-      expect(matches.length).toBeGreaterThanOrEqual(12)
+      expect(matches.length).toBeGreaterThanOrEqual(5)
     })
 
     test('包含状态流转校验', () => {
-      expect(code).toMatch(/TRANSITIONS/)
+      expect(code).toMatch(/allowedTransitions/)
     })
 
     test('包含 commission 记录调用', () => {

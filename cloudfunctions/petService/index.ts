@@ -161,9 +161,8 @@ const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { recordAlert } = require('./common/alert')
 
-const { cloud, db } = initCloud()
+const { db } = initCloud()
 const logger = createLogger('petService')
-const _ = db.command
 
 // =====================================================================
 // 验证常量
@@ -216,11 +215,18 @@ const PET_DETAIL_CACHE_TTL_SECONDS = 5 * 60
 // =====================================================================
 
 export function convertWeight(weight: unknown): number | null {
+  // 未填（undefined/null/''）→ null（允许，前端展示"未知"）
   if (weight === undefined || weight === null || weight === '') { return null }
   const num = Number(weight)
-  if (isNaN(num) || num <= 0) { return null }
+  // P3-B 修复：非法数值不再静默清空为 null，而是显式报错提示用户
+  //   （原实现 0/负数/非数字/超范围一律返回 null，用户输入被悄悄丢弃）
+  if (isNaN(num) || num <= 0) {
+    throw err('INVALID_PARAMS', '体重必须为大于 0 的数字（kg）')
+  }
   // M7: 限制体重范围 0.1-500 kg（覆盖猫 2-10kg、狗 1-80kg、异宠 0.1-50kg）
-  if (num < MIN_WEIGHT_KG || num > MAX_WEIGHT_KG) { return null }
+  if (num < MIN_WEIGHT_KG || num > MAX_WEIGHT_KG) {
+    throw err('INVALID_PARAMS', `体重需在 ${MIN_WEIGHT_KG}-${MAX_WEIGHT_KG}kg 之间`)
+  }
   // 保留两位小数
   return Math.round(num * 100) / 100
 }
@@ -243,8 +249,10 @@ function validateAvatarUrl(avatarUrl: unknown): string {
   if (str.length > MAX_AVATAR_URL_LEN) {
     throw err('INVALID_PARAMS', `头像 URL 长度不能超过 ${MAX_AVATAR_URL_LEN} 个字符`)
   }
-  // 允许空字符串走默认值；非空则必须是 http(s) 或 / 开头的相对路径
-  if (str && !/^(https?:\/\/|\/)/.test(str)) {
+  // 允许空字符串走默认值；非空则必须是 http(s)、/ 开头的相对路径，或 cloud:// fileID
+  // （P1-A: 前端 wx.cloud.uploadFile 返回 cloud:// fileID 直接作为 avatarUrl 存储，
+  //   小程序 image/canvas 均支持 cloud:// 渲染，无需转 http）
+  if (str && !/^(https?:\/\/|\/|cloud:\/\/)/.test(str)) {
     throw err('INVALID_PARAMS', '头像 URL 格式无效')
   }
   return str

@@ -182,6 +182,7 @@ const seedActivity = (over = {}) => {
     {
       _id: ACT_ID,
       title: '测试活动',
+      status: 'published',
       maxParticipants: 5,
       currentParticipants: 0,
       pricePerPerson: 0,

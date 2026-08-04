@@ -7,7 +7,7 @@ const logger = createLogger('adminService:stats')
 
 const ORDER_COLLECTIONS = {
   mall: 'orders',
-  tuan: 'tuan_orders',
+  tuan: 'orders',
   feeding: 'feedingOrders',
   boarding: 'orders',
   activity: 'activity_registrations',
@@ -65,6 +65,7 @@ async function getOrderStats(event) {
       const baseWhere = { ...where }
 
       if (type === 'mall') {baseWhere.type = 'mall'}
+      if (type === 'tuan') {baseWhere.type = 'group_buy'}
       if (type === 'boarding') {
         // 排除 mall + group_buy（团订单另算），避免与 tuan 重复计数
         baseWhere.type = _.or([
@@ -119,6 +120,7 @@ async function exportOrders(event) {
       if (endDate) {where.createdAt = _.lte(new Date(endDate))}
 
       if (type === 'mall') {where.type = 'mall'}
+      if (type === 'tuan') {where.type = 'group_buy'}
       if (type === 'boarding') {
         where.type = _.or([
           _.exists(false),
@@ -161,6 +163,7 @@ async function getOrderTrend(event) {
       const coll = ORDER_COLLECTIONS[type]
       const where = { createdAt: _.gte(startDate), status: _.ne('cancelled') }
       if (type === 'mall') {where.type = 'mall'}
+      if (type === 'tuan') {where.type = 'group_buy'}
       if (type === 'boarding') {
         where.type = _.or([
           _.exists(false),
@@ -193,6 +196,7 @@ async function getOrderTypeStats(event) {
       const coll = ORDER_COLLECTIONS[type]
       const where = { status: _.ne('cancelled') }
       if (type === 'mall') {where.type = 'mall'}
+      if (type === 'tuan') {where.type = 'group_buy'}
       if (type === 'boarding') {
         where.type = _.or([
           _.exists(false),

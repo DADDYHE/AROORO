@@ -122,14 +122,4 @@ exports.FIELD_WHITELISTS = {
         'skuType', 'specGroups', 'skus', 'specs',
         'minPrice', 'maxPrice',
     ],
-    // M2: 修正 feeder 字段白名单，与 FeederRecord 实际字段对齐
-    //   - 旧白名单 ['name', 'area', 'description', 'pricePerVisit', 'services', 'isAcceptingOrders', 'avatar']
-    //     存在 5 个字段不匹配：area→serviceArea, services→serviceTypes/serviceTags, isAcceptingOrders→status, avatar→avatarUrl
-    //   - 修正后允许：基本信息 + 服务描述 + 价格 + 资质
-    //   - 不允许：status（审核状态由管理员维护）、rating/orderCount（系统统计）、createdBy/createdAt/updatedAt（系统字段）
-    feeder: [
-        'name', 'realName', 'nickname', 'avatarUrl', 'phone',
-        'description', 'serviceArea', 'serviceTypes', 'serviceTags',
-        'pricePerVisit', 'certifications', 'gender', 'beautyInfo',
-    ],
 };

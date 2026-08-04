@@ -1,8 +1,7 @@
 /**
  * Sprint 22：商城下单 + 活动报名 风控集成测试
  *
- * 端到端：mock 真实 db 行为，调用 mallService.createOrder / mallService.createGroupBuyOrder
- *        / activityService.submitRegistration，验证：
+ * 端到端：mock 真实 db 行为，调用 mallService.createOrder / activityService.submitRegistration，验证：
  *   - 大额 → RISK_REJECT
  *   - 普通 → pendingReview=false，正常下单
  *   - 风控模块自身异常 → 降级放行
@@ -49,6 +48,9 @@ jest.mock('wx-server-sdk', () => {
                 const cv = v.v instanceof Date ? v.v.getTime() : v.v
                 if (!(dv >= cv)) {return false}
               }
+              if (v._op === 'in') {
+                if (!Array.isArray(v.v) || !v.v.includes(doc[k])) {return false}
+              }
               continue
             }
             if (doc[k] !== v) {return false}
@@ -83,6 +85,10 @@ jest.mock('wx-server-sdk', () => {
 
   return {
     init: jest.fn(),
+    _resetFlowData: () => {
+      orders.length = 0
+      registrations.length = 0
+    },
     database: jest.fn(() => ({
       collection,
       command: {
@@ -126,6 +132,8 @@ beforeEach(() => {
   // 测试时禁用全局 db store，强制使用内存
   const { setGlobalRateLimitStore } = require(path.join(COMMON_DIR, 'risk-rate-limit.js'))
   setGlobalRateLimitStore(null)
+  // 清空订单/报名内存数据，避免用例间状态串扰（mock getWXContext 固定 openid）
+  require('wx-server-sdk')._resetFlowData()
 })
 
 // mock auth
@@ -157,31 +165,6 @@ describe('Sprint 22: 商城下单风控集成', () => {
     expect(result.message).toMatch(/风控/)
   })
 
-  test('createGroupBuyOrder: 普通小单 → 正常落库', async () => {
-    const result = await mallService.main({
-      action: 'createGroupBuyOrder',
-      productId: 'p1',
-      quantity: 1,
-      receiverName: '张三',
-      receiverPhone: '13800000000',
-      receiverAddress: '北京市朝阳区',
-    }, {}, auth())
-    expect(result.code).toBe(0)
-    expect(result.data.orderId).toBeDefined()
-  })
-
-  test('createGroupBuyOrder: 大额 → RISK_REJECT', async () => {
-    const result = await mallService.main({
-      action: 'createGroupBuyOrder',
-      productId: 'p_big',
-      quantity: 1,
-      receiverName: '张三',
-      receiverPhone: '13800000000',
-      receiverAddress: '北京市朝阳区',
-    }, {}, auth())
-    expect(result.code).not.toBe(0)
-    expect(result.message).toMatch(/风控/)
-  })
 })
 
 describe('Sprint 22: 活动报名风控集成', () => {
@@ -200,12 +183,13 @@ describe('Sprint 22: 活动报名风控集成', () => {
   test('submitRegistration: 异常 activity → 兜底为不挂', async () => {
     // 大额场景不直接构造（活动 a1 价低），改测风控模块异常时仍能报名
     // 通过传错误参数模拟：这里仅保证不抛 RISK_REJECT
+    // 使用不同用户，避免与上一用例的待支付报名触发重复报名拦截
     const result = await activityService.main({
       action: 'submitRegistration',
       activityId: 'a1',
       pets: [{ petName: 'P', name: 'P', petGender: 'male' }],
       phone: '13800000000',
-    }, {}, auth())
+    }, {}, auth('u_test_risk'))
     expect(result.code).toBe(0)
   })
 })

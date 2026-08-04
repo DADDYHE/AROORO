@@ -215,7 +215,7 @@ export interface PopupCoupon {
 // =====================================================================
 
 /* eslint-disable @typescript-eslint/no-var-requires */
-const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES, paginate } = require('./common/utils')
+const { initCloud, handleSuccess, generateId, paginate } = require('./common/utils')
 const { createLogger } = require('./common/logger')
 const { writeOperationLog } = require('./common/operation-log')
 const { verifyAuth } = require('./common/auth-middleware')
@@ -284,7 +284,10 @@ export function generateCouponCode(): string {
 /** 优惠券状态枚举（与 CouponStatus 类型对应） */
 const VALID_COUPON_STATUSES = ['unused', 'locked', 'used', 'expired'] as const
 
-/** 业务类型白名单（与项目 memory 中 VALID_BUSINESS_TYPES 约定一致） */
+/**
+ * 业务类型白名单（与项目 memory 中 VALID_BUSINESS_TYPES 约定一致）。
+ * boarding 为寄养规范键（已彻底统一，hosting 历史别名于 2026-08-02 收敛去除）。
+ */
 const VALID_BUSINESS_TYPES = ['boarding', 'feeding', 'mall', 'activity', 'tuan'] as const
 
 /** ID 最大长度（防超长字符串注入） */

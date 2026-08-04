@@ -4,6 +4,9 @@ const STORAGE_KEYS = {
     IS_LOGOUT: 'central:isLogout',
     LOGIN_EXPIRY: 'central:loginExpiry',
   },
+  MALL: {
+    CART: 'mall_cart',
+  },
 }
 
 const FLAT_KEYS = {}

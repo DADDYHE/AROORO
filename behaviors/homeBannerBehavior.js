@@ -20,7 +20,10 @@ const homeBannerBehavior = Behavior({
     bannerList: [],
     bannerHeight: 422,
     bannerVisibleHeight: 337,
-    contentSheetMarginTop: 0,
+    contentSheetOverlap: 0,
+    // scroll-view 布局参数
+    scrollViewOffset: 64, // scroll-view 顶部偏移 = navbarHeight + topbarHeight
+    scrollMarginTop: 0,   // scroll-view 负 margin，拉升至 banner 顶部
   },
 
   methods: {
@@ -32,9 +35,24 @@ const homeBannerBehavior = Behavior({
       const visibleRatio = 4 / 5
       const bannerHeight = Math.round(windowWidth * minImageRatio)
       const bannerVisibleHeight = Math.round(windowWidth * visibleRatio)
-      const topbarHeightPx = 56 // 112rpx 对应 56px（750rpx 设计稿）
-      const contentSheetMarginTop = topbarHeightPx + bannerVisibleHeight
-      this.setData({ bannerHeight, bannerVisibleHeight, contentSheetMarginTop })
+      const contentSheetOverlap = bannerHeight - bannerVisibleHeight
+      this.setData({ bannerHeight, bannerVisibleHeight, contentSheetOverlap })
+      this._updateScrollLayout()
+    },
+
+    /**
+     * 计算 scroll-view 布局参数：
+     * - scrollViewOffset: scroll-view 在页面中的顶部位置 = navbarHeight + topbarHeight
+     *   (topbarHeight 仅登录时存在，112rpx → px)
+     * - scrollMarginTop: 负值，将 scroll-view 从 banner 下方拉回 banner 顶部，
+     *   使内容卡片可滚动覆盖固定 banner
+     */
+    _updateScrollLayout() {
+      const windowWidth = wx.getWindowInfo().windowWidth
+      const topbarHeightPx = this.data.isLoggedIn ? 112 * windowWidth / 750 : 0
+      const scrollViewOffset = Math.round(this.data._navbarHeight + topbarHeightPx)
+      const scrollMarginTop = -this.data.bannerHeight
+      this.setData({ scrollViewOffset, scrollMarginTop })
     },
 
     /**
@@ -55,12 +73,12 @@ const homeBannerBehavior = Behavior({
       const ratio = Math.max(height / width, minImageRatio)
       const newHeight = Math.round(windowWidth * ratio)
       const bannerVisibleHeight = Math.round(windowWidth * visibleRatio)
-      const topbarHeightPx = 56
-      const contentSheetMarginTop = topbarHeightPx + bannerVisibleHeight
+      const contentSheetOverlap = newHeight - bannerVisibleHeight
 
       // 合理范围校验，避免异常值
       if (newHeight > 100 && newHeight < 2000) {
-        this.setData({ bannerHeight: newHeight, bannerVisibleHeight, contentSheetMarginTop })
+        this.setData({ bannerHeight: newHeight, bannerVisibleHeight, contentSheetOverlap })
+        this._updateScrollLayout()
       }
     },
 

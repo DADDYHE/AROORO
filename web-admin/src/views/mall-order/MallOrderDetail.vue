@@ -5,7 +5,7 @@
       <el-descriptions :column="2" border>
         <el-descriptions-item label="订单号">{{ order.orderNo }}</el-descriptions-item>
         <el-descriptions-item label="状态"><el-tag :type="ORDER_STATUS_TAG_TYPE[order.status]">{{ ORDER_STATUS_LABELS[order.status] }}</el-tag></el-descriptions-item>
-        <el-descriptions-item label="商品">{{ order.productName }}</el-descriptions-item>
+        <el-descriptions-item label="商品">{{ order.productName }}<el-tag v-if="order.items && order.items.length > 1" size="small" style="margin-left:8px">等{{ order.items.length }}件</el-tag></el-descriptions-item>
         <el-descriptions-item label="金额">{{ formatMoney(order.totalAmount) }}</el-descriptions-item>
         <el-descriptions-item label="收货人">{{ order.receiverName }}</el-descriptions-item>
         <el-descriptions-item label="联系电话">{{ order.receiverPhone }}</el-descriptions-item>
@@ -16,11 +16,32 @@
       </el-descriptions>
       <div style="margin-top:20px" v-if="order.status === 'confirmed' || order.status === 'paid'">
         <el-button type="primary" @click="openShipDialog">发货</el-button>
+        <el-button type="danger" @click="openRefundDialog">退款</el-button>
+      </div>
+      <div style="margin-top:20px" v-if="order.status === 'shipped'">
+        <el-button type="success" @click="onCompleteOrder">完成订单</el-button>
       </div>
       <div style="margin-top:20px" v-if="order.status === 'shipped' || order.status === 'completed'">
         <el-button type="warning" plain @click="openLogisticsDrawer">查看物流状态</el-button>
       </div>
     </el-card>
+
+    <!-- 退款对话框 -->
+    <el-dialog v-model="refundDialogVisible" title="订单退款" width="460px" :close-on-click-modal="false">
+      <el-form :model="refundForm" label-width="90px">
+        <el-form-item label="退款金额" required>
+          <el-input-number v-model="refundForm.amount" :min="0.01" :max="Number(order.totalAmount) || 0" :precision="2" :step="0.01" style="width:200px" />
+          <span style="margin-left:8px;color:#909399">实付 {{ formatMoney(order.totalAmount) }}</span>
+        </el-form-item>
+        <el-form-item label="退款原因">
+          <el-input v-model="refundForm.reason" type="textarea" :rows="2" placeholder="选填" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="refundDialogVisible = false">取消</el-button>
+        <el-button type="danger" :loading="refundLoading" @click="onConfirmRefund">确认退款</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 发货对话框 -->
     <el-dialog v-model="shipDialogVisible" title="订单发货" width="480px" :close-on-click-modal="false">
@@ -113,15 +134,69 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getMallOrderDetail, shipMallOrder, getLogisticsTrack } from '@/api/mall-order'
+import { getMallOrderDetail, shipMallOrder, completeMallOrder, getLogisticsTrack } from '@/api/mall-order'
+import { adminRefund } from '@/api/refund'
 import { formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE } from '@/constants/order'
 import { EXPRESS_COMPANY_OPTIONS, getExpressCompanyLabel } from '@/constants/expressCompany'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
 const loading = ref(false)
 const order = ref({})
+
+// ============ 退款对话框 ============
+const refundDialogVisible = ref(false)
+const refundLoading = ref(false)
+const refundForm = ref({ amount: 0, reason: '' })
+
+function openRefundDialog() {
+  refundForm.value = { amount: Number(order.value.totalAmount) || 0, reason: '' }
+  refundDialogVisible.value = true
+}
+
+async function onConfirmRefund() {
+  if (!refundForm.value.amount || refundForm.value.amount <= 0) {
+    ElMessage.warning('请输入退款金额')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(`确认对订单 ${order.value.orderNo || order.value._id} 发起退款 ¥${refundForm.value.amount.toFixed(2)}？`, '退款确认', { type: 'warning' })
+  } catch {
+    return
+  }
+  refundLoading.value = true
+  try {
+    await adminRefund(order.value.orderNo || order.value._id, refundForm.value.amount, refundForm.value.reason || '后台退款')
+    ElMessage.success('退款申请已提交')
+    refundDialogVisible.value = false
+    const res = await getMallOrderDetail(route.params.id)
+    order.value = res.data || {}
+  } catch (e) {
+    ElMessage.error(e?.message || '退款失败')
+  } finally {
+    refundLoading.value = false
+  }
+}
+
+async function onCompleteOrder() {
+  try {
+    await ElMessageBox.confirm('确定将该订单标记为已完成？', '完成订单', { type: 'warning' })
+  } catch {
+    return
+  }
+  loading.value = true
+  try {
+    await completeMallOrder(route.params.id)
+    ElMessage.success('已完成')
+    const res = await getMallOrderDetail(route.params.id)
+    order.value = res.data || {}
+  } catch (e) {
+    ElMessage.error(e?.message || '操作失败')
+  } finally {
+    loading.value = false
+  }
+}
 
 // ============ 发货对话框 ============
 const shipDialogVisible = ref(false)

@@ -35,6 +35,28 @@ const { db } = initCloud()
 const _ = db.command
 const logger = createLogger('partnerService:referral')
 
+// 推广/邀请统计统一口径（2026-08-04 治理）：
+//   - 每个板块只从一个权威集合取数：商城/寄养/团购从 orders（按 type 区分），
+//     上门喂养从 feedingOrders，活动从 activity_registrations（镜像单不重复计）
+//   - 状态集 = 已支付且未取消；金额统一按 totalAmount || totalPrice || price 解析
+const REFERRAL_BOARDS = [
+  { type: 'mall', collection: 'orders', where: { type: 'mall' }, statuses: ['paid', 'shipped', 'completed'] },
+  { type: 'boarding', collection: 'orders', where: { type: 'boarding' }, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
+  { type: 'tuan', collection: 'orders', where: { type: 'group_buy' }, statuses: ['paid', 'pending_shipment', 'shipped', 'completed'] },
+  { type: 'feeding', collection: 'feedingOrders', where: {}, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
+  { type: 'activity', collection: 'activity_registrations', where: {}, statuses: ['confirmed'] },
+] as const
+
+/** 聚合金额表达式：totalAmount || totalPrice || price */
+function amountExpr(): Record<string, unknown> {
+  return { $ifNull: ['$totalAmount', { $ifNull: ['$totalPrice', { $ifNull: ['$price', 0] }] }] }
+}
+
+/** 文档金额解析（内存累加用）：totalAmount || totalPrice || price */
+function resolveOrderAmount(o: { totalAmount?: number; totalPrice?: number; price?: number }): number {
+  return Number(o.totalAmount) || Number(o.totalPrice) || Number(o.price) || 0
+}
+
 // =====================================================================
 // 类型定义
 // =====================================================================
@@ -111,24 +133,10 @@ interface OrderLike {
   [k: string]: unknown
 }
 
-interface DbQueryResult {
-  data?: OrderLike[]
-}
-
 // =====================================================================
 // Handler 实现
 // =====================================================================
 
-/** 累加一组订单的数量和总金额 */
-function countAndSum(res: DbQueryResult): { c: number; s: number } {
-  let c = 0
-  let s = 0
-  ;(res.data || []).forEach((o) => {
-    c++
-    s += Number(o.totalPrice) || Number(o.totalAmount) || Number(o.price) || 0
-  })
-  return { c, s }
-}
 
 export async function getReferralStats(
   event: CloudEvent,
@@ -172,7 +180,7 @@ export async function getReferralStats(
           .match(match)
           .group({
             _id: null,
-            total: $.sum('$totalPrice'),
+            total: $.sum(amountExpr()),
             count: $.sum(1),
             owners: ($ as any).addToSet('$ownerId'),
           })
@@ -202,24 +210,14 @@ export async function getReferralStats(
       return handleSuccess({ totalInvited, consumingCount: 0, totalSpent: '0.00' })
     }
 
-    // P2-007: 第一条查询需排除 type='mall'，避免与第二条 mall 专查重复累计
-    const [ordersAgg, mallAgg] = await Promise.all([
-      sumAggregate('orders', { ownerId: _.in(invitedOpenids), status: 'completed', type: _.ne('mall') }),
-      sumAggregate('orders', { ownerId: _.in(invitedOpenids), type: 'mall', status: 'completed' }),
-    ])
-    totalSpent += ordersAgg.sum + mallAgg.sum
-    ordersAgg.openids.forEach(id => spenderOpenids.add(id))
-    mallAgg.openids.forEach(id => spenderOpenids.add(id))
-
-    const [feedingAgg, tuanAgg, actAgg] = await Promise.all([
-      sumAggregate('feedingOrders', { ownerId: _.in(invitedOpenids), status: 'completed' }),
-      sumAggregate('tuan_orders', { ownerId: _.in(invitedOpenids), status: 'completed' }),
-      sumAggregate('activity_registrations', { ownerId: _.in(invitedOpenids), status: 'completed' }),
-    ])
-    totalSpent += feedingAgg.sum + tuanAgg.sum + actAgg.sum
-    feedingAgg.openids.forEach(id => spenderOpenids.add(id))
-    tuanAgg.openids.forEach(id => spenderOpenids.add(id))
-    actAgg.openids.forEach(id => spenderOpenids.add(id))
+    // 统一口径（2026-08-04 治理）：每个板块只从一个权威集合取数，
+    //   团购从 orders.type='group_buy'（不再双查 tuan_orders），
+    //   状态=已支付且未取消，金额 totalAmount || totalPrice || price。
+    for (const board of REFERRAL_BOARDS) {
+      const agg = await sumAggregate(board.collection, { ownerId: _.in(invitedOpenids), status: _.in(board.statuses), ...board.where })
+      totalSpent += agg.sum
+      agg.openids.forEach(id => spenderOpenids.add(id))
+    }
 
     const consumingCount = spenderOpenids.size
 
@@ -299,28 +297,21 @@ export async function getMyInvitedUsers(
     const statsByUser = new Map<string, { orderCount: number; totalSpent: number }>()
 
     if (invitedOpenids.length > 0) {
-      const [mallRes, feedingRes, tuanRes, activityRes, boardingRes] = await Promise.all([
-        db.collection('orders').where({ ownerId: _.in(invitedOpenids), type: 'mall', status: _.in(['paid', 'shipped', 'completed']) }).limit(5000).get().catch((e: unknown) => { logger.warn('getMyInvitedUsers.mall', { msg: (e as Error).message }); return { data: [] } }),
-        db.collection('feedingOrders').where({ ownerId: _.in(invitedOpenids), status: 'completed' }).limit(5000).get().catch((e: unknown) => { logger.warn('getMyInvitedUsers.feeding', { msg: (e as Error).message }); return { data: [] } }),
-        db.collection('tuan_orders').where({ ownerId: _.in(invitedOpenids), status: _.in(['paid', 'completed']) }).limit(5000).get().catch((e: unknown) => { logger.warn('getMyInvitedUsers.tuan', { msg: (e as Error).message }); return { data: [] } }),
-        db.collection('activity_registrations').where({ ownerId: _.in(invitedOpenids), status: 'confirmed' }).limit(5000).get().catch((e: unknown) => { logger.warn('getMyInvitedUsers.activity', { msg: (e as Error).message }); return { data: [] } }),
-        db.collection('orders').where({ ownerId: _.in(invitedOpenids), status: 'completed', type: 'boarding' }).limit(5000).get().catch((e: unknown) => { logger.warn('getMyInvitedUsers.boarding', { msg: (e as Error).message }); return { data: [] } }),
-      ])
-
-      const accumulate = (res: { data: OrderLike[] }) => {
+      // 统一口径（2026-08-04 治理）：每个板块只从一个权威集合取数，
+      //   团购从 orders.type='group_buy'（不再双查 tuan_orders），
+      //   状态=已支付且未取消，金额 totalAmount || totalPrice || price。
+      for (const board of REFERRAL_BOARDS) {
+        const where = { ownerId: _.in(invitedOpenids), status: _.in(board.statuses), ...board.where }
+        const res = await db.collection(board.collection).where(where).limit(5000).get()
+          .catch((e: unknown) => { logger.warn(`getMyInvitedUsers.${board.type}`, { msg: (e as Error).message }); return { data: [] as OrderLike[] } })
         for (const o of (res.data || [])) {
           if (!o.ownerId) continue
           const s = statsByUser.get(o.ownerId) || { orderCount: 0, totalSpent: 0 }
           s.orderCount++
-          s.totalSpent += Number(o.totalPrice) || Number(o.totalAmount) || Number(o.price) || 0
+          s.totalSpent += resolveOrderAmount(o)
           statsByUser.set(o.ownerId, s)
         }
       }
-      accumulate(mallRes)
-      accumulate(feedingRes)
-      accumulate(tuanRes)
-      accumulate(activityRes)
-      accumulate(boardingRes)
     }
 
     const invitedList: InvitedUser[] = invitedUsers.map((u) => {
@@ -352,10 +343,10 @@ export async function getReferralOrders(
   //   type: 业务支持的 orderType（tuan/mall 等）+ 'all' 全部
   //   status: 限制为业务有效状态，避免任意字符串注入
   //   page/pageSize: 与 getMyInvitedUsers 一致的边界
-  // M10: ALLOWED_TYPES 收窄为业务实际支持的带货 orderType
-  //   commissions 仅写入 tuan/mall 两类 orderType，boarding/feeding/activity 不产生带货佣金
-  //   保留无效选项会误导前端传入永远查不到数据的类型
-  const ALLOWED_TYPES = ['all', 'tuan', 'mall']
+  // 佣金为全类型（团购/商城/活动/寄养/服务），白名单须覆盖全部 orderType。
+  // 寄养佣金历史上存在 'hosting'（hosting.js 完成路径）与 'boarding'（orderService 完成路径）双值，
+  // 两个键都放行，并在下方统一映射为 _.in(['hosting','boarding']) 查询，兼容历史数据。
+  const ALLOWED_TYPES = ['all', 'tuan', 'mall', 'activity', 'hosting', 'boarding', 'feeding']
   const ALLOWED_STATUSES = ['pending', 'settled', 'cancelled']
   const type = typeof event.type === 'string' && ALLOWED_TYPES.includes(event.type) ? event.type : 'all'
   const status = typeof event.status === 'string' && ALLOWED_STATUSES.includes(event.status) ? event.status : null
@@ -383,7 +374,8 @@ export async function getReferralOrders(
     //   会导致 where.status 字段被覆盖，最终行为不确定（取决于 CloudBase 实现）
     //   新逻辑：未传 status 时默认排除 cancelled；传 status 时按用户指定值精确查询
     const where: Record<string, unknown> = { inviterId: openid }
-    if (type !== 'all') { where.orderType = type }
+    // 寄养佣金双值归一：hosting / boarding 都映射为同一查询
+    if (type !== 'all') { where.orderType = (type === 'hosting' || type === 'boarding') ? _.in(['hosting', 'boarding']) : type }
     if (status) {
       where.status = status
     } else {
@@ -423,9 +415,8 @@ export async function getReferralOrderStats(
   auth: AuthLike
 ): Promise<unknown> {
   const { openid } = auth
-  // M10: type 参数白名单校验，避免任意字符串注入
-  //   commissions 仅写入 tuan/mall 两类 orderType，收窄白名单与 getReferralOrders 对齐
-  const ALLOWED_TYPES = ['all', 'tuan', 'mall']
+  // 佣金为全类型，白名单覆盖全部 orderType（寄养 hosting/boarding 双值均放行，见下方归一）
+  const ALLOWED_TYPES = ['all', 'tuan', 'mall', 'activity', 'hosting', 'boarding', 'feeding']
   const rawType = typeof event.type === 'string' ? event.type : 'all'
   if (!ALLOWED_TYPES.includes(rawType)) {
     throw err('INVALID_PARAMS', `无效的 type，仅支持：${ALLOWED_TYPES.join(', ')}`)
@@ -450,7 +441,8 @@ export async function getReferralOrderStats(
 
     // inviterId 现在存的是 openid，直接用 openid 查询 commissions
     const where: Record<string, unknown> = { inviterId: openid }
-    if (type !== 'all') { where.orderType = type }
+    // 寄养佣金双值归一：hosting / boarding 都映射为同一查询
+    if (type !== 'all') { where.orderType = (type === 'hosting' || type === 'boarding') ? _.in(['hosting', 'boarding']) : type }
 
     // M2: 改用 aggregate 在数据库侧统计，避免全量 get() 导致的 OOM 风险
     //   原：db.collection().where().get() 后内存累加（无 limit，大数据集会 OOM）

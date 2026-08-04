@@ -292,6 +292,54 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
         })
       }
 
+      // 4) 商城订单全额退款：回退商品库存（与下单扣减/取消回退对称；部分退款不退库存）
+      const mallOrder = orderDoc as unknown as {
+        productId?: string
+        skuId?: string
+        quantity?: number
+        paidAmount?: number
+        totalAmount?: number
+        totalPrice?: number
+        items?: Array<{ productId?: string; skuId?: string; quantity?: number }>
+      }
+      if (orderType === 'mall' && mallOrder.productId) {
+        const paidAmountYuan = Number(mallOrder.paidAmount || mallOrder.totalAmount || mallOrder.totalPrice || 0)
+        const isFullRefund = paidAmountYuan <= 0 || Number(refundAmount) >= Math.round(paidAmountYuan * 100)
+        if (isFullRefund) {
+          const restoreStock = async (productId: string, skuId: string, qty: number): Promise<void> => {
+            const stockUpdateData: Record<string, unknown> = {
+              totalStock: db.command.inc(qty),
+              soldCount: db.command.inc(-qty),
+              updatedAt: db.serverDate(),
+            }
+            let skuIndex = -1
+            if (skuId) {
+              const pRes = await db.collection('products').doc(productId).get()
+              const pd = pRes.data as { skus?: Array<{ skuId: string }> } | null
+              if (pd && pd.skus) {
+                skuIndex = pd.skus.findIndex((s) => s.skuId === skuId)
+              }
+            }
+            if (skuId && skuIndex >= 0) {
+              stockUpdateData[`skus.${skuIndex}.stock`] = db.command.inc(qty)
+              stockUpdateData[`skus.${skuIndex}.soldCount`] = db.command.inc(-qty)
+            } else {
+              stockUpdateData.stock = db.command.inc(qty)
+            }
+            await transaction.collection('products').doc(productId).update({ data: stockUpdateData })
+          }
+          const mallItems = Array.isArray(mallOrder.items) && mallOrder.items.length > 0 ? mallOrder.items : null
+          if (mallItems && mallItems.length > 0) {
+            for (const it of mallItems) {
+              if (!it.productId) { continue }
+              await restoreStock(it.productId, it.skuId || '', Number(it.quantity) || 1)
+            }
+          } else {
+            await restoreStock(mallOrder.productId, mallOrder.skuId || '', Number(mallOrder.quantity) || 1)
+          }
+        }
+      }
+
       await transaction.commit()
       logger.info('createRefund.transaction.success', {
         orderId: orderDoc._id,

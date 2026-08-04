@@ -11,7 +11,7 @@
  *   - 与 errors.ts 双向兼容（handleError 返回的 shape 可与 err() 配对）
  */
 
-import { createHash, randomBytes } from 'crypto'
+import { randomBytes } from 'crypto'
 import type { CloudBaseDB } from './types'
 
 // =====================================================================
@@ -69,7 +69,7 @@ export type BatchHandlerResult<TIn, TOut> = TOut | { success: false, error: stri
 /** ID 类型白名单 */
 export type IdType =
   | 'pet' | 'order' | 'feeding' | 'tuan' | 'activity' | 'registration'
-  | 'feeder' | 'product' | 'banner' | 'address' | 'application'
+  | 'product' | 'banner' | 'address' | 'application'
   | 'wallet' | 'commission' | 'coupon' | 'category' | 'favorite'
 
 /** CloudBase SDK 实例（来自 wx-server-sdk） */
@@ -150,7 +150,6 @@ const TYPE_MAPPING: Record<IdType, string> = {
   tuan: 'tn',
   activity: 'act',
   registration: 'reg',
-  feeder: 'fdr',
   product: 'prd',
   banner: 'bnr',
   address: 'addr',

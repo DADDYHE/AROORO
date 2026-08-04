@@ -252,8 +252,13 @@ async function fetchExpiredDealIds(now: Date): Promise<string[]> {
  * @param dealIds 过期 deal 的 _id 列表
  * @returns 待取消的 orders._id 列表
  */
-async function fetchPendingOrderIds(dealIds: string[]): Promise<string[]> {
-  const orderIds: string[] = []
+/**
+ * 拉取待取消的团购订单文档（含库存回补/累计回退所需字段）
+ */
+async function fetchPendingOrders(
+  dealIds: string[]
+): Promise<Array<{ _id: string; dealId?: string; productId?: string; skuId?: string; quantity?: number | string; totalAmount?: number }>> {
+  const orders: Array<{ _id: string; dealId?: string; productId?: string; skuId?: string; quantity?: number | string; totalAmount?: number }> = []
   // dealIds 分批（in 操作符建议 ≤100 项）
   for (let i = 0; i < dealIds.length; i += BATCH_LIMIT) {
     const dealBatch = dealIds.slice(i, i + BATCH_LIMIT)
@@ -267,17 +272,76 @@ async function fetchPendingOrderIds(dealIds: string[]): Promise<string[]> {
       if (lastId) { where._id = _.gt(lastId) }
       const res = await db.collection(DOWNSTREAM.ORDERS)
         .where(where)
-        .field({ _id: true })
+        .field({ _id: true, dealId: true, productId: true, skuId: true, quantity: true, totalAmount: true })
         .orderBy('_id', 'asc')
         .limit(BATCH_LIMIT)
         .get()
       if (res.data.length === 0) { break }
-      orderIds.push(...res.data.map(o => o._id))
+      orders.push(...res.data as Array<{ _id: string; dealId?: string; productId?: string; skuId?: string; quantity?: number | string; totalAmount?: number }>)
       lastId = res.data[res.data.length - 1]._id
       if (res.data.length < BATCH_LIMIT) { break }
     }
   }
-  return orderIds
+  return orders
+}
+
+/**
+ * 回补 tuan_deals.products 快照库存（与 tuanService.createTuanOrder 扣减对称）：
+ *   - SKU 模式：优先回补团购配额 tuanStock，历史无 tuanStock 的 SKU 回补 stock
+ *   - 非 SKU 模式：回补 products[i].stock/sold
+ */
+async function restoreTuanDealStock(order: { dealId?: string; productId?: string; skuId?: string; quantity?: number | string }): Promise<void> {
+  const { dealId, productId, skuId } = order || {}
+  if (!dealId || !productId) { return }
+  const qty = Number(order.quantity) || 1
+  try {
+    const dealDoc = (db.collection(COLLECTION) as unknown as {
+      doc(id: string): { get(): Promise<{ data: TuanDealDoc | null }>; update(arg: { data: Record<string, unknown> }): Promise<unknown> }
+    }).doc(dealId)
+    const dealRes = await dealDoc.get()
+    const deal = dealRes.data
+    if (!deal || !Array.isArray(deal.products)) { return }
+    const productIndex = deal.products.findIndex(p => p.productId === productId)
+    if (productIndex < 0) { return }
+    const product = deal.products[productIndex]
+    const updateData: Record<string, unknown> = { updatedAt: db.serverDate() }
+    if (skuId && product.skuType === 'multi' && Array.isArray(product.skus)) {
+      const skuIndex = product.skus.findIndex(s => s.skuId === skuId)
+      if (skuIndex >= 0) {
+        const sku = product.skus[skuIndex]
+        const stockField = (sku.tuanStock !== undefined && sku.tuanStock !== null) ? 'tuanStock' : 'stock'
+        updateData[`products.${productIndex}.skus.${skuIndex}.${stockField}`] = _.inc(qty)
+        updateData[`products.${productIndex}.skus.${skuIndex}.sold`] = _.inc(-qty)
+        await dealDoc.update({ data: updateData })
+        return
+      }
+    }
+    updateData[`products.${productIndex}.stock`] = _.inc(qty)
+    updateData[`products.${productIndex}.sold`] = _.inc(-qty)
+    await dealDoc.update({ data: updateData })
+  } catch (e) {
+    logger.warn('restoreTuanDealStock', { dealId, productId, msg: (e as Error)?.message })
+  }
+}
+
+/** 回退 deal 累计单数/金额（与下单事务 inc 对称，防止统计虚高） */
+async function rollbackTuanDealTotals(dealId: string | undefined, amount: number): Promise<void> {
+  if (!dealId) { return }
+  try {
+    const dealDoc = (db.collection(COLLECTION) as unknown as {
+      doc(id: string): { get(): Promise<{ data: TuanDealDoc | null }>; update(arg: { data: Record<string, unknown> }): Promise<unknown> }
+    }).doc(dealId)
+    const dealRes = await dealDoc.get()
+    const deal = dealRes.data
+    if (!deal) { return }
+    const nextOrders = Math.max(0, (Number(deal.totalOrders) || 0) - 1)
+    const nextAmount = Math.max(0, (Number(deal.totalAmount) || 0) - (Number(amount) || 0))
+    await dealDoc.update({
+      data: { totalOrders: nextOrders, totalAmount: nextAmount, updatedAt: db.serverDate() },
+    })
+  } catch (e) {
+    logger.warn('rollbackTuanDealTotals', { dealId, amount, msg: (e as Error)?.message })
+  }
 }
 
 // =====================================================================
@@ -421,25 +485,36 @@ async function cleanupDownstreamForDeals(
     result.cancelledTuanOrders += cancelled
   }
 
-  // 3. 查询待取消的 orders._id 列表（用于后续 user_coupons 和 commissions）
-  const orderIds = await fetchPendingOrderIds(dealIds)
-
-  // 4. 批量取消 orders（幂等：where status='pending_payment' 保护）
-  result.cancelledOrders = await batchUpdateByIds(
-    DOWNSTREAM.ORDERS,
-    orderIds,
-    { status: 'pending_payment' },
-    {
-      status: 'cancelled',
-      cancelReason: CANCEL_REASON,
-      cancelledAt: db.serverDate(),
-      updatedAt: db.serverDate(),
+  // 3. 查询待取消的 orders 文档（含库存回补/累计回退所需字段）
+  const pendingOrders = await fetchPendingOrders(dealIds)
+  const cancelledOrderIds: string[] = []
+  // 4. 逐单幂等取消 orders（where status='pending_payment' 保护，防止并发重复取消/重复回补），
+  //    并在取消成功后回补 tuan_deals 库存、回退 deal 累计单数/金额（与下单事务对称）
+  for (const order of pendingOrders) {
+    try {
+      const upd = await db.collection(DOWNSTREAM.ORDERS)
+        .where({ _id: order._id, status: 'pending_payment' })
+        .update({
+          data: {
+            status: 'cancelled',
+            cancelReason: CANCEL_REASON,
+            cancelledAt: db.serverDate(),
+            updatedAt: db.serverDate(),
+          },
+        }) as { stats?: { updated: number } }
+      if (!upd.stats || upd.stats.updated === 0) { continue }
+      cancelledOrderIds.push(order._id)
+      await restoreTuanDealStock(order)
+      await rollbackTuanDealTotals(order.dealId, Number(order.totalAmount) || 0)
+    } catch (e) {
+      logger.warn('cleanupDownstream.cancelOrder.failed', { orderId: order._id, msg: (e as Error)?.message })
     }
-  )
+  }
+  result.cancelledOrders = cancelledOrderIds.length
 
   // 5. 解锁 user_coupons（按 endTime 分流到 expired/unused）
-  for (let i = 0; i < orderIds.length; i += BATCH_LIMIT) {
-    const batch = orderIds.slice(i, i + BATCH_LIMIT)
+  for (let i = 0; i < cancelledOrderIds.length; i += BATCH_LIMIT) {
+    const batch = cancelledOrderIds.slice(i, i + BATCH_LIMIT)
     // 查询锁定的优惠券（含 endTime 用于分流）
     let lastId = ''
     for (let round = 0; round < MAX_ROUNDS; round++) {
@@ -490,7 +565,7 @@ async function cleanupDownstreamForDeals(
   // 6. 取消 commissions（幂等：where status='pending' 保护）
   result.cancelledCommissions = await batchUpdateByIds(
     DOWNSTREAM.TUAN_COMMISSIONS,
-    orderIds,
+    cancelledOrderIds,
     { status: 'pending' },
     {
       status: 'cancelled',

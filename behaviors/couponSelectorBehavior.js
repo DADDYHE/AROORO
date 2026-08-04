@@ -16,7 +16,7 @@
  *   })
  */
 
-const { computeFinalAmount, COUPON_MIN_AMOUNT } = require('../utils/coupon-amount')
+const { computeFinalAmount } = require('../utils/coupon-amount')
 const { CouponService } = require('../services/CouponService')
 
 const couponSelectorBehavior = Behavior({

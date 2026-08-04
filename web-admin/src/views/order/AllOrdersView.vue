@@ -49,7 +49,7 @@
       </el-table-column>
       <el-table-column label="操作" width="100" fixed="right">
         <template #default="{ row }">
-          <el-button v-if="row._orderType" link type="primary" @click="goDetail(row)">详情</el-button>
+          <el-button v-if="['mall','tuan','feeding'].includes(row._orderType)" link type="primary" @click="goDetail(row)">详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -83,7 +83,7 @@ const STATUS_MAPS = {
   boarding: { pending: '待确认', paid: '已支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成' },
   mall: { pending_payment: '待支付', paid: '已支付', confirmed: '已确认', shipped: '已发货', completed: '已完成' },
   feeding: { pending: '待确认', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝' },
-  tuan: { pending: '待确认', pending_payment: '待支付', paid: '已支付', confirmed: '已确认', shipped: '已发货', completed: '已完成' },
+  tuan: { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成' },
   activity: { pending_payment: '待支付', confirmed: '已确认', completed: '已完成' },
 }
 
@@ -157,6 +157,19 @@ function onTypeChange() {
   statusFilter.value = ''
   resetNotifyState()
   onSearch()
+}
+
+function goDetail(row) {
+  const type = row._orderType
+  const id = row._id || row.orderId
+  const routeMap = {
+    mall: `/order/mall/${id}`,
+    feeding: `/order/feeding/${id}`,
+    tuan: `/order/tuan/${id}`,
+  }
+  if (routeMap[type]) {
+    router.push(routeMap[type])
+  }
 }
 
 async function onExport() {

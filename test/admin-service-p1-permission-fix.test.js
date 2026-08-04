@@ -135,8 +135,7 @@ const ACTION_KEYS = [
   'handleMallOrder', 'shipMallOrder', 'completeMallOrder',
   'getProductStats', 'getCategoryStats', 'listCategories', 'createCategory',
   'updateCategory', 'deleteCategory',
-  'getFeederList', 'getFeederDetail', 'getCurrentFeeder', 'createFeederProfile',
-  'updateFeederProfile', 'getFeedingOrders', 'getFeederOrders', 'handleFeedingOrder',
+  'getFeedingOrders',
   'getFeedingOrderDetail',
   'getBannerList', 'getBannerDetail', 'createBanner', 'updateBanner',
   'updateBannerStatus', 'updateBannerSortOrder', 'deleteBanner',
@@ -293,29 +292,9 @@ describe('adminService P1 鉴权修复：JWT 路径（event.accessToken）', () 
 })
 
 describe('adminService P1 鉴权修复：enrich auth.roles / auth.permissions', () => {
-  // 模拟 service handler 内部对 super_admin 兜底的检查（如 feeding.js:171 / hosting.js:140 / coupon.js:69）
+  // 模拟 service handler 内部对 super_admin 兜底的检查（如 hosting.js:140 / coupon.js:69）
   // 这些 handler 在生产代码里用 `auth.roles?.includes('super_admin')` 决定是否放行
   beforeEach(() => { handlerCalls.length = 0 })
-
-  test('HTTP 路径：A 调 handleFeedingOrder → handler 收到 auth.roles 包含 super_admin', async () => {
-    const superToken = generateToken({ openid: '', adminId: 'super_admin', isSuperAdmin: true, isPartner: true })
-    const res = await adminService.main(buildHttpEvent('handleFeedingOrder', superToken), {})
-    expect(res.statusCode).toBe(200)
-    expect(handlerCalls).toHaveLength(1)
-    expect(handlerCalls[0].action).toBe('handleFeedingOrder')
-    // 关键：handler 收到的 auth 必须有 roles 字段，否则内部 super_admin 兜底失效
-    const lastCall = handlerCalls[handlerCalls.length - 1]
-    expect(lastCall.auth_roles).toEqual(['super_admin'])
-  })
-
-  test('HTTP 路径：B 调 handleFeedingOrder → handler 收到 auth.roles 为空', async () => {
-    const partnerToken = generateToken({ openid: 'o1oA43TDfU5xo8OokEYBMdooRQbo', adminId: 'o1oA43TDfU5xo8OokEYBMdooRQbo', isPartner: true, isSuperAdmin: false })
-    const res = await adminService.main(buildHttpEvent('handleFeedingOrder', partnerToken), {})
-    expect(res.statusCode).toBe(200)
-    const lastCall = handlerCalls[handlerCalls.length - 1]
-    // B 没有 roles 字段 → enrich 后 roles = [] → handler 内部 super_admin 兜底失败 → 抛 PERMISSION_DENIED
-    expect(lastCall.auth_roles).toEqual([])
-  })
 
   test('JWT 路径：A 调 handleBoardingOrder → handler 收到 auth.roles 包含 super_admin', async () => {
     const superToken = generateToken({ openid: '', adminId: 'super_admin', isSuperAdmin: true, isPartner: true })

@@ -1,7 +1,12 @@
 /**
  * 集成测试 - 佣金子链路
  *
- * 流程：订单完成 → 触发 _createCommissionRecord → 写入 tuan_commissions
+ * 流程：订单完成 → 触发 createCommissionRecord → 写入 commissions 集合
+ *
+ * 说明（2026-08-02 写入器统一）：
+ *   - 全局唯一写入器为 common/commission-utils，paymentService/services/commission 仅薄委托
+ *   - 写入集合为 `commissions`（历史测试曾误用 tuan_commissions）
+ *   - 订单类型在写入时被规范化：hosting/order → boarding，group_buy → tuan
  *
  * 覆盖：
  *   - 邀请人存在 + 配置存在 → 写入 commission 记录
@@ -10,10 +15,13 @@
  *   - 邀请人存在但配置无该 orderType 费率 → 跳过
  */
 
+// 每个用例独立模块实例，避免 system_config 5 分钟缓存在用例间串扰
+let createCommission
+
 const mockDb = {
   _collections: {},
   collection(name) {
-    if (!this._collections[name]) {this._collections[name] = { docs: [] }}
+    if (!this._collections[name]) { this._collections[name] = { docs: [] } }
     const self = this
     return {
       doc: id => ({
@@ -23,7 +31,7 @@ const mockDb = {
         },
         update: async ({ data }) => {
           const doc = self._collections[name].docs.find(d => d._id === id)
-          if (doc) {Object.assign(doc, data)}
+          if (doc) { Object.assign(doc, data) }
         },
         remove: async () => {
           self._collections[name].docs = self._collections[name].docs.filter(d => d._id !== id)
@@ -34,13 +42,13 @@ const mockDb = {
           for (const [k, v] of Object.entries(query || {})) {
             if (v && typeof v === 'object' && v._op) {
               if (v._op === 'in' && Array.isArray(v.v)) {
-                if (!v.v.includes(doc[k])) {return false}
+                if (!v.v.includes(doc[k])) { return false }
               } else if (v._op === 'eq') {
-                if (doc[k] !== v.v) {return false}
+                if (doc[k] !== v.v) { return false }
               }
               continue
             }
-            if (doc[k] !== v) {return false}
+            if (doc[k] !== v) { return false }
           }
           return true
         })
@@ -72,12 +80,13 @@ jest.mock('wx-server-sdk', () => ({
 }))
 
 beforeEach(() => {
+  // 重置模块注册表：确保 _cachedConfig 等模块级状态每用例隔离
+  jest.resetModules()
   for (const k of Object.keys(mockDb._collections)) {
     mockDb._collections[k] = { docs: [] }
   }
+  createCommission = require('../../cloudfunctions/paymentService/services/commission').createCommissionRecord
 })
-
-const createCommission = require('../../cloudfunctions/paymentService/services/commission').createCommissionRecord
 
 describe('集成测试：佣金子链路', () => {
   const setupCommonData = ({
@@ -94,25 +103,27 @@ describe('集成测试：佣金子链路', () => {
     mockDb._collections.system_config = { docs: [
       { _id: 'commission_rates', [orderType]: configRate },
     ] }
-    mockDb._collections.tuan_commissions = { docs: [] }
+    mockDb._collections.commissions = { docs: [] }
   }
 
   test('正常流程：邀请人存在 + 费率配置存在 → 写入 commission 记录', async () => {
     setupCommonData({ orderAmount: 1000, configRate: 10 })
 
+    // 寄养以 hosting 别名传入，写入时应被规范化为 boarding
     await createCommission('hosting', {
       _id: 'o1',
       ownerId: 'oOwner',
       totalPrice: 1000,
     })
 
-    const records = mockDb._collections.tuan_commissions.docs
+    const records = mockDb._collections.commissions.docs
     expect(records.length).toBe(1)
     expect(records[0].orderId).toBe('o1')
     expect(records[0].inviterId).toBe('oInviter')
     expect(records[0].inviterNickName).toBe('邀请人')
     expect(records[0].ownerId).toBe('oOwner')
-    expect(records[0].orderType).toBe('hosting')
+    // ⭐ 写入器统一：hosting 别名 → boarding 规范类型
+    expect(records[0].orderType).toBe('boarding')
     expect(records[0].orderAmount).toBe(1000)
     expect(records[0].commissionRate).toBe(10)
     expect(records[0].commissionAmount).toBe(100) // 1000 * 10% = 100
@@ -127,7 +138,7 @@ describe('集成测试：佣金子链路', () => {
     await createCommission('hosting', order)
     await createCommission('hosting', order)
 
-    const records = mockDb._collections.tuan_commissions.docs
+    const records = mockDb._collections.commissions.docs
     expect(records.length).toBe(1)
   })
 
@@ -138,7 +149,7 @@ describe('集成测试：佣金子链路', () => {
 
     await createCommission('hosting', { _id: 'o1', ownerId: 'oOwner', totalPrice: 1000 })
 
-    expect(mockDb._collections.tuan_commissions.docs.length).toBe(0)
+    expect(mockDb._collections.commissions.docs.length).toBe(0)
   })
 
   test('跳过：邀请人用户记录不存在时静默退出', async () => {
@@ -148,7 +159,7 @@ describe('集成测试：佣金子链路', () => {
 
     await createCommission('hosting', { _id: 'o1', ownerId: 'oOwner', totalPrice: 1000 })
 
-    expect(mockDb._collections.tuan_commissions.docs.length).toBe(0)
+    expect(mockDb._collections.commissions.docs.length).toBe(0)
   })
 
   test('跳过：system_config 缺失该 orderType 费率时', async () => {
@@ -158,7 +169,7 @@ describe('集成测试：佣金子链路', () => {
 
     await createCommission('hosting', { _id: 'o1', ownerId: 'oOwner', totalPrice: 1000 })
 
-    expect(mockDb._collections.tuan_commissions.docs.length).toBe(0)
+    expect(mockDb._collections.commissions.docs.length).toBe(0)
   })
 
   test('跳过：orderAmount 为 0 时不写 commission', async () => {
@@ -166,20 +177,20 @@ describe('集成测试：佣金子链路', () => {
 
     await createCommission('hosting', { _id: 'o1', ownerId: 'oOwner', totalPrice: 0 })
 
-    expect(mockDb._collections.tuan_commissions.docs.length).toBe(0)
+    expect(mockDb._collections.commissions.docs.length).toBe(0)
   })
 
-  test('多 orderType 独立费率：mall 与 hosting 同时启用', async () => {
+  test('多 orderType 独立费率：mall 与 boarding 同时启用', async () => {
     setupCommonData({ orderType: 'hosting' })
-    // 调整 config 支持多 orderType
+    // 调整 config 支持多 orderType（hosting 别名映射 boarding）
     mockDb._collections.system_config.docs[0] = { _id: 'commission_rates', hosting: 10, mall: 5 }
 
     await createCommission('hosting', { _id: 'o1', ownerId: 'oOwner', totalPrice: 1000 })
     await createCommission('mall', { _id: 'o2', ownerId: 'oOwner', totalPrice: 2000 })
 
-    const records = mockDb._collections.tuan_commissions.docs
+    const records = mockDb._collections.commissions.docs
     expect(records.length).toBe(2)
-    expect(records.find(r => r.orderType === 'hosting').commissionAmount).toBe(100)
+    expect(records.find(r => r.orderType === 'boarding').commissionAmount).toBe(100)
     expect(records.find(r => r.orderType === 'mall').commissionAmount).toBe(100) // 2000 * 5% = 100
   })
 
@@ -188,7 +199,7 @@ describe('集成测试：佣金子链路', () => {
 
     await createCommission('hosting', { _id: 'o1', ownerId: 'oOwner', totalPrice: 333 })
 
-    const record = mockDb._collections.tuan_commissions.docs[0]
+    const record = mockDb._collections.commissions.docs[0]
     // 333 * 7% = 23.31
     expect(record.commissionAmount).toBe(23.31)
   })

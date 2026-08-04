@@ -111,8 +111,8 @@ class AuthService {
 
     this._initialized = true
 
-    this._refreshAdminStatus(app)
-
+    // _refreshAdminStatus 是网络请求，已移至 app._executeBackgroundStartup
+    // 避免在关键启动阶段与首屏渲染竞争网络资源
     console.log('[AuthService] 从缓存恢复会话成功')
     return true
   }
