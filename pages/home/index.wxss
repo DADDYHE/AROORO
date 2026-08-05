@@ -1070,11 +1070,13 @@ page {
 }
 
 .pet-card-male {
-  border-left: 3rpx solid var(--gender-male, #6B9DAE);
+  /* 性别色左侧线：用 inset 内阴影替代 border-left，确保被 40rpx 圆角裁切、随圆角围绕过去；
+     规避 Skyline 下"单边加粗 border + 大 radius"拐角不圆、方头戳出圆角的硬边 bug */
+  box-shadow: inset 3rpx 0 0 0 var(--gender-male, #6B9DAE);
 }
 
 .pet-card-female {
-  border-left: 3rpx solid var(--gender-female, #C0788E);
+  box-shadow: inset 3rpx 0 0 0 var(--gender-female, #C0788E);
 }
 
 .pet-name {
