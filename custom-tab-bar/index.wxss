@@ -129,6 +129,7 @@
   justify-content: center;
   flex: 1;
   height: 80rpx; /* 与胶囊可见区等高；父级 align-items:flex-start，safe-area 增量不参与排版 */
+  margin-top: 20rpx; /* 全部 tab 项整体下移 20rpx（仅按钮内容，胶囊外形/位置不变）；flex-start 下相对胶囊顶偏移，内容中心 40→60rpx；中间钮 margin-top:-4rpx 相对项顶，钮心随之落到 60rpx，与普通项对齐 */
   position: relative;
   z-index: 1; /* 提至缎面纸纹层(::before z-index:0)之上 */
 }
