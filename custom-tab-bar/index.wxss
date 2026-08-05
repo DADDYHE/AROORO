@@ -1,11 +1,11 @@
 /* ================================================================
-   custom-tab-bar/index.wxss · AROORO TabBar · Haute-Luxury v2
+   custom-tab-bar/index.wxss · AROORO TabBar · Haute-Luxury C6
    ----------------------------------------------------------------
-   高奢 TabBar：
-     · 奶油米白半透底 + 发丝顶线
-     · 选中指示：极简竖线（取代圆点，更克制）
-     · 中央按钮：香槟金平涂 + 金属高光（金 CTA 化）
-     · 图标线条极细，文字极轻
+   高奢 TabBar（C6 融合方案）：
+     · 深绿渐变底座 + 金发丝顶线
+     · 选中指示：金圆点 = 图标容器（金平涂 + 金晕，取代旧顶部短线）
+     · 中央按钮：香槟金平涂 + 墨绿半透背衬 + 金属高光（金 CTA 化）
+     · 图标线条细，文字极轻；选中态切换炭墨资产
    ----------------------------------------------------------------
    设计系统：styles/theme-teal.wxss（深森林绿体系 · 事实生效层）
    注意：styles/design-tokens.wxss 的 --zy-tabbar-* 为橄榄绿旧值，
@@ -48,7 +48,7 @@
 }
 
 /* ================================================================
-   导航栏容器 — 奶油米白 + 发丝顶线
+   导航栏容器 — 深绿渐变底 + 金发丝顶线
    ================================================================ */
 .tab-bar {
   /* ---- 组件内局部令牌 ----------------------------------------
@@ -56,7 +56,7 @@
      子树会被搬出宿主节点，:host 上的自定义属性无法继承进来。
      .tab-bar 是 portal 子树的根，其后代（中心按钮等）均可继承。
      以下值在 theme-teal 中无精确等价物，就地令牌化以保证零外观改变。 */
-  --tb-bar-bg: rgba(236, 228, 212, 0.96);          /* 暖石金半透底（规划对齐 #ECE4D4 + 纸纹） */
+  --tb-bar-bg: linear-gradient(160deg, #2D4A2D 0%, #1A2E1A 100%); /* C6 深绿渐变底 = --lux-green-grad 值；custom-tab-bar 仅 import theme-teal，--lux-green-grad 在 variables.wxss 不可达，故用字面量（深绿底不再需要纸纹） */
   --tb-center-bg: var(--zy-accent);                /* 香槟金平涂底（引用 theme-teal 活令牌 #C9A24B） */
   --tb-center-shadow:
     0 6rpx 20rpx rgba(31, 58, 31, 0.40),
@@ -64,8 +64,7 @@
   --tb-center-shadow-active:
     0 16rpx 44rpx rgba(31, 58, 31, 0.46),
     0 4rpx 14rpx rgba(31, 58, 31, 0.28);
-  --tb-center-ring: 0 0 0 6rpx var(--zy-primary-700);    /* 深绿外扩环（box-shadow spread，Skyline 可靠通道，6rpx≈3px 真机可辨） */
-  --tb-paper-noise: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAQtUlEQVR4nDXZB9iX8xcG8IdQHSMUKaPMSlFaZgohqyEpZZQITXtHsqOQWWiHtMuIsoXQIBQNQtl7K/yvz7n+z3td7/W+7/P7Pt/vOfe57/uc53mLVq1axemnnx7jxo2LbbbZJnbYYYc466yzombNmnHjjTfGtddeG+3bt4+BAwfG2rVr8vvvv/+Oo446KnbZZZfo0aNHfPjhhzFgwIB49dVXc92tt94a33zzTey///6xdOnSmDFjRmyyySZx6aWXxrvvvhs77rhjTJ48OerWrRt9+/aN8ePHR+/evaN69erx0ksvZSwnn3xyrFy5Ms4777xYsGBBPPbYY3HuuefGp59+GjfffHM888wzuW/x888/R/fu3ePss8/OwLfddtvYbrvt4swzz8wgf/nll/B15ZVXxk8//RQPPvhgnHHGGbF+/fq8p23btnHqqafGs88+G7fffnsm3Lx58xg2bFiCILGHH344xowZk3u8/PLLMXz48Dj44IPj+++/j0033TTvO/HEE+PYY4+NP/74I3799df48ssv47TTTovRo0fn+mXLlkXPnj2jTZs2sW7dukzgxx9/jKJFixYhiffeey8Pt1DWm2++edSqVSuatWsXO++8c2YN2QMOOCA+/vjjREdwVapUicqVK8fs2bPjuOOOy2pKbPXq1VGxYsUEQMUEVa1atfj333+zKhdccEHcf//9cdBBB8Vvv/2W66dNm5ZgzZs3L/o06dNvv/12vPDCC4n8Pffck+d36dIl41K9m266KQqlgsp3332XGbt56tSpmZDSHnjggYlCgwYN4oEHHsgq+KxXr15RqVKleOONN2K//faLiRMnJgXuuOOODGLUqFHxzjvvZMUcDtGPPvoo9t1336y0v6GOSpKpXbt2vPnmm/HDDz/EEUcckRVDt0suuSRWrFiRqKOPqm299dZx+OGHZ9JJIYfvtttuicSiRYsS4bvuuis++OCDvBl3cf3rr7/OzX19++23yflTTjklrrvuuqwIRG+77bakoGv//fdfBqCKDpswYULSSgKvvfZaFEWRyaEI2l100UVxxRVXJP+xQYWfe+652GKLLXK/jh075nWUVQWAFE2aNEkuOQRqUL/33nsTZUFWqFAhUVF+Xy+++GK8/vrrSSUHHHPMMVl6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");                /* 纸纹（与 design-tokens 的 --zy-paper-noise 同源，48×48 内联 base64） */
+  --tb-center-ring: 0 0 0 6rpx rgba(10, 20, 10, 0.45);   /* 墨绿半透背衬（box-shadow spread，Skyline 可靠通道；深绿底上不再需要深绿环补对比） */
   --tb-center-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
   --tb-center-inner-shadow: linear-gradient(0deg, rgba(168, 137, 74, 0.30) 0%, transparent 100%);
 
@@ -74,9 +73,7 @@
   left: 0;
   right: 0;
   height: 104rpx;
-  background-color: var(--tb-bar-bg);
-  background-image: var(--tb-paper-noise);
-  border-top: var(--zy-tabbar-border-top);
+  background: var(--tb-bar-bg);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -104,7 +101,14 @@
 }
 
 .tab-bar::before {
-  display: none;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%); /* 金发丝顶线 = --lux-gold-line 值 */
+  pointer-events: none;
 }
 
 /* ================================================================
@@ -120,65 +124,40 @@
   position: relative;
 }
 
-/* ---- 选中态：顶部发丝金色指示线（极简，奢侈品克制） ---- */
-.tab-bar-item.active::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 32rpx;
-  height: 4rpx;
-  border-radius: 2rpx;
-  background: var(--zy-accent);
-  transform: translateX(-50%) scaleX(0);
-  transform-origin: center;
-  opacity: 0;
-  animation-name: gold-line-appear;
-  animation-duration: 500ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-fill-mode: forwards;
-}
-
-@keyframes gold-line-appear {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) scaleX(0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) scaleX(1);
-  }
-}
-
 /* ================================================================
-   图标包裹层
+   图标包裹层 — 金圆点容器（64rpx 圆形；选中 = 金平涂 + 金晕）
    ================================================================ */
 .tab-bar-icon-wrap {
   width: 64rpx;
-  height: 48rpx;
+  height: 64rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 4rpx;
-  background: transparent;
-  transition-property: transform;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1rpx solid rgba(201, 162, 75, 0.2);
+  transition-property: transform, background, border-color, box-shadow;
   transition-duration: 320ms;
   transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 .tab-bar-item.active .tab-bar-icon-wrap {
+  background: #C9A24B;
+  border-color: transparent;
+  box-shadow: 0 0 0 8rpx rgba(201, 162, 75, 0.12);
   transform: translateY(-2rpx);
 }
 
 /* ================================================================
-   图标 — 线条图标，未选中极淡
+   图标 — 非选中米白资产 + opacity .7；选中切换炭墨资产（见 wxml 三元）
    ================================================================ */
 .tab-bar-icon {
-  width: 40rpx;
-  height: 40rpx;
+  width: 36rpx;
+  height: 36rpx;
   transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
               transform 320ms cubic-bezier(0.34, 1.15, 0.64, 1);
-  opacity: 0.35;
+  opacity: 0.7;
 }
 
 .tab-bar-item.active .tab-bar-icon {
@@ -187,28 +166,26 @@
 }
 
 /* ================================================================
-   文字 — 极轻，宽字距
+   文字 — 极轻，宽字距；深绿底上用奶油色 alpha 表达非选中
    ================================================================ */
 .tab-bar-text {
   font-size: 18rpx;
   font-weight: 400;
-  color: var(--zy-tabbar-item-inactive);
+  color: rgba(247, 245, 239, 0.7);
   line-height: 1;
   transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
               transform 320ms cubic-bezier(0.19, 1, 0.22, 1);
   letter-spacing: 0.02em;
-  opacity: 0.6;
 }
 
 .tab-bar-item.active .tab-bar-text {
-  color: var(--zy-tabbar-item-active);
-  font-weight: 500;
+  color: #C9A24B;
+  font-weight: 600;
   letter-spacing: 0.06em;
-  opacity: 1;
 }
 
 /* ================================================================
-   中心按钮 — 香槟金圆钮（深绿环 + 呼吸光晕）
+   中心按钮 — 香槟金圆钮（墨绿半透背衬 + 呼吸光晕）
    ================================================================ */
 .tab-bar-item-center {
   position: relative;
