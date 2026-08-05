@@ -179,9 +179,9 @@
 }
 
 .gender-option.active[data-gender="female"] {
-  background: var(--gender-female-tint, rgba(255, 111, 165, 0.10));
-  color: var(--gender-female, #FF6FA5);
-  border-color: var(--gender-female-border, rgba(255, 111, 165, 0.25));
+  background: var(--gender-female-tint, rgba(255, 166, 201, 0.10));
+  color: var(--gender-female, #FFA6C9);
+  border-color: var(--gender-female-border, rgba(255, 166, 201, 0.25));
 }
 
 .gender-decoration {
