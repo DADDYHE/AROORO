@@ -1,8 +1,10 @@
 const { err } = require('../common/errors')
-const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES } = require('../common/utils')
+const { initCloud, handleSuccess, handleError, ERROR_CODES } = require('../common/utils')
 const { createLogger } = require('../common/logger')
 // P0-6: 资金事务失败主动告警
 const { recordAlert } = require('../common/alert')
+// P1 修复：提现申请限流
+const { withRateLimit } = require('../common/risk-rate-limit')
 // 推广/邀请统计统一口径（板块→权威集合→状态集→金额字段）
 const { REFERRAL_BOARDS, resolveOrderAmount, fetchBoardOrders } = require('./referralStats')
 
@@ -11,6 +13,24 @@ const _ = db.command
 const logger = createLogger('walletService')
 
 const WALLET_TYPES = ['commission', 'serviceIncome']
+
+/**
+ * P1 修复：分页拉全查询（CloudBase get() 默认单次 100 条/显式 limit 也会截断），
+ *   收入统计/明细不再被 500 条上限截断
+ */
+async function fetchAll(collection, where, maxTotal = 10000) {
+  const BATCH = 100
+  const all = []
+  let skip = 0
+  for (;;) {
+    const res = await db.collection(collection).where(where).skip(skip).limit(BATCH).get()
+    const batch = (res && res.data) || []
+    all.push(...batch)
+    if (batch.length < BATCH || all.length >= maxTotal) {break}
+    skip += BATCH
+  }
+  return all.slice(0, maxTotal)
+}
 
 async function getMyIncomeOverview(event, context, auth) {
   const { openid } = auth
@@ -30,17 +50,18 @@ async function getMyIncomeOverview(event, context, auth) {
 
     // inviterId 现在存的是 openid，commissions 中也存 openid
     // L6: 喂养师体系已废弃——feedingOrders 直接按 ownerId（合作伙伴 openid）查询，不再中转 feeders 集合
+    // P1 修复：分页拉全（原 limit(500) 截断收入），佣金仅统计有效状态（排除 cancelled/reversed 退款冲销）
     const [commissionRes, activityRes, boardingRes, feedingRes, commissionWalletRes, serviceIncomeWalletRes] = await Promise.all([
-      db.collection('commissions').where({ inviterId: openid }).limit(500).get(),
-      db.collection('orders').where({ organizerId: openid, status: 'confirmed', orderType: 'activity' }).limit(500).get(),
-      db.collection('orders').where({ organizerId: openid, status: 'completed', type: 'boarding' }).limit(500).get(),
-      db.collection('feedingOrders').where({ ownerId: openid, status: 'completed' }).limit(500).get(),
+      fetchAll('commissions', { inviterId: openid, status: _.in(['pending', 'settled']) }),
+      fetchAll('orders', { organizerId: openid, status: 'confirmed', orderType: 'activity' }),
+      fetchAll('orders', { organizerId: openid, status: 'completed', type: 'boarding' }),
+      fetchAll('feedingOrders', { ownerId: openid, status: 'completed' }),
       db.collection('wallets').where({ openid, type: 'commission' }).limit(1).get(),
       db.collection('wallets').where({ openid, type: 'serviceIncome' }).limit(1).get(),
     ])
 
     let commissionTotal = 0, commissionPending = 0, commissionSettled = 0, commissionMonthly = 0, commissionToday = 0
-    ;(commissionRes.data || []).forEach(c => {
+    ;(Array.isArray(commissionRes) ? commissionRes : []).forEach(c => {
       const amt = Number(c.commissionAmount) || 0
       commissionTotal += amt
       if (c.status === 'pending') {commissionPending += amt}
@@ -50,7 +71,7 @@ async function getMyIncomeOverview(event, context, auth) {
     })
 
     let boardingTotal = 0, boardingMonthly = 0, boardingToday = 0
-    ;(boardingRes.data || []).forEach(o => {
+    ;(Array.isArray(boardingRes) ? boardingRes : []).forEach(o => {
       const amt = Number(o.totalPrice) || Number(o.price) || 0
       boardingTotal += amt
       if (o.completedAt && new Date(o.completedAt) >= monthStart) {boardingMonthly += amt} else if (o.updatedAt && new Date(o.updatedAt) >= monthStart) {boardingMonthly += amt}
@@ -58,7 +79,7 @@ async function getMyIncomeOverview(event, context, auth) {
     })
 
     let activityTotal = 0, activityMonthly = 0, activityToday = 0
-    ;(activityRes.data || []).forEach(o => {
+    ;(Array.isArray(activityRes) ? activityRes : []).forEach(o => {
       const amt = Number(o.totalPrice) || 0
       activityTotal += amt
       if (o.paidAt && new Date(o.paidAt) >= monthStart) {activityMonthly += amt} else if (o.updatedAt && new Date(o.updatedAt) >= monthStart) {activityMonthly += amt}
@@ -66,7 +87,7 @@ async function getMyIncomeOverview(event, context, auth) {
     })
 
     let feedingTotal = 0, feedingMonthly = 0, feedingToday = 0
-    ;(feedingRes.data || []).forEach(o => {
+    ;(Array.isArray(feedingRes) ? feedingRes : []).forEach(o => {
       const amt = Number(o.totalPrice) || 0
       feedingTotal += amt
       if (o.completedAt && new Date(o.completedAt) >= monthStart) {feedingMonthly += amt} else if (o.updatedAt && new Date(o.updatedAt) >= monthStart) {feedingMonthly += amt}
@@ -118,12 +139,13 @@ async function getMyIncomeDetails(event, context, auth) {
     // inviterId 现在存的是 openid，commissions 中也存 openid
     // 佣金类（团购/商城）按 orderType 细分；all/commission 查全部
     if (type === 'all' || type === 'commission' || type === 'tuan' || type === 'mall') {
-      const commissionQuery = { inviterId: openid }
+      // P1 修复：仅统计有效状态（排除 cancelled/reversed 退款冲销），分页拉全
+      const commissionQuery = { inviterId: openid, status: _.in(['pending', 'settled']) }
       if (type === 'tuan' || type === 'mall') {
         commissionQuery.orderType = type
       }
-      const res = await db.collection('commissions').where(commissionQuery).limit(500).get()
-      ;(res.data || []).forEach(c => {
+      const commissionRows = await fetchAll('commissions', commissionQuery)
+      ;(Array.isArray(commissionRows) ? commissionRows : []).forEach(c => {
         allItems.push({
           id: c._id, type: 'commission', typeName: '佣金',
           amount: Number(c.commissionAmount) || 0,
@@ -135,8 +157,8 @@ async function getMyIncomeDetails(event, context, auth) {
     }
 
     if (type === 'all' || type === 'activity') {
-      const res = await db.collection('orders').where({ organizerId: openid, status: 'confirmed', orderType: 'activity' }).limit(500).get()
-      ;(res.data || []).forEach(o => {
+      const rows = await fetchAll('orders', { organizerId: openid, status: 'confirmed', orderType: 'activity' })
+      ;(Array.isArray(rows) ? rows : []).forEach(o => {
         allItems.push({
           id: o._id, type: 'activity', typeName: '活动',
           amount: Number(o.totalPrice) || 0,
@@ -148,8 +170,8 @@ async function getMyIncomeDetails(event, context, auth) {
     }
 
     if (type === 'all' || type === 'boarding' || type === 'hosting') {
-      const res = await db.collection('orders').where({ organizerId: openid, status: 'completed', type: 'boarding' }).limit(500).get()
-      ;(res.data || []).forEach(o => {
+      const rows = await fetchAll('orders', { organizerId: openid, status: 'completed', type: 'boarding' })
+      ;(Array.isArray(rows) ? rows : []).forEach(o => {
         allItems.push({
           id: o._id, type: 'boarding', typeName: '寄养',
           amount: Number(o.totalPrice) || Number(o.price) || 0,
@@ -162,8 +184,8 @@ async function getMyIncomeDetails(event, context, auth) {
 
     if (type === 'all' || type === 'feeding') {
       // L6: 喂养师体系已废弃——feedingOrders 直接按 ownerId（合作伙伴 openid）查询，不再中转 feeders 集合
-      const res = await db.collection('feedingOrders').where({ ownerId: openid, status: 'completed' }).limit(500).get()
-      ;(res.data || []).forEach(o => {
+      const rows = await fetchAll('feedingOrders', { ownerId: openid, status: 'completed' })
+      ;(Array.isArray(rows) ? rows : []).forEach(o => {
         allItems.push({
           id: o._id, type: 'feeding', typeName: '服务',
           amount: Number(o.totalPrice) || 0,
@@ -179,10 +201,16 @@ async function getMyIncomeDetails(event, context, auth) {
     let buyerMap = {}
     if (buyerIds.length > 0) {
       try {
-        const buyerRes = await db.collection('users').where({ _id: _.in(buyerIds) }).field({ _id: true, nickName: true, avatarUrl: true }).limit(500).get()
-        ;(buyerRes.data || []).forEach(u => {
-          buyerMap[u._id] = { nickName: u.nickName || '', avatarUrl: u.avatarUrl || '' }
-        })
+        // P1 修复：买家批量查询分批（原 _.in + limit(500) 对大批量明细会截断）
+        for (let i = 0; i < buyerIds.length; i += 100) {
+          const buyerRes = await db.collection('users')
+            .where({ _id: _.in(buyerIds.slice(i, i + 100)) })
+            .field({ _id: true, nickName: true, avatarUrl: true })
+            .get()
+          ;((buyerRes && buyerRes.data) || []).forEach(u => {
+            buyerMap[u._id] = { nickName: u.nickName || '', avatarUrl: u.avatarUrl || '' }
+          })
+        }
       } catch (e) {
         logger.warn('getMyIncomeDetails.buyers.fetch', { msg: e.message, count: buyerIds.length })
       }
@@ -218,13 +246,14 @@ async function getMyWallet(event, context, auth) {
     throw err('INVALID_PARAMS', '无效的钱包类型')
   }
   try {
-    let walletRes = await db.collection('wallets').where({ openid, type: walletType }).limit(1).get()
+    // P3 修复：GET 查询不创建钱包（避免并发重复创建；钱包由佣金/收入结算时 ensureWalletBalance 自动创建）
+    const walletRes = await db.collection('wallets').where({ openid, type: walletType }).limit(1).get()
     if (!walletRes.data || walletRes.data.length === 0) {
-      await db.collection('wallets').add({ data: { _id: generateId('wallet', openid), openid, type: walletType, balance: 0, totalIncome: 0, totalWithdrawn: 0, frozenAmount: 0, status: 'active', createdAt: db.serverDate(), updatedAt: db.serverDate() } })
-      walletRes = await db.collection('wallets').where({ openid, type: walletType }).limit(1).get()
+      return handleSuccess({ balance: 0, totalIncome: 0, totalWithdrawn: 0, frozenAmount: 0, status: 'active', type: walletType })
     }
     const w = walletRes.data[0]
-    return handleSuccess({ balance: Number(w.balance) || 0, totalIncome: Number(w.totalIncome) || 0, totalWithdrawn: Number(w.totalWithdrawn) || 0, frozenAmount: Number(w.frozenAmount) || 0, status: w.status })
+    const round2 = n => Math.round(Number(n) * 100) / 100
+    return handleSuccess({ balance: round2(w.balance), totalIncome: round2(w.totalIncome), totalWithdrawn: round2(w.totalWithdrawn), frozenAmount: round2(w.frozenAmount), status: w.status })
   } catch (error) {
     logger.error('getMyWallet', error)
     return handleError(error, '获取钱包信息失败', ERROR_CODES.DATA)
@@ -257,12 +286,28 @@ async function requestWithdrawal(event, context, auth) {
   if (!WALLET_TYPES.includes(walletType)) {
     throw err('INVALID_PARAMS', '无效的钱包类型')
   }
-  if (!amount || Number(amount) < 1) {
+  // P1 修复：金额严格校验（有限数值、最低 1 元、2 位小数精度、单次上限）
+  //   原实现 `!amount || Number(amount) < 1` 对 NaN/字符串可绕过，且无精度/上限限制
+  const parsedAmount = Number(amount)
+  if (!Number.isFinite(parsedAmount) || parsedAmount < 1) {
     throw err('INVALID_PARAMS', '最低提现金额为1元')
   }
-  const withdrawAmount = Number(amount)
+  const withdrawAmount = Math.round(parsedAmount * 100) / 100
+  if (withdrawAmount !== parsedAmount) {
+    throw err('INVALID_PARAMS', '提现金额精度不能超过2位小数')
+  }
+  const MAX_SINGLE_WITHDRAWAL = 50000
+  if (withdrawAmount > MAX_SINGLE_WITHDRAWAL) {
+    throw err('BUSINESS_ERROR', `单次最多提现 ${MAX_SINGLE_WITHDRAWAL} 元`)
+  }
 
   try {
+    // P1 修复：资金接口限流（防高频调用/刷单）
+    await withRateLimit(
+      { userId: openid, type: 'withdrawal', targetId: 'wallet' },
+      async () => null
+    )
+
     // 读取用户昵称，用于管理端提现列表展示
     let nickName = ''
     try {
@@ -284,13 +329,19 @@ async function requestWithdrawal(event, context, auth) {
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const todayCount = await db.collection('withdrawals').where({ openid, walletType, createdAt: _.gte(today) }).count()
+    // P2 修复：每日次数仅统计有效状态（排除 rejected/cancelled 等终态，与 partnerService 口径统一）
+    const todayCount = await db.collection('withdrawals').where({
+      openid, walletType, createdAt: _.gte(today),
+      status: _.in(['pending', 'processing', 'approved', 'completed']),
+    }).count()
     if (todayCount.total >= 10) {
       throw err('BUSINESS_ERROR', '每日限提现10次')
     }
 
     // P1-4: 钱包扣减 + 提现记录创建 纳入单一事务，防止资金丢失
     const transaction = await db.startTransaction()
+    // P3 修复：事务内统一使用 transaction.command（对齐 partnerService 规范）
+    const _tx = transaction.command
     try {
       // 事务内重新查询最新余额（防止并发超提）
       const freshWalletRes = await transaction.collection('wallets').doc(w._id).get()
@@ -310,7 +361,7 @@ async function requestWithdrawal(event, context, auth) {
 
       // 扣减余额、增加冻结金额
       await transaction.collection('wallets').doc(w._id).update({
-        data: { balance: _.inc(-withdrawAmount), frozenAmount: _.inc(withdrawAmount), updatedAt: db.serverDate() },
+        data: { balance: _tx.inc(-withdrawAmount), frozenAmount: _tx.inc(withdrawAmount), updatedAt: db.serverDate() },
       })
 
       // 创建提现记录
@@ -426,7 +477,10 @@ async function getMyInvitedUsers(event, context, auth) {
 }
 
 async function getWithdrawalList(event, context, auth) {
-  const { status, page = 1, pageSize = 20 } = event
+  // P2 修复：分页参数边界校验（pageSize 上限 100，防拉全表）+ 字段投影（去除 openid 等内部字段）
+  const { status } = event
+  const page = Math.max(1, Math.floor(Number(event.page) || 1))
+  const pageSize = Math.min(100, Math.max(1, Math.floor(Number(event.pageSize) || 20)))
   try {
     const query = {}
     if (status) {query.status = status}
@@ -434,6 +488,24 @@ async function getWithdrawalList(event, context, auth) {
     const total = countRes.total || 0
     const res = await db.collection('withdrawals')
       .where(query)
+      .field({
+        _id: true,
+        amount: true,
+        status: true,
+        walletType: true,
+        method: true,
+        nickName: true,
+        createdAt: true,
+        updatedAt: true,
+        reviewedBy: true,
+        reviewedAt: true,
+        rejectReason: true,
+        transferError: true,
+        outTradeNo: true,
+        outBatchNo: true,
+        transferBatchNo: true,
+        transferTime: true,
+      })
       .orderBy('createdAt', 'desc')
       .skip((page - 1) * pageSize)
       .limit(pageSize)
@@ -469,18 +541,21 @@ async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source) 
     outBatchNo: transferInfo.out_bill_no || w.outBatchNo || '',
     updatedAt: db.serverDate(),
   }
-  const walletIncData = {
-    frozenAmount: _.inc(-w.amount),
-    totalWithdrawn: _.inc(w.amount),
-    updatedAt: db.serverDate(),
-  }
 
   // 首选路径：单一事务保证提现状态与钱包数据一致
   const transaction = await db.startTransaction()
+  // P3 修复：事务内使用 transaction.command
+  const _tx = transaction.command
   try {
     await transaction.collection('withdrawals').doc(withdrawalId).update({ data: completedData })
     if (walletDoc) {
-      await transaction.collection('wallets').doc(walletDoc._id).update({ data: walletIncData })
+      await transaction.collection('wallets').doc(walletDoc._id).update({
+        data: {
+          frozenAmount: _tx.inc(-w.amount),
+          totalWithdrawn: _tx.inc(w.amount),
+          updatedAt: db.serverDate(),
+        },
+      })
     }
     await transaction.commit()
     return { settled: true, viaTransaction: true }
@@ -504,7 +579,14 @@ async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source) 
   }
   if (withdrawalFixed && walletDoc) {
     try {
-      await db.collection('wallets').doc(walletDoc._id).update({ data: walletIncData })
+      // 补偿路径为非事务更新，使用 db.command
+      await db.collection('wallets').doc(walletDoc._id).update({
+        data: {
+          frozenAmount: _.inc(-w.amount),
+          totalWithdrawn: _.inc(w.amount),
+          updatedAt: db.serverDate(),
+        },
+      })
       walletFixed = true
     } catch (e) {
       logger.error(`${source}.compensate.wallet.failed`, { withdrawalId, msg: e?.message })
@@ -680,6 +762,8 @@ async function rejectWithdrawal(event, context, auth) {
     const walletDoc = walletRes.data && walletRes.data[0]
 
     const transaction = await db.startTransaction()
+    // P3 修复：事务内使用 transaction.command
+    const _tx = transaction.command
     try {
       // 1) 更新提现记录状态为 rejected
       await transaction.collection('withdrawals').doc(withdrawalId).update({
@@ -696,8 +780,8 @@ async function rejectWithdrawal(event, context, auth) {
       if (walletDoc) {
         await transaction.collection('wallets').doc(walletDoc._id).update({
           data: {
-            balance: _.inc(w.amount),
-            frozenAmount: _.inc(-w.amount),
+            balance: _tx.inc(w.amount),
+            frozenAmount: _tx.inc(-w.amount),
             updatedAt: db.serverDate(),
           },
         })

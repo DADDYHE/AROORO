@@ -258,18 +258,31 @@ describe('paymentService/pay', () => {
       expect(result.paid).toBe(false)
     })
 
-    test('合法转移 unpaid → paid 成功', async () => {
+    test('合法转移 unpaid → 只读确认成功（不写库，由微信回调推进状态）', async () => {
       mockDb._collections.orders = { docs: [{ _id: 'o1', outTradeNo: 'ORDER_X', paymentStatus: 'unpaid', totalPrice: 100 }] }
       mockWechatPayUtils.httpsRequest.mockResolvedValueOnce({
         trade_state: 'SUCCESS',
         transaction_id: 'TX_001',
+        amount: { total: 10000, currency: 'CNY' },
       })
       const result = await pay.confirmPayment({ outTradeNo: 'ORDER_X' }, {}, { openid: 'oTest' })
-      // Sprint 25: 成功路径直接返回 ConfirmPaymentResult 原始数据
+      // P0 修复：confirmPayment 只读确认——订单状态推进统一由 paymentNotify 完成，
+      //   避免与回调竞态导致名额/券核销/收入/佣金缺失
       expect(result.paid).toBe(true)
       const updated = mockDb._collections.orders.docs[0]
-      expect(updated.paymentStatus).toBe('paid')
-      expect(updated.transactionId).toBe('TX_001')
+      expect(updated.paymentStatus).toBe('unpaid')
+      expect(updated.transactionId).toBeUndefined()
+    })
+
+    test('实付金额与订单金额不一致 → 返回 paid=false（不确认成功）', async () => {
+      mockDb._collections.orders = { docs: [{ _id: 'o1', outTradeNo: 'ORDER_X', paymentStatus: 'unpaid', totalPrice: 100 }] }
+      mockWechatPayUtils.httpsRequest.mockResolvedValueOnce({
+        trade_state: 'SUCCESS',
+        transaction_id: 'TX_001',
+        amount: { total: 9999, currency: 'CNY' },
+      })
+      const result = await pay.confirmPayment({ outTradeNo: 'ORDER_X' }, {}, { openid: 'oTest' })
+      expect(result.paid).toBe(false)
     })
 
     test('已 paid 重复确认返回 alreadyConfirmed=true', async () => {

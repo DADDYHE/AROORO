@@ -597,6 +597,8 @@ export async function getOrders(event: EventLike, _context: ContextLike, auth: A
   const { role, status, page = 1, pageSize: rawPageSize = 10, dateRange } = event as { role?: string, status?: string, page?: number, pageSize?: number, dateRange?: string }
   // F12: pageSize 无上限会让客户端传极大值触发重查询/超时，clam 到 [1,100]
   const pageSize = Math.min(100, Math.max(1, Number(rawPageSize) || 10))
+  // P2 修复：page 下限 clamp（page=0/负数会导致 skip 为负数）
+  const pageNum = Math.max(1, Math.floor(Number(page) || 1))
   const query: Record<string, unknown> = {}
 
   if (role === 'owner') {
@@ -642,7 +644,7 @@ export async function getOrders(event: EventLike, _context: ContextLike, auth: A
   const result = await db.collection('orders').where(query as never)
     .field(orderFields as never)
     .orderBy('createdAt', 'desc')
-    .skip((Number(page) - 1) * Number(pageSize))
+    .skip((pageNum - 1) * Number(pageSize))
     .limit(Number(pageSize))
     .get()
 
@@ -668,7 +670,7 @@ export async function getOrders(event: EventLike, _context: ContextLike, auth: A
   return handleSuccess({
     list,
     total: countResult.total,
-    page: Number(page),
+    page: pageNum,
     pageSize: Number(pageSize),
     totalPages: Math.ceil(countResult.total / Number(pageSize)),
   }, '获取成功')
@@ -706,13 +708,22 @@ export async function enrichOrders(orders: unknown[]): Promise<EnrichedOrder[]> 
     const hostMap: Record<string, unknown> = {}
 
     if (petIds.length > 0) {
-      const petRes = await db.collection('pets').where({ _id: (db.command as { in: (arr: string[]) => unknown }).in(petIds) }).get()
-      ;(petRes.data || []).forEach(p => { petMap[(p as { _id: string })._id] = p })
+      // P2 修复：_.in 分批查询（单次上限 100），避免大批量宠物 ID 补全缺失
+      for (let i = 0; i < petIds.length; i += 100) {
+        const petRes = await db.collection('pets')
+          .where({ _id: (db.command as { in: (arr: string[]) => unknown }).in(petIds.slice(i, i + 100)) })
+          .get()
+        ;(petRes.data || []).forEach(p => { petMap[(p as { _id: string })._id] = p })
+      }
     }
 
     if (hostIds.length > 0) {
-      const hostRes = await db.collection('hostProfiles').where({ _id: (db.command as { in: (arr: string[]) => unknown }).in(hostIds) }).get()
-      ;(hostRes.data || []).forEach(h => { hostMap[(h as { _id: string })._id] = h })
+      for (let i = 0; i < hostIds.length; i += 100) {
+        const hostRes = await db.collection('hostProfiles')
+          .where({ _id: (db.command as { in: (arr: string[]) => unknown }).in(hostIds.slice(i, i + 100)) })
+          .get()
+        ;(hostRes.data || []).forEach(h => { hostMap[(h as { _id: string })._id] = h })
+      }
     }
 
     result.forEach(order => {
@@ -798,8 +809,9 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
   }
 
   const pricePerDay = (host.data as { pricePerDay?: number }).pricePerDay || 0
-  const start = new Date(startDate)
-  const end = new Date(endDate)
+  // P3 修复：日期按本地时区解析（'YYYY-MM-DD' 直接 new Date 为 UTC 午夜，跨时区边界差一天）
+  const start = new Date(String(startDate).replace(/-/g, '/'))
+  const end = new Date(String(endDate).replace(/-/g, '/'))
   // L4 备注：+1 表示「按天计费且包含首尾两天」（如 7/1~7/3 = 3 天）。
   //   若后续改为按夜计费（酒店式），需改为 -1 或不加。计费规则以产品确认为准。
   const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
@@ -952,11 +964,14 @@ export async function updateOrderStatus(event: EventLike, _context: ContextLike,
   //   - paymentService 内部会更新订单状态为 refunding/refunded 并调微信退款 API
   //   - 失败时抛错，订单状态保持，引导用户重试或联系客服
   if (status === 'cancelled' && od.paymentStatus === 'paid' && od.outTradeNo) {
-    const refundAmount = Number(od.totalPrice) || Number(od.originalAmount) || 0
-    const totalAmount = refundAmount
-    if (refundAmount <= 0) {
+    const refundAmountYuan = Number(od.totalPrice) || Number(od.originalAmount) || 0
+    if (refundAmountYuan <= 0) {
       throw err('BUSINESS_ERROR', '订单金额异常，无法发起退款，请联系客服', { orderId })
     }
+    // P0 修复：paymentService createRefund 入参单位为分（微信 API 直接透传），
+    //   订单金额单位为元，必须 ×100 转换，否则 100 元订单只退 1 元
+    const refundAmount = Math.round(refundAmountYuan * 100)
+    const totalAmount = refundAmount
     try {
       logger.info('updateOrderStatus.triggerRefund', { orderId, outTradeNo: od.outTradeNo, refundAmount })
       const callRes = await cloud.callFunction({
@@ -1187,8 +1202,8 @@ export async function calculatePrice(event: EventLike): HandlerResult {
   }
 
   const pricePerDay = (host.data as { pricePerDay?: number }).pricePerDay || 0
-  const start = new Date(startDate)
-  const end = new Date(endDate)
+  const start = new Date(String(startDate).replace(/-/g, '/'))
+  const end = new Date(String(endDate).replace(/-/g, '/'))
   // L4 备注：+1 表示「按天计费且包含首尾两天」（如 7/1~7/3 = 3 天）。
   //   若后续改为按夜计费（酒店式），需改为 -1 或不加。计费规则以产品确认为准。
   const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
@@ -1211,20 +1226,32 @@ export async function checkDateAvailability(event: EventLike): HandlerResult {
   }
 
   try {
-    // F10 修复：去掉 .limit(100)，避免热门 host(>100 活跃订单) 重叠校验截断致超卖
-    const existingOrders = await db.collection('orders')
-      .where({
-        hostId,
-        status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'in_progress']),
-      })
-      .field({ startDate: true, endDate: true })
-      .get()
+    // F10 + P2 修复：分批拉取该 host 的全部活跃订单做重叠校验，
+    //   避免单次 get() 默认上限截断导致热门 host 超卖，同时控制单批大小
+    const existingOrders: Array<{ startDate: string, endDate: string }> = []
+    const BATCH = 100
+    let skipCount = 0
+    for (;;) {
+      const batchRes = await db.collection('orders')
+        .where({
+          hostId,
+          status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'in_progress']),
+        })
+        .field({ startDate: true, endDate: true })
+        .skip(skipCount)
+        .limit(BATCH)
+        .get()
+      const batch = (batchRes.data || []) as Array<{ startDate: string, endDate: string }>
+      existingOrders.push(...batch)
+      if (batch.length < BATCH || existingOrders.length >= 10000) {break}
+      skipCount += BATCH
+    }
 
-    const requestStart = new Date(startDate).getTime()
-    const requestEnd = new Date(endDate).getTime()
-    const hasOverlap = ((existingOrders.data || []) as Array<{ startDate: string, endDate: string }>).some(o => {
-      const orderStart = new Date(o.startDate).getTime()
-      const orderEnd = new Date(o.endDate).getTime()
+    const requestStart = new Date(String(startDate).replace(/-/g, '/')).getTime()
+    const requestEnd = new Date(String(endDate).replace(/-/g, '/')).getTime()
+    const hasOverlap = existingOrders.some(o => {
+      const orderStart = new Date(String(o.startDate).replace(/-/g, '/')).getTime()
+      const orderEnd = new Date(String(o.endDate).replace(/-/g, '/')).getTime()
       return orderStart < requestEnd && orderEnd > requestStart
     })
 
@@ -1509,6 +1536,50 @@ export async function handleBoardingOrder(event: EventLike, _context: ContextLik
 
   // 取消订单时取消佣金记录和收入记录
   if (newStatus === 'cancelled') {
+    // P1 修复：已支付订单被商家取消必须发起退款（用户已付款，不能只改状态不退钱）。
+    //   与 updateOrderStatus 的退款分支对齐：调用 paymentService.createRefund（金额单位为分）。
+    const cancelOd = orderRes.data as {
+      paymentStatus?: string
+      outTradeNo?: string
+      totalPrice?: number
+      originalAmount?: number
+    }
+    if (cancelOd.paymentStatus === 'paid' && cancelOd.outTradeNo) {
+      const refundYuan = Number(cancelOd.totalPrice) || Number(cancelOd.originalAmount) || 0
+      if (refundYuan <= 0) {
+        throw err('BUSINESS_ERROR', '订单金额异常，无法发起退款，请联系客服', { orderId })
+      }
+      try {
+        const callRes = await cloud.callFunction({
+          name: 'paymentService',
+          data: {
+            action: 'createRefund',
+            outTradeNo: cancelOd.outTradeNo,
+            refundAmount: Math.round(refundYuan * 100),
+            totalAmount: Math.round(refundYuan * 100),
+            reason: '商家取消订单',
+          },
+        })
+        const result = (callRes.result || {}) as { code?: number, message?: string, error?: unknown }
+        if (result.code && result.code !== 0) {
+          throw err('REFUND_FAILED', result.message || '退款发起失败，请稍后重试或联系客服', {
+            orderId,
+            outTradeNo: cancelOd.outTradeNo,
+            paymentError: result.error,
+          })
+        }
+        await sendOrderNotification(orderId, 'refunded')
+        return handleSuccess({ orderId, status: 'refunded', refundInitiated: true }, '退款已发起，请等待到账')
+      } catch (e: unknown) {
+        if (isBusinessError(e)) {throw e}
+        logger.error('handleBoardingOrder.refundCallFailed', { orderId, msg: (e as Error)?.message })
+        throw err('REFUND_FAILED', '退款服务暂时不可用，请稍后重试或联系客服', {
+          orderId,
+          originalMessage: (e as Error)?.message,
+        })
+      }
+    }
+
     try {
       await cancelCommissionRecord(orderId)
     } catch (e) {

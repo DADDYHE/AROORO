@@ -118,21 +118,16 @@ async function fetchOrders(params) {
     const items = []
     let total = 0
     results.forEach(r => {
-      r.list.forEach(item => {
-        if (item.status !== 'cancelled') {
-          items.push({ ...item, _orderType: r.type })
-        }
-      })
+      // P2 修复：不再前端过滤 cancelled（total 与列表口径一致；取消订单由独立页面展示）
+      r.list.forEach(item => { items.push({ ...item, _orderType: r.type }) })
       total += r.total
     })
     items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     return { data: { list: items, total } }
   }
   const result = await fetchFns[orderType.value]({ page: params.page, pageSize: params.pageSize, ...params })
-  // 过滤掉已取消的订单
-  const rawList = result.data?.list || result.data || []
-  const filteredList = rawList.filter(item => item.status !== 'cancelled')
-  return { ...result, data: { ...result.data, list: filteredList } }
+  // P2 修复：不前端过滤 cancelled（total 与列表一致；取消订单由独立页面展示）
+  return result
 }
 
 const { list, loading, total, pagination, fetch, onPageChange, onSizeChange } = usePagination(fetchOrders)

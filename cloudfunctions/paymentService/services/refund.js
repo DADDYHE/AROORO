@@ -109,7 +109,7 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
     };
     const bodyStr = JSON.stringify(requestBody);
     const authorization = generateAuthorization('POST', '/v3/refund/domestic/refunds', bodyStr, config.mchId, config.serialNo, config.privateKey);
-    const refundResult = (await httpsRequest(`${ENDPOINTS.WECHAT_PAY_API_BASE}${ENDPOINTS.WECHAT_PAY_REFUND}`, requestBody, authorization));
+    const refundResult = (await httpsRequest(`${ENDPOINTS.WECHAT_PAY_API_BASE}${ENDPOINTS.WECHAT_PAY_REFUND}`, requestBody, authorization, 'POST', { timeoutHint: 'REFUND' }));
     // M5: 仅 SUCCESS/PROCESSING 才推进 DB——CLOSED/ABNORMAL 等异常状态不推进
     //   原仅判断 `status === 'FAIL'` 抛错，其他状态（CLOSED/ABNORMAL）会误推进 DB 为 refunded
     //   导致资金未实际退回但订单状态已变
@@ -139,12 +139,36 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
         const orderType = orderDoc.orderType || (inferredType || 'order');
         // 事务前：查询所有需要在事务内更新的文档 _id 列表
         let commissionIds = [];
+        let serviceIncomeIds = [];
         let registrationIds = [];
         // P1 修复：活动退款须回退名额（对比超时取消的 restoreActivityQuota），
         //   事务前读取活动当前名额，避免退款后已退款用户永久占名额
         let activityQuota = {
             activityId: '', pCount: 0, current: 0,
         };
+        // P2 修复：退款同步取消服务收入记录（boarding/feeding/activity，与 adminService adminRefund 对齐），
+        //   避免退款后服务收入仍计入合作伙伴收入
+        const incomeTypeMap = {
+            order: 'boarding', boarding: 'boarding', feeding: 'feeding', activity: 'activity',
+        };
+        const serviceIncomeType = incomeTypeMap[orderType];
+        if (serviceIncomeType) {
+            try {
+                const incomeRes = await db.collection('service_incomes')
+                    .where({ orderId: orderDoc._id, type: serviceIncomeType, status: 'completed' })
+                    .field({ _id: true })
+                    .limit(10)
+                    .get();
+                serviceIncomeIds = ((incomeRes && incomeRes.data) || [])
+                    .map((r) => r._id);
+            }
+            catch (e) {
+                logger.warn('createRefund.queryServiceIncomes.failed', {
+                    orderId: orderDoc._id,
+                    msg: e?.message,
+                });
+            }
+        }
         try {
             const commissionRes = await db.collection('commissions')
                 .where({ orderId: orderDoc._id, status: 'pending' })
@@ -237,6 +261,12 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
             // 3) 取消佣金记录
             for (const cid of commissionIds) {
                 await transaction.collection('commissions').doc(cid).update({
+                    data: { status: 'cancelled', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
+                });
+            }
+            // P2 修复：取消服务收入记录（与 adminRefund 对齐）
+            for (const sid of serviceIncomeIds) {
+                await transaction.collection('service_incomes').doc(sid).update({
                     data: { status: 'cancelled', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
                 });
             }
@@ -334,15 +364,22 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
  *
  * @throws BusinessError INVALID_PARAMS / BUSINESS_ERROR
  */
-exports.queryRefund = (0, errors_1.withErrorHandling)(async (event, _context, _auth) => {
-    const { outRefundNo } = event;
+exports.queryRefund = (0, errors_1.withErrorHandling)(async (event, _context, auth) => {
+    const { outRefundNo, outTradeNo } = event;
     if (!outRefundNo) {
         throw (0, errors_1.err)('INVALID_PARAMS', '缺少退款单号');
     }
-    // H9: queryRefund 返回 user_received_account 等敏感字段，需记录访问审计
-    //   outRefundNo 命名为 REFUND_{ts}_{random}，无法直接反推 outTradeNo 做所有权校验
-    //   保留访问日志，便于事后追溯滥用行为
-    logger.info('queryRefund.access', { outRefundNo, accessor: _auth.openid });
+    // P3 修复：查询退款单须同时传订单号 outTradeNo，先按订单校验归属，
+    //   防止任意登录用户凭 outRefundNo 查询他人退款单（响应含 user_received_account 敏感字段）
+    const openid = auth.openid || '';
+    if (!openid) {
+        throw (0, errors_1.err)('AUTH_REQUIRED', '未登录');
+    }
+    if (!outTradeNo) {
+        throw (0, errors_1.err)('INVALID_PARAMS', '缺少订单号');
+    }
+    await fetchOrderAndVerifyOwnership(db, outTradeNo, openid, 0);
+    logger.info('queryRefund.access', { outRefundNo, outTradeNo, accessor: openid });
     const config = WECHAT_PAY;
     if (!config.mchId || !config.privateKey) {
         throw (0, errors_1.err)('BUSINESS_ERROR', '微信支付未配置');

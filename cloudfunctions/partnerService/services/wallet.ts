@@ -302,7 +302,8 @@ export async function getMyIncomeOverview(
     //   boarding/feeding: total/monthly/today 各 3 次 aggregate
     //   wallets: 直接 get（单文档，无截断风险）
     // L6: 喂养师体系已废弃——feedingOrders 直接按 ownerId（合作伙伴 openid）查询
-    const commissionMatch = { inviterId: openid, status: _.neq('cancelled') }
+    // P1 修复：仅统计有效状态（排除 cancelled/reversed 退款冲销，避免收入虚高）
+    const commissionMatch = { inviterId: openid, status: _.in(['pending', 'settled']) }
     const boardingMatch = { organizerId: openid, status: _.in(COMPLETED_BOARDING_STATUSES), type: 'boarding' }
     const feedingMatch = { ownerId: openid, status: 'completed' }
 
@@ -471,12 +472,11 @@ export async function getMyIncomeDetails(
     //   income page details must only display commission records
     //   服务收入明细由 service-income 页面独立查询
     //   原代码查询 activity_registrations/orders/feedingOrders 违反硬约束
-    // M8: 补 status: _.neq('cancelled') 默认过滤，与 referral.ts getReferralOrders 行为一致
-    //   原：未过滤 status，已取消的佣金记录也会出现在收入明细中
-    //   新：默认排除 cancelled 状态，索引利用率也更高（索引含 status 字段）
+    // M8 + P1 修复：仅统计有效状态（排除 cancelled/reversed），
+    //   已取消与退款冲销的佣金不再出现在收入明细中
     const where: Record<string, unknown> = {
       inviterId: openid,
-      status: _.neq('cancelled'),
+      status: _.in(['pending', 'settled']),
     }
     if (type !== 'all') {
       // 标签键与 commissions.orderType 规范值一致（统一为 'boarding'）；
@@ -672,7 +672,8 @@ export async function requestWithdrawal(
     const [todayCountRes, walletRes] = await Promise.all([
       db.collection('withdrawals').where({
         openid, walletType, createdAt: _.gte(today),
-        status: _.in(['awaiting_confirm', 'completed']),
+        // P2 修复：口径与 adminService 一致——统计进行中/已完成的有效提现（排除 rejected/cancelled）
+        status: _.in(['pending', 'processing', 'approved', 'completed']),
       }).count(),
       db.collection('wallets').where({ openid, type: walletType }).limit(1).get(),
     ])
@@ -742,7 +743,9 @@ export async function requestWithdrawal(
       // 创建提现记录
       // H1: 包含 nickName 字段（硬约束：partnerService wallet withdrawal records must include nickName field）
       // H2: 包含 _id / outTradeNo / transferSceneId，供 adminService 审批后发起微信转账
-      // H3: 状态改为 awaiting_confirm（硬约束：Withdrawal records have states: awaiting_confirm, completed, failed, cancelled）
+      // P2 修复：状态对齐后台审批枚举（pending → processing/approved/completed/rejected），
+      //   原 awaiting_confirm 不在 adminService approveWithdrawal 可审批的状态内，
+      //   会产生后台永远无法审批的提现单
       await transaction.collection('withdrawals').add({
         data: {
           _id: withdrawalId,
@@ -752,7 +755,7 @@ export async function requestWithdrawal(
           nickName,
           amount: withdrawAmount,
           method: 'wechat',
-          status: 'awaiting_confirm',
+          status: 'pending',
           // H2: packageInfo 待 adminService 审批后回填（mchId/appId/package）
           transferSceneId: process.env.WECHAT_TRANSFER_SCENE_ID || '',
           createdAt: db.serverDate(),

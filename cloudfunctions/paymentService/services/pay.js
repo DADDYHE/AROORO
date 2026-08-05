@@ -34,7 +34,7 @@ const { WECHAT_PAY, ENDPOINTS } = require('../common/config');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { randomString, rsaSign, httpsRequest, generateAuthorization } = require('./wechatPayUtils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { paymentStateMachine, resolveOrderStatus, isKnownOrderType } = require('../common/payment-state-machine');
+const { paymentStateMachine } = require('../common/payment-state-machine');
 // P0-6: 资金事务失败主动告警
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { recordAlert } = require('../common/alert');
@@ -177,6 +177,11 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
         }
         catch (closeErr) {
             logger.warn('createPayment: 关闭旧支付单失败', { msg: closeErr?.message });
+            // P2 修复：旧预付单关闭失败会导致微信侧单泄漏（2 小时自动关闭），持久化告警供运维关注
+            try {
+                await recordAlert('warning', 'createPayment.close_old_prepay.failed', '创建新支付单前关闭旧预付单失败，旧单可能泄漏', { orderId: orderId, outTradeNo: orderData.outTradeNo, error: closeErr?.message });
+            }
+            catch (_) { /* best-effort */ }
         }
     }
     let actualAmount = 0;
@@ -385,9 +390,12 @@ async function closePaymentInternal(event, _context, _auth, config) {
  *   2. 校验 trade_state === SUCCESS
  *   3. 解析订单类型（orderType）
  *   4. 查询订单并校验状态机可转移性
- *   5. 更新订单 paymentStatus=paid + status=resolveOrderStatus(...)
- *   6. 同步 tuan / activity 类型到对应业务表
- *   7. 触发 commission 记录（best-effort）
+ *   5. 校验实付金额与订单金额一致
+ *
+ * P0 修复（只读确认）：不再推进订单状态/同步业务表/触发佣金——
+ *   状态推进统一由微信支付回调（paymentNotify）完成，避免 confirmPayment 与回调
+ *   竞态导致"回调条件更新失败 → 名额/券核销/收入/佣金缺失"的资金一致性问题。
+ *   本接口仅用于前端支付成功后即时确认"微信侧已扣款"，返回 paid:true 供展示。
  *
  * @throws BusinessError INVALID_PARAMS / BUSINESS_ERROR / NOT_FOUND / STATE_INVALID
  */
@@ -432,94 +440,20 @@ exports.confirmPayment = (0, errors_1.withErrorHandling)(async (event, _context,
         });
         throw (0, errors_1.err)('STATE_INVALID', `非法状态转移 ${existingOrder.paymentStatus} -> paid`);
     }
-    const updateData = {
-        paymentStatus: 'paid',
-        transactionId: result.transaction_id,
-        paidAt: db.serverDate(),
-        updatedAt: db.serverDate(),
-    };
-    // 订单状态由类型决定，统一从 payment-state-machine 解析
-    updateData.status = resolveOrderStatus(orderType, 'paid');
-    if (!isKnownOrderType(orderType)) {
-        logger.warn('confirmPayment.unknownOrderType', { orderType, outTradeNo });
-    }
-    // 跨集合状态同步：tuan 与 activity 类型还需同步到对应业务表
-    //   H6+M11: 原逻辑各步独立 try/catch，与 notify.ts 的事务路径不一致
-    //   导致 tuan_orders 已 paid 但 orders 仍 paying 的中间状态
-    //   修复：主订单更新改为条件更新（where paymentStatus != 'paid'），
-    //         仅当主订单实际推进时才触发 tuan_orders/activity 同步 + commission
-    //         避免与 notify.ts 并发执行时重复同步 + 重复创建佣金
-    const condUpdateRes = await db.collection(collection)
-        .where({
-        _id: existingOrder._id,
-        paymentStatus: _.neq('paid'), // H6: 仅当未 paid 时才推进
-    })
-        .update({ data: updateData });
-    // H6: 主订单未推进（已被 notify.ts 并发推进为 paid）
-    //   此时不应再触发 tuan_orders/activity 同步与 commission 创建，避免重复
-    if (!condUpdateRes.stats || condUpdateRes.stats.updated === 0) {
-        logger.info('confirmPayment.already_paid_skip_sync', {
-            outTradeNo, orderId: existingOrder._id, currentStatus: existingOrder.paymentStatus,
-        });
-        return { paid: true, alreadyConfirmed: true };
-    }
-    if (orderType === 'tuan') {
-        // 通过 tuanOrderId 关联更新 tuan_orders（而非 outTradeNo，因为 tuan_orders 中没有 outTradeNo 字段）
-        const tuanOrderId = existingOrder.tuanOrderId;
-        if (tuanOrderId) {
-            try {
-                await db.collection('tuan_orders').doc(tuanOrderId).update({
-                    data: { status: 'paid', paymentStatus: 'paid', transactionId: result.transaction_id || '', paidAt: db.serverDate(), updatedAt: db.serverDate() },
-                });
-            }
-            catch (e) {
-                logger.warn('confirmPayment.tuan_orders.sync', { tuanOrderId, code: e?.errCode, msg: e?.message });
-                await recordAlert('critical', 'confirmPayment.tuan_sync.failed', '确认支付时 tuan_orders 状态同步失败，需人工核对', {
-                    outTradeNo,
-                    orderType,
-                    tuanOrderId,
-                    error: e?.message,
-                });
-            }
-        }
-    }
-    else if (orderType === 'activity') {
-        try {
-            await db.collection('orders').where({
-                activityId: existingOrder.activityId,
-                ownerId: existingOrder.openid,
-                orderType: 'activity',
-            }).limit(1).update({
-                data: { status: 'confirmed', paymentStatus: 'paid', transactionId: result.transaction_id || '', paidAt: db.serverDate(), updatedAt: db.serverDate() },
+    // P1 修复：实付金额一致性校验（微信查询响应 amount.total 为分）
+    const amountObj = (result.amount || {});
+    const paidAmountFen = typeof amountObj.total === 'number' ? amountObj.total : null;
+    if (paidAmountFen !== null && Number.isFinite(paidAmountFen)) {
+        const amountField = ORDER_TYPE_AMOUNT_FIELD[orderType] || 'totalPrice';
+        const expectedYuan = Number(existingOrder[amountField] || existingOrder.totalPrice || existingOrder.totalAmount || 0);
+        if (Number.isFinite(expectedYuan) && expectedYuan > 0 && Math.round(expectedYuan * 100) !== Math.round(paidAmountFen)) {
+            logger.error('confirmPayment.amount_mismatch', {
+                outTradeNo, orderType, orderId: existingOrder._id,
+                paidFen: paidAmountFen, expectedFen: Math.round(expectedYuan * 100),
             });
-        }
-        catch (e) {
-            logger.warn('confirmPayment.activity.sync', { outTradeNo, code: e?.errCode, msg: e?.message });
-            await recordAlert('critical', 'confirmPayment.activity_sync.failed', '确认支付时 activity 订单状态同步失败，需人工核对', {
-                outTradeNo,
-                orderType,
-                activityId: existingOrder.activityId,
-                openid: existingOrder.openid,
-                error: e?.message,
-            });
-        }
-    }
-    // H6: 仅当主订单实际推进时才触发 commission 创建
-    //   原 notify.ts 与 confirmPayment 并发执行时可创建 2 条佣金记录
-    if (orderType === 'mall' || orderType === 'tuan') {
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const { createCommissionRecord } = require('./commission');
-            await createCommissionRecord(orderType, existingOrder);
-        }
-        catch (commissionErr) {
-            logger.error('confirmPayment commission', { msg: commissionErr?.message });
-            await recordAlert('warning', 'confirmPayment.commission.failed', '确认支付后佣金记录创建失败，需人工核查', {
-                outTradeNo,
-                orderType,
-                orderId: existingOrder._id,
-                error: commissionErr?.message,
-            });
+            await recordAlert('critical', 'confirmPayment.amount_mismatch', '确认支付时微信实付金额与订单金额不一致，需人工对账', { outTradeNo, orderType, orderId: existingOrder._id, paidFen: paidAmountFen, expectedFen: Math.round(expectedYuan * 100) });
+            // 金额不一致不确认成功（状态推进由回调负责；回调侧同样校验并告警）
+            return { paid: false, tradeState: result.trade_state || 'SUCCESS' };
         }
     }
     return { paid: true };

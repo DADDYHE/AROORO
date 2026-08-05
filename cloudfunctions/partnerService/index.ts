@@ -93,11 +93,15 @@ const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap')
 const logger = createLogger('partnerService')
 
 // M10: 启动时注入限流存储（strict 模式，Redis 失败时拒绝资金接口调用）
+let _bootstrapFailed = false
 try {
   const { db } = initCloud()
   bootstrapRateLimit(db, { logger, strict: true })
 } catch (e) {
-  logger.warn('bootstrapRateLimit failed', { msg: (e as Error).message })
+  // P2 修复：strict 模式下 bootstrap 失败必须阻断资金接口（原仅 warn 放行，
+  //   导致限流失效时 requestWithdrawal 仍可调用）
+  _bootstrapFailed = true
+  logger.error('bootstrapRateLimit strict failed', { msg: (e as Error).message })
 }
 
 // M10: 资金类 action 集合——需通过限流中间件
@@ -259,6 +263,13 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
   const { action } = event
   if (!action || !handlers[action as keyof PartnerHandlers]) {
     throw err('INVALID_PARAMS', '无效的操作类型')
+  }
+
+  // P2 修复：限流 bootstrap 失败时拒绝资金类 action（提现申请），
+  //   避免限流失效后资金接口裸奔
+  if (_bootstrapFailed && action === 'requestWithdrawal') {
+    logger.error('main.blocked_by_bootstrap_failure', { action })
+    return toResponse(err('SERVICE_UNAVAILABLE', '提现服务暂不可用，请稍后重试'))
   }
 
   const permission = ACTION_PERMISSIONS[action as keyof PartnerHandlers]

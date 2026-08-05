@@ -85,9 +85,12 @@ export declare const closePayment: WrappedHandler<null>;
  *   2. 校验 trade_state === SUCCESS
  *   3. 解析订单类型（orderType）
  *   4. 查询订单并校验状态机可转移性
- *   5. 更新订单 paymentStatus=paid + status=resolveOrderStatus(...)
- *   6. 同步 tuan / activity 类型到对应业务表
- *   7. 触发 commission 记录（best-effort）
+ *   5. 校验实付金额与订单金额一致
+ *
+ * P0 修复（只读确认）：不再推进订单状态/同步业务表/触发佣金——
+ *   状态推进统一由微信支付回调（paymentNotify）完成，避免 confirmPayment 与回调
+ *   竞态导致"回调条件更新失败 → 名额/券核销/收入/佣金缺失"的资金一致性问题。
+ *   本接口仅用于前端支付成功后即时确认"微信侧已扣款"，返回 paid:true 供展示。
  *
  * @throws BusinessError INVALID_PARAMS / BUSINESS_ERROR / NOT_FOUND / STATE_INVALID
  */

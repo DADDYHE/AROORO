@@ -115,8 +115,9 @@ if (refTs) {
   check('referral.ts 含 ReferralHandler 类型', /export\s+type\s+ReferralHandler\b/.test(refTs))
   check('referral.ts 含 InvitedUser 接口', /export\s+interface\s+InvitedUser\b/.test(refTs))
   check('referral.ts 含 CommissionItem 接口', /export\s+interface\s+CommissionItem\b/.test(refTs))
-  check('referral.ts 含 countAndSum 函数 (强类型化)',
-    /function\s+countAndSum\s*\(\s*res\s*:\s*DbQueryResult\s*\)/.test(refTs))
+  // 2026-08-04 推广统计治理：countAndSum 本地实现收敛到 referralStats（fetchBoardOrders/REFERRAL_BOARDS）
+  check('referral.ts 引用统一统计工具（fetchBoardOrders/REFERRAL_BOARDS）',
+    /REFERRAL_BOARDS|fetchBoardOrders/.test(refTs))
   for (const a of ['getReferralStats', 'getMyInvitedUsers', 'getReferralOrders', 'getReferralOrderStats']) {
     check(`referral.ts 导出 ${a}`, new RegExp(`export\\s+async\\s+function\\s+${a}\\b`).test(refTs))
   }

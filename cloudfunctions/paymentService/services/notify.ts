@@ -134,6 +134,15 @@ const ORDER_TYPE_COLLECTION: Record<OrderType, string> = {
   feeding: 'feedingOrders',
 }
 
+/** 订单实付金额字段（与 pay.ts ORDER_TYPE_AMOUNT_FIELD 保持一致） */
+const ORDER_TYPE_AMOUNT_FIELD: Record<OrderType, string> = {
+  order: 'totalPrice',
+  mall: 'finalAmount',
+  tuan: 'totalPrice',
+  activity: 'finalAmount',
+  feeding: 'totalAmount',
+}
+
 // =====================================================================
 // 工具函数
 // =====================================================================
@@ -373,7 +382,16 @@ async function applyPaidStatus(
       // 2a) 同步关联的 orders 文档
       for (const oid of relatedOrderIds) {
         await transaction.collection('orders').doc(oid).update({
-          data: { status: 'confirmed', paymentStatus: 'paid', paidAt: serverDate, updatedAt: serverDate },
+          // P2 修复：镜像单补写 outTradeNo/transactionId，
+          //   否则后台活动订单详情无微信单号，无法发起退款
+          data: {
+            status: 'confirmed',
+            paymentStatus: 'paid',
+            outTradeNo: existingOrder.outTradeNo || '',
+            transactionId: transactionId || '',
+            paidAt: serverDate,
+            updatedAt: serverDate,
+          },
         })
       }
 
@@ -610,8 +628,13 @@ export async function paymentNotify(
     // H3: serial 头与商户证书序列号比对——防伪造回调
     //   原逻辑解析了 serial 但未比对，攻击者持有任意合法 RSA 私钥即可构造通过验签的伪造回调
     //   必须确认 serial 与本商户配置的平台证书序列号一致
+    // P3 修复：serial 为微信回调必带字段，缺失直接拒绝（原实现允许缺失绕过比对）
+    if (!serial) {
+      logger.warn('paymentNotify: 缺少 serial')
+      return httpResponse(401, 'FAIL', '缺少证书序列号')
+    }
     const expectedSerial = WECHAT_PAY.serialNo
-    if (serial && expectedSerial && serial !== expectedSerial) {
+    if (expectedSerial && serial !== expectedSerial) {
       logger.warn('paymentNotify: serial 不匹配', { serial, expectedSerial })
       return httpResponse(401, 'FAIL', '证书序列号不匹配')
     }
@@ -680,6 +703,34 @@ export async function paymentNotify(
         // P1-3: 微信回调 amount.total 为实付金额（分）→ 转元传入，落 paidAmount 字段
         const amountObj = (orderInfo.amount || {}) as { total?: number }
         const paidAmountYuan = typeof amountObj.total === 'number' ? amountObj.total / 100 : undefined
+
+        // P1 修复：实付金额一致性校验——微信回调金额必须与订单应付款一致。
+        //   不一致时：不推进订单状态 + 持久化告警 + ACK（微信已扣款，重试无用，
+        //   避免重复回调轰炸；订单保持 pending 由人工对账退款）。
+        const paidFen = typeof amountObj.total === 'number' ? amountObj.total : null
+        if (paidFen !== null && Number.isFinite(paidFen)) {
+          const amountField = ORDER_TYPE_AMOUNT_FIELD[orderType] || 'totalPrice'
+          const expectedYuan = Number(existingOrder[amountField] || existingOrder.totalPrice || existingOrder.totalAmount || 0)
+          if (Number.isFinite(expectedYuan) && expectedYuan > 0 && Math.round(expectedYuan * 100) !== Math.round(paidFen)) {
+            logger.error('paymentNotify.amount_mismatch', {
+              outTradeNo: out_trade_no, orderType, orderId: existingOrder._id,
+              paidFen, expectedFen: Math.round(expectedYuan * 100),
+            })
+            try {
+              await recordAlert(
+                'critical',
+                'paymentNotify.amount_mismatch',
+                '支付回调金额与订单金额不一致，订单未推进，需人工对账',
+                {
+                  outTradeNo: out_trade_no, orderType, orderId: existingOrder._id,
+                  paidFen, expectedFen: Math.round(expectedYuan * 100),
+                },
+              )
+            } catch { /* best-effort */ }
+            return httpResponse(200, 'SUCCESS', 'OK')
+          }
+        }
+
         const paidSuccess = await applyPaidStatus(orderType, existingOrder, transaction_id, paidAmountYuan)
         // 仅当支付状态同步成功后才触发佣金记录，避免为未确认的订单创建佣金
         if (paidSuccess) {

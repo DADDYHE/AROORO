@@ -69,6 +69,7 @@ interface CreateRefundResult {
 
 interface QueryRefundEvent {
   outRefundNo?: string
+  outTradeNo?: string
 }
 
 interface WechatRefundResponse {
@@ -179,7 +180,7 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
 
   const refundResult = (await httpsRequest(
     `${ENDPOINTS.WECHAT_PAY_API_BASE}${ENDPOINTS.WECHAT_PAY_REFUND}`,
-    requestBody, authorization
+    requestBody, authorization, 'POST', { timeoutHint: 'REFUND' }
   )) as WechatRefundResponse
 
   // M5: 仅 SUCCESS/PROCESSING 才推进 DB——CLOSED/ABNORMAL 等异常状态不推进
@@ -218,11 +219,34 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
 
     // 事务前：查询所有需要在事务内更新的文档 _id 列表
     let commissionIds: string[] = []
+    let serviceIncomeIds: string[] = []
     let registrationIds: string[] = []
     // P1 修复：活动退款须回退名额（对比超时取消的 restoreActivityQuota），
     //   事务前读取活动当前名额，避免退款后已退款用户永久占名额
     let activityQuota: { activityId: string; pCount: number; current: number } = {
       activityId: '', pCount: 0, current: 0,
+    }
+    // P2 修复：退款同步取消服务收入记录（boarding/feeding/activity，与 adminService adminRefund 对齐），
+    //   避免退款后服务收入仍计入合作伙伴收入
+    const incomeTypeMap: Record<string, string> = {
+      order: 'boarding', boarding: 'boarding', feeding: 'feeding', activity: 'activity',
+    }
+    const serviceIncomeType = incomeTypeMap[orderType]
+    if (serviceIncomeType) {
+      try {
+        const incomeRes = await db.collection('service_incomes')
+          .where({ orderId: orderDoc._id, type: serviceIncomeType, status: 'completed' })
+          .field({ _id: true } as Record<string, true>)
+          .limit(10)
+          .get()
+        serviceIncomeIds = (((incomeRes && incomeRes.data) || []) as Array<{ _id: string }>)
+          .map((r) => r._id)
+      } catch (e) {
+        logger.warn('createRefund.queryServiceIncomes.failed', {
+          orderId: orderDoc._id,
+          msg: (e as Error)?.message,
+        })
+      }
     }
     try {
       const commissionRes = await db.collection('commissions')
@@ -318,6 +342,13 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
       // 3) 取消佣金记录
       for (const cid of commissionIds) {
         await transaction.collection('commissions').doc(cid).update({
+          data: { status: 'cancelled', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
+        })
+      }
+
+      // P2 修复：取消服务收入记录（与 adminRefund 对齐）
+      for (const sid of serviceIncomeIds) {
+        await transaction.collection('service_incomes').doc(sid).update({
           data: { status: 'cancelled', cancelledAt: db.serverDate(), updatedAt: db.serverDate() },
         })
       }
@@ -428,17 +459,22 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
 export const queryRefund: WrappedHandler<WechatRefundResponse> = withErrorHandling<WechatRefundResponse>(async (
   event: Record<string, unknown>,
   _context: Record<string, unknown>,
-  _auth: { openid?: string; [k: string]: unknown }
+  auth: { openid?: string; [k: string]: unknown }
 ) => {
-  const { outRefundNo } = event as QueryRefundEvent
+  const { outRefundNo, outTradeNo } = event as QueryRefundEvent
   if (!outRefundNo) {
     throw err('INVALID_PARAMS', '缺少退款单号')
   }
 
-  // H9: queryRefund 返回 user_received_account 等敏感字段，需记录访问审计
-  //   outRefundNo 命名为 REFUND_{ts}_{random}，无法直接反推 outTradeNo 做所有权校验
-  //   保留访问日志，便于事后追溯滥用行为
-  logger.info('queryRefund.access', { outRefundNo, accessor: _auth.openid })
+  // P3 修复：查询退款单须同时传订单号 outTradeNo，先按订单校验归属，
+  //   防止任意登录用户凭 outRefundNo 查询他人退款单（响应含 user_received_account 敏感字段）
+  const openid = (auth as { openid?: string }).openid || ''
+  if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
+  if (!outTradeNo) {
+    throw err('INVALID_PARAMS', '缺少订单号')
+  }
+  await fetchOrderAndVerifyOwnership(db, outTradeNo, openid, 0)
+  logger.info('queryRefund.access', { outRefundNo, outTradeNo, accessor: openid })
 
   const config = WECHAT_PAY
   if (!config.mchId || !config.privateKey) {

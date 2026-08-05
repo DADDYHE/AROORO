@@ -192,8 +192,10 @@ describe('Sprint 36: partnerService services TypeScript 迁移', () => {
       expect(code).toMatch(/export\s+interface\s+CommissionItem\b/)
     })
 
-    test('包含 countAndSum 函数（强类型化）', () => {
-      expect(code).toMatch(/function\s+countAndSum\s*\(\s*res\s*:\s*DbQueryResult\s*\)/)
+    test('引用统一统计工具（referralStats 治理后 countAndSum 收敛到公共实现）', () => {
+      // 2026-08-04 推广统计治理：countAndSum 本地实现已收敛到 referralStats 的
+      //   fetchBoardOrders/REFERRAL_BOARDS（板块→权威集合→状态集→金额字段统一口径）
+      expect(code).toMatch(/REFERRAL_BOARDS|fetchBoardOrders/)
     })
 
     const ACTIONS = ['getReferralStats', 'getMyInvitedUsers', 'getReferralOrders', 'getReferralOrderStats']

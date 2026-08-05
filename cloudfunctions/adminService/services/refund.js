@@ -86,17 +86,29 @@ async function adminRefund(event, context, auth) {
   )
 
   // 查询订单（不校验 owner，管理员操作）
-  const orderRes = await db.collection('orders')
-    .where({ outTradeNo })
-    .limit(1)
-    .get()
-
-  const orderList = (orderRes && orderRes.data) || []
-  if (orderList.length === 0) {
+  // P2 修复：
+  //   - 兼容 orderNo（业务单号，如 Mxxx）与 outTradeNo（微信商户单号，如 MALL_xxx）——
+  //     后台订单详情页传的是 orderNo，原实现仅按 outTradeNo 查询导致退款按钮查不到订单
+  //   - 按订单类型路由集合：mall/tuan/activity 订单在 orders（活动为镜像单），
+  //     feeding 订单在 feedingOrders（原实现只查 orders，喂养订单退款必然 NOT_FOUND）
+  const SEARCH_COLLECTIONS = ['orders', 'feedingOrders']
+  let orderDoc = null
+  let orderSourceCollection = ''
+  for (const coll of SEARCH_COLLECTIONS) {
+    const orderRes = await db.collection(coll)
+      .where({ $or: [{ outTradeNo }, { orderNo: outTradeNo }] })
+      .limit(1)
+      .get()
+    const orderList = (orderRes && orderRes.data) || []
+    if (orderList.length > 0) {
+      orderDoc = orderList[0]
+      orderSourceCollection = coll
+      break
+    }
+  }
+  if (!orderDoc) {
     throw err('NOT_FOUND', '订单不存在')
   }
-
-  const orderDoc = orderList[0]
 
   // 幂等保护：已退款订单拒绝重复退款
   if (orderDoc.paymentStatus === 'refunded' || orderDoc.status === 'refunded') {
@@ -137,8 +149,11 @@ async function adminRefund(event, context, auth) {
   }
 
   const outRefundNo = `REFUND_${Date.now()}_${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+  // P2 修复：微信侧退款必须用微信商户单号（outTradeNo 字段）；若入参为 orderNo，
+  //   订单文档中的 outTradeNo 才是微信侧单号
+  const wechatTradeNo = orderDoc.outTradeNo || outTradeNo
   const requestBody = {
-    out_trade_no: outTradeNo,
+    out_trade_no: wechatTradeNo,
     out_refund_no: outRefundNo,
     reason: reason || '管理员退款',
     amount: {
@@ -149,7 +164,7 @@ async function adminRefund(event, context, auth) {
   }
 
   logger.info('adminRefund', {
-    outTradeNo, outRefundNo,
+    outTradeNo: wechatTradeNo, outRefundNo,
     refundAmount: refundAmountFen,
     totalAmount: totalAmountFen,
     operator: auth?.openid,
@@ -190,7 +205,9 @@ async function adminRefund(event, context, auth) {
   // 然后在单一事务内逐个 doc(id).update()，任一失败整体回滚。
   // 注意：微信退款已实际发生无法回滚，事务失败时记录告警日志供人工对账。
   if (orderDoc._id) {
-    const orderType = orderDoc.orderType || outTradeNo.split('_')[0].toLowerCase()
+    // P2 修复：orderType 推断用微信商户单号（MALL_/TUAN_/ACT_/FD_/ORDER_ 前缀），
+    //   入参可能是 orderNo（无前缀），会导致 activity/feeding 等业务表同步路由错误
+    const orderType = orderDoc.orderType || String(wechatTradeNo).split('_')[0].toLowerCase()
 
     // 事务前：查询所有需要在事务内更新的文档 _id 列表
     let commissionIds = []
@@ -313,8 +330,8 @@ async function adminRefund(event, context, auth) {
 
     const transaction = await db.startTransaction()
     try {
-      // 1) 更新订单状态
-      await transaction.collection('orders').doc(orderDoc._id).update({
+      // 1) 更新订单状态（按实际集合路由，feeding 在 feedingOrders）
+      await transaction.collection(orderSourceCollection).doc(orderDoc._id).update({
         data: {
           status: 'refunded',
           paymentStatus: 'refunded',
