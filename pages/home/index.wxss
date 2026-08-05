@@ -988,8 +988,6 @@ page {
   border-radius: var(--lux-radius-card);
   border: 1rpx solid var(--hairline);
   box-sizing: border-box;
-  position: relative;      /* 作为性别浮条 ::before 的定位基准 */
-  overflow: hidden;        /* 裁切子内容随 40rpx 圆角，性别浮条不戳出圆角 */
   transition-property: transform;
   transition-duration: 280ms;
   transition-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
@@ -1071,26 +1069,14 @@ page {
   display: none;
 }
 
-.pet-card-male::before,
-.pet-card-female::before {
-  /* 性别色左侧浮条：从贴边 inset 阴影改为内嵌绝对定位细条，离左缘 8rpx 浮起、上下各留 20rpx；
-     父级 overflow:hidden + 40rpx 圆角保证随圆角裁切、绝不戳出圆角外 */
-  content: '';
-  position: absolute;
-  left: 8rpx;
-  top: 20rpx;
-  bottom: 20rpx;
-  width: 3rpx;
-  border-radius: 2rpx;
-  pointer-events: none;
+.pet-card-male {
+  /* 性别色左侧线：用 inset 内阴影替代 border-left，确保被 40rpx 圆角裁切、随圆角围绕过去；
+     规避 Skyline 下"单边加粗 border + 大 radius"拐角不圆、方头戳出圆角的硬边 bug */
+  box-shadow: inset 3rpx 0 0 0 var(--gender-male, #6B9DAE);
 }
 
-.pet-card-male::before {
-  background: var(--gender-male, #6B9DAE);
-}
-
-.pet-card-female::before {
-  background: var(--gender-female, #C0788E);
+.pet-card-female {
+  box-shadow: inset 3rpx 0 0 0 var(--gender-female, #C0788E);
 }
 
 .pet-name {
