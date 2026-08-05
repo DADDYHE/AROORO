@@ -188,6 +188,24 @@ async function updateUserStatus(event, context, auth) {
   return handleSuccess(null, status === 'active' ? '用户已启用' : '用户已禁用')
 }
 
+/**
+ * P1 修复：后台宠物档案管理——按用户 openid 查询其宠物列表（isActive=1）
+ *   权限：super_admin（用户管理同级；宠物档案含用户画像信息）
+ */
+async function getUserPets(event, context, auth) {
+  const { ownerId } = event
+  const page = Math.max(1, Number(event.page) || 1)
+  const pageSize = Math.min(Math.max(1, Number(event.pageSize) || 20), 100)
+  if (!ownerId) {throw err('INVALID_PARAMS', '缺少用户ID')}
+
+  const result = await paginate(db, 'pets', {
+    page, pageSize,
+    where: { ownerId, isActive: 1 },
+    orderBy: { field: 'createdAt', direction: 'desc' },
+  })
+  return handleSuccess(result)
+}
+
 async function getDashboardStats(event, context, auth) {
   try {
     const [pendingOrders, activeHosts, activeActivities, totalProducts] = await Promise.all([
@@ -1124,4 +1142,4 @@ async function getMyCommissionRates(event, context, auth) {
   }
 }
 
-module.exports = { getUserList, getUserDetail, updateUserStatus, getDashboardStats, getEnhancedDashboardStats, getFinanceOverview, getReferralStats, getReferralList, getInvitedUsersByAdmin, getReferralOrders, getReferralOrderStats, getPartnerCommissionRates, updatePartnerCommissionRates, getMyCommissionRates }
+module.exports = { getUserList, getUserDetail, getUserPets, updateUserStatus, getDashboardStats, getEnhancedDashboardStats, getFinanceOverview, getReferralStats, getReferralList, getInvitedUsersByAdmin, getReferralOrders, getReferralOrderStats, getPartnerCommissionRates, updatePartnerCommissionRates, getMyCommissionRates }

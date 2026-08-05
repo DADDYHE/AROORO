@@ -196,6 +196,9 @@ async function adminRefund(event, context, auth) {
     let commissionIds = []
     let serviceIncomeIds = []
     let registrationIds = []
+    // P1 修复：活动退款须回退名额（对比超时取消的 restoreActivityQuota），
+    //   事务前读取活动当前名额，避免退款后已退款用户永久占名额
+    let activityQuota = { activityId: '', pCount: 0, current: 0 }
     // H6: settled 佣金冲销所需数据（记录 + 邀请人钱包 _id）
     let settledCommissions = []
     const commissionWalletIdByOpenid = {}
@@ -262,6 +265,17 @@ async function adminRefund(event, context, auth) {
       } catch (e) {
         logger.warn('adminRefund.queryRegistrations.failed', { orderId: orderDoc._id, msg: e?.message })
       }
+      try {
+        const actRes = await db.collection('activities').doc(orderDoc.activityId).field({ currentParticipants: true }).get()
+        const actData = actRes && actRes.data
+        activityQuota = {
+          activityId: orderDoc.activityId,
+          pCount: Math.max(1, Math.floor(Number(orderDoc.participantCount) || 1)),
+          current: Number((actData && actData.currentParticipants) || 0),
+        }
+      } catch (e) {
+        logger.warn('adminRefund.queryActivityQuota.failed', { orderId: orderDoc._id, msg: e?.message })
+      }
     }
 
     // 商城订单库存回退：事务前读取 product 数据（事务外读取，事务内 update）
@@ -325,6 +339,16 @@ async function adminRefund(event, context, auth) {
         await transaction.collection('activity_registrations').doc(rid).update({
           data: { status: 'refunded', updatedAt: db.serverDate() },
         })
+      }
+
+      // P1 修复：活动退款回退名额（按报名实际人数扣减，且不低于 0，防并发/脏数据扣成负数）
+      if (orderType === 'activity' && activityQuota.activityId && activityQuota.pCount > 0) {
+        const dec = Math.min(activityQuota.pCount, activityQuota.current)
+        if (dec > 0) {
+          await transaction.collection('activities').doc(activityQuota.activityId).update({
+            data: { currentParticipants: _.inc(-dec), updatedAt: db.serverDate() },
+          })
+        }
       }
 
       // 3) 取消佣金记录（pending → cancelled）

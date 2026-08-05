@@ -36,15 +36,16 @@ import OrderTable from '@/components/OrderTable.vue'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
 
-const ACTIVITY_STATUS = { pending_payment: '待支付', confirmed: '已确认', completed: '已完成' }
+// P3 修复：活动订单状态集为 pending_payment/confirmed/refunded/cancelled
+const ACTIVITY_STATUS = { pending_payment: '待支付', confirmed: '已确认', refunded: '已退款', cancelled: '已取消' }
 const statusFilter = ref('')
 
 function fetchFn(params) {
   const p = { ...params }
   if (statusFilter.value) p.status = statusFilter.value
   return getActivityOrders(p).then(res => {
-    const rawList = res.data?.list || res.data || []
-    return { data: { list: rawList.filter(item => item.status !== 'cancelled'), total: res.data?.total || 0 } }
+    // P3 修复：不再前端过滤 cancelled（会导致 total 与列表不一致），状态筛选走后端参数
+    return { data: { list: res.data?.list || res.data || [], total: res.data?.total || 0 } }
   })
 }
 

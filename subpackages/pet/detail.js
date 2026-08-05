@@ -19,6 +19,7 @@ Page({
     pet: {},
     userInfo: {},
     isLoggedIn: false,
+    isOwner: false,
     fromPetSelect: false,
     isLoading: false,
     navScrolled: false,
@@ -97,6 +98,9 @@ Page({
 
         this.setData({
           pet: formattedPet,
+          // P1 修复：公开接口返回 isOwner（服务端用 openid 与 ownerId 比较，
+          //   不泄露 ownerId 明文），据此控制编辑/换头像入口
+          isOwner: pet.isOwner === true,
           ...(silent ? {} : { isLoading: false }),
         })
       } else {
@@ -156,10 +160,25 @@ Page({
   },
 
   chooseAvatar() {
+    // P1 修复：非本人宠物不允许换头像（上传前拦截，避免 COS 产生垃圾文件）
+    if (!this.data.isOwner) {
+      this.error('PERMISSION_DENIED')
+      return
+    }
     chooseAndUploadAvatar({
       onSuccess: async fileID => {
-        await this.updatePetAvatar(fileID)
-        this.toast('AVATAR_UPLOAD_SUCCESS')
+        try {
+          await this.updatePetAvatar(fileID)
+          this.toast('AVATAR_UPLOAD_SUCCESS')
+        } catch (e) {
+          // P2 修复：头像已上传 COS 但档案更新失败时，清理已上传文件，避免垃圾存储
+          try {
+            if (fileID && fileID.startsWith('cloud://')) {
+              wx.cloud.deleteFile({ fileList: [fileID] })
+            }
+          } catch (_) { /* best-effort */ }
+          this.error('SAVE_FAILED')
+        }
       },
       onError: key => this.error(key),
     })

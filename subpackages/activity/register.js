@@ -35,6 +35,7 @@ Page({
     finalAmount: 0,
     showCouponSelector: false,
     loadingCoupons: false,
+    submitting: false,
   },
 
   onLoad(options) {
@@ -66,28 +67,11 @@ Page({
         this._recalculateAmount()
         this._loadAvailableCoupons()
       } else {
-        const activity = {
-          _id: activityId,
-          title: '宠物户外社交活动',
-          time: '2024-12-25 14:00-16:00',
-          location: '城市公园',
-          price: 88,
-          pricePerPerson: 0,
-          pricePerPet: 88,
-        }
-        this.setData({ activity, totalAmount: 88, finalAmount: 88, isPaid: true })
+        this.error('ACTIVITY_NOT_FOUND')
       }
     } catch (e) {
-      const activity = {
-        _id: activityId,
-        title: '宠物户外社交活动',
-        time: '2024-12-25 14:00-16:00',
-        location: '城市公园',
-        price: 88,
-        pricePerPerson: 0,
-        pricePerPet: 88,
-      }
-      this.setData({ activity, totalAmount: 88, finalAmount: 88, isPaid: true })
+      console.error('[Register] 加载活动失败:', e)
+      this.error('LOAD_FAILED')
     }
   },
 
@@ -301,15 +285,21 @@ Page({
   },
 
   async onSubmit() {
+    // P0 修复：提交防抖，防止连点重复报名（后端已同步拦截 pending_payment 重复单）
+    if (this.data.submitting) {return}
+    this.setData({ submitting: true })
+
     const { activityId, pets, phone, notes, friends, totalAmount, selectedCouponId, couponDiscount, finalAmount, participantCount } = this.data
 
     const pCount = parseInt(participantCount, 10)
     if (!pCount || pCount < 1) {
+      this.setData({ submitting: false })
       this.error('ACTIVITY_PARTICIPANT_REQUIRED')
       return
     }
 
     if (!phone) {
+      this.setData({ submitting: false })
       this.error('ACTIVITY_PHONE_REQUIRED')
       return
     }
@@ -317,6 +307,7 @@ Page({
     for (let i = 0; i < pets.length; i++) {
       const pet = pets[i]
       if (!pet.petName || !pet.petBreed) {
+        this.setData({ submitting: false })
         this.error(() => `请填写第${i + 1}只宠物的必填信息`)
         return
       }
@@ -341,6 +332,7 @@ Page({
       try {
         const result = await ActivityService.submitRegistration(registrationData)
         wx.hideLoading()
+        this.setData({ submitting: false })
         if (result && result.code === 0) {
           const pages = getCurrentPages()
           const prevPage = pages[pages.length - 2]
@@ -354,10 +346,12 @@ Page({
         }
       } catch (error) {
         wx.hideLoading()
+        this.setData({ submitting: false })
         console.error('[Register] 提交报名失败:', error)
         this.error('NETWORK_ERROR_LATER')
       }
     } else {
+      this.setData({ submitting: false })
       wx.navigateTo({
         url: `/subpackages/activity/payment?data=${encodeURIComponent(JSON.stringify(registrationData))}`,
       })

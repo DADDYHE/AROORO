@@ -219,6 +219,11 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
     // 事务前：查询所有需要在事务内更新的文档 _id 列表
     let commissionIds: string[] = []
     let registrationIds: string[] = []
+    // P1 修复：活动退款须回退名额（对比超时取消的 restoreActivityQuota），
+    //   事务前读取活动当前名额，避免退款后已退款用户永久占名额
+    let activityQuota: { activityId: string; pCount: number; current: number } = {
+      activityId: '', pCount: 0, current: 0,
+    }
     try {
       const commissionRes = await db.collection('commissions')
         .where({ orderId: orderDoc._id, status: 'pending' })
@@ -244,6 +249,21 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
           .map((r) => r._id)
       } catch (e) {
         logger.warn('createRefund.queryRegistrations.failed', {
+          orderId: orderDoc._id,
+          msg: (e as Error)?.message,
+        })
+      }
+      try {
+        const actRes = await db.collection('activities').doc(orderDoc.activityId).field({
+          currentParticipants: true,
+        } as Record<string, true>).get()
+        activityQuota = {
+          activityId: orderDoc.activityId,
+          pCount: Math.max(1, Math.floor(Number((orderDoc as { participantCount?: number }).participantCount) || 1)),
+          current: Number((actRes.data as { currentParticipants?: number } | null)?.currentParticipants) || 0,
+        }
+      } catch (e) {
+        logger.warn('createRefund.queryActivityQuota.failed', {
           orderId: orderDoc._id,
           msg: (e as Error)?.message,
         })
@@ -283,6 +303,16 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
         await transaction.collection('activity_registrations').doc(rid).update({
           data: { status: 'refunded', updatedAt: db.serverDate() },
         })
+      }
+
+      // P1 修复：活动退款回退名额（按报名实际人数扣减，且不低于 0，防并发/脏数据扣成负数）
+      if (orderType === 'activity' && activityQuota.activityId && activityQuota.pCount > 0) {
+        const dec = Math.min(activityQuota.pCount, activityQuota.current)
+        if (dec > 0) {
+          await transaction.collection('activities').doc(activityQuota.activityId).update({
+            data: { currentParticipants: db.command.inc(-dec), updatedAt: db.serverDate() },
+          })
+        }
       }
 
       // 3) 取消佣金记录

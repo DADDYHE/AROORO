@@ -95,6 +95,7 @@ Page({
         pending_payment: '待付款',
         confirmed: '已确认',
         cancelled: '已取消',
+        refunded: '已退款',
       }
 
       const activity = activityInfo || {}

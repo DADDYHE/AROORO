@@ -44,6 +44,8 @@ const { verifyAuth } = require('./common/auth-middleware');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err, isBusinessError } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+const { recordAlert } = require('./common/alert');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { detectActivityApplyRisk, mapActionToErrorCode } = require('./common/risk-control');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { withRateLimit } = require('./common/risk-rate-limit');
@@ -174,11 +176,9 @@ async function autoUpdateActivityStatus() {
  */
 async function generateActivityCommissions(activityId) {
     try {
-        // 查询该活动所有已确认的报名
-        const registrationsRes = await db.collection('activity_registrations')
-            .where({ activityId, status: 'confirmed' })
-            .get();
-        const registrations = registrationsRes.data || [];
+        // 查询该活动所有已确认的报名（P1 修复：分页拉全，避免 CloudBase get() 默认 100 条截断
+        //   导致报名 >100 人的活动佣金漏发）
+        const registrations = await fetchAllPaged('activity_registrations', { activityId, status: 'confirmed' }, 'createdAt', 10000);
         if (registrations.length === 0) {
             logger.info('generateActivityCommissions.noRegistrations', { activityId });
             return;
@@ -575,11 +575,14 @@ async function submitRegistration(event, context, auth) {
     }
     // M1 修复：查重前置到事务外（CloudBase 事务内不支持 where 查询），
     // 名额检查移入事务内基于快照读，避免"读-判-写"跨事务竞态
+    // P0 修复：查重范围从 confirmed 扩展为 confirmed + pending_payment，
+    //   未支付的待支付报名单同样占用一次报名机会，防止同一用户对同一活动
+    //   反复提交生成多张待支付单并重复付款（资金风险）。
     const existReg = await db.collection('activity_registrations')
-        .where({ activityId, ownerId: openid, status: 'confirmed' })
+        .where({ activityId, ownerId: openid, status: _.in(['confirmed', 'pending_payment']) })
         .count();
     if (existReg.total > 0) {
-        throw err('BUSINESS_ERROR', '您已报名此活动');
+        throw err('BUSINESS_ERROR', '您已报名此活动（含待支付订单），请勿重复报名');
     }
     const transaction = await db.startTransaction();
     try {
@@ -709,6 +712,11 @@ async function submitRegistration(event, context, auth) {
         }
         catch (orderErr) {
             logger.warn('创建活动订单记录失败:', orderErr.message);
+            // P3 修复：镜像单缺失会导致订单中心/佣金/服务收入缺数据，持久化告警供运维补单
+            try {
+                await recordAlert('warning', 'activity.order.mirror.failed', '活动报名成功但订单镜像写入失败，需人工补单', { activityId, openid: maskOpenid(openid), error: orderErr.message });
+            }
+            catch (_) { /* best-effort */ }
         }
         await transaction.commit();
         return handleSuccess({ id: regResult._id || 'ok', registrationId: regResult._id }, '报名成功');

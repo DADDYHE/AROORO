@@ -41,32 +41,33 @@ describe('L2: petService convertWeight', () => {
     test('空字符串 → null', () => {
       expect(convertWeight('')).toBeNull()
     })
-    test('NaN 字符串 → null', () => {
-      expect(convertWeight('abc')).toBeNull()
+    // P3-B 修复后：非法数值显式抛错（不再静默返回 null），测试断言同步当前实现
+    test('NaN 字符串 → 抛错', () => {
+      expect(() => convertWeight('abc')).toThrow()
     })
-    test('NaN 数字 → null', () => {
-      expect(convertWeight(NaN)).toBeNull()
+    test('NaN 数字 → 抛错', () => {
+      expect(() => convertWeight(NaN)).toThrow()
     })
-    test('Infinity → null', () => {
-      expect(convertWeight(Infinity)).toBeNull()
+    test('Infinity → 抛错', () => {
+      expect(() => convertWeight(Infinity)).toThrow()
     })
-    test('-Infinity → null', () => {
-      expect(convertWeight(-Infinity)).toBeNull()
+    test('-Infinity → 抛错', () => {
+      expect(() => convertWeight(-Infinity)).toThrow()
     })
   })
 
   describe('边界值校验（M7）', () => {
-    test('0 → null（非正数）', () => {
-      expect(convertWeight(0)).toBeNull()
+    test('0 → 抛错（非正数）', () => {
+      expect(() => convertWeight(0)).toThrow()
     })
-    test('负数 → null', () => {
-      expect(convertWeight(-5)).toBeNull()
+    test('负数 → 抛错', () => {
+      expect(() => convertWeight(-5)).toThrow()
     })
-    test('0.05 → null（低于下限 0.1kg）', () => {
-      expect(convertWeight(0.05)).toBeNull()
+    test('0.05 → 抛错（低于下限 0.1kg）', () => {
+      expect(() => convertWeight(0.05)).toThrow()
     })
-    test('501 → null（超过上限 500kg）', () => {
-      expect(convertWeight(501)).toBeNull()
+    test('501 → 抛错（超过上限 500kg）', () => {
+      expect(() => convertWeight(501)).toThrow()
     })
     test('0.1 → 0.1（下限边界）', () => {
       expect(convertWeight(0.1)).toBe(0.1)

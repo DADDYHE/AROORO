@@ -87,6 +87,7 @@ export interface PetRecord {
     ownerId?: string;
     _openid?: string;
     isActive?: IsActive;
+    isOwner?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     [k: string]: unknown;

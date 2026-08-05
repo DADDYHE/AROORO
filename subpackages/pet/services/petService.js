@@ -66,9 +66,9 @@ class PetServiceWrapper {
   async verifyOwnership(petId) {
     try {
       const pet = await this.getPetDetail(petId)
-      const { authService } = require('../../../services/AuthService')
-      const identity = authService.getCurrentIdentity()
-      return pet.ownerId === identity?.openid
+      // P1 修复：公开详情接口不返回 ownerId（防 PII 泄露），
+      //   归属判断改用服务端计算的 isOwner 标记（openid 与 ownerId 在服务端比较）
+      return pet.isOwner === true
     } catch (error) {
       return false
     }

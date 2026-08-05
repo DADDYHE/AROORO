@@ -107,29 +107,44 @@ async function createActivityIncomeRecords(activityId, creatorId) {
             logger.warn('createActivityIncomeRecords: invalid params', { activityId, creatorId });
             return;
         }
-        // 查询该活动的所有已支付订单
-        const ordersRes = await db.collection('orders')
-            .where({
-            activityId,
-            orderType: 'activity',
-            paymentStatus: 'paid',
-        })
-            .get();
-        if (!ordersRes.data || ordersRes.data.length === 0) {
+        // 查询该活动的所有已支付订单（P1 修复：分页拉全，避免 CloudBase get() 默认 100 条截断
+        //   导致 >100 笔付费订单的活动收入漏记）
+        const allOrders = [];
+        const PAGE_SIZE = 100;
+        let page = 0;
+        for (;;) {
+            const ordersRes = await db.collection('orders')
+                .where({
+                activityId,
+                orderType: 'activity',
+                paymentStatus: 'paid',
+            })
+                .orderBy('createdAt', 'desc')
+                .skip(page * PAGE_SIZE)
+                .limit(PAGE_SIZE)
+                .get();
+            const batch = (ordersRes.data || []);
+            allOrders.push(...batch);
+            if (batch.length < PAGE_SIZE || allOrders.length >= 10000) {
+                break;
+            }
+            page++;
+        }
+        if (allOrders.length === 0) {
             logger.info('createActivityIncomeRecords: no orders found', { activityId });
             return;
         }
         // 为每个订单创建收入记录
-        for (const order of ordersRes.data) {
+        for (const order of allOrders) {
             const amount = Number(order.totalPrice) || 0;
             if (amount > 0) {
-                await createServiceIncomeRecord(creatorId, 'activity', order._id, amount, order.orderNo || '', `活动收入-${order.activityTitle || '活动'}`);
+                await createServiceIncomeRecord(creatorId, 'activity', String(order._id || ''), amount, String(order.orderNo || ''), `活动收入-${order.activityTitle || '活动'}`);
             }
         }
         logger.info('createActivityIncomeRecords: success', {
             activityId,
             creatorId,
-            orderCount: ordersRes.data.length
+            orderCount: allOrders.length
         });
     }
     catch (error) {

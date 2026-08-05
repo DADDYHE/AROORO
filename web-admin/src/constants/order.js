@@ -83,6 +83,9 @@ export const SIDEBAR_MENUS = [
     { title: '模板管理', path: '/coupon' },
     { title: '优惠券统计', path: '/coupon/stats' },
   ] },
+  { title: '活动管理', icon: 'Calendar', path: '/activity', children: [
+    { title: '活动列表', path: '/activity' },
+  ] },
   { title: '轮播图管理', icon: 'Picture', path: '/banner' },
 
   { type: 'section', title: '订单' },

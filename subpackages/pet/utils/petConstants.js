@@ -18,8 +18,6 @@ module.exports = {
     SENIOR: 'senior',
   },
 
-  MAX_PET_IMAGES: 9,
-
   MAX_NAME_LENGTH: 20,
 
   MAX_DESCRIPTION_LENGTH: 500,

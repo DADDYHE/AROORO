@@ -1,6 +1,26 @@
 const { PET_AGE_GROUPS } = require('./petConstants')
 
+/**
+ * P2 修复：后端档案只有 birthday（无 age 字段），年龄由生日计算
+ * @param {string} birthday YYYY-MM-DD
+ * @returns {number|null} 周岁
+ */
+function calcAge(birthday) {
+  if (!birthday) {return null}
+  const b = new Date(String(birthday).replace(/-/g, '/'))
+  if (isNaN(b.getTime())) {return null}
+  const now = new Date()
+  let age = now.getFullYear() - b.getFullYear()
+  const monthDiff = now.getMonth() - b.getMonth()
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < b.getDate())) {
+    age--
+  }
+  return age >= 0 ? age : null
+}
+
 module.exports = {
+  calcAge,
+
   formatAge(age) {
     if (age === undefined || age === null) {return '未知'}
 
@@ -53,11 +73,12 @@ module.exports = {
 
   formatPetForDisplay(pet) {
     if (!pet) {return {}}
+    const age = calcAge(pet.birthday)
 
     return {
       ...pet,
-      ageDisplay: this.formatAge(pet.age),
-      ageGroup: this.getAgeGroup(pet.age),
+      ageDisplay: age != null ? this.formatAge(age) : '未知',
+      ageGroup: age != null ? this.getAgeGroup(age) : PET_AGE_GROUPS.ADULT,
       weightDisplay: this.formatWeight(pet.weight),
       petTypeDisplay: this.formatPetType(pet.type),
       genderDisplay: this.formatGender(pet.gender),
@@ -68,6 +89,7 @@ module.exports = {
 
   formatPetBasic(pet) {
     if (!pet) {return {}}
+    const age = calcAge(pet.birthday)
 
     return {
       id: pet.id || pet._id,
@@ -78,6 +100,8 @@ module.exports = {
       gender: pet.gender || '',
       genderDisplay: this.formatGender(pet.gender),
       birthday: pet.birthday || '',
+      ageDisplay: age != null ? this.formatAge(age) : '未知',
+      ageGroup: age != null ? this.getAgeGroup(age) : PET_AGE_GROUPS.ADULT,
       weight: pet.weight != null ? pet.weight : '',
       weightDisplay: pet.weight != null ? this.formatWeight(pet.weight) : '',
       note: pet.note || '',
@@ -109,8 +133,10 @@ module.exports = {
     }
 
     if (petData.weight !== undefined && petData.weight !== null && petData.weight !== '') {
-      if (petData.weight <= 0 || petData.weight > 200) {
-        errors.push('宠物体重必须在 0-200kg 之间')
+      const w = Number(petData.weight)
+      // P3 修复：与后端口径对齐（0.1-500kg）
+      if (isNaN(w) || w < 0.1 || w > 500) {
+        errors.push('宠物体重必须在 0.1-500kg 之间')
       }
     }
 

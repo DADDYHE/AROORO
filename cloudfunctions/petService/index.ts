@@ -105,6 +105,8 @@ export interface PetRecord {
   ownerId?: string
   _openid?: string
   isActive?: IsActive
+  // P1 修复：公开接口返回的是否本人标记（不泄露 ownerId 明文）
+  isOwner?: boolean
   createdAt?: Date
   updatedAt?: Date
   [k: string]: unknown
@@ -161,7 +163,7 @@ const { bootstrapRateLimit } = require('./common/rate-limit-bootstrap')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { recordAlert } = require('./common/alert')
 
-const { db } = initCloud()
+const { cloud, db } = initCloud()
 const logger = createLogger('petService')
 
 // =====================================================================
@@ -196,7 +198,9 @@ const MAX_NAME_LEN = 30
 const MAX_BREED_LEN = 50
 const MAX_NOTE_LEN = 500
 const MAX_AVATAR_URL_LEN = 2048
-const DEFAULT_AVATAR_URL = '/images/default-pet.png'
+// P3 修复：统一到实际存在的小程序资源（/images/default-avatar.svg），
+//   原值 /images/default-pet.png 在仓库中不存在，会导致默认头像加载失败
+const DEFAULT_AVATAR_URL = '/images/default-avatar.svg'
 
 // H4: 单用户宠物数量上限
 const MAX_PETS_PER_USER = 20
@@ -265,15 +269,34 @@ function validateBirthday(birthday: unknown): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) {
     throw err('INVALID_PARAMS', '生日格式应为 YYYY-MM-DD')
   }
-  const date = new Date(str)
+  // P3 修复：按本地时区解析（'YYYY-MM-DD' 直接 new Date 会被当作 UTC 午夜，
+  //   与用户所在地（东八区）的"今天"判断可能差一天）
+  const date = new Date(str.replace(/-/g, '/'))
   if (isNaN(date.getTime())) {
     throw err('INVALID_PARAMS', '生日日期无效')
   }
-  // 不允许未来日期
-  if (date.getTime() > Date.now()) {
+  // 不允许未来日期（比较到日：今天仍合法）
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  if (str > todayStr) {
     throw err('INVALID_PARAMS', '生日不能是未来日期')
   }
   return str
+}
+
+/**
+ * P1/P3 修复：公开/返回用宠物对象脱敏
+ *   - 剔除 ownerId / _openid（避免 PII 外泄）
+ *   - 仅保留公开字段
+ */
+function sanitizePet(pet: PetRecord): PetRecord {
+  const result: PetRecord = {}
+  for (const key of Object.keys(PET_DETAIL_FIELDS)) {
+    if (pet[key as keyof PetRecord] !== undefined) {
+      ;(result as Record<string, unknown>)[key] = pet[key as keyof PetRecord]
+    }
+  }
+  return result
 }
 
 // =====================================================================
@@ -355,7 +378,8 @@ export const createPet = withErrorHandling(async (
       await db.collection('pets').add({ data: petData })
       deleteCache(`pets_${openid}`)
 
-      const result: PetCreateResult = { id: petData._id || '', pet: petData }
+      // P3 修复：返回脱敏后的宠物数据（不含 ownerId/_openid）
+      const result: PetCreateResult = { id: petData._id || '', pet: sanitizePet(petData) }
 
       // M9: 记录操作日志（best-effort，不阻塞主流程）
       writeOperationLog({
@@ -479,7 +503,8 @@ export const updatePet = withErrorHandling(async (
   deleteCache(`pets_${openid}`)
   deleteCache(`pet_${petId}`)
 
-  const result: PetUpdateResult = { pet: updatedPet }
+  // P3 修复：返回脱敏后的宠物数据（不含 ownerId/_openid）
+  const result: PetUpdateResult = { pet: sanitizePet(updatedPet) }
 
   // M9: 记录操作日志
   writeOperationLog({
@@ -542,6 +567,15 @@ export const deletePet = withErrorHandling(async (
 
   deleteCache(`pets_${openid}`)
   deleteCache(`pet_${petId}`)
+
+  // P3 修复：软删除后异步清理专属 COS 头像（上传流程生成唯一文件名，仅被本宠物引用；
+  //   清理失败仅记日志，不影响删除主流程）
+  const avatarUrl = existingPet.avatarUrl
+  if (avatarUrl && avatarUrl.startsWith('cloud://')) {
+    cloud.deleteFile({ fileList: [avatarUrl] }).catch((e: Error) => {
+      logger.warn('deletePet.cos_cleanup_failed', { petId, msg: e.message })
+    })
+  }
 
   // M11 关联资源说明：软删除后未清理以下关联数据（业务评估后决定保留）：
   //   1. COS 头像图片：宠物可能被多用户引用（如寄养家庭查看），保留图片避免 404
@@ -617,20 +651,28 @@ export const getPetList = withErrorHandling(async (
 export const getPetDetail = withErrorHandling(async (
   event: CloudEvent,
   _context: CloudContext,
-  _auth: AuthLike
+  auth: AuthLike
 ): Promise<unknown> => {
   const { petId } = event
   if (!petId) { throw err('INVALID_PARAMS', '宠物 ID 不能为空') }
 
   const cacheKey = `pet_${petId}`
-  const cachedPet = getCache(cacheKey)
-  if (cachedPet) { return handleSuccess({ pet: cachedPet } as PetDetailResult, '获取成功') }
+  const cachedPet = getCache(cacheKey) as PetRecord | undefined
+  if (cachedPet) {
+    // P1 修复：缓存命中同样脱敏 + 计算 isOwner
+    const publicPet: PetRecord = {
+      ...sanitizePet(cachedPet),
+      isOwner: Boolean(auth?.openid && cachedPet.ownerId === auth.openid),
+    }
+    return handleSuccess({ pet: publicPet } as PetDetailResult, '获取成功')
+  }
 
   // M10 缓存击穿说明：缓存过期瞬间多个请求会同时查 DB。
   //   宠物档案 QPS 低，且单次查询走 (ownerId, isActive, createdAt) 索引，
   //   不会造成 DB 压力，未引入分布式锁。若未来 QPS 上升可考虑 singleflight。
   const result = await db.collection('pets')
-    .field(PET_DETAIL_FIELDS)
+    // P1 修复：内部额外读取 ownerId 用于计算 isOwner（响应前脱敏，不外泄）
+    .field({ ...PET_DETAIL_FIELDS, ownerId: true } as Record<string, boolean>)
     .where({ _id: petId, isActive: 1 })
     .get()
 
@@ -646,8 +688,15 @@ export const getPetDetail = withErrorHandling(async (
   }
 
   // L12: 显式设置 TTL，避免依赖默认值导致行为不明确
+  // P1 说明：缓存保留 ownerId（仅服务端内存内，用于 isOwner 判断），
+  //   响应前统一走 sanitizePet 脱敏，公开数据不含 ownerId/_openid。
   setCache(cacheKey, processedPet, PET_DETAIL_CACHE_TTL_SECONDS)
-  return handleSuccess({ pet: processedPet } as PetDetailResult, '获取成功')
+
+  const publicPet: PetRecord = {
+    ...sanitizePet(processedPet),
+    isOwner: Boolean(auth?.openid && processedPet.ownerId === auth.openid),
+  }
+  return handleSuccess({ pet: publicPet } as PetDetailResult, '获取成功')
 }) as PetActionHandler
 
 // =====================================================================

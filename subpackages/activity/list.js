@@ -39,6 +39,10 @@ Page({
   async _doFetch(params) {
     const action = this.data.currentCategory === 'joined' ? 'getRegistrationList' : 'getActivityList'
     const reqData = { action, page: params.page, pageSize: params.pageSize }
+    // P3 修复：joined 分类只展示已确认报名（排除 refunded/pending_payment 的历史单）
+    if (this.data.currentCategory === 'joined') {
+      reqData.status = 'confirmed'
+    }
     if (this.data.currentCategory !== 'all' && this.data.currentCategory !== 'joined') {
       reqData.category = this.data.currentCategory
     }

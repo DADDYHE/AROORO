@@ -236,6 +236,7 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   // 用户
   getUserList: 'super_admin',
   getUserDetail: 'super_admin',
+  getUserPets: 'super_admin',
   updateUserStatus: 'super_admin',
   // 仪表盘 / 财务
   getDashboardStats: 'super_admin',
@@ -288,10 +289,11 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getActivityDetail: 'partner',
   createActivity: 'partner',
   updateActivity: 'partner',
-  deleteActivity: 'partner',
+  deleteActivity: 'super_admin',
   getActivityRegistrations: 'partner',
   exportActivityRegistrations: 'partner',
   getActivityOrders: 'partner',
+  getActivityOrderDetail: 'partner',
 
   // 商品业务
   getProductList: 'partner',

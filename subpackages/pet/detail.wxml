@@ -56,7 +56,7 @@
         </view>
         <view class="portrait-label">
           <view class="label-line"></view>
-          <text class="label-text">{{pet.avatarUrl ? '点击更换头像' : '点击上传宠物头像'}}</text>
+          <text class="label-text">{{isOwner ? (pet.avatarUrl ? '点击更换头像' : '点击上传宠物头像') : '宠物头像'}}</text>
         </view>
       </view>
 
@@ -103,7 +103,8 @@
       </view>
 
       <view class="gallery-footer">
-        <view wx:if="{{!fromPetSelect}}" bindtap="goToUpdateProfile" class="footer-action action-active">
+        <!-- P1 修复：修改档案仅本人可见（公开详情对访客只读） -->
+        <view wx:if="{{!fromPetSelect && isOwner}}" bindtap="goToUpdateProfile" class="footer-action action-active">
           修改档案
         </view>
         <view wx:else bindtap="confirmSelect" class="footer-action action-active">
