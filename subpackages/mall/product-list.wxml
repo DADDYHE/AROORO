@@ -60,7 +60,7 @@
   </view>
 
   <root-portal>
-  <view class="floating-cart {{cartPosReady ? 'is-ready' : ''}}"
+  <view class="floating-cart {{cartPosReady ? 'is-ready' : ''}} {{cartDragging ? 'is-dragging' : ''}}"
         style="transform: translate({{cartPos.x}}px, {{cartPos.y}}px);"
         hover-class="floating-cart--pressed" hover-stay-time="120"
         bindtouchstart="onCartTouchStart"

@@ -23,6 +23,7 @@ Page({
     cartCount: 0,
     cartPos: { x: 0, y: 0 }, // 视口绝对坐标(px)，由 transform 驱动
     cartPosReady: false,
+    cartDragging: false, // 拖动进行中(真正移动后)的抓取态
   },
 
   async onLoad() {
@@ -211,7 +212,10 @@ Page({
     const t = e.touches[0]
     const dx = t.clientX - this._dragStart.x
     const dy = t.clientY - this._dragStart.y
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {this._dragMoved = true}
+    if (!this._dragMoved && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+      this._dragMoved = true
+      this.setData({ cartDragging: true }) // 真正移动才开始抓取反馈
+    }
     let nx = this._dragStart.btnX + dx
     let ny = this._dragStart.btnY + dy
     const maxX = this._winW - this._cartBtnPx
@@ -224,6 +228,7 @@ Page({
   onCartTouchEnd() {
     const moved = this._dragMoved
     this._dragStart = null
+    this.setData({ cartDragging: false })
     if (!moved) {this.onCartTap()}
   },
 

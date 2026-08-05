@@ -340,7 +340,8 @@
   border: 1rpx solid var(--border-inverse-20);
   will-change: transform;
   opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-refined);
+  transition: opacity var(--dur-fast) var(--ease-refined),
+              box-shadow var(--dur-fast) var(--ease-refined);
 }
 
 .floating-cart.is-ready {
@@ -349,6 +350,13 @@
 
 .floating-cart--pressed {
   box-shadow: 0 4rpx 14rpx rgba(26,26,23,0.20), 0 0 0 2rpx rgba(201,162,75,0.40);
+}
+
+/* 拖动抓取态：珠宝被托起(lift) + 金边收紧 + 金晕增强 —— 不碰 transform 避免与 translate 冲突 */
+.floating-cart.is-dragging {
+  box-shadow: 0 14rpx 30rpx rgba(26,26,23,0.22),
+              0 0 0 1rpx rgba(201,162,75,0.55),
+              0 0 38rpx rgba(201,162,75,0.45);
 }
 
 .floating-cart-icon {
