@@ -63,13 +63,13 @@
   bottom: 0; /* 物理贴屏底；68rpx 指示器区被胶囊自身遮罩，Home Indicator 不受影响 */
   left: 40rpx;
   right: 40rpx;
-  height: calc(100rpx + env(safe-area-inset-bottom, 0)); /* 可见区仍 100rpx，safe-area 增量藏于底部；非 safe-area env=0 回原样 */
+  height: calc(80rpx + env(safe-area-inset-bottom, 0)); /* 可见区 80rpx（二次降高 100→80），safe-area 增量藏于底部；非 safe-area env=0 回原样 */
   border-radius: 9999rpx;
   background: linear-gradient(180deg, #F7F5EF 0%, #ECE4D4 100%);
   box-shadow: 0 -6rpx 16rpx rgba(26, 26, 23, 0.08), 0 8rpx 20rpx rgba(26, 26, 23, 0.08); /* 贴底后向上投影托起，alpha 收敛 */
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start; /* 80rpx 下 env≈68rpx，center 会让内容整体下沉；改 flex-start 把内容钉回顶部 80rpx 带 */
   z-index: 1000;
   padding: 0 !important; /* 中和 wxml 行内 padding-bottom:{{tabBarPadding}}rpx —— 悬浮胶囊无需内边距（wxml/js 零改动） */
   box-sizing: border-box;
@@ -128,19 +128,19 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  height: 100%;
+  height: 80rpx; /* 与胶囊可见区等高；父级 align-items:flex-start，safe-area 增量不参与排版 */
   position: relative;
   z-index: 1; /* 提至缎面纸纹层(::before z-index:0)之上 */
 }
 
 /* ================================================================
-   图标包裹层 — 恒 48×48rpx 锚点（金圆宝石底 ::after + 镶边金晕挂在它上面；
+   图标包裹层 — 恒 44×44rpx 锚点（金圆宝石底 ::after + 镶边金晕挂在它上面；
    非选中透明底、图标 36rpx 居中；选中/非选中尺寸一致，文字位不跳）
    ================================================================ */
 .tab-bar-icon-wrap {
   position: relative;
-  width: 48rpx;
-  height: 48rpx;
+  width: 44rpx;
+  height: 44rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -152,7 +152,7 @@
   transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-/* 金圆宝石底：选中态弹入的 48rpx 金圆（替换原 8rpx 金点，inset:0 铺满 icon-wrap）；
+/* 金圆宝石底：选中态弹入的 44rpx 圆（替换原 8rpx 金点，四边 0 铺满 icon-wrap）；
    中央 CTA 无此结构，天然不出现；仅 .active 显示 */
 .tab-bar-icon-wrap::after {
   content: '';
@@ -171,7 +171,7 @@
 
 .tab-bar-item.active .tab-bar-icon-wrap {
   /* 深绿圆底自身对比 9.8:1+，炭墨镶边冗余移除；仅保留绿晕（静态，不给圆底加呼吸） */
-  box-shadow: 0 0 24rpx rgba(31, 58, 31, 0.30);
+  box-shadow: 0 0 16rpx rgba(31, 58, 31, 0.26); /* 80rpx 带内收敛：晕半径与 alpha 同步降档，避免溢出胶囊边缘 */
 }
 
 .tab-bar-item.active .tab-bar-icon-wrap::after {
@@ -221,7 +221,7 @@
   font-weight: 400;
   color: #6B6559; /* 缎面深端 4.58:1 AA */
   line-height: 1;
-  margin-top: 6rpx;
+  margin-top: 5rpx; /* 图标-文字间距 6→5rpx，配合 80rpx 带 */
   transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
               transform 320ms cubic-bezier(0.19, 1, 0.22, 1);
   letter-spacing: 0.04em;
@@ -252,19 +252,43 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 96rpx;
-  height: 96rpx;
+  width: 88rpx;
+  height: 88rpx;
   border-radius: 50%;
   background: var(--tb-center-bg);
-  position: relative;
+  position: relative; /* 绿线外环 ::before / 金晕 ::after 的定位锚点 */
   overflow: visible;
   /* 炭墨镶边(珠宝镶嵌底座，替代旧 6rpx 深绿环) + 金晕 + 中性投影；静态，禁动画化 */
   box-shadow: 0 0 0 1rpx rgba(26, 26, 23, 0.16),
               0 0 28rpx rgba(201, 162, 75, 0.35),
               0 10rpx 24rpx rgba(26, 26, 23, 0.16);
-  margin-top: -28rpx;
+  margin-top: -17rpx; /* 88rpx 钮在 80rpx 带内的上浮量（随钮径 96→88 重算） */
   transition: transform 180ms cubic-bezier(0.25, 0.1, 0.25, 1),
               opacity 320ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* 绿色细线外环（选中态）：挂在 .center-button 上，与 .tab-bar-item-center::before
+   的 display:none 屏蔽层不同级，互不影响；与金晕层 ::after 完全分离。
+   几何：四边外扩 4rpx（直径 88→96），2rpx 深绿环占外缘 4→6rpx，
+        与炭墨镶边(0→1rpx)之间留 3rpx 净金间隙，外环总直径 100。
+   Skyline 铁律：环用 box-shadow spread 通道画，不用 border；四边显式写，不用 inset 简写。 */
+.center-button::before {
+  content: '';
+  position: absolute;
+  top: -4rpx;
+  right: -4rpx;
+  bottom: -4rpx;
+  left: -4rpx;
+  border-radius: 50%;
+  background: none;
+  box-shadow: 0 0 0 2rpx #1F3A1F; /* var(--zy-primary-700) 深森林绿 · 选中信号 */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms cubic-bezier(0.19, 1, 0.22, 1); /* 仅淡入，不缩放不呼吸（呼吸交给 ::after 金晕） */
+}
+
+.tab-bar-item-center.active .center-button::before {
+  opacity: 1;
 }
 
 /* 独立金晕层：只有光在呼吸（珠宝静置托盘上，按钮体不再缩放） */
