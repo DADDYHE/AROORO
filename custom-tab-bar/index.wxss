@@ -97,7 +97,10 @@
 .tab-bar::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: inherit;
   background-image: var(--tb-paper-noise);
   background-repeat: repeat;
@@ -155,7 +158,10 @@
 .tab-bar-icon-wrap::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: 50%;
   background: #C9A24B;
   z-index: 0;
@@ -267,7 +273,10 @@
 .center-button::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: inherit;
   box-shadow: 0 0 28rpx rgba(201, 162, 75, 0.35);
   opacity: 0.72;
