@@ -159,6 +159,11 @@ exports.getHostInfo = getHostInfo;
 const handlers = {
     getBanners: () => getBanners(),
     getHostInfo,
+    // P2 修复：暴露清缓存 action，供管理端 banner 变更后联动清除（避免 5 分钟缓存延迟）
+    clearBannersCache: () => {
+        clearBannersCache();
+        return handleSuccess(null, '缓存已清除');
+    },
 };
 async function main(event) {
     try {

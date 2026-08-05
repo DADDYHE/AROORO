@@ -163,7 +163,9 @@ async function searchTuanDeals(keyword) {
 async function searchActivities(keyword) {
   const safeKeyword = escapeRegExp(keyword.slice(0, KEYWORD_MAX_LENGTH))
   const where = {
-    status: _.neq('deleted'),
+    // P1 修复：与活动列表用户端口径一致——仅展示已发布/报名截止/已结束，
+    //   原 _.neq('deleted') 会把草稿（draft）与已取消（cancelled）活动搜出来
+    status: _.in(['published', 'registration_stopped', 'ended']),
     $or: [
       { title: db.RegExp({ regexp: safeKeyword, options: 'i' }) },
       { location: db.RegExp({ regexp: safeKeyword, options: 'i' }) },
@@ -277,7 +279,22 @@ async function globalSearch(event) {
 
 exports.main = async (event) => {
   try {
-    return await globalSearch(event)
+    // P2 修复：公开搜索接口限流（防刷流量）。小程序调用可经 getWXContext 取 openid，
+    //   匿名场景（HTTP 直调）降级为 'anon' 公共桶限流
+    let userId = 'anon'
+    try {
+      const wxContext = cloud.getWXContext()
+      if (wxContext && wxContext.OPENID) {
+        userId = wxContext.OPENID
+      }
+    } catch (e) {
+      // 取不到上下文不阻断，使用 anon 桶
+    }
+    const { withRateLimit } = require('./common/risk-rate-limit')
+    return await withRateLimit(
+      { userId, type: 'search', targetId: 'global' },
+      () => globalSearch(event)
+    )
   } catch (error) {
     logger.error('searchService.main', error)
     return handleError(error, '搜索失败')
