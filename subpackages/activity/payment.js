@@ -199,8 +199,12 @@ Page({
     let lockedCouponId = null
 
     try {
+      // P0-B 修复：活动报名单 ID 由前端预生成并传给 submitRegistration，
+      //   与 couponService.lockCoupon 关联的 orderId 保持一致（对齐 mall/tuan 模式）。
+      //   此前传空字符串会导致 lockCoupon 以"订单ID格式错误"拒绝，活动带券报名必失败。
+      const preRegId = `act_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`
       if (couponId) {
-        const lockRes = await CouponService.lockCoupon(couponId, '', 'activity_registration', 'activity')
+        const lockRes = await CouponService.lockCoupon(couponId, preRegId, 'activity_registration', 'activity')
         if (lockRes && lockRes.code !== 0) {
           this.setData({ paying: false })
           this.errorDynamic(lockRes.message, 'COUPON_LOCK_FAILED')
@@ -215,6 +219,7 @@ Page({
         originalAmount,
         couponId: couponId || undefined,
         couponDiscount,
+        _registrationId: preRegId,
       })
 
       if (!regResult || regResult.code !== 0) {

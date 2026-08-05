@@ -317,7 +317,8 @@ function computeCouponDiscount(coupon: { type?: string; rules?: Record<string, u
   const { type, rules } = coupon
   if (!rules) { return { eligible: false, discount: 0, message: '优惠券规则缺失' } }
   const orderAmountInFen = Math.round(orderAmount * 100)
-  if (orderAmountInFen < 0) { return { eligible: false, discount: 0, message: '订单金额异常' } }
+  // P1-6: 实付下限 0.1 元（与 couponService.calculateCouponDiscount 对齐）
+  if (orderAmountInFen <= 10) { return { eligible: false, discount: 0, message: '订单金额过小，无法使用优惠券' } }
   const threshold = rules.threshold as number | undefined
   if (threshold) {
     const thresholdInFen = Math.round(Number(threshold) * 100)
@@ -344,7 +345,7 @@ function computeCouponDiscount(coupon: { type?: string; rules?: Record<string, u
   default:
     return { eligible: false, discount: 0, message: '未知优惠券类型' }
   }
-  discountInFen = Math.min(discountInFen, orderAmountInFen)
+  discountInFen = Math.min(discountInFen, orderAmountInFen - 10)
   return { eligible: true, discount: discountInFen / 100 }
 }
 
@@ -353,12 +354,12 @@ function computeCouponDiscount(coupon: { type?: string; rules?: Record<string, u
  *   - 归属 / 状态(unused|locked) / 有效期 / 适用范围（all|mall）
  *   - 折扣按 coupon.rules 服务端重算，不信任客户端 couponDiscount（防金额伪造）
  */
-async function validateMallCoupon(openid: string, couponId: string, orderAmount: number): Promise<{ discount: number; couponSnapshot: Record<string, unknown> }> {
+async function validateMallCoupon(openid: string, couponId: string, orderAmount: number, items: string[] = []): Promise<{ discount: number; couponSnapshot: Record<string, unknown> }> {
   if (typeof couponId !== 'string' || couponId.length < 1 || couponId.length > 128) {
     throw err('INVALID_PARAMS', '优惠券ID格式错误')
   }
   const couponRes = await db.collection('user_coupons').doc(couponId).get()
-  const coupon = couponRes.data as { ownerId?: string; status?: string; startTime?: Date | string; endTime?: Date | string; applicableScopes?: string[]; templateName?: string; type?: string; rules?: Record<string, unknown> } | null
+  const coupon = couponRes.data as { ownerId?: string; status?: string; startTime?: Date | string; endTime?: Date | string; applicableScopes?: string[]; applicableItemIds?: string[]; templateName?: string; type?: string; rules?: Record<string, unknown> } | null
   if (!coupon) { throw err('COUPON_NOT_FOUND', '优惠券不存在') }
   if (coupon.ownerId !== openid) { throw err('PERMISSION_DENIED', '无权使用他人优惠券') }
   if (coupon.status !== 'unused' && coupon.status !== 'locked') {
@@ -370,6 +371,13 @@ async function validateMallCoupon(openid: string, couponId: string, orderAmount:
   const scopes = Array.isArray(coupon.applicableScopes) ? coupon.applicableScopes : []
   if (scopes.length > 0 && !scopes.includes('all') && !scopes.includes('mall')) {
     throw err('BUSINESS_ERROR', '该优惠券不适用于商城订单')
+  }
+  // P1-5 修复：指定商品券必须命中订单商品（productId/skuId），防约束形同虚设
+  if (coupon.applicableItemIds && coupon.applicableItemIds.length > 0) {
+    const hasMatch = items.some((item) => coupon.applicableItemIds!.includes(item))
+    if (!hasMatch) {
+      throw err('BUSINESS_ERROR', '该优惠券不适用于当前商品')
+    }
   }
   const calc = computeCouponDiscount(coupon, orderAmount)
   if (!calc.eligible) { throw err('BUSINESS_ERROR', `优惠券不可用：${calc.message || '不满足使用条件'}`) }
@@ -961,7 +969,8 @@ export async function createOrder(
     const grossAmount = Math.round(unitPrice * 100 * Number(quantity)) / 100
     let validatedCouponDiscount = 0
     if (couponId) {
-      const lockResult = await validateMallCoupon(openid, couponId as string, grossAmount)
+      const lockResult = await validateMallCoupon(openid, couponId as string, grossAmount,
+        [productId as string, skuId as string].filter(Boolean))
       validatedCouponDiscount = lockResult.discount
     } else if (couponDiscountNum > 0) {
       throw err('INVALID_PARAMS', '未选择优惠券时不允许折扣')
@@ -1177,7 +1186,10 @@ export async function createMultiOrder(
     // P0-1: 服务端校验优惠券并计算折扣（不信任客户端 couponDiscount，防金额伪造）
     let validatedCouponDiscount = 0
     if (couponId) {
-      const lockResult = await validateMallCoupon(openid, couponId as string, totalAmount)
+      // 购物车多商品：券的 applicableItemIds 命中任一商品即可
+      const cartItemIds = [...new Set((normItems as Array<{ productId?: string; skuId?: string }>)
+        .flatMap((it) => [it.productId, it.skuId].filter(Boolean) as string[]))]
+      const lockResult = await validateMallCoupon(openid, couponId as string, totalAmount, cartItemIds)
       validatedCouponDiscount = lockResult.discount
     } else if (couponDiscountNum > 0) {
       throw err('INVALID_PARAMS', '未选择优惠券时不允许折扣')

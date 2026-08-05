@@ -492,28 +492,38 @@ function calculateActivityCouponDiscount(
   orderAmount: number
 ): { eligible: boolean; discountAmount?: number; message?: string } {
   if (!rules) { return { eligible: false, message: '优惠券规则缺失' } }
-  if (rules.threshold && orderAmount < rules.threshold) {
-    return { eligible: false, message: `订单金额未达到满${rules.threshold}元使用门槛` }
+  // 与 couponService.calculateCouponDiscount 对齐：统一整数分计算，避免浮点漂移
+  const orderAmountInFen = Math.round(orderAmount * 100)
+  if (orderAmountInFen <= 10) {
+    return { eligible: false, message: '订单金额过小，无法使用优惠券' }
   }
-  let discountAmount = 0
+  if (rules.threshold) {
+    const thresholdInFen = Math.round(rules.threshold * 100)
+    if (orderAmountInFen < thresholdInFen) {
+      return { eligible: false, message: `订单金额未达到满${rules.threshold}元使用门槛` }
+    }
+  }
+  let discountInFen = 0
   switch (type) {
     case 'fixed_amount':
     case 'full_reduction':
-      discountAmount = rules.reduceAmount || 0
+      discountInFen = Math.round((rules.reduceAmount || 0) * 100)
       break
     case 'discount': {
       const discountRate = Number(rules.discountRate) || 1
       if (discountRate <= 0 || discountRate > 1) { return { eligible: false, message: '折扣率无效' } }
-      discountAmount = orderAmount * (1 - discountRate)
-      if (rules.maxReduceAmount && rules.maxReduceAmount > 0) { discountAmount = Math.min(discountAmount, rules.maxReduceAmount) }
+      discountInFen = Math.round(orderAmountInFen * (1 - discountRate))
+      if (rules.maxReduceAmount && rules.maxReduceAmount > 0) {
+        discountInFen = Math.min(discountInFen, Math.round(rules.maxReduceAmount * 100))
+      }
       break
     }
     default:
       return { eligible: false, message: '未知优惠券类型' }
   }
-  discountAmount = Math.min(discountAmount, orderAmount)
-  discountAmount = Math.round(discountAmount * 100) / 100
-  return { eligible: true, discountAmount }
+  // 实付下限 0.1 元：折扣最高封顶到 原价 - 0.1（与商城/团购/喂养/寄养一致）
+  discountInFen = Math.min(discountInFen, orderAmountInFen - 10)
+  return { eligible: true, discountAmount: discountInFen / 100 }
 }
 
 // 服务端重算活动金额（H3：不再信任前端 totalAmount）
@@ -528,13 +538,14 @@ function computeActivityAmount(activity: ActivityRecord, pCount: number, petCoun
 async function resolveCoupon(
   openid: string,
   couponId: string | undefined,
-  calculatedAmount: number
+  calculatedAmount: number,
+  activityId?: string
 ): Promise<{ couponId: string; discount: number }> {
   if (!couponId) { return { couponId: '', discount: 0 } }
   try {
     const couponRes = await db.collection('user_coupons').where({ _id: couponId }).limit(1).get()
     const coupon = (couponRes.data || [])[0] as
-      | { ownerId?: string; status?: string; startTime?: string | Date; endTime?: string | Date; applicableScopes?: string[]; type?: string; rules?: CouponRulesLite }
+      | { ownerId?: string; status?: string; startTime?: string | Date; endTime?: string | Date; applicableScopes?: string[]; applicableItemIds?: string[]; type?: string; rules?: CouponRulesLite }
       | undefined
     if (!coupon) { logger.warn('resolveCoupon.notFound', { couponId, openid: maskOpenid(openid) }); return { couponId: '', discount: 0 } }
     if (coupon.ownerId !== openid) { logger.warn('resolveCoupon.ownerMismatch', { couponId, openid: maskOpenid(openid) }); return { couponId: '', discount: 0 } }
@@ -545,7 +556,16 @@ async function resolveCoupon(
     if (coupon.startTime && now < new Date(coupon.startTime as string)) { return { couponId: '', discount: 0 } }
     if (coupon.endTime && now > new Date(coupon.endTime as string)) { return { couponId: '', discount: 0 } }
     const scopes = coupon.applicableScopes || []
-    if (scopes.length > 0 && !scopes.includes('activity')) { return { couponId: '', discount: 0 } }
+    // 空数组/缺失=全模块；兼容历史 'all' 值
+    if (scopes.length > 0 && !scopes.includes('all') && !scopes.includes('activity')) {
+      logger.warn('resolveCoupon.scopeInvalid', { couponId, scopes }); return { couponId: '', discount: 0 }
+    }
+    // P1-5 修复：指定活动券必须命中当前活动（与服务端下单校验对齐）
+    if (coupon.applicableItemIds && coupon.applicableItemIds.length > 0) {
+      if (!activityId || !coupon.applicableItemIds.includes(activityId)) {
+        logger.warn('resolveCoupon.itemInvalid', { couponId, activityId }); return { couponId: '', discount: 0 }
+      }
+    }
     const result = calculateActivityCouponDiscount(coupon.type, coupon.rules, calculatedAmount)
     if (!result.eligible || result.discountAmount === undefined) { return { couponId: '', discount: 0 } }
     return { couponId, discount: result.discountAmount }
@@ -810,10 +830,30 @@ export async function submitRegistration(
   const { openid } = auth
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
-  const { activityId, pets, phone, notes, friends, petIds, couponId, participantCount } = event
+  const { activityId, pets, phone, notes, friends, petIds, couponId, participantCount, _registrationId } = event
   if (!activityId) { throw err('INVALID_PARAMS', '缺少活动ID') }
   if (!pets || !Array.isArray(pets) || pets.length === 0) { throw err('INVALID_PARAMS', '请选择参与的宠物') }
   if (!phone) { throw err('INVALID_PARAMS', '请填写联系电话') }
+
+  // P0-B 配套：允许前端预生成报名单 ID（用于与 couponService.lockCoupon 关联的临时订单号一致），
+  //   格式与 couponService.isValidId 对齐（字母数字下划线，≤64 位），避免注入。
+  let preRegId = ''
+  if (_registrationId !== undefined && _registrationId !== null && _registrationId !== '') {
+    if (typeof _registrationId !== 'string' || _registrationId.length > 64 || !/^[a-zA-Z0-9_]+$/.test(_registrationId)) {
+      throw err('INVALID_PARAMS', '报名单ID格式错误')
+    }
+    preRegId = _registrationId
+    // 防重复提交：预生成 ID 已存在说明同一笔报名已被提交
+    try {
+      const dupRes = await db.collection('activity_registrations').doc(preRegId).get()
+      if (dupRes.data) {
+        throw err('BUSINESS_ERROR', '请勿重复提交')
+      }
+    } catch (e) {
+      if ((e as { code?: string }).code === 'BUSINESS_ERROR') { throw e }
+      // doc().get() 不存在时可能抛错，按"不存在"处理
+    }
+  }
 
   // M1 修复：查重前置到事务外（CloudBase 事务内不支持 where 查询），
   // 名额检查移入事务内基于快照读，避免"读-判-写"跨事务竞态
@@ -852,7 +892,7 @@ export async function submitRegistration(
     const petCount = petsArray.length + friendsArray.length
     // H3 修复：金额一律服务端重算，不再信任前端 totalAmount
     const calculatedAmount = computeActivityAmount(activity, pCount, petCount)
-    const coupon = await resolveCoupon(openid, couponId, calculatedAmount)
+    const coupon = await resolveCoupon(openid, couponId, calculatedAmount, activityId)
     const finalAmount = Math.max(0, Math.round((calculatedAmount - coupon.discount) * 100) / 100)
 
     // Sprint 22: 活动报名前先做大额风控
@@ -872,7 +912,7 @@ export async function submitRegistration(
     }))
 
     const registration: RegistrationRecord = {
-      _id: generateId('registration', openid),
+      _id: preRegId || generateId('registration', openid),
       activityId,
       ownerId: openid,
       pets: petsInfo,

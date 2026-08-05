@@ -179,10 +179,17 @@ describe('集成测试：优惠券核销子链路', () => {
       expect(r.eligible).toBe(false)
     })
 
-    test('减免额不超订单金额', () => {
+    test('减免额不超订单金额（抵扣后实付保留 0.1 元下限）', () => {
       const c = { type: 'fixed_amount', rules: { reduceAmount: 1000 } }
       const r = calculateCouponDiscount(c, 50)
-      expect(r.discountAmount).toBe(50)
+      // P1-6 修复：折扣封顶到 原价-0.1，避免全额抵扣单在前端可选但后端被拒
+      expect(r.discountAmount).toBe(49.9)
+    })
+
+    test('订单金额 ≤ 0.1 元 → 不可用', () => {
+      const c = { type: 'fixed_amount', rules: { reduceAmount: 10 } }
+      const r = calculateCouponDiscount(c, 0.1)
+      expect(r.eligible).toBe(false)
     })
 
     test('减免额保留 2 位小数', () => {
@@ -293,15 +300,28 @@ describe('集成测试：优惠券核销子链路', () => {
       couponId = 'uc1', ownerId = 'oUser1', status = 'locked', orderId = 'o1',
     } = {}) => {
       mockDb._collections.user_coupons = { docs: [
-        { _id: couponId, ownerId, templateId: 't1', status, orderId },
+        {
+          _id: couponId, ownerId, templateId: 't1', status, orderId,
+          type: 'full_reduction', rules: { threshold: 100, reduceAmount: 20 },
+        },
       ] }
     }
 
     test('locked → used 状态', async () => {
       setupCoupon()
       const c = mockDb._collections.user_coupons.docs[0]
-      await callCoupon('useCoupon', { couponId: 'uc1', orderId: 'o1' }, 'oUser1')
+      // P2 修复：originalAmount 必传，服务端重算折扣并校验客户端折扣
+      await callCoupon('useCoupon', {
+        couponId: 'uc1', orderId: 'o1', originalAmount: 120,
+        discountAmount: 20, finalAmount: 100,
+      }, 'oUser1')
       expect(c.status).toBe('used')
+    })
+
+    test('缺 originalAmount → 拒绝（防客户端伪造折扣）', async () => {
+      setupCoupon()
+      const res = await callCoupon('useCoupon', { couponId: 'uc1', orderId: 'o1' }, 'oUser1')
+      expect(res.code).not.toBe(0)
     })
 
     test('unused 状态的券不能直接核销（应先 lock）', async () => {
@@ -381,7 +401,10 @@ describe('集成测试：优惠券核销子链路', () => {
       expect(uc.status).toBe('locked')
 
       // 3. 核销
-      await callCoupon('useCoupon', { couponId: uc._id, orderId: 'o1' }, 'oUser1')
+      await callCoupon('useCoupon', {
+        couponId: uc._id, orderId: 'o1', originalAmount: 120,
+        discountAmount: 20, finalAmount: 100,
+      }, 'oUser1')
       expect(uc.status).toBe('used')
     })
   })

@@ -143,6 +143,7 @@ export interface AvailableCoupon {
     couponCode?: string;
     type?: CouponType;
     rules?: CouponRules;
+    status?: CouponStatus;
     discountAmount: number;
     endTime?: Date | string;
 }

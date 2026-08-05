@@ -342,7 +342,8 @@ function computeCouponDiscount(coupon: Pick<UserCouponDoc, 'type' | 'rules'>, or
   if (!rules) {return { eligible: false, discount: 0, message: '优惠券规则缺失' }}
 
   const orderAmountInFen = Math.round(orderAmount * 100)
-  if (orderAmountInFen < 0) {return { eligible: false, discount: 0, message: '订单金额异常' }}
+  // P1-6: 实付下限 0.1 元（与 couponService.calculateCouponDiscount 对齐）
+  if (orderAmountInFen <= 10) {return { eligible: false, discount: 0, message: '订单金额过小，无法使用优惠券' }}
 
   if (rules.threshold) {
     const thresholdInFen = Math.round(rules.threshold * 100)
@@ -371,8 +372,8 @@ function computeCouponDiscount(coupon: Pick<UserCouponDoc, 'type' | 'rules'>, or
     return { eligible: false, discount: 0, message: '未知优惠券类型' }
   }
 
-  // 折扣不超过订单金额
-  discountInFen = Math.min(discountInFen, orderAmountInFen)
+  // 折扣不超过订单金额，且抵扣后实付保留 0.1 元下限
+  discountInFen = Math.min(discountInFen, orderAmountInFen - 10)
   return { eligible: true, discount: discountInFen / 100 }
 }
 
@@ -392,6 +393,7 @@ async function validateAndLockCoupon(
   orderAmount: number,
   orderId: string,
   orderType: string,
+  items: string[] = [],
 ): Promise<{ discount: number, couponSnapshot: Record<string, unknown> }> {
   // ID 格式校验（防注入）
   if (typeof couponId !== 'string' || couponId.length < 1 || couponId.length > 128) {
@@ -418,6 +420,20 @@ async function validateAndLockCoupon(
   }
   if (coupon.endTime && now > new Date(coupon.endTime)) {
     throw err('BUSINESS_ERROR', '优惠券已过期')
+  }
+
+  // P1-3 修复：适用板块服务端强制校验（此前 orderService 完全缺失，商城券可被用于寄养订单）
+  const scopes = Array.isArray(coupon.applicableScopes) ? coupon.applicableScopes : []
+  if (scopes.length > 0 && !scopes.includes('all') && !scopes.includes('boarding')) {
+    throw err('BUSINESS_ERROR', '该优惠券不适用于寄养订单')
+  }
+  // P1-5 修复：指定商品券必须命中寄养宿主（hostId）
+  const itemIds = Array.isArray(coupon.applicableItemIds) ? (coupon.applicableItemIds as string[]) : []
+  if (itemIds.length > 0) {
+    const hasMatch = items.some((item) => itemIds.includes(item))
+    if (!hasMatch) {
+      throw err('BUSINESS_ERROR', '该优惠券不适用于当前寄养服务')
+    }
   }
 
   const calc = computeCouponDiscount(coupon, orderAmount)
@@ -799,7 +815,7 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
   if (couponId) {
     // 先生成临时 orderId 供 lockCoupon 关联（最终写入用同一 id）
     const tempOrderId = generateId('order', openid)
-    const validated = await validateAndLockCoupon(openid, couponId, calculatedPrice, tempOrderId, 'boarding')
+    const validated = await validateAndLockCoupon(openid, couponId, calculatedPrice, tempOrderId, 'boarding', [hostId])
     couponDiscount = validated.discount
     couponSnapshot = validated.couponSnapshot
     // 用 tempOrderId 作为订单 _id，保证与 lockCoupon 关联的 orderId 一致

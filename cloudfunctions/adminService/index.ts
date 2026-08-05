@@ -257,7 +257,6 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   // 危险操作
   initIndexes: 'super_admin',
   initI18nOverrideIndexes: 'super_admin',
-  getOperationLogList: 'super_admin',
   exportOrders: 'super_admin',
 
   // ===== 合作伙伴业务自营（小程序端 partner 可调） =====
@@ -338,14 +337,7 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getTemplateList: 'partner',
   getTemplateDetail: 'partner',
   createCouponGrant: 'partner',
-  getGrantList: 'partner',
-  getGrantDetail: 'partner',
-  getUserCouponList: 'partner',
-  grantCouponToUser: 'partner',
-  revokeUserCoupon: 'partner',
-  batchRevokeUserCoupons: 'partner',
   getCouponStatistics: 'partner',
-  getScopeStatistics: 'partner',
 
   // 团长业务
   createTuanDeal: 'partner',

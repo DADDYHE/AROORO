@@ -122,4 +122,10 @@ exports.FIELD_WHITELISTS = {
         'skuType', 'specGroups', 'skus', 'specs',
         'minPrice', 'maxPrice',
     ],
+    couponTemplate: [
+        'name', 'type', 'rules', 'applicableScopes', 'applicableItemIds',
+        'stock', 'perUserLimit', 'validFrom', 'validTo', 'validDays',
+        'description', 'useRules', 'coverImage', 'claimable',
+        'popupEnabled', 'popupPage', 'status',
+    ],
 };

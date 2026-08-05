@@ -284,7 +284,8 @@ function computeCouponDiscount(
   if (!rules) {return { eligible: false, discount: 0, message: '优惠券规则缺失' }}
 
   const orderAmountInFen = Math.round(orderAmount * 100)
-  if (orderAmountInFen < 0) {return { eligible: false, discount: 0, message: '订单金额异常' }}
+  // P1-6: 实付下限 0.1 元（与 couponService.calculateCouponDiscount 对齐）
+  if (orderAmountInFen <= 10) {return { eligible: false, discount: 0, message: '订单金额过小，无法使用优惠券' }}
 
   const rulesRecord = rules as { threshold?: number; reduceAmount?: number; discountRate?: number; maxReduceAmount?: number }
   if (rulesRecord.threshold) {
@@ -315,7 +316,7 @@ function computeCouponDiscount(
   }
 
   // 折扣不超过订单金额
-  discountInFen = Math.min(discountInFen, orderAmountInFen)
+  discountInFen = Math.min(discountInFen, orderAmountInFen - 10)
   return { eligible: true, discount: discountInFen / 100 }
 }
 
@@ -337,7 +338,8 @@ async function validateAndLockCoupon(
   couponId: string,
   orderAmount: number,
   orderId: string,
-  orderType: string
+  orderType: string,
+  items: string[] = []
 ): Promise<{ discount: number; couponSnapshot: Record<string, unknown> }> {
   // ID 格式校验（防注入）
   if (typeof couponId !== 'string' || couponId.length < 1 || couponId.length > 128) {
@@ -364,6 +366,20 @@ async function validateAndLockCoupon(
   }
   if (coupon.endTime && now > new Date(coupon.endTime)) {
     throw err('BUSINESS_ERROR', '优惠券已过期')
+  }
+
+  // P1-3 修复：适用板块服务端强制校验（此前 tuanService 完全缺失，商城券可被用于团购订单）
+  const scopes = Array.isArray(coupon.applicableScopes) ? coupon.applicableScopes : []
+  if (scopes.length > 0 && !scopes.includes('all') && !scopes.includes('tuan')) {
+    throw err('BUSINESS_ERROR', '该优惠券不适用于团购订单')
+  }
+  // P1-5 修复：指定商品券必须命中团购商品（dealId/productId/skuId）
+  const itemIds = Array.isArray(coupon.applicableItemIds) ? (coupon.applicableItemIds as string[]) : []
+  if (itemIds.length > 0) {
+    const hasMatch = items.some((item) => itemIds.includes(item))
+    if (!hasMatch) {
+      throw err('BUSINESS_ERROR', '该优惠券不适用于当前商品')
+    }
   }
 
   const calc = computeCouponDiscount(coupon, orderAmount)
@@ -662,7 +678,8 @@ export async function createTuanOrder(
       couponId as string,
       grossAmount,
       '',
-      'tuan'
+      'tuan',
+      [dealId as string, productId as string, (skuId as string) || ''].filter(Boolean)
     )
     validatedCouponDiscount = lockResult.discount
     couponSnapshot = lockResult.couponSnapshot

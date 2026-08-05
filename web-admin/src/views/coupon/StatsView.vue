@@ -85,7 +85,8 @@
               <el-table-column prop="source" label="领取方式" width="100" align="center">
                 <template #default="{ row }">
                   <el-tag v-if="row.source === 'popup'" type="warning" size="small">弹窗领取</el-tag>
-                  <el-tag v-else-if="row.source === 'claim'" type="success" size="small">领券中心</el-tag>
+                  <el-tag v-else-if="row.source === 'claim' || row.source === 'claim-center'" type="success" size="small">领券中心</el-tag>
+                  <el-tag v-else-if="row.source === 'manual'" type="primary" size="small">后台发放</el-tag>
                   <el-tag v-else type="info" size="small">{{ row.source || '未知' }}</el-tag>
                 </template>
               </el-table-column>

@@ -39,7 +39,7 @@ function mapCouponTemplates(list) {
   return list.map(t => ({
     ...t,
     accentColor: getAccentColor(t.type),
-    scopeLabels: translateScopes(t.scopes),
+    scopeLabels: translateScopes(t.applicableScopes),
   }))
 }
 

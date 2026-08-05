@@ -69,6 +69,12 @@ const couponSelectorBehavior = Behavior({
       const coupon = this.data.availableCoupons.find(c => c._id === id)
       if (!coupon) { return }
 
+      // P2 修复：locked 券（正在其他订单中使用）明确提示，不允许选中
+      if (coupon.status === 'locked') {
+        wx.showToast({ title: '该优惠券正在使用中', icon: 'none' })
+        return
+      }
+
       const discountAmount = parseFloat(amount)
       const totalPrice = this.data[this._couponTotalPriceKey || 'totalPrice'] || 0
       const { finalAmount, couponDiscount, shouldClear } = computeFinalAmount(totalPrice, discountAmount)

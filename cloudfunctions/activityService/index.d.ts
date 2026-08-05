@@ -2,18 +2,20 @@
  * activityService/index.ts - 活动服务主入口（TypeScript 源文件 - Sprint 38 迁移）
  *
  * 业务功能：
- *   - 活动管理（CRUD + 自动状态更新）
- *   - 活动报名（带风控前置 + 优惠券）
- *   - 活动支付订单（创建 + 确认）
- *   - 报名管理（详情、列表、导出）
- *   - 合作伙伴视角（活动报名列表、活动订单列表、CSV 导出）
+ *   - 活动列表 / 详情（用户端）
+ *   - 活动报名（带风控前置 + 优惠券，支付走 paymentService 回调闭环）
+ *   - 我的报名（详情、列表）
+ *   - 定时状态自动更新（published → registration_stopped → ended + 佣金/收入）
  *
- * 共 13 个 action：
+ * 注（P3-7 清理）：活动管理（CRUD/报名列表/导出/活动订单）已统一走
+ *   adminService（合作伙伴端）与 orderService（订单列表），本服务不再承载。
+ *
+ * 共 5 个 action：
  *   1. getActivityList - 活动列表
  *   2. getActivityDetail - 活动详情
- *   6. submitRegistration - 提交报名（含风控前置）
- *   7. getRegistrationDetail - 报名详情
- *   8. getRegistrationList - 报名列表
+ *   3. submitRegistration - 提交报名（含风控前置）
+ *   4. getRegistrationDetail - 报名详情
+ *   5. getRegistrationList - 报名列表
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构

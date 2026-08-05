@@ -28,12 +28,9 @@
         <template #default="{ row }">
           <div style="display:inline-flex;align-items:center;gap:6px">
             <el-switch :model-value="row.popupEnabled" @change="(val) => togglePopup(row._id, val, row.popupPage)" />
-            <el-select v-if="row.popupEnabled" :model-value="row.popupPage || 'tuan'" size="small" style="width:80px" @change="(val) => togglePopup(row._id, true, val)">
-              <el-option label="宠团团" value="tuan" />
-              <el-option label="商城" value="mall" />
-              <el-option label="上门服务" value="feeding" />
-              <el-option label="寄养" value="hosting" />
-              <el-option label="首页" value="home" />
+            <!-- 弹窗仅在小程序"宠团团（discover）"页实现，其余页面值不会触发，暂不提供 -->
+            <el-select v-if="row.popupEnabled" :model-value="row.popupPage || 'tuan'" size="small" style="width:110px" @change="(val) => togglePopup(row._id, true, val)">
+              <el-option label="宠团团（已实现）" value="tuan" />
             </el-select>
           </div>
         </template>
@@ -97,11 +94,8 @@
           </el-form-item>
           <el-form-item v-if="grantForm.popupEnabled" label="触发页面">
             <el-select v-model="grantForm.popupPage" placeholder="选择触发页面">
-              <el-option label="宠团团" value="tuan" />
-              <el-option label="商城首页" value="mall" />
-              <el-option label="上门服务" value="feeding" />
-              <el-option label="寄养" value="hosting" />
-              <el-option label="首页" value="home" />
+              <!-- 弹窗仅在小程序"宠团团（discover）"页实现 -->
+              <el-option label="宠团团（已实现）" value="tuan" />
             </el-select>
           </el-form-item>
         </template>
@@ -125,7 +119,7 @@ import { usePagination } from '@/composables/usePagination'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const typeMap = { full_reduction: '满减券', discount: '折扣券', fixed_amount: '固定金额券' }
-const scopeMap = { mall: '商城', tuan: '团购', feeding: '上门服务', hosting: '寄养', activity: '活动' }
+const scopeMap = { all: '全模块', mall: '商城', tuan: '团购', feeding: '上门服务', boarding: '寄养', hosting: '寄养', activity: '活动' }
 
 const { list, loading, total, pagination, fetch, onPageChange, onSizeChange } = usePagination(getTemplateList)
 

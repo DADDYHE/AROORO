@@ -72,6 +72,30 @@ Page({
     this._loadDefaultAddress()
   },
 
+  // P1-4/P1-5 修复：按下单场景传入正确的 business 与 items
+  //   - 商城：business='mall'，items=商品/规格（购物车场景聚合全部商品）
+  //   - 团购：business='tuan'，items=dealId/productId/skuId
+  _couponQueryOpts() {
+    if (this.data.fromTuan) {
+      const td = this.data.tuanData || {}
+      return {
+        business: 'tuan',
+        items: [td.dealId, td.productId, this.data.skuId].filter(Boolean),
+      }
+    }
+    const items = []
+    if (this.data.fromCart) {
+      (this.data.cartItems || []).forEach(it => {
+        if (it.productId) {items.push(it.productId)}
+        if (it.skuId) {items.push(it.skuId)}
+      })
+    } else if (this.data.product) {
+      if (this.data.product._id) {items.push(this.data.product._id)}
+      if (this.data.skuId) {items.push(this.data.skuId)}
+    }
+    return { business: 'mall', items: [...new Set(items)] }
+  },
+
   onShow() {
     const app = getApp()
     const globalAddress = app.globalData.selectedAddress
@@ -94,7 +118,7 @@ Page({
       finalAmount: totalAmount,
       isLoading: false,
     })
-    this._loadAvailableCoupons()
+    this._loadAvailableCoupons(this._couponQueryOpts())
   },
 
   async _loadProduct(productId, skuId, quantity) {
@@ -123,7 +147,7 @@ Page({
           finalAmount: totalAmount,
           isLoading: false,
         })
-        this._loadAvailableCoupons()
+        this._loadAvailableCoupons(this._couponQueryOpts())
       } else {
         this.setData({ isLoading: false, error: '商品不存在' })
       }
@@ -144,7 +168,7 @@ Page({
       finalAmount: Math.round(totalAmount * 100) / 100,
       isLoading: false,
     })
-    this._loadAvailableCoupons()
+    this._loadAvailableCoupons(this._couponQueryOpts())
   },
 
   async _loadDefaultAddress() {
@@ -196,7 +220,7 @@ Page({
       updateData.finalAmount = totalAmount
     }
     this.setData(updateData)
-    this._loadAvailableCoupons()
+    this._loadAvailableCoupons(this._couponQueryOpts())
   },
 
   _getUnitPrice(product) {
@@ -211,10 +235,19 @@ Page({
     this.setData({ remark: e.detail.value })
   },
 
-  onToggleCouponSelector() {
+  // P2 修复：原方法误命名 onToggleCouponSelector 且漏掉事件参数 e（引用未定义变量），
+  //   导致头部无法展开选券面板；改为 onSelectCoupon（wxml 券项绑定），
+  //   面板开关回落到 couponSelectorBehavior 的 onToggleCouponSelector。
+  onSelectCoupon(e) {
     const { id, amount } = e.currentTarget.dataset
     const coupon = this.data.availableCoupons.find(c => c._id === id)
     if (!coupon) {return}
+
+    // P2 修复：locked 券（正在其他订单中使用）明确提示，不允许选中
+    if (coupon.status === 'locked') {
+      wx.showToast({ title: '该优惠券正在使用中', icon: 'none' })
+      return
+    }
 
     const discountAmount = parseFloat(amount)
     const { finalAmount, couponDiscount, shouldClear } = computeFinalAmount(this.data.totalAmount, discountAmount)

@@ -172,12 +172,9 @@ async function updateCouponTemplate(event, context, auth) {
   // - 允许切换领取相关设置 claimable/popupEnabled/popupPage
   // - 其他字段（name/type/rules/...）忽略，避免影响已发放的券
   const alwaysAllowedInService = ['claimable', 'perUserLimit', 'popupEnabled', 'popupPage', 'stock']
-  const systemFields = ['action', 'data', 'adminOpenid', 'timestamp', 'token', 'HTTP_CONTEXT']
   if (template.status !== 'draft') {
-    const disallowedKeys = Object.keys(event).filter(
-      k => k !== 'templateId' && !alwaysAllowedInService.includes(k) && !systemFields.includes(k)
-    )
-    if (disallowedKeys.length > 0) {
+    // 非草稿模板始终走"服务期字段"分支：只允许调整库存与领取相关设置，
+    // 其他字段（name/type/rules/applicableScopes...）一律忽略（防影响已发放的券）。
     const updateData = { updatedAt: db.serverDate() }
     alwaysAllowedInService.forEach(k => {
       if (event[k] !== undefined) {updateData[k] = event[k]}
@@ -198,8 +195,8 @@ async function updateCouponTemplate(event, context, auth) {
     await db.collection('coupon_templates').doc(templateId).update({ data: updateData })
     return handleSuccess(null, '已更新库存与领取设置')
   }
-  }
 
+  // 草稿状态：允许全量编辑（走字段白名单，防注入多余字段）
   const beforeData = { ...template }
   const updateData = { updatedAt: db.serverDate(), ...filterFields(FIELD_WHITELISTS.couponTemplate, event) }
 
@@ -361,15 +358,37 @@ async function getTemplateList(event, context, auth) {
 
   const list = result.list || []
   if (list.length > 0) {
-    // 用普通查询统计已领取和已使用数量
+    // P3 修复：用 aggregate 按 templateId 分组统计，替代逐模板 N+1 次 count
+    //   （原实现每页 20 个模板产生 40 次查询，且无截断风险）
+    const ids = list.map(t => t._id).filter(Boolean)
+    const $ = _.aggregate
+    const countByTemplate = async (extraMatch = {}) => {
+      const map = {}
+      if (ids.length === 0) { return map }
+      try {
+        const aggRes = await db.collection('user_coupons')
+          .aggregate()
+          .match({ templateId: _.in(ids), ...extraMatch })
+          .group({ _id: '$templateId', total: $.sum(1) })
+          .end()
+        for (const r of (aggRes.list || [])) {
+          if (r._id) { map[r._id] = Number(r.total) || 0 }
+        }
+      } catch (e) {
+        // aggregate 失败时降级为逐模板 count，保证列表可用
+        logger.warn('getTemplateList.aggregate.fallback', { msg: e.message })
+        for (const t of list) {
+          const c = await db.collection('user_coupons').where({ templateId: t._id, ...extraMatch }).count()
+          map[t._id] = c.total || 0
+        }
+      }
+      return map
+    }
+    const [claimedMap, usedMap] = await Promise.all([countByTemplate(), countByTemplate({ status: 'used' })])
     for (const t of list) {
-      const [claimedRes, usedRes] = await Promise.all([
-        db.collection('user_coupons').where({ templateId: t._id }).count(),
-        db.collection('user_coupons').where({ templateId: t._id, status: 'used' }).count(),
-      ])
       t.totalCount = t.stock || 0
-      t.claimedCount = claimedRes.total || 0
-      t.usedCount = usedRes.total || 0
+      t.claimedCount = claimedMap[t._id] || 0
+      t.usedCount = usedMap[t._id] || 0
       logger.info('templateStats', { id: t._id, claimedCount: t.claimedCount, usedCount: t.usedCount })
     }
   }
@@ -612,216 +631,13 @@ async function createCouponGrant(event, context, auth) {
   return handleSuccess({ grantId, successCount, failedCount, errorLog }, '发放完成')
 }
 
-async function getGrantList(event, context, auth) {
-  const { templateId, keyword, page = 1, pageSize = 20 } = event
-  const where = {}
-  if (templateId) { where.templateId = templateId }
-  if (keyword) { where.templateName = db.RegExp({ regexp: escapeRegExp(keyword), options: 'i' }) }
-
-  const result = await paginate(db, 'user_coupons', {
-    page, pageSize, where,
-    orderBy: { field: 'receivedAt', direction: 'desc' },
-  })
-
-  return handleSuccess(result)
-}
-
-async function getGrantDetail(event, context, auth) {
-  const { grantId } = event
-  if (!grantId) {throw err('INVALID_PARAMS', '缺少发放ID')}
-  const res = await db.collection('coupon_grants').doc(grantId).get()
-  if (!res.data) {throw err('NOT_FOUND', '发放记录不存在')}
-  return handleSuccess(res.data)
-}
-
-// ==================== 用户优惠券管理 ====================
-
-async function getUserCouponList(event, context, auth) {
-  const { ownerId, status, templateId, page = 1, pageSize = 20 } = event
-  const where = {}
-  if (ownerId) {where.ownerId = ownerId}
-  if (status) {where.status = status}
-  if (templateId) {where.templateId = templateId}
-
-  const result = await paginate(db, 'user_coupons', {
-    page, pageSize, where,
-    orderBy: { field: 'createdAt', direction: 'desc' },
-  })
-  return handleSuccess(result)
-}
-
-async function grantCouponToUser(event, context, auth) {
-  const { templateId, ownerId } = event
-  if (!templateId || !ownerId) {throw err('INVALID_PARAMS', '缺少模板ID或用户ID')}
-
-  return await createCouponGrant({
-    templateId,
-    grantType: 'manual_single',
-    userIds: [ownerId],
-    note: '手动单独发放',
-  }, context, auth)
-}
-
-async function revokeUserCoupon(event, context, auth) {
-  const { couponId } = event
-  if (!couponId) {throw err('INVALID_PARAMS', '缺少优惠券ID')}
-
-  const couponRes = await db.collection('user_coupons').where({ _id: couponId }).limit(1).get()
-  if (!couponRes.data || couponRes.data.length === 0) {throw err('COUPON_NOT_FOUND', '优惠券不存在')}
-
-  const coupon = couponRes.data[0]
-  if (coupon.status !== 'unused') {
-    throw err('BUSINESS_ERROR', '仅可撤销未使用的优惠券')
-  }
-
-  if (!_canManageScope(auth, coupon.applicableScopes)) {
-    throw err('PERMISSION_DENIED', '无权管理此优惠券的业务范围')
-  }
-
-  await db.collection('user_coupons').doc(couponId).update({
-    data: { status: 'revoked', updatedAt: db.serverDate() },
-  })
-
-  await writeOperationLog({
-    module: 'user_coupon',
-    action: 'revoke',
-    targetId: couponId,
-    targetName: coupon.templateName,
-    operatorId: auth.openid,
-    operatorName: auth.nickName || auth.openid,
-    beforeData: { status: 'unused' },
-    afterData: { status: 'revoked' },
-    remark: '管理员撤销优惠券',
-  })
-
-  return handleSuccess(null, '撤销成功')
-}
-
-async function batchRevokeUserCoupons(event, context, auth) {
-  const { couponIds } = event
-  if (!couponIds || !couponIds.length) {throw err('INVALID_PARAMS', '缺少优惠券ID列表')}
-
-  let successCount = 0
-  let failedCount = 0
-
-  for (const couponId of couponIds) {
-    try {
-      const couponRes = await db.collection('user_coupons').where({ _id: couponId }).limit(1).get()
-      if (!couponRes.data || couponRes.data.length === 0 || couponRes.data[0].status !== 'unused') {
-        failedCount++
-        continue
-      }
-      if (!_canManageScope(auth, couponRes.data[0].applicableScopes)) {
-        failedCount++
-        continue
-      }
-      await db.collection('user_coupons').doc(couponId).update({
-        data: { status: 'revoked', updatedAt: db.serverDate() },
-      })
-      successCount++
-    } catch (e) {
-      failedCount++
-    }
-  }
-
-  return handleSuccess({ successCount, failedCount }, `成功撤销 ${successCount} 张，失败 ${failedCount} 张`)
-}
-
-// ==================== 统计 ====================
-
-async function getScopeStatistics(event, context, auth) {
-  const { scope } = event
-  if (!scope) {throw err('INVALID_PARAMS', '缺少scope')}
-
-  const templateWhere = {}
-  if (scope !== 'general') {
-    templateWhere.applicableScopes = _.in([scope])
-  }
-
-  const [totalTemplates, activeTemplates] = await Promise.all([
-    db.collection('coupon_templates').where(templateWhere).count(),
-    db.collection('coupon_templates').where({ ...templateWhere, status: 'active' }).count(),
-  ])
-
-  const couponWhere = scope !== 'general' ? { applicableScopes: _.in([scope]) } : {}
-
-  const [issuedCount, usedCount, expiredCount, revokedCount] = await Promise.all([
-    db.collection('user_coupons').where(couponWhere).count(),
-    db.collection('user_coupons').where({ ...couponWhere, status: 'used' }).count(),
-    db.collection('user_coupons').where({ ...couponWhere, status: 'expired' }).count(),
-    db.collection('user_coupons').where({ ...couponWhere, status: 'revoked' }).count(),
-  ])
-
-  const usageWhere = scope !== 'general' ? { businessType: scope } : {}
-  const usageRes = await db.collection('coupon_usage').where(usageWhere).get()
-  const totalDiscountAmount = usageRes.data.reduce((sum, u) => sum + (u.discountAmount || 0), 0)
-
-  const templates = await db.collection('coupon_templates')
-    .where({ ...templateWhere, status: _.in(['active', 'paused', 'ended']) })
-    .orderBy('createdAt', 'desc')
-    .limit(5)
-    .get()
-
-  const topTemplates = await Promise.all(templates.data.map(async t => {
-    const [tIssued, tUsed] = await Promise.all([
-      db.collection('user_coupons').where({ templateId: t._id }).count(),
-      db.collection('user_coupons').where({ templateId: t._id, status: 'used' }).count(),
-    ])
-    const tDiscountRes = await db.collection('coupon_usage').where({ templateId: t._id }).get()
-    const tDiscount = tDiscountRes.data.reduce((sum, u) => sum + (u.discountAmount || 0), 0)
-    return {
-      _id: t._id,
-      name: t.name,
-      type: t.type,
-      status: t.status,
-      issued: tIssued.total,
-      used: tUsed.total,
-      usageRate: tIssued.total > 0 ? Math.round((tUsed.total / tIssued.total) * 10000) / 100 : 0,
-      totalDiscount: Math.round(tDiscount * 100) / 100,
-    }
-  }))
-
-  const issued = issuedCount.total
-  const used = usedCount.total
-
-  return handleSuccess({
-    templates: { total: totalTemplates.total, active: activeTemplates.total },
-    coupons: {
-      issued, used,
-      expired: expiredCount.total,
-      revoked: revokedCount.total,
-      usageRate: issued > 0 ? Math.round((used / issued) * 10000) / 100 : 0,
-    },
-    amount: { totalDiscount: Math.round(totalDiscountAmount * 100) / 100 },
-    topTemplates,
-  })
-}
-
-async function getOperationLogList(event, context, auth) {
-  const { module, action, operatorId, page = 1, pageSize = 20 } = event
-  const where = {}
-  if (module) {where.module = module}
-  if (action) {where.action = action}
-  if (operatorId) {where.operatorId = operatorId}
-
-  const result = await paginate(db, 'operation_logs', {
-    page, pageSize, where,
-    orderBy: { field: 'createdAt', direction: 'desc' },
-  })
-  return handleSuccess(result)
-}
-
 module.exports = {
   // 模板管理
   createCouponTemplate, updateCouponTemplate, deleteCouponTemplate,
   toggleCouponTemplateStatus, cloneCouponTemplate,
   getTemplateList, getTemplateDetail,
   // 发放管理
-  createCouponGrant, getGrantList, getGrantDetail,
-  // 用户优惠券
-  getUserCouponList, grantCouponToUser, revokeUserCoupon, batchRevokeUserCoupons,
-  // 统计
-  getScopeStatistics, getCouponStatistics: getScopeStatistics, getOperationLogList,
+  createCouponGrant,
   // 工具函数导出（供 couponService 使用）
   generateCouponCode, calculateCouponDiscount,
   // 索引初始化

@@ -165,6 +165,7 @@ export interface AvailableCoupon {
   couponCode?: string
   type?: CouponType
   rules?: CouponRules
+  status?: CouponStatus
   discountAmount: number
   endTime?: Date | string
 }
@@ -282,7 +283,8 @@ export function generateCouponCode(): string {
 // =====================================================================
 
 /** 优惠券状态枚举（与 CouponStatus 类型对应） */
-const VALID_COUPON_STATUSES = ['unused', 'locked', 'used', 'expired'] as const
+// revoked：后台撤销后置为 revoked，纳入合法枚举（getMyCoupons 状态过滤/展示用）
+const VALID_COUPON_STATUSES = ['unused', 'locked', 'used', 'expired', 'revoked'] as const
 
 /**
  * 业务类型白名单（与项目 memory 中 VALID_BUSINESS_TYPES 约定一致）。
@@ -367,6 +369,10 @@ export function calculateCouponDiscount(
   // P3-2: 使用整数分计算避免浮点精度问题（项目 memory 要求资金计算用整数分）
   //   例如 orderAmount=19.99, discountRate=0.85 时浮点运算可能出现 0.01 元误差
   const orderAmountInFen = Math.round(orderAmount * 100)
+  // P1-6: 实付下限 0.1 元——订单金额 ≤ 0.1 元时不可用券
+  if (orderAmountInFen <= 10) {
+    return { eligible: false, message: '订单金额过小，无法使用优惠券' }
+  }
 
   // R3: threshold 也统一为分比较，避免元比较与分计算不一致
   if (rules.threshold) {
@@ -399,8 +405,9 @@ export function calculateCouponDiscount(
     return { eligible: false, message: '未知优惠券类型' }
   }
 
-  // 折扣不能超过订单金额
-  discountAmountInFen = Math.min(discountAmountInFen, orderAmountInFen)
+  // 折扣不能超过订单金额，且抵扣后实付保留 0.1 元下限
+  // （与前端 computeFinalAmount 及各业务服务下单校验口径一致，避免全额抵扣单在后端被拒）
+  discountAmountInFen = Math.min(discountAmountInFen, orderAmountInFen - 10)
   // 转回元
   const discountAmount = discountAmountInFen / 100
 
@@ -472,13 +479,16 @@ export async function getAvailableCoupons(
 
   const couponWhere: Record<string, unknown> = {
     ownerId: auth.openid,
-    status: 'unused',
+    // P2 修复：包含 locked（用户锁券后重进结算页仍能看到自己的券，前端对 locked 做明确提示），
+    //   与 getMyCoupons 的可用状态口径一致。
+    status: _.in(['unused', 'locked']),
     startTime: _.lte(now),
     endTime: _.gte(now),
     applicableScopes: _.or([
       _.eq([]),
       _.size(0),
-      _.in([business]),
+      // 兼容历史 'all' 存储值（后台已归一化为空数组，但历史数据可能含 'all'）
+      _.in([business, 'all']),
     ]),
   }
 
@@ -502,6 +512,7 @@ export async function getAvailableCoupons(
         couponCode: coupon.couponCode,
         type: coupon.type,
         rules: coupon.rules,
+        status: coupon.status,
         discountAmount: result.discountAmount,
         endTime: coupon.endTime,
       })
@@ -537,7 +548,11 @@ export async function getClaimableTemplates(
     remaining: _.gt(0),
   }
   if (business) {
-    where.applicableScopes = _.in([business])
+    where.applicableScopes = _.or([
+      _.eq([]),
+      _.size(0),
+      _.in([business, 'all']),
+    ])
   }
 
   const result = await paginate(db, 'coupon_templates', {
@@ -549,7 +564,7 @@ export async function getClaimableTemplates(
   if (result.list && result.list.length > 0) {
     const templateIds: string[] = result.list.map((t) => t._id || '').filter(Boolean)
     const claimedRes = await db.collection('user_coupons')
-      .where({ templateId: _.in(templateIds), ownerId: auth.openid, status: _.in(['unused', 'locked']) })
+      .where({ templateId: _.in(templateIds), ownerId: auth.openid, status: 'unused' })
       .get()
     const claimedMap: Record<string, number> = {}
     for (const c of (claimedRes.data || []) as UserCoupon[]) {
@@ -604,6 +619,8 @@ export async function claimCoupon(
   // 时间校验前置
   const now = new Date()
   const startTime = template.validFrom ? new Date(template.validFrom) : now
+  // P2 修复：未生效模板（validFrom 在未来）不允许提前领取（弹窗/领券中心/API 统一拦截）
+  if (template.validFrom && startTime > now) { throw err('BUSINESS_ERROR', '该优惠券尚未生效') }
   let endTime: Date
   if (template.validDays) {
     endTime = new Date(now.getTime() + template.validDays * 24 * 60 * 60 * 1000)
@@ -616,7 +633,8 @@ export async function claimCoupon(
 
   // P0-2: perUserLimit 预检（防呆，并发场景最终一致性靠事务保证）
   const existingCount = await db.collection('user_coupons')
-    .where({ templateId, ownerId: auth.openid, status: _.in(['unused', 'locked']) })
+    // 口径统一：仅 unused 占用名额（locked 为临时占用，与后台发放逻辑一致）
+    .where({ templateId, ownerId: auth.openid, status: 'unused' })
     .count()
   if (existingCount.total >= (template.perUserLimit || 1)) {
     throw err('COUPON_LIMIT_REACHED', `每人限领${template.perUserLimit || 1}张`)
@@ -790,36 +808,36 @@ export async function useCoupon(
   // P3-6: 使用辅助函数加载并鉴权（useCoupon 要求状态为 locked）
   const coupon = await loadAndAuthorizeCoupon(couponId, auth.openid, 'locked')
 
+  // P2 修复：核销订单与锁定订单不一致时告警（mall/tuan 前端锁的是临时 orderId，
+  //   支付回调传真实 _id，属于设计内差异；此处仅提示，便于对账排查）
+  if (coupon.orderId && orderId && coupon.orderId !== orderId) {
+    logger.warn('useCoupon.orderIdMismatch', {
+      couponId, lockedOrderId: coupon.orderId, useOrderId: orderId,
+    })
+  }
+
   // P0-3: 服务端重新计算 discountAmount，不信任客户端传入
-  //   - 若调用方传入了 originalAmount，则按 coupon.rules 重算并校验
-  //   - 若未传入 originalAmount（如内部回调），使用客户端传入的 discountAmount 兜底
-  //   - 客户端传入的 discountAmount 与服务端计算不一致时，拒绝核销（防伪造）
-  let verifiedDiscountAmount = 0
-  let verifiedOriginalAmount = 0
-  if (typeof originalAmount === 'number' && originalAmount > 0) {
-    verifiedOriginalAmount = originalAmount
-    const calcResult = calculateCouponDiscount(coupon, originalAmount)
-    if (!calcResult.eligible || calcResult.discountAmount === undefined) {
-      throw err('BUSINESS_ERROR', `优惠券核销校验失败：${calcResult.message || '不满足使用条件'}`)
-    }
-    verifiedDiscountAmount = calcResult.discountAmount
-    // 客户端传入的 discountAmount 必须与服务端计算一致（允许 0.01 元浮点误差）
-    if (typeof discountAmount === 'number' &&
-        Math.abs(discountAmount - verifiedDiscountAmount) > 0.01) {
-      logger.warn('useCoupon.amountMismatch', {
-        couponId, orderId,
-        clientDiscount: discountAmount,
-        serverDiscount: verifiedDiscountAmount,
-      })
-      throw err('PAYMENT_AMOUNT_MISMATCH',
-        `优惠券折扣金额校验失败：期望 ${verifiedDiscountAmount}，实际 ${discountAmount}`)
-    }
-  } else if (typeof discountAmount === 'number' && discountAmount >= 0) {
-    // 兼容旧调用方：未传 originalAmount 时信任 discountAmount（仅限内部可信调用）
-    verifiedDiscountAmount = discountAmount
-    verifiedOriginalAmount = typeof finalAmount === 'number'
-      ? finalAmount + discountAmount
-      : 0
+  //   - originalAmount 必传（核销是资金相关操作，服务端必须能重算，防金额伪造）
+  //   - 客户端传入的 discountAmount 与服务端计算不一致时，拒绝核销
+  if (typeof originalAmount !== 'number' || originalAmount <= 0) {
+    throw err('INVALID_PARAMS', '缺少有效的订单原价')
+  }
+  const verifiedOriginalAmount = originalAmount
+  const calcResult = calculateCouponDiscount(coupon, originalAmount)
+  if (!calcResult.eligible || calcResult.discountAmount === undefined) {
+    throw err('BUSINESS_ERROR', `优惠券核销校验失败：${calcResult.message || '不满足使用条件'}`)
+  }
+  const verifiedDiscountAmount = calcResult.discountAmount
+  // 客户端传入的 discountAmount 必须与服务端计算一致（允许 0.01 元浮点误差）
+  if (typeof discountAmount === 'number' &&
+      Math.abs(discountAmount - verifiedDiscountAmount) > 0.01) {
+    logger.warn('useCoupon.amountMismatch', {
+      couponId, orderId,
+      clientDiscount: discountAmount,
+      serverDiscount: verifiedDiscountAmount,
+    })
+    throw err('PAYMENT_AMOUNT_MISMATCH',
+      `优惠券折扣金额校验失败：期望 ${verifiedDiscountAmount}，实际 ${discountAmount}`)
   }
 
   const usageRecord: CouponUsage = {
@@ -989,9 +1007,18 @@ export async function getPopupCoupon(
   // P2-4: 修正 canClaim 计算——按 perUserLimit 对比，而非简单的"是否已领过"
   //   原 bug：用户领取过 1 张但 perUserLimit=2 时，弹窗不再显示该券
   //   修复：聚合每个模板的已领数，与 perUserLimit 比较决定是否可领
-  const templateIds: string[] = (templates.data as CouponTemplate[]).map((t) => t._id || '').filter(Boolean)
+  const now = new Date()
+  // P2 修复：未生效（validFrom 在未来）的模板不参与弹窗
+  const activeTemplates = (templates.data as CouponTemplate[]).filter((t) => {
+    if (t.validFrom) {
+      const start = new Date(t.validFrom)
+      if (start > now) { return false }
+    }
+    return true
+  })
+  const templateIds: string[] = activeTemplates.map((t) => t._id || '').filter(Boolean)
   const claimedRes = await db.collection('user_coupons')
-    .where({ templateId: _.in(templateIds), ownerId: auth.openid, status: _.in(['unused', 'locked']) })
+    .where({ templateId: _.in(templateIds), ownerId: auth.openid, status: 'unused' })
     .get()
 
   const claimedCountMap: Record<string, number> = {}
@@ -1001,7 +1028,7 @@ export async function getPopupCoupon(
     }
   }
 
-  const available = (templates.data as CouponTemplate[]).find((t) => {
+  const available = activeTemplates.find((t) => {
     const claimedCount = claimedCountMap[t._id || ''] || 0
     return claimedCount < (t.perUserLimit || 1)
   })

@@ -150,4 +150,10 @@ export const FIELD_WHITELISTS: Record<string, string[]> = {
     'skuType', 'specGroups', 'skus', 'specs',
     'minPrice', 'maxPrice',
   ],
+  couponTemplate: [
+    'name', 'type', 'rules', 'applicableScopes', 'applicableItemIds',
+    'stock', 'perUserLimit', 'validFrom', 'validTo', 'validDays',
+    'description', 'useRules', 'coverImage', 'claimable',
+    'popupEnabled', 'popupPage', 'status',
+  ],
 }

@@ -51,7 +51,7 @@
         </view>
       </view>
       <view class="card-stamp status-{{item.status}}">
-        {{item.status==='unused' ? '可使用' : item.status==='used' ? '已使用' : '已过期'}}
+        {{item.status==='unused' ? '可使用' : item.status==='used' ? '已使用' : item.status==='revoked' ? '已撤销' : '已过期'}}
       </view>
     </view>
 

@@ -422,7 +422,8 @@ function computeCouponDiscount(
   const { type, rules } = coupon
   if (!rules) { return { eligible: false, discount: 0, message: '优惠券规则缺失' } }
   const orderAmountInFen = Math.round(orderAmount * 100)
-  if (orderAmountInFen < 0) { return { eligible: false, discount: 0, message: '订单金额异常' } }
+  // P1-6: 实付下限 0.1 元（与 couponService.calculateCouponDiscount 对齐）
+  if (orderAmountInFen <= 10) { return { eligible: false, discount: 0, message: '订单金额过小，无法使用优惠券' } }
   const threshold = rules.threshold as number | undefined
   if (threshold) {
     const thresholdInFen = Math.round(Number(threshold) * 100)
@@ -449,7 +450,7 @@ function computeCouponDiscount(
   default:
     return { eligible: false, discount: 0, message: '未知优惠券类型' }
   }
-  discountInFen = Math.min(discountInFen, orderAmountInFen)
+  discountInFen = Math.min(discountInFen, orderAmountInFen - 10)
   return { eligible: true, discount: discountInFen / 100 }
 }
 
@@ -461,7 +462,8 @@ function computeCouponDiscount(
 async function validateFeedingCoupon(
   openid: string,
   couponId: string,
-  orderAmount: number
+  orderAmount: number,
+  items: string[] = []
 ): Promise<{ discount: number; couponSnapshot: Record<string, unknown> }> {
   if (typeof couponId !== 'string' || couponId.length < 1 || couponId.length > 128) {
     throw err('INVALID_PARAMS', '优惠券ID格式错误')
@@ -473,6 +475,7 @@ async function validateFeedingCoupon(
     startTime?: Date | string
     endTime?: Date | string
     applicableScopes?: string[]
+    applicableItemIds?: string[]
     templateName?: string
     type?: string
     rules?: Record<string, unknown>
@@ -488,6 +491,13 @@ async function validateFeedingCoupon(
   const scopes = Array.isArray(coupon.applicableScopes) ? coupon.applicableScopes : []
   if (scopes.length > 0 && !scopes.includes('all') && !scopes.includes('feeding')) {
     throw err('BUSINESS_ERROR', '该优惠券不适用于上门喂养服务')
+  }
+  // P1-5 修复：指定商品券必须命中服务维度；上门喂养暂无商品维度，带 itemIds 的券一律不可用（fail-closed）
+  if (coupon.applicableItemIds && coupon.applicableItemIds.length > 0) {
+    const hasMatch = items.some((item) => coupon.applicableItemIds!.includes(item))
+    if (!hasMatch) {
+      throw err('BUSINESS_ERROR', '该优惠券不适用于本次服务')
+    }
   }
   const calc = computeCouponDiscount(coupon, orderAmount)
   if (!calc.eligible) {
@@ -587,7 +597,7 @@ export async function createFeedingOrder(
     // P0-1 修复：券折扣以服务端重算为准（不信任客户端 couponDiscount，防金额伪造）
     let validatedCouponDiscount = 0
     if (couponId) {
-      const couponResult = await validateFeedingCoupon(openid, couponId as string, originalAmount)
+      const couponResult = await validateFeedingCoupon(openid, couponId as string, originalAmount, [])
       validatedCouponDiscount = couponResult.discount
     } else if (Number(couponDiscount) > 0) {
       throw err('INVALID_PARAMS', '未选择优惠券时不允许折扣')

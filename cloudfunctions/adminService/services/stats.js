@@ -215,6 +215,21 @@ async function getOrderTypeStats(event) {
   }
 }
 
+/**
+ * P2 修复：CloudBase get() 默认单次上限 100 条，统计数据必须分批取全，
+ *   否则 coupon_usage/模板排行会被静默截断（核销金额/带动订单数偏小）。
+ */
+async function fetchAllPaged(collectionName, where = {}, pageSize = 1000, maxPages = 50) {
+  const all = []
+  for (let page = 0; page < maxPages; page++) {
+    const res = await db.collection(collectionName).where(where).skip(page * pageSize).limit(pageSize).get()
+    const rows = res.data || []
+    all.push(...rows)
+    if (rows.length < pageSize) { break }
+  }
+  return all
+}
+
 async function getCouponStats(event) {
   try {
     const { startDate, endDate, templateId, days: daysParam } = event
@@ -231,27 +246,28 @@ async function getCouponStats(event) {
       db.collection('user_coupons').where({ ...userCouponWhere, status: 'used' }).count(),
     ])
 
-    // 使用记录统计
+    // 使用记录统计（分批取全，避免 100 条截断导致金额/订单数失真）
     const usageWhere = templateId ? { templateId } : {}
-    const usageRes = await db.collection('coupon_usage').where(usageWhere).get()
+    const usageRecords = await fetchAllPaged('coupon_usage', usageWhere)
     let totalUsedAmount = 0
     let discountAmount = 0
-    for (const u of (usageRes.data || [])) {
+    for (const u of usageRecords) {
       totalUsedAmount += Number(u.originalAmount) || 0
       discountAmount += Number(u.discountAmount) || 0
     }
-    const drivenOrders = (usageRes.data || []).length
+    const drivenOrders = usageRecords.length
 
-    // 按模板统计：先获取所有模板，再逐个 count + 领取明细
-    const templatesRes = await db.collection('coupon_templates').limit(100).get()
+    // 按模板统计：先分批获取全部模板，再逐个 count + 领取明细
+    const templates = await fetchAllPaged('coupon_templates', {})
     const byTemplate = []
-    for (const t of (templatesRes.data || [])) {
+    for (const t of templates) {
       const [grantCount, usedCount] = await Promise.all([
         db.collection('user_coupons').where({ ...userCouponWhere, templateId: t._id }).count(),
         db.collection('user_coupons').where({ ...userCouponWhere, templateId: t._id, status: 'used' }).count(),
       ])
       if (grantCount.total > 0) {
-        // 获取领取明细
+        // 获取领取明细（页面展开表格无分页，展示侧保留 100 条上限；
+        //   统计口径 grantCount/usedCount 用 count() 不受此限制）
         const detailsRes = await db.collection('user_coupons').where({
           ...userCouponWhere, templateId: t._id,
         }).field({ ownerId: true, source: true, status: true, receivedAt: true }).limit(100).get()

@@ -156,7 +156,7 @@ Page({
   // ===== 上门时间选择器 =====
   onShowTimePicker() {
     let hourIdx = 9
-    let minuteIdx = 0
+    const minuteIdx = 0
     if (this.data.visitHour) {
       const h = parseInt(this.data.visitHour, 10)
       hourIdx = Math.max(0, Math.min(h, this.data.timeHourOptions.length - 1))
@@ -349,7 +349,7 @@ Page({
         wx.showToast({ title: '下单成功', icon: 'success' })
         setTimeout(() => {
           wx.redirectTo({
-            url: '/subpackages/feeding/order-status?orderId=' + orderId,
+            url: `/subpackages/feeding/order-status?orderId=${orderId}`,
           })
         }, 1500)
       }
@@ -482,7 +482,9 @@ Page({
     } else if (this.data.couponDiscount !== finalCouponDiscount) {
       this.setData({ couponDiscount: finalCouponDiscount })
     }
-    this._loadAvailableCoupons()
+    // P1-4 修复：此前未传 business 导致默认按 mall 查询，
+    //   喂养专属券不显示、商城券误显示且提交被拒
+    this._loadAvailableCoupons({ business: 'feeding' })
   },
 
 })

@@ -47,11 +47,8 @@
       </el-form-item>
       <el-form-item v-if="form.popupEnabled" label="触发页面">
         <el-select v-model="form.popupPage" placeholder="选择触发页面">
-          <el-option label="宠团团" value="tuan" />
-          <el-option label="商城首页" value="mall" />
-          <el-option label="上门服务" value="feeding" />
-          <el-option label="寄养" value="boarding" />
-          <el-option label="首页" value="home" />
+          <!-- 弹窗仅在小程序"宠团团（discover）"页实现，其余页面值不会触发，暂不提供 -->
+          <el-option label="宠团团（已实现）" value="tuan" />
         </el-select>
       </el-form-item>
       <el-form-item label="发放总量" prop="stock"><el-input-number v-model="form.stock" :min="1" controls-position="right" /></el-form-item>
