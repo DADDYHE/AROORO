@@ -19,7 +19,6 @@
 /* ===== 页面容器 ===== */
 .container {
   min-height: 100vh;
-  background-color: var(--background-color);
   position: relative;
 }
 

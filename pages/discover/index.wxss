@@ -37,7 +37,6 @@
 /* ===== 页面容器 ===== */
 .tuan-page {
   height: 100vh;
-  background-color: var(--background-color);
   background-image: var(--zy-paper-noise);
   background-repeat: repeat;
   display: flex;
@@ -51,7 +50,6 @@
 
 /* ===== 顶部品牌区（编辑式极简） ===== */
 .tuan-header {
-  background: var(--background-color);
   padding: 0;
   position: relative;
   flex-shrink: 0;

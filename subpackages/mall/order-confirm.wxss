@@ -6,11 +6,6 @@
    ================================================================ */
 @import '../../styles/loading-animation.wxss';
 @import '../../styles/components.wxss';
-
-page {
-  background-color: var(--background-color);
-}
-
 /* ===== 入场动画 ===== */
 @keyframes fadeInUp {
   0% {
@@ -31,7 +26,6 @@ page {
 /* ===== 页面容器 ===== */
 .page-container {
   min-height: 100vh;
-  background: var(--background-color);
   padding-bottom: calc(160rpx + env(safe-area-inset-bottom));
 }
 
@@ -586,7 +580,6 @@ page {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: var(--background-color);
   padding: 0 40rpx;
   animation-name: fadeIn;
   animation-duration: 600ms;

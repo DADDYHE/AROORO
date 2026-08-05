@@ -20,7 +20,6 @@
 /* ===== 页面容器 ===== */
 .payment-page {
   min-height: 100vh;
-  background: var(--background-color);
   padding-bottom: calc(200rpx + env(safe-area-inset-bottom));
 }
 

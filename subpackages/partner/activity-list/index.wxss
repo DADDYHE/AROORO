@@ -10,7 +10,6 @@
 
 /* ---------- 筛选吸顶区（停靠在导航栏下方） ---------- */
 .filter-section {
-  background: var(--background-color);
   position: sticky;
   top: 0;
   left: 0;

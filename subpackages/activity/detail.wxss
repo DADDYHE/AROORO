@@ -4,11 +4,6 @@
    Hero 全出血大图 + 发丝描边卡片 + 克制动效
    Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
    ================================================================ */
-
-page {
-  background-color: var(--background-color);
-}
-
 /* ===== 入场动画 ===== */
 @keyframes fadeInUp {
   0% {
@@ -34,7 +29,6 @@ page {
 /* ===== 页面容器 ===== */
 .page-container {
   min-height: 100vh;
-  background-color: var(--background-color);
   position: relative;
 }
 
@@ -707,7 +701,6 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--background-color);
   z-index: 1000;
 }
 
@@ -753,7 +746,6 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--background-color);
   z-index: 1000;
 }
 

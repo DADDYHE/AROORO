@@ -2,7 +2,6 @@
 
 .page-container {
   min-height: 100vh;
-  background: var(--background-color);
   padding: 24rpx var(--page-padding, 48rpx);
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }

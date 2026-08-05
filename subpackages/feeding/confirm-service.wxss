@@ -34,7 +34,6 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--background-color);
   position: relative;
   padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
 }
@@ -507,7 +506,6 @@
   overflow: hidden;
   flex-shrink: 0;
   border: 1rpx solid var(--hairline);
-  background-color: var(--background-color);
   margin-right: 24rpx;
 }
 
@@ -1059,7 +1057,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--background-color);
   border-radius: var(--zy-radius-md);
   flex-shrink: 0;
   margin-right: 20rpx;

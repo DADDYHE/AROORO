@@ -5,14 +5,9 @@
    ================================================================ */
 
 /* ===== 页面级变量覆盖（板块锚定深林绿） ===== */
-page {
-  background-color: var(--background-color);
-}
-
 /* ===== 容器 ===== */
 .page-container {
   min-height: 100vh;
-  background-color: var(--background-color);
   position: relative;
   overflow-x: hidden;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
@@ -72,7 +67,6 @@ page {
   gap: 12rpx;
   flex-wrap: wrap;
   justify-content: flex-start;
-  background-color: var(--background-color);
   position: relative;
   z-index: 10;
   border-bottom: 1rpx solid var(--hairline);

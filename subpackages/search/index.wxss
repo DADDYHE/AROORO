@@ -16,7 +16,6 @@
 /* ===== 页面容器 ===== */
 .search-page {
   min-height: 100vh;
-  background: var(--background-color);
 }
 
 /* ===== 搜索栏 ===== */

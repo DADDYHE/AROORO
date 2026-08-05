@@ -254,7 +254,6 @@
 
 .container {
   padding: 0;
-  background-color: var(--background-color);
   min-height: 100vh;
 }
 
@@ -470,7 +469,6 @@
 .price-section.disabled {
   opacity: 0.5;
   pointer-events: none;
-  background-color: var(--background-color);
 }
 
 .price-section.disabled .price-symbol,

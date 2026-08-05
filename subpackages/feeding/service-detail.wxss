@@ -15,7 +15,6 @@
 
 /* ===== 页面容器 ===== */
 .page {
-  background-color: var(--background-color);
   min-height: 100vh;
   padding-bottom: calc(80rpx + env(safe-area-inset-bottom));
 }

@@ -25,7 +25,6 @@
 /* ===== 页面容器 ===== */
 .page-container {
   min-height: 100vh;
-  background-color: var(--background-color);
   display: flex;
   flex-direction: column;
 }
@@ -99,7 +98,6 @@
 }
 
 .subcat-list {
-  background-color: var(--background-color);
 }
 
 .subcat-item {
@@ -130,7 +128,6 @@
 .content-area {
   flex: 1;
   overflow-y: auto;
-  background-color: var(--background-color);
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 

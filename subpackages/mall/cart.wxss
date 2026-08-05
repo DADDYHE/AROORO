@@ -4,11 +4,6 @@
    发丝描边 + 奶油纸感底 + 金色 CTA 光晕
    Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
    ================================================================ */
-
-page {
-  background-color: var(--background-color);
-}
-
 /* ===== 入场动画 ===== */
 @keyframes fadeInUp {
   0% {
@@ -30,7 +25,6 @@ page {
 .page-container {
   min-height: 100vh;
   padding-bottom: calc(160rpx + env(safe-area-inset-bottom));
-  background-color: var(--background-color);
 }
 
 /* ===== 购物车列表 ===== */

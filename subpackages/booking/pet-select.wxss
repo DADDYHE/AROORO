@@ -22,7 +22,6 @@
 /* ===== 容器 ===== */
 .gallery-container {
   min-height: 100vh;
-  background-color: var(--background-color);
   padding: 0 0 calc(200rpx + env(safe-area-inset-bottom));
 }
 
@@ -220,7 +219,6 @@
   border-radius: 20rpx;
   overflow: hidden;
   flex-shrink: 0;
-  background: var(--background-color);
   border: 1rpx solid var(--hairline);
   position: relative;
 }
@@ -662,7 +660,6 @@
 
 .popup-cancel-btn {
   padding: 12rpx 24rpx;
-  background: var(--background-color);
   border-radius: var(--zy-radius-pill);
   transition: transform var(--transition-fast);
 }
@@ -755,7 +752,6 @@
   width: 52rpx;
   height: 52rpx;
   border-radius: 50%;
-  background: var(--background-color);
   display: flex;
   align-items: center;
   justify-content: center;

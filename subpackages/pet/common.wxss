@@ -6,7 +6,6 @@
 
 /* ===== 页面级变量 ===== */
 page {
-  background-color: var(--background-color);
   font-family: var(--font-sans);
 }
 
@@ -30,7 +29,6 @@ page {
 /* ===== 页面容器 ===== */
 .gallery-container {
   min-height: 100vh;
-  background-color: var(--background-color);
   position: relative;
   overflow-x: hidden;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));

@@ -6,7 +6,6 @@
 /* 容器 */
 .hosts-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--background-color) 0%, var(--card-color) 100%);
   position: relative;
   overflow-x: hidden;
 }
@@ -121,7 +120,6 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: linear-gradient(135deg, var(--background-color) 0%, var(--card-color) 100%);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   border-bottom: 1rpx solid var(--hairline);

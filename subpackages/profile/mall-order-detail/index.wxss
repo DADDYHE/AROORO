@@ -8,7 +8,6 @@
    把旧橄榄坐标系带回来（详见 #10）。 */
 
 .page {
-  background: var(--background-color);
   min-height: 100vh;
   padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
 }

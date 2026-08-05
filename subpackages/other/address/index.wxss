@@ -15,14 +15,8 @@
     transform: translateY(0);
   }
 }
-
-page {
-  background-color: var(--background-color);
-}
-
 .page-container {
   min-height: 100vh;
-  background: var(--background-color);
   padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;

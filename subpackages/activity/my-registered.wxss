@@ -8,10 +8,6 @@
    把旧橄榄坐标系带回来（详见 #10）。 */
 
 /* ===== 页面级 ===== */
-page {
-  background-color: var(--background-color);
-}
-
 /* ===== 入场动画 ===== */
 @keyframes fadeInUp {
   0% {
@@ -32,7 +28,6 @@ page {
 /* ===== 容器 ===== */
 .page-container {
   min-height: 100vh;
-  background-color: var(--background-color);
   position: relative;
   overflow-x: hidden;
   padding: calc(var(--zy-space-xl) + env(safe-area-inset-top)) 0 calc(48rpx + env(safe-area-inset-bottom));

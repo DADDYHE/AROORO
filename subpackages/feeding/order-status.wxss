@@ -10,7 +10,6 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--background-color);
   position: relative;
 }
 
@@ -340,7 +339,6 @@
   overflow: hidden;
   flex-shrink: 0;
   border: 1rpx solid var(--gray-200);
-  background-color: var(--background-color);
   margin-right: 24rpx;
 }
 
@@ -419,7 +417,6 @@
   padding: 60rpx 32rpx;
   color: var(--gray-500);
   font-size: 26rpx;
-  background-color: var(--background-color);
   border-radius: 16rpx;
   margin: 24rpx 32rpx 32rpx;
 }

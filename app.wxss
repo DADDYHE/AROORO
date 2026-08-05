@@ -18,9 +18,10 @@
    ================================================================ */
 
 page {
-  background-color: var(--background-color);
-  background-image: var(--zy-paper-noise);
-  background-repeat: repeat;
+  background-color: #ECE4D4;
+  background-image: var(--zy-paper-noise), linear-gradient(180deg, #FBF9F4 0%, #F7F5EF 8%, #ECE4D4 100%);
+  background-repeat: repeat, no-repeat;
+  background-size: auto, 100% 100%;
   font-family: var(--font-regular);
   font-size: var(--zy-fs-md);
   color: var(--text-primary);

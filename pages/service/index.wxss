@@ -11,12 +11,10 @@
 
 page {
   height: 100vh;
-  background-color: var(--background-color);
 }
 
 .page {
   min-height: 100vh;
-  background-color: var(--background-color);
   padding: 0 var(--page-padding, 48rpx);
   padding-bottom: calc(var(--zy-space-4xl) + env(safe-area-inset-bottom, 0px));
 }

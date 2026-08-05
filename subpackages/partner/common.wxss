@@ -12,7 +12,6 @@
 /* ---------- 页面容器 ---------- */
 .partner-page {
   min-height: 100vh;
-  background-color: var(--background-color);
   padding: 0 var(--page-padding);
   padding-bottom: calc(env(safe-area-inset-bottom) + 32rpx);
   font-family: var(--font-stack);
@@ -20,7 +19,6 @@
 
 .gallery-container {
   min-height: 100vh;
-  background-color: var(--background-color);
   padding: 0 var(--page-padding);
   padding-bottom: calc(env(safe-area-inset-bottom) + 32rpx);
 }

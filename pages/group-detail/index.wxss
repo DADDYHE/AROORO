@@ -26,7 +26,6 @@
 
 .tuan-detail {
   padding-bottom: calc(160rpx + env(safe-area-inset-bottom));
-  background-color: var(--background-color);
   background-image: var(--zy-paper-noise);
   background-repeat: repeat;
   min-height: 100vh;

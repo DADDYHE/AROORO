@@ -40,7 +40,6 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--background-color);
   position: relative;
 }
 
@@ -247,7 +246,6 @@
   overflow: hidden;
   flex-shrink: 0;
   border: 1rpx solid var(--hairline);
-  background-color: var(--background-color);
   position: relative;
   margin-right: var(--zy-space-lg);
 }
