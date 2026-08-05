@@ -60,7 +60,12 @@
   </view>
 
   <root-portal>
-  <view class="floating-cart" hover-class="floating-cart--pressed" hover-stay-time="120" bindtap="onCartTap">
+  <view class="floating-cart {{cartPosReady ? 'is-ready' : ''}}"
+        style="transform: translate({{cartPos.x}}px, {{cartPos.y}}px);"
+        hover-class="floating-cart--pressed" hover-stay-time="120"
+        bindtouchstart="onCartTouchStart"
+        bindtouchmove="onCartTouchMove"
+        bindtouchend="onCartTouchEnd">
     <image class="floating-cart-icon" src="/images/icons/cart-ink.svg" mode="aspectFit"></image>
     <view wx:if="{{cartCount > 0}}" class="floating-cart-badge">
       <text class="floating-cart-badge-text">{{cartCount > 99 ? '99+' : cartCount}}</text>

@@ -323,11 +323,11 @@
   font-family: var(--font-sans);
 }
 
-/* ===== 悬浮购物车（珠宝式金色浮钮） ===== */
+/* ===== 悬浮购物车（珠宝式金色浮钮 · 可拖动） ===== */
 .floating-cart {
   position: fixed;
-  right: 32rpx;
-  bottom: calc(200rpx + env(safe-area-inset-bottom));
+  left: 0;
+  top: 0;
   width: 96rpx;
   height: 96rpx;
   border-radius: 50%;
@@ -338,12 +338,17 @@
   box-shadow: var(--shadow-glow-mall);
   z-index: 999;
   border: 1rpx solid var(--border-inverse-20);
-  transition: transform var(--dur-fast) var(--ease-refined),
-              opacity var(--dur-fast) var(--ease-refined);
+  will-change: transform;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-refined);
+}
+
+.floating-cart.is-ready {
+  opacity: 1;
 }
 
 .floating-cart--pressed {
-  transform: scale(0.92);
+  box-shadow: 0 4rpx 14rpx rgba(26,26,23,0.20), 0 0 0 2rpx rgba(201,162,75,0.40);
 }
 
 .floating-cart-icon {

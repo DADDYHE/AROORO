@@ -21,10 +21,13 @@ Page({
     hasMore: false,
     loading: false,
     cartCount: 0,
+    cartPos: { x: 0, y: 0 }, // 视口绝对坐标(px)，由 transform 驱动
+    cartPosReady: false,
   },
 
   async onLoad() {
     this._initNavbarHeight()
+    this._initCartPos()
     this._refreshCartCount()
     this.setData({ categories: mallCategories })
     try {
@@ -171,6 +174,57 @@ Page({
 
   onShow() {
     this._refreshCartCount()
+  },
+
+  _initCartPos() {
+    const info = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync())
+    const rpx = info.windowWidth / 750
+    const btn = 96 * rpx
+    const margin = 32 * rpx
+    const gapBottom = 200 * rpx
+    const safeBottom = info.safeArea ? (info.windowHeight - info.safeArea.bottom) : 0
+    this._cartBtnPx = btn
+    this._winW = info.windowWidth
+    this._winH = info.windowHeight
+    this.setData({
+      cartPos: {
+        x: info.windowWidth - btn - margin,
+        y: info.windowHeight - btn - gapBottom - safeBottom,
+      },
+      cartPosReady: true,
+    })
+  },
+
+  onCartTouchStart(e) {
+    const t = e.touches[0]
+    this._dragStart = {
+      x: t.clientX,
+      y: t.clientY,
+      btnX: this.data.cartPos.x,
+      btnY: this.data.cartPos.y,
+    }
+    this._dragMoved = false
+  },
+
+  onCartTouchMove(e) {
+    if (!this._dragStart) {return}
+    const t = e.touches[0]
+    const dx = t.clientX - this._dragStart.x
+    const dy = t.clientY - this._dragStart.y
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {this._dragMoved = true}
+    let nx = this._dragStart.btnX + dx
+    let ny = this._dragStart.btnY + dy
+    const maxX = this._winW - this._cartBtnPx
+    const maxY = this._winH - this._cartBtnPx
+    nx = Math.max(0, Math.min(nx, maxX))
+    ny = Math.max(0, Math.min(ny, maxY))
+    this.setData({ 'cartPos.x': nx, 'cartPos.y': ny })
+  },
+
+  onCartTouchEnd() {
+    const moved = this._dragMoved
+    this._dragStart = null
+    if (!moved) {this.onCartTap()}
   },
 
   onCartTap() {
