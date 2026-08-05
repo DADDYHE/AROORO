@@ -71,7 +71,7 @@ export const ORDER_TYPE_LABELS = {
 }
 
 export const SIDEBAR_MENUS = [
-  { title: '数据看板', icon: 'DataAnalysis', path: '/dashboard' },
+  { title: '数据看板', icon: 'DataAnalysis', path: '/dashboard', superAdminOnly: true },
 
   { type: 'section', title: '商品与内容' },
   { title: '商品和团购', icon: 'Goods', path: '/product-menu', children: [
@@ -106,12 +106,12 @@ export const SIDEBAR_MENUS = [
     { title: '档案管理', path: '/hosting/profile' },
   ] },
   { title: '合作伙伴管理', icon: 'Share', path: '/referral', children: [
-    { title: '审批中心', path: '/admin/approval' },
+    { title: '审批中心', path: '/admin/approval', superAdminOnly: true },
     { title: '伙伴管理', path: '/referral' },
   ] },
 
   { type: 'section', title: '财务与用户' },
-  { title: '用户管理', icon: 'User', path: '/user' },
-  { title: '营收情况', icon: 'Money', path: '/finance' },
-  { title: '提现审核', icon: 'WalletFilled', path: '/withdrawal' },
+  { title: '用户管理', icon: 'User', path: '/user', superAdminOnly: true },
+  { title: '营收情况', icon: 'Money', path: '/finance', superAdminOnly: true },
+  { title: '提现审核', icon: 'WalletFilled', path: '/withdrawal', superAdminOnly: true },
 ]

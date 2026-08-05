@@ -3,6 +3,8 @@ const { handleSuccess, handleError, ERROR_CODES } = require('../common/utils')
 const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
 const crypto = require('crypto')
+// P2 修复：webLogin 防爆破限流
+const { withRateLimit } = require('../common/risk-rate-limit')
 
 const { db } = initCloud()
 const logger = createLogger('adminService.auth')
@@ -71,7 +73,6 @@ async function login(event, context, auth) {
   const sessionToken = generateSessionToken()
 
   let admin = null
-  let isNewUser = false
 
   try {
     const adminRes = await db.collection('admins').doc(openid).get()
@@ -81,35 +82,15 @@ async function login(event, context, auth) {
   }
 
   if (!admin) {
-    const newAdmin = {
-      openid,
-      nickName: userInfo?.nickName || '',
-      avatarUrl: userInfo?.avatarUrl || '',
-      realName: '',
-      phone: '',
-      isPartner: false,
-      status: 'active',
-      sessionToken,
-      createdAt: db.serverDate(),
-      updatedAt: db.serverDate(),
-    }
-
-    await db.collection('admins').doc(openid).set({ data: newAdmin })
-    admin = newAdmin
-    isNewUser = true
-
+    // P1 修复：不再自动创建 active 管理员——合作伙伴需经审批流程才写入 admins，
+    //   任意小程序用户登录即插入 admins(status=active) 会污染权限集合，
+    //   且一旦被误配 isPartner/roles 即形成越权面。
+    logger.info('login.no_admin_record', { openid })
     return handleSuccess({
       isPartner: false,
-      isNewUser,
-      sessionToken,
-      adminInfo: {
-        _id: openid,
-        isPartner: false,
-        nickName: admin.nickName || '',
-        avatarUrl: admin.avatarUrl || '',
-        realName: '',
-        phone: '',
-      },
+      isNewUser: true,
+      sessionToken: '',
+      adminInfo: null,
     })
   }
 
@@ -180,6 +161,12 @@ async function webLogin(event, context, auth) {
     throw err('INVALID_PARAMS', '参数错误')
   }
 
+  // P2 修复：登录接口防爆破——按用户名每分钟最多 10 次尝试
+  await withRateLimit(
+    { userId: `web_login:${String(username).slice(0, 64)}`, type: 'web_login' },
+    async () => null
+  )
+
   const adminDb = getAdminDb()
   const adminRes = await adminDb.collection('admins')
     .where({ username, status: 'active' })
@@ -202,7 +189,7 @@ async function webLogin(event, context, auth) {
   }
 
   const { generateToken } = require('../common/token-utils')
-  const { isSuperAdmin } = require('../common/permissions')
+  const { isSuperAdmin, isPartner: isPartnerFn } = require('../common/permissions')
 
   const token = generateToken({
     openid: admin.openid,
@@ -218,12 +205,29 @@ async function webLogin(event, context, auth) {
       openid: admin.openid,
       nickName: admin.nickName || admin.username,
       avatarUrl: admin.avatarUrl || '',
-      isPartner: admin.isPartner || false,
+      isPartner: isPartnerFn(admin),
+      // P2 修复：前端菜单按角色过滤需要 isSuperAdmin（以 DB roles 实时判定）
+      isSuperAdmin: isSuperAdmin(admin),
     },
   })
 }
 
 async function createScanLogin(event, context, auth) {
+  // P3 修复：生成新扫码 token 前清理过期/已完成的旧记录，避免集合无限增长
+  try {
+    const adminDbForClean = getAdminDb()
+    await adminDbForClean.collection('scanLoginTokens')
+      .where({
+        $or: [
+          { expiresAt: adminDbForClean.command.lt(Date.now()) },
+          { status: adminDbForClean.command.in(['completed', 'denied', 'expired']) },
+        ],
+      })
+      .remove()
+  } catch (e) {
+    logger.warn('createScanLogin.cleanup.failed', { msg: e?.message || String(e) })
+  }
+
   const loginToken = crypto.randomBytes(16).toString('hex')
   const expiresAt = Date.now() + 5 * 60 * 1000
 
@@ -286,7 +290,8 @@ async function pollScanLogin(event, context, auth) {
     }
 
     const { generateToken } = require('../common/token-utils')
-    const isPartner = Boolean(admin.isPartner)
+    const { isSuperAdmin, isPartner: isPartnerFn } = require('../common/permissions')
+    const isPartner = isPartnerFn(admin)
 
     const token = generateToken({
       openid: admin.openid,
@@ -307,6 +312,7 @@ async function pollScanLogin(event, context, auth) {
         nickName: admin.nickName || '',
         avatarUrl: admin.avatarUrl || '',
         isPartner,
+        isSuperAdmin: isSuperAdmin(admin),
       },
     })
   }

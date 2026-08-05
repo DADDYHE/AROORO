@@ -35,6 +35,10 @@ const { filterFields, FIELD_WHITELISTS } = require('./common/validator');
 const { getCache, setCache, deleteCache } = require('./common/cache');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { withRateLimit } = require('./common/risk-rate-limit');
+// P2 修复：isPartner 判定统一走权限工具（roles 含 partner 或 isPartner 布尔任一命中），
+//   避免 login/checkAdminStatus 只认布尔字段导致 roles 授权账号在前端 isPartner=false
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { isPartner: isPartnerFn } = require('./common/permissions');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { cloud, db } = initCloud();
 const logger = createLogger('userService:auth');
@@ -149,7 +153,7 @@ async function login(event, context, auth) {
                 const adminRes = await db.collection('admins').doc(openid).get();
                 const adminInfo = adminRes.data;
                 if (adminInfo && adminInfo.status === 'active') {
-                    isPartner = Boolean(adminInfo.isPartner);
+                    isPartner = isPartnerFn(adminInfo);
                 }
             }
             catch (e) {
@@ -312,6 +316,8 @@ async function updateUserInfo(event, context, auth) {
         }
         if (userExists) {
             await db.collection('users').doc(openid).update({ data: updateData });
+            // P2 修复：资料更新后清除身份缓存，避免 300s TTL 内返回旧数据
+            deleteCache(`identity_${openid}`);
             return handleSuccess(null, '更新用户信息成功');
         }
         else {
@@ -323,6 +329,7 @@ async function updateUserInfo(event, context, auth) {
                 ...safeUserInfo,
             };
             await db.collection('users').doc(openid).set({ data: createData });
+            deleteCache(`identity_${openid}`);
             return handleSuccess(null, '创建用户信息成功');
         }
     }
@@ -410,7 +417,8 @@ async function checkAdminStatus(event, context, auth) {
             });
         }
         if (adminInfo && adminInfo.status === 'active') {
-            const isPartner = Boolean(adminInfo.isPartner);
+            // P2 修复：统一口径（roles 含 partner 或 isPartner 布尔）
+            const isPartner = isPartnerFn(adminInfo);
             return handleSuccess({ isPartner });
         }
         else {

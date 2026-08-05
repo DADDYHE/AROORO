@@ -32,6 +32,10 @@ const { filterFields, FIELD_WHITELISTS } = require('./common/validator')
 const { getCache, setCache, deleteCache } = require('./common/cache')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { withRateLimit } = require('./common/risk-rate-limit')
+// P2 修复：isPartner 判定统一走权限工具（roles 含 partner 或 isPartner 布尔任一命中），
+//   避免 login/checkAdminStatus 只认布尔字段导致 roles 授权账号在前端 isPartner=false
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { isPartner: isPartnerFn } = require('./common/permissions')
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { cloud, db } = initCloud()
@@ -246,7 +250,7 @@ export async function login(
           const adminRes = await db.collection('admins').doc(openid).get()
           const adminInfo = adminRes.data as AdminRecord | null
           if (adminInfo && adminInfo.status === 'active') {
-            isPartner = Boolean(adminInfo.isPartner)
+            isPartner = isPartnerFn(adminInfo)
           }
         } catch (e) {
           logger.warn('login.admins.fetch', {
@@ -428,6 +432,8 @@ export async function updateUserInfo(
 
     if (userExists) {
       await db.collection('users').doc(openid).update({ data: updateData })
+      // P2 修复：资料更新后清除身份缓存，避免 300s TTL 内返回旧数据
+      deleteCache(`identity_${openid}`)
       return handleSuccess(null, '更新用户信息成功')
     } else {
       // L2 修复：复用已过滤+特殊处理的 safeUserInfo（430 行），避免重复 filterFields 且 bio 取值不一致
@@ -438,6 +444,7 @@ export async function updateUserInfo(
         ...safeUserInfo,
       }
       await db.collection('users').doc(openid).set({ data: createData })
+      deleteCache(`identity_${openid}`)
       return handleSuccess(null, '创建用户信息成功')
     }
   } catch (error) {
@@ -535,7 +542,8 @@ export async function checkAdminStatus(
     }
 
     if (adminInfo && adminInfo.status === 'active') {
-      const isPartner = Boolean(adminInfo.isPartner)
+      // P2 修复：统一口径（roles 含 partner 或 isPartner 布尔）
+      const isPartner = isPartnerFn(adminInfo)
       return handleSuccess({ isPartner })
     } else {
       return handleSuccess({ isPartner: false })

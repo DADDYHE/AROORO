@@ -98,7 +98,18 @@ const parentMenuTitle = computed(() => {
 })
 
 const visibleMenus = computed(() => {
+  // P2 修复：按角色过滤菜单——平台级（superAdminOnly）仅超级管理员可见，
+  //   合作伙伴登录不再看到用户管理/财务/提现审核等超管菜单（后端仍会二次鉴权）
+  const isSuperAdmin = auth.admin?.isSuperAdmin === true
   const filtered = SIDEBAR_MENUS
+    .map(menu => {
+      if (menu.superAdminOnly && !isSuperAdmin) {return null}
+      if (menu.children) {
+        return { ...menu, children: menu.children.filter(child => !child.superAdminOnly || isSuperAdmin) }
+      }
+      return menu
+    })
+    .filter(Boolean)
   // 移除连续的 section 标签和首尾的 section 标签
   const result = []
   for (let i = 0; i < filtered.length; i++) {
