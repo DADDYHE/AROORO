@@ -358,7 +358,7 @@
   transform: translate(-50%, -50%);
   width: 32rpx;
   height: 2rpx;
-  background: var(--lux-gold-400);
+  background: var(--accent-color);
 }
 
 .empty-text {

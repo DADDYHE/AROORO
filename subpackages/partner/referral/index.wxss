@@ -231,7 +231,7 @@
 .empty-line {
   width: 48rpx;
   height: 1rpx;
-  background: var(--lux-gold-400);
+  background: var(--accent-color);
   margin-bottom: 20rpx;
 }
 

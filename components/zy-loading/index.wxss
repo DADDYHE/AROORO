@@ -144,7 +144,7 @@
   height: 100rpx;
   top: 10rpx;
   left: 10rpx;
-  border: 2rpx solid var(--lux-gold-400, #D4B978);
+  border: 2rpx solid var(--lux-gold-600, #A8894A);
   border-radius: 50%;
   animation: lux-ring-spin var(--lux-dur-ring-spin, 2400ms) linear infinite;
 }
@@ -183,7 +183,7 @@
   margin-left: -4rpx;
   width: 8rpx;
   height: 8rpx;
-  background: var(--lux-gold-300, #E8D5A8);
+  background: var(--accent-color);
 }
 
 .lux-ring-marker--middle {
@@ -197,7 +197,7 @@
   margin-left: -3rpx;
   width: 6rpx;
   height: 6rpx;
-  background: var(--lux-gold-300, #E8D5A8);
+  background: var(--accent-color);
 }
 
 /* 中心点：呼吸缩放 */
@@ -208,7 +208,7 @@
   width: 10rpx;
   height: 10rpx;
   border-radius: 50%;
-  background: var(--lux-gold-grad, linear-gradient(135deg, #E8D5A8, #C9A24B, #B8923E));
+  background: var(--lux-gold-grad, linear-gradient(135deg, #C9A24B 0%, #A8894A 100%));
   animation: lux-dot-pulse var(--lux-dur-dot-pulse, 2000ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
 }
 

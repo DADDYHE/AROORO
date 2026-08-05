@@ -80,13 +80,13 @@
 .exhibit-amount .currency {
   font-size: 28rpx;
   font-weight: 300;
-  color: var(--lux-gold-400);
+  color: var(--accent-color);
 }
 
 .exhibit-amount .value {
   font-size: 64rpx;
   font-weight: 300;
-  color: var(--lux-gold-300);
+  color: var(--accent-color);
   letter-spacing: 0.01em;
   line-height: 1;
   font-feature-settings: 'tnum';
@@ -119,7 +119,7 @@
 .meta-value {
   font-size: 28rpx;
   font-weight: 300;
-  color: var(--lux-gold-300);
+  color: var(--accent-color);
   font-feature-settings: 'tnum';
 }
 
@@ -326,7 +326,7 @@
 .empty-icon::after {
   content: '';
   position: absolute;
-  background: var(--lux-gold-400);
+  background: var(--accent-color);
   border-radius: 2rpx;
 }
 
@@ -479,6 +479,6 @@
   width: 6rpx;
   height: 6rpx;
   border-radius: 50%;
-  background: var(--lux-gold-400);
+  background: var(--accent-color);
   opacity: 0.5;
 }

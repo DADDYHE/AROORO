@@ -8,7 +8,7 @@
 @import '../../styles/components.wxss';
 
 page {
-  background: var(--background-color);
+  background-color: var(--background-color);
 }
 
 /* ===== 入场动画 ===== */
@@ -38,7 +38,7 @@ page {
 /* ── 通用卡片 ── */
 .info-card {
   background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   padding: var(--zy-space-lg);
   margin-bottom: var(--zy-space-lg);
   border: 1rpx solid var(--hairline);

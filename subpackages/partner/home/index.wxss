@@ -97,7 +97,7 @@
 .income-value {
   font-size: 38rpx;
   font-weight: 300;
-  color: var(--lux-gold-300);
+  color: var(--accent-color);
   letter-spacing: 0.01em;
   font-feature-settings: 'tnum';
 }
@@ -126,7 +126,7 @@
 .entrance-line {
   width: 32rpx;
   height: 1rpx;
-  background: var(--lux-gold-400);
+  background: var(--accent-color);
 }
 
 .entrance-label {

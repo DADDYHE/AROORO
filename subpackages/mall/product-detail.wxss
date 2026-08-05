@@ -7,7 +7,7 @@
 @import '../../styles/loading-animation.wxss';
 
 page {
-  background: var(--background-color);
+  background-color: var(--background-color);
 }
 
 /* ===== 入场动画 ===== */
@@ -166,7 +166,7 @@ page {
 /* ── 通用卡片（编辑式分节） ── */
 .info-card {
   background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   padding: var(--card-padding);
   margin-bottom: var(--zy-space-lg);
   border: 1rpx solid var(--hairline);

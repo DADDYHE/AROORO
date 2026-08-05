@@ -20,22 +20,23 @@
 const { shared, timing, runOnUI, cancelAnimation } = wx.worklet || {}
 
 // 奢侈级变体数据（常量，无需响应式）
+// P0-2 收敛：两档金交替（主金 #C9A24B / 深金 #A8894A），nth1/3/5/7 主、nth2/4/6 深
 const CASCADE_PARTICLES = [
-  { left: 20, color: '#E8D5A8', delay: 0 },
-  { left: 36, color: '#D4B978', delay: 150 },
+  { left: 20, color: '#C9A24B', delay: 0 },
+  { left: 36, color: '#A8894A', delay: 150 },
   { left: 52, color: '#C9A24B', delay: 300 },
-  { left: 68, color: '#D4B978', delay: 450 },
-  { left: 84, color: '#E8D5A8', delay: 600 },
-  { left: 100, color: '#C9A24B', delay: 750 },
-  { left: 48, color: '#D4B978', delay: 900 },
+  { left: 68, color: '#A8894A', delay: 450 },
+  { left: 84, color: '#C9A24B', delay: 600 },
+  { left: 100, color: '#A8894A', delay: 750 },
+  { left: 48, color: '#C9A24B', delay: 900 },
 ]
 
 const SILK_LINES = [
-  { color: '#E8D5A8', delay: 0 },
-  { color: '#D4B978', delay: 100 },
+  { color: '#C9A24B', delay: 0 },
+  { color: '#A8894A', delay: 100 },
   { color: '#C9A24B', delay: 200 },
-  { color: '#D4B978', delay: 300 },
-  { color: '#E8D5A8', delay: 400 },
+  { color: '#A8894A', delay: 300 },
+  { color: '#C9A24B', delay: 400 },
 ]
 
 const MONOGRAM_RINGS = [

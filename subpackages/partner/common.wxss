@@ -108,7 +108,7 @@
 .brand-meta-line {
   width: 32rpx;
   height: 1rpx;
-  background: var(--lux-gold-400);
+  background: var(--accent-color);
   position: relative;
 }
 
@@ -217,7 +217,7 @@
 .entrance-line {
   width: 32rpx;
   height: 1rpx;
-  background: var(--lux-gold-400);
+  background: var(--accent-color);
 }
 
 .entrance-label {
@@ -651,7 +651,7 @@
 .empty-line {
   width: 48rpx;
   height: 1rpx;
-  background: var(--lux-gold-400);
+  background: var(--accent-color);
   margin: 0 auto 24rpx;
 }
 

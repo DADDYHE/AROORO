@@ -204,7 +204,7 @@
   align-items: center;
   padding: 16rpx;
   background-color: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   margin-bottom: 0;
   border: 1rpx solid var(--hairline);
   overflow: visible;

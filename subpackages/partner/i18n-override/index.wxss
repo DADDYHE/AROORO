@@ -56,7 +56,7 @@
 .stat-num {
   font-size: 40rpx;
   font-weight: 300;
-  color: var(--lux-gold-300);
+  color: var(--accent-color);
   letter-spacing: 0.01em;
   font-feature-settings: 'tnum';
   line-height: 1.2;
@@ -333,7 +333,7 @@
 .empty-state .empty-line {
   width: 48rpx;
   height: 1rpx;
-  background: var(--lux-gold-400);
+  background: var(--accent-color);
   margin: 0;
 }
 

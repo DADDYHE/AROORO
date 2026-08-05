@@ -63,11 +63,11 @@
 
   <view class="loading-more" wx:if="{{isLoading}}">
     <view class="lux-silk">
-  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 0ms;"></view>
-  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 100ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 0ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-600, #A8894A); animation-delay: 100ms;"></view>
   <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 200ms;"></view>
-  <view class="lux-silk-line" style="background: var(--lux-gold-400, #D4B978); animation-delay: 300ms;"></view>
-  <view class="lux-silk-line" style="background: var(--lux-gold-300, #E8D5A8); animation-delay: 400ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-600, #A8894A); animation-delay: 300ms;"></view>
+  <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 400ms;"></view>
 </view>
     <text class="loading-more-text">加载中</text>
   </view>

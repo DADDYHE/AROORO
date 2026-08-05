@@ -37,7 +37,9 @@
 /* ===== 页面容器 ===== */
 .tuan-page {
   height: 100vh;
-  background: var(--background-color);
+  background-color: var(--background-color);
+  background-image: var(--zy-paper-noise);
+  background-repeat: repeat;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -126,7 +128,7 @@
 /* ===== 团购卡片（白卡 + 发丝描边 + 微圆角） ===== */
 .deal-card {
   background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   overflow: hidden;
   margin-bottom: var(--zy-space-lg);
   border: 1rpx solid var(--hairline);

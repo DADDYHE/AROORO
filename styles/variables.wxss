@@ -44,15 +44,12 @@ page {
      ================================================================ */
 
   /* ---- 金属香槟金阶（用于强调数字、徽章描边、渐变高光） ---- */
+  /* P0-2 收敛：-300/-400/-700 已删档，收敛为两档金 主金 -500 #C9A24B / 深金 -600 #A8894A */
   --lux-gold-100: #FDF8EE;   /* 最浅：金箔底纹 */
   --lux-gold-200: #F5EBD0;   /* 浅金：柔和高光 */
-  --lux-gold-300: #E8D5A8;   /* 中浅金：渐变中间值 */
-  --lux-gold-400: #D4B978;   /* 中金：主金属色 */
   --lux-gold-500: #C9A24B;   /* 香槟金：品牌点缀锚点 */
-  --lux-gold-600: #B8923E;   /* 深金：描边/按下态 */
-  --lux-gold-700: #9A7430;   /* 最深金：文字/低光 */
-  --lux-gold-grad: linear-gradient(135deg, #E8D5A8 0%, #C9A24B 40%, #B8923E 100%);
-  --lux-gold-grad-soft: linear-gradient(135deg, #FDF8EE 0%, #F5EBD0 50%, #E8D5A8 100%);
+  --lux-gold-600: #A8894A;   /* 深金：描边/按下深态 B′ */
+  --lux-gold-grad: linear-gradient(135deg, #C9A24B 0%, #A8894A 100%);
 
   /* ---- 深森林绿阶（用于深色卡片底、品牌头部、渐变深停） ---- */
   --lux-green-900: #1A2E1A;  /* 极深：暗调底/深色卡 */
@@ -83,13 +80,13 @@ page {
   --lux-ls-number: 0.01em;     /* 数字（紧凑） */
 
   /* ---- 奢侈级圆角（更克制，配合层次阴影） ---- */
-  --lux-radius-card: 20rpx;       /* 主卡片 */
-  --lux-radius-inner: 16rpx;      /* 卡片内元素 */
+  --lux-radius-card: 40rpx;       /* 主卡片（P0-4 升档：20→40） */
+  --lux-radius-inner: 32rpx;      /* 卡片内元素（P0-4 升档：16→32） */
   --lux-radius-pill: 9999rpx;     /* 胶囊按钮 */
 
   /* ---- 金线装饰令牌 ---- */
   --lux-gold-line: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%);
-  --lux-gold-line-solid: linear-gradient(90deg, #E8D5A8 0%, #C9A24B 50%, #B8923E 100%);
+  --lux-gold-line-solid: linear-gradient(90deg, #C9A24B 0%, #A8894A 100%);
 
   /* ---- 卡片底纹令牌 ---- */
   --lux-card-bg: #FFFFFF;

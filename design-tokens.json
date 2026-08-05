@@ -97,7 +97,7 @@
     "lg": "40rpx", "xl": "64rpx", "2xl": "96rpx", "3xl": "128rpx", "4xl": "200rpx"
   },
   "radius": {
-    "_source": "styles/theme-teal.wxss 的 --zy-radius-*（A-1 补档后 4/8/12/16/20/24/32/12rpx）为运行时真值；本块与之对齐。A-1 新增 --zy-radius-xs:4rpx（旧 --border-radius-xs 的 38 处消费缺口档），补档后旧代 --border-radius-* 全族可零动版迁移。旧值整体错 1-2 档（sm 16/md 24/lg 24/xl 32/2xl 32/3xl 40）已废弃。",
+    "_source": "styles/theme-teal.wxss 的 --zy-radius-*（A-1 补档后 4/8/12/16/20/24/32/9999rpx）为运行时真值；本块与之对齐。A-1 新增 --zy-radius-xs:4rpx（旧 --border-radius-xs 的 38 处消费缺口档），补档后旧代 --border-radius-* 全族可零动版迁移。旧值整体错 1-2 档（sm 16/md 24/lg 24/xl 32/2xl 32/3xl 40）已废弃。",
     "xs": "4rpx",
     "sm": "8rpx",
     "md": "12rpx",
@@ -107,8 +107,8 @@
     "3xl": "32rpx",
     "4xl": "40rpx",
     "full": "12rpx",
-    "pill": "12rpx",
-    "_pillNote": "999rpx 胶囊已废弃（Haute-Luxury 去胶囊化 → 矩形微圆角 12rpx）。⚠ A-1 复核：全仓 wxss 中 999rpx/9999rpx 作为 var() 兜底仍存在 5 处（zy-action-sheet / zy-calendar / activity-card / login-prompt 的 var(--border-radius-full/pill, 9999rpx)），属 A-2 前置清理项——删旧代定义前必须先改，否则兜底退回胶囊形。另有 169 处 border-radius:50% 为圆形头像/图标容器，属合法用法，不受本梯子约束。"
+    "pill": "9999rpx",
+    "_pillNote": "P0-4 已裁定：--zy-radius-pill 12rpx → 9999rpx（恢复胶囊，按钮/状态标签全局生效）。此前 A-1 曾注「999rpx 胶囊已废弃（去胶囊化→矩形微圆角 12rpx）」，随 P0-4 反转作废。全仓 wxss 中 999rpx/9999rpx 作为 var() 兜底 5 处（zy-action-sheet / zy-calendar / activity-card / login-prompt 的 var(--border-radius-full/pill, 9999rpx)）现与生效值一致，不再是前置清理项。另有 169 处 border-radius:50% 为圆形头像/图标容器，属合法用法，不受本梯子约束。"
   },
   "shadow": {
     "_source": "styles/theme-teal.wxss L227-234 为运行时真值；本块与之逐字对齐。染色统一 rgba(26,26,23,*)（墨黑 #1A1A17），旧 rgba(42,40,35,*)（#2A2823）已废弃。Haute-Luxury 方向：xs/sm 去阴影改发丝线。",

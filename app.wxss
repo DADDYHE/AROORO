@@ -81,7 +81,7 @@ label, form, block, canvas, video, map, movable-area, movable-view {
 /* ========== 卡片（Haute-Luxury：发丝描边 + 微圆角 + 无阴影） ========== */
 .card {
   background-color: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   border: 1rpx solid var(--hairline);
   padding: var(--card-padding);
   margin-bottom: var(--zy-space-xl);
@@ -179,7 +179,7 @@ label, form, block, canvas, video, map, movable-area, movable-view {
 /* ========== 列表 ========== */
 .list {
   background-color: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   border: 1rpx solid var(--hairline);
   overflow: hidden;
   margin-bottom: var(--zy-space-xl);

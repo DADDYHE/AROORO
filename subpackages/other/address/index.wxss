@@ -17,7 +17,7 @@
 }
 
 page {
-  background: var(--background-color);
+  background-color: var(--background-color);
 }
 
 .page-container {

@@ -26,13 +26,13 @@
     <view wx:if="{{ loading }}" class="loading-container">
       <view class="loading-content">
         <view class="lux-cascade">
-  <view class="lux-cascade-dot" style="left: 20rpx; background: #E8D5A8; animation-delay: 0ms;"></view>
-  <view class="lux-cascade-dot" style="left: 36rpx; background: #D4B978; animation-delay: 150ms;"></view>
+  <view class="lux-cascade-dot" style="left: 20rpx; background: #C9A24B; animation-delay: 0ms;"></view>
+  <view class="lux-cascade-dot" style="left: 36rpx; background: #A8894A; animation-delay: 150ms;"></view>
   <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
-  <view class="lux-cascade-dot" style="left: 68rpx; background: #D4B978; animation-delay: 450ms;"></view>
-  <view class="lux-cascade-dot" style="left: 84rpx; background: #E8D5A8; animation-delay: 600ms;"></view>
-  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
-  <view class="lux-cascade-dot" style="left: 48rpx; background: #D4B978; animation-delay: 900ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #A8894A; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 84rpx; background: #C9A24B; animation-delay: 600ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #A8894A; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
         </view>
         <text class="loading-text">加载中</text>

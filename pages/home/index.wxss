@@ -30,7 +30,7 @@
 page {
   margin: 0;
   padding: 0;
-  background: var(--background-color);
+  background-color: var(--background-color);
 }
 
 /* ===== 下拉刷新指示器（极简） ===== */
@@ -376,7 +376,7 @@ page {
   box-sizing: border-box;
   padding: 36rpx 32rpx;
   background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   border: 1rpx solid var(--hairline);
   position: relative;
   overflow: hidden;
@@ -527,7 +527,7 @@ page {
   flex-direction: column;
   width: 300rpx;
   background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   overflow: hidden;
   border: 1rpx solid var(--hairline);
   flex-shrink: 0;
@@ -601,7 +601,7 @@ page {
   width: 300rpx;
   height: 400rpx;
   position: relative;
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   overflow: hidden;
   flex-shrink: 0;
   margin-right: var(--zy-space-lg);
@@ -708,7 +708,7 @@ page {
 .activity-h-card {
   display: flex;
   background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   overflow: hidden;
   border: 1rpx solid var(--hairline);
   transition-property: transform;
@@ -833,7 +833,7 @@ page {
 /* ===== 未登录提示卡（极简） ===== */
 .login-card {
   background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   padding: 64rpx 40rpx;
   border: 1rpx solid var(--hairline);
   display: flex;
@@ -985,7 +985,7 @@ page {
   min-width: 0;
   padding: 24rpx;
   background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   border: 1rpx solid var(--hairline);
   box-sizing: border-box;
   transition-property: transform;
@@ -1112,7 +1112,7 @@ page {
   min-height: 140rpx;
   padding: 24rpx;
   background: var(--card-cream);
-  border-radius: var(--zy-radius-lg);
+  border-radius: var(--lux-radius-card);
   border: 1rpx dashed var(--border-soft);
   box-sizing: border-box;
   transition-property: transform;
