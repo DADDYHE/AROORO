@@ -262,7 +262,7 @@
   box-shadow: 0 0 0 1rpx rgba(26, 26, 23, 0.16),
               0 0 28rpx rgba(201, 162, 75, 0.35),
               0 10rpx 24rpx rgba(26, 26, 23, 0.16);
-  margin-top: -17rpx; /* 88rpx 钮在 80rpx 带内的上浮量（随钮径 96→88 重算） */
+  margin-top: -4rpx; /* 88rpx 钮在 80rpx 可见区垂直居中：钮心 = 40rpx(−4+44)，与胶囊可见区中心重合（上下各凸出 4rpx） */
   transition: transform 180ms cubic-bezier(0.25, 0.1, 0.25, 1),
               opacity 320ms cubic-bezier(0.19, 1, 0.22, 1);
 }
