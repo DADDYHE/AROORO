@@ -59,13 +59,13 @@
   --tb-bar-bg: rgba(247, 245, 239, 0.96);          /* 奶油米白半透底（非 --zy-tabbar-bg 的纯白） */
   --tb-center-bg: var(--zy-accent);                /* 香槟金平涂底（引用 theme-teal 活令牌 #C9A24B） */
   --tb-center-shadow:
-    0 6rpx 20rpx rgba(31, 58, 31, 0.32),
+    0 6rpx 20rpx rgba(31, 58, 31, 0.40),
     0 2rpx 8rpx rgba(31, 58, 31, 0.20);            /* 深林绿投影（非橄榄绿） */
   --tb-center-shadow-active:
     0 16rpx 44rpx rgba(31, 58, 31, 0.46),
     0 4rpx 14rpx rgba(31, 58, 31, 0.28);
-  --tb-center-border: 2rpx solid var(--zy-primary-700);  /* 深绿实线环（金底压深绿，边缘清晰） */
-  --tb-center-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 100%);
+  --tb-center-border: 4rpx solid var(--zy-primary-700);  /* 深绿画框（4rpx 双倍宽，抗 AA 吞没） */
+  --tb-center-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
   --tb-center-inner-shadow: linear-gradient(0deg, rgba(168, 137, 74, 0.30) 0%, transparent 100%);
 
   position: fixed;
@@ -250,7 +250,7 @@
   }
   50% {
     transform: scale(1.04);
-    opacity: 0.95;
+    opacity: 1;
   }
 }
 
