@@ -1,10 +1,11 @@
 /* ================================================================
-   custom-tab-bar/index.wxss · AROORO TabBar · Haute-Luxury C6
+   custom-tab-bar/index.wxss · AROORO TabBar · 方案A 悬浮缎面珠宝盘
    ----------------------------------------------------------------
-   高奢 TabBar（C6 融合方案）：
-     · 暖石纸纹底座（#ECE4D4）+ 金发丝顶线
-     · 选中指示：金圆点 = 图标容器（金平涂 + 金晕，取代旧顶部短线）
-     · 中央按钮：香槟金平涂 + 深绿实环背衬 + 金属高光（金 CTA 化）
+   高奢 TabBar（DADDY 选定方案 A · 悬浮缎面珠宝盘）：
+     · 悬浮胶囊：缎面渐变底 + 纸纹(::before) + 顶部高光(::after)
+     · 选中指示：金点(icon-wrap::after 弹入) + 图标炭墨 + 金晕
+     · 中央按钮：香槟金平涂 + 炭墨镶边 + 独立金晕层呼吸
+       （珠宝静置托盘上，只有光在呼吸；深绿完全退出 tabBar）
      · 图标线条细，文字极轻；选中态切换炭墨资产
    ----------------------------------------------------------------
    设计系统：styles/theme-teal.wxss（深森林绿体系 · 事实生效层）
@@ -48,7 +49,7 @@
 }
 
 /* ================================================================
-   导航栏容器 — 暖石纸纹底 + 金发丝顶线
+   导航栏容器 — 悬浮缎面胶囊（底渐变 + 纸纹 ::before + 高光 ::after）
    ================================================================ */
 .tab-bar {
   /* ---- 组件内局部令牌 ----------------------------------------
@@ -56,32 +57,22 @@
      子树会被搬出宿主节点，:host 上的自定义属性无法继承进来。
      .tab-bar 是 portal 子树的根，其后代（中心按钮等）均可继承。
      以下值在 theme-teal 中无精确等价物，就地令牌化以保证零外观改变。 */
-  --tb-bar-bg: rgba(236, 228, 212, 0.96);            /* 暖石浅底（#ECE4D4 @0.96，= --zy-paper-fallback 值）；DADDY 选定暖石回归 */
   --tb-paper-noise: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAQtUlEQVR4nDXZB9iX8xcG8IdQHSMUKaPMSlFaZgohqyEpZZQITXtHsqOQWWiHtMuIsoXQIBQNQtl7K/yvz7n+z3td7/W+7/P7Pt/vOfe57/uc53mLVq1axemnnx7jxo2LbbbZJnbYYYc466yzombNmnHjjTfGtddeG+3bt4+BAwfG2rVr8vvvv/+Oo446KnbZZZfo0aNHfPjhhzFgwIB49dVXc92tt94a33zzTey///6xdOnSmDFjRmyyySZx6aWXxrvvvhs77rhjTJ48OerWrRt9+/aN8ePHR+/evaN69erx0ksvZSwnn3xyrFy5Ms4777xYsGBBPPbYY3HuuefGp59+GjfffHM888wzuW/x888/R/fu3ePss8/OwLfddtvYbrvt4swzz8wgf/nll/B15ZVXxk8//RQPPvhgnHHGGbF+/fq8p23btnHqqafGs88+G7fffnsm3Lx58xg2bFiCILGHH344xowZk3u8/PLLMXz48Dj44IPj+++/j0033TTvO/HEE+PYY4+NP/74I3799df48ssv47TTTovRo0fn+mXLlkXPnj2jTZs2sW7dukzgxx9/jKJFixYhiffeey8Pt1DWm2++edSqVSuatWsXO++8c2YN2QMOOCA+/vjjREdwVapUicqVK8fs2bPjuOOOy2pKbPXq1VGxYsUEQMUEVa1atfj333+zKhdccEHcf//9cdBBB8Vvv/2W66dNm5ZgzZs3L/o06dNvv/12vPDCC4n8Pffck+d36dIl41K9m266KQqlgsp3332XGbt56tSpmZDSHnjggYlCgwYN4oEHHsgq+KxXr15RqVKleOONN2K//faLiRMnJgXuuOOODGLUqFHxzjvvZMUcDtGPPvoo9t1336y0v6GOSpKpXbt2vPnmm/HDDz/EEUcckRVDt0suuSRWrFiRqKOPqm299dZx+OGHZ9JJIYfvtttuicSiRYsS4bvuuis++OCDvBl3cf3rr7/OzX19++23yflTTjklrrvuuqwIRG+77bakoGv//fdfBqCKDpswYULSSgKvvfZaFEWRyaEI2l100UVxxRVXJP+xQYWfe+652GKLLXK/jh075nWUVQWAFE2aNEkuOQRqUL/33nsTZUFWqFAhUVF+Xy+++GK8/vrrSSUHHHPMMVl6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");   /* 纸纹 base64 = styles/design-tokens.wxss --zy-paper-noise 同源值（逐字符复制，48×48 · 4% alpha） */
   --tb-center-bg: var(--zy-accent);                /* 香槟金平涂底（引用 theme-teal 活令牌 #C9A24B） */
-  --tb-center-shadow:
-    0 6rpx 20rpx rgba(31, 58, 31, 0.40),
-    0 2rpx 8rpx rgba(31, 58, 31, 0.20);            /* 深林绿投影（非橄榄绿） */
-  --tb-center-shadow-active:
-    0 16rpx 44rpx rgba(31, 58, 31, 0.46),
-    0 4rpx 14rpx rgba(31, 58, 31, 0.28);
-  --tb-center-ring: 0 0 0 6rpx #1F3A1F;               /* 深绿实环 = var(--zy-primary-700)；暖石浅底上 9.87:1 定义金盘边界 */
-  --tb-center-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
-  --tb-center-inner-shadow: linear-gradient(0deg, rgba(168, 137, 74, 0.30) 0%, transparent 100%);
-
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 104rpx;
-  background-color: var(--tb-bar-bg);
-  background-image: var(--tb-paper-noise);
+  bottom: 28rpx;
+  bottom: calc(28rpx + env(safe-area-inset-bottom, 0));
+  left: 40rpx;
+  right: 40rpx;
+  height: 132rpx;
+  border-radius: 9999rpx;
+  background: linear-gradient(180deg, #F7F5EF 0%, #ECE4D4 100%);
+  box-shadow: 0 10rpx 24rpx rgba(26, 26, 23, 0.10), 0 28rpx 64rpx rgba(26, 26, 23, 0.18);
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
-  padding-top: 8rpx;
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding: 0 !important; /* 中和 wxml 行内 padding-bottom:{{tabBarPadding}}rpx —— 悬浮胶囊无需内边距（wxml/js 零改动） */
   box-sizing: border-box;
   overflow: visible;
   animation-name: tabbar-fade-in;
@@ -94,7 +85,7 @@
 @keyframes tabbar-fade-in {
   0% {
     opacity: 0;
-    transform: translateY(16rpx);
+    transform: translateY(24rpx);
   }
   100% {
     opacity: 1;
@@ -102,14 +93,27 @@
   }
 }
 
+/* 缎面包裹纸纹层：纯装饰、不响应点击；圆角跟随胶囊 */
 .tab-bar::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--tb-paper-noise);
+  background-repeat: repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 顶部缎面高光：左右各留 24rpx，避免 9999rpx 圆角处戳出 */
+.tab-bar::after {
+  content: '';
+  position: absolute;
+  top: 1rpx;
+  left: 24rpx;
+  right: 24rpx;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%); /* 金发丝顶线 = --lux-gold-line 值 */
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65) 50%, transparent);
   pointer-events: none;
 }
 
@@ -124,31 +128,65 @@
   flex: 1;
   height: 100%;
   position: relative;
+  z-index: 1; /* 提至缎面纸纹层(::before z-index:0)之上 */
 }
 
 /* ================================================================
-   图标包裹层 — 金圆点容器（64rpx 圆形；选中 = 金平涂 + 深绿描边 + 深绿晕）
+   图标包裹层 — 裸盒锚点（36×36rpx 对齐图标实际尺寸；金点 + 金晕挂在它上面）
    ================================================================ */
 .tab-bar-icon-wrap {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
+  position: relative;
+  width: 36rpx;
+  height: 36rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4rpx;
-  background: rgba(31, 58, 31, 0.06);
-  border: 1rpx solid rgba(31, 58, 31, 0.14);
-  transition-property: transform, background, border-color, box-shadow;
+  background: none;
+  border: none;
+  border-radius: 0;
+  transition-property: box-shadow;
   transition-duration: 320ms;
   transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-.tab-bar-item.active .tab-bar-icon-wrap {
+/* 金点：选中态弹入图标正上方 8rpx；中央 CTA 无此结构，天然不出现 */
+.tab-bar-icon-wrap::after {
+  content: '';
+  position: absolute;
+  top: -8rpx;
+  left: 50%;
+  margin-left: -4rpx;
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
   background: #C9A24B;
-  border: 2rpx solid #1F3A1F;
-  box-shadow: 0 0 0 8rpx rgba(31, 58, 31, 0.15);
-  transform: translateY(-2rpx);
+  box-shadow: 0 0 6rpx rgba(201, 162, 75, 0.5);
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.tab-bar-item.active .tab-bar-icon-wrap {
+  box-shadow: 0 0 20rpx rgba(201, 162, 75, 0.32); /* 金晕（静态） */
+}
+
+.tab-bar-item.active .tab-bar-icon-wrap::after {
+  animation: gold-dot-in 150ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes gold-dot-in {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ================================================================
@@ -157,39 +195,40 @@
 .tab-bar-icon {
   width: 36rpx;
   height: 36rpx;
-  color: #5A564C; /* line 图标 fill=currentColor 跟随文字色（暖石浅底 5.79:1 AA，= --text-secondary） */
+  color: #7D7768; /* line 图标 fill=currentColor 跟随（缎面深端 3.53:1，非文本 3:1 ✓） */
   transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
               transform 320ms cubic-bezier(0.34, 1.15, 0.64, 1);
   opacity: 1;
 }
 
 .tab-bar-item.active .tab-bar-icon {
-  color: #1A1A17; /* ink 资产 fill 写死无需跟随；设上防呆 */
+  color: #1A1A17; /* 炭墨（缎面深端 13.8:1 AAA）；scale 放图标子层，不与 worklet 按压缩放冲突 */
   opacity: 1;
-  transform: translateY(-1rpx);
+  transform: scale(1.06);
 }
 
 /* ================================================================
-   文字 — 极轻，宽字距；暖石浅底上用暖炭灰表达非选中
+   文字 — 极轻，宽字距；缎面上用暖炭灰表达非选中、近墨炭表达选中
    ================================================================ */
 .tab-bar-text {
   font-size: 18rpx;
   font-weight: 400;
-  color: #5A564C; /* 暖石浅底非选中文字 5.79:1 AA（= --text-secondary / --zy-text-2） */
+  color: #6B6559; /* 缎面深端 4.58:1 AA */
   line-height: 1;
+  margin-top: 6rpx;
   transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
               transform 320ms cubic-bezier(0.19, 1, 0.22, 1);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
 }
 
 .tab-bar-item.active .tab-bar-text {
-  color: #1F3A1F; /* 金在浅底不可作文字 1.90✗ → 深绿 9.87:1（= var(--zy-tabbar-item-active)） */
+  color: #2A2820; /* 缎面深端 11.68:1 AAA */
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em; /* 编辑级字距 */
 }
 
 /* ================================================================
-   中心按钮 — 香槟金圆钮（墨绿半透背衬 + 呼吸光晕）
+   中心按钮 — 珠宝化金钮（香槟金平涂 + 炭墨镶边 + 独立金晕呼吸层）
    ================================================================ */
 .tab-bar-item-center {
   position: relative;
@@ -213,57 +252,36 @@
   background: var(--tb-center-bg);
   position: relative;
   overflow: visible;
-  box-shadow: var(--tb-center-ring), var(--tb-center-shadow);
+  /* 炭墨镶边(珠宝镶嵌底座，替代旧 6rpx 深绿环) + 金晕 + 中性投影；静态，禁动画化 */
+  box-shadow: 0 0 0 1rpx rgba(26, 26, 23, 0.16),
+              0 0 28rpx rgba(201, 162, 75, 0.35),
+              0 10rpx 24rpx rgba(26, 26, 23, 0.16);
   margin-top: -48rpx;
-  animation-name: center-btn-glow;
-  animation-duration: 5000ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-delay: 1500ms;
-  animation-fill-mode: forwards;
-  animation-iteration-count: infinite;
   transition: transform 180ms cubic-bezier(0.25, 0.1, 0.25, 1),
               opacity 320ms cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-@keyframes center-btn-glow {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.04);
-    opacity: 1;
-  }
-}
-
-/* 顶部金属高光 */
-.center-button::before {
-  content: '';
-  position: absolute;
-  top: 6rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50%;
-  height: 24rpx;
-  background: var(--tb-center-highlight);
-  border-radius: 50%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* 底部微阴影凹陷（珠宝感） */
+/* 独立金晕层：只有光在呼吸（珠宝静置托盘上，按钮体不再缩放） */
 .center-button::after {
   content: '';
   position: absolute;
-  bottom: 6rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40%;
-  height: 16rpx;
-  background: var(--tb-center-inner-shadow);
-  border-radius: 50%;
-  z-index: 1;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 28rpx rgba(201, 162, 75, 0.35);
+  opacity: 0.72;
+  animation: halo-breath 1.6s ease-in-out infinite;
   pointer-events: none;
+}
+
+@keyframes halo-breath {
+  0%, 100% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
 }
 
 .center-button-icon {
@@ -286,10 +304,6 @@
   z-index: 2;
   letter-spacing: 0.08em;
   margin-top: 4rpx;
-}
-
-.tab-bar-item-center.active .center-button {
-  box-shadow: var(--tb-center-ring), var(--tb-center-shadow-active);
 }
 
 .tab-bar-item-center.active .center-button-icon {
