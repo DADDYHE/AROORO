@@ -3,7 +3,7 @@
    ----------------------------------------------------------------
    高奢 TabBar（DADDY 选定方案 A · 悬浮缎面珠宝盘）：
      · 悬浮胶囊：缎面渐变底 + 纸纹(::before) + 顶部高光(::after)
-     · 选中指示：金点(icon-wrap::after 弹入) + 图标炭墨 + 金晕
+     · 选中指示：金圆宝石底(icon-wrap::after 弹入) + 炭墨图标 + 镶边金晕
      · 中央按钮：香槟金平涂 + 炭墨镶边 + 独立金晕层呼吸
        （珠宝静置托盘上，只有光在呼吸；深绿完全退出 tabBar）
      · 图标线条细，文字极轻；选中态切换炭墨资产
@@ -60,14 +60,14 @@
   --tb-paper-noise: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAQtUlEQVR4nDXZB9iX8xcG8IdQHSMUKaPMSlFaZgohqyEpZZQITXtHsqOQWWiHtMuIsoXQIBQNQtl7K/yvz7n+z3td7/W+7/P7Pt/vOfe57/uc53mLVq1axemnnx7jxo2LbbbZJnbYYYc466yzombNmnHjjTfGtddeG+3bt4+BAwfG2rVr8vvvv/+Oo446KnbZZZfo0aNHfPjhhzFgwIB49dVXc92tt94a33zzTey///6xdOnSmDFjRmyyySZx6aWXxrvvvhs77rhjTJ48OerWrRt9+/aN8ePHR+/evaN69erx0ksvZSwnn3xyrFy5Ms4777xYsGBBPPbYY3HuuefGp59+GjfffHM888wzuW/x888/R/fu3ePss8/OwLfddtvYbrvt4swzz8wgf/nll/B15ZVXxk8//RQPPvhgnHHGGbF+/fq8p23btnHqqafGs88+G7fffnsm3Lx58xg2bFiCILGHH344xowZk3u8/PLLMXz48Dj44IPj+++/j0033TTvO/HEE+PYY4+NP/74I3799df48ssv47TTTovRo0fn+mXLlkXPnj2jTZs2sW7dukzgxx9/jKJFixYhiffeey8Pt1DWm2++edSqVSuatWsXO++8c2YN2QMOOCA+/vjjREdwVapUicqVK8fs2bPjuOOOy2pKbPXq1VGxYsUEQMUEVa1atfj333+zKhdccEHcf//9cdBBB8Vvv/2W66dNm5ZgzZs3L/o06dNvv/12vPDCC4n8Pffck+d36dIl41K9m266KQqlgsp3332XGbt56tSpmZDSHnjggYlCgwYN4oEHHsgq+KxXr15RqVKleOONN2K//faLiRMnJgXuuOOODGLUqFHxzjvvZMUcDtGPPvoo9t1336y0v6GOSpKpXbt2vPnmm/HDDz/EEUcckRVDt0suuSRWrFiRqKOPqm299dZx+OGHZ9JJIYfvtttuicSiRYsS4bvuuis++OCDvBl3cf3rr7/OzX19++23yflTTjklrrvuuqwIRG+77bakoGv//fdfBqCKDpswYULSSgKvvfZaFEWRyaEI2l100UVxxRVXJP+xQYWfe+652GKLLXK/jh075nWUVQWAFE2aNEkuOQRqUL/33nsTZUFWqFAhUVF+Xy+++GK8/vrrSSUHHHPMMVl6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");   /* 纸纹 base64 = styles/design-tokens.wxss --zy-paper-noise 同源值（逐字符复制，48×48 · 4% alpha） */
   --tb-center-bg: var(--zy-accent);                /* 香槟金平涂底（引用 theme-teal 活令牌 #C9A24B） */
   position: fixed;
-  bottom: 28rpx;
-  bottom: calc(28rpx + env(safe-area-inset-bottom, 0));
+  bottom: 8rpx; /* 兜底：非 safe-area 设备（28rpx → 8rpx 靠底） */
+  bottom: calc(8rpx + env(safe-area-inset-bottom, 0)); /* iOS：抬离 Home Indicator */
   left: 40rpx;
   right: 40rpx;
   height: 132rpx;
   border-radius: 9999rpx;
   background: linear-gradient(180deg, #F7F5EF 0%, #ECE4D4 100%);
-  box-shadow: 0 10rpx 24rpx rgba(26, 26, 23, 0.10), 0 28rpx 64rpx rgba(26, 26, 23, 0.18);
+  box-shadow: 0 8rpx 16rpx rgba(26, 26, 23, 0.10), 0 16rpx 40rpx rgba(26, 26, 23, 0.14); /* 靠底语义收敛，减弱投影 */
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -132,56 +132,56 @@
 }
 
 /* ================================================================
-   图标包裹层 — 裸盒锚点（36×36rpx 对齐图标实际尺寸；金点 + 金晕挂在它上面）
+   图标包裹层 — 恒 48×48rpx 锚点（金圆宝石底 ::after + 镶边金晕挂在它上面；
+   非选中透明底、图标 36rpx 居中；选中/非选中尺寸一致，文字位不跳）
    ================================================================ */
 .tab-bar-icon-wrap {
   position: relative;
-  width: 36rpx;
-  height: 36rpx;
+  width: 48rpx;
+  height: 48rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   background: none;
   border: none;
-  border-radius: 0;
+  border-radius: 50%; /* 圆形容器：镶边环/金晕 box-shadow 跟随圆形，与金圆底同构（P1 修复） */
   transition-property: box-shadow;
   transition-duration: 320ms;
   transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-/* 金点：选中态弹入图标正上方 8rpx；中央 CTA 无此结构，天然不出现 */
+/* 金圆宝石底：选中态弹入的 48rpx 金圆（替换原 8rpx 金点，inset:0 铺满 icon-wrap）；
+   中央 CTA 无此结构，天然不出现；仅 .active 显示 */
 .tab-bar-icon-wrap::after {
   content: '';
   position: absolute;
-  top: -8rpx;
-  left: 50%;
-  margin-left: -4rpx;
-  width: 8rpx;
-  height: 8rpx;
+  inset: 0;
   border-radius: 50%;
   background: #C9A24B;
-  box-shadow: 0 0 6rpx rgba(201, 162, 75, 0.5);
+  z-index: 0;
   opacity: 0;
-  transform: scale(0);
+  transform: scale(0.8);
   pointer-events: none;
 }
 
 .tab-bar-item.active .tab-bar-icon-wrap {
-  box-shadow: 0 0 20rpx rgba(201, 162, 75, 0.32); /* 金晕（静态） */
+  /* 1rpx 炭墨镶边（浅底上勾勒金圆轮廓，.28 较 CTA .16 强）+ 金晕（静态，不给圆底加呼吸） */
+  box-shadow: 0 0 0 1rpx rgba(26, 26, 23, 0.28),
+              0 0 24rpx rgba(201, 162, 75, 0.40);
 }
 
 .tab-bar-item.active .tab-bar-icon-wrap::after {
-  animation: gold-dot-in 150ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: gem-in 150ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards; /* 金圆弹入 overshoot */
 }
 
-@keyframes gold-dot-in {
+@keyframes gem-in {
   0% {
     opacity: 0;
-    transform: scale(0);
+    transform: scale(0.8);
   }
-  70% {
+  60% {
     opacity: 1;
-    transform: scale(1.15);
+    transform: scale(1.06);
   }
   100% {
     opacity: 1;
@@ -196,15 +196,17 @@
   width: 36rpx;
   height: 36rpx;
   color: #7D7768; /* line 图标 fill=currentColor 跟随（缎面深端 3.53:1，非文本 3:1 ✓） */
+  position: relative;
+  z-index: 1; /* 覆盖金圆宝石底(z-index:0)之上 */
   transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
               transform 320ms cubic-bezier(0.34, 1.15, 0.64, 1);
   opacity: 1;
 }
 
 .tab-bar-item.active .tab-bar-icon {
-  color: #1A1A17; /* 炭墨（缎面深端 13.8:1 AAA）；scale 放图标子层，不与 worklet 按压缩放冲突 */
+  color: #1A1A17; /* 炭墨（on 金圆底 7.27:1 AAA）；scale(.78) = 36→28rpx 等效 */
   opacity: 1;
-  transform: scale(1.06);
+  transform: scale(0.78); /* 仅作用于图标自身；worklet 按压 scale 作用于 icon-wrap(wrap 层)，无 transform 冲突 */
 }
 
 /* ================================================================
