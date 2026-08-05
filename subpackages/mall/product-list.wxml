@@ -59,18 +59,18 @@
     </view>
   </view>
 
-  <root-portal>
-  <view class="floating-cart {{cartPosReady ? 'is-ready' : ''}} {{cartDragging ? 'is-dragging' : ''}}"
-        style="transform: translate({{cartPos.x}}px, {{cartPos.y}}px);"
-        hover-class="floating-cart--pressed" hover-stay-time="120"
-        bindtouchstart="onCartTouchStart"
-        bindtouchmove="onCartTouchMove"
-        bindtouchend="onCartTouchEnd">
-    <image class="floating-cart-icon" src="/images/icons/cart-ink.svg" mode="aspectFit"></image>
-    <view wx:if="{{cartCount > 0}}" class="floating-cart-badge">
-      <text class="floating-cart-badge-text">{{cartCount > 99 ? '99+' : cartCount}}</text>
-    </view>
-  </view>
-  </root-portal>
 </view>
 </scroll-view>
+
+<!-- 可拖动悬浮购物车：页面根级 fixed，不依赖 root-portal（避免页面返回时 portal 独立 webview 已被销毁导致的 routeDone / navigateBack webviewId 报错） -->
+<view class="floating-cart {{cartPosReady ? 'is-ready' : ''}} {{cartDragging ? 'is-dragging' : ''}}"
+      style="transform: translate({{cartPos.x}}px, {{cartPos.y}}px);"
+      hover-class="floating-cart--pressed" hover-stay-time="120"
+      bindtouchstart="onCartTouchStart"
+      bindtouchmove="onCartTouchMove"
+      bindtouchend="onCartTouchEnd">
+  <image class="floating-cart-icon" src="/images/icons/cart-ink.svg" mode="aspectFit"></image>
+  <view wx:if="{{cartCount > 0}}" class="floating-cart-badge">
+    <text class="floating-cart-badge-text">{{cartCount > 99 ? '99+' : cartCount}}</text>
+  </view>
+</view>
