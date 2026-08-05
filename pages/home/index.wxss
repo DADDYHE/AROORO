@@ -1026,7 +1026,7 @@ page {
 }
 
 .pet-avatar-female {
-  border: 2rpx solid var(--gender-female, #C0788E);
+  border: 2rpx solid var(--gender-female, #FF6FA5);
 }
 
 .pet-info {
@@ -1061,7 +1061,7 @@ page {
 }
 
 .pet-gender-female {
-  color: var(--gender-female, #C0788E);
+  color: var(--gender-female, #FF6FA5);
   background: var(--gender-female-tint, rgba(192, 120, 142, 0.10));
 }
 
@@ -1076,7 +1076,7 @@ page {
 }
 
 .pet-card-female {
-  box-shadow: inset 3rpx 0 0 0 var(--gender-female, #C0788E);
+  box-shadow: inset 3rpx 0 0 0 var(--gender-female, #FF6FA5);
 }
 
 .pet-name {

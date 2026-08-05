@@ -40,9 +40,9 @@ page {
   --gender-male: #6B9DAE;
   --gender-male-tint: rgba(107, 157, 174, 0.10);
   --gender-male-border: rgba(107, 157, 174, 0.25);
-  --gender-female: #C0788E;
-  --gender-female-tint: rgba(192, 120, 142, 0.10);
-  --gender-female-border: rgba(192, 120, 142, 0.25);
+  --gender-female: #FF6FA5;
+  --gender-female-tint: rgba(255, 111, 165, 0.10);
+  --gender-female-border: rgba(255, 111, 165, 0.25);
 
   /* ===== 中性色：奶油纸感白底 + 炭墨文字 ===== */
   --background-color: #F7F5EF;         /* 奶油米白 — 页面底（Hermès 纸感） */
