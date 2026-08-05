@@ -173,9 +173,9 @@
 }
 
 .gender-option.active[data-gender="male"] {
-  background: var(--gender-male-tint, rgba(107, 157, 174, 0.10));
-  color: var(--gender-male, #6B9DAE);
-  border-color: var(--gender-male-border, rgba(107, 157, 174, 0.25));
+  background: var(--gender-male-tint, rgba(91, 184, 214, 0.10));
+  color: var(--gender-male, #5BB8D6);
+  border-color: var(--gender-male-border, rgba(91, 184, 214, 0.25));
 }
 
 .gender-option.active[data-gender="female"] {

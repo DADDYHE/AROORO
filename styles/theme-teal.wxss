@@ -37,9 +37,9 @@ page {
   --brand-red-soft: #F0DFD6;
 
   /* ===== 语义性别色（男蓝女粉，跨页面复用） ===== */
-  --gender-male: #6B9DAE;
-  --gender-male-tint: rgba(107, 157, 174, 0.10);
-  --gender-male-border: rgba(107, 157, 174, 0.25);
+  --gender-male: #5BB8D6;
+  --gender-male-tint: rgba(91, 184, 214, 0.10);
+  --gender-male-border: rgba(91, 184, 214, 0.25);
   --gender-female: #FF6FA5;
   --gender-female-tint: rgba(255, 111, 165, 0.10);
   --gender-female-border: rgba(255, 111, 165, 0.25);

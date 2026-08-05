@@ -1022,7 +1022,7 @@ page {
 }
 
 .pet-avatar-male {
-  border: 2rpx solid var(--gender-male, #6B9DAE);
+  border: 2rpx solid var(--gender-male, #5BB8D6);
 }
 
 .pet-avatar-female {
@@ -1056,13 +1056,13 @@ page {
 }
 
 .pet-gender-male {
-  color: var(--gender-male, #6B9DAE);
-  background: var(--gender-male-tint, rgba(107, 157, 174, 0.10));
+  color: var(--gender-male, #5BB8D6);
+  background: var(--gender-male-tint, rgba(91, 184, 214), 0.10));
 }
 
 .pet-gender-female {
   color: var(--gender-female, #FF6FA5);
-  background: var(--gender-female-tint, rgba(192, 120, 142, 0.10));
+  background: var(--gender-female-tint, rgba(255, 111, 165), 0.10));
 }
 
 .pet-gender-unknown {
@@ -1072,7 +1072,7 @@ page {
 .pet-card-male {
   /* 性别色左侧线：用 inset 内阴影替代 border-left，确保被 40rpx 圆角裁切、随圆角围绕过去；
      规避 Skyline 下"单边加粗 border + 大 radius"拐角不圆、方头戳出圆角的硬边 bug */
-  box-shadow: inset 3rpx 0 0 0 var(--gender-male, #6B9DAE);
+  box-shadow: inset 3rpx 0 0 0 var(--gender-male, #5BB8D6);
 }
 
 .pet-card-female {
