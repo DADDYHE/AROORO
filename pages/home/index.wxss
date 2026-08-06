@@ -4,8 +4,8 @@
    ----------------------------------------------------------------
    设计方向：零装帧极简
      · Banner 16:9 纯图，无 scrim / 无文案 / 无描金
-     · 下方一整片实色 --sheet-paper，与 banner 硬边相接、零透叠
-     · 卡片：实心 --card-satin + 单条 --hairline-glass 边
+     · 下方一整片暖石缎面渐变（--sheet-grad，与 page 同源），与 banner 硬边相接、零透叠
+     · 卡片：暖石渐变（--card-satin→--sheet-paper）+ 单条 --hairline-glass 边
      · 排版：中性无衬线、常规字重、零字距处理
    Skyline 兼容：禁用 backdrop-filter / text-shadow / mask-image /
                  :active / position:sticky / text-transform / 负 z-index
@@ -14,10 +14,11 @@
 
 /* ===== 基础容器 ===== */
 .home-container {
+  --sheet-grad: var(--zy-paper-noise), linear-gradient(180deg, var(--card-satin) 0%, var(--sheet-paper) 50%, var(--background-warm) 100%);
   min-height: 100vh;
   background: transparent;
   font-family: var(--font-sans);
-  padding: 0; /* 缎面溶解：底部留白移入 sheet（见 .bottom-spacer），避免 sheet 结束后露出 page 渐变(#ECE4D4) 与 sheet 纸面(#F7F5EF) 的色阶断层 */
+  padding: 0; /* Plain Sheet：整片背景统一暖石缎面渐变（sheet 用 --sheet-grad，与 page 同源），零装帧 */
   margin-top: 0;
   box-sizing: border-box;
 }
@@ -211,14 +212,17 @@ page {
 .hero-img { width: 100%; height: 100%; display: block; }
 .hero-img-ph { background: var(--skeleton-base); }
 
-/* ===== 内容 sheet：一整片实色纸面，与 banner 硬边相接（零装帧） ===== */
+/* ===== 内容 sheet：一整片暖石缎面渐变，与 banner 硬边相接（零装帧） ===== */
 .home-content-sheet {
   position: relative;
   z-index: 2;
   border-radius: 0;
   padding-top: 0;
   min-height: 100vh;
-  background: var(--sheet-paper);
+  background-color: var(--sheet-paper);
+  background-image: var(--sheet-grad);
+  background-repeat: repeat, no-repeat;
+  background-size: auto, 100% 100%;
 }
 
 /* ===== Section 3: 登录入口（实心主按钮 CTA） ===== */
@@ -267,7 +271,7 @@ page {
   flex: 1;
   box-sizing: border-box;
   padding: 36rpx 32rpx;
-  background: var(--card-satin); /* Plain Sheet：实心暖石纸卡，单条炭墨发丝边 */
+  background: linear-gradient(180deg, var(--card-satin) 0%, var(--sheet-paper) 100%); /* Plain Sheet：实心暖石纸卡，单条炭墨发丝边 */
   border-radius: var(--lux-radius-card);
   border: 1rpx solid var(--hairline-glass);
   position: relative;
@@ -415,7 +419,7 @@ page {
   display: flex;
   flex-direction: column;
   width: 300rpx;
-  background: var(--card-satin);
+  background: linear-gradient(180deg, var(--card-satin) 0%, var(--sheet-paper) 100%);
   border-radius: var(--lux-radius-card);
   overflow: hidden;
   border: 1rpx solid var(--hairline-glass);
@@ -596,7 +600,7 @@ page {
 
 .activity-h-card {
   display: flex;
-  background: var(--card-satin);
+  background: linear-gradient(180deg, var(--card-satin) 0%, var(--sheet-paper) 100%);
   border-radius: var(--lux-radius-card);
   overflow: hidden;
   border: 1rpx solid var(--hairline-glass);
@@ -807,7 +811,7 @@ page {
   max-width: calc(50% - 24rpx); /* 50% - spacing-lg/2，与 .qs-item flex:1 平分等价 */
   min-width: 0;
   padding: 24rpx;
-  background: var(--card-satin); /* Plain Sheet：实心暖石纸卡，单条炭墨发丝边 */
+  background: linear-gradient(180deg, var(--card-satin) 0%, var(--sheet-paper) 100%); /* Plain Sheet：实心暖石纸卡，单条炭墨发丝边 */
   border-radius: var(--lux-radius-card);
   border: 1rpx solid var(--hairline-glass);
   box-sizing: border-box;
@@ -934,7 +938,7 @@ page {
   min-width: 0;
   min-height: 140rpx;
   padding: 24rpx;
-  background: var(--card-satin); /* Plain Sheet：空态同用实心纸，虚线版位保持"未装帧"语义 */
+  background: linear-gradient(180deg, var(--card-satin) 0%, var(--sheet-paper) 100%); /* Plain Sheet：空态同用实心纸，虚线版位保持"未装帧"语义 */
   border-radius: var(--lux-radius-card);
   border: 1rpx dashed var(--hairline-glass);
   box-sizing: border-box;
