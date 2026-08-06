@@ -75,6 +75,7 @@ page {
 }
 
 /* ===== Section 1: 顶部栏（高奢极简） ===== */
+/* 顶栏占位：补偿 zy-navbar(root-portal) 占位块失效，避免内容被 fixed 导航栏压住 banner */
 .topbar {
   display: flex;
   align-items: center;
@@ -981,12 +982,12 @@ page {
   animation-fill-mode: forwards;
 }
 
-/* 可达性兜底：用户开启「减少动态效果」时，入场动画不播，内容直接可见，避免卡在 opacity:0 */
-@media (prefers-reduced-motion: reduce) {
-  .stagger-item {
-    opacity: 1;
-    animation: none;
-  }
+/* 可达性兜底：用户开启「减少动态效果」时，入场动画不播，内容直接可见，避免卡在 opacity:0。
+   Skyline 不支持 prefers-reduced-motion 媒体特性（报 Unsupported segment 且整段被忽略），
+   故改为由 JS 探测 reduceMotion 后给滚动容器加 .reduce-motion 类来驱动。 */
+.reduce-motion .stagger-item {
+  opacity: 1;
+  animation: none;
 }
 
 .stagger-rise {

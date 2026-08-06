@@ -36,17 +36,16 @@ const homeBannerBehavior = Behavior({
     },
 
     /**
-     * 计算 scroll-view 布局参数：
-     * - scrollViewOffset: scroll-view 在页面中的顶部位置 = navbarHeight + topbarHeight
-     *   (topbarHeight 仅登录时存在，112rpx → px)
-     * - scrollMarginTop: 负值，将 scroll-view 从 banner 下方拉回 banner 顶部，
-     *   使内容卡片可滚动覆盖固定 banner
+     * 计算 scroll-view 布局参数（Plain Sheet：banner 为 scroll-view 之外的独立兄弟节点，
+     * 下方硬边相接实色 sheet，零透叠）：
+     * - scrollViewOffset: scroll-view 顶部偏移 = navbarHeight + topbarHeight（用于高度公式）
+     * - scrollMarginTop: 0（不再用负 margin 把 sheet 拉到 banner 之上，否则会盖住 banner）
      */
     _updateScrollLayout() {
       const windowWidth = wx.getWindowInfo().windowWidth
       const topbarHeightPx = this.data.isLoggedIn ? 112 * windowWidth / 750 : 0
       const scrollViewOffset = Math.round(this.data._navbarHeight + topbarHeightPx)
-      const scrollMarginTop = -this.data.bannerHeight
+      const scrollMarginTop = 0
       this.setData({ scrollViewOffset, scrollMarginTop })
     },
 

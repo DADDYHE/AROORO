@@ -21,15 +21,30 @@ Page({
     locale: 'zh-CN',
     todayDate: '',
     _refreshPulling: false,
+    reduceMotion: false,
   },
 
   onLoad() {
     this._initNavbarHeight()
     const locale = app && app.globalData ? app.globalData.locale : 'zh-CN'
     this.setData({ t: pageI18n.buildTMap(locale), locale })
+    this._initReduceMotion()
     this._initToday()
     this._initBanner()
     this._initRefreshAnimation()
+  },
+
+  _initReduceMotion() {
+    if (!wx.getSystemSetting) return
+    const setting = wx.getSystemSetting()
+    this.setData({ reduceMotion: setting.reduceMotion === 'enable' })
+    if (typeof wx.onReduceMotionChange !== 'function') return
+    this._reduceMotionHandler = (res) => {
+      if (res && typeof res.reduceMotion === 'string') {
+        this.setData({ reduceMotion: res.reduceMotion === 'enable' })
+      }
+    }
+    wx.onReduceMotionChange(this._reduceMotionHandler)
   },
 
   _initToday() {
@@ -84,6 +99,10 @@ Page({
 
   onUnload() {
     this._teardownRefreshAnimation()
+    if (this._reduceMotionHandler && typeof wx.offReduceMotionChange === 'function') {
+      wx.offReduceMotionChange(this._reduceMotionHandler)
+      this._reduceMotionHandler = null
+    }
   },
 
   // ================================================================

@@ -34,7 +34,7 @@
 
 <!-- ===== 内容滚动区 ===== -->
 <scroll-view
-  class="home-scroll"
+  class="home-scroll {{reduceMotion ? 'reduce-motion' : ''}}"
   scroll-y
   enhanced
   refresher-enabled="{{true}}"
