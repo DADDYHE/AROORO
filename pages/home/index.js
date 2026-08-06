@@ -22,10 +22,14 @@ Page({
     todayDate: '',
     _refreshPulling: false,
     reduceMotion: false,
+    // 导航栏 + 顶部栏共用深绿宝石渐变带（白高光贯穿两栏）
+    gemNavbarBg: 'linear-gradient(135deg, #2D4F2D 0%, #0F2410 100%)',
+    gemTopbarStyle: '', // 空串 = 回落 wxss 兜底渐变（勿给默认值，否则会拼出 size:0 的空背景）
   },
 
   onLoad() {
     this._initNavbarHeight()
+    this._initGemBand()
     const locale = app && app.globalData ? app.globalData.locale : 'zh-CN'
     this.setData({ t: pageI18n.buildTMap(locale), locale })
     this._initReduceMotion()
@@ -56,6 +60,51 @@ Page({
     this.setData({
       todayDate: `${month}月${date}日 ${weekday}`,
     })
+  },
+
+  // 导航栏 + 顶部栏共用同一条深绿宝石渐变带：用 background-size/position 偏移让白高光贯穿两栏。
+  // 导航栏(占位高度 navH px) 取长带 [0, navH]，顶部栏(96rpx) 取长带 [navH, navH+topbarH]，
+  // 两栏共用同一张渐变图 + 同一 background-size，靠 position 偏移对齐 => 极光帘幕跨接缝连续（仅 scroll=0 成立）。
+  _initGemBand() {
+    try {
+      const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+      const menuButton = wx.getMenuButtonBoundingClientRect()
+      const statusBarHeight = windowInfo.statusBarHeight || 20
+      const navBarHeight = (menuButton.top - statusBarHeight) * 2 + menuButton.height
+      const navH = statusBarHeight + navBarHeight
+      const windowWidth = windowInfo.windowWidth || 375
+      const topbarH = 96 * windowWidth / 750 // 顶部栏高度 96rpx 换算为 px
+      const bandH = navH + topbarH
+      // 极光态(aurora)：单条 118deg 渐变模拟极光帘幕。
+      // Skyline 硬约束：① 不支持多背景层简写(逗号叠加)，整条声明会被丢弃导致元素全透明；
+      //   ② 简写里不追加 background-color 兜底(未验证语法)。故全部色标必须 opaque，禁用 rgba alpha。
+      // 层次：外帘辉光@48%(#39553F) -> 暗谷@60%(#0F2410) -> 主帘@67% + 热核@68.5%(#5A7C63) -> 尾焰@74%；
+      // 首尾回落深绿基底 #2D4F2D/#0F2410，色相始终锁在项目深绿族内，不新增色。
+      const gemGradient =
+        'linear-gradient(118deg,' +
+        ' #2D4F2D 0%,' +
+        ' #0F2410 16%,' +
+        ' #2D4F2D 28%,' +
+        ' #1A361F 40%,' +
+        ' #39553F 48%,' +
+        ' #142C18 56%,' +
+        ' #0F2410 60%,' +
+        ' #2E4C36 64%,' +
+        ' #4E6D56 67%,' +
+        ' #5A7C63 68.5%,' +
+        ' #4A6952 70%,' +
+        ' #35553E 74%,' +
+        ' #16301A 80%,' +
+        ' #0F2410 88%,' +
+        ' #2D4F2D 100%)'
+      this.setData({
+        gemNavbarBg: gemGradient + ' 0 0 / 100% ' + bandH + 'px no-repeat',
+        gemTopbarStyle:
+          'background: ' + gemGradient + ' 0 -' + navH + 'px / 100% ' + bandH + 'px no-repeat;',
+      })
+    } catch (e) {
+      // 降级：gemNavbarBg 已用深绿兜底，顶部栏走 wxss 兜底
+    }
   },
 
   onShow() {

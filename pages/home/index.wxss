@@ -83,7 +83,7 @@ page {
   justify-content: space-between;
   height: 96rpx;
   padding: 0 var(--page-padding);
-  background: transparent;
+  background: linear-gradient(135deg, #2D4F2D 0%, #0F2410 100%);
   position: relative;
   z-index: 30;
 }
@@ -108,7 +108,7 @@ page {
   height: 72rpx;
   border-radius: 50%;
   flex-shrink: 0;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(255,255,255,0.28);
   transition-property: transform;
   transition-duration: 280ms;
   transition-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
@@ -142,7 +142,7 @@ page {
 .topbar-name {
   font-size: 30rpx;
   font-weight: 500;
-  color: var(--text-primary);
+  color: rgba(201,162,75,0.92);
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -152,7 +152,7 @@ page {
 
 .topbar-loc {
   font-size: 22rpx;
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.62);
   line-height: 1.2;
 }
 
@@ -164,8 +164,8 @@ page {
   height: 72rpx;
   margin-left: 16rpx;
   border-radius: 50%;
-  background: var(--gray-100);
-  border: 1rpx solid var(--border-color);
+  background: rgba(255,255,255,0.14);
+  border: 1rpx solid rgba(255,255,255,0.22);
   flex-shrink: 0;
   transition-property: transform;
   transition-duration: 180ms;
@@ -174,13 +174,13 @@ page {
 
 .topbar-search--pressed {
   transform: scale(0.9);
-  background: var(--gray-200);
+  background: rgba(255,255,255,0.22);
 }
 
 .topbar-search-icon {
   width: 28rpx;
   height: 28rpx;
-  border: 2rpx solid var(--text-secondary);
+  border: 2rpx solid rgba(255,255,255,0.85);
   border-radius: 50%;
   position: relative;
   flex-shrink: 0;
@@ -193,7 +193,7 @@ page {
   bottom: -6rpx;
   width: 12rpx;
   height: 2rpx;
-  background: var(--text-secondary);
+  background: rgba(255,255,255,0.85);
   border-radius: 1rpx;
   transform: rotate(45deg);
 }

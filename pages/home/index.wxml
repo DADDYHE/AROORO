@@ -1,7 +1,7 @@
-<zy-navbar title="AROORO" showBack="{{false}}" />
+<zy-navbar title="AROORO" showBack="{{false}}" bg="{{gemNavbarBg}}" color="rgba(201,162,75,0.92)" />
 
 <!-- ===== Section 1: 顶部栏 ===== -->
-<header class="topbar topbar-stagger" wx:if="{{isLoggedIn}}">
+<header class="topbar topbar-stagger" wx:if="{{isLoggedIn}}" style="{{gemTopbarStyle}}">
   <view class="topbar-left" catchtap="handleLogin" hover-class="topbar-left--pressed" hover-stay-time="120">
     <image wx:if="{{isLoggedIn && userInfo.avatarUrl}}" class="topbar-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill" hover-class="topbar-avatar--pressed" hover-stay-time="120" />
     <view wx:else class="topbar-avatar topbar-avatar-ph" hover-class="topbar-avatar--pressed" hover-stay-time="120">
