@@ -19,9 +19,7 @@ const homeBannerBehavior = Behavior({
   data: {
     bannerList: [],
     // Plain Sheet：banner 恒为 16:9 纯图，sheet 硬边紧贴其下，零透叠。
-    // 不变式：bannerVisibleHeight === bannerHeight
     bannerHeight: 211,
-    bannerVisibleHeight: 211,
     // scroll-view 布局参数
     scrollViewOffset: 64, // scroll-view 顶部偏移 = navbarHeight + topbarHeight
     scrollMarginTop: 0,   // scroll-view 负 margin，拉升至 banner 顶部
@@ -31,7 +29,7 @@ const homeBannerBehavior = Behavior({
     _initBanner() {
       const windowWidth = wx.getWindowInfo().windowWidth
       const bannerHeight = Math.round(windowWidth * 9 / 16)
-      this.setData({ bannerHeight, bannerVisibleHeight: bannerHeight })
+      this.setData({ bannerHeight })
       this._updateScrollLayout()
     },
 

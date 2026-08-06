@@ -61,7 +61,7 @@
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 
   <!-- ===== 内容 sheet：与 banner 硬边相接 ===== -->
-  <view class="home-content-sheet" style="margin-top: {{bannerVisibleHeight}}px;">
+  <view class="home-content-sheet">
 
   <!-- ===== Section 2.5: 我的宠物 ===== -->
   <view class="section my-pets-section stagger-item stagger-rise-fast delay-1" wx:if="{{isLoggedIn}}">
