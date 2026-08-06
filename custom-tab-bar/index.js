@@ -21,7 +21,7 @@ Component({
       {
         pagePath: '/pages/discover/index',
         iconPath: '/images/icons/discover-line.svg',
-        selectedIconPath: '/images/icons/discover-ink.svg',
+        selectedIconPath: '/images/icons/discover-gold.svg',
         text: '宠团团',
       },
       {

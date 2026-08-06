@@ -61,12 +61,12 @@
   --tb-center-bg: var(--zy-accent);                /* 香槟金平涂底（引用 theme-teal 活令牌 #C9A24B） */
   position: fixed;
   bottom: 0; /* 物理贴屏底；68rpx 指示器区被胶囊自身遮罩，Home Indicator 不受影响 */
-  left: 40rpx;
-  right: 40rpx;
+  left: 0;
+  right: 0;
   height: calc(80rpx + env(safe-area-inset-bottom, 0)); /* 可见区 80rpx（二次降高 100→80），safe-area 增量藏于底部；非 safe-area env=0 回原样 */
-  border-radius: 9999rpx;
-  background: linear-gradient(180deg, #F7F5EF 0%, #ECE4D4 100%);
-  box-shadow: 0 -6rpx 16rpx rgba(26, 26, 23, 0.08), 0 8rpx 20rpx rgba(26, 26, 23, 0.08); /* 贴底后向上投影托起，alpha 收敛 */
+  border-radius: 0; /* 取消胶囊状态：平条整宽贴底，与顶部极光条呼应 */
+  background: linear-gradient(118deg, #2D4F2D 0%, #0F2410 16%, #2D4F2D 28%, #1A361F 40%, #39553F 48%, #142C18 56%, #0F2410 60%, #2E4C36 64%, #4E6D56 67%, #5A7C63 68.5%, #4A6952 70%, #35553E 74%, #16301A 80%, #0F2410 88%, #2D4F2D 100%); /* 极光帘幕：与顶部 navbar/topbar 共用同款 118° 渐变（暗谷/外帘辉光/热核 #5A7C63@68.5%），角度与层次完全对齐 */
+  box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.30); /* 平条贴底：顶部投影托起，去除原胶囊的下投影 */
   display: flex;
   justify-content: space-around;
   align-items: flex-start; /* 80rpx 下 env≈68rpx，center 会让内容整体下沉；改 flex-start 把内容钉回顶部 80rpx 带 */
@@ -94,17 +94,7 @@
 
 /* 缎面包裹纸纹层：纯装饰、不响应点击；圆角跟随胶囊 */
 .tab-bar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  border-radius: inherit;
-  background-image: var(--tb-paper-noise);
-  background-repeat: repeat;
-  z-index: 0;
-  pointer-events: none;
+  display: none; /* 深绿极光底无需浅色纸纹；保持与顶部极光一致的洁净观感 */
 }
 
 /* 顶部缎面高光：左右各留 24rpx，避免 9999rpx 圆角处戳出 */
@@ -163,7 +153,7 @@
   bottom: 0;
   left: 0;
   border-radius: 50%;
-  background: #1F3A1F; /* var(--zy-primary-700) 深森林绿 · 选中宝石底 */
+  background: rgba(201, 162, 75, 0.22); /* 选中宝石底：淡金圆盘（金=选中信号），图标金叠其上仍可读 */
   z-index: 0;
   opacity: 0;
   transform: scale(0.8);
@@ -171,8 +161,8 @@
 }
 
 .tab-bar-item.active .tab-bar-icon-wrap {
-  /* 深绿圆底自身对比 9.8:1+，炭墨镶边冗余移除；仅保留绿晕（静态，不给圆底加呼吸） */
-  box-shadow: 0 0 16rpx rgba(31, 58, 31, 0.26); /* 80rpx 带内收敛：晕半径与 alpha 同步降档，避免溢出胶囊边缘 */
+  /* 选中金晕（静态，不给圆底加呼吸）；深绿底上金晕醒目 */
+  box-shadow: 0 0 16rpx rgba(201, 162, 75, 0.42);
 }
 
 .tab-bar-item.active .tab-bar-icon-wrap::after {
@@ -200,7 +190,7 @@
 .tab-bar-icon {
   width: 36rpx;
   height: 36rpx;
-  color: #7D7768; /* line 图标 fill=currentColor 跟随（缎面深端 3.53:1，非文本 3:1 ✓） */
+  color: #FFFFFF; /* 未选中图标纯白，深绿极光底上清晰（currentColor 跟随 line 资产） */
   position: relative;
   z-index: 1; /* 覆盖金圆宝石底(z-index:0)之上 */
   transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
@@ -209,7 +199,7 @@
 }
 
 .tab-bar-item.active .tab-bar-icon {
-  color: #ffffff; /* fallback 白（on 深绿底 9.8:1+ AAA）；white 资产 fill 写死；scale(.78) = 36→28rpx 等效 */
+  color: #C9A24B; /* 选中图标金（金 SVG 已硬编码金；此处兜底 currentColor 情形） */
   opacity: 1;
   transform: scale(0.78); /* 仅作用于图标自身；worklet 按压 scale 作用于 icon-wrap(wrap 层)，无 transform 冲突 */
 }
@@ -220,7 +210,7 @@
 .tab-bar-text {
   font-size: 18rpx;
   font-weight: 400;
-  color: #6B6559; /* 缎面深端 4.58:1 AA */
+  color: #FFFFFF; /* 未选中文字纯白，深绿极光底上清晰 */
   line-height: 1;
   margin-top: 5rpx; /* 图标-文字间距 6→5rpx，配合 80rpx 带 */
   transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1),
@@ -229,9 +219,15 @@
 }
 
 .tab-bar-item.active .tab-bar-text {
-  color: #1F3A1F; /* 深绿宝石呼应 var(--zy-primary-700) 9.8:1 AAA */
+  color: #C9A24B; /* 缎面暖石金 · 选中信号 */
   font-weight: 600;
   letter-spacing: 0.08em; /* 编辑级字距 */
+}
+
+/* 选中态局部暗座：极光亮带上金字需可读 → 选中项内嵌深绿径向暗座（中心实、边缘透明），
+   金图标/金字落在暗座上对比 ~4.6:1（AA）；中央金钮自带金底，用 :not 排除，光带在其余区域完整透出 */
+.tab-bar-item.active:not(.tab-bar-item-center) {
+  background: radial-gradient(130% 120% at 50% 38%, rgba(11, 26, 14, 0.88) 0%, rgba(11, 26, 14, 0.50) 52%, rgba(11, 26, 14, 0) 100%);
 }
 
 /* ================================================================
@@ -282,7 +278,7 @@
   left: -4rpx;
   border-radius: 50%;
   background: none;
-  box-shadow: 0 0 0 2rpx #1F3A1F; /* var(--zy-primary-700) 深森林绿 · 选中信号 */
+  box-shadow: 0 0 0 2rpx rgba(255, 255, 255, 0.9); /* 深绿底上深绿环不可见 → 改白环作选中信号（金钮上白环醒目） */
   opacity: 0;
   pointer-events: none;
   transition: opacity 150ms cubic-bezier(0.19, 1, 0.22, 1); /* 仅淡入，不缩放不呼吸（呼吸交给 ::after 金晕） */
@@ -332,7 +328,7 @@
 .center-button-text {
   font-size: 18rpx;
   font-weight: 600;
-  color: var(--text-on-accent);
+  color: #FFFFFF; /* 极光绿底上纯白（与未选中普通钮一致） */
   line-height: 1;
   position: relative;
   z-index: 2;
@@ -345,5 +341,6 @@
 }
 
 .tab-bar-item-center.active .center-button-text {
+  color: #C9A24B; /* 选中金（与普通钮选中态一致） */
   letter-spacing: 0.12em;
 }
