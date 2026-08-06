@@ -125,7 +125,6 @@ describe('Sprint 12: 喂食服务子链路', () => {
         address: '上海市浦东新区某某路',
         totalAmount: 200,
         originalAmount: 250,
-        couponDiscount: 50,
       })
 
       expect(res.code).toBe(0)
@@ -179,18 +178,31 @@ describe('Sprint 12: 喂食服务子链路', () => {
     })
 
     test('带优惠券的订单字段填充', async () => {
+      // P0-1 修复：券折扣由服务端按 coupon.rules 重算，测试需先播种有效券
+      mockDb._collections.user_coupons = { docs: [{
+        _id: 'cp_001',
+        ownerId: 'oOwner',
+        status: 'unused',
+        type: 'fixed_amount',
+        rules: { reduceAmount: 30 },
+        applicableScopes: ['feeding'],
+      }] }
       const res = await call('createFeedingOrder', {
         petIds: ['pet_1'],
+        startDate: '2026-06-10',
+        endDate: '2026-06-11',
+        petDetails: [{ id: 'pet_1', name: '旺财' }],
+        petServices: { pet_1: { serviceDates: [{ date: '2026-06-10' }] } },
         totalAmount: 150,
         originalAmount: 200,
         couponId: 'cp_001',
-        couponDiscount: 50,
+        couponDiscount: 50, // 客户端伪造折扣，服务端应按 rules 重算为 30
       })
 
       expect(res.code).toBe(0)
       const saved = mockDb._collections.feedingOrders.docs[0]
       expect(saved.couponId).toBe('cp_001')
-      expect(saved.couponDiscount).toBe(50)
+      expect(saved.couponDiscount).toBe(30)
     })
   })
 
