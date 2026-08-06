@@ -5,6 +5,7 @@
     "zy-loading": "../../components/zy-loading/index"
   },
   "navigationBarTitleText": "AROORO",
+  "navigationBarTextStyle": "white",
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "light"
 }

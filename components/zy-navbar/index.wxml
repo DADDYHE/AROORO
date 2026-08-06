@@ -7,6 +7,8 @@
       <view class="zy-navbar__left" wx:if="{{showBack}}" bindtap="onBackTap" hover-class="zy-navbar__left--pressed" hover-stay-time="120">
         <view class="zy-navbar__back-icon" style="border-color: {{color}};"></view>
       </view>
+      <!-- 无返回键时，左侧补一个与右侧胶囊占位等宽的空占位，保证标题相对屏幕居中 -->
+      <view wx:else class="zy-navbar__spacer" style="width: {{menuButtonHeight + 23}}px;"></view>
       <view class="zy-navbar__title" style="color: {{color}};">
         <text class="zy-navbar__title-text">{{title}}</text>
       </view>

@@ -1,4 +1,4 @@
-<zy-navbar title="AROORO" showBack="{{false}}" bg="{{gemNavbarBg}}" color="rgba(201,162,75,0.92)" />
+<zy-navbar title="AROORO" showBack="{{false}}" bg="{{gemNavbarBg}}" color="#FFFFFF" />
 
 <!-- ===== Section 1: 顶部栏 ===== -->
 <header class="topbar topbar-stagger" wx:if="{{isLoggedIn}}" style="{{gemTopbarStyle}}">

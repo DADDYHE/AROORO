@@ -55,8 +55,10 @@
 .zy-navbar__back-icon {
   width: 18rpx;
   height: 18rpx;
-  border-left: 3rpx solid var(--text-primary);
-  border-bottom: 3rpx solid var(--text-primary);
+  /* 带 fallback：简写内的 var() 若解析失败会令整条声明 unset（border-style 变 none → 箭头消失）。
+     组件在 <root-portal> 内，变量继承不保证，故必须兜底。实际颜色由 wxml 内联 border-color 覆盖。 */
+  border-left: 3rpx solid var(--text-primary, #1A1A17);
+  border-bottom: 3rpx solid var(--text-primary, #1A1A17);
   transform: rotate(45deg);
   transition-property: border-color;
   transition-duration: 240ms;
@@ -74,7 +76,11 @@
   font-size: 32rpx;
   font-weight: 500;
   letter-spacing: 0.05em;
-  color: var(--text-primary);
+  /* 必须 inherit：颜色由父级 .zy-navbar__title 的内联 color={{color}} 提供。
+     这里若写死 color（哪怕是 var(--text-primary)），会覆盖父级内联值，
+     导致 color prop 完全失效 —— 深色导航栏上标题永远渲成黑字。
+     另注：本组件在 <root-portal> 内、且未自引令牌文件，var() 能否解析不确定，故不用变量。 */
+  color: inherit;
   animation-name: title-reveal;
   animation-duration: 700ms;
   animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
@@ -102,4 +108,17 @@
 .zy-navbar__right--pressed {
   transform: scale(0.9);
   opacity: 0.6;
+}
+
+/* 无返回键时的左侧占位：与右侧胶囊占位（.zy-navbar__right）等宽，
+   尺寸规则完全一致以保证左右对称，使 flex:1 的标题落在屏幕正中。
+   不依赖 box-sizing —— 两侧用同一套 min-width/padding/inline-width 即天然对称。 */
+.zy-navbar__spacer {
+  flex-shrink: 0;
+  min-width: 88rpx;
+  min-height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 20rpx;
 }

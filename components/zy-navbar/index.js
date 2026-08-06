@@ -30,7 +30,8 @@ Component({
     title: { type: String, value: '' },
     showBack: { type: Boolean, value: true },
     bg: { type: String, value: '#FFFFFF' },
-    color: { type: String, value: '#1D1D1F' },
+    // 用字面量而非 var(--text-primary)：组件在 <root-portal> 内且未自引令牌文件，变量继承不保证
+    color: { type: String, value: '#1A1A17' },
     transparent: { type: Boolean, value: false },
   },
 
