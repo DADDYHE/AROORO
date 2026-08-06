@@ -18,21 +18,7 @@
   </view>
 </header>
 
-<!-- ===== Section 2: Banner 16:9（纯图，无 scrim / 无文案） ===== -->
-<view class="hero-section" wx:if="{{bannerList.length}}">
-  <swiper class="hero-swiper" autoplay circular interval="5000" duration="600" style="height: {{bannerHeight}}px;">
-    <swiper-item wx:for="{{bannerList}}" wx:key="_id" data-action="{{item.actionType || 'none'}}" data-target="{{item.actionTarget || ''}}" bindtap="handleBannerTap">
-      <view class="hero-card">
-        <image class="hero-img" src="{{item.imageUrl}}" mode="aspectFill" />
-      </view>
-    </swiper-item>
-  </swiper>
-</view>
-<view class="hero-section" wx:else>
-  <view class="hero-card hero-img-ph" style="height: {{bannerHeight}}px;"></view>
-</view>
-
-<!-- ===== 内容滚动区 ===== -->
+<!-- ===== 内容滚动区（banner 已移入此滚动容器，与内容一起上滑） ===== -->
 <scroll-view
   class="home-scroll {{reduceMotion ? 'reduce-motion' : ''}}"
   scroll-y
@@ -57,6 +43,21 @@
   </view>
   <text class="refresh-text">{{_refresherTriggered ? '刷新中...' : '下拉刷新'}}</text>
 </view>
+
+<!-- ===== Banner 16:9（纯图，无 scrim / 无文案）—— 置于滚动容器内，随内容上滑 ===== -->
+<view class="hero-section" wx:if="{{bannerList.length}}">
+  <swiper class="hero-swiper" autoplay circular interval="5000" duration="600" style="height: {{bannerHeight}}px;">
+    <swiper-item wx:for="{{bannerList}}" wx:key="_id" data-action="{{item.actionType || 'none'}}" data-target="{{item.actionTarget || ''}}" bindtap="handleBannerTap">
+      <view class="hero-card">
+        <image class="hero-img" src="{{item.imageUrl}}" mode="aspectFill" />
+      </view>
+    </swiper-item>
+  </swiper>
+</view>
+<view class="hero-section" wx:else>
+  <view class="hero-card hero-img-ph" style="height: {{bannerHeight}}px;"></view>
+</view>
+
 <view class="home-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 
