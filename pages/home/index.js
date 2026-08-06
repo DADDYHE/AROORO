@@ -9,18 +9,7 @@ const homeActivityBehavior = require('../../behaviors/homeActivityBehavior')
 const homeTuanBehavior = require('../../behaviors/homeTuanBehavior')
 const homeMallBehavior = require('../../behaviors/homeMallBehavior')
 const { buildSharePath } = require('../../utils/share')
-const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 const pageI18n = require('../../utils/page-i18n.js')
-
-const FEATURE_ICONS = [
-  CLOUD_ICONS.MEGAPHONE,
-  CLOUD_ICONS.SHOPPING_CART,
-  CLOUD_ICONS.DOOR_OPEN,
-  CLOUD_ICONS.HOME_HEART,
-]
-
-const CLOUD_ICON_TIME = CLOUD_ICONS.TIME
-const CLOUD_ICON_MAP_PIN = CLOUD_ICONS.MAP_PIN
 
 Page({
   ...pageI18n.mixin(),
@@ -31,16 +20,7 @@ Page({
     userInfo: null,
     locale: 'zh-CN',
     todayDate: '',
-    weatherTemp: 14,
-    unreadCount: 0,
     _refreshPulling: false,
-    featureItems: [
-      { id: 'activity', name: '线下活动', desc: '精彩社区活动', icon: FEATURE_ICONS[0] },
-      { id: 'mall', name: '宠物商城', desc: '精选好物推荐', icon: FEATURE_ICONS[1] },
-    ],
-    recentViews: [],
-    iconTimeLine: CLOUD_ICON_TIME,
-    iconMapPin: CLOUD_ICON_MAP_PIN,
   },
 
   onLoad() {
@@ -60,7 +40,6 @@ Page({
     const weekday = weekdays[now.getDay()]
     this.setData({
       todayDate: `${month}月${date}日 ${weekday}`,
-      weatherTemp: Math.floor(10 + Math.random() * 15),
     })
   },
 
@@ -94,12 +73,7 @@ Page({
 
     if (isLoggedIn) {
       this._loadMyPets()
-      this._loadRecentViews()
     }
-  },
-
-  _loadRecentViews() {
-    this.setData({ recentViews: [] })
   },
 
   onPullDownRefresh() {
@@ -210,17 +184,6 @@ Page({
     wx.navigateTo({ url: '/subpackages/search/index' })
   },
 
-  handleFeatureTap(e) {
-    const id = e.currentTarget.dataset.id
-    const routes = {
-      activity: '/subpackages/activity/list',
-      mall: '/subpackages/mall/product-list',
-    }
-    const url = routes[id]
-    if (!url) { return }
-    wx.navigateTo({ url })
-  },
-
   handleBannerTap(e) {
     const action = e.currentTarget.dataset.action
     const actionTarget = e.currentTarget.dataset.target || ''
@@ -293,16 +256,6 @@ Page({
   handleActivityTap(e) {
     const id = e.detail.id || e.currentTarget.dataset.id
     wx.navigateTo({ url: `/subpackages/activity/detail?id=${id}` })
-  },
-
-  handleRecentViewTap(e) {
-    const id = e.currentTarget.dataset.id
-    const type = e.currentTarget.dataset.type
-    if (type === 'host') {
-      wx.navigateTo({ url: `/subpackages/booking/host-detail?id=${id}` })
-    } else if (type === 'activity') {
-      wx.navigateTo({ url: `/subpackages/activity/detail?id=${id}` })
-    }
   },
 
   onShareAppMessage() {
