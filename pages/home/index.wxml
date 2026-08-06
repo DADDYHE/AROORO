@@ -78,6 +78,7 @@
 
     <view class="pets-grid" wx:if="{{myPets.length > 0}}">
       <view class="pet-card pet-card-{{item.genderClass}} stagger-item stagger-scale" wx:for="{{myPets}}" wx:key="_id" data-id="{{item._id}}" bindtap="handlePetTap" hover-class="pet-card--pressed" hover-stay-time="120" style="animation-delay: {{220 + index * 80}}ms;">
+        <view class="aurora-edge"></view>
         <image class="pet-avatar pet-avatar-{{item.genderClass}}" src="{{item.avatarUrl}}" mode="aspectFill" />
         <view class="pet-info">
           <view class="pet-name-row">
@@ -107,6 +108,8 @@
   <view class="quick-services-wrapper stagger-item stagger-rise-fast delay-2">
     <view class="quick-services">
     <view class="qs-item stagger-item stagger-scale" data-action="activity" bindtap="handleBannerTap" hover-class="qs-item--pressed" hover-stay-time="120" style="animation-delay: 330ms;">
+      <view class="aurora-corner"></view>
+      <view class="aurora-bloom aurora-bloom--breathe"></view>
       <view class="qs-icon qs-icon-activity">
         <image class="qs-emoji-img" src="cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/megaphone-line.svg" mode="aspectFit" />
       </view>
@@ -115,6 +118,8 @@
       <view class="qs-accent qs-accent-activity"></view>
     </view>
     <view class="qs-item stagger-item stagger-scale" data-action="mall" bindtap="handleBannerTap" hover-class="qs-item--pressed" hover-stay-time="120" style="animation-delay: 420ms;">
+      <view class="aurora-corner"></view>
+      <view class="aurora-bloom aurora-bloom--breathe"></view>
       <view class="qs-icon qs-icon-mall">
         <image class="qs-emoji-img" src="cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/shopping-cart-2-line.svg" mode="aspectFit" />
       </view>
@@ -139,6 +144,8 @@
           <text class="featured-img-ph-text">团</text>
         </view>
         <view class="mall-card-overlay"></view>
+        <view class="aurora-lume-line"></view>
+        <view class="mall-card-guard"></view>
         <view class="mall-card-info">
           <text class="mall-card-name">{{item.title}}</text>
           <view class="mall-card-price-row">
@@ -167,6 +174,8 @@
           <text class="featured-img-ph-text">品</text>
         </view>
         <view class="mall-card-overlay"></view>
+        <view class="aurora-lume-line"></view>
+        <view class="mall-card-guard"></view>
         <view class="mall-card-info">
           <text class="mall-card-name">{{item.name}}</text>
           <view class="mall-card-price-row">
@@ -188,6 +197,7 @@
     </view>
     <view class="activity-list">
       <view class="activity-h-card" wx:for="{{latestActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap" hover-class="activity-h-card--pressed" hover-stay-time="120" style="animation: rise-fade-in-short 420ms cubic-bezier(0.19,1,0.22,1) {{550 + index * 90}}ms forwards; opacity: 0;">
+        <view class="aurora-edge"></view>
         <share-element wx:if="{{item.coverUrl}}" key="activity-{{item._id}}" class="activity-h-img-share">
           <image class="activity-h-img" src="{{item.coverUrl}}" mode="aspectFill" />
         </share-element>
@@ -196,6 +206,7 @@
         </view>
         <view class="activity-h-body">
           <text class="activity-h-name">{{item.title}}</text>
+          <view class="aurora-gold-rule"></view>
           <text class="activity-h-info">{{item.timeText}}</text>
           <view class="activity-h-meta">
             <view class="activity-h-loc"><image class="activity-h-loc-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image><text class="activity-h-loc-text">{{item.location || '待定'}}</text></view>

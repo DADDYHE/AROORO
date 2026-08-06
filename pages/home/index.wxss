@@ -607,6 +607,7 @@ page {
   background: linear-gradient(180deg, var(--card-satin) 0%, var(--sheet-paper) 100%);
   border-radius: var(--lux-radius-card);
   overflow: hidden;
+  position: relative;
   border: 1rpx solid var(--hairline-glass);
   transition-property: transform;
   transition-duration: 280ms;
@@ -819,6 +820,8 @@ page {
   border-radius: var(--lux-radius-card);
   border: 1rpx solid var(--hairline-glass);
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
   transition-property: transform;
   transition-duration: 280ms;
   transition-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
@@ -1039,4 +1042,125 @@ page {
   animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-delay: 100ms;
   animation-fill-mode: forwards;
+}
+
+/* ================================================================
+   7. 极光点缀 · 呼应顶部深绿极光带（Haute-Luxury 极光衰减排）
+   ----------------------------------------------------------------
+   设计依据：deliverables/aurora-accent/DESIGN-aurora-accent.md
+   Skyline 安全：全部真实 view / 无负 z-index / 无 backdrop-filter /
+                 无 mask-image / 无 text-shadow；仅 transform·opacity 动画。
+   全套渐变派生自品牌深绿四色（#0F2410/#1F3A1F/#5A7C63），零新色相。
+   极光衰减排：光源在页面顶部，越往下滚动接到的光越弱（falloff 分级）。
+   ================================================================ */
+.home-container {
+  /* 发丝边染绿（等重量校准：感知明度≈原炭墨 rgba(26,26,23,.14)，白拿一层品牌呼应，零视觉代价） */
+  --hairline-aurora:       rgba(31, 58, 31, 0.15);
+  --hairline-aurora-dim:   rgba(31, 58, 31, 0.11);
+  --hairline-aurora-lift:  rgba(31, 58, 31, 0.24);
+  /* 顶沿染边 · 峰值偏右 58% 非对称（对称=廉价） */
+  --aurora-edge-top: linear-gradient(90deg,
+      rgba(15,36,16,0) 0%,    rgba(15,36,16,0.26) 10%,
+      rgba(31,58,31,0.34) 32%, rgba(90,124,99,0.46) 58%,
+      rgba(90,124,99,0.20) 78%, rgba(90,124,99,0) 100%);
+  /* 全图卡遮罩 · 66% 处注入热核，让极光"渗"进画面（同时修 F3 对比度缺陷） */
+  --aurora-scrim-img: linear-gradient(to top,
+      rgba(15,36,16,0.88) 0%, rgba(15,36,16,0.74) 20%,
+      rgba(23,47,26,0.46) 44%, rgba(90,124,99,0.18) 66%,
+      rgba(90,124,99,0.05) 84%, rgba(90,124,99,0) 100%);
+  /* 文字守护层 · 铺在 .mall-card-info 背后（白字对比度 2.7→7.2:1，AAA） */
+  --aurora-scrim-guard: linear-gradient(to top,
+      rgba(15,36,16,0.72) 0%, rgba(15,36,16,0.64) 62%,
+      rgba(15,36,16,0.24) 88%, rgba(15,36,16,0) 100%);
+  /* 全图卡顶部提亮线 · 深底上的染边等价物 */
+  --aurora-edge-lume: linear-gradient(90deg,
+      rgba(164,183,169,0) 0%, rgba(164,183,169,0.28) 38%,
+      rgba(164,183,169,0.42) 62%, rgba(164,183,169,0) 100%);
+  /* 一支金 · 仅 1px 功能信号线（金在暖石纸卡上 2.2:1 不达标，绝不作文案/填充） */
+  --aurora-gold-rule: linear-gradient(90deg,
+      rgba(201,162,75,0) 0%, rgba(201,162,75,0.9) 18%,
+      rgba(201,162,75,1) 50%, rgba(201,162,75,0.9) 82%, rgba(201,162,75,0) 100%);
+  /* 角弧 / 晕 / 线尺度（px×2 = rpx） */
+  --aurora-corner:     #3A5A42;   /* 中深绿，色相 135°，派生自 #0F2410↔#5A7C63 中点，零新色相 */
+  --aurora-corner-w:   4rpx;      /* = .qs-accent 竖线宽，重量守恒 */
+  --aurora-corner-r:   40rpx;     /* 必须 = --lux-radius-card（40rpx），否则不同心 */
+  --aurora-bloom-size: 216rpx;
+  --aurora-edge-h:    2rpx;
+  --aurora-lume-h:    2rpx;
+  --aurora-gold-w:    2rpx;
+  --aurora-gold-len:  28rpx;
+  --aurora-guard-h:   124rpx;
+}
+
+/* 极光衰减排：各卡只靠一个 falloff 变量分级（光源在顶部，越往下越弱） */
+.qs-item         { --aurora-falloff: 1;    --hairline-glass: var(--hairline-aurora); }
+.pet-card        { --aurora-falloff: 0.72; --hairline-glass: var(--hairline-aurora); }
+.mall-card       { --aurora-falloff: 0.56; --hairline-glass: var(--hairline-aurora-dim); }
+.activity-h-card { --aurora-falloff: 0.44; --hairline-glass: var(--hairline-aurora-dim); }
+
+/* ── 通用点缀层基类：真实 view，正 z-index，绝不负 ── */
+/* 快捷服务卡：左上角极光圆角弧（R1：原顶边横条+左竖线合并为仅圆角一段） */
+.aurora-corner {
+  position: absolute; top: -1rpx; left: -1rpx;   /* 贴卡片圆角外缘（被 overflow 裁掉外扩后残留在边） */
+  width: var(--aurora-corner-r); height: var(--aurora-corner-r);   /* 40rpx，与卡片圆角同心 */
+  /* SVG 弧线：圆心(40,40) 半径39，沿左上圆角精确描边；规避 Skyline 的 border-quarter-circle 渲染缺失 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M40 1 A39 39 0 0 0 1 40' fill='none' stroke='%233A5A42' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  opacity: var(--aurora-falloff, 1);
+  pointer-events: none; z-index: 1;
+}
+/* 右上角宝石晕 · 全页仅首屏 2 枚呼吸（稀缺=高级） */
+.aurora-bloom {
+  position: absolute; top: 0; right: 0;
+  width: var(--aurora-bloom-size); height: var(--aurora-bloom-size);   /* 216rpx */
+  /* SVG 径向晕：cx=100% cy=0%（右上角）发散；规避 Skyline 对 CSS radial-gradient 的支持弱 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3CradialGradient id='g' cx='100%25' cy='0%25' r='78%25'%3E%3Cstop offset='0%25' stop-color='%235A7C63' stop-opacity='0.27'/%3E%3Cstop offset='35%25' stop-color='%235A7C63' stop-opacity='0.16'/%3E%3Cstop offset='65%25' stop-color='%231F3A1F' stop-opacity='0.07'/%3E%3Cstop offset='100%25' stop-color='%231F3A1F' stop-opacity='0'/%3E%3C/radialGradient%3E%3Crect width='100' height='100' fill='url(%23g)'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  opacity: var(--aurora-falloff, 1);
+  transform-origin: 100% 0%;
+  pointer-events: none; z-index: 1;
+}
+.aurora-bloom--breathe {
+  animation: aurora-breathe 7200ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+/* 顶沿极光染边条（宠物卡 / 活动卡） */
+.aurora-edge {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: var(--aurora-edge-h);
+  background: var(--aurora-edge-top);
+  opacity: var(--aurora-falloff, 1);
+  pointer-events: none; z-index: 1;
+}
+/* 一支金信号线（活动卡时间行） */
+.aurora-gold-rule {
+  width: var(--aurora-gold-len); height: var(--aurora-gold-w);
+  background: var(--aurora-gold-rule);
+  border-radius: 1rpx; flex-shrink: 0;
+}
+/* 全图卡顶部提亮线 */
+.aurora-lume-line {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: var(--aurora-lume-h);
+  background: var(--aurora-edge-lume);
+  opacity: var(--aurora-falloff, 1);
+  pointer-events: none; z-index: 1;
+}
+/* 全图卡文字守护层（修 F3） */
+.mall-card-guard {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: var(--aurora-guard-h);
+  background: var(--aurora-scrim-guard);
+  pointer-events: none; z-index: 1;
+}
+/* 全图卡：遮罩换极光渐变 + 信息层抬到守护层之上 */
+.mall-card-overlay { height: 62%; background: var(--aurora-scrim-img); }
+.mall-card-info   { z-index: 2; }
+
+/* 极光呼吸 — 7.2s，慢到几乎察觉不到；仅首屏 2 枚角晕，全页不重复（S8 无限动画克制） */
+@keyframes aurora-breathe {
+  0%   { opacity: 0.55; transform: scale(1); }
+  50%  { opacity: 1;    transform: scale(1.05); }
+  100% { opacity: 0.55; transform: scale(1); }
 }
