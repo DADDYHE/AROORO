@@ -584,13 +584,13 @@ page {
 
 .mall-card-original {
   font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.82);
   text-decoration: line-through;
 }
 
 .mall-card-sold {
   font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.85);
   margin-left: auto;
   letter-spacing: 0;
 }
@@ -1068,10 +1068,11 @@ page {
       rgba(15,36,16,0.88) 0%, rgba(15,36,16,0.74) 20%,
       rgba(23,47,26,0.46) 44%, rgba(90,124,99,0.18) 66%,
       rgba(90,124,99,0.05) 84%, rgba(90,124,99,0) 100%);
-  /* 文字守护层 · 铺在 .mall-card-info 背后（白字对比度 2.7→7.2:1，AAA） */
+  /* 文字守护层 · 铺在 .mall-card-info 背后（亮图上白字对比度 3→8.8:1，过 AA） */
   --aurora-scrim-guard: linear-gradient(to top,
-      rgba(15,36,16,0.72) 0%, rgba(15,36,16,0.64) 62%,
-      rgba(15,36,16,0.24) 88%, rgba(15,36,16,0) 100%);
+      rgba(15,36,16,0.94) 0%, rgba(15,36,16,0.90) 62%,
+      rgba(15,36,16,0.74) 84%, rgba(15,36,16,0.28) 95%,
+      rgba(15,36,16,0) 100%);
   /* 全图卡顶部提亮线 · 深底上的染边等价物 */
   --aurora-edge-lume: linear-gradient(90deg,
       rgba(164,183,169,0) 0%, rgba(164,183,169,0.28) 38%,
@@ -1089,7 +1090,7 @@ page {
   --aurora-lume-h:    2rpx;
   --aurora-gold-w:    2rpx;
   --aurora-gold-len:  28rpx;
-  --aurora-guard-h:   124rpx;
+  --aurora-guard-h:   140rpx;
 }
 
 /* 极光衰减排：各卡只靠一个 falloff 变量分级（光源在顶部，越往下越弱） */
@@ -1147,15 +1148,17 @@ page {
   opacity: var(--aurora-falloff, 1);
   pointer-events: none; z-index: 1;
 }
-/* 全图卡文字守护层（修 F3） */
+/* 全图卡文字守护层（直接写死渐变，不依赖继承变量，确保 Skyline 下必渲染） */
 .mall-card-guard {
   position: absolute; left: 0; right: 0; bottom: 0;
-  height: var(--aurora-guard-h);
-  background: var(--aurora-scrim-guard);
+  height: 125rpx;
+  background: linear-gradient(to top,
+      rgba(15,36,16,0.72) 0%, rgba(15,36,16,0.50) 45%,
+      rgba(15,36,16,0.22) 78%, rgba(15,36,16,0) 100%);
   pointer-events: none; z-index: 1;
 }
-/* 全图卡：遮罩换极光渐变 + 信息层抬到守护层之上 */
-.mall-card-overlay { height: 62%; background: var(--aurora-scrim-img); }
+/* 全图卡：遮罩直接写死强渐变 + 信息层抬到守护层之上 */
+.mall-card-overlay { height: 50%; background: linear-gradient(to top, rgba(15,36,16,0.5) 0%, rgba(15,36,16,0.22) 40%, rgba(15,36,16,0.10) 70%, transparent 100%); }
 .mall-card-info   { z-index: 2; }
 
 /* 极光呼吸 — 7.2s，慢到几乎察觉不到；仅首屏 2 枚角晕，全页不重复（S8 无限动画克制） */
