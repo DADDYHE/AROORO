@@ -18,9 +18,10 @@ const { UtilityService } = require('../services/CloudFunctionService')
 const homeBannerBehavior = Behavior({
   data: {
     bannerList: [],
-    bannerHeight: 422,
-    bannerVisibleHeight: 337,
-    contentSheetOverlap: 0,
+    // Plain Sheet：banner 恒为 16:9 纯图，sheet 硬边紧贴其下，零透叠。
+    // 不变式：bannerVisibleHeight === bannerHeight
+    bannerHeight: 211,
+    bannerVisibleHeight: 211,
     // scroll-view 布局参数
     scrollViewOffset: 64, // scroll-view 顶部偏移 = navbarHeight + topbarHeight
     scrollMarginTop: 0,   // scroll-view 负 margin，拉升至 banner 顶部
@@ -29,14 +30,8 @@ const homeBannerBehavior = Behavior({
   methods: {
     _initBanner() {
       const windowWidth = wx.getWindowInfo().windowWidth
-      // 内容卡片上移后，要求 banner 可见区域为 5:4（宽:高 = 5:4）
-      // 图片比例至少为 4:5（高:宽 = 5:4），否则会被强制拉伸到该比例
-      const minImageRatio = 5 / 4
-      const visibleRatio = 4 / 5
-      const bannerHeight = Math.round(windowWidth * minImageRatio)
-      const bannerVisibleHeight = Math.round(windowWidth * visibleRatio)
-      const contentSheetOverlap = bannerHeight - bannerVisibleHeight
-      this.setData({ bannerHeight, bannerVisibleHeight, contentSheetOverlap })
+      const bannerHeight = Math.round(windowWidth * 9 / 16)
+      this.setData({ bannerHeight, bannerVisibleHeight: bannerHeight })
       this._updateScrollLayout()
     },
 
@@ -55,36 +50,7 @@ const homeBannerBehavior = Behavior({
       this.setData({ scrollViewOffset, scrollMarginTop })
     },
 
-    /**
-     * 图片加载完成后，按第一张图片的真实比例动态调整 swiper 高度。
-     * 避免图片比例与默认 16:9 不一致时被 aspectFill 裁剪。
-     * 同时保证内容卡片上移后 banner 可见区域为 5:4。
-     */
-    onBannerImageLoad(e) {
-      if (this._bannerHeightAdjusted) {return}
-      this._bannerHeightAdjusted = true
-
-      const { width, height } = e.detail || {}
-      if (!width || !height) {return}
-
-      const windowWidth = wx.getWindowInfo().windowWidth
-      const minImageRatio = 5 / 4
-      const visibleRatio = 4 / 5
-      const ratio = Math.max(height / width, minImageRatio)
-      const newHeight = Math.round(windowWidth * ratio)
-      const bannerVisibleHeight = Math.round(windowWidth * visibleRatio)
-      const contentSheetOverlap = newHeight - bannerVisibleHeight
-
-      // 合理范围校验，避免异常值
-      if (newHeight > 100 && newHeight < 2000) {
-        this.setData({ bannerHeight: newHeight, bannerVisibleHeight, contentSheetOverlap })
-        this._updateScrollLayout()
-      }
-    },
-
     async _loadBannerData() {
-      // 允许新一轮加载时重新调整高度
-      this._bannerHeightAdjusted = false
       try {
         const result = await UtilityService.getBanners()
         if (result && result.code === 0 && result.data) {

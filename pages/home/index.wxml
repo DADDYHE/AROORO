@@ -18,33 +18,18 @@
   </view>
 </header>
 
-<!-- ===== Section 2: 英雄区 ===== -->
+<!-- ===== Section 2: Banner 16:9（纯图，无 scrim / 无文案） ===== -->
 <view class="hero-section" wx:if="{{bannerList.length}}">
   <swiper class="hero-swiper" autoplay circular interval="5000" duration="600" style="height: {{bannerHeight}}px;">
     <swiper-item wx:for="{{bannerList}}" wx:key="_id" data-action="{{item.actionType || 'none'}}" data-target="{{item.actionTarget || ''}}" bindtap="handleBannerTap">
       <view class="hero-card">
-        <image class="hero-img" src="{{item.imageUrl}}" mode="aspectFill" bindload="onBannerImageLoad" />
-        <view class="hero-overlay"></view>
-        <view class="hero-text">
-          <text class="hero-title hero-title-stagger">{{item.title || '宠爱如初'}}</text>
-          <text class="hero-sub hero-sub-stagger">{{item.subtitle || '为爱宠开启精致生活'}}</text>
-        </view>
+        <image class="hero-img" src="{{item.imageUrl}}" mode="aspectFill" />
       </view>
     </swiper-item>
   </swiper>
 </view>
 <view class="hero-section" wx:else>
-  <view class="hero-card" style="height: {{bannerHeight}}px;">
-    <view class="hero-img hero-img-ph"></view>
-    <view class="hero-overlay"></view>
-    <view class="hero-text">
-      <text class="hero-title hero-title-stagger">宠爱如初</text>
-      <text class="hero-sub hero-sub-stagger">为爱宠开启精致生活</text>
-    </view>
-    <view class="scroll-hint">
-      <view class="scroll-hint-line"></view>
-    </view>
-  </view>
+  <view class="hero-card hero-img-ph" style="height: {{bannerHeight}}px;"></view>
 </view>
 
 <!-- ===== 内容滚动区 ===== -->
@@ -75,8 +60,8 @@
 <view class="home-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 
-  <!-- ===== 内容卡片 sheet：优雅上掀 ===== -->
-  <view class="home-content-sheet stagger-item stagger-sheet" style="margin-top: {{bannerVisibleHeight}}px;">
+  <!-- ===== 内容 sheet：与 banner 硬边相接 ===== -->
+  <view class="home-content-sheet" style="margin-top: {{bannerVisibleHeight}}px;">
 
   <!-- ===== Section 2.5: 我的宠物 ===== -->
   <view class="section my-pets-section stagger-item stagger-rise-fast delay-1" wx:if="{{isLoggedIn}}">

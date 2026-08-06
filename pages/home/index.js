@@ -49,7 +49,6 @@ Page({
     this.setData({ t: pageI18n.buildTMap(locale), locale })
     this._initToday()
     this._initBanner()
-    this._initParallax()
     this._initRefreshAnimation()
   },
 
@@ -109,80 +108,7 @@ Page({
     wx.stopPullDownRefresh()
   },
 
-  // ================================================================
-  // Worklet 视差滚动
-  // ----------------------------------------------------------------
-  // 滚动时 hero 图片轻微放大 + 上移，产生层次感
-  // worklet 在 UI 线程同步驱动 transform，无 setData 开销，60fps 流畅
-  // ================================================================
-  _initParallax() {
-    if (!wx.worklet || !this.applyAnimatedStyle) return
-    const { shared } = wx.worklet
-    this._heroScrollY = shared(0)
-
-    const scrollY = this._heroScrollY
-    // Hero 图片：视差上移 + 轻微放大（丝绸层叠感）
-    const updateHeroStyle = () => {
-      'worklet'
-      const y = scrollY.value
-      const clampedY = Math.min(Math.max(y, 0), 350)
-      const translateY = -clampedY * 0.25
-      const scale = 1 + clampedY * 0.0002
-      return { transform: `translateY(${translateY}px) scale(${scale})` }
-    }
-
-    // Hero 遮罩：滚动时渐深（聚焦内容）
-    const updateOverlayStyle = () => {
-      'worklet'
-      const y = scrollY.value
-      const clampedY = Math.min(Math.max(y, 0), 350)
-      const opacity = 0.55 + clampedY * 0.001
-      return { opacity: opacity }
-    }
-
-    // Hero 文字：视差上移速度更快（漂浮感）+ 渐隐
-    const updateHeroTextStyle = () => {
-      'worklet'
-      const y = scrollY.value
-      const clampedY = Math.min(Math.max(y, 0), 280)
-      const translateY = -clampedY * 0.4
-      const opacity = 1 - clampedY / 280
-      return { transform: `translateY(${translateY}px)`, opacity: opacity }
-    }
-
-    wx.nextTick(() => {
-      try {
-        this._cancelHeroStyle = this.applyAnimatedStyle('.hero-card', updateHeroStyle)
-        this._cancelOverlayStyle = this.applyAnimatedStyle('.hero-overlay', updateOverlayStyle)
-        this._cancelHeroTextStyle = this.applyAnimatedStyle('.hero-text', updateHeroTextStyle)
-      } catch (e) {
-        this._cancelHeroStyle = null
-        this._cancelOverlayStyle = null
-        this._cancelHeroTextStyle = null
-      }
-    })
-  },
-
-  // 由 listBehavior._onScroll 调用，直接更新 SharedValue（无 setData 开销）
-  _onParallaxScroll(scrollTop) {
-    if (this._heroScrollY) {
-      this._heroScrollY.value = scrollTop
-    }
-  },
-
   onUnload() {
-    if (this._cancelHeroStyle) {
-      this._cancelHeroStyle()
-      this._cancelHeroStyle = null
-    }
-    if (this._cancelOverlayStyle) {
-      this._cancelOverlayStyle()
-      this._cancelOverlayStyle = null
-    }
-    if (this._cancelHeroTextStyle) {
-      this._cancelHeroTextStyle()
-      this._cancelHeroTextStyle = null
-    }
     this._teardownRefreshAnimation()
   },
 

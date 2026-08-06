@@ -1,14 +1,15 @@
 /* ================================================================
-   pages/home/index.wxss · AROORO 首页 · Haute-Luxury v2
+   pages/home/index.wxss · AROORO 首页 · Plain Sheet
+   设计系统：styles/theme-teal.wxss（teal 调色板，无新色相）
    ----------------------------------------------------------------
-   设计方向：Editorial Luxury（杂志式奢侈品首页）
-     · Hero 全出血大图，极简文案
-     · 奶油白内容卡片 sheet 优雅上掀
-     · 服务入口：极简线条 + 宽字距标签
-     · 商品卡：全图 + 底部渐变信息
-     · 活动卡：左图右文，发丝描边
-     · 我的宠物：圆形头像 + 极简排版
-   Skyline 兼容：仅 transform/opacity 动画，GPU 加速
+   设计方向：零装帧极简
+     · Banner 16:9 纯图，无 scrim / 无文案 / 无描金
+     · 下方一整片实色 --sheet-paper，与 banner 硬边相接、零透叠
+     · 卡片：实心 --card-satin + 单条 --hairline-glass 边
+     · 排版：中性无衬线、常规字重、零字距处理
+   Skyline 兼容：禁用 backdrop-filter / text-shadow / mask-image /
+                 :active / position:sticky / text-transform / 负 z-index
+                 仅 transform/opacity 动画，GPU 加速
    ================================================================ */
 
 /* ===== 基础容器 ===== */
@@ -16,7 +17,7 @@
   min-height: 100vh;
   background: transparent;
   font-family: var(--font-sans);
-  padding: 0 0 240rpx;
+  padding: 0; /* 缎面溶解：底部留白移入 sheet（见 .bottom-spacer），避免 sheet 结束后露出 page 渐变(#ECE4D4) 与 sheet 纸面(#F7F5EF) 的色阶断层 */
   margin-top: 0;
   box-sizing: border-box;
 }
@@ -67,8 +68,7 @@ page {
 
 .refresh-text {
   font-size: 20rpx;
-  color: var(--text-tertiary);
-  letter-spacing: 0.12em;
+  color: var(--text-on-glass-2);
   transition-property: opacity;
   transition-duration: 280ms;
   transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -152,7 +152,6 @@ page {
   font-size: 22rpx;
   color: var(--text-secondary);
   line-height: 1.2;
-  letter-spacing: 0.08em;
 }
 
 .topbar-search {
@@ -201,149 +200,43 @@ page {
   display: none;
 }
 
-/* ===== Section 2: 英雄区（全出血大图 + 极简文案） ===== */
-.hero-section {
-  padding: 0;
-  margin-top: 0;
-  position: relative;
-  z-index: 1;
-  width: 100%;
-}
-
-.hero-swiper {
-  width: 100%;
-}
-
+/* ===== Section 2: Banner 16:9（纯图，无 scrim / 无文案） ===== */
+.hero-section { position: relative; z-index: 1; width: 100%; }
+.hero-swiper { width: 100%; height: 422rpx; }
 .hero-card {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+  position: relative; width: 100%; height: 422rpx;
+  overflow: hidden; background: var(--skeleton-base);
 }
+.hero-img { width: 100%; height: 100%; display: block; }
+.hero-img-ph { background: var(--skeleton-base); }
 
-.hero-img {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.hero-img-ph {
-  background: linear-gradient(180deg, #3D6B3D 0%, #1F3A1F 100%);
-}
-
-.hero-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to top, rgba(15, 36, 16, 0.75) 0%, rgba(15, 36, 16, 0.2) 45%, transparent 70%);
-}
-
-.hero-text {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  padding: 0 var(--page-padding) 96rpx;
-}
-
-/* 向下滚动提示：极简圆点脉动 */
-.scroll-hint {
-  position: absolute;
-  bottom: 48rpx;
-  right: var(--page-padding);
-  width: 40rpx;
-  height: 40rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  animation-name: scroll-hint-appear;
-  animation-duration: 900ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
-  animation-delay: 1500ms;
-  animation-fill-mode: forwards;
-}
-
-.scroll-hint-line {
-  width: 6rpx;
-  height: 6rpx;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 50%;
-  animation-name: scroll-dot-breathe;
-  animation-duration: 2400ms;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-  animation-iteration-count: infinite;
-}
-
-@keyframes scroll-hint-appear {
-  from { opacity: 0; transform: translateY(12rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scroll-dot-breathe {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.8); opacity: 0.9; }
-}
-
-.hero-title {
-  font-size: 64rpx;
-  font-weight: 300;
-  color: #FFFFFF;
-  letter-spacing: 0.02em;
-  display: block;
-  line-height: 1.15;
-}
-
-.hero-sub {
-  font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 16rpx;
-  display: block;
-  line-height: 1.6;
-  letter-spacing: 0.08em;
-  font-weight: 300;
-}
-
-/* ===== 内容 sheet：奶油白卡片优雅上掀 ===== */
+/* ===== 内容 sheet：一整片实色纸面，与 banner 硬边相接（零装帧） ===== */
 .home-content-sheet {
   position: relative;
   z-index: 2;
   border-radius: 0;
   padding-top: 0;
-  margin-top: -48rpx;
+  min-height: 100vh;
+  background: var(--sheet-paper);
 }
 
-/* ===== Section 3: 登录入口（奢侈品 CTA） ===== */
+/* ===== Section 3: 登录入口（实心主按钮 CTA） ===== */
 .search-section {
   padding: var(--zy-space-xl) var(--page-padding) var(--zy-space-lg);
 }
 
 .home-login-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  background: var(--card-color);
-  color: var(--text-primary);
-  font-size: 26rpx;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  padding: 32rpx;
-  border-radius: var(--zy-radius-lg);
-  border: 1rpx solid var(--hairline);
-  position: relative;
-  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 32rpx;
+  background: var(--primary-color); color: var(--text-on-primary);
+  font-size: 26rpx; font-weight: 500; letter-spacing: 0.02em;
+  border-radius: var(--zy-radius-pill); border: none; box-shadow: none;
   transition-property: transform;
   transition-duration: 180ms;
   transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.home-login-btn--pressed {
-  transform: scale(0.98);
-  border-color: var(--primary-soft);
-}
+.home-login-btn--pressed { transform: scale(0.98); opacity: 0.92; }
 
 .home-login-text {
   font-size: 26rpx;
@@ -373,9 +266,9 @@ page {
   flex: 1;
   box-sizing: border-box;
   padding: 36rpx 32rpx;
-  background: var(--card-color);
+  background: var(--card-satin); /* Plain Sheet：实心暖石纸卡，单条炭墨发丝边 */
   border-radius: var(--lux-radius-card);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid var(--hairline-glass);
   position: relative;
   overflow: hidden;
   transition-property: transform;
@@ -431,18 +324,16 @@ page {
 .qs-title {
   font-size: 30rpx;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-on-glass);
   line-height: 1.3;
   margin-bottom: 8rpx;
-  letter-spacing: 0.02em;
 }
 
 .qs-subtitle {
   font-size: 22rpx;
-  color: var(--text-tertiary);
+  font-weight: 400;
+  color: var(--text-on-glass-2);
   line-height: 1.4;
-  letter-spacing: 0.04em;
-  font-weight: 300;
 }
 
 .qs-accent {
@@ -479,18 +370,17 @@ page {
   margin-bottom: var(--zy-space-xl);
 }
 
+/* Plain Sheet：中性无衬线，常规字重，零字距处理 */
 .section-title {
   font-size: 36rpx;
-  font-weight: 400;
+  font-weight: 600;
   color: var(--text-primary);
   line-height: 1.2;
-  letter-spacing: 0.02em;
 }
 
 .section-link {
   font-size: 22rpx;
-  color: var(--text-tertiary);
-  letter-spacing: 0.08em;
+  color: var(--text-on-glass-2);
   transition-property: transform;
   transition-duration: 180ms;
   transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -499,7 +389,7 @@ page {
 }
 
 .section-link--pressed {
-  color: #1F3A1F;
+  color: var(--primary-color);
   transform: translateX(4rpx);
 }
 
@@ -524,10 +414,10 @@ page {
   display: flex;
   flex-direction: column;
   width: 300rpx;
-  background: var(--card-color);
+  background: var(--card-satin);
   border-radius: var(--lux-radius-card);
   overflow: hidden;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid var(--hairline-glass);
   flex-shrink: 0;
   margin-right: var(--zy-space-lg);
   transition-property: transform;
@@ -555,8 +445,8 @@ page {
 
 .featured-img-ph-text {
   font-size: 40rpx;
-  color: var(--text-tertiary);
-  font-weight: 300;
+  color: var(--text-on-glass-2);
+  font-weight: 400;
 }
 
 .featured-body {
@@ -590,7 +480,7 @@ page {
 
 .featured-price-orig {
   font-size: 22rpx;
-  color: var(--text-tertiary);
+  color: var(--text-on-glass-2);
 }
 
 /* ===== 商城好物：全图 + 底部渐变信息 ===== */
@@ -603,7 +493,7 @@ page {
   overflow: hidden;
   flex-shrink: 0;
   margin-right: var(--zy-space-lg);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid var(--hairline-glass);
   transition-property: transform;
   transition-duration: 280ms;
   transition-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
@@ -685,13 +575,13 @@ page {
 
 .mall-card-original {
   font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.6);
   text-decoration: line-through;
 }
 
 .mall-card-sold {
   font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.7);
   margin-left: auto;
   letter-spacing: 0.04em;
 }
@@ -705,10 +595,10 @@ page {
 
 .activity-h-card {
   display: flex;
-  background: var(--card-color);
+  background: var(--card-satin);
   border-radius: var(--lux-radius-card);
   overflow: hidden;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid var(--hairline-glass);
   transition-property: transform;
   transition-duration: 280ms;
   transition-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
@@ -748,8 +638,8 @@ page {
 
 .activity-h-img-ph-text {
   font-size: 28rpx;
-  color: var(--text-tertiary);
-  font-weight: 300;
+  color: var(--text-on-glass-2);
+  font-weight: 400;
 }
 
 .activity-h-body {
@@ -775,10 +665,9 @@ page {
 
 .activity-h-info {
   font-size: 22rpx;
-  color: var(--text-tertiary);
+  color: var(--text-on-glass-2);
   line-height: 1.5;
-  letter-spacing: 0.04em;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .activity-h-meta {
@@ -793,8 +682,7 @@ page {
   align-items: center;
   gap: 8rpx;
   font-size: 20rpx;
-  color: var(--text-tertiary);
-  letter-spacing: 0.04em;
+  color: var(--text-on-glass-2);
 }
 
 .activity-h-loc-icon {
@@ -813,8 +701,8 @@ page {
   align-items: center;
   gap: 8rpx;
   font-size: 20rpx;
-  color: #1F3A1F;
-  letter-spacing: 0.04em;
+  color: var(--text-on-glass); /* 原硬编码 #1F3A1F 暗态仅 2.76:1，改主文字色 */
+  font-weight: 500;
 }
 
 .activity-h-people-icon {
@@ -830,10 +718,10 @@ page {
 
 /* ===== 未登录提示卡（极简） ===== */
 .login-card {
-  background: var(--card-color);
+  background: var(--card-satin);
   border-radius: var(--lux-radius-card);
   padding: 64rpx 40rpx;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid var(--hairline-glass);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -849,20 +737,18 @@ page {
 
 .login-title {
   font-size: 36rpx;
-  font-weight: 300;
+  font-weight: 500;
   color: var(--text-primary);
   display: block;
-  letter-spacing: 0.02em;
 }
 
 .login-sub {
   font-size: 24rpx;
-  color: var(--text-tertiary);
+  color: var(--text-on-glass-2);
   display: block;
   margin-top: 16rpx;
   line-height: 1.7;
-  letter-spacing: 0.04em;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .login-btn {
@@ -875,7 +761,7 @@ page {
   padding: 24rpx 56rpx;
   border-radius: var(--zy-radius-pill);
   align-self: flex-start;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.02em;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-glow-primary-soft);
@@ -890,16 +776,14 @@ page {
 
 /* ===== 底部留白（艺术级呼吸） ===== */
 .bottom-spacer {
-  height: 160rpx;
+  height: 400rpx; /* 缎面溶解：原 240(container)+160 = 400，全量移入 sheet 内部，保证底部也是纸面而非 page 渐变 */
 }
 
 /* ===== Section 2.5: 我的宠物（极简头像行） ===== */
 .my-pets-section {
-  margin: var(--zy-space-xl) 0 var(--zy-space-lg);
-  padding: 40rpx var(--page-padding) 48rpx;
+  margin: 0 0 var(--zy-space-lg);
+  padding: 64rpx var(--page-padding) 48rpx;
   background: transparent;
-  border-radius: 0;
-  border-bottom: 1rpx solid var(--hairline);
 }
 
 .my-pets-header {
@@ -925,7 +809,7 @@ page {
   margin-left: 24rpx;
   border-radius: var(--zy-radius-pill);
   background: transparent;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid var(--hairline-glass);
   flex-shrink: 0;
   white-space: nowrap;
   transition-property: transform;
@@ -941,9 +825,8 @@ page {
 
 .pet-view-all {
   font-size: 22rpx;
-  color: var(--text-tertiary);
+  color: var(--text-on-glass-2);
   line-height: 1;
-  letter-spacing: 0.08em;
   transition-property: transform;
   transition-duration: 180ms;
   transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -951,21 +834,20 @@ page {
 }
 
 .pet-view-all--pressed {
-  color: #1F3A1F;
+  color: var(--primary-color);
   transform: translateX(4rpx);
 }
 
 .pet-add-icon {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: var(--text-on-glass-2);
   line-height: 1;
 }
 
 .pet-add-text {
   font-size: 22rpx;
-  color: var(--text-secondary);
+  color: var(--text-on-glass-2);
   line-height: 1;
-  letter-spacing: 0.06em;
 }
 
 .pets-grid {
@@ -982,9 +864,9 @@ page {
   max-width: calc(50% - 24rpx); /* 50% - spacing-lg/2，与 .qs-item flex:1 平分等价 */
   min-width: 0;
   padding: 24rpx;
-  background: var(--card-color);
+  background: var(--card-satin); /* Plain Sheet：实心暖石纸卡，单条炭墨发丝边 */
   border-radius: var(--lux-radius-card);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid var(--hairline-glass);
   box-sizing: border-box;
   transition-property: transform;
   transition-duration: 280ms;
@@ -1067,9 +949,9 @@ page {
   display: none;
 }
 
+/* 性别色左侧线：用 inset 内阴影替代 border-left，确保被 40rpx 圆角裁切、随圆角围绕过去；
+   规避 Skyline 下"单边加粗 border + 大 radius"拐角不圆、方头戳出圆角的硬边 bug。 */
 .pet-card-male {
-  /* 性别色左侧线：用 inset 内阴影替代 border-left，确保被 40rpx 圆角裁切、随圆角围绕过去；
-     规避 Skyline 下"单边加粗 border + 大 radius"拐角不圆、方头戳出圆角的硬边 bug */
   box-shadow: inset 3rpx 0 0 0 var(--gender-male, #5BB8D6);
 }
 
@@ -1080,25 +962,23 @@ page {
 .pet-name {
   font-size: 28rpx;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-on-glass);
   line-height: 1.2;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  letter-spacing: 0.01em;
 }
 
 .pet-breed {
   font-size: 22rpx;
-  color: var(--text-tertiary);
+  font-weight: 400;
+  color: var(--text-on-glass-2);
   margin-top: 6rpx;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  letter-spacing: 0.02em;
-  font-weight: 300;
 }
 
 .pet-card-empty {
@@ -1111,9 +991,9 @@ page {
   min-width: 0;
   min-height: 140rpx;
   padding: 24rpx;
-  background: var(--card-cream);
+  background: var(--card-satin); /* Plain Sheet：空态同用实心纸，虚线版位保持"未装帧"语义 */
   border-radius: var(--lux-radius-card);
-  border: 1rpx dashed var(--border-soft);
+  border: 1rpx dashed var(--hairline-glass);
   box-sizing: border-box;
   transition-property: transform;
   transition-duration: 180ms;
@@ -1128,11 +1008,10 @@ page {
 
 .pet-empty-text {
   font-size: 24rpx;
-  font-weight: 300;
-  color: var(--text-tertiary);
+  font-weight: 400;
+  color: var(--text-on-glass-2);
   line-height: 1.4;
   text-align: center;
-  letter-spacing: 0.06em;
 }
 
 /* ================================================================
@@ -1155,14 +1034,17 @@ page {
   100% { opacity: 1; transform: scale(1); }
 }
 
-@keyframes sheet-slide-up {
-  0% { opacity: 0; transform: translateY(40rpx); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
 .stagger-item {
   opacity: 0;
   animation-fill-mode: forwards;
+}
+
+/* 可达性兜底：用户开启「减少动态效果」时，入场动画不播，内容直接可见，避免卡在 opacity:0 */
+@media (prefers-reduced-motion: reduce) {
+  .stagger-item {
+    opacity: 1;
+    animation: none;
+  }
 }
 
 .stagger-rise {
@@ -1183,13 +1065,6 @@ page {
   animation-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
 }
 
-.stagger-sheet {
-  animation-name: sheet-slide-up;
-  animation-duration: 800ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-delay: 200ms;
-}
-
 .delay-0 { animation-delay: 0ms; }
 .delay-1 { animation-delay: 120ms; }
 .delay-2 { animation-delay: 240ms; }
@@ -1199,35 +1074,6 @@ page {
 .delay-6 { animation-delay: 720ms; }
 .delay-7 { animation-delay: 840ms; }
 .delay-8 { animation-delay: 960ms; }
-
-/* Hero 文字入场：字间距收紧 */
-.hero-title-stagger {
-  opacity: 0;
-  animation-name: hero-title-fade;
-  animation-duration: 900ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
-  animation-delay: 500ms;
-  animation-fill-mode: forwards;
-}
-
-.hero-sub-stagger {
-  opacity: 0;
-  animation-name: hero-sub-fade;
-  animation-duration: 800ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-delay: 700ms;
-  animation-fill-mode: forwards;
-}
-
-@keyframes hero-title-fade {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
-@keyframes hero-sub-fade {
-  0% { opacity: 0; transform: translateY(8rpx); }
-  100% { opacity: 0.7; transform: translateY(0); }
-}
 
 /* 顶部栏淡入 */
 @keyframes topbar-fade {

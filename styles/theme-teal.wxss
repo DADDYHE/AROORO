@@ -376,6 +376,14 @@ page {
   --gradient-white-fade: linear-gradient(to top, #FFFFFF 0%, rgba(255,255,255,0) 100%);
   --gradient-white-fade-soft: linear-gradient(to top, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
 
+  /* ===== Plain Sheet（首页 banner 下整片实色纸面 · 亮态） =====
+     命名保留 "glass" 为历史包袱，实为实色/实线，勿按字面理解。 */
+  --sheet-paper: #F7F5EF;                     /* 纸面：banner 下一整片实色背景 */
+  --card-satin: #FBF9F4;                      /* 卡底，必须比 --sheet-paper 亮一档 */
+  --text-on-glass: #1A1A17;                   /* 卡上主文字 */
+  --text-on-glass-2: #545046;                 /* 卡上次文字 */
+  --hairline-glass: rgba(26, 26, 23, 0.14);   /* 炭墨发丝边：0.12 在实心纸上几乎看不见，保持 0.14 */
+
   /* ===== 寄养洗色（host-list 引用） ===== */
   --boarding-wash: #F5EDE5;
 }
@@ -410,6 +418,14 @@ page {
   --zy-text-3: #6E6A5E;
   --zy-border: #2E2F29;
   --zy-divider: #252621;
+
+  /* ===== Plain Sheet（暗态） ===== */
+  --sheet-paper: #161713;
+  --card-satin: #1A1C16;                      /* 卡底，必须比 --sheet-paper 亮一档，卡才浮得起来 */
+  --text-on-glass: #F0EDE4;
+  --text-on-glass-2: #CFCABA;
+  --hairline-glass: rgba(240, 237, 228, 0.16);
+  --skeleton-base: #23251E;                   /* 暗态补档：亮态 #ECE8DE 在暗底会成刺眼白块占位 */
 }
 
 /* ===== 毛玻璃降级 ===== */
