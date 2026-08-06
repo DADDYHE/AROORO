@@ -151,6 +151,9 @@ export interface IncomeDetailItem {
   description: string
   status: string
   createdAt: Date
+  buyerId?: string
+  buyerNickName?: string
+  buyerAvatarUrl?: string
 }
 
 export interface IncomeDetailsResult {
@@ -169,6 +172,11 @@ const EMPTY_COMMISSION_OVERVIEW: CommissionOverview = { ...EMPTY_COMMISSION, byO
 const EMPTY_AGGREGATE: OrderAggregate = { total: 0, monthly: 0, today: 0 }
 const EMPTY_SERVICE_INCOME_OVERVIEW: ServiceIncomeOverview = { total: 0, monthly: 0, today: 0, byType: {} }
 const EMPTY_WALLET: WalletSummary = { balance: 0, totalIncome: 0, totalWithdrawn: 0, frozenAmount: 0 }
+
+/** 金额统一两位小数（消除浮点长尾，如 1234.5678000000001） */
+function round2(n: unknown): number {
+  return Math.round(Number(n) * 100) / 100
+}
 
 const EMPTY_OVERVIEW: IncomeOverview = {
   commission: EMPTY_COMMISSION_OVERVIEW,
@@ -305,6 +313,8 @@ export async function getMyIncomeOverview(
     // P1 修复：仅统计有效状态（排除 cancelled/reversed 退款冲销，避免收入虚高）
     const commissionMatch = { inviterId: openid, status: _.in(['pending', 'settled']) }
     const boardingMatch = { organizerId: openid, status: _.in(COMPLETED_BOARDING_STATUSES), type: 'boarding' }
+    // 活动收入：活动创建者的报名费收入（orders 镜像单，与 adminService 旧版口径一致）
+    const activityMatch = { organizerId: openid, status: 'confirmed', orderType: 'activity' }
     const feedingMatch = { ownerId: openid, status: 'completed' }
 
     const [
@@ -313,6 +323,7 @@ export async function getMyIncomeOverview(
       commissionByOrderTypeMonthlyAgg,
       commissionByOrderTypeTodayAgg,
       boardingTotalAgg, boardingMonthlyAgg, boardingTodayAgg,
+      activityTotalAgg, activityMonthlyAgg, activityTodayAgg,
       feedingTotalAgg, feedingMonthlyAgg, feedingTodayAgg,
       commissionWalletRes, serviceWalletRes,
     ] = await Promise.all([
@@ -328,6 +339,10 @@ export async function getMyIncomeOverview(
       safeAggSum('orders', boardingMatch, null, 'totalPrice'),
       safeAggSum('orders', { ...boardingMatch, completedAt: _.gte(monthStart) }, null, 'totalPrice'),
       safeAggSum('orders', { ...boardingMatch, completedAt: _.gte(todayStart) }, null, 'totalPrice'),
+      // 活动三维度（paidAt 为实付时间）
+      safeAggSum('orders', activityMatch, null, 'totalPrice'),
+      safeAggSum('orders', { ...activityMatch, paidAt: _.gte(monthStart) }, null, 'totalPrice'),
+      safeAggSum('orders', { ...activityMatch, paidAt: _.gte(todayStart) }, null, 'totalPrice'),
       // feeding 三维度（按 ownerId 查询）
       safeAggSum('feedingOrders', feedingMatch, null, 'totalPrice'),
       safeAggSum('feedingOrders', { ...feedingMatch, completedAt: _.gte(monthStart) }, null, 'totalPrice'),
@@ -391,6 +406,12 @@ export async function getMyIncomeOverview(
       monthly: boardingMonthlyAgg[0]?.total || 0,
       today: boardingTodayAgg[0]?.total || 0,
     }
+    // 活动收入（与旧版 adminService 返回结构对齐：顶层 activity 字段）
+    const activity: OrderAggregate = {
+      total: activityTotalAgg[0]?.total || 0,
+      monthly: activityMonthlyAgg[0]?.total || 0,
+      today: activityTodayAgg[0]?.total || 0,
+    }
     const feeding: OrderAggregate = {
       total: feedingTotalAgg[0]?.total || 0,
       monthly: feedingMonthlyAgg[0]?.total || 0,
@@ -412,19 +433,19 @@ export async function getMyIncomeOverview(
     const commissionWallet: WalletSummary = { ...EMPTY_WALLET }
     if (commissionWalletRes.data && commissionWalletRes.data.length > 0) {
       const w = commissionWalletRes.data[0] as WalletRecord
-      commissionWallet.balance = Number(w.balance) || 0
-      commissionWallet.totalIncome = Number(w.totalIncome) || 0
-      commissionWallet.totalWithdrawn = Number(w.totalWithdrawn) || 0
-      commissionWallet.frozenAmount = Number(w.frozenAmount) || 0
+      commissionWallet.balance = round2(w.balance)
+      commissionWallet.totalIncome = round2(w.totalIncome)
+      commissionWallet.totalWithdrawn = round2(w.totalWithdrawn)
+      commissionWallet.frozenAmount = round2(w.frozenAmount)
     }
 
     const serviceIncomeWallet: WalletSummary = { ...EMPTY_WALLET }
     if (serviceWalletRes.data && serviceWalletRes.data.length > 0) {
       const w = serviceWalletRes.data[0] as WalletRecord
-      serviceIncomeWallet.balance = Number(w.balance) || 0
-      serviceIncomeWallet.totalIncome = Number(w.totalIncome) || 0
-      serviceIncomeWallet.totalWithdrawn = Number(w.totalWithdrawn) || 0
-      serviceIncomeWallet.frozenAmount = Number(w.frozenAmount) || 0
+      serviceIncomeWallet.balance = round2(w.balance)
+      serviceIncomeWallet.totalIncome = round2(w.totalIncome)
+      serviceIncomeWallet.totalWithdrawn = round2(w.totalWithdrawn)
+      serviceIncomeWallet.frozenAmount = round2(w.frozenAmount)
     }
 
     // H2: 硬约束 #17——home page total income must be sum of commission and service income
@@ -432,16 +453,16 @@ export async function getMyIncomeOverview(
     //   新：wallet.totalIncome = commissionWallet.totalIncome + serviceIncomeWallet.totalIncome
     //   balance/frozenAmount/totalWithdrawn 同样汇总（业务语义：首页展示总览）
     const wallet: WalletSummary & { commission: WalletSummary; serviceIncome: WalletSummary } = {
-      balance: commissionWallet.balance + serviceIncomeWallet.balance,
-      totalIncome: commissionWallet.totalIncome + serviceIncomeWallet.totalIncome,
-      totalWithdrawn: commissionWallet.totalWithdrawn + serviceIncomeWallet.totalWithdrawn,
-      frozenAmount: commissionWallet.frozenAmount + serviceIncomeWallet.frozenAmount,
+      balance: round2(commissionWallet.balance + serviceIncomeWallet.balance),
+      totalIncome: round2(commissionWallet.totalIncome + serviceIncomeWallet.totalIncome),
+      totalWithdrawn: round2(commissionWallet.totalWithdrawn + serviceIncomeWallet.totalWithdrawn),
+      frozenAmount: round2(commissionWallet.frozenAmount + serviceIncomeWallet.frozenAmount),
       commission: commissionWallet,
       serviceIncome: serviceIncomeWallet,
     }
 
     // L1: API 字段名改为 boarding（与 commissions.orderType / orders.type 规范值一致），值指向 boarding 局部变量
-    return handleSuccess({ commission, boarding, feeding, serviceIncome, wallet })
+    return handleSuccess({ commission, activity, boarding, feeding, serviceIncome, wallet })
   } catch (error) {
     logger.error('getMyIncomeOverview', error)
     return handleError(error, '获取收入概览失败', ERROR_CODES.DATA)
@@ -524,7 +545,32 @@ export async function getMyIncomeDetails(
         description,
         status: (c.status as string) || 'pending',
         createdAt: c.createdAt as Date,
+        buyerId: (c.ownerId as string) || '',
       } as IncomeDetailItem
+    })
+
+    // P2 修复：批量补买家昵称/头像（与旧版 adminService 明细结构对齐，供前端明细页展示）
+    const buyerIds = [...new Set(list.map((i) => i.buyerId).filter(Boolean) as string[])]
+    const buyerMap: Record<string, { nickName: string; avatarUrl: string }> = {}
+    if (buyerIds.length > 0) {
+      try {
+        for (let i = 0; i < buyerIds.length; i += 100) {
+          const buyerRes = await db.collection('users')
+            .where({ _id: _.in(buyerIds.slice(i, i + 100)) })
+            .field({ _id: true, nickName: true, avatarUrl: true } as Record<string, true>)
+            .get()
+          ;((buyerRes.data || []) as Array<{ _id: string; nickName?: string; avatarUrl?: string }>).forEach((u) => {
+            buyerMap[u._id] = { nickName: u.nickName || '', avatarUrl: u.avatarUrl || '' }
+          })
+        }
+      } catch (e) {
+        logger.warn('getMyIncomeDetails.buyers.fetch', { msg: (e as Error).message })
+      }
+    }
+    list.forEach((item) => {
+      const b = item.buyerId ? buyerMap[item.buyerId] : null
+      item.buyerNickName = b ? b.nickName : ''
+      item.buyerAvatarUrl = b ? b.avatarUrl : ''
     })
 
     // totalAmount 用 aggregate 在数据库侧累加，避免全量拉取
@@ -578,10 +624,10 @@ export async function getMyWallet(
     }
     const w = walletRes.data[0] as WalletRecord
     return handleSuccess({
-      balance: Number(w.balance) || 0,
-      totalIncome: Number(w.totalIncome) || 0,
-      totalWithdrawn: Number(w.totalWithdrawn) || 0,
-      frozenAmount: Number(w.frozenAmount) || 0,
+      balance: round2(w.balance),
+      totalIncome: round2(w.totalIncome),
+      totalWithdrawn: round2(w.totalWithdrawn),
+      frozenAmount: round2(w.frozenAmount),
       status: w.status,
       type: walletType,
     })
@@ -625,6 +671,7 @@ export async function getMyWithdrawals(
         nickName: true,
         createdAt: true,
         updatedAt: true,
+        rejectReason: true,
         // outTradeNo 保留——前端可能用于查询转账状态
         outTradeNo: true,
       })

@@ -45,13 +45,13 @@
         </view>
       </view>
       <view class="card-footer">
-        <text class="card-time">{{utils.formatEndTime(item.endTime, _tick)}}</text>
-        <view class="card-use-btn" wx:if="{{item.status==='unused'}}" catchtap="onUseCoupon" data-scope="{{item.applicableScopes}}">
+        <text class="card-time">{{utils.formatEndTime(item.endTime, _tick, item._effectiveStatus || item.status)}}</text>
+        <view class="card-use-btn" wx:if="{{(item._effectiveStatus || item.status)==='unused'}}" catchtap="onUseCoupon" data-scope="{{item.applicableScopes}}">
           去使用
         </view>
       </view>
-      <view class="card-stamp status-{{item.status}}">
-        {{item.status==='unused' ? '可使用' : item.status==='used' ? '已使用' : item.status==='revoked' ? '已撤销' : '已过期'}}
+      <view class="card-stamp status-{{item._effectiveStatus || item.status}}">
+        {{(item._effectiveStatus || item.status)==='unused' ? '可使用' : (item._effectiveStatus || item.status)==='used' ? '已使用' : (item._effectiveStatus || item.status)==='revoked' ? '已撤销' : '已过期'}}
       </view>
     </view>
 
@@ -82,13 +82,16 @@
 </view>
 
 <wxs module="utils">
-  var formatEndTime = function(dateStr, tick) {
+  var formatEndTime = function(dateStr, tick, status) {
     if (!dateStr) return ''
+    // 已使用/已撤销的券不再展示到期提示（状态由印章展示）
+    if (status === 'used' || status === 'revoked') return ''
+    if (status === 'expired') return '已过期'
     var d = getDate(dateStr)
     var now = getDate()
     var diff = d.getTime() - now.getTime()
     var days = Math.ceil(diff / (1000 * 60 * 60 * 24))
-    if (days <= 0) return '即将过期'
+    if (days <= 0) return '已过期'
     if (days <= 3) return days + '天后过期'
     var m = d.getMonth() + 1
     var day = d.getDate()

@@ -109,6 +109,7 @@ export const SIDEBAR_MENUS = [
   { title: '合作伙伴管理', icon: 'Share', path: '/referral', children: [
     { title: '审批中心', path: '/admin/approval', superAdminOnly: true },
     { title: '伙伴管理', path: '/referral' },
+    { title: '佣金结算', path: '/commission' },
   ] },
 
   { type: 'section', title: '财务与用户' },

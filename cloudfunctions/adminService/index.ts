@@ -220,9 +220,6 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getConfig: null,
   updateProfile: null,
   resolveCloudUrls: null,
-  submitApplication: null,
-  getApplicationStatus: null,
-  getMyPermissions: null,
 
   // ===== 超级管理员专属（web 管理端强管理能力） =====
   // 审批 / 平台级管理
@@ -279,10 +276,6 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getReferralStats: 'partner',
   getReferralList: 'partner',
   getInvitedUsersByAdmin: 'partner',
-  getReferralOrders: 'partner',
-  getReferralOrderStats: 'partner',
-  getMyCommissionRates: 'partner',
-  getMyInvitedUsers: 'partner',
 
   // 活动业务
   getActivityList: 'partner',
@@ -355,14 +348,8 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getTuanLeaderList: 'partner',
   getTuanLeaderCommissions: 'partner',
   getTuanCommissionStats: 'partner',
-  settleTuanCommissions: 'partner',
-
-  // partner 自己的钱包 / 收入 / 提现申请
-  getMyIncomeOverview: 'partner',
-  getMyIncomeDetails: 'partner',
-  getMyWallet: 'partner',
-  getMyWithdrawals: 'partner',
-  requestWithdrawal: 'partner',
+  settleCommissions: 'partner',
+  getCommissionList: 'partner',
 
   // partner 自己的统计
   getOrderStats: 'partner',

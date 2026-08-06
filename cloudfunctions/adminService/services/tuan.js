@@ -466,7 +466,11 @@ async function getTuanCommissionStats(event, context, auth) {
   })
 }
 
-async function settleTuanCommissions(event, context, auth) {
+/**
+ * 佣金结算（迁移自 settleTuanCommissions：不限于团购，按佣金记录 id 批量结算任意类型，
+ *   pending → settled + 入账 commission 钱包；条件更新防并发重复入账）
+ */
+async function settleCommissions(event, context, auth) {
   const { ids } = event
   if (!ids || ids.length === 0) {throw err('INVALID_PARAMS', '请选择待结算记录')}
   const now = new Date()
@@ -526,6 +530,47 @@ async function settleTuanCommissions(event, context, auth) {
     })
   }
   return handleSuccess({ successCount, failedCount, settledCount: successCount })
+}
+
+/**
+ * 佣金记录查询（后台结算页使用）：按 orderType / status / 邀请人过滤，分页
+ */
+async function getCommissionList(event, context, auth) {
+  const { orderType, status, inviterId, page = 1, pageSize = 20 } = event
+  const safePage = Math.max(1, Math.floor(Number(page) || 1))
+  const safePageSize = Math.min(100, Math.max(1, Math.floor(Number(pageSize) || 20)))
+  const where = {}
+  if (orderType) {where.orderType = orderType}
+  if (status) {where.status = status}
+  if (inviterId) {where.inviterId = inviterId}
+
+  const result = await paginate(db, 'commissions', {
+    page: safePage, pageSize: safePageSize, where,
+    orderBy: { field: 'createdAt', direction: 'desc' },
+  })
+  // 补邀请人/下单用户昵称，便于后台结算页识别
+  const list = result.list || []
+  if (list.length > 0) {
+    const openids = [...new Set(list.flatMap(c => [c.inviterId, c.ownerId]).filter(Boolean))]
+    const userMap = {}
+    try {
+      for (let i = 0; i < openids.length; i += 100) {
+        const userRes = await db.collection('users')
+          .where({ _id: _.in(openids.slice(i, i + 100)) })
+          .field({ _id: true, nickName: true })
+          .get()
+        ;((userRes && userRes.data) || []).forEach(u => { userMap[u._id] = u.nickName || '' })
+      }
+    } catch (e) {
+      logger.warn('getCommissionList.users.fetch', { msg: e?.message || String(e) })
+    }
+    list.forEach(c => {
+      c.inviterNickName = c.inviterId ? (userMap[c.inviterId] || '') : ''
+      c.ownerNickName = c.ownerId ? (userMap[c.ownerId] || '') : ''
+    })
+    result.list = list
+  }
+  return handleSuccess(result)
 }
 
 async function getTuanDealOrderDetail(event, context, auth) {
@@ -813,6 +858,6 @@ async function rollbackTuanDealTotalsAdmin(dealId, amount) {
 module.exports = {
   createTuanDeal, updateTuanDeal, deleteTuanDeal, publishTuanDeal, endTuanDeal,
   getTuanDealList, getTuanDealDetail, getTuanDealOrders, getTuanDealOrderDetail,
-  getTuanLeaderList, getTuanLeaderCommissions, getTuanCommissionStats, settleTuanCommissions,
+  getTuanLeaderList, getTuanLeaderCommissions, getTuanCommissionStats, settleCommissions, getCommissionList,
   handleTuanOrder,
 }

@@ -41,19 +41,19 @@ const logger = createLogger('partnerService:referral');
 //     上门喂养从 feedingOrders，活动从 activity_registrations（镜像单不重复计）
 //   - 状态集 = 已支付且未取消；金额统一按 totalAmount || totalPrice || price 解析
 const REFERRAL_BOARDS = [
-  { type: 'mall', collection: 'orders', where: { type: 'mall' }, statuses: ['paid', 'shipped', 'completed'] },
-  { type: 'boarding', collection: 'orders', where: { type: 'boarding' }, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
-  { type: 'tuan', collection: 'orders', where: { type: 'group_buy' }, statuses: ['paid', 'pending_shipment', 'shipped', 'completed'] },
-  { type: 'feeding', collection: 'feedingOrders', where: {}, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
-  { type: 'activity', collection: 'activity_registrations', where: {}, statuses: ['confirmed'] },
+    { type: 'mall', collection: 'orders', where: { type: 'mall' }, statuses: ['paid', 'shipped', 'completed'] },
+    { type: 'boarding', collection: 'orders', where: { type: 'boarding' }, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
+    { type: 'tuan', collection: 'orders', where: { type: 'group_buy' }, statuses: ['paid', 'pending_shipment', 'shipped', 'completed'] },
+    { type: 'feeding', collection: 'feedingOrders', where: {}, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
+    { type: 'activity', collection: 'activity_registrations', where: {}, statuses: ['confirmed'] },
 ];
 /** 聚合金额表达式：totalAmount || totalPrice || price */
 function amountExpr() {
-  return { $ifNull: ['$totalAmount', { $ifNull: ['$totalPrice', { $ifNull: ['$price', 0] }] }] };
+    return { $ifNull: ['$totalAmount', { $ifNull: ['$totalPrice', { $ifNull: ['$price', 0] }] }] };
 }
 /** 文档金额解析（内存累加用）：totalAmount || totalPrice || price */
 function resolveOrderAmount(o) {
-  return Number(o.totalAmount) || Number(o.totalPrice) || Number(o.price) || 0;
+    return Number(o.totalAmount) || Number(o.totalPrice) || Number(o.price) || 0;
 }
 // =====================================================================
 // Handler 实现
@@ -365,9 +365,9 @@ async function getReferralOrderStats(event, context, auth) {
             }
             return { count: 0, sum: 0 };
         };
-        // status: _.neq('cancelled') 排除已取消的佣金单
+        // status 白名单排除 cancelled/reversed（退款冲销的佣金不再计入统计）
         const [allAgg, pendingAgg, settledAgg] = await Promise.all([
-            statsByStatus({ status: _.neq('cancelled') }),
+            statsByStatus({ status: _.in(['pending', 'settled']) }),
             statsByStatus({ status: 'pending' }),
             statsByStatus({ status: 'settled' }),
         ]);

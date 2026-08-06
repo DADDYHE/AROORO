@@ -116,6 +116,9 @@ export interface IncomeDetailItem {
     description: string;
     status: string;
     createdAt: Date;
+    buyerId?: string;
+    buyerNickName?: string;
+    buyerAvatarUrl?: string;
 }
 export interface IncomeDetailsResult {
     list: IncomeDetailItem[];

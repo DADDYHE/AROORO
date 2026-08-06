@@ -133,6 +133,7 @@ export interface PartnerHandlers {
   submitApplication: PartnerActionHandler
   getApplicationStatus: PartnerActionHandler
   getMyPermissions: PartnerActionHandler
+  getMyCommissionRates: PartnerActionHandler
 
   // 收入 / 钱包
   getMyIncomeOverview: PartnerActionHandler
@@ -161,6 +162,7 @@ export const handlers: PartnerHandlers = {
   submitApplication: applicationHandlers.submitApplication,
   getApplicationStatus: applicationHandlers.getApplicationStatus,
   getMyPermissions: applicationHandlers.getMyPermissions,
+  getMyCommissionRates: applicationHandlers.getMyCommissionRates,
 
   // 收入 / 钱包
   getMyIncomeOverview: walletHandlers.getMyIncomeOverview,
@@ -189,6 +191,7 @@ const ACTION_PERMISSIONS: Record<keyof PartnerHandlers, PartnerPermission> = {
   submitApplication: null,
   getApplicationStatus: null,
   getMyPermissions: null,
+  getMyCommissionRates: 'partner',
 
   // 收入/钱包/提现：需要合作伙伴身份
   getMyIncomeOverview: 'partner',

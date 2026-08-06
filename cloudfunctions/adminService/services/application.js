@@ -18,70 +18,6 @@ function canApproveApplications(auth) {
   ))
 }
 
-async function submitApplication(event, context, auth) {
-  const { realName, phone, reason } = event
-  const { openid } = auth
-
-  if (!realName || !phone || !reason) {
-    throw err('INVALID_PARAMS', '请填写完整信息')
-  }
-  // P2-016: 手机号格式校验 + reason 长度限制，防止恶意写入超长文本
-  if (!/^1[3-9]\d{9}$/.test(phone)) {
-    throw err('INVALID_PARAMS', '手机号格式无效')
-  }
-  if (String(reason).length > 500) {
-    throw err('INVALID_PARAMS', '申请理由不得超过 500 字')
-  }
-
-  // P0-6: 限流（每用户每小时 1 次申请）
-  await withRateLimit(
-    { userId: openid, type: 'application', targetId: 'submit' },
-    async () => {
-      const existingRes = db.collection('admin_applications')
-        .where({ openid, status: 'pending' }).limit(1).get()
-      return existingRes
-    }
-  )
-
-  const existingRes = await db.collection('admin_applications')
-    .where({ openid, status: 'pending' }).limit(1).get()
-  if (existingRes.data && existingRes.data.length > 0) {
-    throw err('BUSINESS_ERROR', '您已有待审核申请')
-  }
-
-  let admin = null
-  try {
-    const adminRes = await db.collection('admins').doc(openid).get()
-    admin = adminRes.data
-  } catch (e) {
-    logger.warn('application.admins.fetch', { openid, code: e.errCode, msg: e.message })
-  }
-
-  const application = {
-    openid,
-    nickName: admin?.nickName || '',
-    avatarUrl: admin?.avatarUrl || '',
-    realName,
-    phone,
-    reason,
-    status: 'pending',
-    createdAt: db.serverDate(),
-    updatedAt: db.serverDate(),
-  }
-
-  application._id = generateId('application', openid)
-  const res = await db.collection('admin_applications').add({ data: application })
-  return handleSuccess({ id: res._id }, '提交成功')
-}
-
-async function getApplicationStatus(event, context, auth) {
-  const { openid } = auth
-  const res = await db.collection('admin_applications')
-    .where({ openid, status: 'pending' }).limit(1).get()
-  const hasPending = res.data && res.data.length > 0
-  return handleSuccess({ hasPending, application: hasPending ? res.data[0] : null })
-}
-
 async function approveApplication(event, context, auth) {
   if (!canApproveApplications(auth)) {
     throw err('PERMISSION_DENIED', '需要管理员权限')
@@ -221,21 +157,4 @@ async function getApplicationList(event, context, auth) {
   return handleSuccess(result)
 }
 
-async function getMyPermissions(event, context, auth) {
-  const { openid } = auth
-
-  let admin = null
-  try {
-    const adminRes = await db.collection('admins').doc(openid).get()
-    admin = adminRes.data
-  } catch (e) {
-    logger.warn('application.admins.fetch', { openid, code: e.errCode, msg: e.message })
-  }
-  if (!admin) {
-    return handleSuccess({ isPartner: false })
-  }
-
-  return handleSuccess({ isPartner: admin.isPartner || false })
-}
-
-module.exports = { submitApplication, getApplicationStatus, approveApplication, rejectApplication, getApplicationList, getMyPermissions }
+module.exports = { approveApplication, rejectApplication, getApplicationList }

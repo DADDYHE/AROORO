@@ -19,13 +19,16 @@ function formatRule(coupon) {
   }
 }
 
-function formatEndTime(dateStr) {
+function formatEndTime(dateStr, status) {
   if (!dateStr) {return ''}
+  // 已使用/已撤销的券不再展示到期提示（状态由印章展示）
+  if (status === 'used' || status === 'revoked') {return ''}
+  if (status === 'expired') {return '已过期'}
   const d = new Date(dateStr)
   const now = new Date()
   const diff = d.getTime() - now.getTime()
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
-  if (days <= 0) {return '即将过期'}
+  if (days <= 0) {return '已过期'}
   if (days <= 3) {return `${days}天后过期`}
   const m = d.getMonth() + 1
   const day = d.getDate()
@@ -144,14 +147,25 @@ Page({
     try {
       // 所有 tab 统一仅显示近 6 个月的优惠券
       const sixMonthsAgo = Date.now() - 180 * 24 * 60 * 60 * 1000
+      // 拉取全量状态，tab 过滤移到本地：防止"unused 但已过期"（定时任务未及标记）
+      // 的券在未使用标签下显示、却在已过期标签下找不到
       const params = { page: this.data.page, pageSize: 50 }
-      if (this.data.activeTab !== 'all') {params.status = this.data.activeTab}
       const result = await CouponService.getMyCoupons(params)
       if (result && result.code === 0) {
         const rawList = result.data.list || []
         const filtered = rawList.filter(c => {
           const t = new Date(c.createdAt || c.claimedAt || 0).getTime()
-          return t >= sixMonthsAgo
+          if (t < sixMonthsAgo) {return false}
+          // 逻辑过期：unused 但 endTime 已过 → 按已过期展示/归类
+          if (c.status === 'unused' && c.endTime) {
+            const end = new Date(c.endTime).getTime()
+            if (!isNaN(end) && end < Date.now()) {
+              c._effectiveStatus = 'expired'
+            }
+          }
+          if (!c._effectiveStatus) {c._effectiveStatus = c.status}
+          // tab 过滤按逻辑状态
+          return this.data.activeTab === 'all' || c._effectiveStatus === this.data.activeTab
         })
         const list = filtered.map(item => ({
           ...item,
@@ -160,7 +174,8 @@ Page({
         }))
         this.setData({
           coupons: this.data.page === 1 ? list : [...this.data.coupons, ...list],
-          hasMore: filtered.length >= 20,
+          // hasMore 以后端返回为准（本地过滤不改变分页进度）
+          hasMore: rawList.length >= 50,
         })
       }
     } catch (e) {

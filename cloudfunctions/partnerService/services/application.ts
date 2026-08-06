@@ -270,6 +270,56 @@ export async function getMyPermissions(
   return handleSuccess({ isPartner: admin.isPartner || false })
 }
 
+/**
+ * 获取我的佣金比例（迁移自 adminService 旧版：前端收入页展示各板块佣金率）
+ * 费率来源：admins.commissionRates（自定义）> system_config.commission_rates（全局）
+ */
+export async function getMyCommissionRates(
+  event: CloudEvent,
+  context: CloudContext,
+  auth: AuthLike
+): Promise<unknown> {
+  const openid = auth.openid
+  if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
+
+  try {
+    let admin: { commissionRates?: Record<string, unknown> } | null = null
+    try {
+      const adminRes = await db.collection('admins').doc(openid).get()
+      admin = adminRes.data as { commissionRates?: Record<string, unknown> } | null
+    } catch (e) {
+      logger.warn('getMyCommissionRates.admins.fetch', { openid, msg: (e as Error).message })
+    }
+
+    let globalRates: Record<string, unknown> = {}
+    try {
+      const configRes = await db.collection('system_config').doc('commission_rates').get()
+      globalRates = (configRes.data || {}) as Record<string, unknown>
+    } catch (e) {
+      logger.warn('getMyCommissionRates.system_config', { msg: (e as Error).message })
+    }
+
+    const { pickRate } = require('../common/commission-utils')
+    const ORDER_TYPES = ['tuan', 'mall', 'activity', 'feeding', 'boarding']
+    const customRates = (admin && admin.commissionRates) || {}
+    const rates: Record<string, number> = {}
+    ORDER_TYPES.forEach((type) => {
+      // pickRate 按 RATE_KEY_ALIASES 依次尝试 boarding/hosting/order，取首个非零值；
+      // 同时把结果写入 boarding 与 hosting 两个键，兼容前端（用 hosting）与未来（用 boarding）读侧
+      const custom = pickRate(customRates, type)
+      const global = pickRate(globalRates, type)
+      const value = custom > 0 ? custom : (global > 0 ? global : 0)
+      rates[type] = value
+      if (type === 'boarding') { rates['hosting'] = value }
+    })
+
+    return handleSuccess({ rates, hasCustomRates: Boolean(admin && admin.commissionRates) })
+  } catch (error) {
+    logger.error('getMyCommissionRates', error)
+    return handleError(error, '获取佣金比例失败', ERROR_CODES.DATA)
+  }
+}
+
 // =====================================================================
 // Runtime shim: CommonJS 兼容
 // =====================================================================
@@ -280,6 +330,7 @@ _mod.exports = {
   submitApplication,
   getApplicationStatus,
   getMyPermissions,
+  getMyCommissionRates,
 }
 _mod.exports.default = _mod.exports
 
@@ -287,4 +338,5 @@ export default {
   submitApplication,
   getApplicationStatus,
   getMyPermissions,
+  getMyCommissionRates,
 }

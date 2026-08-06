@@ -68,9 +68,15 @@ export type ApplicationHandler = (event: CloudEvent, context: CloudContext, auth
 export declare function submitApplication(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getApplicationStatus(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getMyPermissions(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
+/**
+ * 获取我的佣金比例（迁移自 adminService 旧版：前端收入页展示各板块佣金率）
+ * 费率来源：admins.commissionRates（自定义）> system_config.commission_rates（全局）
+ */
+export declare function getMyCommissionRates(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 declare const _default: {
     submitApplication: typeof submitApplication;
     getApplicationStatus: typeof getApplicationStatus;
     getMyPermissions: typeof getMyPermissions;
+    getMyCommissionRates: typeof getMyCommissionRates;
 };
 export default _default;

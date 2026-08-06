@@ -521,23 +521,23 @@ class AdminService {
   }
 
   async getMyIncomeOverview() {
-    return this.cloud.call('adminService', { action: 'getMyIncomeOverview' }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getMyIncomeOverview' }, { useCache: false })
   }
 
   async getMyIncomeDetails(data = {}) {
-    return this.cloud.call('adminService', { action: 'getMyIncomeDetails', ...data }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getMyIncomeDetails', ...data }, { useCache: false })
   }
 
   async getMyWallet() {
-    return this.cloud.call('adminService', { action: 'getMyWallet' }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getMyWallet' }, { useCache: false })
   }
 
   async requestWithdrawal(amount) {
-    return this.cloud.post('adminService', { action: 'requestWithdrawal', amount })
+    return this.cloud.post('partnerService', { action: 'requestWithdrawal', amount })
   }
 
   async getMyWithdrawals(data = {}) {
-    return this.cloud.call('adminService', { action: 'getMyWithdrawals', ...data }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getMyWithdrawals', ...data }, { useCache: false })
   }
 
   // 服务收入（活动创建者、寄养服务者、上门服务者）
@@ -550,27 +550,31 @@ class AdminService {
   }
 
   async getApplicationStatus() {
-    return this.cloud.call('adminService', { action: 'getApplicationStatus' }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getApplicationStatus' }, { useCache: false })
   }
 
   async submitApplication(data) {
-    return this.cloud.post('adminService', { action: 'submitApplication', ...data })
+    return this.cloud.post('partnerService', { action: 'submitApplication', ...data })
   }
 
   async getMyPermissions() {
-    return this.cloud.call('adminService', { action: 'getMyPermissions' }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getMyPermissions' }, { useCache: false })
   }
 
   async getMyInvitedUsers(data = {}) {
-    return this.cloud.call('adminService', { action: 'getMyInvitedUsers', ...data }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getMyInvitedUsers', ...data }, { useCache: false })
   }
 
   async getReferralOrders(data = {}) {
-    return this.cloud.call('adminService', { action: 'getReferralOrders', ...data }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getReferralOrders', ...data }, { useCache: false })
   }
 
   async getReferralOrderStats(data = {}) {
-    return this.cloud.call('adminService', { action: 'getReferralOrderStats', ...data }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getReferralOrderStats', ...data }, { useCache: false })
+  }
+
+  async getReferralStats(data = {}) {
+    return this.cloud.call('partnerService', { action: 'getReferralStats', ...data }, { useCache: false })
   }
 
   // ===== i18n override (Sprint 23) =====
@@ -634,7 +638,7 @@ class AdminService {
   }
 
   async getMyCommissionRates() {
-    return this.cloud.call('adminService', { action: 'getMyCommissionRates' }, { useCache: false })
+    return this.cloud.call('partnerService', { action: 'getMyCommissionRates' }, { useCache: false })
   }
 }
 

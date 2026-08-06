@@ -46,6 +46,7 @@ const routes = [
       { path: 'order/stats', name: 'OrderStats', component: () => import('@/views/order/OrderStatsView.vue'), meta: { title: '订单统计' } },
       { path: 'banner', name: 'BannerList', component: () => import('@/views/banner/BannerList.vue'), meta: { title: '轮播图管理' } },
       { path: 'i18n', name: 'I18nOverride', component: () => import('@/views/i18n/I18nOverrideView.vue'), meta: { title: '文案覆盖管理' } },
+      { path: 'commission', name: 'CommissionSettlement', component: () => import('@/views/commission/CommissionSettlement.vue'), meta: { title: '佣金结算' } },
       { path: 'referral', name: 'Referral', component: () => import('@/views/referral/ReferralView.vue'), meta: { title: '带货管理' } },
       { path: 'referral/:targetOpenid/users', name: 'ReferralUsers', component: () => import('@/views/referral/ReferralUsersView.vue'), meta: { title: '推广收入详情' } },
       { path: 'referral/:targetOpenid/users/:invitedUserId/orders', name: 'ReferralUserOrders', component: () => import('@/views/referral/ReferralUserOrdersView.vue'), meta: { title: '推广用户订单' } },

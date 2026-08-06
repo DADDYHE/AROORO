@@ -70,7 +70,7 @@ Page({
             incomeSummary = {
               total: ((d.commission?.total || 0) + (d.activity?.total || 0) + (d.boarding?.total || 0) + (d.feeding?.total || 0)).toFixed(2),
               monthly: ((d.commission?.monthly || 0) + (d.activity?.monthly || 0) + (d.boarding?.monthly || 0) + (d.feeding?.monthly || 0)).toFixed(2),
-              walletBalance: d.wallet?.balance || 0,
+              walletBalance: Number(d.wallet?.balance || 0).toFixed(2),
             }
           }
         } catch (e) {

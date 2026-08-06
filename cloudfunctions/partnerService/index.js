@@ -69,6 +69,7 @@ exports.handlers = {
     submitApplication: applicationHandlers.submitApplication,
     getApplicationStatus: applicationHandlers.getApplicationStatus,
     getMyPermissions: applicationHandlers.getMyPermissions,
+    getMyCommissionRates: applicationHandlers.getMyCommissionRates,
     // 收入 / 钱包
     getMyIncomeOverview: walletHandlers.getMyIncomeOverview,
     getMyIncomeDetails: walletHandlers.getMyIncomeDetails,
@@ -92,6 +93,7 @@ const ACTION_PERMISSIONS = {
     submitApplication: null,
     getApplicationStatus: null,
     getMyPermissions: null,
+    getMyCommissionRates: 'partner',
     // 收入/钱包/提现：需要合作伙伴身份
     getMyIncomeOverview: 'partner',
     getMyIncomeDetails: 'partner',

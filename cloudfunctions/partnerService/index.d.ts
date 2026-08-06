@@ -65,6 +65,7 @@ export interface PartnerHandlers {
     submitApplication: PartnerActionHandler;
     getApplicationStatus: PartnerActionHandler;
     getMyPermissions: PartnerActionHandler;
+    getMyCommissionRates: PartnerActionHandler;
     getMyIncomeOverview: PartnerActionHandler;
     getMyIncomeDetails: PartnerActionHandler;
     getMyWallet: PartnerActionHandler;

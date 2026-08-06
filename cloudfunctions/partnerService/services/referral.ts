@@ -468,9 +468,9 @@ export async function getReferralOrderStats(
       return { count: 0, sum: 0 }
     }
 
-    // status: _.neq('cancelled') 排除已取消的佣金单
+    // status 白名单排除 cancelled/reversed（退款冲销的佣金不再计入统计）
     const [allAgg, pendingAgg, settledAgg] = await Promise.all([
-      statsByStatus({ status: _.neq('cancelled') }),
+      statsByStatus({ status: _.in(['pending', 'settled']) }),
       statsByStatus({ status: 'pending' }),
       statsByStatus({ status: 'settled' }),
     ])

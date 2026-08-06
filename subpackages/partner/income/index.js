@@ -39,17 +39,24 @@ Page({
   async _loadData() {
     this.setData({ isLoading: true })
     try {
-      const [overviewRes, walletRes, ratesRes] = await Promise.all([
+      const [overviewRes, walletRes] = await Promise.all([
         AdminService.getMyIncomeOverview(),
         AdminService.getMyWallet(),
-        AdminService.getMyCommissionRates(),
       ])
 
       const overview = overviewRes.code === 0 && overviewRes.data ? overviewRes.data : null
       const wallet = walletRes.code === 0 && walletRes.data ? walletRes.data : null
 
       const TYPE_NAMES = { tuan: '团购', mall: '商城', activity: '活动', feeding: '喂养', hosting: '寄养' }
-      const ratesData = ratesRes.code === 0 && ratesRes.data ? ratesRes.data : null
+      // 佣金率查询独立容错：失败（如云函数未部署最新版）不阻塞收入/钱包展示
+      let ratesData = null
+      try {
+        const ratesRes = await AdminService.getMyCommissionRates()
+        ratesData = ratesRes.code === 0 && ratesRes.data ? ratesRes.data : null
+      } catch (e) {
+        console.warn('[partner/income] getMyCommissionRates failed:', e?.message || e)
+        ratesData = null
+      }
       const commissionRates = ratesData && ratesData.rates
         ? Object.keys(TYPE_NAMES).map(key => ({ key, name: TYPE_NAMES[key], rate: ratesData.rates[key] || 0 }))
         : Object.keys(TYPE_NAMES).map(key => ({ key, name: TYPE_NAMES[key], rate: 0 }))
