@@ -80,9 +80,22 @@ async function enrichAdminOrder(order) {
 }
 
 async function getBoardingOrders(event, context, auth) {
-  const { status, page = 1, pageSize = 20 } = event
+  const { status, page = 1, pageSize = 20, startDate, endDate } = event
   const where = {}
   if (status) {where.status = status}
+  if (startDate || endDate) {
+    let timeCond = null
+    if (startDate) {
+      const startVal = /^\d{4}-\d{2}-\d{2}$/.test(startDate) ? `${startDate}T00:00:00.000` : startDate
+      timeCond = _.gte(new Date(startVal))
+    }
+    if (endDate) {
+      const endVal = /^\d{4}-\d{2}-\d{2}$/.test(endDate) ? `${endDate}T23:59:59.999` : endDate
+      const end = new Date(endVal)
+      timeCond = timeCond ? timeCond.and(_.lte(end)) : _.lte(end)
+    }
+    if (timeCond) {where.createdAt = timeCond}
+  }
   where.type = _.nin(['mall', 'group_buy'])
   where.orderType = _.nin(['activity'])
 

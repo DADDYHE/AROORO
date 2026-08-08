@@ -44,8 +44,31 @@ async function getAdminList(event, _context, auth) {
     }
     const page = Number(event.page) || 1;
     const rawPageSize = Number(event.pageSize) || 20;
-    const pageSize = Math.min(Math.max(1, rawPageSize), 100);
-    const result = await (0, utils_1.paginate)(db, 'admins', { page, pageSize });
+    // 前端 ReferralView 以 pageSize=1000 拉全量伙伴列表（页面无分页），
+    // 上限放宽到 1000（仍受限于 admins 内部小集合 + super_admin 权限，不做无限拉取）
+    const pageSize = Math.min(Math.max(1, rawPageSize), 1000);
+    // paginate 内部有 MAX_PAGE_SIZE=100 上限，>100 时直接手动分页（保持 paginate 返回结构）
+    let result;
+    if (pageSize <= 100) {
+        result = await (0, utils_1.paginate)(db, 'admins', { page, pageSize });
+    }
+    else {
+        const countRes = await db.collection('admins').count();
+        const total = countRes.total || 0;
+        const res = await db.collection('admins')
+            .orderBy('createdAt', 'desc')
+            .skip((page - 1) * pageSize)
+            .limit(pageSize)
+            .get();
+        result = {
+            list: res.data || [],
+            total,
+            page,
+            pageSize,
+            totalPages: Math.ceil(total / pageSize),
+            hasNext: page * pageSize < total,
+        };
+    }
     return (0, utils_1.handleSuccess)(result);
 }
 exports.getAdminList = getAdminList;

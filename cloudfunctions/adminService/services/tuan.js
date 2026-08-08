@@ -277,7 +277,7 @@ async function getTuanDealDetail(event, context, auth) {
 }
 
 async function getTuanDealOrders(event, context, auth) {
-  const { dealId, status, page = 1, pageSize = 20 } = event
+  const { dealId, status, page = 1, pageSize = 20, startDate, endDate } = event
   // ★ 修复：原来查 `tuan_orders` 集合——那是个无 transactionId 的孤立集合，
   //  wx 发货信息同步的 shipped / completed 状态都写不到它上面，所以 web 端永远卡在 paid。
   // 真实团购订单已经统一在 `orders` 集合（type='group_buy'），跟商城订单共用一个集合，
@@ -286,6 +286,19 @@ async function getTuanDealOrders(event, context, auth) {
   const where = { type: 'group_buy', status: _.neq('deleted') }
   if (dealId) {where.dealId = dealId}
   if (status && status !== 'all') {where.status = status}
+  if (startDate || endDate) {
+    let timeCond = null
+    if (startDate) {
+      const startVal = /^\d{4}-\d{2}-\d{2}$/.test(startDate) ? `${startDate}T00:00:00.000` : startDate
+      timeCond = _.gte(new Date(startVal))
+    }
+    if (endDate) {
+      const endVal = /^\d{4}-\d{2}-\d{2}$/.test(endDate) ? `${endDate}T23:59:59.999` : endDate
+      const end = new Date(endVal)
+      timeCond = timeCond ? timeCond.and(_.lte(end)) : _.lte(end)
+    }
+    if (timeCond) {where.createdAt = timeCond}
+  }
   const result = await paginate(db, 'orders', { page, pageSize, where, orderBy: { field: 'createdAt', direction: 'desc' } })
 
   const list = result.list || []

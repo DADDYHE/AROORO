@@ -276,6 +276,8 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getReferralStats: 'partner',
   getReferralList: 'partner',
   getInvitedUsersByAdmin: 'partner',
+  getReferralOrders: 'partner',
+  getReferralOrderStats: 'partner',
 
   // 活动业务
   getActivityList: 'partner',

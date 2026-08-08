@@ -20,7 +20,8 @@ const _ = db.command
 
 const REFERRAL_BOARDS = [
   { type: 'mall', collection: 'orders', where: { type: 'mall' }, statuses: ['paid', 'shipped', 'completed'] },
-  { type: 'boarding', collection: 'orders', where: { type: 'boarding' }, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
+  // 寄养口径与 getBoardingOrders 对齐：orders 中非 mall/group_buy 的订单（兼容历史无 type / type=hosting 记录）
+  { type: 'boarding', collection: 'orders', where: { type: _.nin(['mall', 'group_buy']), orderType: _.nin(['activity']) }, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
   { type: 'tuan', collection: 'orders', where: { type: 'group_buy' }, statuses: ['paid', 'pending_shipment', 'shipped', 'completed'] },
   { type: 'feeding', collection: 'feedingOrders', where: {}, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
   { type: 'activity', collection: 'activity_registrations', where: {}, statuses: ['confirmed'] },

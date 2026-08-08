@@ -748,6 +748,8 @@ async function getInvitedUsersByAdmin(event, context, auth) {
 
     const list = invitedUsers.map(u => ({
       _id: u._id,
+      // users._id = openid：前端 ReferralUsersView 用 row.openid 跳转"该用户订单"页
+      openid: u._id,
       nickName: u.nickName || '未知用户',
       avatarUrl: u.avatarUrl || '',
       createdAt: u.createdAt,
@@ -761,6 +763,242 @@ async function getInvitedUsersByAdmin(event, context, auth) {
   } catch (error) {
     logger.error('getInvitedUsersByAdmin', error)
     return handleError(error, '获取邀请用户失败', ERROR_CODES.DATA)
+  }
+}
+
+/**
+ * 带货客户订单列表（web-admin 推广用户订单页）
+ * 契约：{ type?, page?, pageSize?, targetOpenid?, invitedUserOpenid? } → { list, total }
+ *  - type 前端使用 hosting（寄养），与历史 boarding 双值归一
+ *  - invitedUserOpenid 命中时只查该用户订单；否则按 targetOpenid 解析邀请人（super_admin 可全局）
+ */
+async function getReferralOrders(event, context, auth) {
+  const { type = '', page = 1, pageSize = 20, targetOpenid, invitedUserOpenid } = event
+  const _ = db.command
+  // 前端用 hosting，历史/集合用 boarding：归一后按 boarding 分支处理
+  const normalizedType = type === 'hosting' ? 'boarding' : type
+
+  try {
+    let invitedOpenids = []
+    const nickMap = {}
+
+    if (invitedUserOpenid && invitedUserOpenid.trim()) {
+      // H3 安全修复：partner 只能查自己邀请的用户的订单
+      const invitedId = invitedUserOpenid.trim()
+      const userDoc = await assertInvitedUserOwnership(auth, invitedId)
+      invitedOpenids = [invitedId]
+      if (userDoc) {nickMap[userDoc._id] = userDoc.nickName}
+    } else {
+      // H3 安全修复：统一经归属解析 —— partner 锁定自己；super_admin 可查任意/全局
+      const effectiveTarget = resolveReferralTarget(auth, targetOpenid)
+      const inviterWhere = effectiveTarget
+        ? { inviterId: effectiveTarget }
+        : { inviterId: _.exists(true).and(_.neq('')) } // 仅 super_admin 可达（全局）
+
+      const invitedRes = await db.collection('users')
+        .where(inviterWhere)
+        .field({ _id: true, nickName: true })
+        .limit(1000)
+        .get()
+
+      const invitedUsers = invitedRes.data || []
+      if (invitedUsers.length === 0) {
+        return handleSuccess({ list: [], total: 0 })
+      }
+      invitedOpenids = invitedUsers.map(u => u._id).filter(Boolean)
+      invitedUsers.forEach(u => { nickMap[u._id] = u.nickName })
+    }
+
+    if (invitedOpenids.length === 0) {
+      return handleSuccess({ list: [], total: 0 })
+    }
+
+    const orders = []
+    const skip = (page - 1) * pageSize
+    const pushOrders = (res, orderType) => {
+      ;(res.data || []).forEach(o => orders.push({ ...o, orderType, buyerNick: nickMap[o.ownerId] || o.ownerName || '' }))
+    }
+
+    if (!normalizedType || normalizedType === 'mall') {
+      try {
+        const mallRes = await db.collection('orders').where({ type: 'mall', ownerId: _.in(invitedOpenids) })
+          .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
+        pushOrders(mallRes, 'mall')
+      } catch (e) {
+        logger.warn('getReferralOrders.mall', { code: e.errCode, msg: e.message })
+      }
+    }
+
+    if (!normalizedType || normalizedType === 'boarding') {
+      // 寄养口径与 getBoardingOrders 一致：orders 中非 mall/group_buy 的订单（兼容历史无 type 记录）
+      try {
+        const hostWhere = { ownerId: _.in(invitedOpenids), type: _.nin(['mall', 'group_buy']), orderType: _.nin(['activity']) }
+        const hostRes = await db.collection('orders').where(hostWhere)
+          .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
+        pushOrders(hostRes, 'boarding')
+      } catch (e) {
+        logger.warn('getReferralOrders.boarding', { code: e.errCode, msg: e.message })
+      }
+    }
+
+    if (!normalizedType || normalizedType === 'feeding') {
+      try {
+        const feedRes = await db.collection('feedingOrders').where({ ownerId: _.in(invitedOpenids) })
+          .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
+        pushOrders(feedRes, 'feeding')
+      } catch (e) {
+        logger.warn('getReferralOrders.feedingOrders', { code: e.errCode, msg: e.message })
+      }
+    }
+
+    if (!normalizedType || normalizedType === 'tuan') {
+      try {
+        const tuanRes = await db.collection('orders').where({ type: 'group_buy', ownerId: _.in(invitedOpenids) })
+          .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
+        pushOrders(tuanRes, 'tuan')
+      } catch (e) {
+        logger.warn('getReferralOrders.tuan', { code: e.errCode, msg: e.message })
+      }
+    }
+
+    if (!normalizedType || normalizedType === 'activity') {
+      try {
+        const actRes = await db.collection('activity_registrations').where({ ownerId: _.in(invitedOpenids) })
+          .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
+        pushOrders(actRes, 'activity')
+      } catch (e) {
+        logger.warn('getReferralOrders.activity_registrations', { code: e.errCode, msg: e.message })
+      }
+    }
+
+    orders.sort((a, b) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return tb - ta
+    })
+
+    return handleSuccess({ list: orders, total: orders.length })
+  } catch (error) {
+    logger.error('getReferralOrders', error)
+    return handleError(error, `获取带货客户订单失败: ${error.message}`, ERROR_CODES.DATA)
+  }
+}
+
+/**
+ * 带货订单统计（web-admin 推广收入详情页）
+ * 契约：{ type, targetOpenid } → { totalAmount, totalCount, commissionRate, estimatedCommission }
+ *  - type 前端使用 hosting（寄养），与历史 boarding 双值归一
+ *  - 佣金率读取走 pickRate，兼容 boarding/hosting/order 别名键
+ */
+async function getReferralOrderStats(event, context, auth) {
+  const { type = 'mall', targetOpenid } = event
+  const _ = db.command
+  const rawType = type
+  const normalizedType = type === 'hosting' ? 'boarding' : type
+
+  try {
+    let invitedOpenids = []
+
+    // H3 安全修复：partner 只能统计自己邀请的用户；全局统计仅 super_admin 可达
+    const effectiveTarget = resolveReferralTarget(auth, targetOpenid)
+    const inviterWhere = effectiveTarget
+      ? { inviterId: effectiveTarget }
+      : { inviterId: _.exists(true).and(_.neq('')) }
+    const invitedRes = await db.collection('users')
+      .where(inviterWhere)
+      .field({ _id: true })
+      .limit(1000)
+      .get()
+    invitedOpenids = (invitedRes.data || []).map(u => u._id).filter(Boolean)
+
+    if (invitedOpenids.length === 0) {
+      return handleSuccess({ totalAmount: 0, totalCount: 0, commissionRate: 0, estimatedCommission: 0 })
+    }
+
+    let totalAmount = 0
+    let totalCount = 0
+    let typeBreakdown = {} // 记录各类型订单金额（用于 type === 'all' 时分别计算佣金）
+
+    // 统一口径：每个板块只从一个权威集合取数（团购从 orders.type='group_buy'），
+    // 状态集=已支付且未取消，金额按 totalAmount || totalPrice || price 解析。
+    const boardByType = REFERRAL_BOARDS.find(b => b.type === normalizedType)
+    if (normalizedType === 'all') {
+      for (const board of REFERRAL_BOARDS) {
+        try {
+          const list = await fetchBoardOrders(board, invitedOpenids)
+          let c = 0
+          let s = 0
+          for (const o of list) {c++; s += resolveOrderAmount(o)}
+          typeBreakdown[board.type] = s
+          totalCount += c
+          totalAmount += s
+        } catch (e) {
+          logger.warn(`getReferralOrderStats.${board.type}`, { type, code: e.errCode, msg: e.message })
+        }
+      }
+    } else if (boardByType) {
+      try {
+        const list = await fetchBoardOrders(boardByType, invitedOpenids)
+        for (const o of list) {totalCount++; totalAmount += resolveOrderAmount(o)}
+      } catch (e) {
+        logger.warn(`getReferralOrderStats.${boardByType.type}`, { type, code: e.errCode, msg: e.message })
+      }
+    } else {
+      return handleSuccess({ totalAmount: 0, totalCount: 0, commissionRate: 0, estimatedCommission: 0 })
+    }
+
+    totalAmount = Math.round(totalAmount * 100) / 100
+
+    let estimatedCommission = 0
+    let commissionRate = 0
+
+    // 读取佣金配置：优先使用合作伙伴自定义配置，fallback 到系统默认配置
+    let commissionConfig = {}
+    try {
+      const configRes = await db.collection('system_config').doc('commission_rates').get()
+      commissionConfig = configRes.data || {}
+    } catch (e) {
+      logger.warn('getReferralOrderStats.system_config', { type, code: e.errCode, msg: e.message })
+    }
+
+    // 如果有 targetOpenid 或 auth.openid，尝试读取合作伙伴自定义配置
+    const targetId = targetOpenid || (auth.openid && !auth._isHttpAuth ? auth.openid : null)
+    if (targetId) {
+      try {
+        const adminRes = await db.collection('admins').doc(targetId).get()
+        const admin = adminRes.data
+        if (admin && admin.commissionRates) {
+          // 合作伙伴自定义配置覆盖系统默认配置
+          commissionConfig = { ...commissionConfig, ...admin.commissionRates }
+        }
+      } catch (e) {
+        logger.warn('getReferralOrderStats.admins.fetch', { targetId, code: e.errCode, msg: e.message })
+      }
+    }
+
+    if (normalizedType === 'all') {
+      // 分别计算各类型订单的佣金后求和；费率走 pickRate 兼容 boarding/hosting/order 别名键
+      const rates = {}
+      for (const orderType of Object.keys(typeBreakdown)) {
+        const amount = typeBreakdown[orderType]
+        const rate = Number(commission_utils_1.pickRate(commissionConfig, orderType, orderType)) || 0
+        rates[orderType] = rate
+        estimatedCommission += Math.round(Math.round(amount * 100) * rate / 100) / 100
+      }
+      // 计算加权平均佣金率（用于前端展示）
+      commissionRate = totalAmount > 0 ? Math.round(estimatedCommission / totalAmount * 100 * 100) / 100 : 0
+    } else {
+      // 单一类型，使用对应的佣金率
+      commissionRate = Number(commission_utils_1.pickRate(commissionConfig, normalizedType, rawType)) || 0
+      estimatedCommission = Math.round(Math.round(totalAmount * 100) * commissionRate / 100) / 100
+    }
+
+    estimatedCommission = Math.round(estimatedCommission * 100) / 100
+
+    return handleSuccess({ totalAmount, totalCount, commissionRate, estimatedCommission })
+  } catch (error) {
+    logger.error('getReferralOrderStats', error)
+    return handleError(error, '获取带货订单统计失败', ERROR_CODES.DATA)
   }
 }
 
@@ -862,4 +1100,4 @@ async function updatePartnerCommissionRates(event, context, auth) {
 }
 
 
-module.exports = { getUserList, getUserDetail, getUserPets, updateUserStatus, getDashboardStats, getEnhancedDashboardStats, getFinanceOverview, getReferralStats, getReferralList, getInvitedUsersByAdmin, getPartnerCommissionRates, updatePartnerCommissionRates }
+module.exports = { getUserList, getUserDetail, getUserPets, updateUserStatus, getDashboardStats, getEnhancedDashboardStats, getFinanceOverview, getReferralStats, getReferralList, getInvitedUsersByAdmin, getReferralOrders, getReferralOrderStats, getPartnerCommissionRates, updatePartnerCommissionRates }

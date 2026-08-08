@@ -16,7 +16,8 @@ export function useNewOrderNotify(list, orderTypeLabel = '订单') {
         const orderNo = item.orderNo || item._id || ''
         const buyer = item.buyerNickName || item.userName || item.ownerName || ''
         const amount = item.totalAmount || item.totalPrice || 0
-        const amountStr = (amount / 100).toFixed(2)
+        // 金额单位为元（与 formatMoney 及后端 totalAmount 口径一致），此前误按“分”换算导致通知金额少 100 倍
+        const amountStr = Number(amount).toFixed(2)
 
         ElNotification({
           title: `新${orderTypeLabel}提醒`,

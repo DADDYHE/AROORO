@@ -417,7 +417,13 @@ async function retryTransfer(event, context, auth) {
           },
         })
 
-      return handleSuccess({ message: '重试转账失败，请稍后再试', transferError: transferError ? transferError.message : '' })
+      // 前端 WithdrawalReview 读取顶层 transferError（res.transferError）判断失败；
+      // data 内同时保留一份，兼容其他消费方
+      const retryFailMsg = transferError ? transferError.message : '转账接口调用失败'
+      return {
+        ...handleSuccess({ message: '重试转账失败，请稍后再试', transferError: retryFailMsg }),
+        transferError: retryFailMsg,
+      }
     }
   } catch (error) {
     logger.error('retryTransfer', error)
