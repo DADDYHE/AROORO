@@ -313,6 +313,36 @@ async function rejectWithdrawal(event, context, auth) {
     const w = wRes.data
     if (w.status !== 'pending') {throw err('BUSINESS_ERROR', '状态错误')}
 
+    // 并发防双回退：事务前原子占位（rejectStarted 标记，与 approveWithdrawal 的占位同构），
+    // 否则两个并发拒绝会各自通过“事务外旧快照”校验并双恢复钱包余额
+    const claim = await db.collection('withdrawals')
+      .where({ _id: withdrawalId, status: 'pending', rejectStarted: _.neq(true) })
+      .update({
+        data: {
+          rejectStarted: true,
+          rejectStartedBy: auth.openid,
+          rejectStartedAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+        },
+      })
+    const claimed = (claim && claim.stats && claim.stats.updated) || 0
+    if (claimed === 0) {
+      const cur = (await db.collection('withdrawals').doc(withdrawalId).get()).data
+      if (cur && cur.status === 'rejected') {
+        return handleSuccess({ message: '该提现已被拒绝' })
+      }
+      if (cur && cur.rejectStarted === true) {
+        const startedAt = cur.rejectStartedAt ? new Date(cur.rejectStartedAt).getTime() : 0
+        // 崩溃残留占位超过 2 分钟自动清理，允许重试
+        if (Date.now() - startedAt > 120000) {
+          await db.collection('withdrawals').where({ _id: withdrawalId, rejectStarted: true }).update({
+            data: { rejectStarted: false, updatedAt: db.serverDate() },
+          })
+        }
+      }
+      throw err('BUSINESS_ERROR', '该提现正在被处理，请刷新后重试')
+    }
+
     // P0-7: 提现状态更新→rejected + 钱包 balance/frozenAmount 恢复 纳入单一事务
     // 事务前先查询钱包 _id（CloudBase 事务内不支持 where().get() / where().update()）
     const walletType = w.walletType || 'commission'
@@ -346,6 +376,10 @@ async function rejectWithdrawal(event, context, auth) {
       await transaction.commit()
     } catch (txError) {
       try { await transaction.rollback() } catch (_) { /* ignore rollback error */ }
+      // 事务失败清理占位，允许重试
+      await db.collection('withdrawals').where({ _id: withdrawalId, rejectStarted: true }).update({
+        data: { rejectStarted: false, updatedAt: db.serverDate() },
+      })
       throw txError
     }
 
@@ -520,6 +554,40 @@ async function confirmManualTransfer(event, context, auth) {
       logger.warn('confirmManualTransfer.payee.fetch', { withdrawalId, msg: e?.message })
     }
 
+    // 并发防双付：事务前原子占位（manualConfirmStarted 标记）。
+    // 事务路径的 doc().update() 无 where 守卫，入口校验基于事务外旧快照，
+    // 两个并发确认会在交错下双释放冻结金额；占位成功者才允许结算。
+    const claim = await db.collection('withdrawals')
+      .where({ _id: withdrawalId, status: 'approved', mode: 'manual', manualConfirmStarted: _.neq(true) })
+      .update({
+        data: {
+          manualConfirmStarted: true,
+          manualConfirmingBy: auth.openid,
+          manualConfirmingAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+        },
+      })
+    const claimed = (claim && claim.stats && claim.stats.updated) || 0
+    if (claimed === 0) {
+      const cur = (await db.collection('withdrawals').doc(withdrawalId).get()).data
+      if (cur && cur.status === 'completed') {
+        return handleSuccess({ message: '该提现已由其他管理员确认完成' })
+      }
+      if (cur && cur.status === 'cancelled') {
+        throw err('BUSINESS_ERROR', '该提现已撤销，无法确认打款')
+      }
+      if (cur && cur.manualConfirmStarted === true) {
+        const startedAt = cur.manualConfirmingAt ? new Date(cur.manualConfirmingAt).getTime() : 0
+        // 崩溃残留占位超过 2 分钟自动清理，允许重试
+        if (Date.now() - startedAt > 120000) {
+          await db.collection('withdrawals').where({ _id: withdrawalId, manualConfirmStarted: true }).update({
+            data: { manualConfirmStarted: false, updatedAt: db.serverDate() },
+          })
+        }
+      }
+      throw err('BUSINESS_ERROR', '该提现正在被其他管理员确认，请稍后重试')
+    }
+
     const extra = {
       transferMethod: 'manual',
       payoutChannel: channel,
@@ -542,6 +610,10 @@ async function confirmManualTransfer(event, context, auth) {
       if (cur && cur.status === 'cancelled') {
         throw err('BUSINESS_ERROR', '该提现已撤销，无法确认打款')
       }
+      // 落库失败：清理占位，允许重试
+      await db.collection('withdrawals').where({ _id: withdrawalId, manualConfirmStarted: true }).update({
+        data: { manualConfirmStarted: false, updatedAt: db.serverDate() },
+      })
       throw err('DATA_ERROR', '确认打款落库失败，请重试或人工对账')
     }
 
@@ -619,6 +691,33 @@ async function cancelWithdrawal(event, context, auth) {
     if (w.status !== 'approved') {
       throw err('BUSINESS_ERROR', '仅“待打款（approved）”状态可撤销')
     }
+    // 并发防双回退：事务前原子占位（cancelStarted 标记）
+    const claim = await db.collection('withdrawals')
+      .where({ _id: withdrawalId, status: 'approved', cancelStarted: _.neq(true) })
+      .update({
+        data: {
+          cancelStarted: true,
+          cancelStartedBy: auth.openid,
+          cancelStartedAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+        },
+      })
+    const claimed = (claim && claim.stats && claim.stats.updated) || 0
+    if (claimed === 0) {
+      const cur = (await db.collection('withdrawals').doc(withdrawalId).get()).data
+      if (cur && cur.status === 'cancelled') {
+        return handleSuccess({ message: '该提现已取消' })
+      }
+      if (cur && cur.cancelStarted === true) {
+        const startedAt = cur.cancelStartedAt ? new Date(cur.cancelStartedAt).getTime() : 0
+        if (Date.now() - startedAt > 120000) {
+          await db.collection('withdrawals').where({ _id: withdrawalId, cancelStarted: true }).update({
+            data: { cancelStarted: false, updatedAt: db.serverDate() },
+          })
+        }
+      }
+      throw err('BUSINESS_ERROR', '该提现正在被处理，请刷新后重试')
+    }
     const walletType = w.walletType || 'commission'
     const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
     const walletDoc = walletRes.data && walletRes.data[0]
@@ -651,6 +750,10 @@ async function cancelWithdrawal(event, context, auth) {
       await transaction.commit()
     } catch (txError) {
       try { await transaction.rollback() } catch (_) { /* ignore */ }
+      // 事务失败清理占位，允许重试
+      await db.collection('withdrawals').where({ _id: withdrawalId, cancelStarted: true }).update({
+        data: { cancelStarted: false, updatedAt: db.serverDate() },
+      })
       logger.error('cancelWithdrawal.transaction.failed', {
         withdrawalId, code: txError?.code, errCode: txError?.errCode, msg: txError?.message,
       })
