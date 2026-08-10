@@ -158,7 +158,10 @@
                 <text class="detail-buyer-name">{{item.buyerNickName}}</text>
               </view>
             </view>
-            <text class="detail-amount">+¥{{item.amount}}</text>
+            <view class="detail-right">
+              <text class="detail-amount">{{item.status === 'cancelled' || item.status === 'reversed' ? '' : '+'}}¥{{item.amount}}</text>
+              <text class="detail-status" style="color: {{item.statusColor}}">{{item.statusText}}</text>
+            </view>
           </view>
         </view>
       </view>
