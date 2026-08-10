@@ -51,9 +51,13 @@
       <view class="record-bottom">
         <text class="record-time">{{item.timeText}}</text>
         <text wx:if="{{item.status === 'rejected' && item.rejectReason}}" class="record-reason">原因：{{item.rejectReason}}</text>
+        <text wx:if="{{item.status === 'cancelled' && item.cancelReason}}" class="record-reason">原因：{{item.cancelReason}}</text>
       </view>
       <view wx:if="{{item.status === 'processing'}}" class="record-confirm">
         <button class="record-confirm-btn" size="mini" bindtap="onConfirmReceipt" data-id="{{item._id}}">确认收款 / 查询到账</button>
+      </view>
+      <view wx:if="{{item.status === 'pending'}}" class="record-confirm">
+        <button class="record-confirm-btn record-cancel-btn" size="mini" bindtap="onCancelRequest" data-id="{{item._id}}">取消申请</button>
       </view>
     </view>
 

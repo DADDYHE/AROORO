@@ -648,3 +648,75 @@
 .modal-btn-disabled {
   opacity: 0.5;
 }
+
+/* ==================== 收款方式选择 + 收款账号管理（v5.1） ==================== */
+.modal-payout {
+  margin-bottom: 16rpx;
+}
+
+.modal-payout-label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-secondary, #6B6F76);
+  margin-bottom: 12rpx;
+}
+
+.modal-payout-group {
+  display: flex;
+  gap: 16rpx;
+}
+
+.modal-payout-item {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  border-radius: 12rpx;
+  border: 1rpx solid var(--lux-hairline, rgba(201, 162, 75, 0.25));
+  background: var(--lux-card-cream, #FAF6EC);
+  font-size: 26rpx;
+  color: var(--text-secondary, #6B6F76);
+}
+
+.modal-payout-item.active {
+  border-color: var(--primary-color, #2F6B4F);
+  color: var(--primary-color, #2F6B4F);
+  background: rgba(47, 107, 79, 0.08);
+}
+
+.modal-payout-account {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.payout-account-text {
+  font-size: 24rpx;
+  color: var(--text-primary, #1D1E2C);
+}
+
+.payout-account-empty {
+  font-size: 24rpx;
+  color: var(--text-tertiary, #9A9489);
+}
+
+.payee-modal {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.payee-section {
+  margin-bottom: 20rpx;
+}
+
+.payee-label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-secondary, #6B6F76);
+  margin-bottom: 10rpx;
+}
+
+.payee-input {
+  margin-bottom: 12rpx;
+  border-radius: 12rpx;
+}

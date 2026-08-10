@@ -36,6 +36,9 @@ const { createLogger } = require('../common/logger');
 // P0: 提现成功结算统一走共享模块（与 adminService 审批/对账共用同一口径）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { settleWithdrawalCompleted } = require('../common/withdrawal-settle');
+// 收款账号工具（格式校验 / 渠道可用性）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { PAYOUT_CHANNELS, validatePayee, hasPayeeChannel } = require('../common/payee-utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { db } = initCloud();
 const _ = db.command;
@@ -503,6 +506,13 @@ async function getMyWithdrawals(event, context, auth) {
             packageInfo: true,
             outBatchNo: true,
             transferBatchNo: true,
+            // v5.1：模式与人工打款信息（脱敏展示给本人）
+            mode: true,
+            payoutChannel: true,
+            paidAmount: true,
+            amountDiff: true,
+            manualPaidAt: true,
+            cancelReason: true,
             // outTradeNo 保留——前端可能用于查询转账状态
             outTradeNo: true,
         })
@@ -518,6 +528,106 @@ async function getMyWithdrawals(event, context, auth) {
     }
 }
 exports.getMyWithdrawals = getMyWithdrawals;
+/**
+ * 获取本人收款账号（完整，仅本人可见）
+ */
+async function getMyPayeeAccounts(event, context, auth) {
+    const { openid } = auth;
+    try {
+        const userRes = await db.collection('users').doc(openid).get();
+        const payee = (userRes.data && userRes.data.payee) || {};
+        return handleSuccess({ payee });
+    }
+    catch (error) {
+        logger.error('getMyPayeeAccounts', error);
+        return handleError(error, '获取收款账号失败', ERROR_CODES.DATA);
+    }
+}
+exports.getMyPayeeAccounts = getMyPayeeAccounts;
+/**
+ * 更新本人收款账号（允许全空；使用时再强制至少一个渠道）
+ */
+async function updatePayeeAccounts(event, context, auth) {
+    const { openid } = auth;
+    const payee = (event.payee && typeof event.payee === 'object') ? event.payee : {};
+    const check = validatePayee(payee);
+    if (!check.ok) {
+        throw err('INVALID_PARAMS', check.error);
+    }
+    try {
+        const cleaned = {
+            wechat: String(payee.wechat || '').trim(),
+            alipay: String(payee.alipay || '').trim(),
+            bank: {
+                bankName: String((payee.bank && payee.bank.bankName) || '').trim(),
+                cardNo: String((payee.bank && payee.bank.cardNo) || '').trim(),
+                holder: String((payee.bank && payee.bank.holder) || '').trim(),
+            },
+        };
+        // 全空时仅保留空结构（允许清空）
+        await db.collection('users').doc(openid).update({
+            data: { payee: cleaned, updatedAt: db.serverDate() },
+        });
+        return handleSuccess({ payee: cleaned }, '收款账号已更新');
+    }
+    catch (error) {
+        logger.error('updatePayeeAccounts', error);
+        return handleError(error, '更新收款账号失败', ERROR_CODES.DATA);
+    }
+}
+exports.updatePayeeAccounts = updatePayeeAccounts;
+/**
+ * 本人取消提现申请（仅 pending；frozen→balance 回退）
+ */
+async function cancelWithdrawal(event, context, auth) {
+    const { openid } = auth;
+    const { withdrawalId, reason } = event;
+    if (!withdrawalId) {throw err('INVALID_PARAMS', '缺少提现记录ID');}
+    const cancelReason = String(reason || '').trim();
+    if (!cancelReason) {throw err('INVALID_PARAMS', '请填写取消原因');}
+    try {
+        const wRes = await db.collection('withdrawals').doc(withdrawalId).get();
+        const w = wRes.data;
+        if (!w || w.openid !== openid) {throw err('NOT_FOUND', '提现记录不存在');}
+        if (w.status !== 'pending') {throw err('BUSINESS_ERROR', '仅待审核的提现可取消');}
+        const walletType = w.walletType || 'commission';
+        const walletRes = await db.collection('wallets').where({ openid, type: walletType }).limit(1).get();
+        const walletDoc = walletRes.data && walletRes.data[0];
+        const transaction = await db.startTransaction();
+        const _tx = transaction.command;
+        try {
+            await transaction.collection('withdrawals').doc(withdrawalId).update({
+                data: {
+                    status: 'cancelled',
+                    cancelReason,
+                    cancelledBy: openid,
+                    cancelledAt: db.serverDate(),
+                    updatedAt: db.serverDate(),
+                },
+            });
+            if (walletDoc) {
+                await transaction.collection('wallets').doc(walletDoc._id).update({
+                    data: {
+                        balance: _tx.inc(w.amount),
+                        frozenAmount: _tx.inc(-w.amount),
+                        updatedAt: db.serverDate(),
+                    },
+                });
+            }
+            await transaction.commit();
+        }
+        catch (txError) {
+            try { await transaction.rollback(); } catch (_) { /* ignore */ }
+            throw err('BUSINESS_ERROR', '取消失败，该提现状态可能已变更，请刷新后重试');
+        }
+        return handleSuccess({ message: '提现已取消，冻结金额已退回余额' });
+    }
+    catch (error) {
+        logger.error('cancelWithdrawal', error);
+        return handleError(error, '取消提现失败', ERROR_CODES.DATA);
+    }
+}
+exports.cancelWithdrawal = cancelWithdrawal;
 /**
  * P0: 用户确认收款 / 查询到账（小程序端提现记录页）
  *
@@ -590,8 +700,12 @@ async function confirmWithdrawal(event, context, auth) {
 exports.confirmWithdrawal = confirmWithdrawal;
 async function requestWithdrawal(event, context, auth) {
     const { openid } = auth;
-    const { amount } = event;
+    const { amount, payoutMethod } = event;
     const walletType = normalizeWalletType(event.walletType);
+    // v5.1：收款方式必选，且所选渠道账号已预留
+    if (!PAYOUT_CHANNELS.includes(payoutMethod)) {
+        throw err('INVALID_PARAMS', '请选择收款方式（微信/支付宝/银行卡）');
+    }
     // H4: 金额校验——精度限制 2 位小数 + 单次上限 + NaN 防御
     const parsedAmount = Number(amount);
     if (!Number.isFinite(parsedAmount) || parsedAmount < 1) {
@@ -633,6 +747,18 @@ async function requestWithdrawal(event, context, auth) {
         }
         if (Number(w.balance) < withdrawAmount) {
             throw err('BUSINESS_ERROR', '余额不足');
+        }
+        // 校验所选收款渠道账号已预留（双保险：前端填写 + 后端权威）
+        let userPayee = null;
+        try {
+            const userRes = await db.collection('users').doc(openid).get();
+            userPayee = (userRes.data && userRes.data.payee) || {};
+        }
+        catch (e) {
+            logger.warn('requestWithdrawal.users.fetch', { openid, msg: e.message });
+        }
+        if (!hasPayeeChannel(userPayee, payoutMethod)) {
+            throw err('INVALID_PARAMS', '请先在「收款账号」中预留该收款方式（微信/支付宝/银行卡）');
         }
         // H1: 获取 nickName——优先 auth.nickName，fallback 查询 users 集合
         let nickName = auth.nickName || '';
@@ -691,7 +817,7 @@ async function requestWithdrawal(event, context, auth) {
                     walletType,
                     nickName,
                     amount: withdrawAmount,
-                    method: 'wechat',
+                    method: payoutMethod,
                     status: 'pending',
                     // H2: packageInfo 待 adminService 审批后回填（mchId/appId/package）
                     transferSceneId: process.env.WECHAT_TRANSFER_SCENE_ID || '',
@@ -731,6 +857,9 @@ _mod.exports = {
     getMyIncomeDetails,
     getMyWallet,
     getMyWithdrawals,
+    getMyPayeeAccounts,
+    updatePayeeAccounts,
+    cancelWithdrawal,
     confirmWithdrawal,
     requestWithdrawal,
 };
@@ -740,6 +869,9 @@ exports.default = {
     getMyIncomeDetails,
     getMyWallet,
     getMyWithdrawals,
+    getMyPayeeAccounts,
+    updatePayeeAccounts,
+    cancelWithdrawal,
     confirmWithdrawal,
     requestWithdrawal,
 };

@@ -23,9 +23,11 @@ const logger = createLogger('withdrawal-settle')
  * @param {object} w 提现记录文档（需含 openid/amount/walletType）
  * @param {object} transferInfo 转账结果（transfer_bill_no/out_bill_no，可来自发起转账或查单接口）
  * @param {string} source 日志/告警来源标识
+ * @param {string} [lockStatus='processing'] 补偿路径条件更新的前置状态（auto='processing'，manual='approved'）
+ * @param {object} [extraData={}] 额外落库字段（人工打款：transferMethod/payoutChannel/paidAmount/...）
  * @returns {Promise<{settled: boolean, viaTransaction: boolean}>}
  */
-async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source) {
+async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source, lockStatus = 'processing', extraData = {}) {
   const walletType = w.walletType || 'commission'
   // 事务前先查询钱包 _id（CloudBase 事务内不支持 where().get() / where().update()）
   const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
@@ -36,6 +38,7 @@ async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source) 
     transferTime: db.serverDate(),
     transferBatchNo: transferInfo.transfer_bill_no || '',
     outBatchNo: transferInfo.out_bill_no || w.outBatchNo || '',
+    ...extraData,
     updatedAt: db.serverDate(),
   }
 
@@ -67,7 +70,7 @@ async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source) 
   let walletFixed = false
   try {
     const upRes = await db.collection('withdrawals')
-      .where({ _id: withdrawalId, status: 'processing' })
+      .where({ _id: withdrawalId, status: lockStatus })
       .update({ data: { ...completedData, needsReconcile: true } })
     withdrawalFixed = ((upRes && upRes.stats && upRes.stats.updated) || 0) > 0
   } catch (e) {

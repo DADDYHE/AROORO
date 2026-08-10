@@ -17,7 +17,7 @@ export type OrderStatus =
   | 'rejected'
 
 /** 提现状态 */
-export type WithdrawalStatus = 'pending' | 'processing' | 'approved' | 'completed' | 'rejected'
+export type WithdrawalStatus = 'pending' | 'processing' | 'approved' | 'completed' | 'rejected' | 'cancelled'
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending_payment: '待支付',
@@ -47,4 +47,5 @@ export const WITHDRAWAL_STATUS_LABELS: Record<WithdrawalStatus, string> = {
   approved: '待人工转账',
   completed: '已完成',
   rejected: '已拒绝',
+  cancelled: '已取消',
 }

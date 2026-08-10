@@ -27,4 +27,5 @@ exports.WITHDRAWAL_STATUS_LABELS = {
     approved: '待人工转账',
     completed: '已完成',
     rejected: '已拒绝',
+    cancelled: '已取消',
 };

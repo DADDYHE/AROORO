@@ -6,7 +6,7 @@
  *   - 4 个服务子模块：application / wallet / referral / income
  *   - 共 14 个 action：
  *     * 申请（3 个）：submitApplication / getApplicationStatus / getMyPermissions
- *     * 收入 / 钱包（6 个）：getMyIncomeOverview / getMyIncomeDetails / getMyWallet / getMyWithdrawals / confirmWithdrawal / requestWithdrawal
+ *     * 收入 / 钱包（9 个）：getMyIncomeOverview / getMyIncomeDetails / getMyWallet / getMyWithdrawals / getMyPayeeAccounts / updatePayeeAccounts / cancelWithdrawal / confirmWithdrawal / requestWithdrawal
  *     * 服务收入（2 个）：getServiceIncomeOverview / getServiceIncomeDetails
  *     * 邀请（4 个）：getReferralStats / getMyInvitedUsers / getReferralOrders / getReferralOrderStats
  *
@@ -140,6 +140,9 @@ export interface PartnerHandlers {
   getMyIncomeDetails: PartnerActionHandler
   getMyWallet: PartnerActionHandler
   getMyWithdrawals: PartnerActionHandler
+  getMyPayeeAccounts: PartnerActionHandler
+  updatePayeeAccounts: PartnerActionHandler
+  cancelWithdrawal: PartnerActionHandler
   confirmWithdrawal: PartnerActionHandler
   requestWithdrawal: PartnerActionHandler
 
@@ -170,6 +173,9 @@ export const handlers: PartnerHandlers = {
   getMyIncomeDetails: walletHandlers.getMyIncomeDetails,
   getMyWallet: walletHandlers.getMyWallet,
   getMyWithdrawals: walletHandlers.getMyWithdrawals,
+  getMyPayeeAccounts: walletHandlers.getMyPayeeAccounts,
+  updatePayeeAccounts: walletHandlers.updatePayeeAccounts,
+  cancelWithdrawal: walletHandlers.cancelWithdrawal,
   confirmWithdrawal: walletHandlers.confirmWithdrawal,
   requestWithdrawal: walletHandlers.requestWithdrawal,
 
@@ -200,6 +206,9 @@ const ACTION_PERMISSIONS: Record<keyof PartnerHandlers, PartnerPermission> = {
   getMyIncomeDetails: 'partner',
   getMyWallet: 'partner',
   getMyWithdrawals: 'partner',
+  getMyPayeeAccounts: 'partner',
+  updatePayeeAccounts: 'partner',
+  cancelWithdrawal: 'partner',
   confirmWithdrawal: 'partner',
   requestWithdrawal: 'partner',
 

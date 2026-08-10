@@ -143,6 +143,10 @@
   border: none;
 }
 
+.record-cancel-btn {
+  background: #A8A29E;
+}
+
 /* ---------- 支付方式卡片 ---------- */
 .payment-methods {
   margin-top: 32rpx;
