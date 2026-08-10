@@ -59,6 +59,7 @@ export interface CommissionRecordPayload {
     orderAmount: number;
     commissionRate: number;
     commissionAmount: number;
+    productName?: string;
     status: 'pending';
     createdAt: unknown;
     updatedAt: unknown;

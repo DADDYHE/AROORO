@@ -175,6 +175,7 @@ export interface IncomeDetailItem {
   buyerId?: string
   buyerNickName?: string
   buyerAvatarUrl?: string
+  productName?: string
 }
 
 export interface IncomeDetailsResult {
@@ -567,6 +568,7 @@ export async function getMyIncomeDetails(
         status: (c.status as string) || 'pending',
         createdAt: c.createdAt as Date,
         buyerId: (c.ownerId as string) || '',
+        productName: (c.productName as string) || '',
       } as IncomeDetailItem
     })
 

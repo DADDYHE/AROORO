@@ -72,6 +72,7 @@ export interface CommissionRecordPayload {
   orderAmount: number
   commissionRate: number
   commissionAmount: number
+  productName?: string
   status: 'pending'
   // db.serverDate() 返回 Command 对象，运行时非 Date
   createdAt: unknown
@@ -82,6 +83,19 @@ export interface CommissionRecordPayload {
 // =====================================================================
 // 常量表（订单类型 / 费率键 / 金额字段）
 // =====================================================================
+
+// 商品/服务名称候选字段（不同业务订单字段名不同）
+const PRODUCT_NAME_KEYS = ['productName', 'activityTitle', 'hostName', 'title', 'name', 'serviceName', 'goodsName']
+
+function extractProductName(order: CommissionOrderDoc): string {
+  for (const key of PRODUCT_NAME_KEYS) {
+    const v = order[key]
+    if (typeof v === 'string' && v.trim()) {
+      return v.trim().slice(0, 80)
+    }
+  }
+  return ''
+}
 
 /**
  * 订单类型规范化表
@@ -371,6 +385,7 @@ export async function createCommissionRecord(
       orderAmount,
       commissionRate: rate,
       commissionAmount,
+      productName: extractProductName(order),
       status: 'pending',
       createdAt: db.serverDate(),
       updatedAt: db.serverDate(),
