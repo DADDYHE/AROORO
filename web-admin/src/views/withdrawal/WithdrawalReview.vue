@@ -69,6 +69,10 @@
             <template v-else-if="row.status === 'approved'">
               <el-button v-if="row.method === 'wechat' && autoTransferEnabled" link type="warning" @click="onRetry(row._id, row.status)">重新转账</el-button>
               <el-button link type="success" @click="onConvert(row._id)">转人工打款</el-button>
+              <el-button link type="danger" @click="onCancel(row._id)">撤销</el-button>
+            </template>
+            <template v-else-if="row.status === 'processing'">
+              <el-button link type="warning" @click="onRetry(row._id, row.status)">对账</el-button>
             </template>
             <span v-else class="text-muted">已处理</span>
           </template>

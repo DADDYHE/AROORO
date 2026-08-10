@@ -601,7 +601,8 @@ async function getPayoutConfig(event, context, auth) {
 }
 
 /**
- * v5.1：super_admin 撤销 approved(mode=manual) 提现（打款前撤销，frozen→balance 回退）
+ * v5.1：super_admin 撤销 approved 提现（打款前撤销，frozen→balance 回退）
+ * 覆盖 manual（待人工打款）与 auto 失败回退单（无 mode 或 mode=auto）；
  * 强约束：原因必填 + operation-log；系统无法验证是否已打款，文案强确认由前端承担。
  */
 async function cancelWithdrawal(event, context, auth) {
@@ -617,8 +618,8 @@ async function cancelWithdrawal(event, context, auth) {
     if (w.status === 'cancelled') {
       return handleSuccess({ message: '该提现已取消' })
     }
-    if (w.status !== 'approved' || w.mode !== 'manual') {
-      throw err('BUSINESS_ERROR', '仅“待人工打款（approved, manual）”状态可撤销')
+    if (w.status !== 'approved') {
+      throw err('BUSINESS_ERROR', '仅“待打款（approved）”状态可撤销')
     }
     const walletType = w.walletType || 'commission'
     const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
