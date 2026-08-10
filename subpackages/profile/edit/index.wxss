@@ -139,7 +139,7 @@
   color: var(--text-on-primary, #F7F5EF);
   font-size: 30rpx;
   font-weight: 400;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   border: none;
   margin-top: 48rpx;
   letter-spacing: 0.12em;

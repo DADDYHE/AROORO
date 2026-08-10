@@ -283,7 +283,7 @@
   padding: 20rpx 48rpx;
   background: var(--gradient-primary);
   color: var(--text-on-primary);
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 26rpx;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -303,7 +303,7 @@
   padding: 20rpx 48rpx;
   background: var(--lux-gold-grad);
   color: var(--text-on-accent);  /* 原 #FFFFFF */
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 26rpx;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -324,7 +324,7 @@
   background: transparent;
   color: var(--primary-color);
   border: 1rpx solid var(--primary-color);
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 26rpx;
   font-weight: 400;
   letter-spacing: 0.12em;
@@ -342,7 +342,7 @@
   padding: 18rpx 44rpx;
   background: var(--divider-color);
   color: var(--text-primary);
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 26rpx;
   font-weight: 400;
   letter-spacing: 0.06em;
@@ -768,7 +768,7 @@
 .action-bar .action-btn {
   flex: 1;
   height: 84rpx;
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;

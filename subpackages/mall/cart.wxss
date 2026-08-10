@@ -285,7 +285,7 @@
   padding: 18rpx 64rpx;
   background: var(--gradient-secondary);
   color: var(--text-on-accent);  /* 原 var(--text-on-primary) */
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 26rpx;
   margin-top: var(--zy-space-sm2);
   font-weight: 500;
@@ -364,7 +364,7 @@
   padding: 20rpx 48rpx;
   background: var(--gradient-secondary);
   color: var(--text-on-accent);  /* 原 var(--text-on-primary) */
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 28rpx;
   font-weight: 500;
   letter-spacing: 0.10em;

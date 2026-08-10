@@ -127,9 +127,9 @@
 
 /* ===== 价格标签 ===== */
 .price-tag {
-  position: absolute;
-  bottom: var(--zy-space-lg);
-  right: var(--page-padding);
+  position: static;
+  align-self: flex-end;
+  margin-top: 8rpx;
   background: var(--border-inverse-20, rgba(255,255,255,0.20));
   padding: 16rpx 24rpx;
   border-radius: var(--zy-radius-lg);
@@ -236,7 +236,7 @@
   color: var(--activity-primary);
   border: 1rpx solid var(--activity-primary);
   padding: 20rpx 48rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 24rpx;
   height: 80rpx;
   display: flex;
@@ -265,7 +265,7 @@
   color: var(--text-on-primary);
   border: none;
   padding: 20rpx 48rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 24rpx;
   height: 80rpx;
   display: flex;
@@ -340,8 +340,8 @@
 }
 
 .pet-picker-body {
-  flex: 1;
-  max-height: calc(70vh - 120rpx);
+  /* Skyline 下 scroll-view 不能用 flex:1 撑高度（父级 max-height 时算成 0），必须给明确高度 */
+  height: calc(70vh - 120rpx);
   padding: 0;
   overflow: hidden;
 }
@@ -380,7 +380,7 @@
   color: var(--text-on-primary);
   border: none;
   padding: 20rpx 48rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 26rpx;
   height: 80rpx;
   display: flex;
@@ -519,7 +519,7 @@
   align-items: center;
   gap: 8rpx;
   padding: 8rpx 16rpx;
-  border-radius: var(--zy-radius-sm);
+  border-radius: var(--zy-radius-lg);
   background-color: rgba(184,92,60,0.06);
   color: var(--error-color);
   font-size: 20rpx;
@@ -645,7 +645,7 @@
   color: var(--activity-primary);
   border: 1rpx solid var(--activity-primary);
   padding: 20rpx 48rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 24rpx;
   height: 80rpx;
   display: flex;
@@ -788,7 +788,7 @@
 .action-btn {
   padding: 10rpx 16rpx;
   border: 1rpx solid var(--border-color);
-  border-radius: var(--zy-radius-sm);
+  border-radius: var(--zy-radius-lg);
   font-size: 18rpx;
   height: 52rpx;
   line-height: 32rpx;
@@ -976,10 +976,6 @@
   border-bottom: 1rpx solid var(--hairline);
 }
 
-.fee-detail-item:last-of-type {
-  border-bottom: none;
-}
-
 .fee-detail-label {
   font-size: 24rpx;
   color: var(--text-secondary);
@@ -1082,7 +1078,7 @@
   color: var(--text-on-primary);
   border: none;
   padding: 24rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 30rpx;
   font-weight: 500;
   width: 100%;

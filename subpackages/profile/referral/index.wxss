@@ -289,7 +289,7 @@
 .share-btn {
   width: 100%;
   padding: 24rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   background: var(--gradient-primary);
   color: var(--text-on-primary, #F7F5EF);
   font-size: 30rpx;

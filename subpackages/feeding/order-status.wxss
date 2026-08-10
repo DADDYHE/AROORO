@@ -510,7 +510,7 @@
 
 .action-btn {
   padding: 24rpx 80rpx;
-  border-radius: 48rpx;
+  border-radius: var(--zy-radius-lg);
   font-size: 30rpx;
 }
 
@@ -563,7 +563,7 @@
 .retry-btn {
   padding: 20rpx 64rpx;
   background: linear-gradient(135deg, var(--feeding-primary) 0%, var(--primary-color) 100%);
-  border-radius: 48rpx;
+  border-radius: var(--zy-radius-lg);
   color: var(--text-on-primary);
   font-size: 28rpx;
   font-weight: 600;

@@ -267,7 +267,7 @@
   color: var(--text-primary);
   padding: 4rpx 16rpx;
   border: 1rpx solid var(--mall-tint);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   background: var(--mall-tint, rgba(201,162,75,0.08));
 }
 
@@ -310,7 +310,7 @@
   color: var(--text-on-accent);  /* 原 var(--card-color) */
   font-size: 28rpx;
   font-weight: 400;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   letter-spacing: 0.06em;
   text-align: center;
   box-shadow: var(--shadow-glow-mall);
@@ -327,7 +327,7 @@
   color: var(--text-secondary);
   font-size: 28rpx;
   font-weight: 400;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   border: 1rpx solid var(--border-color, #E2DED3);
   letter-spacing: 0.06em;
   text-align: center;

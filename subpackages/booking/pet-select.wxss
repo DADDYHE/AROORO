@@ -187,7 +187,7 @@
   gap: 8rpx;
   background: var(--gradient-primary);
   padding: 6rpx 16rpx 6rpx 12rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   box-shadow: var(--shadow-glow-primary-btn);
 }
 
@@ -543,7 +543,7 @@
 .footer-action {
   flex: 1;
   min-width: 0;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 28rpx;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -660,7 +660,7 @@
 
 .popup-cancel-btn {
   padding: 12rpx 24rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   transition: transform var(--transition-fast);
 }
 
@@ -828,7 +828,7 @@
 
 .popup-confirm-btn {
   padding: 28rpx 0;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   text-align: center;
   border: none;
   transition: transform var(--transition-fast), opacity var(--transition-fast);

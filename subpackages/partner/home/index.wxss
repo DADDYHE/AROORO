@@ -47,7 +47,7 @@
   display: inline-flex;
   padding: 16rpx 44rpx;
   background: var(--gradient-primary);
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   box-shadow: var(--lux-shadow-green);
 }
 

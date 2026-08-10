@@ -188,7 +188,7 @@
   padding: 14rpx 36rpx;
   background: var(--gradient-secondary);
   color: var(--text-on-accent);  /* 原 var(--primary-deep) */
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-weight: 500;
   letter-spacing: 0.08em;
   border: none;

@@ -347,7 +347,7 @@
   font-size: 24rpx;
   font-weight: 500;
   padding: 16rpx 40rpx;
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   letter-spacing: 0.1em;
   box-shadow: var(--lux-shadow-green);
 }
@@ -454,7 +454,7 @@
   flex: 1;
   text-align: center;
   padding: 20rpx 0;
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 26rpx;
   font-weight: 500;
   letter-spacing: 0.1em;

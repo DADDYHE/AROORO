@@ -344,7 +344,7 @@
   color: var(--text-on-primary, #F7F5EF);
   font-size: 28rpx;
   font-weight: 500;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   text-align: center;
   min-width: 200rpx;
   letter-spacing: 0.04em;

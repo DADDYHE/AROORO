@@ -301,7 +301,7 @@
   gap: 12rpx;
   padding: 16rpx 48rpx;
   border: 1rpx solid var(--hairline);
-  border-radius: var(--zy-radius-xs);
+  border-radius: var(--zy-radius-lg);
   background-color: var(--card-color);
   transition: transform var(--dur-fast) var(--ease-refined),
               background-color var(--dur-fast) var(--ease-refined);

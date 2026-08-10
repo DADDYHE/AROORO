@@ -188,7 +188,7 @@
   color: var(--text-primary);
   background: var(--lux-card-cream);
   border: 1rpx solid var(--lux-hairline);
-  border-radius: var(--lux-radius-inner);
+  border-radius: var(--zy-radius-lg);
   letter-spacing: 0.06em;
   font-weight: 400;
 }
@@ -309,7 +309,7 @@
   color: var(--text-secondary);
   letter-spacing: 0.04em;
   font-weight: 400;
-  border-radius: var(--lux-radius-inner);
+  border-radius: var(--zy-radius-lg);
   background: transparent;
 }
 
@@ -485,7 +485,7 @@
   align-items: center;
   justify-content: center;
   font-size: 26rpx;
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   letter-spacing: 0.10em;
   font-weight: 500;
   line-height: 1;

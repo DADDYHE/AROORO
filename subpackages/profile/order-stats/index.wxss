@@ -330,7 +330,7 @@
   color: var(--error-color);
   padding: 8rpx 24rpx;
   border: 1rpx solid rgba(184, 92, 60, 0.2);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   background: rgba(184, 92, 60, 0.06);
 }
 

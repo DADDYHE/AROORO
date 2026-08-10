@@ -125,6 +125,7 @@
 
 /* ===== 团购卡片（白卡 + 发丝描边 + 微圆角） ===== */
 .deal-card {
+  position: relative;
   background: var(--card-color);
   border-radius: var(--lux-radius-card);
   overflow: hidden;
@@ -266,7 +267,7 @@
 .deal-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: var(--zy-space-sm2);
   padding: var(--zy-space-sm2) var(--zy-space-lg) var(--zy-space-lg);
 }
@@ -293,26 +294,28 @@
   opacity: 0.75;
 }
 
-/* 分享按钮：透明底 + 发丝描边，移除所有 !important */
+/* 分享按钮：参照 group-detail 底部「客服」按钮样式 —— 无框、竖排小图标 + 极小文字、图标文字整体贴左；置于卡片底部左侧（flex space-between，避开 Skyline 绝对定位不渲染的坑） */
 .btn-share {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
-  padding: 12rpx 28rpx;
-  border-radius: var(--zy-radius-pill);
-  background: transparent;
-  border: 1rpx solid var(--hairline);
-  font-size: 22rpx;
-  min-width: unset;
-  width: auto;
-  max-width: unset;
-  line-height: 1;
+  gap: 6rpx;
+  padding: 0;
   margin: 0;
+  border: none;
+  background: transparent;
+  line-height: normal;
+  width: auto;
+  min-width: unset;
+  max-width: unset;
   box-sizing: border-box;
-  color: var(--text-secondary);
-  transition: transform 240ms cubic-bezier(0.25, 0.1, 0.25, 1),
-              border-color 240ms cubic-bezier(0.25, 0.1, 0.25, 1),
-              background-color 240ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  color: var(--text-tertiary);
+  transition: opacity 240ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.btn-share .action-text {
+  text-align: left;
 }
 
 .btn-share::after {
@@ -320,34 +323,33 @@
 }
 
 .btn-share--pressed {
-  transform: scale(0.96);
-  border-color: var(--border-color);
-  background: var(--accent-wash);
+  opacity: 0.6;
 }
 
 .action-icon {
   font-size: 22rpx;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
 }
 
-/* 方案 A 发丝线分享图标（image 替代 emoji） */
+/* 分享图标：与客服按钮图标尺寸一致 */
 .action-icon--svg {
-  width: 26rpx;
-  height: 26rpx;
+  width: 40rpx;
+  height: 40rpx;
   flex-shrink: 0;
 }
 
 .action-text {
   font-family: var(--font-sans);
-  font-size: 22rpx;
-  color: var(--text-secondary);
-  letter-spacing: 0.06em;
+  font-size: 18rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.12em;
 }
 
 /* 参团主按钮 — 团购板块陶土暖棕渐变 CTA */
 .btn-join {
-  padding: 18rpx 52rpx;
-  border-radius: var(--zy-radius-pill);
+  flex-shrink: 0;
+  padding: 18rpx 104rpx;
+  border-radius: var(--zy-radius-lg);
   background: var(--tuan-primary);
   border: none;
   transition: transform 240ms cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -370,6 +372,7 @@
   color: var(--card-color);
   font-weight: 500;
   letter-spacing: 0.1em;
+  white-space: nowrap;
 }
 
 /* ===== 加载 / 空态 ===== */
@@ -666,7 +669,7 @@
   font-family: var(--font-sans);
   font-size: 28rpx;
   font-weight: 500;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   border: none;
   display: flex;
   align-items: center;

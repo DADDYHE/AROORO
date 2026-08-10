@@ -102,7 +102,7 @@ label, form, block, canvas, video, map, movable-area, movable-view {
   align-items: center;
   justify-content: center;
   padding: var(--zy-space-lg) var(--zy-space-xl);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: var(--zy-fs-md);
   font-family: var(--font-semibold);
   font-weight: 500;

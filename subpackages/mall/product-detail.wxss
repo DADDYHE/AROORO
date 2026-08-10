@@ -386,7 +386,7 @@
   flex: 1;
   padding: 24rpx 0;
   border: 1rpx solid var(--mall-primary);
-  border-radius: var(--zy-radius-xs);
+  border-radius: var(--zy-radius-lg);
   text-align: center;
   font-size: 26rpx;
   font-weight: 500;
@@ -408,7 +408,7 @@
   flex: 1;
   padding: 24rpx 0;
   background: var(--gradient-secondary);
-  border-radius: var(--zy-radius-xs);
+  border-radius: var(--zy-radius-lg);
   text-align: center;
   font-size: 26rpx;
   font-weight: 500;
@@ -727,7 +727,7 @@
   width: 100%;
   padding: 26rpx 0;
   background: var(--gradient-secondary);
-  border-radius: var(--zy-radius-xs);
+  border-radius: var(--zy-radius-lg);
   text-align: center;
   font-size: 28rpx;
   font-weight: 500;
@@ -785,7 +785,7 @@
 .retry-btn {
   padding: 20rpx 64rpx;
   background: var(--gradient-secondary);
-  border-radius: var(--zy-radius-xs);
+  border-radius: var(--zy-radius-lg);
   font-size: 24rpx;
   font-weight: 500;
   color: var(--text-on-accent);  /* 原 var(--text-inverse) */

@@ -132,7 +132,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 24rpx;
   font-weight: 400;
   letter-spacing: 2rpx;

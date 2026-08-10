@@ -125,7 +125,7 @@
   margin-top: 36rpx;
   padding: 24rpx 0;
   background: var(--primary-color, #1F3A1F);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   text-align: center;
   transition-property: transform, opacity;
   transition-duration: 160ms;

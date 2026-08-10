@@ -220,7 +220,7 @@
   color: var(--text-on-primary);
   font-size: 28rpx;
   font-weight: 500;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   border: none;
   display: flex;
   align-items: center;
@@ -424,7 +424,7 @@
   height: 88rpx;
   font-size: 28rpx;
   font-weight: 500;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   letter-spacing: 0.06em;
   display: flex;
   align-items: center;

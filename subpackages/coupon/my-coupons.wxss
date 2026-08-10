@@ -30,7 +30,7 @@
   align-items: center;
   gap: 16rpx;
   background: var(--coupon-gradient);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   padding: 20rpx 28rpx;
   box-shadow: var(--shadow-glow-coupon);
   z-index: 99;
@@ -306,7 +306,7 @@
 .card-use-btn {
   padding: 12rpx 32rpx;
   border: 1rpx solid var(--accent-color);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 22rpx;
   color: var(--text-gold-on-dark);
   background: transparent;

@@ -253,7 +253,7 @@
   letter-spacing: 1rpx;
   padding: 8rpx 20rpx;
   border: 1rpx solid var(--primary-color);
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   flex-shrink: 0;
 }
 
@@ -286,7 +286,7 @@
   justify-content: center;
   background: var(--gradient-primary);
   color: var(--text-on-primary);
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 28rpx;
   font-weight: 500;
   letter-spacing: 6rpx;

@@ -153,7 +153,7 @@
 .search-btn {
   padding: 12rpx 28rpx;
   background: var(--gradient-primary);
-  border-radius: var(--lux-radius-inner);
+  border-radius: var(--zy-radius-lg);
   flex-shrink: 0;
 }
 
@@ -378,7 +378,7 @@
   display: inline-flex;
   padding: 14rpx 44rpx;
   border: 1rpx solid var(--primary-color);
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
 }
 
 .empty-action-text {

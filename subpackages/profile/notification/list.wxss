@@ -24,7 +24,7 @@
 .mark-read-btn {
   padding: 10rpx 24rpx;
   background: var(--primary-wash, #F2F5EC);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 22rpx;
   color: var(--primary-color);
   letter-spacing: 0.04em;

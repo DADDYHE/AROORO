@@ -273,6 +273,7 @@
   left: 0;
   right: 0;
   display: flex;
+  flex-wrap: wrap;
   gap: 16rpx;
   padding: 20rpx 32rpx;
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
@@ -284,7 +285,7 @@
 .action-btn {
   flex: 1;
   height: 80rpx;
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -321,6 +322,15 @@
 .action-btn-full {
   flex: none;
   width: 100%;
+}
+
+.action-btn-export {
+  background: transparent;
+  border: 1rpx solid var(--zy-accent-gold, #C9A24B);
+}
+
+.action-btn-export .action-btn-text {
+  color: var(--zy-accent-gold, #C9A24B);
 }
 
 /* ---------- 报名名单弹层 ---------- */
@@ -377,9 +387,9 @@
 }
 
 .reg-list-body {
-  flex: 1;
+  /* Skyline 下 flex:1 + 父级 max-height 会塌缩成 0，给确定高度；sheet 仍 max-height:70vh 兜底 */
+  height: calc(70vh - 100rpx);
   padding: 12rpx 0;
-  max-height: 60vh;
   overflow-y: auto;
 }
 
@@ -406,12 +416,43 @@
   display: block;
 }
 
+.reg-name-line {
+  display: flex;
+  align-items: center;
+}
+
+.reg-signed-badge {
+  margin-left: 12rpx;
+  padding: 2rpx 14rpx;
+  border-radius: 999rpx;
+  background: var(--success-color);
+  flex-shrink: 0;
+}
+
+.reg-signed-text {
+  font-size: 18rpx;
+  color: var(--text-on-primary);
+  letter-spacing: 0.06em;
+}
+
 .reg-meta {
   font-size: 22rpx;
   color: var(--text-tertiary);
   margin-top: 4rpx;
   display: block;
   letter-spacing: 0.03em;
+}
+
+.reg-counts {
+  flex: 0 0 auto;
+  padding: 0 16rpx;
+}
+
+.reg-count-text {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .reg-action {
@@ -429,4 +470,94 @@
   font-size: 26rpx;
   color: var(--text-secondary);
   letter-spacing: 0.06em;
+}
+
+/* ---------- 导出报名表弹层 ---------- */
+.export-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-color);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.export-sheet {
+  width: 100%;
+  background: var(--lux-card-bg);
+  border-radius: var(--zy-radius-2xl) var(--zy-radius-2xl) 0 0;
+  padding: 32rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid var(--lux-hairline);
+  box-shadow: var(--lux-shadow-elevated);
+}
+
+.export-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.export-sheet-title {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.06em;
+}
+
+.export-sheet-tip {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  display: block;
+  margin-bottom: 24rpx;
+  letter-spacing: 0.03em;
+}
+
+.export-sheet-btn {
+  height: 88rpx;
+  border-radius: var(--zy-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20rpx;
+  border: 1rpx solid transparent;
+}
+
+.export-sheet-btn:last-child {
+  margin-bottom: 0;
+}
+
+.export-sheet-btn-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.export-sheet-btn-share {
+  background: var(--gradient-primary);
+  box-shadow: var(--lux-shadow-green);
+}
+
+.export-sheet-btn-share .export-sheet-btn-text {
+  color: var(--text-on-primary);
+}
+
+.export-sheet-btn-save {
+  background: transparent;
+  border-color: var(--primary-color);
+}
+
+.export-sheet-btn-save .export-sheet-btn-text {
+  color: var(--primary-color);
+}
+
+.export-sheet-btn-copy {
+  background: var(--divider-color);
+}
+
+.export-sheet-btn-copy .export-sheet-btn-text {
+  color: var(--text-primary);
 }

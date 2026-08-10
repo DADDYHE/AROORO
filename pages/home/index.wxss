@@ -237,15 +237,20 @@ page {
 .home-login-btn {
   display: flex; align-items: center; justify-content: center;
   width: 100%; padding: 32rpx;
-  background: var(--primary-color); color: var(--text-on-primary);
+  background: linear-gradient(118deg, #1F3A1F 0%, #2D4F2D 48%, #3A5A42 100%);
+  color: var(--text-on-primary);
   font-size: 26rpx; font-weight: 500; letter-spacing: 0;
-  border-radius: var(--zy-radius-pill); border: none; box-shadow: none;
-  transition-property: transform;
+  border-radius: var(--zy-radius-lg); border: none;
+  box-shadow: 0 6rpx 18rpx rgba(58, 90, 66, 0.30);
+  transition-property: transform, box-shadow;
   transition-duration: 180ms;
   transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.home-login-btn--pressed { transform: scale(0.98); opacity: 0.92; }
+.home-login-btn--pressed {
+  transform: scale(0.98); opacity: 0.92;
+  box-shadow: 0 3rpx 10rpx rgba(58, 90, 66, 0.22);
+}
 
 .home-login-text {
   font-size: 26rpx;
@@ -407,6 +412,13 @@ page {
   padding-right: 0;
 }
 
+/* 区块本身 padding-right:0 是为了让横滑卡列表（featured-list 自带 padding-right）出血到屏幕右缘；
+   但标题行应保留页面右内边距，否则「查看全部」会比其他板块更贴右屏边、无法对齐。
+   故仅给 .section-head 补回右内边距，横滑区域不受影响。 */
+.section-featured .section-head {
+  padding-right: var(--page-padding);
+}
+
 .featured-scroll {
   height: 400rpx;
   white-space: nowrap;
@@ -521,9 +533,6 @@ page {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.mall-card--pressed .mall-card-img {
-  transform: scale(1.04);
-}
 
 .mall-card-img-share {
   width: 100%;
@@ -628,9 +637,6 @@ page {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.activity-h-card--pressed .activity-h-img {
-  transform: scale(1.04);
-}
 
 .activity-h-img-share {
   width: 240rpx;
@@ -726,6 +732,176 @@ page {
   color: inherit;
 }
 
+/* ===== Section 2.7: 我的活动（已报名，可首页签到） ===== */
+.my-activities-section {
+  margin-top: var(--section-gap);
+  padding: 0 var(--page-padding);
+}
+
+/* 「我的宠物」与「我的活动」同为登录态专属区块，成组紧凑排布，收紧其间的章节间距 */
+.my-pets-section + .my-activities-section {
+  margin-top: 24rpx;
+}
+
+/* 「我的活动」板块底到「快捷导航」顶的间距统一为 36rpx */
+.my-activities-section + .quick-services-wrapper {
+  margin-top: 36rpx;
+}
+
+/* 「我的活动」标题到卡片的间距，比全局 section 标题间距（64rpx）收紧 */
+.my-activities-section .section-head {
+  margin-bottom: 32rpx;
+}
+
+.my-act-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zy-space-lg);
+}
+
+.my-act-card {
+  display: flex;
+  align-items: stretch;
+  background: linear-gradient(180deg, var(--card-satin) 0%, var(--sheet-paper) 100%);
+  border-radius: var(--lux-radius-card);
+  overflow: hidden;
+  position: relative;
+  border: 1rpx solid var(--hairline-glass);
+  transition-property: transform;
+  transition-duration: 280ms;
+  transition-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
+}
+
+.my-act-card--pressed {
+  transform: scale(0.99);
+  border-color: var(--primary-soft);
+}
+
+.my-act-img {
+  width: 200rpx;
+  height: 200rpx;
+  flex-shrink: 0;
+}
+
+.my-act-img-ph {
+  background: var(--primary-wash);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.my-act-img-ph-text {
+  font-size: 26rpx;
+  color: var(--text-on-glass-2);
+  font-weight: 400;
+}
+
+.my-act-body {
+  flex: 1;
+  padding: 28rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8rpx;
+  min-width: 0;
+}
+
+.my-act-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-act-info {
+  font-size: 22rpx;
+  color: var(--text-on-glass-2);
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.my-act-meta {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 4rpx;
+}
+
+.my-act-loc {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 20rpx;
+  color: var(--text-on-glass-2);
+}
+
+.my-act-loc-icon {
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
+}
+
+.my-act-loc-text {
+  font-size: inherit;
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 右侧签到操作列 */
+.my-act-action {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 28rpx;
+}
+
+.my-act-signin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 30rpx;
+  border-radius: var(--zy-radius-lg);
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-glow-primary-btn);
+  transition-property: transform, opacity;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.my-act-signin--pressed {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.my-act-signin-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text-on-primary);
+  letter-spacing: 0.04em;
+}
+
+.my-act-signed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 24rpx;
+  border-radius: var(--zy-radius-pill);
+  border: 1rpx solid var(--lux-gold-500, #C9A24B);
+}
+
+.my-act-signed-text {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--lux-gold-500, #C9A24B);
+  letter-spacing: 0.04em;
+}
+
 /* ===== 底部留白（艺术级呼吸） ===== */
 .bottom-spacer {
   height: 400rpx; /* 缎面溶解：原 240(container)+160 = 400，全量移入 sheet 内部，保证底部也是纸面而非 page 渐变 */
@@ -734,7 +910,7 @@ page {
 /* ===== Section 2.5: 我的宠物（极简头像行） ===== */
 .my-pets-section {
   margin: 0 0 var(--zy-space-lg);
-  padding: 64rpx var(--page-padding) 48rpx;
+  padding: 64rpx var(--page-padding) 12rpx;
   background: transparent;
 }
 
@@ -759,7 +935,7 @@ page {
   gap: 6rpx;
   padding: 12rpx 24rpx;
   margin-left: 24rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   background: transparent;
   border: 1rpx solid var(--hairline-glass);
   flex-shrink: 0;

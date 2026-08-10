@@ -377,7 +377,7 @@
 .join-button {
   padding: 14rpx 32rpx;
   background: var(--gradient-primary);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   min-width: 132rpx;
   text-align: center;
   transition: transform 280ms cubic-bezier(0.25,0.1,0.25,1),

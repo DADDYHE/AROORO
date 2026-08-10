@@ -313,7 +313,7 @@
 
 .action-btn {
   padding: 22rpx 32rpx;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;

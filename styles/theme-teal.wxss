@@ -286,7 +286,7 @@ page {
   --zy-radius-xs: 4rpx;   /* A-1 补档：覆盖旧 --border-radius-xs(4rpx) 38 处消费，实现圆角零动版迁移 */
   --zy-radius-sm: 8rpx;
   --zy-radius-md: 12rpx;
-  --zy-radius-lg: 16rpx;
+  --zy-radius-lg: 24rpx;
   --zy-radius-xl: 20rpx;
   --zy-radius-2xl: 24rpx;
   --zy-radius-3xl: 32rpx;

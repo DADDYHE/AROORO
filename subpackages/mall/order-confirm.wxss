@@ -549,7 +549,7 @@
 .submit-btn {
   padding: 22rpx 56rpx;
   background: var(--gradient-secondary);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   text-align: center;
   font-size: 28rpx;
   font-weight: 500;
@@ -606,7 +606,7 @@
 .retry-btn {
   padding: 18rpx 56rpx;
   background: var(--gradient-secondary);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 24rpx;
   font-weight: 500;
   color: var(--text-on-accent);  /* 原 var(--text-inverse) */

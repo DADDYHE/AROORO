@@ -432,7 +432,7 @@
   letter-spacing: 0.08em;
   background: var(--gradient-primary);
   color: var(--text-on-primary);
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;

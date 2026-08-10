@@ -315,7 +315,7 @@
 .pay-btn {
   background: var(--gradient-primary);
   border: none;
-  border-radius: var(--zy-radius-pill);
+  border-radius: var(--zy-radius-lg);
   padding: 26rpx 0;
   box-shadow: var(--shadow-glow-primary-btn);
   transition: transform var(--transition-fast), opacity var(--transition-fast);

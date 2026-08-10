@@ -94,7 +94,7 @@
   font-size: 24rpx;
   color: var(--text-on-primary);
   background: var(--gradient-primary);
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   border: none;
   line-height: 1;
   display: inline-flex;
@@ -338,7 +338,7 @@
   padding: 14rpx 32rpx;
   border: 1rpx solid var(--boarding-primary);
   color: var(--boarding-primary);
-  border-radius: var(--lux-radius-pill);
+  border-radius: var(--zy-radius-lg);
   font-size: 24rpx;
   font-weight: 400;
   letter-spacing: 2rpx;

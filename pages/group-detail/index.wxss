@@ -207,7 +207,7 @@
   color: var(--text-on-primary);
   font-size: 24rpx;
   padding: 14rpx 28rpx;
-  border-radius: var(--zy-radius-xs);
+  border-radius: var(--zy-radius-lg);
   font-weight: 500;
   box-shadow: var(--shadow-glow-groupbuy);
   letter-spacing: 0.12em;
@@ -354,7 +354,7 @@
   font-size: 30rpx;
   font-weight: 500;
   padding: 24rpx 0;
-  border-radius: var(--zy-radius-xs);
+  border-radius: var(--zy-radius-lg);
   text-align: center;
   box-shadow: var(--shadow-glow-groupbuy);
   letter-spacing: 0.15em;
@@ -671,7 +671,7 @@
   width: 100%;
   padding: 26rpx 0;
   background: var(--groupbuy-gradient);
-  border-radius: var(--zy-radius-xs);
+  border-radius: var(--zy-radius-lg);
   text-align: center;
   font-size: 28rpx;
   font-weight: 500;
