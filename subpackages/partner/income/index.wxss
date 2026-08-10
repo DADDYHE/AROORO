@@ -35,7 +35,7 @@
   padding: 32rpx 36rpx;
 }
 
-/* ---------- 总收入概览卡片金色光晕 ---------- */
+/* ---------- 佣金统计卡片金色光晕 ---------- */
 .income-overview-card::before {
   content: '';
   position: absolute;
@@ -47,7 +47,7 @@
   pointer-events: none;
 }
 
-/* ---------- 总收入概览 ---------- */
+/* ---------- 佣金统计 ---------- */
 .overview-total {
   display: flex;
   flex-direction: column;

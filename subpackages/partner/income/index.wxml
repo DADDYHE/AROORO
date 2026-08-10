@@ -1,4 +1,4 @@
-<zy-navbar title="收入统计" />
+<zy-navbar title="佣金统计" />
 <scroll-view
   scroll-y
   enhanced
@@ -32,7 +32,7 @@
       <view class="brand-block">
         <view class="brand-accent-bar"></view>
         <view class="brand-main">
-          <text class="brand-text">收入概览</text>
+          <text class="brand-text">佣金统计</text>
         </view>
         <view class="brand-meta">
           <view class="brand-meta-line"></view>
@@ -46,7 +46,7 @@
         <view class="card-accent income-accent"></view>
         <view class="card-body">
           <view class="overview-total">
-            <text class="overview-label">累计收入</text>
+            <text class="overview-label">累计佣金</text>
             <text class="overview-value">¥{{totalIncomeText}}</text>
           </view>
           <view class="overview-divider"></view>
@@ -102,7 +102,7 @@
         <view class="card-accent rates-accent"></view>
         <view class="card-body">
           <view class="rates-title">
-            <text class="rates-title-text">分成比例</text>
+            <text class="rates-title-text">佣金比例</text>
           </view>
           <view class="rates-grid">
             <view wx:for="{{commissionRates}}" wx:key="key" class="rates-item">
@@ -115,7 +115,7 @@
 
       <view class="gallery-entrance">
         <view class="entrance-line"></view>
-        <text class="entrance-label">收入明细</text>
+        <text class="entrance-label">佣金明细</text>
       </view>
 
       <view class="tab-bar">
@@ -152,7 +152,7 @@
           <view class="detail-row">
             <view class="detail-left">
               <text class="detail-type">{{item.typeName || (item.type === 'tuan' ? '团购' : (item.type === 'mall' ? '商城' : (item.type === 'activity' ? '活动' : (item.type === 'boarding' ? '寄养' : '服务'))))}}</text>
-              <text class="detail-desc">{{item.description}}</text>
+              <text class="detail-desc">{{item.productName || item.description}}</text>
               <view wx:if="{{item.buyerNickName}}" class="detail-buyer">
                 <image wx:if="{{item.buyerAvatarUrl}}" class="detail-buyer-avatar" src="{{item.buyerAvatarUrl}}" mode="aspectFill" />
                 <text class="detail-buyer-name">{{item.buyerNickName}}</text>

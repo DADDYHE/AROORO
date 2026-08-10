@@ -128,6 +128,7 @@ export interface IncomeDetailItem {
     amount: number;
     orderNo: string;
     description: string;
+    productName?: string;
     status: string;
     createdAt: Date;
     buyerId?: string;

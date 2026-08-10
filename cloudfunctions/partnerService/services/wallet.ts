@@ -170,6 +170,8 @@ export interface IncomeDetailItem {
   amount: number
   orderNo: string
   description: string
+  // 商品/服务名称（佣金创建时落库；旧记录可能为空，前端用 typeName 兜底）
+  productName?: string
   status: string
   createdAt: Date
   buyerId?: string
@@ -564,6 +566,7 @@ export async function getMyIncomeDetails(
         amount: Number(c.commissionAmount) || 0,
         orderNo: (c.orderNo as string) || '',
         description,
+        productName: (c.productName as string) || '',
         status: (c.status as string) || 'pending',
         createdAt: c.createdAt as Date,
         buyerId: (c.ownerId as string) || '',

@@ -44,6 +44,8 @@ export interface CommissionOrderDoc {
   finalAmount?: number
   basicPrice?: number
   paidAmount?: number
+  // 商品/服务名称（各业务订单文档字段名不同：商城/团购=productName、活动=activityTitle、寄养=hostName 等）
+  productName?: string
   [k: string]: unknown
 }
 
@@ -72,6 +74,8 @@ export interface CommissionRecordPayload {
   orderAmount: number
   commissionRate: number
   commissionAmount: number
+  // 商品/服务名称（创建时从订单文档 best-effort 提取，供佣金明细页展示）
+  productName: string
   status: 'pending'
   // db.serverDate() 返回 Command 对象，运行时非 Date
   createdAt: unknown
@@ -359,6 +363,14 @@ export async function createCommissionRecord(
     // 4. 幂等预检
     if (await hasExistingCommission(db, order._id, inviterId)) { return }
 
+    // 4.1 商品/服务名称（best-effort）：各业务订单文档字段名不同，按候选顺序取第一个非空
+    const PRODUCT_NAME_KEYS = ['productName', 'activityTitle', 'hostName', 'title', 'name', 'serviceName', 'goodsName']
+    let productName = ''
+    for (const k of PRODUCT_NAME_KEYS) {
+      const v = order[k]
+      if (typeof v === 'string' && v.trim()) { productName = v.trim().slice(0, 80); break }
+    }
+
     // 5. 写入（确定性 _id + 唯一索引冲突恢复）
     const payload: CommissionRecordPayload = {
       _id: buildCommissionId(order._id, inviterId),
@@ -371,6 +383,7 @@ export async function createCommissionRecord(
       orderAmount,
       commissionRate: rate,
       commissionAmount,
+      productName,
       status: 'pending',
       createdAt: db.serverDate(),
       updatedAt: db.serverDate(),

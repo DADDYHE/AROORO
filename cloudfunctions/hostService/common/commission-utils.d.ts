@@ -34,6 +34,7 @@ export interface CommissionOrderDoc {
     finalAmount?: number;
     basicPrice?: number;
     paidAmount?: number;
+    productName?: string;
     [k: string]: unknown;
 }
 /** 系统配置（佣金率），键可能是 hosting 或 boarding，故用索引签名 */
@@ -59,6 +60,7 @@ export interface CommissionRecordPayload {
     orderAmount: number;
     commissionRate: number;
     commissionAmount: number;
+    productName: string;
     status: 'pending';
     createdAt: unknown;
     updatedAt: unknown;

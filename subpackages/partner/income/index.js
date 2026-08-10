@@ -77,7 +77,7 @@ Page({
       let hostingText = ''
       let feedingText = ''
       // walletCardTotalIncome：钱包卡片"总收入"展示值
-      // 与"累计收入"卡片保持一致，避免 commissions 累加 vs wallets.totalIncome 历史记账口径不同导致数据不一致
+      // 与"累计佣金"卡片保持一致，避免 commissions 累加 vs wallets.totalIncome 历史记账口径不同导致数据不一致
       let walletCardTotalIncome = ''
       // 钱包卡片金额格式化到小数点后两位
       let walletBalanceText = ''
