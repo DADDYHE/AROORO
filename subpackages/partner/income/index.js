@@ -141,6 +141,17 @@ Page({
       const res = await AdminService.getMyIncomeDetails({ type: this.data.activeTab, page: this.data.page, pageSize: this.data.pageSize })
       if (res.code === 0 && res.data) {
         let list = res.data.list || []
+        // v5.1：佣金状态展示（待结算/已结算/已取消/已冲销）
+        const COMMISSION_STATUS_MAP = {
+          pending: { text: '待结算', color: '#C9A24B' },
+          settled: { text: '已结算', color: '#5B7C4A' },
+          cancelled: { text: '已取消', color: '#9A9489' },
+          reversed: { text: '已冲销', color: '#A85B4A' },
+        }
+        list = list.map(it => {
+          const st = COMMISSION_STATUS_MAP[it.status] || { text: it.status || '待结算', color: '#9A9489' }
+          return { ...it, statusText: st.text, statusColor: st.color }
+        })
         // 转换 cloud:// 头像 URL 为可访问的临时 URL
         const cloudAvatars = list.filter(it => it.buyerAvatarUrl && it.buyerAvatarUrl.startsWith('cloud://'))
         if (cloudAvatars.length > 0) {

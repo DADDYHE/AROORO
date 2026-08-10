@@ -305,6 +305,20 @@
   color: var(--error-color);
 }
 
+.detail-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6rpx;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.detail-status {
+  font-size: 20rpx;
+  letter-spacing: 0.02em;
+}
+
 /* ---------- 空状态 ---------- */
 .empty-line {
   width: 48rpx;
