@@ -8,3 +8,5 @@ export function getFullPayeeInfo(withdrawalId) { return callAction('getFullPayee
 export function getPayoutConfig() { return callAction('getPayoutConfig') }
 export function cancelWithdrawal(withdrawalId, reason) { return callAction('cancelWithdrawal', { withdrawalId, reason }) }
 export function convertToManual(withdrawalId) { return callAction('convertToManual', { withdrawalId }) }
+export function inspectWithdrawal(withdrawalId) { return callAction('inspectWithdrawal', { withdrawalId }) }
+export function repairWithdrawalBalance(withdrawalId) { return callAction('repairWithdrawalBalance', { withdrawalId }) }

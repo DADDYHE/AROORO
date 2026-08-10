@@ -74,6 +74,9 @@
             <template v-else-if="row.status === 'processing'">
               <el-button link type="warning" @click="onRetry(row._id, row.status)">对账</el-button>
             </template>
+            <template v-else-if="row.status === 'cancelled'">
+              <el-button link type="info" @click="openInspect(row._id)">检查</el-button>
+            </template>
             <span v-else class="text-muted">已处理</span>
           </template>
           <span v-else class="text-muted">只读</span>
@@ -137,12 +140,29 @@
         <el-button type="success" :loading="confirming" @click="onConfirmSubmit">确认已打款</el-button>
       </template>
     </el-dialog>
+
+    <!-- 撤销记录检查/修复（运维诊断） -->
+    <el-dialog v-model="inspectVisible" title="撤销记录检查" width="520px">
+      <template v-if="inspectData">
+        <p>金额：{{ formatMoney(inspectData.withdrawal.amount) }} ｜ 状态：{{ WITHDRAWAL_STATUS_LABELS[inspectData.withdrawal.status] }}</p>
+        <p>渠道：{{ channelLabel(inspectData.withdrawal.method) }} ｜ 钱包类型：{{ inspectData.withdrawal.walletType }}</p>
+        <el-divider />
+        <p>佣金钱包：余额 {{ formatMoney(inspectData.wallets.commission?.balance) }} ｜ 冻结 {{ formatMoney(inspectData.wallets.commission?.frozenAmount) }}</p>
+        <p>服务收入钱包：余额 {{ formatMoney(inspectData.wallets.serviceIncome?.balance) }} ｜ 冻结 {{ formatMoney(inspectData.wallets.serviceIncome?.frozenAmount) }}</p>
+        <p>该用户提现单总数：{{ inspectData.otherWithdrawalsTotal }}</p>
+        <div v-if="inspectResult" class="diff">{{ inspectResult }}</div>
+      </template>
+      <template #footer>
+        <el-button @click="inspectVisible = false">关闭</el-button>
+        <el-button type="warning" :loading="repairing" @click="onRepair">修复冻结金额</el-button>
+      </template>
+    </el-dialog>
   </el-card>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { getWithdrawalList, approveWithdrawal, rejectWithdrawal, retryTransfer, confirmManualTransfer, getFullPayeeInfo, getPayoutConfig, cancelWithdrawal, convertToManual } from '@/api/withdrawal'
+import { getWithdrawalList, approveWithdrawal, rejectWithdrawal, retryTransfer, confirmManualTransfer, getFullPayeeInfo, getPayoutConfig, cancelWithdrawal, convertToManual, inspectWithdrawal, repairWithdrawalBalance } from '@/api/withdrawal'
 import { usePagination } from '@/composables/usePagination'
 import { formatDate, formatMoney } from '@/utils/format'
 import { WITHDRAWAL_STATUS_LABELS } from '@/constants/order'
@@ -304,6 +324,42 @@ async function onCancel(id) {
   await cancelWithdrawal(id, value)
   ElMessage.success('已撤销，冻结金额已退回')
   fetch()
+}
+
+// ===== 撤销记录检查/修复 =====
+const inspectVisible = ref(false)
+const inspectData = ref(null)
+const inspectResult = ref('')
+const repairing = ref(false)
+
+async function openInspect(id) {
+  inspectResult.value = ''
+  try {
+    const res = await inspectWithdrawal(id)
+    inspectData.value = res.data || null
+    inspectVisible.value = true
+  } catch (e) {
+    ElMessage.error(e?.message || '检查失败')
+  }
+}
+
+async function onRepair() {
+  if (!inspectData.value) {return}
+  repairing.value = true
+  try {
+    const res = await repairWithdrawalBalance(inspectData.value.withdrawal._id)
+    inspectResult.value = res.data?.repaired
+      ? `已回补 ${formatMoney(res.data.before ? (res.data.after.balance - res.data.before.balance) : 0)}：余额 ${formatMoney(res.data.after.balance)}，冻结 ${formatMoney(res.data.after.frozenAmount)}`
+      : `无需修复（余额 ${formatMoney(res.data.after?.balance)}，冻结 ${formatMoney(res.data.after?.frozenAmount)}）`
+    // 刷新检查数据与列表
+    const res2 = await inspectWithdrawal(inspectData.value.withdrawal._id)
+    inspectData.value = res2.data || inspectData.value
+    fetch()
+  } catch (e) {
+    ElMessage.error(e?.message || '修复失败')
+  } finally {
+    repairing.value = false
+  }
 }
 
 onMounted(async () => {
