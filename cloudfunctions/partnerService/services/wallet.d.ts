@@ -134,6 +134,7 @@ export interface IncomeDetailItem {
     buyerId?: string;
     buyerNickName?: string;
     buyerAvatarUrl?: string;
+    productName?: string;
 }
 export interface IncomeDetailsResult {
     list: IncomeDetailItem[];

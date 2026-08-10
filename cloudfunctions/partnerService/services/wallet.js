@@ -382,6 +382,7 @@ async function getMyIncomeDetails(event, context, auth) {
                 status: c.status || 'pending',
                 createdAt: c.createdAt,
                 buyerId: c.ownerId || '',
+                productName: c.productName || '',
             };
         });
         // P2 修复：批量补买家昵称/头像（与旧版 adminService 明细结构对齐，供前端明细页展示）
