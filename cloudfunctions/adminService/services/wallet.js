@@ -622,6 +622,14 @@ async function cancelWithdrawal(event, context, auth) {
     const walletType = w.walletType || 'commission'
     const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
     const walletDoc = walletRes.data && walletRes.data[0]
+    // 防静默丢钱：钱包不存在或金额非法时必须显式失败，不允许“标记已撤销但余额未退回”
+    const amountNum = Number(w.amount)
+    if (!walletDoc) {
+      throw err('BUSINESS_ERROR', '未找到用户钱包，无法退回冻结金额，请人工处理')
+    }
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      throw err('BUSINESS_ERROR', '提现金额非法，无法退回冻结金额，请人工处理')
+    }
     const transaction = await db.startTransaction()
     try {
       await transaction.collection('withdrawals').doc(withdrawalId).update({
@@ -633,15 +641,13 @@ async function cancelWithdrawal(event, context, auth) {
           updatedAt: db.serverDate(),
         },
       })
-      if (walletDoc) {
-        await transaction.collection('wallets').doc(walletDoc._id).update({
-          data: {
-            balance: _.inc(Number(w.amount) || 0),
-            frozenAmount: _.inc(-(Number(w.amount) || 0)),
-            updatedAt: db.serverDate(),
-          },
-        })
-      }
+      await transaction.collection('wallets').doc(walletDoc._id).update({
+        data: {
+          balance: _.inc(amountNum),
+          frozenAmount: _.inc(-amountNum),
+          updatedAt: db.serverDate(),
+        },
+      })
       await transaction.commit()
     } catch (txError) {
       try { await transaction.rollback() } catch (_) { /* ignore */ }
@@ -713,6 +719,125 @@ async function convertToManual(event, context, auth) {
   }
 }
 
+/**
+ * v5.1 运维诊断：查看提现单 + 用户钱包 + 其他提现单（super_admin 只读）
+ * 用于核对撤销/审批后钱包余额与冻结金额是否一致。
+ */
+async function inspectWithdrawal(event, context, auth) {
+  const { withdrawalId } = event
+  if (!withdrawalId) {throw err('INVALID_PARAMS', '参数错误')}
+  try {
+    const wRes = await db.collection('withdrawals').doc(withdrawalId).get()
+    const w = wRes.data
+    if (!w) {throw err('NOT_FOUND', '提现记录不存在')}
+    const openid = w.openid || ''
+    const [commissionRes, serviceRes, othersRes] = await Promise.all([
+      db.collection('wallets').where({ openid, type: 'commission' }).limit(1).get(),
+      db.collection('wallets').where({ openid, type: 'serviceIncome' }).limit(1).get(),
+      db.collection('withdrawals').where({ openid }).count(),
+    ])
+    const wallet = (doc) => {
+      const d = doc && doc[0]
+      return d
+        ? { balance: Number(d.balance) || 0, frozenAmount: Number(d.frozenAmount) || 0, totalIncome: Number(d.totalIncome) || 0, totalWithdrawn: Number(d.totalWithdrawn) || 0 }
+        : null
+    }
+    writeOperationLog({
+      module: 'withdrawal',
+      action: 'inspect',
+      targetId: withdrawalId,
+      operatorId: auth.openid,
+      afterData: { openid },
+    })
+    return handleSuccess({
+      withdrawal: {
+        _id: w._id,
+        openid,
+        amount: w.amount,
+        status: w.status,
+        mode: w.mode || 'auto',
+        method: w.method || 'wechat',
+        walletType: w.walletType || 'commission',
+        createdAt: w.createdAt,
+        cancelledAt: w.cancelledAt || null,
+        cancelReason: w.cancelReason || '',
+        outBatchNo: w.outBatchNo || '',
+      },
+      wallets: {
+        commission: wallet(commissionRes.data),
+        serviceIncome: wallet(serviceRes.data),
+      },
+      otherWithdrawalsTotal: (othersRes && othersRes.total) || 0,
+    })
+  } catch (error) {
+    logger.error('inspectWithdrawal', error)
+    return handleError(error, error.message || '检查提现失败', ERROR_CODES.DATA)
+  }
+}
+
+/**
+ * v5.1 运维修复：cancelled 记录幂等回补冻结金额
+ * 仅当 status='cancelled' 且钱包 frozenAmount >= 金额时才执行（条件更新防重复），
+ * 否则返回当前状态不动作。
+ */
+async function repairWithdrawalBalance(event, context, auth) {
+  const { withdrawalId } = event
+  if (!withdrawalId) {throw err('INVALID_PARAMS', '参数错误')}
+  try {
+    const wRes = await db.collection('withdrawals').doc(withdrawalId).get()
+    const w = wRes.data
+    if (!w) {throw err('NOT_FOUND', '提现记录不存在')}
+    if (w.status !== 'cancelled') {
+      throw err('BUSINESS_ERROR', '仅已撤销（cancelled）的记录可修复回补')
+    }
+    const amountNum = Number(w.amount)
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      throw err('BUSINESS_ERROR', '提现金额非法，无法修复')
+    }
+    const walletType = w.walletType || 'commission'
+    const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
+    const walletDoc = walletRes.data && walletRes.data[0]
+    if (!walletDoc) {
+      throw err('BUSINESS_ERROR', '未找到用户钱包，无法修复，请人工处理')
+    }
+    const before = {
+      balance: Number(walletDoc.balance) || 0,
+      frozenAmount: Number(walletDoc.frozenAmount) || 0,
+    }
+    // 条件更新：仅当冻结金额仍 >= 金额时才回补（幂等）
+    const up = await db.collection('wallets')
+      .where({ _id: walletDoc._id, frozenAmount: _.gte(amountNum) })
+      .update({
+        data: {
+          balance: _.inc(amountNum),
+          frozenAmount: _.inc(-amountNum),
+          updatedAt: db.serverDate(),
+        },
+      })
+    const updated = (up && up.stats && up.stats.updated) || 0
+    const after = {
+      balance: before.balance + (updated ? amountNum : 0),
+      frozenAmount: before.frozenAmount - (updated ? amountNum : 0),
+    }
+    if (updated > 0) {
+      writeOperationLog({
+        module: 'withdrawal',
+        action: 'repair_balance',
+        targetId: withdrawalId,
+        operatorId: auth.openid,
+        afterData: { amount: amountNum, before, after },
+      })
+      await recordAlert('warning', 'withdrawal.repair_balance.applied',
+        '撤销记录钱包回补缺失，已通过修复接口补回冻结金额',
+        { withdrawalId, openid: w.openid, amount: amountNum, before, after })
+    }
+    return handleSuccess({ repaired: updated > 0, before, after })
+  } catch (error) {
+    logger.error('repairWithdrawalBalance', error)
+    return handleError(error, error.message || '修复提现余额失败', ERROR_CODES.DATA)
+  }
+}
+
 // Re-export from common for cross-service usage
 const { ensureWalletBalance } = require('../common/wallet-utils')
 
@@ -726,5 +851,7 @@ module.exports = {
   getPayoutConfig,
   cancelWithdrawal,
   convertToManual,
+  inspectWithdrawal,
+  repairWithdrawalBalance,
   ensureWalletBalance,
 }

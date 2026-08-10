@@ -250,6 +250,8 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getFullPayeeInfo: 'super_admin',
   cancelWithdrawal: 'super_admin',
   convertToManual: 'super_admin',
+  inspectWithdrawal: 'super_admin',
+  repairWithdrawalBalance: 'super_admin',
   // P1-2: 管理员退款（web-admin 后台客诉处理）
   adminRefund: 'super_admin',
   queryRefund: 'super_admin',
