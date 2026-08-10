@@ -1,6 +1,7 @@
 const { ActivityService } = require('./services/ActivityService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const { parseDate } = require('../../utils/dateUtils')
+const { getLocation } = require('../../utils/geolocation')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath, buildShareQuery } = require('../../utils/share')
@@ -29,7 +30,11 @@ Page({
   data: {
     activity: null,
     isLoading: true,
+    loadError: false,
     isRegistered: false,
+    isSigned: false,
+    registrationId: '',
+    canSignIn: false,
     activityStatus: 'upcoming',
     registrationEnded: false,
     statusText: '即将开始',
@@ -72,10 +77,15 @@ Page({
   /** 加载活动详情，设置展示数据并随时注册状态 */
   async _loadActivity(activityId, silent = false) {
     if (!silent) {
-      this.setData({ isLoading: true })
+      this.setData({ isLoading: true, loadError: false })
     }
     try {
-      const result = await ActivityService.getActivityDetail(activityId)
+      const result = await Promise.race([
+        ActivityService.getActivityDetail(activityId),
+        // 本地加载超时：防止小程序端 wx.cloud.callFunction 在开发者工具云通道异常时
+        // 永久 pending，导致透明全屏遮罩死锁、所有按钮点不动。超时后释放遮罩并给出重试。
+        new Promise((_, reject) => setTimeout(() => reject(new Error('LOAD_TIMEOUT')), 8000)),
+      ])
       if (result && result.code === 0 && result.data) {
         const activity = result.data
         activity.coverUrl = activity.coverUrl || '/images/default-activity.svg'
@@ -90,6 +100,10 @@ Page({
         const activityStatus = this._getActivityStatus(activity)
         const registrationEnded = this._isRegistrationEnded(activity)
         const isRegistered = activity.isRegistered || false
+        const isSigned = activity.isSigned || false
+        const registrationId = activity.registrationId || ''
+        // 可签到：已报名 + 未签 + 活动进行中（startTime<=now<=endTime，后端再次校验）
+        const canSignIn = isRegistered && !isSigned && Boolean(registrationId) && activityStatus === 'ongoing'
 
         const displayDate = this._formatDateRange(activity.startTime, activity.endTime)
         const { displayTime, isMultiDay, startTimeDisplay, endTimeDisplay } = this._formatTimeRange(activity.startTime, activity.endTime)
@@ -115,6 +129,9 @@ Page({
           activityStatus,
           registrationEnded,
           isRegistered,
+          isSigned,
+          registrationId,
+          canSignIn,
           displayDate,
           displayTime,
           isMultiDay,
@@ -126,6 +143,7 @@ Page({
           priceDisplayText,
           btnStatus,
           btnText,
+          loadError: false,
         })
       } else {
         this.setData({ activity: null })
@@ -137,7 +155,11 @@ Page({
       console.error('加载活动详情失败:', error)
       this.setData({ activity: null })
       if (!silent) {
-        this.error('LOAD_FAILED')
+        if (error && error.message === 'LOAD_TIMEOUT') {
+          this.setData({ loadError: true })
+        } else {
+          this.error('LOAD_FAILED')
+        }
       }
     }
     if (!silent) {
@@ -311,6 +333,37 @@ Page({
     this.setData({ 'activity.organizer.hasValidAvatar': false })
   },
 
+  async onSignIn() {
+    const { registrationId, isSigned } = this.data
+    if (!registrationId || isSigned) {return}
+    wx.showLoading({ title: '签到中' })
+    try {
+      const loc = await getLocation()
+      const res = await ActivityService.signInRegistration({
+        registrationId,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      })
+      wx.hideLoading()
+      if (res && res.code === 0 && res.data) {
+        if (res.data.tooFar) {
+          wx.showToast({ title: (res.message || '距离活动地点过远') + '，请在现场签到', icon: 'none' })
+          return
+        }
+        this.setData({ isSigned: true, canSignIn: false })
+        wx.showToast({ title: '签到成功', icon: 'success' })
+      } else {
+        wx.showToast({ title: res && res.message ? res.message : '签到失败', icon: 'none' })
+      }
+    } catch (e) {
+      wx.hideLoading()
+      const title = (e && e.code)
+        ? (e.message || '签到失败，请稍后重试')
+        : '获取定位失败，请开启定位权限后重试'
+      wx.showToast({ title, icon: 'none' })
+    }
+  },
+
   onRegister() {
     const { activity, isRegistered, activityStatus, registrationEnded } = this.data
     if (!activity) {return}
@@ -341,6 +394,12 @@ Page({
   },
 
   onScroll(e) {
+  },
+
+  _retryLoad() {
+    if (this._activityId) {
+      this._loadActivity(this._activityId)
+    }
   },
 
   goBack() {

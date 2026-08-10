@@ -116,8 +116,7 @@
           </view>
           <view class="card-footer">
             <view class="card-participants">
-              <text class="card-stat-label">报名人数</text>
-              <text class="card-stat">{{item.currentParticipants || 0}}/{{item.maxParticipants || '∞'}}</text>
+              <text class="card-stat">已报名：{{item.currentParticipants || 0}}/{{item.maxParticipants ? item.maxParticipants : '♾️'}}人，{{item.currentPets || 0}}/♾️宠</text>
             </view>
             <view class="card-prices">
               <text class="card-price" wx:if="{{item.pricePerPerson}}">¥{{item.pricePerPerson}}/人</text>

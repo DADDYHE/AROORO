@@ -2,6 +2,8 @@ const { ActivityService } = require('./services/ActivityService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const { transformActivityItem } = require('./utils/activityHelpers')
+const { parseDate } = require('../../utils/dateUtils')
+const { getLocation } = require('../../utils/geolocation')
 
 Page({
   behaviors: [ListBehavior, cloudImageBehavior],
@@ -38,10 +40,51 @@ Page({
     return []
   },
 
-  _transformListItem(a) { return transformActivityItem(a) },
+  _transformListItem(a) {
+    const item = transformActivityItem(a)
+    const now = new Date()
+    const start = parseDate(a.startTime)
+    const end = parseDate(a.endTime)
+    const within = Boolean(start) && now >= start && (!end || now <= end)
+    item.canSignIn = item.signInStatus !== 'signed' && within
+    return item
+  },
 
   _onListError() {
     this.setData({ activities: [] })
+  },
+
+  async onSignIn(e) {
+    const regId = e.currentTarget.dataset.regid
+    if (!regId) { return }
+    wx.showLoading({ title: '签到中' })
+    try {
+      const loc = await getLocation()
+      const res = await ActivityService.signInRegistration({
+        registrationId: regId,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      })
+      wx.hideLoading()
+      if (res && res.code === 0 && res.data) {
+        if (res.data.tooFar) {
+          wx.showToast({ title: (res.message || '距离活动地点过远') + '，请在现场签到', icon: 'none' })
+          return
+        }
+        const activities = (this.data.activities || []).map((it) =>
+          it._registrationId === regId ? { ...it, signInStatus: 'signed', canSignIn: false } : it)
+        this.setData({ activities })
+        wx.showToast({ title: '签到成功', icon: 'success' })
+      } else {
+        wx.showToast({ title: res && res.message ? res.message : '签到失败', icon: 'none' })
+      }
+    } catch (err) {
+      wx.hideLoading()
+      const title = (err && err.code)
+        ? (err.message || '签到失败，请稍后重试')
+        : '获取定位失败，请开启定位权限后重试'
+      wx.showToast({ title, icon: 'none' })
+    }
   },
 
   onActivityTap(e) {

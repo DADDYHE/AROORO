@@ -158,7 +158,7 @@ export async function uploadShippingInfo(params: UploadShippingInfoParams): Prom
           item_desc: params.shippingItem.itemDesc || '商品已发货',
         },
       ],
-      // uploader: '左右小程序后台', // 可选
+      // uploader: 'AROORO小程序后台', // 可选
       //payer_openid 不传，由微信侧根据 transactionId 自动反查
     }
     const result = await httpsPostJson(url, body)

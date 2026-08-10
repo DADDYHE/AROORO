@@ -173,6 +173,11 @@ export interface RegistrationRecord {
     riskReasons?: string[];
     createdAt?: Date;
     updatedAt?: Date;
+    signInStatus?: 'signed' | string;
+    signedAt?: Date;
+    signInLatitude?: number;
+    signInLongitude?: number;
+    signInDistance?: number;
     [k: string]: unknown;
 }
 export interface OrderRecord {
@@ -259,12 +264,15 @@ export interface ExportResult {
 }
 export interface ActivityDetailResult extends ActivityRecord {
     isRegistered: boolean;
+    isSigned?: boolean;
+    registrationId?: string;
 }
 export declare function getActivityList(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getActivityDetail(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function submitRegistration(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getRegistrationDetail(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getRegistrationList(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
+export declare function signInRegistration(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare const handlers: Record<string, ActivityActionHandler>;
 export declare function main(event: CloudEvent, context: CloudContext): Promise<unknown>;
 declare const _default: {
@@ -272,6 +280,7 @@ declare const _default: {
     getActivityList: typeof getActivityList;
     getActivityDetail: typeof getActivityDetail;
     submitRegistration: typeof submitRegistration;
+    signInRegistration: typeof signInRegistration;
     getRegistrationDetail: typeof getRegistrationDetail;
     getRegistrationList: typeof getRegistrationList;
     handlers: Record<string, ActivityActionHandler>;

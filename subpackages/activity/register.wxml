@@ -20,7 +20,7 @@
       <view class="activity-meta">
         <view class="meta-item">
           <image class="meta-icon" src="/images/icons/clock-luxury-line.svg" mode="aspectFit"></image>
-          <text class="meta-text">{{activity ? activity.time : ''}}</text>
+          <text class="meta-text">{{activityTime}}</text>
         </view>
         <view class="meta-item">
           <image class="meta-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image>
@@ -189,6 +189,20 @@
           placeholder="请输入联系电话" 
           value="{{phone}}"
           data-field="phone"
+          bindinput="onInput"
+        />
+        <view class="input-decoration"></view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">联系人姓名（选填）</text>
+      <view class="input-container">
+        <input 
+          class="input" 
+          placeholder="请输入联系人姓名" 
+          value="{{contactName}}"
+          data-field="contactName"
           bindinput="onInput"
         />
         <view class="input-decoration"></view>

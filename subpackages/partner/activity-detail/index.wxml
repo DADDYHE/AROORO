@@ -28,7 +28,7 @@
   </view>
 
   <block wx:elif="{{activity}}">
-    <scroll-view scroll-y class="scroll-container">
+    <view class="scroll-container">
       <view class="page-content">
         <view class="hero-section" wx:if="{{activity.coverUrl}}">
           <image class="hero-cover" src="{{activity.coverUrl}}" mode="aspectFill" />
@@ -91,7 +91,7 @@
               <view class="participant-section">
                 <view class="participant-row">
                   <text class="participant-label">已报名</text>
-                  <text class="participant-count">{{participantText}}</text>
+                  <text class="participant-count">{{regSummaryText}}</text>
                 </view>
                 <view class="participant-bar" wx:if="{{activity.maxParticipants}}">
                   <view class="participant-fill" style="width: {{participantPct}}%; background: {{participantPct >= 100 ? '#C9A24B' : '#4F5E35'}}"></view>
@@ -142,7 +142,7 @@
           <view class="bottom-spacer"></view>
         </view>
       </view>
-    </scroll-view>
+    </view>
 
     <root-portal>
     <view class="action-bar">
@@ -152,6 +152,9 @@
       <view class="action-btn action-btn-status {{activity.status === 'draft' ? '' : 'action-btn-full'}}" bindtap="onChangeStatus">
         <text class="action-btn-text">{{statusActionText}}</text>
       </view>
+      <view class="action-btn action-btn-export action-btn-full" bindtap="onExportRegistrations">
+        <text class="action-btn-text">导出报名表</text>
+      </view>
     </view>
     </root-portal>
   </block>
@@ -160,7 +163,7 @@
   <view class="reg-list-mask" wx:if="{{showRegList}}" bindtap="onCloseRegList">
     <view class="reg-list-sheet" catchtap="">
       <view class="reg-list-header">
-        <text class="reg-list-title">报名名单 ({{registrations.length}}人)</text>
+        <text class="reg-list-title">报名名单（{{regSummary.totalGroups}}组）</text>
         <view class="reg-list-close" bindtap="onCloseRegList">
           <image src="/images/icons/close-luxury-line.svg" mode="aspectFit" class="modal-close-icon"></image>
         </view>
@@ -168,8 +171,16 @@
       <scroll-view scroll-y class="reg-list-body">
         <view class="reg-item" wx:for="{{registrations}}" wx:key="_id">
           <view class="reg-info">
-            <text class="reg-name">{{item.contactName || item.userName || '未知'}}</text>
+            <view class="reg-name-line">
+              <text class="reg-name">{{item.contactName || item.displayName || item.userNickName || '未知'}}</text>
+              <view wx:if="{{item.signInStatus === 'signed'}}" class="reg-signed-badge">
+                <text class="reg-signed-text">已签到</text>
+              </view>
+            </view>
             <text class="reg-meta">{{item.contactPhone || ''}}</text>
+          </view>
+          <view class="reg-counts">
+            <text class="reg-count-text">宠物{{item.petCount}}只，人数{{item.participantCount}}人</text>
           </view>
           <view class="reg-action" wx:if="{{item.contactPhone}}" bindtap="onCallParticipant" data-phone="{{item.contactPhone}}">
             <image class="reg-call" src="/images/icons/phone-luxury-line.svg" mode="aspectFit"></image>
@@ -179,6 +190,29 @@
           <text>暂无报名</text>
         </view>
       </scroll-view>
+    </view>
+  </view>
+  </root-portal>
+
+  <root-portal>
+  <view class="export-mask" wx:if="{{showExportSheet}}" bindtap="onCloseExportSheet">
+    <view class="export-sheet" catchtap="">
+      <view class="export-sheet-header">
+        <text class="export-sheet-title">导出报名表</text>
+        <view class="export-sheet-close" bindtap="onCloseExportSheet">
+          <image src="/images/icons/close-luxury-line.svg" mode="aspectFit" class="modal-close-icon"></image>
+        </view>
+      </view>
+      <text class="export-sheet-tip">CSV 含表头与全部报名信息，选择导出方式</text>
+      <view class="export-sheet-btn export-sheet-btn-share" bindtap="onExportShare">
+        <text class="export-sheet-btn-text">转发到微信</text>
+      </view>
+      <view class="export-sheet-btn export-sheet-btn-save" bindtap="onExportSave">
+        <text class="export-sheet-btn-text">保存到本机（PC）</text>
+      </view>
+      <view class="export-sheet-btn export-sheet-btn-copy" bindtap="onExportCopy">
+        <text class="export-sheet-btn-text">复制内容</text>
+      </view>
     </view>
   </view>
   </root-portal>

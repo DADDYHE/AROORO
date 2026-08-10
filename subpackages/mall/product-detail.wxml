@@ -16,10 +16,10 @@
   <view class="image-gallery">
     <swiper class="gallery-swiper" current="{{currentImageIndex}}" bindchange="onImageChange">
       <swiper-item wx:for="{{product.images || [product.coverUrl || product.coverImage]}}" wx:key="index">
-        <!-- 首图用 share-element 包裹，与列表页配对，实现共享元素飞跃过渡 -->
-        <share-element wx:if="{{index === 0}}" key="product-{{product._id}}" class="gallery-image-share">
+        <!-- 首图包装容器（曾用 share-element 做共享元素飞跃；Skyline 下该动画易触发图片无限加载卡死，已移除） -->
+        <view wx:if="{{index === 0}}" class="gallery-image-share">
           <image class="gallery-image" src="{{item}}" mode="aspectFill" lazy-load data-url="{{item}}" bindtap="onPreviewGalleryImage" binderror="onCloudImageError" data-src="{{item}}" data-path="product.images[{{index}}]" />
-        </share-element>
+        </view>
         <image wx:else class="gallery-image" src="{{item}}" mode="aspectFill" lazy-load data-url="{{item}}" bindtap="onPreviewGalleryImage" binderror="onCloudImageError" data-src="{{item}}" data-path="product.images[{{index}}]" />
       </swiper-item>
     </swiper>

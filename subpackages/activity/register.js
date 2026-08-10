@@ -1,8 +1,8 @@
 const { authService } = require('../../services/AuthService')
 const { PetService } = require('../../services/CloudFunctionService')
 const { ActivityService } = require('./services/ActivityService')
-const { CouponService } = require('../../services/CouponService')
 const { computeFinalAmount } = require('../../utils/coupon-amount')
+const { timeRangeText } = require('../../utils/dateUtils')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
@@ -15,11 +15,13 @@ Page({
   data: {
     activityId: '',
     activity: null,
+    activityTime: '',
     isRegistered: false,
     pets: [
       { petName: '', petGender: 'male', petBreed: '' },
     ],
     phone: '',
+    contactName: '',
     notes: '',
     friends: [],
     showPetPicker: false,
@@ -62,10 +64,15 @@ Page({
         const activity = result.data
         this.setData({
           activity,
+          activityTime: timeRangeText(activity.startTime, activity.endTime),
           isRegistered: activity.isRegistered === true,
         })
         this._recalculateAmount()
-        this._loadAvailableCoupons()
+        this._loadAvailableCoupons({
+          business: 'activity',
+          items: activity._id ? [activity._id] : [],
+          amount: this.data.totalAmount,
+        })
       } else {
         this.error('ACTIVITY_NOT_FOUND')
       }
@@ -126,28 +133,8 @@ Page({
     this._recalculateAmount()
   },
 
-  async _loadAvailableCoupons() {
-    const { activity, totalAmount } = this.data
-    if (!activity || !totalAmount) {return}
-
-    this.setData({ loadingCoupons: true })
-    try {
-      const result = await CouponService.getAvailableCoupons({
-        business: 'activity',
-        items: activity._id ? [activity._id] : [],
-        amount: totalAmount,
-      })
-      if (result && result.code === 0) {
-        this.setData({ availableCoupons: result.data || [] })
-      }
-    } catch (e) {
-      // silent
-    } finally {
-      this.setData({ loadingCoupons: false })
-    }
-  },
-
-  // onToggleCouponSelector, onSelectCoupon, onRemoveCoupon 已由 couponSelectorBehavior 提供
+  // onToggleCouponSelector, onSelectCoupon, onRemoveCoupon, _loadAvailableCoupons 已由 couponSelectorBehavior 提供
+  // 本页通过传 opts（business:'activity' / items:[activity._id] / amount）复用其行为版，避免与 behavior 同名方法冲突告警
 
   onShowPetPicker() {
     const isLoggedIn = authService.isLoggedIn()
@@ -289,7 +276,7 @@ Page({
     if (this.data.submitting) {return}
     this.setData({ submitting: true })
 
-    const { activityId, pets, phone, notes, friends, totalAmount, selectedCouponId, couponDiscount, finalAmount, participantCount } = this.data
+    const { activityId, pets, phone, contactName, notes, friends, totalAmount, selectedCouponId, couponDiscount, finalAmount, participantCount } = this.data
 
     const pCount = parseInt(participantCount, 10)
     if (!pCount || pCount < 1) {
@@ -317,6 +304,7 @@ Page({
       activityId,
       pets,
       phone,
+      contactName: contactName || '',
       notes: notes || '',
       friends: friends || [],
       petIds: pets.map(p => p.petId).filter(Boolean),

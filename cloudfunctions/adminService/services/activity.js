@@ -1,4 +1,5 @@
 const { err } = require('../common/errors')
+const { parseBJTime, bjWallClock, bjFormat } = require('./_bjtime')
 const { handleSuccess, handleError, generateId, ERROR_CODES, paginate, escapeRegExp } = require('../common/utils')
 const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
@@ -24,16 +25,10 @@ function _formatTime(timestamp) {
   } else if (typeof timestamp === 'number') {
     date = new Date(timestamp)
   } else if (typeof timestamp === 'string') {
-    date = new Date(String(timestamp).replace(/-/g, '/'))
+    date = parseBJTime(timestamp)
   }
   if (!date || isNaN(date.getTime())) {return String(timestamp)}
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hour = String(date.getHours()).padStart(2, '0')
-  const minute = String(date.getMinutes()).padStart(2, '0')
-  const second = String(date.getSeconds()).padStart(2, '0')
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+  return bjWallClock(date)
 }
 
 const { db } = initCloud()
@@ -41,7 +36,7 @@ const { db } = initCloud()
 function _parseDate(dateStr) {
   if (!dateStr) {return null}
   try {
-    return new Date(String(dateStr).replace(/-/g, '/'))
+    return parseBJTime(dateStr)
   } catch (e) {
     return null
   }
@@ -67,13 +62,12 @@ function _normalizeTime(v) {
   } else {
     const s = String(v).trim()
     if (s) {
-      const d = new Date(s.replace(/-/g, '/'))
-      if (!isNaN(d.getTime())) {date = d}
+      const d = parseBJTime(s)
+      if (d && !isNaN(d.getTime())) {date = d}
     }
   }
   if (!date || isNaN(date.getTime())) {return ''}
-  const pad = (n) => String(n).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+  return bjFormat(date)
 }
 
 // P2-4 修复：与 activityService 对齐的活动状态机 + 关键字段校验（活跃管理路径此前缺失）
@@ -81,16 +75,16 @@ const ACTIVITY_CREATE_STATUS = ['draft', 'published']
 const ACTIVITY_STATUS_TRANSITIONS = {
   draft: ['published', 'cancelled', 'deleted'],
   published: ['registration_stopped', 'cancelled'],
-  registration_stopped: ['ended', 'cancelled'],
-  ended: [],
-  cancelled: ['deleted'],
+  registration_stopped: ['ended', 'cancelled', 'published'],
+  ended: ['published'],
+  cancelled: ['deleted', 'published'],
 }
 
 function validateActivityFields(data) {
   const parseTime = (v) => {
     if (v === undefined || v === null || v === '') {return null}
-    const d = new Date(String(v).replace(/-/g, '/'))
-    return isNaN(d.getTime()) ? null : d
+    const d = parseBJTime(v)
+    return d && !isNaN(d.getTime()) ? d : null
   }
   if (data.startTime !== undefined && data.startTime !== '' && !parseTime(data.startTime)) {
     throw err('INVALID_PARAMS', '活动开始时间格式无效')
@@ -131,16 +125,43 @@ async function getActivityList(event, context, auth) {
     where.status = db.command.neq('deleted')
   }
   if (keyword && keyword.trim()) {
-    where.title = db.RegExp({
-      regexp: escapeRegExp(keyword.trim()),
-      options: 'i',
-    })
+    const safeKeyword = escapeRegExp(keyword.trim())
+    where.$or = [
+      { title: db.RegExp({ regexp: safeKeyword, options: 'i' }) },
+      { location: db.RegExp({ regexp: safeKeyword, options: 'i' }) },
+    ]
   }
 
   const result = await paginate(db, 'activities', {
     page, pageSize: safePageSize, where,
     orderBy: { field: 'createdAt', direction: 'desc' },
   })
+
+  // P4 报名宠物数聚合：按活动分组统计已报名宠物总数（活动文档未单独维护 currentPets）
+  const list = result.list || []
+  if (list.length > 0) {
+    const _ = db.command
+    const ids = list.map(a => a._id)
+    const aggRes = await db.collection('activity_registrations').aggregate()
+      .match({ activityId: _.in(ids) })
+      .group({
+        _id: '$activityId',
+        totalPets: {
+          $sum: {
+            $cond: [
+              { $gt: [{ $size: { $ifNull: ['$pets', []] } }, 0] },
+              { $size: { $ifNull: ['$pets', []] } },
+              { $ifNull: ['$petCount', 0] },
+            ],
+          },
+        },
+      })
+      .end()
+    const petMap = {}
+    ;(aggRes.data || []).forEach(g => { petMap[g._id] = g.totalPets || 0 })
+    result.list = list.map(a => ({ ...a, currentPets: petMap[a._id] || 0 }))
+  }
+
   return handleSuccess(result)
 }
 
@@ -148,7 +169,11 @@ async function getActivityDetail(event, context, auth) {
   const { activityId } = event
   if (!activityId) {throw err('INVALID_PARAMS', '缺少活动ID')}
   const res = await db.collection('activities').doc(activityId).get()
-  return handleSuccess(res.data)
+  if (!res.data) {throw err('NOT_FOUND', '活动不存在')}
+  // P4 报名汇总：宠物数/人数/组数/签到组数（供详情页「报名情况」卡片）
+  const regs = await fetchAllRegistrations(db, activityId)
+  const registrationSummary = computeRegSummary(regs)
+  return handleSuccess({ ...res.data, registrationSummary })
 }
 
 async function createActivity(event, context, auth) {
@@ -269,6 +294,41 @@ async function updateActivity(event, context, auth) {
   return handleSuccess(null, '更新成功')
 }
 
+// P4 报名统计：拉取活动全量报名（避免 limit 截断），并聚合人数/宠物/签到组数
+async function fetchAllRegistrations(db, activityId) {
+  let all = []
+  const PAGE_SIZE = 100
+  let page = 0
+  while (true) {
+    const res = await db.collection('activity_registrations')
+      .where({ activityId })
+      .orderBy('createdAt', 'asc')
+      .skip(page * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+      .get()
+    const data = res.data || []
+    all.push(...data)
+    if (data.length < PAGE_SIZE) {break}
+    page++
+    if (page >= 50) {break} // 安全上限 5000
+  }
+  return all
+}
+
+function computeRegSummary(registrations) {
+  let totalPets = 0
+  let totalPeople = 0
+  let signedGroups = 0
+  registrations.forEach(reg => {
+    const pets = Array.isArray(reg.pets) ? reg.pets : []
+    const petCount = pets.length || reg.petCount || 0
+    totalPets += petCount
+    totalPeople += (reg.participantCount || 1)
+    if (reg.checkedIn || reg.signIn || reg.isCheckIn || reg.signInStatus === 'signed') {signedGroups++}
+  })
+  return { totalPets, totalPeople, totalGroups: registrations.length, signedGroups }
+}
+
 async function getActivityRegistrations(event, context, auth) {
   const { activityId, page = 1, pageSize = 20 } = event
   if (!activityId) {throw err('INVALID_PARAMS', '缺少活动ID')}
@@ -281,42 +341,41 @@ async function getActivityRegistrations(event, context, auth) {
 
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 100)
 
-  const result = await paginate(db, 'activity_registrations', {
-    page, pageSize: safePageSize,
-    where: { activityId },
-    orderBy: { field: 'createdAt', direction: 'desc' },
-  })
+  // P4：拉全量报名用于聚合汇总；展示列表取前 safePageSize 条（合伙人名单体量可控）
+  const all = await fetchAllRegistrations(db, activityId)
+  const summary = computeRegSummary(all)
 
-  if (result.list && result.list.length > 0) {
-    const openids = result.list.map(r => r.ownerId).filter(Boolean)
-    if (openids.length > 0) {
-      const _ = db.command
-      const usersRes = await db.collection('users').where({ _id: _.in(openids) }).get()
-      const userMap = {}
-      usersRes.data.forEach(u => { userMap[u._id] = u })
-
-      result.list = result.list.map(r => {
-        const user = userMap[r.ownerId] || {}
-        return {
-          ...r,
-          userNickName: user.nickName || '',
-          userAvatar: user.avatarUrl || '',
-          displayName: user.nickName || '未知用户',
-          createdAt: _formatTime(r.createdAt),
-        }
-      })
-    } else {
-      result.list = result.list.map(r => ({
-        ...r,
-        userNickName: '',
-        userAvatar: '',
-        displayName: '未知用户',
-        createdAt: _formatTime(r.createdAt),
-      }))
+  const openids = [...new Set(all.map(r => r.ownerId).filter(Boolean))]
+  const userMap = {}
+  if (openids.length > 0) {
+    const _ = db.command
+    for (let i = 0; i < openids.length; i += 100) {
+      const usersRes = await db.collection('users').where({ _id: _.in(openids.slice(i, i + 100)) }).get()
+      ;(usersRes.data || []).forEach(u => { userMap[u._id] = u })
     }
   }
 
-  return handleSuccess(result)
+  const list = all.map(r => {
+    const user = userMap[r.ownerId] || {}
+    const pets = Array.isArray(r.pets) ? r.pets : []
+    const petCount = pets.length || r.petCount || 0
+    const participantCount = r.participantCount || 1
+    return {
+      ...r,
+      petCount,
+      participantCount,
+      userNickName: user.nickName || '',
+      userAvatar: user.avatarUrl || '',
+      displayName: user.nickName || '未知用户',
+      createdAt: _formatTime(r.createdAt),
+    }
+  })
+
+  return handleSuccess({
+    list: list.slice(0, safePageSize),
+    total: all.length,
+    summary,
+  })
 }
 
 async function exportActivityRegistrations(event, context, auth) {
@@ -332,64 +391,64 @@ async function exportActivityRegistrations(event, context, auth) {
   }
 
   // P3 修复：分页拉取全量，避免 limit(1000) 静默截断大活动报名
-  let registrations = []
-  const PAGE_SIZE = 100
-  let page = 0
-  while (true) {
-    const res = await db.collection('activity_registrations')
-      .where({ activityId })
-      .orderBy('createdAt', 'desc')
-      .skip(page * PAGE_SIZE)
-      .limit(PAGE_SIZE)
-      .get()
-    const data = res.data || []
-    registrations.push(...data)
-    if (data.length < PAGE_SIZE) {break}
-    page++
-    if (page >= 50) {break} // 安全上限 5000
-  }
+  const registrations = await fetchAllRegistrations(db, activityId)
 
-  if (registrations.length > 0) {
-    const openids = registrations.map(r => r.ownerId).filter(Boolean)
-    if (openids.length > 0) {
-      const _ = db.command
-      const userMap = {}
-      // P2 修复：大批量报名时 _id in 分批查询，避免单次 get() 100 条截断导致昵称缺失
-      const uniqueIds = [...new Set(openids)]
-      for (let i = 0; i < uniqueIds.length; i += 100) {
-        const usersRes = await db.collection('users')
-          .where({ _id: _.in(uniqueIds.slice(i, i + 100)) })
-          .get()
-        ;(usersRes.data || []).forEach(u => { userMap[u._id] = u })
-      }
-
-      registrations = registrations.map(r => ({
-        ...r,
-        userNickName: userMap[r.ownerId]?.nickName || '',
-      }))
+  // P2 修复：大批量报名时 _id in 分批查询，避免单次 get() 100 条截断导致昵称缺失
+  const userMap = {}
+  const openids = [...new Set(registrations.map(r => r.ownerId).filter(Boolean))]
+  if (openids.length > 0) {
+    const _ = db.command
+    for (let i = 0; i < openids.length; i += 100) {
+      const usersRes = await db.collection('users')
+        .where({ _id: _.in(openids.slice(i, i + 100)) })
+        .get()
+      ;(usersRes.data || []).forEach(u => { userMap[u._id] = u })
     }
   }
 
-  const headers = ['序号', '宠物昵称', '报名时间', '用户昵称', '联系电话', '备注', '签到']
-
-  const rows = registrations.map((reg, index) => [
-    index + 1,
-    (reg.pets && reg.pets.map(p => p.name).join(', ')) || '',
-    _formatTime(reg.createdAt),
-    reg.userNickName || '',
-    reg.phone || '',
-    reg.notes || '',
-    '',
-  ])
+  const GENDER_MAP = { male: '弟弟', female: '妹妹', unknown: '未知' }
+  const genderText = (g) => GENDER_MAP[(g || '').toLowerCase()] || '未知'
+  const signText = (r) =>
+    (r.checkedIn || r.signIn || r.isCheckIn || r.signInStatus === 'signed') ? '已签到' : ''
+  const nickOf = (ownerId) => (userMap[ownerId] && userMap[ownerId].nickName) || ''
+  // 联系人姓名：有则导出联系人姓名，没有则退回报名用户名（昵称）
+  const contactOf = (r) => r.contactName || nickOf(r.ownerId) || ''
 
   // P2 修复：CSV 公式注入防护——以 = + - @ 及制表符/回车开头的单元格加单引号前缀，
-  // 防止 Excel/WPS 打开导出文件时把用户可控内容（备注/昵称/电话）当公式执行
+  // 防止 Excel/WPS 打开导出文件时把用户可控内容（昵称/电话/备注）当公式执行
   const escapeCell = (cell) => {
-    let str = String(cell).replace(/"/g, '""')
+    let str = String(cell == null ? '' : cell).replace(/"/g, '""')
     if (/^[=+\-@\t\r]/.test(str)) {str = `'${str}`}
     return `"${str}"`
   }
-  const csvContent = [headers.join(','), ...rows.map(row => row.map(escapeCell).join(','))].join('\n')
+
+  const headers = ['报名分组', '宠物姓名', '宠物性别', '报名用户名', '联系人姓名', '联系电话', '签到']
+  const rows = []
+  registrations.forEach((reg, idx) => {
+    const pets = Array.isArray(reg.pets) ? reg.pets : []
+    const petCount = pets.length || reg.petCount || 0
+    const participantCount = reg.participantCount || 1
+    const userName = nickOf(reg.ownerId)
+    const contact = contactOf(reg)
+    const phone = reg.phone || ''
+    const sign = signText(reg)
+    const groupText = `报名${idx + 1}：宠物${petCount}只，人数${participantCount}人`
+    const groupRows = pets.length === 0
+      ? [[groupText, '', '', userName, contact, phone, sign]]
+      : pets.map(p => [groupText, p.name || '', genderText(p.gender), userName, contact, phone, sign])
+    // 每组仅首行显示「第X组」摘要，后续行该列留空
+    groupRows.forEach((r, i) => { r[0] = i === 0 ? groupText : ''; rows.push(r) })
+  })
+
+  // P4 末行总计：宠物/人数/组数/签到组数
+  const summary = computeRegSummary(registrations)
+  const totalRow = [
+    `总计：宠物${summary.totalPets}只，人数${summary.totalPeople}人，总报名${summary.totalGroups}组，签到${summary.signedGroups}组`,
+    '', '', '', '', '', '',
+  ]
+
+  const csvBody = [headers.join(','), ...rows.map(row => row.map(escapeCell).join(',')), totalRow.map(escapeCell).join(',')].join('\n')
+  const csvContent = '\uFEFF' + csvBody // BOM 防 Excel/WPS 中文乱码
 
   return handleSuccess({
     activityTitle: activityRes.data.title,

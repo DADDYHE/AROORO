@@ -190,7 +190,7 @@ Page({
       fail: () => {
         wx.getSetting({
           success: settingRes => {
-            if (!settingRes.authSetting['scope.userFuzzyLocation']) {
+            if (!settingRes.authSetting['scope.userLocation']) {
               this.showModal({ titleKey: 'BIZ_AJ90BY', contentKey: 'BIZ_GLVXQO', confirmText: '去设置' })
             }
           },

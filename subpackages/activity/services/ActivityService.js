@@ -10,6 +10,7 @@ class ActivityService {
   static submitRegistration(data) { return this.call('submitRegistration', data) }
   static getRegistrationList(data) { return this.call('getRegistrationList', data) }
   static getRegistrationDetail(registrationId) { return this.call('getRegistrationDetail', { registrationId }) }
+  static signInRegistration(data) { return this.call('signInRegistration', data) }
 }
 
 module.exports = { ActivityService }

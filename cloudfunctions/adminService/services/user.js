@@ -2,6 +2,7 @@ const { handleSuccess, handleError, ERROR_CODES, paginate } = require('../common
 const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
 const { err } = require('../common/errors')
+const { bjDayStart, bjMonthStart } = require('./_bjtime')
 const { ORDER_TYPES, ORDER_TYPE_NAMES } = require('../constants')
 // 复用统一佣金写入器的键规范化/别名工具，修复寄养 boarding↔hosting 键分裂：
 //   前端(web-admin/小程序)与线上存储均用 hosting 键，而 ORDER_TYPES 用 boarding，
@@ -229,7 +230,7 @@ async function getDashboardStats(event, context, auth) {
 async function getEnhancedDashboardStats(event, context, auth) {
   try {
     const now = new Date()
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayStart = bjDayStart(now)
     const _ = db.command
     const thirtyDaysAgo = new Date(todayStart.getTime() - 29 * 86400000)
 
@@ -449,7 +450,7 @@ async function getFinanceOverview(event, context, auth) {
   try {
     const _ = db.command
     const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const monthStart = bjMonthStart(now)
 
     // 各订单类型的查询配置，与实际数据库集合结构对齐：
     // - orders 集合：用 type 字段区分（mall / group_buy / boarding）

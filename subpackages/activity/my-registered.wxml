@@ -45,13 +45,22 @@
             <view wx:if="{{item.activityStatus === 'ended'}}" class="joined-badge ended-badge">
               <text class="joined-badge-text">已结束</text>
             </view>
+            <view wx:elif="{{item.signInStatus === 'signed'}}" class="joined-badge signed-badge">
+              <text class="joined-badge-text">已签到</text>
+            </view>
             <view wx:else class="joined-badge">
               <text class="joined-badge-text">已报名</text>
             </view>
           </view>
         </view>
-        <view class="activity-accent"></view>
       </view>
+      <view wx:if="{{item.canSignIn}}" class="card-signin" hover-class="card-signin--pressed" catchtap="onSignIn" data-regid="{{item._registrationId}}">
+        <text class="card-signin-text">现场签到</text>
+      </view>
+      <view wx:elif="{{item.signInStatus === 'signed'}}" class="card-signed">
+        <text class="card-signed-text">已签到 ✓</text>
+      </view>
+      <view class="activity-accent"></view>
     </view>
   </view>
 

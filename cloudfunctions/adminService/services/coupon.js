@@ -3,6 +3,7 @@ const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
 const { filterFields, FIELD_WHITELISTS } = require('../common/validator')
 const { err } = require('../common/errors')
+const { parseBJTime } = require('./_bjtime')
 // 统一 best-effort 审计日志（详见 common/operation-log）
 const { writeOperationLog: _commonWriteOperationLog } = require('../common/operation-log')
 
@@ -537,12 +538,12 @@ async function createCouponGrant(event, context, auth) {
         return false
       }
 
-      const startTime = template.validFrom ? new Date(template.validFrom) : now
+      const startTime = template.validFrom ? parseBJTime(template.validFrom) : now
       let endTime
       if (template.validDays) {
         endTime = new Date(now.getTime() + template.validDays * 24 * 60 * 60 * 1000)
       } else if (template.validTo) {
-        endTime = new Date(template.validTo)
+        endTime = parseBJTime(template.validTo)
       } else {
         endTime = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
       }

@@ -11,16 +11,17 @@ Page({
 
   data: {
     activities: [],
-    currentCategory: 'all',
+    currentCategory: 'registerable',
     iconTimeLine: CLOUD_ICONS.TIME,
     iconMapPin: CLOUD_ICONS.MAP_PIN,
     categories: [
-      { key: 'all', label: '全部' },
+      { key: 'registerable', label: '可报名' },
       { key: 'outdoor', label: '户外' },
       { key: 'social', label: '社交' },
       { key: 'training', label: '训练' },
       { key: 'health', label: '健康' },
       { key: 'joined', label: '我报名的' },
+      { key: 'all', label: '全部' },
     ],
   },
 
@@ -43,7 +44,10 @@ Page({
     if (this.data.currentCategory === 'joined') {
       reqData.status = 'confirmed'
     }
-    if (this.data.currentCategory !== 'all' && this.data.currentCategory !== 'joined') {
+    if (this.data.currentCategory === 'registerable') {
+      // 可报名：服务端按 status=published（报名中）且排除已报名过滤，前端不二次过滤以免破坏分页
+      reqData.registerable = true
+    } else if (this.data.currentCategory !== 'all' && this.data.currentCategory !== 'joined') {
       reqData.category = this.data.currentCategory
     }
     const result = await ActivityService.call(action, reqData)

@@ -98,6 +98,34 @@
     </view>
   </view>
 
+  <!-- ===== Section 2.7: 我的活动（已报名） ===== -->
+  <view class="section my-activities-section stagger-item stagger-rise delay-2" wx:if="{{isLoggedIn && signableActivities.length}}">
+    <view class="section-head">
+      <text class="section-title">快速签到</text>
+      <text class="section-link" bindtap="handleViewAllMyActivities" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
+    </view>
+    <view class="my-act-list">
+      <view class="my-act-card stagger-item stagger-scale" wx:for="{{signableActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap" hover-class="my-act-card--pressed" hover-stay-time="120" style="animation-delay: {{220 + index * 80}}ms;">
+        <view class="aurora-edge"></view>
+        <image wx:if="{{item.coverUrl}}" class="my-act-img" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view wx:else class="my-act-img my-act-img-ph"><text class="my-act-img-ph-text">活动</text></view>
+        <view class="my-act-body">
+          <text class="my-act-name">{{item.title}}</text>
+          <view class="aurora-gold-rule"></view>
+          <text class="my-act-info">{{item.timeText}}</text>
+          <view class="my-act-meta">
+            <view class="my-act-loc"><image class="my-act-loc-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image><text class="my-act-loc-text">{{item.location || '待定'}}</text></view>
+          </view>
+        </view>
+        <view class="my-act-action">
+          <view class="my-act-signin" catchtap="onSignIn" data-regid="{{item._registrationId}}" hover-class="my-act-signin--pressed" hover-stay-time="120">
+            <text class="my-act-signin-text">签到</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- ===== Section 3: 未登录登录入口 ===== -->
   <view class="search-section stagger-item stagger-rise delay-2" wx:if="{{!isLoggedIn}}">
     <view class="home-login-btn" catchtap="handleLogin" hover-class="home-login-btn--pressed" hover-stay-time="120">
@@ -168,9 +196,9 @@
     <scroll-view class="featured-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
       <view class="featured-list">
       <view class="mall-card" wx:for="{{mallProducts}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleMallProductTap" hover-class="mall-card--pressed" hover-stay-time="120">
-        <share-element wx:if="{{item.coverUrl}}" key="product-{{item._id}}" class="mall-card-img-share">
+        <view wx:if="{{item.coverUrl}}" class="mall-card-img-share">
           <image class="mall-card-img" src="{{item.coverUrl}}" mode="aspectFill" />
-        </share-element>
+        </view>
         <view wx:else class="mall-card-img mall-card-img-ph">
           <text class="featured-img-ph-text">品</text>
         </view>
@@ -199,9 +227,7 @@
     <view class="activity-list">
       <view class="activity-h-card" wx:for="{{latestActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap" hover-class="activity-h-card--pressed" hover-stay-time="120" style="animation: rise-fade-in-short 420ms cubic-bezier(0.19,1,0.22,1) {{550 + index * 90}}ms forwards; opacity: 0;">
         <view class="aurora-edge"></view>
-        <share-element wx:if="{{item.coverUrl}}" key="activity-{{item._id}}" class="activity-h-img-share">
-          <image class="activity-h-img" src="{{item.coverUrl}}" mode="aspectFill" />
-        </share-element>
+        <image wx:if="{{item.coverUrl}}" class="activity-h-img" src="{{item.coverUrl}}" mode="aspectFill" />
         <view wx:else class="activity-h-img activity-h-img-ph">
           <text class="activity-h-img-ph-text">活动</text>
         </view>

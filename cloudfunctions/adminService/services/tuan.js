@@ -1,4 +1,5 @@
 const { err } = require('../common/errors')
+const { parseBJTime } = require('./_bjtime')
 const { handleSuccess, handleError, ERROR_CODES, paginate, initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
 const { recordAlert } = require('../common/alert')
@@ -210,8 +211,8 @@ async function updateTuanDeal(event, context, auth) {
       }
     }))
   }
-  if (startTime !== undefined) {update.startTime = startTime ? new Date(startTime) : null}
-  if (endTime !== undefined) {update.endTime = endTime ? new Date(endTime) : new Date('2099-12-31T23:59:59')}
+  if (startTime !== undefined) {update.startTime = startTime ? parseBJTime(startTime) : null}
+  if (endTime !== undefined) {update.endTime = endTime ? parseBJTime(endTime) : new Date('2099-12-31T23:59:59')}
   await db.collection('tuan_deals').doc(id).update({ data: update })
   return handleSuccess(null, '更新成功')
 }
@@ -237,7 +238,7 @@ async function publishTuanDeal(event, context, auth) {
     throw err('PERMISSION_DENIED', '无权操作他人资源')
   }
   // P3: 防止把已过期的团购重新发布（否则只能等 cron 回收）
-  const endTime = existing.data.endTime ? new Date(existing.data.endTime) : null
+  const endTime = existing.data.endTime ? parseBJTime(existing.data.endTime) : null
   if (endTime && endTime.getTime() < Date.now()) {
     throw err('INVALID_PARAMS', '团购已过结束时间，无法发布（请先调整结束时间）')
   }

@@ -67,8 +67,9 @@ Component({
       }, 2800)
     }
 
-    // 初始化 worklet 按压弹性动效
-    this._initTabPressAnimation()
+    // 初始化 worklet 按压弹性动效（nextTick 等节点渲染就绪后再绑定，
+    // 避免 Skyline 下 attached 时 .tab-scale-N 节点尚未挂载导致 applyAnimatedStyle 报 "can not find corresponding nodes" 噪声）
+    wx.nextTick(() => this._initTabPressAnimation())
   },
   detached() {
     this._isAttached = false
@@ -99,7 +100,17 @@ Component({
         url,
         fail: error => {
           console.error('页面切换失败:', error)
-          this._syncTabBarFromPages()
+          // 切换超时/失败逃生舱：reLaunch 强制重建目标 tab 页，绕过可能卡死的 webview。
+          // 常见于源页面存在未释放的全屏遮罩或云调用悬挂导致框架切换超时。
+          const errMsg = (error && error.errMsg) || ''
+          if (/timeout|fail/.test(errMsg)) {
+            wx.reLaunch({
+              url,
+              fail: () => this._syncTabBarFromPages(),
+            })
+          } else {
+            this._syncTabBarFromPages()
+          }
         },
       })
     },

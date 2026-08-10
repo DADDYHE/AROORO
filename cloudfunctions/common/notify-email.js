@@ -22,7 +22,7 @@
  *     "pass": "邮箱授权码",      // 注意：是授权码，不是登录密码
  *     "from": "123456@qq.com",
  *     "to": "daddy@xxx.com",
- *     "subjectPrefix": "[左右告警]"
+ *     "subjectPrefix": "[AROORO告警]"
  *   }
  *
  * 调用方式（由 alert.js 在 critical 时触发）：
@@ -75,7 +75,7 @@ function isConfigured(cfg) {
 
 /** 构造符合 RFC 822 的最小 MIME 邮件文本（含中文主题 Base64 编码） */
 function buildMessage(cfg, payload) {
-  const prefix = cfg.subjectPrefix || '[左右告警]'
+  const prefix = cfg.subjectPrefix || '[AROORO告警]'
   const plainSubject = `${prefix} ${String(payload.severity || '').toUpperCase()} ${payload.action || ''}`
   const subject = /[^\u0000-\u007f]/.test(plainSubject)
     ? `=?UTF-8?B?${Buffer.from(plainSubject).toString('base64')}?=`

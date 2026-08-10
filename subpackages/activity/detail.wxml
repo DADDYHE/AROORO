@@ -2,169 +2,161 @@
 <scroll-view
   scroll-y
   enhanced
-  refresher-enabled="{{true}}"
-  refresher-triggered="{{_refresherTriggered}}"
-  bindrefresherrefresh="_onRefresherRefresh"
-  bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
-  lower-threshold="100"
   style="height: calc(100vh - {{_navbarHeight}}px);"
 >
 <view class="page-container" wx:if="{{activity}}">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-  <scroll-view scroll-y class="scroll-container" bindscroll="onScroll">
-    <view class="page-content">
-      <view class="hero-section">
-        <share-element wx:if="{{activity.coverUrl}}" key="activity-{{activity._id}}" class="hero-cover-share">
-          <image
-            lazy-load
-            class="hero-cover"
-            src="{{activity.coverUrl}}"
-            mode="aspectFill"
-            binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl"
-          />
-        </share-element>
-        <image
-          wx:else
-          lazy-load
-          class="hero-cover"
-          src="/images/default-activity.svg"
-          mode="aspectFill"
-        />
-        <view class="hero-overlay"></view>
-        <view class="hero-content">
-          <view class="hero-badge-row">
-            <view class="status-badge {{activityStatus}}">
-              <text class="status-text">{{statusText}}</text>
-            </view>
-            <view class="category-badge" wx:if="{{activity.category}}">
-              <text class="category-text">{{categoryText}}</text>
-            </view>
+  <view class="page-content">
+    <view class="hero-section">
+      <image
+        wx:if="{{activity.coverUrl}}"
+        lazy-load
+        class="hero-cover"
+        src="{{activity.coverUrl}}"
+        mode="aspectFill"
+        binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl"
+      />
+      <image
+        wx:else
+        lazy-load
+        class="hero-cover"
+        src="/images/default-activity.svg"
+        mode="aspectFill"
+      />
+      <view class="hero-overlay"></view>
+      <view class="hero-content">
+        <view class="hero-badge-row">
+          <view class="status-badge {{activityStatus}}">
+            <text class="status-text">{{statusText}}</text>
           </view>
-          <text class="hero-title">{{activity.title}}</text>
-          <view class="hero-meta">
-            <view class="hero-meta-item">
-              <image class="hero-meta-icon" src="/images/icons/calendar-luxury-line.svg" mode="aspectFit"></image>
-              <text class="hero-meta-text">{{displayDate}}</text>
-            </view>
-            <view class="hero-meta-item">
-              <image class="hero-meta-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image>
-              <text class="hero-meta-text">{{activity.location || '待定'}}</text>
-            </view>
+          <view class="category-badge" wx:if="{{activity.category}}">
+            <text class="category-text">{{categoryText}}</text>
           </view>
         </view>
-        <view class="hero-accent-line"></view>
+        <text class="hero-title">{{activity.title}}</text>
+        <view class="hero-meta">
+          <view class="hero-meta-item">
+            <image class="hero-meta-icon" src="/images/icons/calendar-luxury-line.svg" mode="aspectFit"></image>
+            <text class="hero-meta-text">{{displayDate}}</text>
+          </view>
+          <view class="hero-meta-item">
+            <image class="hero-meta-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image>
+            <text class="hero-meta-text">{{activity.location || '待定'}}</text>
+          </view>
+        </view>
       </view>
+      <view class="hero-accent-line"></view>
+    </view>
 
-      <view class="info-card">
-        <view class="info-row">
-          <view class="info-cell info-cell--full {{isMultiDay ? 'multi-day' : ''}}">
-            <text class="info-label">活动时间</text>
-            <view wx:if="{{isMultiDay}}" class="info-value-multi">
-              <view class="time-row-group">
-                <view class="time-row">
-                  <text class="time-prefix">开始</text>
-                  <text class="time-main">{{startTimeDisplay}}</text>
-                </view>
-                <view class="time-row">
-                  <text class="time-prefix">结束</text>
-                  <text class="time-main">{{endTimeDisplay}}</text>
-                </view>
+    <view class="info-card">
+      <view class="info-row">
+        <view class="info-cell info-cell--full {{isMultiDay ? 'multi-day' : ''}}">
+          <text class="info-label">活动时间</text>
+          <view wx:if="{{isMultiDay}}" class="info-value-multi">
+            <view class="time-row-group">
+              <view class="time-row">
+                <text class="time-prefix">开始</text>
+                <text class="time-main">{{startTimeDisplay}}</text>
+              </view>
+              <view class="time-row">
+                <text class="time-prefix">结束</text>
+                <text class="time-main">{{endTimeDisplay}}</text>
               </view>
             </view>
-            <text wx:else class="info-value">{{displayTime}}</text>
           </view>
-        </view>
-        <view class="info-row-divider"></view>
-        <view class="info-row">
-          <view class="info-cell">
-            <text class="info-label">活动费用</text>
-            <text class="info-value price-value">{{priceDisplayText}}</text>
-          </view>
-          <view class="info-cell-divider"></view>
-          <view class="info-cell">
-            <text class="info-label">报名人数</text>
-            <text class="info-value">{{activity.currentParticipants > 0 ? activity.currentParticipants : 0}}/{{activity.maxParticipants || '不限'}}</text>
-          </view>
-        </view>
-        <view class="info-row-divider"></view>
-        <view class="info-row">
-          <view class="info-cell info-cell--full">
-            <text class="info-label">活动地点</text>
-            <text class="info-value location-link" bindtap="onLocationTap">{{activity.location || '待定'}}</text>
-          </view>
+          <text wx:else class="info-value">{{displayTime}}</text>
         </view>
       </view>
-
-      <view class="highlight-section" wx:if="{{highlightTags.length > 0}}">
-        <scroll-view scroll-x class="highlight-scroll">
-          <view class="highlight-tags">
-            <view class="highlight-tag" wx:for="{{highlightTags}}" wx:key="index">
-              <text class="highlight-tag-text">{{item}}</text>
-            </view>
-          </view>
-        </scroll-view>
-      </view>
-
-      <view class="section-card">
-        <view class="section-header">
-          <view class="section-title-wrapper">
-            <view class="section-title-accent"></view>
-            <text class="section-title">活动详情</text>
-          </view>
+      <view class="info-row-divider"></view>
+      <view class="info-row">
+        <view class="info-cell">
+          <text class="info-label">活动费用</text>
+          <text class="info-value price-value">{{priceDisplayText}}</text>
         </view>
-        <text class="description">{{activity.description || '暂无详细描述'}}</text>
-      </view>
-
-      <view class="section-card" wx:if="{{activity.images && activity.images.length > 0}}">
-        <view class="section-header">
-          <view class="section-title-wrapper">
-            <view class="section-title-accent"></view>
-            <text class="section-title">活动图片</text>
-          </view>
-          <text class="section-count">{{activity.images.length}}张</text>
-        </view>
-        <view class="image-gallery-large">
-          <view 
-            class="gallery-item-large" 
-            wx:for="{{activity.images}}" 
-            wx:key="index"
-            bindtap="previewImage"
-            data-index="{{index}}"
-          >
-            <image class="gallery-image-large" src="{{item}}" mode="widthFix" lazy-load binderror="onCloudImageError" data-src="{{item}}" data-path="activity.images[{{index}}]" />
-          </view>
+        <view class="info-cell-divider"></view>
+        <view class="info-cell">
+          <text class="info-label">报名人数</text>
+          <text class="info-value">{{activity.currentParticipants > 0 ? activity.currentParticipants : 0}}/{{activity.maxParticipants || '不限'}}</text>
         </view>
       </view>
-
-      <view class="organizer-card">
-        <view class="section-header">
-          <view class="section-title-wrapper">
-            <view class="section-title-accent"></view>
-            <text class="section-title">主办方</text>
-          </view>
-        </view>
-        <view class="organizer-content">
-          <view class="organizer-avatar-wrap {{activity.organizer.hasValidAvatar ? 'has-avatar' : ''}}">
-            <image wx:if="{{activity.organizer.hasValidAvatar}}" class="organizer-avatar-img" src="{{activity.organizer.avatar}}" mode="aspectFill" binderror="onOrganizerAvatarError" />
-            <view wx:else class="organizer-avatar-fallback">
-              <text class="organizer-avatar-letter">{{activity.organizer.name}}</text>
-            </view>
-          </view>
-          <view class="organizer-info">
-            <text class="organizer-name">{{activity.organizer.name}}</text>
-            <text class="organizer-desc">已举办 {{activity.organizer.activityCount || 0}} 场活动</text>
-          </view>
-          <view class="organizer-action" bindtap="onContact">
-            <image class="organizer-action-icon organizer-action-icon--svg" src="/images/icons/message-luxury-line.svg" mode="aspectFit" />
-            <text class="organizer-action-text">联系</text>
-          </view>
+      <view class="info-row-divider"></view>
+      <view class="info-row">
+        <view class="info-cell info-cell--full">
+          <text class="info-label">活动地点</text>
+          <text class="info-value location-link" bindtap="onLocationTap">{{activity.location || '待定'}}</text>
         </view>
       </view>
-
-      <view class="bottom-spacer"></view>
     </view>
-  </scroll-view>
+
+    <view class="highlight-section" wx:if="{{highlightTags.length > 0}}">
+      <scroll-view scroll-x class="highlight-scroll">
+        <view class="highlight-tags">
+          <view class="highlight-tag" wx:for="{{highlightTags}}" wx:key="index">
+            <text class="highlight-tag-text">{{item}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title-wrapper">
+          <view class="section-title-accent"></view>
+          <text class="section-title">活动详情</text>
+        </view>
+      </view>
+      <text class="description">{{activity.description || '暂无详细描述'}}</text>
+    </view>
+
+    <view class="section-card" wx:if="{{activity.images && activity.images.length > 0}}">
+      <view class="section-header">
+        <view class="section-title-wrapper">
+          <view class="section-title-accent"></view>
+          <text class="section-title">活动图片</text>
+        </view>
+        <text class="section-count">{{activity.images.length}}张</text>
+      </view>
+      <view class="image-gallery-large">
+        <view 
+          class="gallery-item-large" 
+          wx:for="{{activity.images}}" 
+          wx:key="index"
+          bindtap="previewImage"
+          data-index="{{index}}"
+        >
+          <image class="gallery-image-large" src="{{item}}" mode="widthFix" lazy-load binderror="onCloudImageError" data-src="{{item}}" data-path="activity.images[{{index}}]" />
+        </view>
+      </view>
+    </view>
+
+    <view class="organizer-card">
+      <view class="section-header">
+        <view class="section-title-wrapper">
+          <view class="section-title-accent"></view>
+          <text class="section-title">主办方</text>
+        </view>
+      </view>
+      <view class="organizer-content">
+        <view class="organizer-avatar-wrap {{activity.organizer.hasValidAvatar ? 'has-avatar' : ''}}">
+          <image wx:if="{{activity.organizer.hasValidAvatar}}" class="organizer-avatar-img" src="{{activity.organizer.avatar}}" mode="aspectFill" binderror="onOrganizerAvatarError" />
+          <view wx:else class="organizer-avatar-fallback">
+            <text class="organizer-avatar-letter">{{activity.organizer.name}}</text>
+          </view>
+        </view>
+        <view class="organizer-info">
+          <text class="organizer-name">{{activity.organizer.name}}</text>
+          <text class="organizer-desc">已举办 {{activity.organizer.activityCount || 0}} 场活动</text>
+        </view>
+        <view class="organizer-action" bindtap="onContact">
+          <image class="organizer-action-icon organizer-action-icon--svg" src="/images/icons/message-luxury-line.svg" mode="aspectFit" />
+          <text class="organizer-action-text">联系</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="bottom-spacer"></view>
+  </view>
 
   <root-portal>
   <view class="action-bar">
@@ -180,9 +172,21 @@
       </view>
     </view>
     <view class="action-primary">
-      <view class="primary-btn {{btnStatus}}" bindtap="onRegister">
-        <text class="primary-btn-text">{{btnText}}</text>
-      </view>
+      <block wx:if="{{canSignIn}}">
+        <view class="primary-btn sign-in-btn" bindtap="onSignIn">
+          <text class="primary-btn-text">现场签到</text>
+        </view>
+      </block>
+      <block wx:elif="{{isSigned}}">
+        <view class="primary-btn signed-btn">
+          <text class="primary-btn-text">已签到 ✓</text>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="primary-btn {{btnStatus}}" bindtap="onRegister">
+          <text class="primary-btn-text">{{btnText}}</text>
+        </view>
+      </block>
     </view>
   </view>
   </root-portal>
@@ -208,7 +212,17 @@
 
 
 <root-portal>
-<view class="error-container" wx:if="{{!isLoading && !activity}}" style="height: 1399rpx; display: flex; box-sizing: border-box; left: 0rpx; top: 0rpx">
+<view class="error-container" wx:if="{{!isLoading && loadError}}" style="height: 1399rpx; display: flex; box-sizing: border-box; left: 0rpx; top: 0rpx">
+  <view class="error-content">
+    <image class="error-icon" src="/images/icons/sad-face-luxury-line.svg" mode="aspectFit"></image>
+    <text class="error-title">加载失败</text>
+    <text class="error-desc">网络开小差了，请点击重试</text>
+    <view class="error-btn" bindtap="_retryLoad">
+      <text class="error-btn-text">重新加载</text>
+    </view>
+  </view>
+</view>
+<view class="error-container" wx:elif="{{!isLoading && !activity}}" style="height: 1399rpx; display: flex; box-sizing: border-box; left: 0rpx; top: 0rpx">
   <view class="error-content">
     <image class="error-icon" src="/images/icons/sad-face-luxury-line.svg" mode="aspectFit"></image>
     <text class="error-title">活动不存在</text>

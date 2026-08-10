@@ -38,6 +38,10 @@ Page({
     registrations: [],
     showRegList: false,
     statusActionText: '发布',
+    regSummary: { totalGroups: 0, totalPets: 0, totalPeople: 0, signedGroups: 0 },
+    regSummaryText: '',
+    showExportSheet: false,
+    exportFileName: '',
   },
 
   onLoad(options) {
@@ -113,6 +117,8 @@ Page({
           priceDisplayText,
           participantPct,
           participantText,
+          regSummary: activity.registrationSummary || { totalGroups: 0, totalPets: 0, totalPeople: 0, signedGroups: 0 },
+          regSummaryText: activity.registrationSummary ? `宠物${activity.registrationSummary.totalPets}只，人数${activity.registrationSummary.totalPeople}人` : '',
           dateDisplay,
           timeDisplay,
         })
@@ -208,9 +214,12 @@ Page({
         pageSize: 50,
       })
       if (res.code === 0 && res.data) {
+        const summary = res.data.summary || { totalGroups: 0, totalPets: 0, totalPeople: 0, signedGroups: 0 }
         this.setData({
           registrations: res.data.list || [],
           showRegList: true,
+          regSummary: summary,
+          regSummaryText: `宠物${summary.totalPets}只，人数${summary.totalPeople}人`,
         })
       }
     } catch (e) {
@@ -221,6 +230,132 @@ Page({
 
   onCloseRegList() {
     this.setData({ showRegList: false })
+  },
+
+  async onExportRegistrations() {
+    if (!this._activityId) {return}
+    wx.showLoading({ title: '导出中' })
+    try {
+      const res = await AdminService.exportActivityRegistrations({ activityId: this._activityId })
+      if (res.code !== 0 || !res.data || !res.data.csvContent) {
+        wx.hideLoading()
+        this.errorDynamic(res.message, 'OPERATION_FAILED')
+        return
+      }
+      const csvContent = res.data.csvContent
+      this._exportCsv = csvContent // 始终缓存，供「复制内容」兜底（不依赖文件是否写入成功）
+      // 文件名清洗：活动标题可能含 / \ : * ? " < > | 等非法字符，会导致 writeFile 失败
+      const rawTitle = res.data.activityTitle || '活动'
+      const safeTitle = String(rawTitle).replace(/[\\/:*?"<>|\n\r\t]/g, '_').slice(0, 30)
+      const fileName = `报名表_${safeTitle}.csv`
+      // 真机 wx.shareFileMessage 要求文件位于临时目录，持久目录（USER_DATA_PATH）转发会失败；PC 两者皆可
+      const tmpDir = (wx.env.TEMP || '').replace(/\/$/, '')
+      const baseDir = tmpDir || wx.env.USER_DATA_PATH
+      const filePath = `${baseDir}/${fileName}`
+      wx.getFileSystemManager().writeFile({
+        filePath,
+        data: csvContent,
+        encoding: 'utf8',
+        success: () => {
+          wx.hideLoading()
+          this._exportFilePath = filePath
+          this.setData({ showExportSheet: true, exportFileName: fileName })
+        },
+        fail: () => {
+          // 写文件失败（极端情况）：仍弹层，仅「复制内容」可用
+          wx.hideLoading()
+          this._exportFilePath = ''
+          this.setData({ showExportSheet: true, exportFileName: fileName })
+        },
+      })
+    } catch (e) {
+      wx.hideLoading()
+      this.error('OPERATION_FAILED')
+    }
+  },
+
+  // 弹层按钮：转发到微信。必须在「用户 TAP 手势」中调用，
+  // 否则真机 fail: "can only be invoked by user TAP gesture"（这是此前落剪贴板的真正原因）
+  onExportShare() {
+    const filePath = this._exportFilePath
+    const fileName = this.data.exportFileName
+    if (!filePath) { this.onExportCopy(); return }
+    wx.shareFileMessage({
+      filePath,
+      fileName,
+      success: () => {
+        this._closeExportSheet()
+        wx.showToast({ title: '已调起转发，发给「文件传输助手」即可在微信内打开', icon: 'none' })
+      },
+      fail: () => {
+        // 部分机型不支持 .csv 转发，降级为 .txt 重试一次
+        this._shareAsTxt(this._exportCsv, fileName, () => {
+          this._closeExportSheet()
+          wx.showToast({ title: '已调起转发，发给「文件传输助手」即可在微信内打开', icon: 'none' })
+        })
+      },
+    })
+  },
+
+  _shareAsTxt(csvContent, csvFileName, onOk) {
+    const txtName = (csvFileName || '报名表.csv').replace(/\.csv$/i, '.txt')
+    const tmpDir = (wx.env.TEMP || '').replace(/\/$/, '')
+    const baseDir = tmpDir || wx.env.USER_DATA_PATH
+    const txtPath = `${baseDir}/${txtName}`
+    wx.getFileSystemManager().writeFile({
+      filePath: txtPath,
+      data: csvContent,
+      encoding: 'utf8',
+      success: () => {
+        wx.shareFileMessage({
+          filePath: txtPath,
+          fileName: txtName,
+          success: onOk,
+          fail: () => { wx.showToast({ title: '转发未唤起，请点「复制内容」', icon: 'none' }) },
+        })
+      },
+      fail: () => { wx.showToast({ title: '转发未唤起，请点「复制内容」', icon: 'none' }) },
+    })
+  },
+
+  // 弹层按钮：保存到本机（仅 PC 微信暴露该 API，移动端无）
+  onExportSave() {
+    if (typeof wx.saveFileToDisk !== 'function') {
+      wx.showToast({ title: '移动端请用「转发到微信」', icon: 'none' })
+      return
+    }
+    const filePath = this._exportFilePath
+    if (!filePath) { this.onExportCopy(); return }
+    wx.saveFileToDisk({
+      filePath,
+      success: () => {
+        this._closeExportSheet()
+        wx.showToast({ title: '已保存到本机', icon: 'none' })
+      },
+      fail: () => { wx.showToast({ title: '保存失败，请点「转发到微信」', icon: 'none' }) },
+    })
+  },
+
+  // 弹层按钮：复制内容（用户手势中调用，最可靠兜底）
+  onExportCopy() {
+    const csv = this._exportCsv || ''
+    if (!csv) { this.error('OPERATION_FAILED'); return }
+    wx.setClipboardData({
+      data: csv,
+      success: () => {
+        this._closeExportSheet()
+        wx.showToast({ title: '已复制，可粘贴到 Excel / 微信发送给文件传输助手', icon: 'none' })
+      },
+      fail: () => { this.error('OPERATION_FAILED') },
+    })
+  },
+
+  _closeExportSheet() {
+    this.setData({ showExportSheet: false })
+  },
+
+  onCloseExportSheet() {
+    this._closeExportSheet()
   },
 
   onCallParticipant(e) {

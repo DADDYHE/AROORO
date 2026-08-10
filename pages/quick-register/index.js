@@ -43,7 +43,7 @@ Page({
     const result = await ActivityService.getActivityList({
       status: 'published',
       page: params.page,
-      size: params.pageSize,
+      pageSize: params.pageSize,
     })
 
     if (result && result.code === 0) {
@@ -83,5 +83,11 @@ Page({
     }
 
     wx.navigateTo({ url: `/subpackages/activity/register?id=${id}` })
+  },
+
+  handleActivityDetailTap(e) {
+    const id = e.currentTarget.dataset.id
+    if (!id) {return}
+    wx.navigateTo({ url: `/subpackages/activity/detail?id=${id}` })
   },
 })

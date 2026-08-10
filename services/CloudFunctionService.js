@@ -42,6 +42,31 @@ const MAX_CACHE_SIZE = 100
 const CACHE_CLEANUP_INTERVAL = 5 * 60 * 1000
 const REQUEST_CACHE_KEY_PREFIX = 'cloud_request_cache_'
 
+// 前端绝对兜底超时：以防 wx.cloud.callFunction 在极端情况下（调试器云通道断开、
+// 环境未关联等）既无 success 也无 fail、连自身 timeout 都不触发，导致调用 Promise
+// 永久 pending、页面 loading 死锁。该值略大于 callFunction 的 20s 服务端超时，
+// 只兜底"服务端超时回调都失效"的极端场景，不影响正常请求。
+const FRONTEND_TIMEOUT = 25000
+
+/**
+ * 给 Promise 套一个绝对超时。超时后 reject（message 含 'timeout' 以便被识别为超时、
+ * 在 _executeWithRetry 中直接 break 不再重试）。原 Promise 不会被取消，会在其自身
+ * 结束后自然 settle，不影响其它逻辑。
+ */
+function _withFrontendTimeout(promise, ms, label) {
+  let timer = null
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const err = new Error(`Frontend call timeout (${ms}ms): ${label}`)
+      err.frontendTimeout = true
+      reject(err)
+    }, ms)
+  })
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timer) { clearTimeout(timer) }
+  })
+}
+
 function _stableStringify(obj) {
   if (obj === null || obj === undefined || typeof obj !== 'object') {return String(obj)}
   if (Array.isArray(obj)) {return JSON.stringify(obj)}
@@ -171,7 +196,11 @@ class CloudFunctionService {
 
     for (let i = 0; i <= retryCount; i++) {
       try {
-        const result = await wx.cloud.callFunction({ name, data, timeout: 20000 })
+        const result = await _withFrontendTimeout(
+          wx.cloud.callFunction({ name, data, timeout: 20000 }),
+          FRONTEND_TIMEOUT,
+          `${name}.${data.action || ''}`
+        )
         if (result.result) {
           if (result.result.code !== 0) {
             // Sprint 16：优先使用 i18n 翻译 error.type
@@ -256,7 +285,10 @@ class CloudFunctionService {
 
       const code = error.code || 9999
       const errorTypeKey = ERROR_CODE_MAP[code] || 'BUSINESS'
-      const level = [1003, 1005].includes(code) ? ERROR_LEVELS.WARNING : ERROR_LEVELS.ERROR
+      // 业务校验错误（含未映射的业务码，默认归为 BUSINESS）属预期用户态，降级为 WARNING，避免污染 error 级监控
+      const level = (errorTypeKey === 'BUSINESS' || [1003, 1005].includes(code))
+        ? ERROR_LEVELS.WARNING
+        : ERROR_LEVELS.ERROR
 
       globalErrorManager.handleError(error, {
         level,
@@ -473,6 +505,14 @@ class ActivityService {
   async getMyRegisteredActivities(data = {}) {
     return this.cloud.get('activityService', { action: 'getRegistrationList', ...data })
   }
+
+  async getRegistrationList(data = {}) {
+    return this.cloud.get('activityService', { action: 'getRegistrationList', ...data })
+  }
+
+  async signInRegistration(data = {}) {
+    return this.cloud.get('activityService', { action: 'signInRegistration', ...data })
+  }
 }
 
 class AdminService {
@@ -490,6 +530,10 @@ class AdminService {
 
   async getActivityRegistrations(data = {}) {
     return this.cloud.call('adminService', { action: 'getActivityRegistrations', ...data }, { useCache: false })
+  }
+
+  async exportActivityRegistrations(data = {}) {
+    return this.cloud.call('adminService', { action: 'exportActivityRegistrations', ...data }, { useCache: false })
   }
 
   async createActivity(data) {

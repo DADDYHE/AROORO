@@ -196,6 +196,11 @@ export interface RegistrationRecord {
   riskReasons?: string[]
   createdAt?: Date
   updatedAt?: Date
+  signInStatus?: 'signed' | string
+  signedAt?: Date
+  signInLatitude?: number
+  signInLongitude?: number
+  signInDistance?: number
   [k: string]: unknown
 }
 
@@ -285,6 +290,8 @@ export interface ExportResult {
 
 export interface ActivityDetailResult extends ActivityRecord {
   isRegistered: boolean
+  isSigned?: boolean
+  registrationId?: string
 }
 
 // =====================================================================
@@ -656,7 +663,7 @@ const ACTIVITY_LIST_FIELDS: Record<string, boolean> = {
 
 const REGISTRATION_LIST_FIELDS: Record<string, boolean> = {
   _id: true, activityId: true, openid: true, phone: true, status: true,
-  totalAmount: true, createdAt: true,
+  totalAmount: true, createdAt: true, signInStatus: true,
 }
 
 export async function getActivityList(
@@ -664,21 +671,37 @@ export async function getActivityList(
   context: CloudContext,
   auth: AuthLike
 ): Promise<unknown> {
-  const { page = 1, pageSize = 10, status, category, keyword } = event
+  const { page = 1, pageSize = 10, status, category, keyword, registerable } = event
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 10), 100)
-  logger.info('getActivityList.query', { page, pageSize: safePageSize, status, category, keyword })
+  logger.info('getActivityList.query', { page, pageSize: safePageSize, status, category, keyword, registerable })
+
+  // 可报名模式：先取"我已报名"的活动 id，用于服务端排除（保证分页正确，避免客户端过滤破坏 hasMore 判定）
+  let myRegistrations: string[] = []
+  if (auth.openid) {
+    const regRes = await db.collection('activity_registrations')
+      .where({ ownerId: auth.openid, status: 'confirmed' })
+      .field({ activityId: true })
+      .get()
+    myRegistrations = (regRes.data || []).map((r: { activityId?: string }) => r.activityId).filter((id: string | undefined): id is string => Boolean(id))
+  }
 
   // M4 修复：状态自动更新迁移至定时触发器（见 main 入口 Timer 分支），列表接口只读
 
   const where: Record<string, unknown> = {}
-  if (status && status !== 'all') {
+  if (registerable) {
+    // 可报名：报名中(published) 且用户尚未报名（按 _id 排除已报名，服务端过滤保证分页准确）
+    where.status = 'published'
+    if (myRegistrations.length > 0) {
+      where._id = _.nin(myRegistrations)
+    }
+  } else if (status && status !== 'all') {
     where.status = status
   } else {
     // P1-A 修复：默认只展示"对用户可见"的活动（已发布/报名截止/已结束），
     //   原 _.neq('deleted') 会把草稿（draft）与已取消（cancelled）活动外露给用户列表
     where.status = _.in(['published', 'registration_stopped', 'ended'])
   }
-  if (category && category !== 'all') {
+  if (category && category !== 'all' && !registerable) {
     where.category = category
   }
   if (keyword) {
@@ -730,15 +753,6 @@ export async function getActivityList(
 
   logger.info('getActivityList.result', { total: result.total, listCount: result.list.length })
 
-  let myRegistrations: string[] = []
-  if (auth.openid) {
-    const regRes = await db.collection('activity_registrations')
-      .where({ ownerId: auth.openid, status: 'confirmed' })
-      .field({ activityId: true })
-      .get()
-    myRegistrations = (regRes.data || []).map((r: { activityId?: string }) => r.activityId).filter((id: string | undefined): id is string => Boolean(id))
-  }
-
   result.list = (result.list as ActivityRecord[]).map((activity) => ({
     ...activity,
     joined: myRegistrations.includes(activity._id || ''),
@@ -766,17 +780,25 @@ export async function getActivityDetail(
       auth.openid
         ? db.collection('activity_registrations')
             .where({ activityId, ownerId: auth.openid, status: 'confirmed' })
-            .count()
-        : Promise.resolve<{ total: number }>({ total: 0 }),
+            .limit(1)
+            .get()
+        : Promise.resolve<{ data: RegistrationRecord[] }>({ data: [] }),
     ])
 
-    const isRegistered = regRes.total > 0
+    const myReg = (regRes.data && regRes.data[0]) || null
+    const isRegistered = Boolean(myReg)
+    const isSigned = myReg ? myReg.signInStatus === 'signed' : false
     const data = res.data as ActivityRecord | null
     if (!data) {
       throw err('NOT_FOUND', '活动不存在')
     }
 
-    const result: ActivityDetailResult = { ...data, isRegistered }
+    const result: ActivityDetailResult = {
+      ...data,
+      isRegistered,
+      isSigned,
+      registrationId: myReg ? (myReg._id || '') : '',
+    }
 
     // L8 修复：头像补全与活动数彼此独立且都依赖主查询结果 → 并行执行
     await Promise.all([
@@ -831,7 +853,7 @@ export async function submitRegistration(
   const { openid } = auth
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
-  const { activityId, pets, phone, notes, friends, petIds, couponId, participantCount, _registrationId } = event
+  const { activityId, pets, phone, notes, friends, petIds, couponId, participantCount, contactName, _registrationId } = event
   if (!activityId) { throw err('INVALID_PARAMS', '缺少活动ID') }
   if (!pets || !Array.isArray(pets) || pets.length === 0) { throw err('INVALID_PARAMS', '请选择参与的宠物') }
   if (!phone) { throw err('INVALID_PARAMS', '请填写联系电话') }
@@ -922,6 +944,7 @@ export async function submitRegistration(
       pets: petsInfo,
       petIds: petIds || [],
       phone: phone || '',
+      contactName: contactName || '',
       notes: notes || '',
       friends: friendsArray,
       status: isPaid ? 'pending_payment' : 'confirmed',
@@ -1210,6 +1233,7 @@ export async function getRegistrationList(
           _registrationId: reg ? (reg._id || '') : (a._id || ''),
           regStatus: reg ? reg.status : '',
           regCreatedAt: reg ? reg.createdAt : a.createdAt,
+          signInStatus: reg ? reg.signInStatus : '',
         }
       })
 
@@ -1260,10 +1284,119 @@ export async function getRegistrationList(
 
 
 
+// =====================================================================
+// Handler 9: signInRegistration - 活动签到（定位 + 时间窗校验）
+// =====================================================================
+
+// 地球半径（米），haversine 球面距离
+const EARTH_RADIUS = 6371000
+
+function toRad(deg: number): number {
+  return (deg * Math.PI) / 180
+}
+
+/** 两点球面距离（米），输入 gcj02 坐标 */
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 2 * EARTH_RADIUS * Math.asin(Math.sqrt(a))
+}
+
+/**
+ * 解析活动存储的本地时间字符串。
+ * 活动 startTime/endTime 以「无时区墙钟字符串」（YYYY-MM-DD HH:mm[:ss]）存储，
+ * 其语义为北京时间（运营在 web-admin 填写、前端按本地时区显示均为北京时间）。
+ * 云函数运行环境默认 UTC，若直接 new Date("2026/08/08 11:00:00") 会被当作 UTC 时间，
+ * 导致比实际北京时间晚 8 小时、签到时间窗整体后移。这里统一按东八区语义解析为绝对时间。
+ */
+function parseLocalDate(s?: string | Date): Date | null {
+  if (!s) { return null }
+  if (s instanceof Date) { return s }
+  const str = String(s).trim()
+  const m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/)
+  if (m) {
+    const y = +m[1], mo = +m[2], d = +m[3], h = +m[4], mi = +m[5], se = +(m[6] || 0)
+    // 输入视为北京时间墙钟，转换为绝对时间（东八区）后参与比较
+    return new Date(Date.UTC(y, mo - 1, d, h - 8, mi, se))
+  }
+  const d = new Date(str.replace(/-/g, '/'))
+  return isNaN(d.getTime()) ? null : d
+}
+
+// 签到默认半径（米），可用环境变量 SIGN_IN_RADIUS 覆盖。
+// 默认放宽到 500m：吸收 GPS 漂移、chooseLocation 钉点微偏，以及历史 wgs84 坐标归一化前的残余偏差。
+function signInRadius(): number {
+  const v = Number(process.env.SIGN_IN_RADIUS)
+  return v > 0 ? v : 500
+}
+
+export async function signInRegistration(
+  event: CloudEvent,
+  context: CloudContext,
+  auth: AuthLike
+): Promise<unknown> {
+  const { registrationId, latitude, longitude } = event
+  if (!registrationId) { throw err('INVALID_PARAMS', '缺少报名ID') }
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    throw err('INVALID_PARAMS', '缺少定位信息，请在设置中开启定位权限')
+  }
+
+  const regRes = await db.collection('activity_registrations').doc(registrationId).get()
+  const reg = regRes.data as RegistrationRecord | null
+  if (!reg) { throw err('NOT_FOUND', '报名记录不存在') }
+  if (reg.ownerId !== auth.openid) { throw err('PERMISSION_DENIED', '只能签到自己的报名') }
+  if (reg.status !== 'confirmed') { throw err('INVALID_STATE', '当前报名状态不可签到') }
+  if (reg.signInStatus === 'signed') {
+    return handleSuccess({ signed: true, alreadySigned: true }, '您已签到')
+  }
+
+  const actRes = await db.collection('activities').doc(reg.activityId).get()
+  const activity = actRes.data as ActivityRecord | null
+  if (!activity) { throw err('NOT_FOUND', '活动不存在') }
+
+  // 时间窗：仅活动当天 startTime <= now <= endTime
+  const now = new Date()
+  const start = parseLocalDate(activity.startTime)
+  const end = parseLocalDate(activity.endTime)
+  if (!start) { throw err('INVALID_STATE', '活动未设置开始时间，无法签到') }
+  if (now < start) { throw err('NOT_STARTED', '活动尚未开始，无法签到') }
+  if (end && now > end) { throw err('ENDED', '活动已结束，无法签到') }
+
+  // 位置校验：haversine 距离 <= 半径
+  const actLat = Number(activity.latitude)
+  const actLng = Number(activity.longitude)
+  if (!actLat || !actLng) { throw err('LOCATION_MISSING', '活动未设置坐标，无法定位签到') }
+  const distance = haversine(latitude, longitude, actLat, actLng)
+  const radius = signInRadius()
+  if (distance > radius) {
+    return handleSuccess(
+      { signed: false, tooFar: true, distance: Math.round(distance), radius },
+      `距离活动地点约${Math.round(distance)}米，请在现场签到`,
+    )
+  }
+
+  await db.collection('activity_registrations').doc(registrationId).update({
+    data: {
+      signInStatus: 'signed',
+      signedAt: db.serverDate(),
+      signInLatitude: latitude,
+      signInLongitude: longitude,
+      signInDistance: Math.round(distance),
+      updatedAt: db.serverDate(),
+    },
+  })
+
+  return handleSuccess({ signed: true, distance: Math.round(distance) }, '签到成功')
+}
+
+
 export const handlers: Record<string, ActivityActionHandler> = {
   getActivityList,
   getActivityDetail,
   submitRegistration,
+  signInRegistration,
   getRegistrationDetail,
   getRegistrationList,
 }
@@ -1273,7 +1406,7 @@ export const handlers: Record<string, ActivityActionHandler> = {
 // =====================================================================
 
 // P3-010: 写操作和登录校验 action 列表提升为模块级常量，避免每次调用重新创建数组
-const WRITE_ACTIONS = ['submitRegistration'] as const
+const WRITE_ACTIONS = ['submitRegistration', 'signInRegistration'] as const
 const LOGIN_REQUIRED_ACTIONS = [...WRITE_ACTIONS, 'getActivityDetail', 'getRegistrationDetail', 'getRegistrationList'] as const
 
 export async function main(
@@ -1317,6 +1450,7 @@ _mod.exports = {
   getActivityList,
   getActivityDetail,
   submitRegistration,
+  signInRegistration,
   getRegistrationDetail,
   getRegistrationList,
   handlers,
@@ -1328,6 +1462,7 @@ export default {
   getActivityList,
   getActivityDetail,
   submitRegistration,
+  signInRegistration,
   getRegistrationDetail,
   getRegistrationList,
   handlers,

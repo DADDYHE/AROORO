@@ -1,6 +1,7 @@
 const { handleSuccess, handleError, ERROR_CODES, paginate } = require('../common/utils')
 const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
+const { parseBJTime, bjDayStart, bjFormat } = require('./_bjtime')
 const { db } = initCloud()
 const _ = db.command
 const logger = createLogger('adminService:stats')
@@ -22,7 +23,7 @@ async function getOrderStats(event) {
   try {
     const { orderType, status, startDate, endDate } = event
     const now = new Date()
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayStart = bjDayStart(now)
     const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
 
     const where = {}
@@ -32,8 +33,8 @@ async function getOrderStats(event) {
       // 默认排除已取消的订单
       where.status = _.ne('cancelled')
     }
-    if (startDate) {where.createdAt = _.gte(new Date(startDate))}
-    if (endDate) {where.createdAt = _.lte(new Date(endDate))}
+    if (startDate) {where.createdAt = _.gte(parseBJTime(startDate))}
+    if (endDate) {where.createdAt = _.lte(parseBJTime(endDate))}
 
     const allOrderTypes = ['mall', 'tuan', 'feeding', 'boarding', 'activity']
 
@@ -147,15 +148,15 @@ async function getOrderTrend(event) {
   try {
     const { days = 30 } = event
     const now = new Date()
-    const startDate = new Date(now.getTime() - (days - 1) * 24 * 60 * 60 * 1000)
-    startDate.setHours(0, 0, 0, 0)
+    const todayBJ = bjDayStart(now)
+    const startDate = new Date(todayBJ.getTime() - (days - 1) * 24 * 60 * 60 * 1000)
 
     // 一次性拉取所有订单（按时间窗口过滤），按天分组内存聚合
     const allTypes = ['mall', 'tuan', 'feeding', 'boarding', 'activity']
     const countsByDay = {}
     for (let i = 0; i < days; i++) {
       const dayStart = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000)
-      const key = `${dayStart.getFullYear()}-${String(dayStart.getMonth() + 1).padStart(2, '0')}-${String(dayStart.getDate()).padStart(2, '0')}`
+      const key = bjFormat(dayStart)
       countsByDay[key] = 0
     }
 
@@ -173,7 +174,7 @@ async function getOrderTrend(event) {
       const res = await db.collection(coll).where(where).limit(1000).get()
       for (const o of (res.data || [])) {
         const t = new Date(o.createdAt)
-        const key = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+        const key = bjFormat(t)
         if (countsByDay[key] !== undefined) countsByDay[key]++
       }
     }
@@ -237,8 +238,8 @@ async function getCouponStats(event) {
 
     const userCouponWhere = {}
     if (templateId) { userCouponWhere.templateId = templateId }
-    if (startDate) { userCouponWhere.createdAt = _.gte(new Date(startDate)) }
-    if (endDate) { userCouponWhere.createdAt = _.lte(new Date(endDate)) }
+    if (startDate) { userCouponWhere.createdAt = _.gte(parseBJTime(startDate)) }
+    if (endDate) { userCouponWhere.createdAt = _.lte(parseBJTime(endDate)) }
 
     // 基础统计：用 where + count 替代 aggregate
     const [totalGranted, totalUsed] = await Promise.all([
@@ -302,13 +303,14 @@ async function getCouponStats(event) {
     // 趋势数据
     const days = daysParam || 7
     const now = new Date()
-    const start = new Date(now.getTime() - (days - 1) * 24 * 60 * 60 * 1000)
+    const todayBJ = bjDayStart(now)
+    const start = new Date(todayBJ.getTime() - (days - 1) * 24 * 60 * 60 * 1000)
     const trendData = []
 
     for (let i = 0; i < days; i++) {
       const dayStart = new Date(start.getTime() + i * 24 * 60 * 60 * 1000)
       const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
-      const dateStr = `${dayStart.getFullYear()}-${String(dayStart.getMonth() + 1).padStart(2, '0')}-${String(dayStart.getDate()).padStart(2, '0')}`
+      const dateStr = bjFormat(dayStart)
 
       const [dayGranted, dayUsed] = await Promise.all([
         db.collection('user_coupons').where({

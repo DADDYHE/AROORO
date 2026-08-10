@@ -23,12 +23,13 @@ Page({
   },
 
   autoLocate() {
-    wx.getFuzzyLocation({
+    wx.getLocation({
+      type: 'gcj02',
       success: res => {
         this._resolveCity(res.latitude, res.longitude)
       },
       fail: err => {
-        console.warn('[service] getFuzzyLocation fail:', err)
+        console.warn('[service] getLocation fail:', err)
         this._locateByIP()
       },
     })
@@ -122,7 +123,7 @@ Page({
       fail: () => {
         wx.getSetting({
           success: settingRes => {
-            if (!settingRes.authSetting['scope.userFuzzyLocation']) {
+            if (!settingRes.authSetting['scope.userLocation']) {
               this.showModal({ titleKey: 'BIZ_AJ90BY', contentKey: 'BIZ_PVLULF', confirmText: '去设置' })
             }
           },

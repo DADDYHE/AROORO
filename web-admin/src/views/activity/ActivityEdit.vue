@@ -29,7 +29,12 @@
         <div style="display:flex;gap:10px">
           <el-input-number v-model="form.latitude" :precision="6" placeholder="纬度" controls-position="right" style="width:180px" />
           <el-input-number v-model="form.longitude" :precision="6" placeholder="经度" controls-position="right" style="width:180px" />
+          <el-select v-model="form.coordType" style="width:160px">
+            <el-option label="GCJ-02（国测局）" value="gcj02" />
+            <el-option label="WGS-84（GPS）" value="wgs84" />
+          </el-select>
         </div>
+        <div class="hint">小程序选点/地图均为 GCJ-02，直接选即可；若经纬度来自 GPS 设备或高德原始坐标，请选 WGS-84，保存时系统会自动转换为 GCJ-02 再存库（避免现场签到距离偏移）。</div>
       </el-form-item>
       <el-form-item label="每人费用" prop="pricePerPerson">
         <el-input-number v-model="form.pricePerPerson" :min="0" :precision="2" controls-position="right" />
@@ -73,6 +78,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getActivityDetail, createActivity, updateActivity } from '@/api/activity'
+import { wgs84ToGcj02 } from '@/utils/geoConvert'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -83,8 +89,8 @@ const isEdit = computed(() => !!route.params.id)
 
 const form = reactive({
   title: '', category: 'outdoor', description: '',
-  startTime: '', endTime: '', location: '',
-  latitude: null, longitude: null,
+  startTime: '', endTime: '',   location: '',
+  latitude: null, longitude: null, coordType: 'gcj02',
   maxParticipants: 0,
   pricePerPerson: 0, pricePerPet: 0,
   coverUrl: '', contactName: '', contactPhone: '', wechatId: '',
@@ -115,6 +121,7 @@ onMounted(async () => {
         endTime: res.data.endTime || '',
         latitude: res.data.latitude || null,
         longitude: res.data.longitude || null,
+        coordType: res.data.coordType || 'gcj02',
       })
     }
   }
@@ -127,6 +134,13 @@ async function onSave() {
     const payload = { ...form }
     if (payload.startTime === null) { payload.startTime = '' }
     if (payload.endTime === null) { payload.endTime = '' }
+    // 坐标系归一化：仅当录入为 WGS-84 时才转换；GCJ-02 原样存库。
+    if (payload.coordType === 'wgs84' && payload.latitude != null && payload.longitude != null) {
+      const g = wgs84ToGcj02(Number(payload.latitude), Number(payload.longitude))
+      payload.latitude = g.lat
+      payload.longitude = g.lng
+      payload.coordType = 'gcj02'
+    }
     if (isEdit.value) { await updateActivity({ activityId: route.params.id, ...payload }) }
     else { await createActivity(payload) }
     ElMessage.success('保存成功')

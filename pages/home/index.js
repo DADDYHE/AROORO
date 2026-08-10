@@ -8,12 +8,13 @@ const homePetBehavior = require('../../behaviors/homePetBehavior')
 const homeActivityBehavior = require('../../behaviors/homeActivityBehavior')
 const homeTuanBehavior = require('../../behaviors/homeTuanBehavior')
 const homeMallBehavior = require('../../behaviors/homeMallBehavior')
+const homeMyActivitiesBehavior = require('../../behaviors/homeMyActivitiesBehavior')
 const { buildSharePath } = require('../../utils/share')
 const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior, homeBannerBehavior, homePetBehavior, homeActivityBehavior, homeTuanBehavior, homeMallBehavior],
+  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior, homeBannerBehavior, homePetBehavior, homeActivityBehavior, homeTuanBehavior, homeMallBehavior, homeMyActivitiesBehavior],
   data: {
     t: pageI18n.buildTMap('zh-CN'),
     isLoggedIn: false,
@@ -137,6 +138,7 @@ Page({
 
     if (isLoggedIn) {
       this._loadMyPets()
+      this._loadMyActivities()
     }
   },
 
