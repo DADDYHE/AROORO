@@ -528,12 +528,16 @@ class AdminService {
     return this.cloud.call('partnerService', { action: 'getMyIncomeDetails', ...data }, { useCache: false })
   }
 
-  async getMyWallet() {
-    return this.cloud.call('partnerService', { action: 'getMyWallet' }, { useCache: false })
+  async getMyWallet(data = {}) {
+    return this.cloud.call('partnerService', { action: 'getMyWallet', ...data }, { useCache: false })
   }
 
-  async requestWithdrawal(amount) {
-    return this.cloud.post('partnerService', { action: 'requestWithdrawal', amount })
+  async requestWithdrawal(amount, walletType = 'commission') {
+    return this.cloud.post('partnerService', { action: 'requestWithdrawal', amount, walletType })
+  }
+
+  async confirmWithdrawal(withdrawalId) {
+    return this.cloud.post('partnerService', { action: 'confirmWithdrawal', withdrawalId })
   }
 
   async getMyWithdrawals(data = {}) {

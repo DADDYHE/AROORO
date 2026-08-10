@@ -180,7 +180,7 @@
         <input class="modal-input" type="digit" placeholder="请输入提现金额" value="{{withdrawAmount}}" bindinput="onWithdrawAmountInput" focus="{{showWithdrawModal}}" />
       </view>
       <view class="modal-tips">
-        <text>最低10元，单笔最高500元，每日限提1次</text>
+        <text>最低1元，单笔最高500元，每日限提10次</text>
         <text class="modal-all-btn" bindtap="onWithdrawAll">全部提现</text>
       </view>
       <view class="modal-btns">

@@ -17,6 +17,13 @@ Page({
     hasMore: true,
     isDetailLoading: false,
     isLoadingMore: false,
+    // 服务收入钱包（P2 修复：服务收入也支持提现）
+    serviceBalanceText: '0.00',
+    withdrawBalance: 0,
+    withdrawBalanceText: '0.00',
+    showWithdrawModal: false,
+    withdrawAmount: '',
+    isSubmitting: false,
   },
 
   onLoad() {
@@ -33,7 +40,10 @@ Page({
   async _loadData() {
     this.setData({ isLoading: true })
     try {
-      const overviewRes = await AdminService.getServiceIncomeOverview()
+      const [overviewRes, walletRes] = await Promise.all([
+        AdminService.getServiceIncomeOverview(),
+        AdminService.getMyWallet({ walletType: 'serviceIncome' }),
+      ])
       
       if (overviewRes.code === 0 && overviewRes.data) {
         const d = overviewRes.data
@@ -46,6 +56,15 @@ Page({
             monthlyIncome: d.monthlyIncome || 0,
             todayIncome: d.todayIncome || 0,
           },
+        })
+      }
+
+      if (walletRes.code === 0 && walletRes.data) {
+        const balance = Number(walletRes.data.balance) || 0
+        this.setData({
+          serviceBalanceText: balance.toFixed(2),
+          withdrawBalance: balance,
+          withdrawBalanceText: balance.toFixed(2),
         })
       }
       
@@ -104,5 +123,58 @@ Page({
     this._loadData().then(() => {
       wx.stopPullDownRefresh()
     })
+  },
+
+  onWithdrawTap() {
+    if (this.data.withdrawBalance < 1) {
+      wx.showToast({ title: '可提现余额不足1元', icon: 'none' })
+      return
+    }
+    this.setData({ showWithdrawModal: true, withdrawAmount: '' })
+  },
+
+  onWithdrawAmountInput(e) {
+    this.setData({ withdrawAmount: e.detail.value })
+  },
+
+  onWithdrawAll() {
+    const maxAmount = Math.min(this.data.withdrawBalance, 500)
+    this.setData({ withdrawAmount: maxAmount.toFixed(2) })
+  },
+
+  async onWithdrawConfirm() {
+    const amount = Number(this.data.withdrawAmount)
+    if (!amount || amount < 1) {
+      wx.showToast({ title: '最低提现1元', icon: 'none' })
+      return
+    }
+    if (amount > this.data.withdrawBalance) {
+      wx.showToast({ title: '超出可提现余额', icon: 'none' })
+      return
+    }
+    if (amount > 500) {
+      wx.showToast({ title: '单笔最高提现500元', icon: 'none' })
+      return
+    }
+
+    this.setData({ isSubmitting: true })
+    try {
+      const res = await AdminService.requestWithdrawal(amount, 'serviceIncome')
+      if (res.code === 0) {
+        wx.showToast({ title: '提现申请已提交', icon: 'success' })
+        this.setData({ showWithdrawModal: false, withdrawAmount: '' })
+        this._loadData()
+      } else {
+        wx.showToast({ title: res.message || '提现失败', icon: 'none' })
+      }
+    } catch (e) {
+      wx.showToast({ title: (e && e.message) || '提现失败', icon: 'none' })
+    } finally {
+      this.setData({ isSubmitting: false })
+    }
+  },
+
+  onWithdrawCancel() {
+    this.setData({ showWithdrawModal: false, withdrawAmount: '' })
   },
 })

@@ -7,6 +7,8 @@ const { recordAlert } = require('../common/alert')
 const { withRateLimit } = require('../common/risk-rate-limit')
 // 推广/邀请统计统一口径（板块→权威集合→状态集→金额字段）
 const { REFERRAL_BOARDS, resolveOrderAmount, fetchBoardOrders } = require('./referralStats')
+// P0: 提现成功结算统一走共享模块（与 partnerService 确认收款后结算共用同一口径）
+const { settleWithdrawalCompleted } = require('../common/withdrawal-settle')
 
 const { cloud, db } = initCloud()
 const _ = db.command
@@ -28,6 +30,8 @@ async function getWithdrawalList(event, context, auth) {
       .where(query)
       .field({
         _id: true,
+        // 后台列表需展示申请人兜底（web-admin 读取 row.openid）
+        openid: true,
         amount: true,
         status: true,
         walletType: true,
@@ -53,102 +57,6 @@ async function getWithdrawalList(event, context, auth) {
     logger.error('getWithdrawalList', error)
     return handleError(error, '获取提现列表失败', ERROR_CODES.DATA)
   }
-}
-
-/**
- * H4: 转账成功后的落库结算（提现→completed + 钱包冻结释放/累计提现）
- * 优先使用事务；事务失败时降级为非事务补偿更新（条件更新保证幂等），
- * 避免记录卡死在 processing 状态造成"钱已转出、状态永远无法闭环"的死锁。
- *
- * @param {string} withdrawalId 提现记录 _id
- * @param {object} w 提现记录文档（需含 openid/amount/walletType）
- * @param {object} transferInfo 转账结果（transfer_bill_no/out_bill_no，可来自发起转账或查单接口）
- * @param {string} source 日志/告警来源标识
- * @returns {Promise<{settled: boolean, viaTransaction: boolean}>}
- */
-async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source) {
-  const walletType = w.walletType || 'commission'
-  // 事务前先查询钱包 _id（CloudBase 事务内不支持 where().get() / where().update()）
-  const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
-  const walletDoc = walletRes.data && walletRes.data[0]
-
-  const completedData = {
-    status: 'completed',
-    transferTime: db.serverDate(),
-    transferBatchNo: transferInfo.transfer_bill_no || '',
-    outBatchNo: transferInfo.out_bill_no || w.outBatchNo || '',
-    updatedAt: db.serverDate(),
-  }
-
-  // 首选路径：单一事务保证提现状态与钱包数据一致
-  const transaction = await db.startTransaction()
-  // P3 修复：事务内使用 transaction.command
-  const _tx = transaction.command
-  try {
-    await transaction.collection('withdrawals').doc(withdrawalId).update({ data: completedData })
-    if (walletDoc) {
-      await transaction.collection('wallets').doc(walletDoc._id).update({
-        data: {
-          frozenAmount: _tx.inc(-w.amount),
-          totalWithdrawn: _tx.inc(w.amount),
-          updatedAt: db.serverDate(),
-        },
-      })
-    }
-    await transaction.commit()
-    return { settled: true, viaTransaction: true }
-  } catch (txError) {
-    try { await transaction.rollback() } catch (_) { /* ignore rollback error */ }
-    logger.error(`${source}.transaction.failed`, {
-      withdrawalId, openid: w.openid, msg: txError?.message,
-    })
-  }
-
-  // H4 补偿路径：转账已成功、事务失败 → 非事务条件更新落库（where status=processing 保证幂等且防并发重复）
-  let withdrawalFixed = false
-  let walletFixed = false
-  try {
-    const upRes = await db.collection('withdrawals')
-      .where({ _id: withdrawalId, status: 'processing' })
-      .update({ data: { ...completedData, needsReconcile: true } })
-    withdrawalFixed = ((upRes && upRes.stats && upRes.stats.updated) || 0) > 0
-  } catch (e) {
-    logger.error(`${source}.compensate.withdrawal.failed`, { withdrawalId, msg: e?.message })
-  }
-  if (withdrawalFixed && walletDoc) {
-    try {
-      // 补偿路径为非事务更新，使用 db.command
-      await db.collection('wallets').doc(walletDoc._id).update({
-        data: {
-          frozenAmount: _.inc(-w.amount),
-          totalWithdrawn: _.inc(w.amount),
-          updatedAt: db.serverDate(),
-        },
-      })
-      walletFixed = true
-    } catch (e) {
-      logger.error(`${source}.compensate.wallet.failed`, { withdrawalId, msg: e?.message })
-    }
-  }
-
-  await recordAlert(
-    'critical',
-    `${source}.transaction.failed`,
-    withdrawalFixed
-      ? '提现转账成功且事务失败，已通过补偿更新落库（needsReconcile），请核对钱包数据'
-      : '提现转账已成功但 DB 状态同步与补偿更新均失败，需人工对账',
-    {
-      withdrawalId,
-      openid: w.openid,
-      amount: w.amount,
-      walletType,
-      transferBatchNo: transferInfo.transfer_bill_no || '',
-      outBatchNo: transferInfo.out_bill_no || w.outBatchNo || '',
-      withdrawalFixed,
-      walletFixed,
-    }
-  )
-  return { settled: withdrawalFixed, viaTransaction: false }
 }
 
 /**
@@ -236,10 +144,37 @@ async function approveWithdrawal(event, context, auth) {
     }
 
     if (transferResult) {
-      // P0-7 + H4: 事务优先，失败降级补偿，保证提现不卡死在 processing
-      await settleWithdrawalCompleted(withdrawalId, w, transferResult, 'approveWithdrawal')
+      const transferState = transferResult.state || ''
+      // P0 修复：新版商家转账为“用户确认收款”模式——只有微信侧终态 SUCCESS 才能结算。
+      // 创建成功（WAIT_USER_CONFIRM/ACCEPTED/PROCESSING 等非终态）仅持久化单据信息并保持
+      // processing，等待用户在小程序确认收款后由 confirmWithdrawal / 后台对账闭环。
+      if (transferState === 'SUCCESS') {
+        await settleWithdrawalCompleted(withdrawalId, w, transferResult, 'approveWithdrawal')
+        return handleSuccess({ message: '审核通过，转账已到账' })
+      }
 
-      return handleSuccess({ message: '审核通过，已自动转账到用户微信零钱' })
+      await db.collection('withdrawals').doc(withdrawalId).update({
+        data: {
+          packageInfo: transferResult.package_info || '',
+          transferBatchNo: transferResult.transfer_bill_no || '',
+          outBatchNo: transferResult.out_bill_no || w.outBatchNo || '',
+          transferState,
+          updatedAt: db.serverDate(),
+        },
+      })
+      await recordAlert(
+        'warning',
+        'approveWithdrawal.transfer.pending',
+        transferState === 'WAIT_USER_CONFIRM'
+          ? '转账已创建，等待用户在小程序确认收款'
+          : `转账处理中（${transferState}），待对账`,
+        { withdrawalId, outBatchNo: transferResult.out_bill_no || w.outBatchNo || '' }
+      )
+      return handleSuccess({
+        message: transferState === 'WAIT_USER_CONFIRM'
+          ? '转账已受理，请提醒用户在小程序确认收款'
+          : `转账处理中（${transferState || '未知'}），请稍后对账`,
+      })
     } else {
       // H4: 转账调用异常可能是网络超时（状态不明），直接回退 approved 后重试会换新单号造成重复打款。
       // 先按商户单号查单确认微信侧是否已受理，未受理才回退 approved。
@@ -380,10 +315,35 @@ async function retryTransfer(event, context, auth) {
     }
 
     if (transferResult) {
-      // P0-7 + H4: 事务优先，失败降级补偿，保证提现不卡死在 processing
-      await settleWithdrawalCompleted(withdrawalId, w, transferResult, 'retryTransfer')
+      const transferState = transferResult.state || ''
+      // P0 修复：与 approveWithdrawal 一致——仅 SUCCESS 终态结算，非终态保持 processing 待确认/对账
+      if (transferState === 'SUCCESS') {
+        await settleWithdrawalCompleted(withdrawalId, w, transferResult, 'retryTransfer')
+        return handleSuccess({ message: '重试转账成功，已到账' })
+      }
 
-      return handleSuccess({ message: '重试转账成功，已自动转账到用户微信零钱' })
+      await db.collection('withdrawals').doc(withdrawalId).update({
+        data: {
+          packageInfo: transferResult.package_info || '',
+          transferBatchNo: transferResult.transfer_bill_no || '',
+          outBatchNo: transferResult.out_bill_no || w.outBatchNo || '',
+          transferState,
+          updatedAt: db.serverDate(),
+        },
+      })
+      await recordAlert(
+        'warning',
+        'retryTransfer.transfer.pending',
+        transferState === 'WAIT_USER_CONFIRM'
+          ? '重试转账已创建，等待用户在小程序确认收款'
+          : `重试转账处理中（${transferState}），待对账`,
+        { withdrawalId, outBatchNo: transferResult.out_bill_no || w.outBatchNo || '' }
+      )
+      return handleSuccess({
+        message: transferState === 'WAIT_USER_CONFIRM'
+          ? '转账已受理，请提醒用户在小程序确认收款'
+          : `转账处理中（${transferState || '未知'}），请稍后对账`,
+      })
     } else {
       // H4: 与 approveWithdrawal 一致 —— 先查单确认微信侧未受理，才回退 approved，避免重复打款
       let acceptedByWechat = false

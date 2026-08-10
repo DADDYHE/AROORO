@@ -61,5 +61,61 @@ Page({
     }
   },
 
+  /**
+   * P0 修复：确认收款 / 查询到账（新版商家转账需用户在小程序确认收款后才到账）
+   *  - confirmWithdrawal 查单：SUCCESS → 后端结算落库；WAIT_USER_CONFIRM → 返回 packageInfo
+   *  - 有 packageInfo → wx.requestMerchantTransfer 拉起微信确认收款，确认后再查一次闭环
+   */
+  async onConfirmReceipt(e) {
+    const { id } = e.currentTarget.dataset
+    if (!id) {return}
+    wx.showLoading({ title: '查询中', mask: true })
+    try {
+      let res = await AdminService.confirmWithdrawal(id)
+      if (res.code !== 0) {throw new Error(res.message || '操作失败')}
+      let state = (res.data && res.data.state) || ''
+      const packageInfo = (res.data && res.data.packageInfo) || ''
+
+      if (packageInfo) {
+        wx.hideLoading()
+        await this._requestMerchantConfirm(packageInfo)
+        wx.showLoading({ title: '确认中', mask: true })
+        res = await AdminService.confirmWithdrawal(id)
+        if (res.code !== 0) {throw new Error(res.message || '操作失败')}
+        state = (res.data && res.data.state) || ''
+      }
+
+      wx.hideLoading()
+      if (state === 'SUCCESS') {
+        wx.showToast({ title: '已到账', icon: 'success' })
+      } else if (state === 'FAIL' || state === 'CANCELLED' || state === 'CANCELING') {
+        wx.showToast({ title: '转账未成功，请联系客服', icon: 'none' })
+      } else if (state === 'WAIT_USER_CONFIRM') {
+        wx.showToast({ title: '请在微信确认收款', icon: 'none' })
+      } else {
+        wx.showToast({ title: '转账处理中，请稍后查询', icon: 'none' })
+      }
+      this.setData({ page: 1 })
+      this._loadData()
+    } catch (e) {
+      wx.hideLoading()
+      wx.showToast({ title: (e && e.message) || '操作失败', icon: 'none' })
+    }
+  },
+
+  _requestMerchantConfirm(packageInfo) {
+    return new Promise((resolve, reject) => {
+      if (typeof wx.requestMerchantTransfer !== 'function') {
+        reject(new Error('当前微信版本不支持确认收款'))
+        return
+      }
+      wx.requestMerchantTransfer({
+        packageInfo,
+        success: resolve,
+        fail: (err) => reject(new Error((err && err.errMsg) || '确认收款未完成')),
+      })
+    })
+  },
+
   _formatTime(date) { return formatTime(date) },
 })

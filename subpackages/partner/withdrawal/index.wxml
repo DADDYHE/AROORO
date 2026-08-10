@@ -44,13 +44,16 @@
     <view wx:for="{{list}}" wx:key="_id" class="record-card">
       <view class="record-top">
         <text class="record-amount" style="color: {{item.status === 'rejected' ? '#A85B4A' : '#5B7C4A'}}">
-          {{item.status === 'rejected' ? '-' : '+'}}¥{{item.amountText}}
+          {{item.status === 'rejected' ? '' : '+'}}¥{{item.amountText}}
         </text>
         <text class="record-status" style="color: {{item.statusColor}}">{{item.statusText}}</text>
       </view>
       <view class="record-bottom">
         <text class="record-time">{{item.timeText}}</text>
         <text wx:if="{{item.status === 'rejected' && item.rejectReason}}" class="record-reason">原因：{{item.rejectReason}}</text>
+      </view>
+      <view wx:if="{{item.status === 'processing'}}" class="record-confirm">
+        <button class="record-confirm-btn" size="mini" bindtap="onConfirmReceipt" data-id="{{item._id}}">确认收款 / 查询到账</button>
       </view>
     </view>
 

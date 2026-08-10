@@ -23,8 +23,10 @@
             <el-button link type="primary" @click="onApprove(row._id)">通过</el-button>
             <el-button link type="danger" @click="onReject(row._id)">拒绝</el-button>
           </template>
-          <template v-else-if="row.status === 'approved'">
-            <el-button link type="warning" @click="onRetry(row._id)">重新转账</el-button>
+          <template v-else-if="row.status === 'approved' || row.status === 'processing'">
+            <el-button link type="warning" @click="onRetry(row._id, row.status)">
+              {{ row.status === 'processing' ? '对账' : '重新转账' }}
+            </el-button>
           </template>
           <span v-else class="text-muted">已处理</span>
         </template>
@@ -61,13 +63,15 @@ async function onReject(id) {
   fetch()
 }
 
-async function onRetry(id) {
-  await ElMessageBox.confirm('确定重新发起转账？')
+async function onRetry(id, status = 'approved') {
+  const actionText = status === 'processing' ? '对账' : '重新发起转账'
+  await ElMessageBox.confirm(`确定${actionText}？`, { type: 'warning' })
   const res = await retryTransfer(id)
   if (res?.transferError) {
     ElMessage.warning(`转账失败：${res.transferError}`)
   } else {
-    ElMessage.success('转账成功')
+    // 后端把业务提示放在 data.message（对账成功/处理中/待确认等），避免一律误报"转账成功"
+    ElMessage.success(res?.data?.message || res?.message || '操作成功')
   }
   fetch()
 }

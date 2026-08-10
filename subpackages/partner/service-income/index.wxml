@@ -49,6 +49,17 @@
       </view>
     </view>
 
+    <!-- 服务收入钱包：可提现 + 提现入口（P2 修复） -->
+    <view class="service-wallet-card">
+      <view class="service-wallet-row">
+        <view class="service-wallet-info">
+          <text class="service-wallet-label">可提现余额</text>
+          <text class="service-wallet-value">¥{{serviceBalanceText}}</text>
+        </view>
+        <view class="service-wallet-btn" bindtap="onWithdrawTap">提现</view>
+      </view>
+    </view>
+
     <!-- 分类展区：三种收入类型 -->
     <view class="category-gallery">
       <view class="category-frame activity-frame">
@@ -188,4 +199,24 @@
     </view>
   </view>
 </view>
+<root-portal>
+  <view wx:if="{{showWithdrawModal}}" class="modal-mask" bindtap="onWithdrawCancel">
+    <view class="modal-content" catchtap="">
+      <view class="modal-title">申请提现</view>
+      <view class="modal-balance">可提现余额：¥{{withdrawBalanceText}}</view>
+      <view class="modal-input-row">
+        <text class="modal-input-prefix">¥</text>
+        <input class="modal-input" type="digit" placeholder="请输入提现金额" value="{{withdrawAmount}}" bindinput="onWithdrawAmountInput" focus="{{showWithdrawModal}}" />
+      </view>
+      <view class="modal-tips">
+        <text>最低1元，单笔最高500元，每日限提10次</text>
+        <text class="modal-all-btn" bindtap="onWithdrawAll">全部提现</text>
+      </view>
+      <view class="modal-btns">
+        <view class="modal-btn modal-btn-cancel" bindtap="onWithdrawCancel">取消</view>
+        <view class="modal-btn modal-btn-confirm {{isSubmitting ? 'modal-btn-disabled' : ''}}" bindtap="onWithdrawConfirm">{{isSubmitting ? '提交中...' : '确认提现'}}</view>
+      </view>
+    </view>
+  </view>
+</root-portal>
 </scroll-view>

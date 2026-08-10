@@ -19,6 +19,8 @@ const WECHAT_PAY = {
     mchId: process.env.WECHAT_MCHID || '',
     serialNo: process.env.WECHAT_SERIAL_NO || '',
     privateKey: process.env.WECHAT_PRIVATE_KEY || '',
+    // P2 修复：转账场景 ID（新版商家转账必填，需在商户平台申请对应场景）
+    transferSceneId: process.env.WECHAT_TRANSFER_SCENE_ID || '',
     notifyUrl: process.env.WECHAT_NOTIFY_URL || '',
     certificate: process.env.WECHAT_PAY_CERTIFICATE || '',
     apiV3Key: process.env.WECHAT_API_V3_KEY || '',

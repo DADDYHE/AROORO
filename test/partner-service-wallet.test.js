@@ -414,9 +414,9 @@ describe('partnerService/wallet', () => {
       today.setHours(0, 0, 0, 0)
       mockDb._collections.wallets = { docs: [{ _id: 'w1', openid: 'oTest_openid', type: 'commission', balance: 1000, status: 'active' }] }
       // P1-4: 每日限额从 1 次调整为 10 次
-      // H3: 状态枚举为 awaiting_confirm（硬约束）
+      // P2: 状态枚举为 pending（与 adminService 审批枚举一致，awaiting_confirm 已废弃）
       mockDb._collections.withdrawals = { docs: Array.from({ length: 10 }, (_, i) => ({
-        openid: 'oTest_openid', walletType: 'commission', amount: 50, status: 'awaiting_confirm', createdAt: new Date(today.getTime() + 3600_000 * (i + 1)),
+        openid: 'oTest_openid', walletType: 'commission', amount: 50, status: 'pending', createdAt: new Date(today.getTime() + 3600_000 * (i + 1)),
       })) }
       const result = await wallet.requestWithdrawal({ amount: 50 }, {}, { openid: 'oTest_openid' })
       expect(result.code).not.toBe(0)
@@ -431,8 +431,8 @@ describe('partnerService/wallet', () => {
       expect(walletDoc.frozenAmount).toBe(30) // +30 frozen
       expect(mockDb._collections.withdrawals.docs.length).toBe(1)
       expect(mockDb._collections.withdrawals.docs[0].amount).toBe(30)
-      // H3: 状态枚举为 awaiting_confirm（硬约束）
-      expect(mockDb._collections.withdrawals.docs[0].status).toBe('awaiting_confirm')
+      // P2: 状态枚举为 pending（与 adminService 审批枚举一致，awaiting_confirm 已废弃）
+      expect(mockDb._collections.withdrawals.docs[0].status).toBe('pending')
     })
   })
 })

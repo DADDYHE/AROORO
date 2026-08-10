@@ -33,6 +33,9 @@ const { err } = require('../common/errors');
 const { initCloud, handleSuccess, handleError, generateId, ERROR_CODES } = require('../common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createLogger } = require('../common/logger');
+// P0: 提现成功结算统一走共享模块（与 adminService 审批/对账共用同一口径）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { settleWithdrawalCompleted } = require('../common/withdrawal-settle');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { db } = initCloud();
 const _ = db.command;
@@ -495,6 +498,11 @@ async function getMyWithdrawals(event, context, auth) {
             createdAt: true,
             updatedAt: true,
             rejectReason: true,
+            // P0: 用户端展示转账失败原因 + 确认收款所需单据信息
+            transferError: true,
+            packageInfo: true,
+            outBatchNo: true,
+            transferBatchNo: true,
             // outTradeNo 保留——前端可能用于查询转账状态
             outTradeNo: true,
         })
@@ -510,6 +518,76 @@ async function getMyWithdrawals(event, context, auth) {
     }
 }
 exports.getMyWithdrawals = getMyWithdrawals;
+/**
+ * P0: 用户确认收款 / 查询到账（小程序端提现记录页）
+ *
+ * 新版商家转账为“用户确认收款”模式：adminService 审批创建转账后状态为
+ * WAIT_USER_CONFIRM（processing），本接口按商户单号查单：
+ *   - SUCCESS（终态）→ 共享结算逻辑落库 completed（释放冻结/累计已提现）
+ *   - WAIT_USER_CONFIRM 等非终态 → 返回 packageInfo，前端 wx.requestMerchantTransfer 拉起确认
+ *   - FAIL/CANCELLED/CANCELING → 条件回退 approved（带失败原因），等待后台重试转账
+ *
+ * 入参：{ withdrawalId }
+ * 返回：{ state, packageInfo }
+ */
+async function confirmWithdrawal(event, context, auth) {
+    const { withdrawalId } = event;
+    const { openid } = auth;
+    if (!withdrawalId) {
+        throw err('INVALID_PARAMS', '缺少提现记录ID');
+    }
+    try {
+        const wRes = await db.collection('withdrawals').doc(withdrawalId).get();
+        const w = wRes.data;
+        // 归属校验：只能确认自己的提现
+        if (!w || w.openid !== openid) {
+            throw err('NOT_FOUND', '提现记录不存在');
+        }
+        if (w.status !== 'processing') {
+            // 已非处理中：直接返回当前状态（completed/rejected/approved/pending）
+            return handleSuccess({ state: w.status || '', packageInfo: '' });
+        }
+        if (!w.outBatchNo) {
+            throw err('BUSINESS_ERROR', '该记录缺少商户转账单号，请联系客服处理');
+        }
+        const { queryTransferByOutBillNo } = require('../common/transfer');
+        const q = await queryTransferByOutBillNo(w.outBatchNo);
+        const state = q.state || '';
+
+        if (state === 'SUCCESS') {
+            const r = await settleWithdrawalCompleted(withdrawalId, w, q, 'partnerConfirmWithdrawal');
+            if (!r.settled) {
+                throw err('DATA_ERROR', '转账已到账但状态同步失败，请联系客服处理');
+            }
+            return handleSuccess({ state: 'SUCCESS', packageInfo: '' });
+        }
+
+        if (state === 'FAIL' || state === 'CANCELLED' || state === 'CANCELING') {
+            // 条件更新防并发：仅当仍为 processing 时回退 approved，带失败原因供后台重试
+            await db.collection('withdrawals')
+                .where({ _id: withdrawalId, status: 'processing' })
+                .update({
+                data: {
+                    status: 'approved',
+                    transferError: `微信转账状态: ${state}${q.fail_reason ? ` (${q.fail_reason})` : ''}`,
+                    updatedAt: db.serverDate(),
+                },
+            });
+            return handleSuccess({ state, packageInfo: '' });
+        }
+
+        // 非终态（WAIT_USER_CONFIRM/PROCESSING/TRANSFERING 等）：返回 packageInfo 供前端拉起确认
+        return handleSuccess({
+            state,
+            packageInfo: w.packageInfo || '',
+        });
+    }
+    catch (error) {
+        logger.error('confirmWithdrawal', error);
+        return handleError(error, '确认收款失败', ERROR_CODES.DATA);
+    }
+}
+exports.confirmWithdrawal = confirmWithdrawal;
 async function requestWithdrawal(event, context, auth) {
     const { openid } = auth;
     const { amount } = event;
@@ -523,7 +601,8 @@ async function requestWithdrawal(event, context, auth) {
     if (withdrawAmount !== parsedAmount) {
         throw err('INVALID_PARAMS', '提现金额精度不能超过2位小数');
     }
-    const MAX_SINGLE_WITHDRAWAL = 50000;
+    // P1 修复：单笔上限与小程序端一致（前端 500 元封顶，直连云函数不可绕过）
+    const MAX_SINGLE_WITHDRAWAL = 500;
     if (withdrawAmount > MAX_SINGLE_WITHDRAWAL) {
         throw err('BUSINESS_ERROR', `单次最多提现 ${MAX_SINGLE_WITHDRAWAL} 元`);
     }
@@ -652,6 +731,7 @@ _mod.exports = {
     getMyIncomeDetails,
     getMyWallet,
     getMyWithdrawals,
+    confirmWithdrawal,
     requestWithdrawal,
 };
 _mod.exports.default = _mod.exports;
@@ -660,5 +740,6 @@ exports.default = {
     getMyIncomeDetails,
     getMyWallet,
     getMyWithdrawals,
+    confirmWithdrawal,
     requestWithdrawal,
 };
