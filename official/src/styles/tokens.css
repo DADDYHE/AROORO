@@ -1,0 +1,30 @@
+/* ===== AROORO 官网设计令牌（Haute-Luxury v2，与小程/ web-admin 同源） ===== */
+:root {
+  /* 色彩 */
+  --gold: #C9A24B;          /* 一支金：CTA / 选中 / 标签点 */
+  --gold-deep: #A8894A;     /* 同支金按下深态：仅填充/描边，禁作文字色 */
+  --green: #1F3A1F;         /* 深绿：文字 / 标题 / 线 */
+  --stone-1: #F7F5EF;       /* 暖石底浅 */
+  --stone-2: #ECE4D4;       /* 暖石底深 */
+  --text-1: #1F3A1F;        /* 主文字 */
+  --text-2: #5b6b57;        /* 次文字 */
+  --text-3: #8a9386;        /* 弱文字 */
+  --hairline: rgba(31, 58, 31, 0.12);
+  --card: #fffdf8;
+
+  /* 圆角 */
+  --radius: 16px;
+  --radius-lg: 24px;
+
+  /* 间距 */
+  --space: 24rpx; /* 仅占位，Web 用 px */
+  --gap: 16px;
+
+  /* 字体 */
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+
+  /* 阴影 */
+  --shadow-soft: 0 8px 30px rgba(31, 58, 31, 0.08);
+  --shadow-card: 0 2px 16px rgba(31, 58, 31, 0.06);
+}
