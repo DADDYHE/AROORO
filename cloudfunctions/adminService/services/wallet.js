@@ -660,7 +660,8 @@ async function cancelWithdrawal(event, context, auth) {
     return handleSuccess({ message: '已撤销提现，冻结金额已退回余额' })
   } catch (error) {
     logger.error('cancelWithdrawal', error)
-    return handleError(error, '撤销提现失败', ERROR_CODES.DATA)
+    // 透出具体原因（如状态非 approved / 状态已变更），便于后台定位
+    return handleError(error, error.message || '撤销提现失败', ERROR_CODES.DATA)
   }
 }
 
