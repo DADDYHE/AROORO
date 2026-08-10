@@ -600,6 +600,32 @@ async function cancelWithdrawal(event, context, auth) {
         if (w.status !== 'pending') {
             throw err('BUSINESS_ERROR', '仅待审核的提现可取消');
         }
+        // 并发防双回退：事务前原子占位（cancelStarted 标记）
+        const claim = await db.collection('withdrawals')
+            .where({ _id: withdrawalId, openid, status: 'pending', cancelStarted: _.neq(true) })
+            .update({
+            data: {
+                cancelStarted: true,
+                cancelStartedAt: db.serverDate(),
+                updatedAt: db.serverDate(),
+            },
+        });
+        const claimed = (claim && claim.stats && claim.stats.updated) || 0;
+        if (claimed === 0) {
+            const cur = (await db.collection('withdrawals').doc(withdrawalId).get()).data;
+            if (cur && cur.status === 'cancelled') {
+                return handleSuccess({ message: '该提现已取消' });
+            }
+            if (cur && cur.cancelStarted === true) {
+                const startedAt = cur.cancelStartedAt ? new Date(cur.cancelStartedAt).getTime() : 0;
+                if (Date.now() - startedAt > 120000) {
+                    await db.collection('withdrawals').where({ _id: withdrawalId, cancelStarted: true }).update({
+                        data: { cancelStarted: false, updatedAt: db.serverDate() },
+                    });
+                }
+            }
+            throw err('BUSINESS_ERROR', '该提现正在被处理，请刷新后重试');
+        }
         const walletType = w.walletType || 'commission';
         const walletRes = await db.collection('wallets').where({ openid, type: walletType }).limit(1).get();
         const walletDoc = walletRes.data && walletRes.data[0];
@@ -630,6 +656,9 @@ async function cancelWithdrawal(event, context, auth) {
                 await transaction.rollback();
             }
             catch (_) { /* ignore */ }
+            await db.collection('withdrawals').where({ _id: withdrawalId, cancelStarted: true }).update({
+                data: { cancelStarted: false, updatedAt: db.serverDate() },
+            });
             throw err('BUSINESS_ERROR', '取消失败，该提现状态可能已变更，请刷新后重试');
         }
         return handleSuccess({ message: '提现已取消，冻结金额已退回余额' });
@@ -668,8 +697,37 @@ async function confirmWithdrawal(event, context, auth) {
         const q = await queryTransferByOutBillNo(w.outBatchNo);
         const state = q.state || '';
         if (state === 'SUCCESS') {
+            // 并发防双结算：事务前原子占位（confirmStarted 标记），双确认/双点击仅一个能结算
+            const claim = await db.collection('withdrawals')
+                .where({ _id: withdrawalId, status: 'processing', confirmStarted: _.neq(true) })
+                .update({
+                data: {
+                    confirmStarted: true,
+                    confirmStartedAt: db.serverDate(),
+                    updatedAt: db.serverDate(),
+                },
+            });
+            const claimed = (claim && claim.stats && claim.stats.updated) || 0;
+            if (claimed === 0) {
+                const cur = (await db.collection('withdrawals').doc(withdrawalId).get()).data;
+                if (cur && cur.status === 'completed') {
+                    return handleSuccess({ state: 'SUCCESS', packageInfo: '' });
+                }
+                if (cur && cur.confirmStarted === true) {
+                    const startedAt = cur.confirmStartedAt ? new Date(cur.confirmStartedAt).getTime() : 0;
+                    if (Date.now() - startedAt > 120000) {
+                        await db.collection('withdrawals').where({ _id: withdrawalId, confirmStarted: true }).update({
+                            data: { confirmStarted: false, updatedAt: db.serverDate() },
+                        });
+                    }
+                }
+                return handleSuccess({ state: (cur && cur.status) || 'processing', packageInfo: '' });
+            }
             const r = await settleWithdrawalCompleted(withdrawalId, w, q, 'partnerConfirmWithdrawal');
             if (!r.settled) {
+                await db.collection('withdrawals').where({ _id: withdrawalId, confirmStarted: true }).update({
+                    data: { confirmStarted: false, updatedAt: db.serverDate() },
+                });
                 throw err('DATA_ERROR', '转账已到账但状态同步失败，请联系客服处理');
             }
             return handleSuccess({ state: 'SUCCESS', packageInfo: '' });

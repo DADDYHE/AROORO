@@ -130,6 +130,11 @@
         </el-form-item>
         <el-form-item label="打款凭证" required>
           <el-input v-model="confirmForm.payEvidence" type="textarea" :rows="2" placeholder="流水号 / 截图URL / 文本凭证（必填）" />
+          <div class="evidence-upload">
+            <el-button size="small" :loading="evidenceUploading" @click="evidenceInput?.click()">上传凭证文件</el-button>
+            <span v-if="evidenceUploaded" class="hint">已上传：{{ confirmForm.payEvidence }}</span>
+            <input ref="evidenceInput" type="file" accept="image/*,.pdf,.txt" style="display:none" @change="onEvidenceFile" />
+          </div>
         </el-form-item>
         <el-form-item label="差异原因/备注">
           <el-input v-model="confirmForm.note" type="textarea" :rows="2" placeholder="金额不一致时必填差异原因" />
@@ -163,6 +168,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { getWithdrawalList, approveWithdrawal, rejectWithdrawal, retryTransfer, confirmManualTransfer, getFullPayeeInfo, getPayoutConfig, cancelWithdrawal, convertToManual, inspectWithdrawal, repairWithdrawalBalance } from '@/api/withdrawal'
+import { uploadFile } from '@/api/upload'
 import { usePagination } from '@/composables/usePagination'
 import { formatDate, formatMoney } from '@/utils/format'
 import { WITHDRAWAL_STATUS_LABELS } from '@/constants/order'
@@ -249,6 +255,9 @@ const confirmRow = ref(null)
 const confirmForm = reactive({ channel: 'wechat', paidAmount: 0, payEvidence: '', note: '' })
 const fullPayee = ref(null)
 const confirming = ref(false)
+const evidenceInput = ref(null)
+const evidenceUploading = ref(false)
+const evidenceUploaded = ref(false)
 const diffInfo = computed(() => Math.round((Number(confirmForm.paidAmount || 0) - Number(confirmRow.value?.amount || 0)) * 100) / 100)
 
 async function openConfirm(row) {
@@ -258,12 +267,31 @@ async function openConfirm(row) {
   confirmForm.payEvidence = ''
   confirmForm.note = ''
   fullPayee.value = null
+  evidenceUploaded.value = false
   confirmVisible.value = true
   try {
     const res = await getFullPayeeInfo(row._id)
     fullPayee.value = res.data || null
   } catch (e) {
     console.warn('[WithdrawalReview] getFullPayeeInfo failed:', e?.message)
+  }
+}
+
+async function onEvidenceFile(e) {
+  const file = e.target.files && e.target.files[0]
+  if (!file) {return}
+  evidenceUploading.value = true
+  try {
+    const ext = (file.name.match(/\.[a-zA-Z0-9]+$/) || ['.jpg'])[0]
+    const data = await uploadFile(file, `withdrawal-evidence/${Date.now()}${ext}`)
+    confirmForm.payEvidence = data.fileID || data.url || ''
+    evidenceUploaded.value = true
+    ElMessage.success('凭证已上传')
+  } catch (err) {
+    ElMessage.error(err?.message || '上传失败')
+  } finally {
+    evidenceUploading.value = false
+    if (evidenceInput.value) {evidenceInput.value.value = ''}
   }
 }
 
@@ -380,4 +408,5 @@ onMounted(async () => {
 .diff { color: #f56c6c; font-size: 12px; margin-left: 8px; }
 .hint { color: var(--text-tertiary); font-size: 12px; margin-top: 6px; }
 .payee-line { font-weight: 500; }
+.evidence-upload { margin-top: 8px; display: flex; align-items: center; gap: 10px; }
 </style>
