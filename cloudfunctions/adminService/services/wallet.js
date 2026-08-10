@@ -407,6 +407,10 @@ async function retryTransfer(event, context, auth) {
     if (w.status !== 'approved') {
       throw err('BUSINESS_ERROR', '仅审核通过但转账失败、或转账结果待对账的记录可重试')
     }
+    // 人工打款记录与确认/撤销互斥：只能走确认/撤销流程，禁止自动重试
+    if (w.mode === 'manual') {
+      throw err('BUSINESS_ERROR', '人工打款记录请使用确认/撤销流程')
+    }
 
     // 自动打款关闭时禁止重新发起自动转账（人工打款流程接管）
     if (!isAutoTransferEnabled()) {
@@ -558,7 +562,7 @@ async function confirmManualTransfer(event, context, auth) {
     // 事务路径的 doc().update() 无 where 守卫，入口校验基于事务外旧快照，
     // 两个并发确认会在交错下双释放冻结金额；占位成功者才允许结算。
     const claim = await db.collection('withdrawals')
-      .where({ _id: withdrawalId, status: 'approved', mode: 'manual', manualConfirmStarted: _.neq(true) })
+      .where({ _id: withdrawalId, status: 'approved', mode: 'manual', manualConfirmStarted: _.neq(true), cancelStarted: _.neq(true) })
       .update({
         data: {
           manualConfirmStarted: true,
@@ -693,7 +697,7 @@ async function cancelWithdrawal(event, context, auth) {
     }
     // 并发防双回退：事务前原子占位（cancelStarted 标记）
     const claim = await db.collection('withdrawals')
-      .where({ _id: withdrawalId, status: 'approved', cancelStarted: _.neq(true) })
+      .where({ _id: withdrawalId, status: 'approved', cancelStarted: _.neq(true), manualConfirmStarted: _.neq(true) })
       .update({
         data: {
           cancelStarted: true,
