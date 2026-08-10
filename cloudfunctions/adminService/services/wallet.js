@@ -838,6 +838,72 @@ async function repairWithdrawalBalance(event, context, auth) {
   }
 }
 
+/**
+ * v5.1 运维诊断：查看某合作伙伴（inviterId/openid）的全部佣金、双钱包与提现单
+ * 用于核对“累计收入 / 待结算佣金 / 钱包余额”是否一致（super_admin 只读 + 审计）。
+ */
+async function inspectPartnerFinance(event, context, auth) {
+  const { inviterId } = event
+  if (!inviterId) {throw err('INVALID_PARAMS', '缺少合作伙伴 openid')}
+  try {
+    const [commRes, commissionWalletRes, serviceWalletRes, wdRes] = await Promise.all([
+      db.collection('commissions').where({ inviterId }).orderBy('createdAt', 'desc').limit(100).get(),
+      db.collection('wallets').where({ openid: inviterId, type: 'commission' }).limit(1).get(),
+      db.collection('wallets').where({ openid: inviterId, type: 'serviceIncome' }).limit(1).get(),
+      db.collection('withdrawals').where({ openid: inviterId }).orderBy('createdAt', 'desc').limit(20).get(),
+    ])
+    const commissions = (commRes.data || []).map(c => ({
+      _id: c._id,
+      orderId: c.orderId || '',
+      orderNo: c.orderNo || '',
+      orderType: c.orderType || '',
+      commissionAmount: c.commissionAmount,
+      status: c.status || '',
+      settledAt: c.settledAt || null,
+      createdAt: c.createdAt,
+    }))
+    const wallet = (d) => {
+      const x = d && d[0]
+      return x
+        ? {
+            balance: Number(x.balance) || 0,
+            frozenAmount: Number(x.frozenAmount) || 0,
+            totalIncome: Number(x.totalIncome) || 0,
+            totalWithdrawn: Number(x.totalWithdrawn) || 0,
+          }
+        : null
+    }
+    const withdrawals = (wdRes.data || []).map(w => ({
+      _id: w._id,
+      amount: w.amount,
+      status: w.status || '',
+      mode: w.mode || 'auto',
+      method: w.method || 'wechat',
+      createdAt: w.createdAt,
+      cancelledAt: w.cancelledAt || null,
+      cancelReason: w.cancelReason || '',
+    }))
+    writeOperationLog({
+      module: 'commission',
+      action: 'inspect_partner',
+      targetId: inviterId,
+      operatorId: auth.openid,
+    })
+    return handleSuccess({
+      inviterId,
+      commissions,
+      wallets: {
+        commission: wallet(commissionWalletRes.data),
+        serviceIncome: wallet(serviceWalletRes.data),
+      },
+      withdrawals,
+    })
+  } catch (error) {
+    logger.error('inspectPartnerFinance', error)
+    return handleError(error, error.message || '检查合作伙伴财务失败', ERROR_CODES.DATA)
+  }
+}
+
 // Re-export from common for cross-service usage
 const { ensureWalletBalance } = require('../common/wallet-utils')
 
@@ -853,5 +919,6 @@ module.exports = {
   convertToManual,
   inspectWithdrawal,
   repairWithdrawalBalance,
+  inspectPartnerFinance,
   ensureWalletBalance,
 }
