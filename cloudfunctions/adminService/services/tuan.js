@@ -547,6 +547,57 @@ async function settleCommissions(event, context, auth) {
 }
 
 /**
+ * 历史遗留佣金补标：仅把 pending 记录置为 settled，**不入账钱包**。
+ * 适用场景：佣金写入器统一/历史路径造成的“钱已入钱包但佣金状态仍 pending”的存量记录
+ * （正常结算会重复入账，必须先人工核实钱包已含该笔金额再补标）。
+ */
+async function settleCommissionLegacy(event, context, auth) {
+  const { commissionId } = event
+  if (!commissionId) {throw err('INVALID_PARAMS', '缺少佣金记录ID')}
+  const now = new Date()
+  try {
+    const commRes = await db.collection('commissions').doc(commissionId).get()
+    const comm = commRes.data
+    if (!comm) {throw err('NOT_FOUND', '佣金记录不存在')}
+    if (comm.status !== 'pending') {
+      throw err('BUSINESS_ERROR', '仅待结算记录可补标')
+    }
+    const amountNum = Number(comm.commissionAmount) || 0
+    // 条件更新防并发：仅 pending → settled
+    const up = await db.collection('commissions')
+      .where({ _id: commissionId, status: 'pending' })
+      .update({
+        data: {
+          status: 'settled',
+          settledAt: now,
+          settledBy: auth.openid,
+          legacyReconciled: true,
+          updatedAt: db.serverDate(),
+        },
+      })
+    const updated = (up && up.stats && up.stats.updated) || 0
+    if (updated === 0) {
+      throw err('BUSINESS_ERROR', '该记录状态已变更，请刷新后重试')
+    }
+    const { writeOperationLog } = require('../common/operation-log')
+    writeOperationLog({
+      module: 'commission',
+      action: 'settle_legacy_no_credit',
+      targetId: commissionId,
+      operatorId: auth.openid,
+      afterData: { amount: amountNum, inviterId: comm.inviterId, note: '历史记录补标，未重复入账' },
+    })
+    await recordAlert('warning', 'commission.legacy_settled_no_credit',
+      '历史佣金记录补标为已结算（未重复入账），请人工核对钱包金额',
+      { commissionId, inviterId: comm.inviterId, amount: amountNum })
+    return handleSuccess({ settled: true, amount: amountNum, note: '已补标为已结算，未重复入账' })
+  } catch (error) {
+    logger.error('settleCommissionLegacy', error)
+    return handleError(error, error.message || '补标失败', ERROR_CODES.DATA)
+  }
+}
+
+/**
  * 佣金记录查询（后台结算页使用）：按 orderType / status / 邀请人过滤，分页
  */
 async function getCommissionList(event, context, auth) {
@@ -872,6 +923,6 @@ async function rollbackTuanDealTotalsAdmin(dealId, amount) {
 module.exports = {
   createTuanDeal, updateTuanDeal, deleteTuanDeal, publishTuanDeal, endTuanDeal,
   getTuanDealList, getTuanDealDetail, getTuanDealOrders, getTuanDealOrderDetail,
-  getTuanLeaderList, getTuanLeaderCommissions, getTuanCommissionStats, settleCommissions, getCommissionList,
+  getTuanLeaderList, getTuanLeaderCommissions, getTuanCommissionStats, settleCommissions, settleCommissionLegacy, getCommissionList,
   handleTuanOrder,
 }

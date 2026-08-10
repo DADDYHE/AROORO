@@ -361,6 +361,7 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getTuanCommissionStats: 'partner',
   settleCommissions: 'partner',
   getCommissionList: 'partner',
+  settleCommissionLegacy: 'super_admin',
 
   // partner 自己的统计
   getOrderStats: 'partner',

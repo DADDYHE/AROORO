@@ -36,6 +36,11 @@
       <el-table-column prop="createdAt" label="创建时间" width="170">
         <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
       </el-table-column>
+      <el-table-column label="操作" width="90" fixed="right">
+        <template #default="{ row }">
+          <el-button v-if="row.status === 'pending'" link type="warning" @click="onLegacySettle(row)">历史补标</el-button>
+        </template>
+      </el-table-column>
     </el-table>
     <el-pagination class="pager" layout="total, prev, pager, next" :total="total" v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" @current-change="onPageChange" />
 
@@ -86,7 +91,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getCommissionList, settleCommissions, inspectPartnerFinance } from '@/api/commission'
+import { getCommissionList, settleCommissions, inspectPartnerFinance, settleCommissionLegacy } from '@/api/commission'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -148,6 +153,26 @@ async function onSettle() {
     ElMessage.error(e?.message || '结算失败')
   } finally {
     settling.value = false
+  }
+}
+
+async function onLegacySettle(row) {
+  try {
+    await ElMessageBox.confirm(
+      `对订单 ${row.orderNo || row._id}（¥${formatMoney(row.commissionAmount)}）执行历史补标？\n` +
+      '仅当该笔佣金金额【已确认进入钱包】时使用（钱已在钱包、只是状态没更新）。\n' +
+      '本操作【不会重复入账】，只把状态补为已结算。请勿对未入账记录使用！',
+      '历史补标（不入账）', { type: 'warning', confirmButtonText: '确认补标' }
+    )
+  } catch {
+    return
+  }
+  try {
+    const res = await settleCommissionLegacy(row._id)
+    ElMessage.success(res.data?.note || '已补标')
+    fetch()
+  } catch (e) {
+    ElMessage.error(e?.message || '补标失败')
   }
 }
 
