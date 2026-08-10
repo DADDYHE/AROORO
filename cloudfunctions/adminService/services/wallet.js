@@ -16,6 +16,26 @@ const logger = createLogger('walletService')
 
 const WALLET_TYPES = ['commission', 'serviceIncome']
 
+/**
+ * 生成微信商家转账商户单号（out_bill_no）：
+ * 微信要求 ≤32 字符、字母/数字/下划线；这里用 前缀+13位时间戳+6位随机数（约 21-22 字符），
+ * 同毫秒并发碰撞概率 1/1000000，且每次重试都会生成新单号（微信侧单号唯一）。
+ */
+function buildOutBatchNo(prefix) {
+  return `${prefix}${Date.now()}${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`
+}
+
+/**
+ * 自动打款总开关（预留接口）：
+ *  - 默认开启（未配置或值为 1/true/on 时走自动转账）；
+ *  - 配置 WECHAT_TRANSFER_AUTO_ENABLED=0/false/off 时，审批通过仅置为 approved（待人工打款），
+ *    不再调用微信转账，由人工打款流程接管（状态/冻结金额保持不变）。
+ */
+function isAutoTransferEnabled() {
+  const v = String(process.env.WECHAT_TRANSFER_AUTO_ENABLED || '').trim().toLowerCase()
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no')
+}
+
 async function getWithdrawalList(event, context, auth) {
   // P2 修复：分页参数边界校验（pageSize 上限 100，防拉全表）+ 字段投影（去除 openid 等内部字段）
   const { status } = event
@@ -112,8 +132,29 @@ async function approveWithdrawal(event, context, auth) {
     const w = wRes.data
     if (w.status !== 'pending') {throw err('BUSINESS_ERROR', '状态错误')}
 
+    // 自动打款关闭时：审批通过 → approved（待人工打款），不发起微信转账
+    if (!isAutoTransferEnabled()) {
+      const manualClaim = await db.collection('withdrawals')
+        .where({ _id: withdrawalId, status: 'pending' })
+        .update({
+          data: {
+            status: 'approved',
+            reviewedBy: auth.openid,
+            reviewedAt: db.serverDate(),
+            manualPayoutRequired: true,
+            transferError: '',
+            updatedAt: db.serverDate(),
+          },
+        })
+      const manualCount = (manualClaim && manualClaim.stats && manualClaim.stats.updated) || 0
+      if (manualCount === 0) {
+        throw err('BUSINESS_ERROR', '该提现申请正在被处理或状态已变更')
+      }
+      return handleSuccess({ message: '审核通过，待人工打款（自动转账已关闭）' })
+    }
+
     // H4: 转账前先生成并持久化商户单号，确保 processing 卡死后可按单号对账
-    const outBatchNo = `WD_${withdrawalId}_${Date.now()}`
+    const outBatchNo = buildOutBatchNo('WD')
 
     // P1-D: 条件更新防并发重复转账 — where(status=pending) 原子占位
     const claimRes = await db.collection('withdrawals')
@@ -291,8 +332,13 @@ async function retryTransfer(event, context, auth) {
       throw err('BUSINESS_ERROR', '仅审核通过但转账失败、或转账结果待对账的记录可重试')
     }
 
+    // 自动打款关闭时禁止重新发起自动转账（人工打款流程接管）
+    if (!isAutoTransferEnabled()) {
+      throw err('BUSINESS_ERROR', '自动转账已关闭，请走人工打款流程')
+    }
+
     // H4: 重试前先生成并持久化商户单号（随占位一起写入），保证异常后可对账
-    const outBatchNo = `WD_RETRY_${withdrawalId}_${Date.now()}`
+    const outBatchNo = buildOutBatchNo('WDR')
 
     // P1-D: 条件更新防并发重复转账 — where(status=approved) 原子占位
     const claimRes = await db.collection('withdrawals')

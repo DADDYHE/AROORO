@@ -28,6 +28,34 @@ const { createLogger } = require('./logger')
 
 const logger = createLogger('transfer')
 
+// 微信 APIv3 要求请求头必须携带 Accept 与 User-Agent（缺任一返回 400）
+const DEFAULT_USER_AGENT = WECHAT_PAY.appId || 'arooro-wechat-pay'
+
+/**
+ * 微信 APIv3 签名随机串：仅允许字母/数字（base64url 含 -/_ 会被判定格式错误），
+ * 用 32 位十六进制（与官方示例一致）
+ */
+function randomNonceStr() {
+  return crypto.randomBytes(16).toString('hex')
+}
+
+/**
+ * 获取当前云函数出口 IP（用于微信商家转账“接口安全”IP 白名单配置）
+ * 仅在与微信通信失败且疑似 IP 拦截时调用；失败返回空串不影响主流程
+ */
+function fetchEgressIp() {
+  return new Promise((resolve) => {
+    const req = https.get('https://api.ipify.org', { timeout: 5000 }, (res) => {
+      let buf = ''
+      res.setEncoding('utf8')
+      res.on('data', (chunk) => { buf += chunk })
+      res.on('end', () => { resolve(buf.trim() || '') })
+    })
+    req.on('error', () => resolve(''))
+    req.on('timeout', () => { req.destroy(); resolve('') })
+  })
+}
+
 // 新版 API 端点
 const TRANSFER_API = '/v3/fund-app/mch-transfer/transfer-bills'
 const QUERY_BY_OUT_BILL_API = '/v3/fund-app/mch-transfer/transfer-bills/out-bill-no'
@@ -89,11 +117,28 @@ function _tryFormatKey(key, format) {
 
 let _cachedKeyFormat = null
 
+/**
+ * 把单行 PEM（头/体/尾挤在一行，控制台粘贴常见）还原为标准多行 PEM：
+ *   -----BEGIN PRIVATE KEY-----\n<base64 每行64字符>\n-----END PRIVATE KEY-----
+ */
+function reflowPemSingleLine(s) {
+  const m = String(s).match(/^(-----BEGIN [^-]+-----)\s*(.*?)\s*(-----END [^-]+-----)$/s)
+  if (!m) {return s}
+  const body = m[2].replace(/\s+/g, '')
+  if (!body) {return s}
+  const lines = []
+  for (let i = 0; i < body.length; i += 64) {
+    lines.push(body.slice(i, i + 64))
+  }
+  return [m[1], ...lines, m[3]].join('\n')
+}
+
 function normalizePrivateKey(key) {
   if (!key) {return ''}
-  if (_cachedKeyFormat) {return _tryFormatKey(key, _cachedKeyFormat)}
-
-  const trimmed = String(key).trim()
+  // 兼容从控制台粘贴时带入的首尾引号（如 "-----BEGIN PRIVATE KEY-----\n..."）
+  // 以及单行 PEM（头/体/尾无换行）——先还原为标准多行再解析
+  const trimmed = reflowPemSingleLine(String(key).trim().replace(/^["']+|["']+$/g, ''))
+  if (_cachedKeyFormat) {return _tryFormatKey(trimmed, _cachedKeyFormat)}
 
   if (trimmed.includes('-----BEGIN')) {
     try {
@@ -140,7 +185,27 @@ function normalizePrivateKey(key) {
   }
 
   logger.error('all key formats failed, using raw value')
-  return String(key).trim()
+  return trimmed
+}
+
+/**
+ * 私钥诊断信息（不含密钥内容，仅用于定位配置问题）
+ */
+function describePrivateKey(key) {
+  const s = String(key || '').trim().replace(/^["']+|["']+$/g, '')
+  const firstLine = (s.split('\n')[0] || '').trim()
+  const header = /^-----BEGIN [^-]+-----/.test(firstLine) ? firstLine : '(无PEM头)'
+  return {
+    header,
+    length: s.length,
+    lines: s.split('\n').length,
+    hasLiteralBackslashN: s.includes('\\n'),
+    looksBase64: /^[A-Za-z0-9+/=\s]+$/.test(s.replace(/\\n/g, '').trim()),
+    isCertificate: s.includes('BEGIN CERTIFICATE'),
+    isEncryptedKey: s.includes('BEGIN ENCRYPTED PRIVATE KEY'),
+    isRsaHeader: s.includes('BEGIN RSA PRIVATE KEY'),
+    isPkcs8Header: s.includes('BEGIN PRIVATE KEY'),
+  }
 }
 
 /**
@@ -200,7 +265,7 @@ async function initiateTransfer(openid, amount, outBillNo, remark) {
   const bodyStr = JSON.stringify(body)
   const url = TRANSFER_API
   const timestamp = Math.floor(Date.now() / 1000).toString()
-  const nonceStr = randomString(16)
+  const nonceStr = randomNonceStr()
 
   const signature = signRequest('POST', url, timestamp, nonceStr, bodyStr, privateKey)
 
@@ -248,7 +313,7 @@ async function queryTransferByOutBillNo(outBillNo) {
 
   const url = `${QUERY_BY_OUT_BILL_API}/${encodeURIComponent(outBillNo)}`
   const timestamp = Math.floor(Date.now() / 1000).toString()
-  const nonceStr = randomString(16)
+  const nonceStr = randomNonceStr()
 
   const signature = signRequest('GET', url, timestamp, nonceStr, '', privateKey)
   const authorization = buildAuthorization(mchId, nonceStr, timestamp, serialNo, signature)
@@ -286,7 +351,7 @@ async function cancelTransfer(outBillNo) {
 
   const url = `${CANCEL_API}/${encodeURIComponent(outBillNo)}/cancel`
   const timestamp = Math.floor(Date.now() / 1000).toString()
-  const nonceStr = randomString(16)
+  const nonceStr = randomNonceStr()
 
   // 撤销转账 POST body 为空
   const signature = signRequest('POST', url, timestamp, nonceStr, '', privateKey)
@@ -309,14 +374,15 @@ async function cancelTransfer(outBillNo) {
  * 构建 WECHATPAY2-SHA256-RSA2048 Authorization 头
  */
 function buildAuthorization(mchId, nonceStr, timestamp, serialNo, signature) {
-  return [
-    'WECHATPAY2-SHA256-RSA2048',
+  // 微信规范：认证类型与参数之间必须有一个空格（否则返回 401 Authorization值格式错误）
+  const params = [
     `mchid="${mchId}"`,
     `nonce_str="${nonceStr}"`,
     `timestamp="${timestamp}"`,
     `serial_no="${serialNo}"`,
     `signature="${signature}"`,
   ].join(',')
+  return `WECHATPAY2-SHA256-RSA2048 ${params}`
 }
 
 /**
@@ -331,12 +397,20 @@ function signRequest(method, url, timestamp, nonceStr, body, privateKeyPem) {
   const signStr = [method, url, timestamp, nonceStr, body, ''].join('\n')
 
   const normalizedKey = normalizePrivateKey(privateKeyPem)
-
-  const sign = crypto.createSign('RSA-SHA256')
-  sign.update(signStr, 'utf8')
-  sign.end()
-
-  return sign.sign(normalizedKey, 'base64')
+  try {
+    const sign = crypto.createSign('RSA-SHA256')
+    sign.update(signStr, 'utf8')
+    sign.end()
+    return sign.sign(normalizedKey, 'base64')
+  } catch (e) {
+    // 抛出可读诊断，后台 transferError 可直接定位（不泄露密钥内容）
+    const diag = describePrivateKey(privateKeyPem)
+    throw new Error(
+      `微信支付私钥签名失败: ${e.message}；私钥诊断: ${JSON.stringify(diag)}。` +
+      '请检查云函数环境变量 WECHAT_PRIVATE_KEY（需为 apiclient_key.pem 完整内容，' +
+      '以 -----BEGIN PRIVATE KEY----- 或 -----BEGIN RSA PRIVATE KEY----- 开头）'
+    )
+  }
 }
 
 /**
@@ -355,6 +429,7 @@ function httpsPost(url, body, headers = {}) {
       headers: {
         ...headers,
         'Content-Length': payload.length,
+        'User-Agent': headers['User-Agent'] || headers['user-agent'] || DEFAULT_USER_AGENT,
       },
     }, (res) => {
       let buf = ''
@@ -374,7 +449,18 @@ function httpsPost(url, body, headers = {}) {
           const data = JSON.parse(buf)
           if (res.statusCode >= 400) {
             const errMsg = data.message || data.detail || `HTTP ${res.statusCode}`
-            reject(new Error(`微信API错误(${res.statusCode}): ${errMsg}`))
+            ;(async () => {
+              let msg = `微信API错误(${res.statusCode}): ${errMsg}`
+              // 商家转账要求配置请求来源 IP：被拦截时顺带返回云函数出口 IP 供白名单配置
+              if (res.statusCode === 400 && /不允许调用接口|IP地址不允许/.test(errMsg)) {
+                const ip = await fetchEgressIp()
+                if (ip) {
+                  msg += `；当前云函数出口IP: ${ip}（请在商户平台 产品中心→商家转账到零钱→接口安全 添加此IP）`
+                }
+              }
+              reject(new Error(msg))
+            })()
+            return
           } else {
             resolve(data)
           }
@@ -402,7 +488,10 @@ function httpsGet(url, headers = {}) {
       path: u.pathname + u.search,
       method: 'GET',
       timeout: 10000,
-      headers,
+      headers: {
+        ...headers,
+        'User-Agent': headers['User-Agent'] || headers['user-agent'] || DEFAULT_USER_AGENT,
+      },
     }, (res) => {
       let buf = ''
       res.setEncoding('utf8')
@@ -420,7 +509,17 @@ function httpsGet(url, headers = {}) {
           const data = JSON.parse(buf)
           if (res.statusCode >= 400) {
             const errMsg = data.message || data.detail || `HTTP ${res.statusCode}`
-            reject(new Error(`微信API错误(${res.statusCode}): ${errMsg}`))
+            ;(async () => {
+              let msg = `微信API错误(${res.statusCode}): ${errMsg}`
+              if (res.statusCode === 400 && /不允许调用接口|IP地址不允许/.test(errMsg)) {
+                const ip = await fetchEgressIp()
+                if (ip) {
+                  msg += `；当前云函数出口IP: ${ip}（请在商户平台 产品中心→商家转账到零钱→接口安全 添加此IP）`
+                }
+              }
+              reject(new Error(msg))
+            })()
+            return
           } else {
             resolve(data)
           }
