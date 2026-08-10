@@ -1,5 +1,6 @@
 const { AdminService } = require('../../../services/CloudFunctionService')
-const { formatTime } = require('../../profile/utils/dateUtils')
+// 主包 utils（分包不可互相 require，跨分包引用会导致 module not defined）
+const { formatTime } = require('../../../utils/dateUtils')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 const STATUS_MAP = {
