@@ -1,5 +1,5 @@
 {
-  "description": "家庭式宠物寄养平台小程序 - 2026-03-28 更新",
+  "description": "AROORO 宠物社交·活动·寄养·电商综合平台小程序",
   "cloudfunctionRoot": "cloudfunctions/",
   "packOptions": {
     "ignore": [
@@ -285,7 +285,7 @@
   "compileType": "miniprogram",
   "libVersion": "3.16.0",
   "appid": "wx481ebe4d7c924f77",
-  "projectname": "wechat-pet-hosting-app",
+  "projectname": "arooro",
   "isGameTourist": false,
   "condition": {},
   "editorSetting": {
