@@ -320,8 +320,6 @@ async function rejectWithdrawal(event, context, auth) {
     const walletDoc = walletRes.data && walletRes.data[0]
 
     const transaction = await db.startTransaction()
-    // P3 修复：事务内使用 transaction.command
-    const _tx = transaction.command
     try {
       // 1) 更新提现记录状态为 rejected
       await transaction.collection('withdrawals').doc(withdrawalId).update({
@@ -338,8 +336,8 @@ async function rejectWithdrawal(event, context, auth) {
       if (walletDoc) {
         await transaction.collection('wallets').doc(walletDoc._id).update({
           data: {
-            balance: _tx.inc(w.amount),
-            frozenAmount: _tx.inc(-w.amount),
+            balance: _.inc(Number(w.amount) || 0),
+            frozenAmount: _.inc(-(Number(w.amount) || 0)),
             updatedAt: db.serverDate(),
           },
         })
@@ -625,7 +623,6 @@ async function cancelWithdrawal(event, context, auth) {
     const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
     const walletDoc = walletRes.data && walletRes.data[0]
     const transaction = await db.startTransaction()
-    const _tx = transaction.command
     try {
       await transaction.collection('withdrawals').doc(withdrawalId).update({
         data: {
@@ -639,8 +636,8 @@ async function cancelWithdrawal(event, context, auth) {
       if (walletDoc) {
         await transaction.collection('wallets').doc(walletDoc._id).update({
           data: {
-            balance: _tx.inc(Number(w.amount) || 0),
-            frozenAmount: _tx.inc(-(Number(w.amount) || 0)),
+            balance: _.inc(Number(w.amount) || 0),
+            frozenAmount: _.inc(-(Number(w.amount) || 0)),
             updatedAt: db.serverDate(),
           },
         })

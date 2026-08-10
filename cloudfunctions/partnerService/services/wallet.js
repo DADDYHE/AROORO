@@ -594,7 +594,6 @@ async function cancelWithdrawal(event, context, auth) {
         const walletRes = await db.collection('wallets').where({ openid, type: walletType }).limit(1).get();
         const walletDoc = walletRes.data && walletRes.data[0];
         const transaction = await db.startTransaction();
-        const _tx = transaction.command;
         try {
             await transaction.collection('withdrawals').doc(withdrawalId).update({
                 data: {
@@ -608,8 +607,8 @@ async function cancelWithdrawal(event, context, auth) {
             if (walletDoc) {
                 await transaction.collection('wallets').doc(walletDoc._id).update({
                     data: {
-                        balance: _tx.inc(w.amount),
-                        frozenAmount: _tx.inc(-w.amount),
+                        balance: _.inc(Number(w.amount) || 0),
+                        frozenAmount: _.inc(-(Number(w.amount) || 0)),
                         updatedAt: db.serverDate(),
                     },
                 });
@@ -779,10 +778,7 @@ async function requestWithdrawal(event, context, auth) {
         const outTradeNo = `WD${Date.now()}${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`;
         // P1-4: 钱包扣减 + 提现记录创建 纳入单一事务，防止资金丢失
         const transaction = await db.startTransaction();
-        // H6: 使用 transaction.command 替代 db.command，确保事务原子性
-        //   project_memory 硬约束：Transaction operations in wallet services must use
-        //   transaction.collection() instead of db.collection() to ensure atomicity
-        const _tx = transaction.command;
+        // 事务内命令用 db.command（wx-server-sdk Transaction 无 command 属性）
         try {
             // 事务内重新查询最新余额（防止并发超提）
             const freshWalletRes = await transaction.collection('wallets').doc(w._id).get();
@@ -799,9 +795,9 @@ async function requestWithdrawal(event, context, auth) {
                 await transaction.rollback();
                 throw err('BUSINESS_ERROR', '余额不足');
             }
-            // 扣减余额、增加冻结金额（使用 _tx.inc 而非 _.inc）
+            // 扣减余额、增加冻结金额
             await transaction.collection('wallets').doc(w._id).update({
-                data: { balance: _tx.inc(-withdrawAmount), frozenAmount: _tx.inc(withdrawAmount), updatedAt: db.serverDate() },
+                data: { balance: _.inc(-withdrawAmount), frozenAmount: _.inc(withdrawAmount), updatedAt: db.serverDate() },
             });
             // 创建提现记录
             // H1: 包含 nickName 字段（硬约束：partnerService wallet withdrawal records must include nickName field）

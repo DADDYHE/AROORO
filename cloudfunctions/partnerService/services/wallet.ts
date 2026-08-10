@@ -761,10 +761,7 @@ export async function requestWithdrawal(
 
     // P1-4: 钱包扣减 + 提现记录创建 纳入单一事务，防止资金丢失
     const transaction = await db.startTransaction()
-    // H6: 使用 transaction.command 替代 db.command，确保事务原子性
-    //   project_memory 硬约束：Transaction operations in wallet services must use
-    //   transaction.collection() instead of db.collection() to ensure atomicity
-    const _tx = transaction.command
+    // 事务内命令用 db.command（wx-server-sdk Transaction 无 command 属性）
     try {
       // 事务内重新查询最新余额（防止并发超提）
       const freshWalletRes = await transaction.collection('wallets').doc(w._id!).get()
@@ -782,9 +779,9 @@ export async function requestWithdrawal(
         throw err('BUSINESS_ERROR', '余额不足')
       }
 
-      // 扣减余额、增加冻结金额（使用 _tx.inc 而非 _.inc）
+      // 扣减余额、增加冻结金额
       await transaction.collection('wallets').doc(w._id!).update({
-        data: { balance: _tx.inc(-withdrawAmount), frozenAmount: _tx.inc(withdrawAmount), updatedAt: db.serverDate() },
+        data: { balance: _.inc(-withdrawAmount), frozenAmount: _.inc(withdrawAmount), updatedAt: db.serverDate() },
       })
 
       // 创建提现记录
