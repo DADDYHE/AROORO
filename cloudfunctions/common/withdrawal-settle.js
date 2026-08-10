@@ -44,14 +44,13 @@ async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source, 
 
   // 首选路径：单一事务保证提现状态与钱包数据一致
   const transaction = await db.startTransaction()
-  const _tx = transaction.command
   try {
     await transaction.collection('withdrawals').doc(withdrawalId).update({ data: completedData })
     if (walletDoc) {
       await transaction.collection('wallets').doc(walletDoc._id).update({
         data: {
-          frozenAmount: _tx.inc(-w.amount),
-          totalWithdrawn: _tx.inc(w.amount),
+          frozenAmount: _.inc(-(Number(w.amount) || 0)),
+          totalWithdrawn: _.inc(Number(w.amount) || 0),
           updatedAt: db.serverDate(),
         },
       })
