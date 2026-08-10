@@ -26,7 +26,7 @@
  *   feedingOrders: { ownerId: 1, status: 1 }                     - 覆盖 feeding 服务收入查询
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requestWithdrawal = exports.getMyWithdrawals = exports.getMyWallet = exports.getMyIncomeDetails = exports.getMyIncomeOverview = void 0;
+exports.requestWithdrawal = exports.confirmWithdrawal = exports.cancelWithdrawal = exports.updatePayeeAccounts = exports.getMyPayeeAccounts = exports.getMyWithdrawals = exports.getMyWallet = exports.getMyIncomeDetails = exports.getMyIncomeOverview = void 0;
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err } = require('../common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -549,19 +549,21 @@ exports.getMyPayeeAccounts = getMyPayeeAccounts;
  */
 async function updatePayeeAccounts(event, context, auth) {
     const { openid } = auth;
-    const payee = (event.payee && typeof event.payee === 'object') ? event.payee : {};
-    const check = validatePayee(payee);
+    const raw = (event.payee && typeof event.payee === 'object')
+        ? event.payee
+        : {};
+    const check = validatePayee(raw);
     if (!check.ok) {
         throw err('INVALID_PARAMS', check.error);
     }
     try {
         const cleaned = {
-            wechat: String(payee.wechat || '').trim(),
-            alipay: String(payee.alipay || '').trim(),
+            wechat: String(raw.wechat || '').trim(),
+            alipay: String(raw.alipay || '').trim(),
             bank: {
-                bankName: String((payee.bank && payee.bank.bankName) || '').trim(),
-                cardNo: String((payee.bank && payee.bank.cardNo) || '').trim(),
-                holder: String((payee.bank && payee.bank.holder) || '').trim(),
+                bankName: String((raw.bank && raw.bank.bankName) || '').trim(),
+                cardNo: String((raw.bank && raw.bank.cardNo) || '').trim(),
+                holder: String((raw.bank && raw.bank.holder) || '').trim(),
             },
         };
         // 全空时仅保留空结构（允许清空）
@@ -581,15 +583,23 @@ exports.updatePayeeAccounts = updatePayeeAccounts;
  */
 async function cancelWithdrawal(event, context, auth) {
     const { openid } = auth;
-    const { withdrawalId, reason } = event;
-    if (!withdrawalId) {throw err('INVALID_PARAMS', '缺少提现记录ID');}
-    const cancelReason = String(reason || '').trim();
-    if (!cancelReason) {throw err('INVALID_PARAMS', '请填写取消原因');}
+    const withdrawalId = String(event.withdrawalId || '');
+    const cancelReason = String(event.reason || '').trim();
+    if (!withdrawalId) {
+        throw err('INVALID_PARAMS', '缺少提现记录ID');
+    }
+    if (!cancelReason) {
+        throw err('INVALID_PARAMS', '请填写取消原因');
+    }
     try {
         const wRes = await db.collection('withdrawals').doc(withdrawalId).get();
         const w = wRes.data;
-        if (!w || w.openid !== openid) {throw err('NOT_FOUND', '提现记录不存在');}
-        if (w.status !== 'pending') {throw err('BUSINESS_ERROR', '仅待审核的提现可取消');}
+        if (!w || w.openid !== openid) {
+            throw err('NOT_FOUND', '提现记录不存在');
+        }
+        if (w.status !== 'pending') {
+            throw err('BUSINESS_ERROR', '仅待审核的提现可取消');
+        }
         const walletType = w.walletType || 'commission';
         const walletRes = await db.collection('wallets').where({ openid, type: walletType }).limit(1).get();
         const walletDoc = walletRes.data && walletRes.data[0];
@@ -616,7 +626,10 @@ async function cancelWithdrawal(event, context, auth) {
             await transaction.commit();
         }
         catch (txError) {
-            try { await transaction.rollback(); } catch (_) { /* ignore */ }
+            try {
+                await transaction.rollback();
+            }
+            catch (_) { /* ignore */ }
             throw err('BUSINESS_ERROR', '取消失败，该提现状态可能已变更，请刷新后重试');
         }
         return handleSuccess({ message: '提现已取消，冻结金额已退回余额' });
@@ -629,19 +642,11 @@ async function cancelWithdrawal(event, context, auth) {
 exports.cancelWithdrawal = cancelWithdrawal;
 /**
  * P0: 用户确认收款 / 查询到账（小程序端提现记录页）
- *
- * 新版商家转账为“用户确认收款”模式：adminService 审批创建转账后状态为
- * WAIT_USER_CONFIRM（processing），本接口按商户单号查单：
- *   - SUCCESS（终态）→ 共享结算逻辑落库 completed（释放冻结/累计已提现）
- *   - WAIT_USER_CONFIRM 等非终态 → 返回 packageInfo，前端 wx.requestMerchantTransfer 拉起确认
- *   - FAIL/CANCELLED/CANCELING → 条件回退 approved（带失败原因），等待后台重试转账
- *
- * 入参：{ withdrawalId }
- * 返回：{ state, packageInfo }
+ * 新版商家转账为“用户确认收款”模式：查单后 SUCCESS 结算 / 非终态返回 packageInfo / 失败回退 approved
  */
 async function confirmWithdrawal(event, context, auth) {
-    const { withdrawalId } = event;
     const { openid } = auth;
+    const withdrawalId = String(event.withdrawalId || '');
     if (!withdrawalId) {
         throw err('INVALID_PARAMS', '缺少提现记录ID');
     }
@@ -653,16 +658,15 @@ async function confirmWithdrawal(event, context, auth) {
             throw err('NOT_FOUND', '提现记录不存在');
         }
         if (w.status !== 'processing') {
-            // 已非处理中：直接返回当前状态（completed/rejected/approved/pending）
             return handleSuccess({ state: w.status || '', packageInfo: '' });
         }
         if (!w.outBatchNo) {
             throw err('BUSINESS_ERROR', '该记录缺少商户转账单号，请联系客服处理');
         }
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { queryTransferByOutBillNo } = require('../common/transfer');
         const q = await queryTransferByOutBillNo(w.outBatchNo);
         const state = q.state || '';
-
         if (state === 'SUCCESS') {
             const r = await settleWithdrawalCompleted(withdrawalId, w, q, 'partnerConfirmWithdrawal');
             if (!r.settled) {
@@ -670,9 +674,7 @@ async function confirmWithdrawal(event, context, auth) {
             }
             return handleSuccess({ state: 'SUCCESS', packageInfo: '' });
         }
-
         if (state === 'FAIL' || state === 'CANCELLED' || state === 'CANCELING') {
-            // 条件更新防并发：仅当仍为 processing 时回退 approved，带失败原因供后台重试
             await db.collection('withdrawals')
                 .where({ _id: withdrawalId, status: 'processing' })
                 .update({
@@ -684,7 +686,6 @@ async function confirmWithdrawal(event, context, auth) {
             });
             return handleSuccess({ state, packageInfo: '' });
         }
-
         // 非终态（WAIT_USER_CONFIRM/PROCESSING/TRANSFERING 等）：返回 packageInfo 供前端拉起确认
         return handleSuccess({
             state,
@@ -699,9 +700,10 @@ async function confirmWithdrawal(event, context, auth) {
 exports.confirmWithdrawal = confirmWithdrawal;
 async function requestWithdrawal(event, context, auth) {
     const { openid } = auth;
-    const { amount, payoutMethod } = event;
+    const { amount } = event;
     const walletType = normalizeWalletType(event.walletType);
     // v5.1：收款方式必选，且所选渠道账号已预留
+    const payoutMethod = typeof event.payoutMethod === 'string' ? event.payoutMethod : '';
     if (!PAYOUT_CHANNELS.includes(payoutMethod)) {
         throw err('INVALID_PARAMS', '请选择收款方式（微信/支付宝/银行卡）');
     }
@@ -748,7 +750,7 @@ async function requestWithdrawal(event, context, auth) {
             throw err('BUSINESS_ERROR', '余额不足');
         }
         // 校验所选收款渠道账号已预留（双保险：前端填写 + 后端权威）
-        let userPayee = null;
+        let userPayee = {};
         try {
             const userRes = await db.collection('users').doc(openid).get();
             userPayee = (userRes.data && userRes.data.payee) || {};

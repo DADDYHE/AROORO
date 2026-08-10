@@ -58,6 +58,20 @@ export interface WalletRecord {
     createdAt: Date;
     updatedAt: Date;
 }
+/** 提现记录（v5.1 扩展字段） */
+export interface WithdrawalRecord {
+    _id?: string;
+    openid?: string;
+    walletType?: string;
+    method?: string;
+    mode?: string;
+    status?: string;
+    amount?: number;
+    outBatchNo?: string;
+    packageInfo?: string;
+    payeeSnapshot?: unknown;
+    [k: string]: unknown;
+}
 export interface CommissionItem {
     total: number;
     pending: number;
@@ -129,12 +143,33 @@ export declare function getMyIncomeOverview(event: CloudEvent, context: CloudCon
 export declare function getMyIncomeDetails(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getMyWallet(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getMyWithdrawals(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
+/**
+ * 获取本人收款账号（完整，仅本人可见）
+ */
+export declare function getMyPayeeAccounts(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
+/**
+ * 更新本人收款账号（允许全空；使用时再强制至少一个渠道）
+ */
+export declare function updatePayeeAccounts(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
+/**
+ * 本人取消提现申请（仅 pending；frozen→balance 回退）
+ */
+export declare function cancelWithdrawal(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
+/**
+ * P0: 用户确认收款 / 查询到账（小程序端提现记录页）
+ * 新版商家转账为“用户确认收款”模式：查单后 SUCCESS 结算 / 非终态返回 packageInfo / 失败回退 approved
+ */
+export declare function confirmWithdrawal(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function requestWithdrawal(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 declare const _default: {
     getMyIncomeOverview: typeof getMyIncomeOverview;
     getMyIncomeDetails: typeof getMyIncomeDetails;
     getMyWallet: typeof getMyWallet;
     getMyWithdrawals: typeof getMyWithdrawals;
+    getMyPayeeAccounts: typeof getMyPayeeAccounts;
+    updatePayeeAccounts: typeof updatePayeeAccounts;
+    cancelWithdrawal: typeof cancelWithdrawal;
+    confirmWithdrawal: typeof confirmWithdrawal;
     requestWithdrawal: typeof requestWithdrawal;
 };
 export default _default;

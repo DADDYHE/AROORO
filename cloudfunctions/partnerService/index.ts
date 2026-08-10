@@ -4,7 +4,7 @@
  * 业务功能：
  *   - 合作伙伴小程序端统一入口：申请 / 状态 / 权限 / 收入 / 钱包 / 提现 / 邀请
  *   - 4 个服务子模块：application / wallet / referral / income
- *   - 共 14 个 action：
+ *   - 共 18 个 action：
  *     * 申请（3 个）：submitApplication / getApplicationStatus / getMyPermissions
  *     * 收入 / 钱包（9 个）：getMyIncomeOverview / getMyIncomeDetails / getMyWallet / getMyWithdrawals / getMyPayeeAccounts / updatePayeeAccounts / cancelWithdrawal / confirmWithdrawal / requestWithdrawal
  *     * 服务收入（2 个）：getServiceIncomeOverview / getServiceIncomeDetails
