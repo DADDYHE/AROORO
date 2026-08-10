@@ -572,12 +572,28 @@ class AdminService {
     return this.cloud.call('partnerService', { action: 'getMyIncomeDetails', ...data }, { useCache: false })
   }
 
-  async getMyWallet() {
-    return this.cloud.call('partnerService', { action: 'getMyWallet' }, { useCache: false })
+  async getMyWallet(data = {}) {
+    return this.cloud.call('partnerService', { action: 'getMyWallet', ...data }, { useCache: false })
   }
 
-  async requestWithdrawal(amount) {
-    return this.cloud.post('partnerService', { action: 'requestWithdrawal', amount })
+  async requestWithdrawal(amount, walletType = 'commission', payoutMethod = '') {
+    return this.cloud.post('partnerService', { action: 'requestWithdrawal', amount, walletType, payoutMethod })
+  }
+
+  async confirmWithdrawal(withdrawalId) {
+    return this.cloud.post('partnerService', { action: 'confirmWithdrawal', withdrawalId })
+  }
+
+  async getMyPayeeAccounts() {
+    return this.cloud.call('partnerService', { action: 'getMyPayeeAccounts' }, { useCache: false })
+  }
+
+  async updatePayeeAccounts(payee) {
+    return this.cloud.post('partnerService', { action: 'updatePayeeAccounts', payee })
+  }
+
+  async cancelWithdrawal(withdrawalId, reason) {
+    return this.cloud.post('partnerService', { action: 'cancelWithdrawal', withdrawalId, reason })
   }
 
   async getMyWithdrawals(data = {}) {

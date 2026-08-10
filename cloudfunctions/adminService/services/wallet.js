@@ -7,12 +7,38 @@ const { recordAlert } = require('../common/alert')
 const { withRateLimit } = require('../common/risk-rate-limit')
 // 推广/邀请统计统一口径（板块→权威集合→状态集→金额字段）
 const { REFERRAL_BOARDS, resolveOrderAmount, fetchBoardOrders } = require('./referralStats')
+// P0: 提现成功结算统一走共享模块（与 partnerService 确认收款后结算共用同一口径）
+const { settleWithdrawalCompleted } = require('../common/withdrawal-settle')
+// v5.1：收款账号工具（渠道白名单 / 校验 / 脱敏快照）
+const { PAYOUT_CHANNELS, hasPayeeChannel, maskPayee } = require('../common/payee-utils')
+// v5.1：操作审计（best-effort）
+const { writeOperationLog } = require('../common/operation-log')
 
 const { cloud, db } = initCloud()
 const _ = db.command
 const logger = createLogger('walletService')
 
 const WALLET_TYPES = ['commission', 'serviceIncome']
+
+/**
+ * 生成微信商家转账商户单号（out_bill_no）：
+ * 微信要求 ≤32 字符、字母/数字/下划线；这里用 前缀+13位时间戳+6位随机数（约 21-22 字符），
+ * 同毫秒并发碰撞概率 1/1000000，且每次重试都会生成新单号（微信侧单号唯一）。
+ */
+function buildOutBatchNo(prefix) {
+  return `${prefix}${Date.now()}${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`
+}
+
+/**
+ * 自动打款总开关（预留接口）：
+ *  - 默认开启（未配置或值为 1/true/on 时走自动转账）；
+ *  - 配置 WECHAT_TRANSFER_AUTO_ENABLED=0/false/off 时，审批通过仅置为 approved（待人工打款），
+ *    不再调用微信转账，由人工打款流程接管（状态/冻结金额保持不变）。
+ */
+function isAutoTransferEnabled() {
+  const v = String(process.env.WECHAT_TRANSFER_AUTO_ENABLED || '').trim().toLowerCase()
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no')
+}
 
 async function getWithdrawalList(event, context, auth) {
   // P2 修复：分页参数边界校验（pageSize 上限 100，防拉全表）+ 字段投影（去除 openid 等内部字段）
@@ -28,8 +54,23 @@ async function getWithdrawalList(event, context, auth) {
       .where(query)
       .field({
         _id: true,
+        // 后台列表需展示申请人兜底（web-admin 读取 row.openid）
+        openid: true,
         amount: true,
         status: true,
+        // v5.1：模式/渠道/人工打款信息（只出脱敏，不出完整账号）
+        mode: true,
+        method: true,
+        payeeSnapshot: true,
+        payoutChannel: true,
+        paidAmount: true,
+        amountDiff: true,
+        manualPaidBy: true,
+        manualPaidAt: true,
+        payEvidence: true,
+        manualNote: true,
+        paidToSnapshot: true,
+        cancelReason: true,
         walletType: true,
         method: true,
         nickName: true,
@@ -53,102 +94,6 @@ async function getWithdrawalList(event, context, auth) {
     logger.error('getWithdrawalList', error)
     return handleError(error, '获取提现列表失败', ERROR_CODES.DATA)
   }
-}
-
-/**
- * H4: 转账成功后的落库结算（提现→completed + 钱包冻结释放/累计提现）
- * 优先使用事务；事务失败时降级为非事务补偿更新（条件更新保证幂等），
- * 避免记录卡死在 processing 状态造成"钱已转出、状态永远无法闭环"的死锁。
- *
- * @param {string} withdrawalId 提现记录 _id
- * @param {object} w 提现记录文档（需含 openid/amount/walletType）
- * @param {object} transferInfo 转账结果（transfer_bill_no/out_bill_no，可来自发起转账或查单接口）
- * @param {string} source 日志/告警来源标识
- * @returns {Promise<{settled: boolean, viaTransaction: boolean}>}
- */
-async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source) {
-  const walletType = w.walletType || 'commission'
-  // 事务前先查询钱包 _id（CloudBase 事务内不支持 where().get() / where().update()）
-  const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
-  const walletDoc = walletRes.data && walletRes.data[0]
-
-  const completedData = {
-    status: 'completed',
-    transferTime: db.serverDate(),
-    transferBatchNo: transferInfo.transfer_bill_no || '',
-    outBatchNo: transferInfo.out_bill_no || w.outBatchNo || '',
-    updatedAt: db.serverDate(),
-  }
-
-  // 首选路径：单一事务保证提现状态与钱包数据一致
-  const transaction = await db.startTransaction()
-  // P3 修复：事务内使用 transaction.command
-  const _tx = transaction.command
-  try {
-    await transaction.collection('withdrawals').doc(withdrawalId).update({ data: completedData })
-    if (walletDoc) {
-      await transaction.collection('wallets').doc(walletDoc._id).update({
-        data: {
-          frozenAmount: _tx.inc(-w.amount),
-          totalWithdrawn: _tx.inc(w.amount),
-          updatedAt: db.serverDate(),
-        },
-      })
-    }
-    await transaction.commit()
-    return { settled: true, viaTransaction: true }
-  } catch (txError) {
-    try { await transaction.rollback() } catch (_) { /* ignore rollback error */ }
-    logger.error(`${source}.transaction.failed`, {
-      withdrawalId, openid: w.openid, msg: txError?.message,
-    })
-  }
-
-  // H4 补偿路径：转账已成功、事务失败 → 非事务条件更新落库（where status=processing 保证幂等且防并发重复）
-  let withdrawalFixed = false
-  let walletFixed = false
-  try {
-    const upRes = await db.collection('withdrawals')
-      .where({ _id: withdrawalId, status: 'processing' })
-      .update({ data: { ...completedData, needsReconcile: true } })
-    withdrawalFixed = ((upRes && upRes.stats && upRes.stats.updated) || 0) > 0
-  } catch (e) {
-    logger.error(`${source}.compensate.withdrawal.failed`, { withdrawalId, msg: e?.message })
-  }
-  if (withdrawalFixed && walletDoc) {
-    try {
-      // 补偿路径为非事务更新，使用 db.command
-      await db.collection('wallets').doc(walletDoc._id).update({
-        data: {
-          frozenAmount: _.inc(-w.amount),
-          totalWithdrawn: _.inc(w.amount),
-          updatedAt: db.serverDate(),
-        },
-      })
-      walletFixed = true
-    } catch (e) {
-      logger.error(`${source}.compensate.wallet.failed`, { withdrawalId, msg: e?.message })
-    }
-  }
-
-  await recordAlert(
-    'critical',
-    `${source}.transaction.failed`,
-    withdrawalFixed
-      ? '提现转账成功且事务失败，已通过补偿更新落库（needsReconcile），请核对钱包数据'
-      : '提现转账已成功但 DB 状态同步与补偿更新均失败，需人工对账',
-    {
-      withdrawalId,
-      openid: w.openid,
-      amount: w.amount,
-      walletType,
-      transferBatchNo: transferInfo.transfer_bill_no || '',
-      outBatchNo: transferInfo.out_bill_no || w.outBatchNo || '',
-      withdrawalFixed,
-      walletFixed,
-    }
-  )
-  return { settled: withdrawalFixed, viaTransaction: false }
 }
 
 /**
@@ -195,7 +140,7 @@ async function reconcileProcessingWithdrawal(withdrawalId, w) {
 }
 
 async function approveWithdrawal(event, context, auth) {
-  const { withdrawalId } = event
+  const { withdrawalId, mode = 'auto' } = event
   if (!withdrawalId) {throw err('INVALID_PARAMS', '参数错误')}
 
   try {
@@ -204,8 +149,56 @@ async function approveWithdrawal(event, context, auth) {
     const w = wRes.data
     if (w.status !== 'pending') {throw err('BUSINESS_ERROR', '状态错误')}
 
+    // v5.1：管理员每单显式二选一；mode='manual' 走人工打款分支（不调 transfer.js）
+    if (mode === 'manual') {
+      // 校验用户所选渠道已预留账号（人工打款前置）
+      const channel = PAYOUT_CHANNELS.includes(w.method) ? w.method : 'wechat'
+      const userRes = await db.collection('users').doc(w.openid).get()
+      const payee = (userRes.data && userRes.data.payee) || {}
+      if (!hasPayeeChannel(payee, channel)) {
+        throw err('BUSINESS_ERROR', '用户未预留所选收款方式的账号，无法人工打款')
+      }
+      const snapshot = maskPayee(payee, channel)
+      const manualClaim = await db.collection('withdrawals')
+        .where({ _id: withdrawalId, status: 'pending' })
+        .update({
+          data: {
+            status: 'approved',
+            mode: 'manual',
+            payeeSnapshot: snapshot || {},
+            manualPayoutRequired: true,
+            reviewedBy: auth.openid,
+            reviewedAt: db.serverDate(),
+            transferError: '',
+            updatedAt: db.serverDate(),
+          },
+        })
+      const manualCount = (manualClaim && manualClaim.stats && manualClaim.stats.updated) || 0
+      if (manualCount === 0) {
+        throw err('BUSINESS_ERROR', '该提现申请正在被处理或状态已变更')
+      }
+      writeOperationLog({
+        module: 'withdrawal',
+        action: 'approve_manual',
+        targetId: withdrawalId,
+        operatorId: auth.openid,
+        afterData: { status: 'approved', mode: 'manual', channel },
+      })
+      return handleSuccess({ message: '审核通过，已进入人工打款队列（待管理员打款）' })
+    }
+
+    // —— 自动打款分支（行为与 v3 前一致，仅新增渠道与总闸前置校验） ——
+    // 渠道约束：仅微信收款方式支持自动打款
+    if ((w.method || 'wechat') !== 'wechat') {
+      throw err('BUSINESS_ERROR', '仅微信收款方式支持自动打款，请选择人工打款')
+    }
+    // 运维总闸：关闭时不允许自动打款
+    if (!isAutoTransferEnabled()) {
+      throw err('BUSINESS_ERROR', '自动转账已关闭，请选择人工打款')
+    }
+
     // H4: 转账前先生成并持久化商户单号，确保 processing 卡死后可按单号对账
-    const outBatchNo = `WD_${withdrawalId}_${Date.now()}`
+    const outBatchNo = buildOutBatchNo('WD')
 
     // P1-D: 条件更新防并发重复转账 — where(status=pending) 原子占位
     const claimRes = await db.collection('withdrawals')
@@ -236,10 +229,37 @@ async function approveWithdrawal(event, context, auth) {
     }
 
     if (transferResult) {
-      // P0-7 + H4: 事务优先，失败降级补偿，保证提现不卡死在 processing
-      await settleWithdrawalCompleted(withdrawalId, w, transferResult, 'approveWithdrawal')
+      const transferState = transferResult.state || ''
+      // P0 修复：新版商家转账为“用户确认收款”模式——只有微信侧终态 SUCCESS 才能结算。
+      // 创建成功（WAIT_USER_CONFIRM/ACCEPTED/PROCESSING 等非终态）仅持久化单据信息并保持
+      // processing，等待用户在小程序确认收款后由 confirmWithdrawal / 后台对账闭环。
+      if (transferState === 'SUCCESS') {
+        await settleWithdrawalCompleted(withdrawalId, w, transferResult, 'approveWithdrawal')
+        return handleSuccess({ message: '审核通过，转账已到账' })
+      }
 
-      return handleSuccess({ message: '审核通过，已自动转账到用户微信零钱' })
+      await db.collection('withdrawals').doc(withdrawalId).update({
+        data: {
+          packageInfo: transferResult.package_info || '',
+          transferBatchNo: transferResult.transfer_bill_no || '',
+          outBatchNo: transferResult.out_bill_no || w.outBatchNo || '',
+          transferState,
+          updatedAt: db.serverDate(),
+        },
+      })
+      await recordAlert(
+        'warning',
+        'approveWithdrawal.transfer.pending',
+        transferState === 'WAIT_USER_CONFIRM'
+          ? '转账已创建，等待用户在小程序确认收款'
+          : `转账处理中（${transferState}），待对账`,
+        { withdrawalId, outBatchNo: transferResult.out_bill_no || w.outBatchNo || '' }
+      )
+      return handleSuccess({
+        message: transferState === 'WAIT_USER_CONFIRM'
+          ? '转账已受理，请提醒用户在小程序确认收款'
+          : `转账处理中（${transferState || '未知'}），请稍后对账`,
+      })
     } else {
       // H4: 转账调用异常可能是网络超时（状态不明），直接回退 approved 后重试会换新单号造成重复打款。
       // 先按商户单号查单确认微信侧是否已受理，未受理才回退 approved。
@@ -356,8 +376,13 @@ async function retryTransfer(event, context, auth) {
       throw err('BUSINESS_ERROR', '仅审核通过但转账失败、或转账结果待对账的记录可重试')
     }
 
+    // 自动打款关闭时禁止重新发起自动转账（人工打款流程接管）
+    if (!isAutoTransferEnabled()) {
+      throw err('BUSINESS_ERROR', '自动转账已关闭，请走人工打款流程')
+    }
+
     // H4: 重试前先生成并持久化商户单号（随占位一起写入），保证异常后可对账
-    const outBatchNo = `WD_RETRY_${withdrawalId}_${Date.now()}`
+    const outBatchNo = buildOutBatchNo('WDR')
 
     // P1-D: 条件更新防并发重复转账 — where(status=approved) 原子占位
     const claimRes = await db.collection('withdrawals')
@@ -380,10 +405,35 @@ async function retryTransfer(event, context, auth) {
     }
 
     if (transferResult) {
-      // P0-7 + H4: 事务优先，失败降级补偿，保证提现不卡死在 processing
-      await settleWithdrawalCompleted(withdrawalId, w, transferResult, 'retryTransfer')
+      const transferState = transferResult.state || ''
+      // P0 修复：与 approveWithdrawal 一致——仅 SUCCESS 终态结算，非终态保持 processing 待确认/对账
+      if (transferState === 'SUCCESS') {
+        await settleWithdrawalCompleted(withdrawalId, w, transferResult, 'retryTransfer')
+        return handleSuccess({ message: '重试转账成功，已到账' })
+      }
 
-      return handleSuccess({ message: '重试转账成功，已自动转账到用户微信零钱' })
+      await db.collection('withdrawals').doc(withdrawalId).update({
+        data: {
+          packageInfo: transferResult.package_info || '',
+          transferBatchNo: transferResult.transfer_bill_no || '',
+          outBatchNo: transferResult.out_bill_no || w.outBatchNo || '',
+          transferState,
+          updatedAt: db.serverDate(),
+        },
+      })
+      await recordAlert(
+        'warning',
+        'retryTransfer.transfer.pending',
+        transferState === 'WAIT_USER_CONFIRM'
+          ? '重试转账已创建，等待用户在小程序确认收款'
+          : `重试转账处理中（${transferState}），待对账`,
+        { withdrawalId, outBatchNo: transferResult.out_bill_no || w.outBatchNo || '' }
+      )
+      return handleSuccess({
+        message: transferState === 'WAIT_USER_CONFIRM'
+          ? '转账已受理，请提醒用户在小程序确认收款'
+          : `转账处理中（${transferState || '未知'}），请稍后对账`,
+      })
     } else {
       // H4: 与 approveWithdrawal 一致 —— 先查单确认微信侧未受理，才回退 approved，避免重复打款
       let acceptedByWechat = false
@@ -417,11 +467,247 @@ async function retryTransfer(event, context, auth) {
           },
         })
 
-      return handleSuccess({ message: '重试转账失败，请稍后再试', transferError: transferError ? transferError.message : '' })
+      // 前端 WithdrawalReview 读取顶层 transferError（res.transferError）判断失败；
+      // data 内同时保留一份，兼容其他消费方
+      const retryFailMsg = transferError ? transferError.message : '转账接口调用失败'
+      return {
+        ...handleSuccess({ message: '重试转账失败，请稍后再试', transferError: retryFailMsg }),
+        transferError: retryFailMsg,
+      }
     }
   } catch (error) {
     logger.error('retryTransfer', error)
     return handleError(error, '重试转账失败', ERROR_CODES.DATA)
+  }
+}
+
+/**
+ * v5.1：确认人工打款（事后记录——管理员已在系统外完成打款）
+ * 两道保险：先读记录校验 mode='manual'，再条件更新 where(status='approved', mode='manual') 防并发。
+ * payEvidence / paidAmount 必填；|差异|>0.01 必须填差异原因；结算按申请金额。
+ */
+async function confirmManualTransfer(event, context, auth) {
+  const { withdrawalId, payEvidence, payoutChannel, paidAmount, manualNote } = event
+  if (!withdrawalId) {throw err('INVALID_PARAMS', '参数错误')}
+
+  try {
+    const wRes = await db.collection('withdrawals').doc(withdrawalId).get()
+    const w = wRes.data
+    if (!w) {throw err('NOT_FOUND', '提现记录不存在')}
+    if (w.status === 'completed') {
+      return handleSuccess({ message: '该提现已完成' })
+    }
+    if (w.status !== 'approved' || w.mode !== 'manual') {
+      throw err('BUSINESS_ERROR', '仅“待人工打款（approved, manual）”状态可确认')
+    }
+
+    const evidence = String(payEvidence || '').trim()
+    if (!evidence) {throw err('INVALID_PARAMS', '请上传打款凭证或填写流水号')}
+    const paid = Number(paidAmount)
+    if (!Number.isFinite(paid) || paid <= 0) {throw err('INVALID_PARAMS', '请输入实际打款金额')}
+    const channel = PAYOUT_CHANNELS.includes(payoutChannel) ? payoutChannel : (PAYOUT_CHANNELS.includes(w.method) ? w.method : 'wechat')
+    const diff = Math.round((paid - Number(w.amount || 0)) * 100) / 100
+    const note = String(manualNote || '').trim()
+    if (Math.abs(diff) > 0.01 && !note) {
+      throw err('INVALID_PARAMS', '实际打款金额与申请金额不一致，请填写差异原因')
+    }
+
+    // 打款对象脱敏快照：取当前 users.payee（与审批时快照可能不同，两者均留档）
+    let paidToSnapshot = w.payeeSnapshot || {}
+    try {
+      const userRes = await db.collection('users').doc(w.openid).get()
+      const cur = maskPayee((userRes.data && userRes.data.payee) || {}, channel)
+      if (cur) {paidToSnapshot = cur}
+    } catch (e) {
+      logger.warn('confirmManualTransfer.payee.fetch', { withdrawalId, msg: e?.message })
+    }
+
+    const extra = {
+      transferMethod: 'manual',
+      payoutChannel: channel,
+      paidAmount: paid,
+      amountDiff: diff,
+      manualPaidBy: auth.openid,
+      manualPaidAt: db.serverDate(),
+      payEvidence: evidence,
+      manualNote: note,
+      paidToSnapshot,
+    }
+    const r = await settleWithdrawalCompleted(withdrawalId, w, {}, 'confirmManualTransfer', 'approved', extra)
+    if (!r.settled) {
+      // 并发下可能已被另一管理员完成/撤销 → 幂等返回或明确报错
+      const reRes = await db.collection('withdrawals').doc(withdrawalId).get()
+      const cur = reRes.data
+      if (cur && cur.status === 'completed') {
+        return handleSuccess({ message: '该提现已由其他管理员确认完成' })
+      }
+      if (cur && cur.status === 'cancelled') {
+        throw err('BUSINESS_ERROR', '该提现已撤销，无法确认打款')
+      }
+      throw err('DATA_ERROR', '确认打款落库失败，请重试或人工对账')
+    }
+
+    writeOperationLog({
+      module: 'withdrawal',
+      action: 'confirm_manual',
+      targetId: withdrawalId,
+      operatorId: auth.openid,
+      afterData: { status: 'completed', transferMethod: 'manual', paidAmount: paid, amountDiff: diff, payoutChannel: channel },
+    })
+    return handleSuccess({ message: '已确认人工打款完成' })
+  } catch (error) {
+    logger.error('confirmManualTransfer', error)
+    return handleError(error, '确认人工打款失败', ERROR_CODES.DATA)
+  }
+}
+
+/**
+ * v5.1：查看完整收款信息（唯一完整账号出口，super_admin，每次查看写审计）
+ */
+async function getFullPayeeInfo(event, context, auth) {
+  const { withdrawalId } = event
+  if (!withdrawalId) {throw err('INVALID_PARAMS', '参数错误')}
+  try {
+    const wRes = await db.collection('withdrawals').doc(withdrawalId).get()
+    const w = wRes.data
+    if (!w) {throw err('NOT_FOUND', '提现记录不存在')}
+    const userRes = await db.collection('users').doc(w.openid).get()
+    const payee = (userRes.data && userRes.data.payee) || {}
+    writeOperationLog({
+      module: 'withdrawal',
+      action: 'view_full_payee',
+      targetId: withdrawalId,
+      operatorId: auth.openid,
+      afterData: { channel: PAYOUT_CHANNELS.includes(w.method) ? w.method : 'wechat' },
+    })
+    return handleSuccess({
+      withdrawalId,
+      method: PAYOUT_CHANNELS.includes(w.method) ? w.method : 'wechat',
+      nickName: w.nickName || '',
+      payee,
+      payeeSnapshot: w.payeeSnapshot || null,
+    })
+  } catch (error) {
+    logger.error('getFullPayeeInfo', error)
+    return handleError(error, '获取收款信息失败', ERROR_CODES.DATA)
+  }
+}
+
+/**
+ * v5.1：打款配置（透出运维总闸，web-admin 据此禁用自动选项）
+ */
+async function getPayoutConfig(event, context, auth) {
+  return handleSuccess({ autoTransferEnabled: isAutoTransferEnabled() })
+}
+
+/**
+ * v5.1：super_admin 撤销 approved(mode=manual) 提现（打款前撤销，frozen→balance 回退）
+ * 强约束：原因必填 + operation-log；系统无法验证是否已打款，文案强确认由前端承担。
+ */
+async function cancelWithdrawal(event, context, auth) {
+  const { withdrawalId, reason } = event
+  if (!withdrawalId) {throw err('INVALID_PARAMS', '参数错误')}
+  const cancelReason = String(reason || '').trim()
+  if (!cancelReason) {throw err('INVALID_PARAMS', '请填写撤销原因')}
+
+  try {
+    const wRes = await db.collection('withdrawals').doc(withdrawalId).get()
+    const w = wRes.data
+    if (!w) {throw err('NOT_FOUND', '提现记录不存在')}
+    if (w.status === 'cancelled') {
+      return handleSuccess({ message: '该提现已取消' })
+    }
+    if (w.status !== 'approved' || w.mode !== 'manual') {
+      throw err('BUSINESS_ERROR', '仅“待人工打款（approved, manual）”状态可撤销')
+    }
+    const walletType = w.walletType || 'commission'
+    const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
+    const walletDoc = walletRes.data && walletRes.data[0]
+    const transaction = await db.startTransaction()
+    const _tx = transaction.command
+    try {
+      await transaction.collection('withdrawals').doc(withdrawalId).update({
+        data: {
+          status: 'cancelled',
+          cancelReason,
+          cancelledBy: auth.openid,
+          cancelledAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+        },
+      })
+      if (walletDoc) {
+        await transaction.collection('wallets').doc(walletDoc._id).update({
+          data: {
+            balance: _tx.inc(w.amount),
+            frozenAmount: _tx.inc(-w.amount),
+            updatedAt: db.serverDate(),
+          },
+        })
+      }
+      await transaction.commit()
+    } catch (txError) {
+      try { await transaction.rollback() } catch (_) { /* ignore */ }
+      throw err('BUSINESS_ERROR', '撤销失败，该提现状态可能已变更，请刷新后重试')
+    }
+    writeOperationLog({
+      module: 'withdrawal',
+      action: 'cancel_by_admin',
+      targetId: withdrawalId,
+      operatorId: auth.openid,
+      afterData: { status: 'cancelled', reason: cancelReason },
+    })
+    return handleSuccess({ message: '已撤销提现，冻结金额已退回余额' })
+  } catch (error) {
+    logger.error('cancelWithdrawal', error)
+    return handleError(error, '撤销提现失败', ERROR_CODES.DATA)
+  }
+}
+
+/**
+ * v5.1：auto 失败遗留的 approved 记录显式转为人工打款（补齐 payeeSnapshot/mode）
+ */
+async function convertToManual(event, context, auth) {
+  const { withdrawalId } = event
+  if (!withdrawalId) {throw err('INVALID_PARAMS', '参数错误')}
+  try {
+    const wRes = await db.collection('withdrawals').doc(withdrawalId).get()
+    const w = wRes.data
+    if (!w) {throw err('NOT_FOUND', '提现记录不存在')}
+    if (w.status !== 'approved' || w.mode === 'manual') {
+      throw err('BUSINESS_ERROR', '仅自动转账失败遗留的 approved 记录可转为人工打款')
+    }
+    const channel = PAYOUT_CHANNELS.includes(w.method) ? w.method : 'wechat'
+    const userRes = await db.collection('users').doc(w.openid).get()
+    const payee = (userRes.data && userRes.data.payee) || {}
+    if (!hasPayeeChannel(payee, channel)) {
+      throw err('BUSINESS_ERROR', '用户未预留所选收款方式的账号，无法转为人工打款')
+    }
+    const snapshot = maskPayee(payee, channel)
+    const up = await db.collection('withdrawals')
+      .where({ _id: withdrawalId, status: 'approved' })
+      .update({
+        data: {
+          mode: 'manual',
+          payeeSnapshot: snapshot || {},
+          manualPayoutRequired: true,
+          updatedAt: db.serverDate(),
+        },
+      })
+    const count = (up && up.stats && up.stats.updated) || 0
+    if (count === 0) {
+      throw err('BUSINESS_ERROR', '该提现状态已变更，请刷新后重试')
+    }
+    writeOperationLog({
+      module: 'withdrawal',
+      action: 'convert_manual',
+      targetId: withdrawalId,
+      operatorId: auth.openid,
+      afterData: { mode: 'manual' },
+    })
+    return handleSuccess({ message: '已转为人工打款，可确认已打款' })
+  } catch (error) {
+    logger.error('convertToManual', error)
+    return handleError(error, '转为人工打款失败', ERROR_CODES.DATA)
   }
 }
 
@@ -433,5 +719,10 @@ module.exports = {
   approveWithdrawal,
   rejectWithdrawal,
   retryTransfer,
+  confirmManualTransfer,
+  getFullPayeeInfo,
+  getPayoutConfig,
+  cancelWithdrawal,
+  convertToManual,
   ensureWalletBalance,
 }

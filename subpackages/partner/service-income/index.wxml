@@ -49,6 +49,17 @@
       </view>
     </view>
 
+    <!-- 服务收入钱包：可提现 + 提现入口（P2 修复） -->
+    <view class="service-wallet-card">
+      <view class="service-wallet-row">
+        <view class="service-wallet-info">
+          <text class="service-wallet-label">可提现余额</text>
+          <text class="service-wallet-value">¥{{serviceBalanceText}}</text>
+        </view>
+        <view class="service-wallet-btn" bindtap="onWithdrawTap">提现</view>
+      </view>
+    </view>
+
     <!-- 分类展区：三种收入类型 -->
     <view class="category-gallery">
       <view class="category-frame activity-frame">
@@ -188,4 +199,75 @@
     </view>
   </view>
 </view>
+<root-portal>
+  <view wx:if="{{showWithdrawModal}}" class="modal-mask" bindtap="onWithdrawCancel">
+    <view class="modal-content" catchtap="">
+      <view class="modal-title">申请提现</view>
+      <view class="modal-balance">可提现余额：¥{{withdrawBalanceText}}</view>
+      <view class="modal-payout">
+        <text class="modal-payout-label">收款方式</text>
+        <radio-group class="modal-payout-group" bindchange="onPayoutMethodChange">
+          <label class="modal-payout-item {{payoutMethod === 'wechat' ? 'active' : ''}}">
+            <radio value="wechat" checked="{{payoutMethod === 'wechat'}}" color="#2F6B4F" style="display:none" />
+            <text>微信</text>
+          </label>
+          <label class="modal-payout-item {{payoutMethod === 'alipay' ? 'active' : ''}}">
+            <radio value="alipay" checked="{{payoutMethod === 'alipay'}}" color="#2F6B4F" style="display:none" />
+            <text>支付宝</text>
+          </label>
+          <label class="modal-payout-item {{payoutMethod === 'bank' ? 'active' : ''}}">
+            <radio value="bank" checked="{{payoutMethod === 'bank'}}" color="#2F6B4F" style="display:none" />
+            <text>银行卡</text>
+          </label>
+        </radio-group>
+      </view>
+      <view class="modal-payout-account">
+        <text wx:if="{{currentChannelAccountText}}" class="payout-account-text">{{currentChannelAccountText}}</text>
+        <text wx:else class="payout-account-empty">未预留该收款方式</text>
+        <text class="modal-all-btn" bindtap="openPayeeManage">管理收款账号</text>
+      </view>
+      <view class="modal-input-row">
+        <text class="modal-input-prefix">¥</text>
+        <input class="modal-input" type="digit" placeholder="请输入提现金额" value="{{withdrawAmount}}" bindinput="onWithdrawAmountInput" focus="{{showWithdrawModal}}" />
+      </view>
+      <view class="modal-tips">
+        <text>最低1元，单笔最高500元，每日限提10次</text>
+        <text class="modal-all-btn" bindtap="onWithdrawAll">全部提现</text>
+      </view>
+      <view class="modal-btns">
+        <view class="modal-btn modal-btn-cancel" bindtap="onWithdrawCancel">取消</view>
+        <view class="modal-btn modal-btn-confirm {{isSubmitting ? 'modal-btn-disabled' : ''}}" bindtap="onWithdrawConfirm">{{isSubmitting ? '提交中...' : '确认提现'}}</view>
+      </view>
+    </view>
+  </view>
+</root-portal>
+<!-- 收款账号管理（v5.1） -->
+<root-portal>
+  <view wx:if="{{payeeModalVisible}}" class="modal-mask" bindtap="closePayeeManage">
+    <view class="modal-content payee-modal" catchtap="">
+      <view class="modal-title">收款账号</view>
+      <view class="payee-section">
+        <text class="payee-label">微信（微信号/手机号）</text>
+        <input class="modal-input payee-input" placeholder="选填" value="{{payeeForm.wechat}}" data-field="wechat" bindinput="onPayeeInput" />
+      </view>
+      <view class="payee-section">
+        <text class="payee-label">支付宝（邮箱/手机号）</text>
+        <input class="modal-input payee-input" placeholder="选填" value="{{payeeForm.alipay}}" data-field="alipay" bindinput="onPayeeInput" />
+      </view>
+      <view class="payee-section">
+        <text class="payee-label">银行卡</text>
+        <input class="modal-input payee-input" placeholder="开户行（选填）" value="{{payeeForm.bank.bankName}}" data-field="bankName" bindinput="onBankInput" />
+        <input class="modal-input payee-input" placeholder="卡号（选填）" type="number" value="{{payeeForm.bank.cardNo}}" data-field="cardNo" bindinput="onBankInput" />
+        <input class="modal-input payee-input" placeholder="持卡人（选填）" value="{{payeeForm.bank.holder}}" data-field="holder" bindinput="onBankInput" />
+      </view>
+      <view class="modal-tips">
+        <text>至少预留一种收款方式（提现时需选择）</text>
+      </view>
+      <view class="modal-btns">
+        <view class="modal-btn modal-btn-cancel" bindtap="closePayeeManage">取消</view>
+        <view class="modal-btn modal-btn-confirm {{savingPayee ? 'modal-btn-disabled' : ''}}" bindtap="onSavePayee">{{savingPayee ? '保存中...' : '保存'}}</view>
+      </view>
+    </view>
+  </view>
+</root-portal>
 </scroll-view>

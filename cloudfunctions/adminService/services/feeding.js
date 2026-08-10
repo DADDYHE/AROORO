@@ -13,7 +13,7 @@ const _ = db.command
 const logger = createLogger('adminService:feeding')
 
 async function getFeedingOrders(event, context, auth) {
-  const { status, page = 1, pageSize = 20 } = event
+  const { status, page = 1, pageSize = 20, startDate, endDate } = event
   const where = {}
   // P2-3 修复：非超管（partner）仅可查看归属自己的喂养订单，避免枚举全量订单（含地址/电话等 PII）
   if (!auth.isSuperAdmin && !auth.roles?.includes('super_admin')) {
@@ -21,6 +21,19 @@ async function getFeedingOrders(event, context, auth) {
     where.ownerId = myId
   }
   if (status) {where.status = status}
+  if (startDate || endDate) {
+    let timeCond = null
+    if (startDate) {
+      const startVal = /^\d{4}-\d{2}-\d{2}$/.test(startDate) ? `${startDate}T00:00:00.000` : startDate
+      timeCond = _.gte(new Date(startVal))
+    }
+    if (endDate) {
+      const endVal = /^\d{4}-\d{2}-\d{2}$/.test(endDate) ? `${endDate}T23:59:59.999` : endDate
+      const end = new Date(endVal)
+      timeCond = timeCond ? timeCond.and(_.lte(end)) : _.lte(end)
+    }
+    if (timeCond) {where.createdAt = timeCond}
+  }
 
   const result = await paginate(db, 'feedingOrders', { page, pageSize, where })
 

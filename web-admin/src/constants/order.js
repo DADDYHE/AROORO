@@ -48,6 +48,7 @@ export const WITHDRAWAL_STATUS_LABELS = {
   approved: '待人工转账',
   completed: '已完成',
   rejected: '已拒绝',
+  cancelled: '已取消',
 }
 
 export const HOST_SERVICE_STATUS_LABELS = {
@@ -115,5 +116,6 @@ export const SIDEBAR_MENUS = [
   { type: 'section', title: '财务与用户' },
   { title: '用户管理', icon: 'User', path: '/user', superAdminOnly: true },
   { title: '营收情况', icon: 'Money', path: '/finance', superAdminOnly: true },
-  { title: '提现审核', icon: 'WalletFilled', path: '/withdrawal', superAdminOnly: true },
+  // v5.1：普通管理员（partner）只读查看提现列表做对账
+  { title: '提现审核', icon: 'WalletFilled', path: '/withdrawal' },
 ]

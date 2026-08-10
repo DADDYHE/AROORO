@@ -386,26 +386,26 @@ describe('partnerService/wallet', () => {
 
   describe('requestWithdrawal', () => {
     test('低于 1 元应抛 INVALID_PARAMS', async () => {
-      await expect(wallet.requestWithdrawal({ amount: 0.5 }, {}, { openid: 'oTest_openid' }))
+      await expect(wallet.requestWithdrawal({ amount: 0.5, payoutMethod: 'wechat' }, {}, { openid: 'oTest_openid' }))
         .rejects.toMatchObject({ code: 'INVALID_PARAMS' })
     })
 
     test('钱包不存在应抛 NOT_FOUND', async () => {
       mockDb._collections.wallets = { docs: [] }
       // 抛点在 try 块内，被 catch 转为 handleError
-      const result = await wallet.requestWithdrawal({ amount: 50 }, {}, { openid: 'oTest_openid' })
+      const result = await wallet.requestWithdrawal({ amount: 50, payoutMethod: 'wechat' }, {}, { openid: 'oTest_openid' })
       expect(result.code).not.toBe(0)
     })
 
     test('余额不足应抛 BUSINESS_ERROR', async () => {
       mockDb._collections.wallets = { docs: [{ _id: 'w1', openid: 'oTest_openid', type: 'commission', balance: 5, status: 'active' }] }
-      const result = await wallet.requestWithdrawal({ amount: 50 }, {}, { openid: 'oTest_openid' })
+      const result = await wallet.requestWithdrawal({ amount: 50, payoutMethod: 'wechat' }, {}, { openid: 'oTest_openid' })
       expect(result.code).not.toBe(0)
     })
 
     test('钱包已冻结应抛 BUSINESS_ERROR', async () => {
       mockDb._collections.wallets = { docs: [{ _id: 'w1', openid: 'oTest_openid', type: 'commission', balance: 100, status: 'frozen' }] }
-      const result = await wallet.requestWithdrawal({ amount: 50 }, {}, { openid: 'oTest_openid' })
+      const result = await wallet.requestWithdrawal({ amount: 50, payoutMethod: 'wechat' }, {}, { openid: 'oTest_openid' })
       expect(result.code).not.toBe(0)
     })
 
@@ -414,25 +414,42 @@ describe('partnerService/wallet', () => {
       today.setHours(0, 0, 0, 0)
       mockDb._collections.wallets = { docs: [{ _id: 'w1', openid: 'oTest_openid', type: 'commission', balance: 1000, status: 'active' }] }
       // P1-4: 每日限额从 1 次调整为 10 次
-      // H3: 状态枚举为 awaiting_confirm（硬约束）
+      // P2: 状态枚举为 pending（与 adminService 审批枚举一致，awaiting_confirm 已废弃）
       mockDb._collections.withdrawals = { docs: Array.from({ length: 10 }, (_, i) => ({
-        openid: 'oTest_openid', walletType: 'commission', amount: 50, status: 'awaiting_confirm', createdAt: new Date(today.getTime() + 3600_000 * (i + 1)),
+        openid: 'oTest_openid', walletType: 'commission', amount: 50, status: 'pending', createdAt: new Date(today.getTime() + 3600_000 * (i + 1)),
       })) }
-      const result = await wallet.requestWithdrawal({ amount: 50 }, {}, { openid: 'oTest_openid' })
+      const result = await wallet.requestWithdrawal({ amount: 50, payoutMethod: 'wechat' }, {}, { openid: 'oTest_openid' })
       expect(result.code).not.toBe(0)
     })
 
     test('正常提现应扣减余额并创建记录', async () => {
       mockDb._collections.wallets = { docs: [{ _id: 'w1', openid: 'oTest_openid', type: 'commission', balance: 100, status: 'active' }] }
-      const result = await wallet.requestWithdrawal({ amount: 30 }, {}, { openid: 'oTest_openid' })
+      // v5.1：需预留所选收款方式账号（users.payee）
+      mockDb._collections.users = { docs: [{ _id: 'oTest_openid', payee: { wechat: '13812345678', alipay: '', bank: { bankName: '', cardNo: '', holder: '' } } }] }
+      const result = await wallet.requestWithdrawal({ amount: 30, payoutMethod: 'wechat' }, {}, { openid: 'oTest_openid' })
       expect(result.code).toBe(0)
       const walletDoc = mockDb._collections.wallets.docs[0]
       expect(walletDoc.balance).toBe(70) // 100 - 30
       expect(walletDoc.frozenAmount).toBe(30) // +30 frozen
       expect(mockDb._collections.withdrawals.docs.length).toBe(1)
       expect(mockDb._collections.withdrawals.docs[0].amount).toBe(30)
-      // H3: 状态枚举为 awaiting_confirm（硬约束）
-      expect(mockDb._collections.withdrawals.docs[0].status).toBe('awaiting_confirm')
+      // P2: 状态枚举为 pending（与 adminService 审批枚举一致，awaiting_confirm 已废弃）
+      expect(mockDb._collections.withdrawals.docs[0].status).toBe('pending')
+      // v5.1：method 写入用户所选渠道
+      expect(mockDb._collections.withdrawals.docs[0].method).toBe('wechat')
+    })
+
+    test('未预留所选收款方式应抛错', async () => {
+      mockDb._collections.wallets = { docs: [{ _id: 'w1', openid: 'oTest_openid', type: 'commission', balance: 100, status: 'active' }] }
+      mockDb._collections.users = { docs: [{ _id: 'oTest_openid' }] } // 无 payee
+      const result = await wallet.requestWithdrawal({ amount: 30, payoutMethod: 'alipay' }, {}, { openid: 'oTest_openid' })
+      expect(result.code).not.toBe(0)
+      expect(mockDb._collections.withdrawals.docs.length).toBe(0)
+    })
+
+    test('非法收款方式应抛 INVALID_PARAMS', async () => {
+      await expect(wallet.requestWithdrawal({ amount: 30, payoutMethod: 'cash' }, {}, { openid: 'oTest_openid' }))
+        .rejects.toMatchObject({ code: 'INVALID_PARAMS' })
     })
   })
 })

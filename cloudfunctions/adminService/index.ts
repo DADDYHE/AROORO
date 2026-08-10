@@ -240,10 +240,16 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getEnhancedDashboardStats: 'super_admin',
   getFinanceOverview: 'super_admin',
   // 提现审批
-  getWithdrawalList: 'super_admin',
+  // v5.1：普通管理员（partner）只读对账；操作类仍限 super_admin
+  getWithdrawalList: 'partner',
+  getPayoutConfig: 'partner',
   approveWithdrawal: 'super_admin',
   rejectWithdrawal: 'super_admin',
   retryTransfer: 'super_admin',
+  confirmManualTransfer: 'super_admin',
+  getFullPayeeInfo: 'super_admin',
+  cancelWithdrawal: 'super_admin',
+  convertToManual: 'super_admin',
   // P1-2: 管理员退款（web-admin 后台客诉处理）
   adminRefund: 'super_admin',
   queryRefund: 'super_admin',
@@ -276,6 +282,8 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getReferralStats: 'partner',
   getReferralList: 'partner',
   getInvitedUsersByAdmin: 'partner',
+  getReferralOrders: 'partner',
+  getReferralOrderStats: 'partner',
 
   // 活动业务
   getActivityList: 'partner',
