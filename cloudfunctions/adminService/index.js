@@ -150,6 +150,7 @@ const ACTION_PERMISSIONS = {
     convertToManual: 'super_admin',
     inspectWithdrawal: 'super_admin',
     repairWithdrawalBalance: 'super_admin',
+    inspectPartnerFinance: 'super_admin',
     // P1-2: 管理员退款（web-admin 后台客诉处理）
     adminRefund: 'super_admin',
     queryRefund: 'super_admin',
