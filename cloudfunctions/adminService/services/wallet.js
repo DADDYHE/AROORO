@@ -639,8 +639,8 @@ async function cancelWithdrawal(event, context, auth) {
       if (walletDoc) {
         await transaction.collection('wallets').doc(walletDoc._id).update({
           data: {
-            balance: _tx.inc(w.amount),
-            frozenAmount: _tx.inc(-w.amount),
+            balance: _tx.inc(Number(w.amount) || 0),
+            frozenAmount: _tx.inc(-(Number(w.amount) || 0)),
             updatedAt: db.serverDate(),
           },
         })
@@ -648,7 +648,10 @@ async function cancelWithdrawal(event, context, auth) {
       await transaction.commit()
     } catch (txError) {
       try { await transaction.rollback() } catch (_) { /* ignore */ }
-      throw err('BUSINESS_ERROR', '撤销失败，该提现状态可能已变更，请刷新后重试')
+      logger.error('cancelWithdrawal.transaction.failed', {
+        withdrawalId, code: txError?.code, errCode: txError?.errCode, msg: txError?.message,
+      })
+      throw err('BUSINESS_ERROR', `撤销失败：${txError?.message || '该提现状态可能已变更，请刷新后重试'}`)
     }
     writeOperationLog({
       module: 'withdrawal',
