@@ -6,7 +6,7 @@
  *   - 4 个服务子模块：application / wallet / referral / income
  *   - 共 14 个 action：
  *     * 申请（3 个）：submitApplication / getApplicationStatus / getMyPermissions
- *     * 收入 / 钱包（5 个）：getMyIncomeOverview / getMyIncomeDetails / getMyWallet / getMyWithdrawals / requestWithdrawal
+ *     * 收入 / 钱包（9 个）：getMyIncomeOverview / getMyIncomeDetails / getMyWallet / getMyWithdrawals / getMyPayeeAccounts / updatePayeeAccounts / cancelWithdrawal / confirmWithdrawal / requestWithdrawal
  *     * 服务收入（2 个）：getServiceIncomeOverview / getServiceIncomeDetails
  *     * 邀请（4 个）：getReferralStats / getMyInvitedUsers / getReferralOrders / getReferralOrderStats
  *
@@ -70,6 +70,10 @@ export interface PartnerHandlers {
     getMyIncomeDetails: PartnerActionHandler;
     getMyWallet: PartnerActionHandler;
     getMyWithdrawals: PartnerActionHandler;
+    getMyPayeeAccounts: PartnerActionHandler;
+    updatePayeeAccounts: PartnerActionHandler;
+    cancelWithdrawal: PartnerActionHandler;
+    confirmWithdrawal: PartnerActionHandler;
     requestWithdrawal: PartnerActionHandler;
     getServiceIncomeOverview: PartnerActionHandler;
     getServiceIncomeDetails: PartnerActionHandler;
