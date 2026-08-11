@@ -3,17 +3,18 @@ const { TuanService } = require('../../../services/TuanService')
 const PaymentService = require('../../../services/PaymentService')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
 const countdownBehavior = require('../../../behaviors/countdownBehavior')
-const { MALL_STATUS_TEXT_MAP } = require('../utils/orderConstants')
+const { LOGISTICS_STATUS_TEXT_MAP } = require('../utils/orderConstants')
 const { formatDate, formatDateTime } = require('../utils/dateUtils')
 
-const STATUS_TEXT_MAP = MALL_STATUS_TEXT_MAP
+const STATUS_TEXT_MAP = LOGISTICS_STATUS_TEXT_MAP
 
 const STATUS_DESC_MAP = {
   pending_payment: '请尽快完成付款，超时订单将自动取消',
-  pending_shipment: '商家正在为您准备商品',
+  paid: '商家正在为您准备商品',
   shipped: '商品正在配送中，请注意查收',
   completed: '订单已完成，感谢您的购买',
   cancelled: '订单已取消',
+  refunded: '订单已退款',
 }
 
 const pageI18n = require('../../../utils/page-i18n.js')
