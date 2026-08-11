@@ -184,6 +184,18 @@ async function handleBoardingOrder(event, context, auth) {
     }
   }
 
+  // B5 【P0 资损守卫】：取消操作需校验支付状态——已支付订单不可直接取消（应走退款流程），避免绕过资金流
+  // 与 feeding.js handleFeedingOrder 同款守卫：paid 抛错走退款；unpaid/空放行；其他值报异常
+  if (newStatus === 'cancelled') {
+    const ps = String(orderRes.data.paymentStatus || '').toLowerCase()
+    if (ps === 'paid') {
+      throw err('ORDER_STATUS_INVALID', '已支付订单无法直接取消，请申请退款')
+    }
+    if (ps !== 'unpaid' && ps !== '') {
+      throw err('ORDER_STATUS_INVALID', `订单支付状态异常：${ps || '(空)'}`)
+    }
+  }
+
   try {
     validateTransition(BOARDING_ORDER_TRANSITIONS, orderRes.data.status, newStatus)
   } catch (e) {

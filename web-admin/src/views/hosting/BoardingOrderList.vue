@@ -1,5 +1,5 @@
 <template>
-  <OrderTable :fetch-fn="fetchFn" detail-route="/order/boarding">
+  <OrderTable :fetch-fn="fetchFn" :show-detail="false">
     <template #toolbar-left>
       <el-select v-model="statusFilter" placeholder="状态" style="width:120px" clearable @change="onSearch">
         <el-option v-for="(label, key) in BOARDING_STATUS" :key="key" :label="label" :value="key" />
@@ -35,7 +35,7 @@ import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
 import { normalizePaymentStatus } from '@/utils/payment-status'
 
-const BOARDING_STATUS = { pending: '待确认', paid: '已支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成' }
+const BOARDING_STATUS = { pending_payment: '待支付', paid: '已支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成', cancelled: '已取消', refunded: '已退款' }
 const statusFilter = ref('')
 
 function fetchFn(params) {
@@ -43,7 +43,7 @@ function fetchFn(params) {
   if (statusFilter.value) p.status = statusFilter.value
   return getBoardingOrders(p).then(res => {
     const rawList = res.data?.list || res.data || []
-    return { data: { list: rawList.filter(item => item.status !== 'cancelled'), total: res.data?.total || 0 } }
+    return { data: { list: rawList, total: res.data?.total || 0 } }
   })
 }
 

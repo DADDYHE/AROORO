@@ -20,12 +20,15 @@ exports.validateTransition = exports.canTransition = exports.ACTIVITY_ORDER_TRAN
  * 状态转移表
  * ============================================================ */
 exports.BOARDING_ORDER_TRANSITIONS = {
-    pending: ['confirmed', 'cancelled'],
-    paid: ['confirmed', 'cancelled'],
-    confirmed: ['completed', 'cancelled'],
-    in_progress: ['completed'],
+    pending_payment: ['paid', 'cancelled'],
+    paid: ['confirmed', 'rejected', 'cancelled'],
+    confirmed: ['in_progress', 'completed', 'cancelled'],
+    in_progress: ['completed', 'cancelled'],
     completed: [],
+    rejected: [],
     cancelled: [],
+    refunded: [],
+    deleted: [],
 };
 exports.FEEDING_ORDER_TRANSITIONS = {
     pending_payment: ['paid', 'cancelled'],
@@ -107,8 +110,9 @@ exports.STATUS_LABELS = {
  * ============================================================ */
 exports.BOARDING_STATUS_MAP = {
     confirm: 'confirmed',
-    reject: 'cancelled',
+    reject: 'rejected',
     complete: 'completed',
+    cancel: 'cancelled',
 };
 exports.FEEDING_STATUS_MAP = {
     confirm: 'confirmed',

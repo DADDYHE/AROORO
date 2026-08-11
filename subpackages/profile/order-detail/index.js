@@ -6,14 +6,14 @@ const { STATUS_TEXT_MAP } = require('../utils/orderConstants')
 const { formatDate, formatDateTime } = require('../utils/dateUtils')
 
 const STATUS_DESC_MAP = {
-  pending: '等待寄养家庭确认您的订单',
   pending_payment: '请尽快完成付款，超时订单将自动取消',
   paid: '订单已支付，等待寄养家庭确认',
   confirmed: '寄养家庭已确认您的订单',
   in_progress: '宠物寄养服务进行中',
-  ongoing: '宠物寄养服务进行中',
   completed: '订单已完成，感谢您的信任',
   cancelled: '订单已取消',
+  rejected: '订单已被拒绝',
+  refunded: '订单已退款',
 }
 
 const pageI18n = require('../../../utils/page-i18n.js')

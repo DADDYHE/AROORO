@@ -6,7 +6,7 @@
     </div>
     <el-table :data="list" v-loading="loading" stripe>
       <slot />
-      <el-table-column label="操作" width="100" fixed="right">
+      <el-table-column v-if="showDetail" label="操作" width="100" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="onDetail(row)">详情</el-button>
         </template>
@@ -25,6 +25,7 @@ import { useAutoRefresh } from '@/composables/useAutoRefresh'
 const props = defineProps({
   fetchFn: { type: Function, required: true },
   detailRoute: { type: String, default: '' },
+  showDetail: { type: Boolean, default: true },
 })
 
 const emit = defineEmits(['detail'])
