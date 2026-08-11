@@ -219,8 +219,8 @@ Page({
     const filtered = this._allOrders.filter(item => {
       if (orderType === 'activity') {
         if (currentStatus === 'pending_payment' && (item.status !== 'pending_payment' || item.isEnded)) {return false}
-        if (currentStatus === 'paid' && (item.status !== 'paid' && item.status !== 'completed')) {return false}
-        if (currentStatus === 'completed' && (!item.isEnded || item.status === 'pending_payment' || item.status === 'cancelled')) {return false}
+        if (currentStatus === 'paid' && item.status !== 'paid') {return false}
+        if (currentStatus === 'completed' && item.status !== 'completed') {return false}
         if (currentStatus === 'cancelled' && item.status !== 'cancelled' && !(item.status === 'pending_payment' && item.isEnded)) {return false}
         if (currentStatus === 'refunded' && item.status !== 'refunded') {return false}
       } else if (orderType === 'mall' || orderType === 'group') {

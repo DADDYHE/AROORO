@@ -883,9 +883,10 @@ export async function submitRegistration(
   // P0 修复：查重范围从 confirmed 扩展为 confirmed + pending_payment，
   //   未支付的待支付报名单同样占用一次报名机会，防止同一用户对同一活动
   //   反复提交生成多张待支付单并重复付款（资金风险）。
-  // V5: 死状态 confirmed 移除，改为 paid + pending_payment（已支付/待支付均占用报名机会）
+  // V5: 死状态 confirmed 移除，改为 paid + completed + pending_payment
+  // （已支付/已结束/待支付均占用报名机会，防止两个 cron 独立跑时的时序窗口漏查）
   const existReg = await db.collection('activity_registrations')
-    .where({ activityId, ownerId: openid, status: _.in(['paid', 'pending_payment']) })
+    .where({ activityId, ownerId: openid, status: _.in(['paid', 'completed', 'pending_payment']) })
     .count()
   if (existReg.total > 0) {
     throw err('BUSINESS_ERROR', '您已报名此活动（含待支付订单），请勿重复报名')

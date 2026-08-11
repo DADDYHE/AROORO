@@ -892,6 +892,7 @@ async function completeActivityOrders(result, now) {
         const paidRegs = await fetchAllExpired('activity_registrations', { status: 'paid' }, { _id: true, activityId: true, ownerId: true, participantCount: true });
         // 按 activityId 批量查询活动 endTime，避免 N+1
         const activityIds = [...new Set(paidRegs.map((r) => r.activityId).filter((id) => Boolean(id)))];
+        const foundActivityIds = new Set();
         const endedActivityIds = new Set();
         for (let i = 0; i < activityIds.length; i += 100) {
             const actRes = await db.collection('activities')
@@ -899,13 +900,26 @@ async function completeActivityOrders(result, now) {
                 .field({ _id: true, endTime: true })
                 .get();
             ;((actRes.data || [])).forEach((a) => {
-                if (a._id && a.endTime && String(a.endTime) <= nowStr) {
-                    endedActivityIds.add(a._id);
+                if (a._id) {
+                    foundActivityIds.add(a._id);
+                    if (a.endTime && String(a.endTime) <= nowStr) {
+                        endedActivityIds.add(a._id);
+                    }
                 }
             });
         }
         for (const reg of paidRegs) {
-            if (!reg.activityId || !endedActivityIds.has(reg.activityId)) { continue; }
+            if (!reg.activityId) { continue; }
+            // M2/P2 修复：paid 报名单引用的活动文档缺失（endTime 未知）时不能再靠后面
+            //   静默跳过，需告警运维，避免这些订单永远停留在 paid 无法推进为 completed
+            if (!foundActivityIds.has(reg.activityId)) {
+                try {
+                    await recordAlert('warning', 'completeActivityOrders.missing_activity_doc', `活动报名单 ${reg._id} 引用的活动文档 ${reg.activityId} 缺失，无法推进为 completed`, { registrationId: reg._id, activityId: reg.activityId });
+                }
+                catch { /* ignore */ }
+                continue;
+            }
+            if (!endedActivityIds.has(reg.activityId)) { continue; }
             try {
                 // 幂等：仅当 status 仍为 paid 才更新
                 const updRes = await db.collection('activity_registrations')

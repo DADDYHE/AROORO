@@ -168,6 +168,9 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
         let commissionIds = [];
         let serviceIncomeIds = [];
         let registrationIds = [];
+        // V5 A 修复：活动退款须同步 orders 镜像单（orderType='activity'），
+        //   否则用户侧退款成功后主集合已 refunded，但 web 后台"活动订单"仍显示 paid
+        let mirrorOrderIds = [];
         // P1 修复：活动退款须回退名额（对比超时取消的 restoreActivityQuota），
         //   事务前读取活动当前名额，避免退款后已退款用户永久占名额
         let activityQuota = {
@@ -239,6 +242,22 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
             }
             catch (e) {
                 logger.warn('createRefund.queryActivityQuota.failed', {
+                    orderId: orderDoc._id,
+                    msg: e?.message,
+                });
+            }
+            // V5 A 修复：查询 orders 镜像单（orderType='activity'）_id 列表，事务内同步退款状态
+            try {
+                const mirrorRes = await db.collection('orders')
+                    .where({ activityId: orderDoc.activityId, ownerId: orderDoc.ownerId, orderType: 'activity' })
+                    .field({ _id: true })
+                    .limit(10)
+                    .get();
+                mirrorOrderIds = ((mirrorRes && mirrorRes.data) || [])
+                    .map((r) => r._id);
+            }
+            catch (e) {
+                logger.warn('createRefund.queryMirrorOrders.failed', {
                     orderId: orderDoc._id,
                     msg: e?.message,
                 });

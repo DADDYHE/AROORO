@@ -954,16 +954,20 @@ export async function updateOrderStatus(event: EventLike, _context: ContextLike,
   }
 
   // V5: 活动订单按 orderType 路由到活动专用五态状态机；其余订单走寄养状态机
+  // 活动 cancel 跳过顶部状态机校验（活动状态机 paid 仅允许 → completed/refunded，
+  // 已支付取消需走下方退款分支，由 paymentService 处理 refunding/refunded）
   const odOrderType = (od as { orderType?: string }).orderType
-  if (odOrderType === 'activity') {
-    const { activityOrderStateMachine } = require('./common/activity-state-machine')
-    if (!activityOrderStateMachine.canTransition(od.status, status)) {
-      throw err('BUSINESS_ERROR', '状态变更无效')
-    }
-  } else {
-    const { boardingOrderStateMachine } = require('./common/boarding-state-machine')
-    if (!boardingOrderStateMachine.canTransition(od.status, status)) {
-      throw err('BUSINESS_ERROR', '状态变更无效')
+  if (!(status === 'cancelled' && odOrderType === 'activity')) {
+    if (odOrderType === 'activity') {
+      const { activityOrderStateMachine } = require('./common/activity-state-machine')
+      if (!activityOrderStateMachine.canTransition(od.status, status)) {
+        throw err('BUSINESS_ERROR', '状态变更无效')
+      }
+    } else {
+      const { boardingOrderStateMachine } = require('./common/boarding-state-machine')
+      if (!boardingOrderStateMachine.canTransition(od.status, status)) {
+        throw err('BUSINESS_ERROR', '状态变更无效')
+      }
     }
   }
 

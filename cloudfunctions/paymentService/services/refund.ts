@@ -250,6 +250,9 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
     let commissionIds: string[] = []
     let serviceIncomeIds: string[] = []
     let registrationIds: string[] = []
+    // V5 A 修复：活动退款须同步 orders 镜像单（orderType='activity'），
+    //   否则用户侧退款成功后主集合已 refunded，但 web 后台"活动订单"仍显示 paid
+    let mirrorOrderIds: string[] = []
     // P1 修复：活动退款须回退名额（对比超时取消的 restoreActivityQuota），
     //   事务前读取活动当前名额，避免退款后已退款用户永久占名额
     let activityQuota: { activityId: string; pCount: number; current: number } = {
@@ -321,6 +324,21 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
           msg: (e as Error)?.message,
         })
       }
+      // V5 A 修复：查询 orders 镜像单（orderType='activity'）_id 列表，事务内同步退款状态
+      try {
+        const mirrorRes = await db.collection('orders')
+          .where({ activityId: orderDoc.activityId, ownerId: orderDoc.ownerId, orderType: 'activity' })
+          .field({ _id: true } as Record<string, true>)
+          .limit(10)
+          .get()
+        mirrorOrderIds = (((mirrorRes && mirrorRes.data) || []) as Array<{ _id: string }>)
+          .map((r) => r._id)
+      } catch (e) {
+        logger.warn('createRefund.queryMirrorOrders.failed', {
+          orderId: orderDoc._id,
+          msg: (e as Error)?.message,
+        })
+      }
     }
 
     // H4+M15: 主订单状态更新也按 orderType 路由到正确集合
@@ -355,6 +373,12 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
       for (const rid of registrationIds) {
         await transaction.collection('activity_registrations').doc(rid).update({
           // V5: 报名单同步补写 paymentStatus='refunded'，与 adminService adminRefund 对齐
+          data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
+        })
+      }
+      // V5 A 修复：同步 orders 镜像单（orderType='activity'）状态，保持 web 后台活动订单与主集合一致
+      for (const mid of mirrorOrderIds) {
+        await transaction.collection('orders').doc(mid).update({
           data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
         })
       }

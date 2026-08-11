@@ -84,7 +84,7 @@ const STATUS_MAPS = {
   mall: { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunded: '已退款' },
   feeding: { pending: '待确认', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝' },
   tuan: { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunded: '已退款' },
-  activity: { pending_payment: '待支付', confirmed: '已确认', completed: '已完成' },
+  activity: { pending_payment: '待支付', paid: '已支付', completed: '已完成', cancelled: '已取消', refunded: '已退款' },
 }
 
 // 全部类型：取所有 STATUS_MAPS 的并集（同名 key 标签一致）

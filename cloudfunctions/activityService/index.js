@@ -595,7 +595,7 @@ async function submitRegistration(event, context, auth) {
     //   未支付的待支付报名单同样占用一次报名机会，防止同一用户对同一活动
     //   反复提交生成多张待支付单并重复付款（资金风险）。
     const existReg = await db.collection('activity_registrations')
-        .where({ activityId, ownerId: openid, status: _.in(['paid', 'pending_payment']) })
+        .where({ activityId, ownerId: openid, status: _.in(['paid', 'completed', 'pending_payment']) })
         .count();
     if (existReg.total > 0) {
         throw err('BUSINESS_ERROR', '您已报名此活动（含待支付订单），请勿重复报名');
