@@ -766,6 +766,12 @@ async function handleTuanOrder(event, context, auth) {
     return handleSuccess(null, '订单已取消')
   }
 
+  // cancel 路径仅允许 paid（→refunded）和 pending_payment（→cancelled），其他状态禁止取消
+  // 防止 shipped/completed/历史 pending_shipment 等订单穿透到通用更新分支直接置 cancelled
+  if (operation === 'cancel') {
+    return handleError(new Error('ORDER_STATUS_INVALID'), `当前订单状态（${order.status}）不可取消`, ERROR_CODES.BUSINESS)
+  }
+
   // 发货：写快递单号 + 状态
   if (operation === 'ship') {
     await db.collection('orders').doc(orderId).update({

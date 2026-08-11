@@ -6,7 +6,6 @@ exports.ORDER_STATUS_LABELS = {
     paid: '已支付',
     confirmed: '已确认',
     in_progress: '进行中',
-    pending_shipment: '待发货',
     shipped: '已发货',
     completed: '已完成',
     cancelled: '已取消',

@@ -1372,7 +1372,7 @@ export async function cancelOrder(
       throw err('PERMISSION_DENIED', '无权限操作此订单')
     }
 
-    const cancellableStatuses = ['pending_payment', 'paid']
+    const cancellableStatuses = ['pending_payment']
     if (!cancellableStatuses.includes(orderData.status || '')) {
       throw err('BUSINESS_ERROR', '当前订单状态不可取消')
     }

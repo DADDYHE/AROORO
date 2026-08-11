@@ -880,7 +880,7 @@ async function confirmReceiveTuanOrder(event, _context, auth) {
     if (order.type !== 'group_buy') {
         throw err('BUSINESS_ERROR', '非团购订单');
     }
-    if (!['pending_shipment', 'shipped'].includes(order.status)) {
+    if (order.status !== 'shipped') {
         throw err('BUSINESS_ERROR', '当前状态不可确认收货');
     }
     await db.collection('orders').doc(orderId).update({
@@ -935,11 +935,11 @@ async function cancelTuanOrder(event, _context, auth) {
     if (order.ownerId !== openid && !auth.isSuperAdmin && !auth.adminId) {
         throw err('PERMISSION_DENIED', '无权操作');
     }
-    if (!['pending_payment', 'paid', 'pending_shipment'].includes(order.status)) {
+    if (!['pending_payment', 'paid'].includes(order.status)) {
         throw err('BUSINESS_ERROR', '当前状态不可取消');
     }
     // L3: 仅已支付订单才需取消佣金（pending_payment 从未创建过佣金记录，调用是无效的）
-    if (['paid', 'pending_shipment'].includes(order.status)) {
+    if (order.status === 'paid') {
         try {
             const { cancelCommissionRecord } = require('./common/commission-utils');
             await cancelCommissionRecord(orderId);
@@ -952,7 +952,7 @@ async function cancelTuanOrder(event, _context, auth) {
         }
     }
     // 调用微信支付退款（已支付/待发货状态）
-    if (['paid', 'pending_shipment'].includes(order.status)) {
+    if (order.status === 'paid') {
         try {
             const totalAmount = Math.round(Number(order.totalAmount) * 100);
             if (totalAmount > 0) {
@@ -1040,7 +1040,7 @@ async function cancelTuanOrder(event, _context, auth) {
     await writeOperationLog({
         module: 'tuan_order', action: 'cancel', targetId: orderId,
         operatorId: auth.isSuperAdmin || auth.adminId ? (auth.adminId || auth.openid) : openid,
-        afterData: { previousStatus: order.status, refunded: ['paid', 'pending_shipment'].includes(order.status) },
+        afterData: { previousStatus: order.status, refunded: order.status === 'paid' },
     }).catch(e => logger.warn('cancelTuanOrder.auditLog', { msg: e?.message }));
     return handleSuccess(null, '取消申请已提交');
 }

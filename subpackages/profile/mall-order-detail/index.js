@@ -113,7 +113,7 @@ Page({
     const s = Number(wxState)
     if (s === 2) return 'shipped'
     if (s === 3 || s === 4) return 'completed'
-    if (s === 5) return 'cancelled'
+    if (s === 5) return 'refunded'
     return null
   },
 

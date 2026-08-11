@@ -15,7 +15,7 @@
  *
  * 安全设计：
  *   - 仅清理 pending_payment 状态订单（无资金流，可安全取消）
- *   - 不自动退款 paid/pending_shipment 订单（涉及资金流，仅告警由人工处理）
+ *   - 不自动退款 paid 订单（涉及资金流，仅告警由人工处理）
  *   - 所有 update 操作用 status 条件保护，确保幂等
  *
  * 审查修复（Sprint 51）：
@@ -182,7 +182,7 @@ async function fetchPendingOrders(dealIds) {
 // H2: 辅助函数 - 查询需人工处理的已支付订单数
 // =====================================================================
 /**
- * 统计指定 deals 下 paid/pending_shipment 状态的订单数（需人工处理）
+ * 统计指定 deals 下 paid 状态的订单数（需人工处理）
  *
  * @param dealIds 过期 deal 的 _id 列表
  * @returns 需人工处理的已支付订单数
@@ -195,7 +195,7 @@ async function countPaidOrdersForManual(dealIds) {
             .where({
             type: 'group_buy',
             dealId: _.in(dealBatch),
-            status: _.in(['paid', 'pending_shipment']),
+            status: _.in(['paid']),
         })
             .count();
         total += res.total;
@@ -329,7 +329,7 @@ async function rollbackTuanDealTotals(dealId, amount) {
  *   4. 取消 commissions where orderId in [被取消orders] && status='pending'
  *
  * 不处理（仅统计告警）：
- *   - paid/pending_shipment 状态订单（涉及资金流，由人工处理）
+ *   - paid 状态订单（涉及资金流，由人工处理）
  *
  * @param dealIds 过期 deal 的 _id 列表
  * @returns 下游清理结果
