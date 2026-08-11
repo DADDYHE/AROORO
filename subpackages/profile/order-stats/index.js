@@ -322,7 +322,7 @@ Page({
         startDate: this._formatDate(raw.startDate),
         endDate: this._formatDate(raw.endDate),
         dateRange,
-        address: raw.address || '',
+        address: this._stringifyAddress(raw.address),
         notes: raw.notes || '',
         keyMethod: raw.keyMethod || '',
         visitTime: raw.visitTime || '',
@@ -349,6 +349,25 @@ Page({
   },
 
   _formatDate(dateValue) { return formatDate(dateValue) },
+
+  /**
+   * 把地址字段归一化为字符串。
+   * 历史订单曾把整个地址对象存进 address 字段，直接渲染会得到 [object Object]。
+   * - 字符串：原样返回
+   * - 对象：优先取 fullAddress；否则按 province+city+district+detail 拼接
+   * - 其他：返回空串
+   */
+  _stringifyAddress(addr) {
+    if (!addr) {return ''}
+    if (typeof addr === 'string') {return addr}
+    if (typeof addr === 'object') {
+      if (typeof addr.fullAddress === 'string' && addr.fullAddress) {return addr.fullAddress}
+      return [addr.province, addr.city, addr.district, addr.detail]
+        .filter(v => v && typeof v === 'string')
+        .join('')
+    }
+    return ''
+  },
 
   _formatDateTime(dateValue) { return formatDateTime(dateValue) },
 

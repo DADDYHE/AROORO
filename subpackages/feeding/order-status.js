@@ -4,7 +4,7 @@ const PaymentService = require('../../services/PaymentService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const countdownBehavior = require('../../behaviors/countdownBehavior')
-const { formatTime } = require('../profile/utils/dateUtils')
+const { formatTime } = require('../../utils/dateUtils')
 const pageI18n = require('../../utils/page-i18n.js')
 
 const STATUS_CONFIG = {

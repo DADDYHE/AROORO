@@ -307,7 +307,7 @@ Page({
         petIds,
         petDetails,
         petServices: this.data.petServices,
-        address: this.data.address,
+        address: this.data.addressText || (typeof this.data.address === 'string' ? this.data.address : ''),
         contactPhone: this.data.contactPhone,
         keyMethod: this.data.keyMethod,
         visitTime: this.data.visitTimeText,

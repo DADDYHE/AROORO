@@ -159,7 +159,7 @@
 .pay-countdown-time {
   font-weight: 600;
   font-size: 34rpx;
-  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   letter-spacing: 1rpx;
 }
 
