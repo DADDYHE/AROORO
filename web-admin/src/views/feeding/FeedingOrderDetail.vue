@@ -16,6 +16,8 @@
       </el-descriptions>
       <div style="margin-top:20px" v-if="order.status === 'paid'">
         <el-button type="primary" @click="handleOrder('confirm')">确认订单</el-button>
+      </div>
+      <div style="margin-top:20px" v-if="order.status === 'pending_payment'">
         <el-button type="danger" @click="handleOrder('cancel')">取消</el-button>
       </div>
       <div style="margin-top:20px" v-if="order.status === 'confirmed'">

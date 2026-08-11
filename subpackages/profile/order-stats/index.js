@@ -53,10 +53,10 @@ const FEEDING_STATUS_TABS = [
   { key: 'refunded', label: '已退款' },
 ]
 
-// 寄养（boarding）专属 tabs：状态机为 pending/paid/confirmed/in_progress/completed/cancelled，无 rejected
+// 寄养（boarding）专属 tabs：状态机为 pending_payment/paid/confirmed/in_progress/completed/cancelled，无 rejected
 const BOARDING_STATUS_TABS = [
   { key: 'all', label: '全部' },
-  { key: 'pending', label: '待确认' },
+  { key: 'pending_payment', label: '待支付' },
   { key: 'paid', label: '已支付' },
   { key: 'confirmed', label: '已确认' },
   { key: 'in_progress', label: '进行中' },
@@ -267,8 +267,8 @@ Page({
         if (currentStatus === 'cancelled' && item.status !== 'cancelled') {return false}
         if (currentStatus === 'refunded' && item.status !== 'refunded') {return false}
       } else if (orderType === 'boarding') {
-        // 寄养：与 BOARDING_STATUS_TABS 一一对应（状态机为 pending/paid/confirmed/in_progress/completed/cancelled）
-        if (currentStatus === 'pending' && item.status !== 'pending') {return false}
+        // 寄养：与 BOARDING_STATUS_TABS 一一对应（状态机为 pending_payment/paid/confirmed/in_progress/completed/cancelled）
+        if (currentStatus === 'pending_payment' && item.status !== 'pending_payment') {return false}
         if (currentStatus === 'paid' && item.status !== 'paid') {return false}
         if (currentStatus === 'confirmed' && item.status !== 'confirmed') {return false}
         if (currentStatus === 'in_progress' && item.status !== 'in_progress') {return false}
