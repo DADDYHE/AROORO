@@ -196,6 +196,12 @@ async function handleBoardingOrder(event, context, auth) {
     }
   }
 
+  // reject 仅限已支付订单（pending_payment 不允许 rejected，与状态机 B1 表一致）；
+  // 未支付单被拒时报明确业务提示，避免误以为可拒绝未支付单
+  if (newStatus === 'rejected' && orderRes.data.status === 'pending_payment') {
+    throw err('ORDER_STATUS_INVALID', '订单尚未支付，无法拒绝；未支付订单将自动超时取消或由用户主动取消')
+  }
+
   try {
     validateTransition(BOARDING_ORDER_TRANSITIONS, orderRes.data.status, newStatus)
   } catch (e) {

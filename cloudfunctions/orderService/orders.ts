@@ -1439,6 +1439,11 @@ export async function handleBoardingOrder(event: EventLike, _context: ContextLik
   }
 
   if (!canPerformOperation(od.status, operation)) {
+    // reject 仅限已支付订单（pending_payment 不允许 rejected，与状态机真值一致）；
+    // 未支付单被拒时报明确业务提示，避免寄养家庭误以为可拒绝未支付单
+    if (operation === 'reject' && od.status === 'pending_payment') {
+      throw err('STATE_INVALID', '订单尚未支付，无法拒绝；未支付订单将自动超时取消或由用户主动取消')
+    }
     throw err('STATE_INVALID', `无法从 ${od.status} 变更为 ${newStatus}`)
   }
 

@@ -163,7 +163,6 @@ async function main() {
   }
 
   // 3) 矛盾组合【只报告，不自动改】
-  const ps = String
   for (const d of candidates) {
     if (!isBoardingOrder(d)) continue
     const st = d.status
