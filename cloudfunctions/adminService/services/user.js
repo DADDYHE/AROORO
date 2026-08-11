@@ -245,7 +245,7 @@ async function getEnhancedDashboardStats(event, context, auth) {
       ]),
       Promise.all([
         db.collection('orders').where({ status: 'pending_payment' }).count(),
-        db.collection('orders').where({ type: 'mall', status: 'confirmed' }).count(),
+        db.collection('orders').where({ type: 'mall', status: 'paid' }).count(),
         db.collection('admin_applications').where({ status: 'pending' }).count(),
         db.collection('withdrawals').where({ status: 'pending' }).count(),
       ]),

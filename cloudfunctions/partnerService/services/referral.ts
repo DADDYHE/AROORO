@@ -42,7 +42,7 @@ const logger = createLogger('partnerService:referral')
 const REFERRAL_BOARDS = [
   { type: 'mall', collection: 'orders', where: { type: 'mall' }, statuses: ['paid', 'shipped', 'completed'] },
   { type: 'boarding', collection: 'orders', where: { type: 'boarding' }, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
-  { type: 'tuan', collection: 'orders', where: { type: 'group_buy' }, statuses: ['paid', 'pending_shipment', 'shipped', 'completed'] },
+  { type: 'tuan', collection: 'orders', where: { type: 'group_buy' }, statuses: ['paid', 'shipped', 'completed'] },
   { type: 'feeding', collection: 'feedingOrders', where: {}, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
   { type: 'activity', collection: 'activity_registrations', where: {}, statuses: ['confirmed'] },
 ] as const

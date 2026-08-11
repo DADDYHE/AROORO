@@ -111,7 +111,6 @@ exports.FEEDING_OPERATION_LABELS = {
     cancel: '取消',
 };
 exports.MALL_STATUS_MAP = {
-    confirm: 'confirmed',
     ship: 'shipped',
     complete: 'completed',
     cancel: 'cancelled',

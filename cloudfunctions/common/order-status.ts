@@ -8,7 +8,6 @@ export type OrderStatus =
   | 'paid'
   | 'confirmed'
   | 'in_progress'
-  | 'pending_shipment'
   | 'shipped'
   | 'completed'
   | 'cancelled'
@@ -24,7 +23,6 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   paid: '已支付',
   confirmed: '已确认',
   in_progress: '进行中',
-  pending_shipment: '待发货',
   shipped: '已发货',
   completed: '已完成',
   cancelled: '已取消',

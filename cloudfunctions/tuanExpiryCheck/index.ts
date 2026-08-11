@@ -362,7 +362,7 @@ async function countPaidOrdersForManual(dealIds: string[]): Promise<number> {
       .where({
         type: 'group_buy',
         dealId: _.in(dealBatch),
-        status: _.in(['paid', 'pending_shipment']),
+        status: _.in(['paid']),
       })
       .count()
     total += res.total

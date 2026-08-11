@@ -2,7 +2,7 @@ const { orderManager, ORDER_EVENTS } = require('../../../services/OrderManager')
 const { OrderService } = require('../../../services/CloudFunctionService')
 const { TuanService } = require('../../../services/TuanService')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
-const { STATUS_TEXT_MAP, MALL_STATUS_TEXT_MAP, GROUP_STATUS_TEXT_MAP } = require('../utils/orderConstants')
+const { STATUS_TEXT_MAP, LOGISTICS_STATUS_TEXT_MAP } = require('../utils/orderConstants')
 const { formatDate, formatDateTime, parseDate } = require('../utils/dateUtils')
 
 const TYPE_MAP = {
@@ -16,7 +16,6 @@ const TYPE_MAP = {
 const MALL_STATUS_TABS = [
   { key: 'all', label: '全部' },
   { key: 'pending_payment', label: '待支付' },
-  { key: 'pending_shipment', label: '待发货' },
   { key: 'shipped', label: '已发货' },
   { key: 'completed', label: '已完成' },
   { key: 'cancelled', label: '已取消' },
@@ -25,7 +24,6 @@ const MALL_STATUS_TABS = [
 const GROUP_STATUS_TABS = [
   { key: 'all', label: '全部' },
   { key: 'pending_payment', label: '待支付' },
-  { key: 'pending_shipment', label: '待发货' },
   { key: 'shipped', label: '已发货' },
   { key: 'completed', label: '已完成' },
   { key: 'cancelled', label: '已取消' },
@@ -187,7 +185,7 @@ Page({
       })
       this._calcStats()
       this._applyFilter()
-      // 异步增强 wx 发货状态：paid/pending_shipment 订单可能已在微信平台后台发货
+      // 异步增强 wx 发货状态：paid 订单可能已在微信平台后台发货
       this._enrichWxShippingStatus()
         .then(() => {
           // wx 状态回来后重算每个订单的 status（shipped），再渲染
@@ -211,7 +209,6 @@ Page({
         if (currentStatus === 'cancelled' && item.status !== 'cancelled' && !(item.status === 'pending_payment' && item.isEnded)) {return false}
       } else if (orderType === 'mall' || orderType === 'group') {
         if (currentStatus === 'pending_payment' && item.status !== 'pending_payment') {return false}
-        if (currentStatus === 'pending_shipment' && !['pending_shipment', 'paid', 'confirmed'].includes(item.status)) {return false}
         if (currentStatus === 'shipped' && item.status !== 'shipped') {return false}
         if (currentStatus === 'completed' && item.status !== 'completed') {return false}
         if (currentStatus === 'cancelled' && item.status !== 'cancelled') {return false}
@@ -270,7 +267,7 @@ Page({
         itemCount: items.length,
         hasMultiItems: items.length > 1,
         status,
-        statusText: MALL_STATUS_TEXT_MAP[status] || status,
+        statusText: LOGISTICS_STATUS_TEXT_MAP[status] || status,
         totalPrice: raw.totalAmount || 0,
         createdAt: this._formatDateTime(raw.createdAt),
         receiverName: raw.receiverName || '',
@@ -290,7 +287,7 @@ Page({
         unitPrice: raw.unitPrice || 0,
         quantity: raw.quantity || 1,
         status,
-        statusText: GROUP_STATUS_TEXT_MAP[status] || status,
+        statusText: LOGISTICS_STATUS_TEXT_MAP[status] || status,
         totalPrice: raw.totalAmount || 0,
         createdAt: this._formatDateTime(raw.createdAt),
         receiverName: raw.receiverName || '',
@@ -377,7 +374,7 @@ Page({
    * 兜底识别 wx 平台"发货管理"标记：返回归一化状态 'shipped'，未识别则返回 ''
    *
    * 微信小程序 https://mp.weixin.qq.com/wxamp/order 后台发货后，订单在我们后端
-   * 仍是 paid/confirmed（不会自动回写），但通过 wx getOrder 接口可识别。
+   * 仍是 paid（不会自动回写），但通过 wx getOrder 接口可识别。
    * _enrichWxShippingStatus 会把 wxOrderState / wxShipping 字段附加到订单上，
    * 这里直接读取。
    */
@@ -401,7 +398,7 @@ Page({
       if (v === 1 || v === '1') {return 'shipped'}
       if (typeof v === 'string' && /^(shipped|delivered|已发货)$/i.test(v)) {return 'shipped'}
     }
-    if (raw.shippedAt && (raw.status === 'paid' || raw.status === 'confirmed')) {
+    if (raw.shippedAt && raw.status === 'paid') {
       return 'shipped'
     }
     return ''
@@ -416,7 +413,7 @@ Page({
     if (!this._allOrders || this._allOrders.length === 0) {return}
     const targets = this._allOrders.filter(o => {
       if (o.orderType !== 'mall' && o.orderType !== 'group_buy') {return false}
-      return ['paid', 'confirmed', 'pending_shipment'].includes(o.status)
+      return o.status === 'paid'
     })
     if (targets.length === 0) {return}
 
@@ -447,9 +444,9 @@ Page({
                 if (newStatus && newStatus !== order.status) {
                   order.status = newStatus
                   if (order.orderType === 'mall') {
-                    order.statusText = MALL_STATUS_TEXT_MAP[newStatus] || newStatus
+                    order.statusText = LOGISTICS_STATUS_TEXT_MAP[newStatus] || newStatus
                   } else if (order.orderType === 'group_buy') {
-                    order.statusText = GROUP_STATUS_TEXT_MAP[newStatus] || newStatus
+                    order.statusText = LOGISTICS_STATUS_TEXT_MAP[newStatus] || newStatus
                   } else {
                     order.statusText = STATUS_TEXT_MAP[newStatus] || newStatus
                   }
@@ -477,9 +474,9 @@ Page({
       if (newStatus && newStatus !== order.status) {
         order.status = newStatus
         if (order.orderType === 'mall') {
-          order.statusText = MALL_STATUS_TEXT_MAP[newStatus] || newStatus
+          order.statusText = LOGISTICS_STATUS_TEXT_MAP[newStatus] || newStatus
         } else if (order.orderType === 'group_buy') {
-          order.statusText = GROUP_STATUS_TEXT_MAP[newStatus] || newStatus
+          order.statusText = LOGISTICS_STATUS_TEXT_MAP[newStatus] || newStatus
         } else {
           order.statusText = STATUS_TEXT_MAP[newStatus] || newStatus
         }
@@ -491,7 +488,7 @@ Page({
     const orders = this._allOrders || []
     const PAID_STATUSES = [
       'paid', 'confirmed', 'in_progress', 'completed',
-      'pending_shipment', 'shipped',
+      'shipped',
     ]
     const paidOrders = orders.filter(o => PAID_STATUSES.includes(o.status))
     const count = paidOrders.length
@@ -559,9 +556,9 @@ Page({
         if (target) {
           target.status = 'cancelled'
           if (target.orderType === 'mall') {
-            target.statusText = MALL_STATUS_TEXT_MAP.cancelled
+            target.statusText = LOGISTICS_STATUS_TEXT_MAP.cancelled
           } else if (target.orderType === 'group_buy') {
-            target.statusText = GROUP_STATUS_TEXT_MAP.cancelled
+            target.statusText = LOGISTICS_STATUS_TEXT_MAP.cancelled
           } else {
             target.statusText = STATUS_TEXT_MAP.cancelled
           }

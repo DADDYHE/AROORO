@@ -2,7 +2,7 @@ const { handleSuccess, handleError, generateId, ERROR_CODES, paginate, escapeReg
 const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
 const { filterFields, FIELD_WHITELISTS } = require('../common/validator')
-const { MALL_ORDER_TRANSITIONS, MALL_STATUS_MAP, STATUS_LABELS, validateTransition } = require('./stateMachine')
+const { LOGISTICS_ORDER_TRANSITIONS, MALL_STATUS_MAP, STATUS_LABELS, validateTransition } = require('./stateMachine')
 const { createCommissionRecord } = require('./commission')
 const { enrichBuyerFields } = require('./_enrichBuyers')
 const { err } = require('../common/errors')
@@ -297,7 +297,7 @@ async function handleMallOrder(event, context, auth) {
   if (orderRes.data.type !== 'mall') {throw err('BUSINESS_ERROR', '非商城订单')}
 
   try {
-    validateTransition(MALL_ORDER_TRANSITIONS, orderRes.data.status, newStatus)
+    validateTransition(LOGISTICS_ORDER_TRANSITIONS, orderRes.data.status, newStatus)
   } catch (e) {
     return handleError(e, e.message, ERROR_CODES.BUSINESS)
   }
@@ -319,7 +319,7 @@ async function shipMallOrder(event, context, auth) {
   if (orderRes.data.type !== 'mall') {throw err('BUSINESS_ERROR', '非商城订单')}
 
   try {
-    validateTransition(MALL_ORDER_TRANSITIONS, orderRes.data.status, 'shipped')
+    validateTransition(LOGISTICS_ORDER_TRANSITIONS, orderRes.data.status, 'shipped')
   } catch (e) {
     return handleError(e, e.message, ERROR_CODES.BUSINESS)
   }
@@ -444,7 +444,7 @@ async function completeMallOrder(event, context, auth) {
   if (!orderRes.data) {throw err('NOT_FOUND', '订单不存在')}
 
   try {
-    validateTransition(MALL_ORDER_TRANSITIONS, orderRes.data.status, 'completed')
+    validateTransition(LOGISTICS_ORDER_TRANSITIONS, orderRes.data.status, 'completed')
   } catch (e) {
     return handleError(e, e.message, ERROR_CODES.BUSINESS)
   }

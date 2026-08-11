@@ -1372,7 +1372,7 @@ export async function cancelOrder(
       throw err('PERMISSION_DENIED', '无权限操作此订单')
     }
 
-    const cancellableStatuses = ['pending_payment', 'pending_shipment']
+    const cancellableStatuses = ['pending_payment', 'paid']
     if (!cancellableStatuses.includes(orderData.status || '')) {
       throw err('BUSINESS_ERROR', '当前订单状态不可取消')
     }
@@ -1540,7 +1540,7 @@ export async function confirmReceive(
 
     // ★ Plan A Bonus：确认收货前先对账一次——避免 wx 已确认收货（order_state=3）但本地还是 shipped
     // 用户在小程序能进入这个流程意味着已经从 wx 端完成收货，强制同步一次。
-    if (orderData.status === 'shipped' || orderData.status === 'paid' || orderData.status === 'confirmed') {
+    if (orderData.status === 'shipped' || orderData.status === 'paid') {
       try {
         // M6: 改用顶部静态 require 的 reconcileOrderWithWx
         const sync = await reconcileOrderWithWx({ db, logger, order: orderData as any })
@@ -1610,7 +1610,7 @@ export async function deleteOrder(
 // =====================================================================
 //
 // 桥接 wx 平台"发货信息管理"——商家在 https://mp.weixin.qq.com/wxamp/order
-// 后台发货时，订单在我们后端 orders 集合中 status 仍可能是 paid/confirmed，
+// 后台发货时，订单在我们后端 orders 集合中 status 仍可能是 paid，
 // 但实际已发货。本接口按 orderIds 批量调 wx getOrder 接口，返回
 // order_state 与 shipping 字段，供前端判断 wx 平台发货状态。
 //
