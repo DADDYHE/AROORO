@@ -28,9 +28,9 @@
         </view>
         <view class="address-detail">{{ item.fullAddress }}</view>
         <view class="address-actions">
-          <text class="address-action-edit" bindtap="editAddress" data-id="{{ item._id }}">编辑</text>
-          <text class="address-action-set-default" wx:if="{{ !item.isDefault }}" bindtap="setDefault" data-id="{{ item._id }}">设为默认</text>
-          <text class="address-action-delete" bindtap="deleteAddress" data-id="{{ item._id }}">删除</text>
+          <text class="address-action-edit" catchtap="editAddress" data-id="{{ item._id }}">编辑</text>
+          <text class="address-action-set-default" wx:if="{{ !item.isDefault }}" catchtap="setDefault" data-id="{{ item._id }}">设为默认</text>
+          <text class="address-action-delete" catchtap="deleteAddress" data-id="{{ item._id }}">删除</text>
         </view>
       </view>
     </block>

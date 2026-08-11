@@ -1,4 +1,5 @@
 const app = getApp()
+const { authService } = require('../../../services/AuthService')
 const { UserService } = require('../../../services/CloudFunctionService')
 const { validateFields } = require('../../validator')
 
