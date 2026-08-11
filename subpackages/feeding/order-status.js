@@ -163,8 +163,9 @@ Page({
   // 规则：
   //   status === 'cancelled' → paymentStatus === 'refunded' ? 'refunded' : 'closed'
   //   status === 'refunded'  → 'refunded'
-  //   金额为 0               → 'free'
+  //   paymentStatus === 'paid' && 金额为 0 → 'free'
   //   其他                   → paymentStatus || 'unpaid'
+  // 与 web-admin/src/utils/payment-status.js 保持一致
   _normalizePaymentStatus(order) {
     if (!order) {return 'unpaid'}
     const { status, paymentStatus } = order
@@ -174,9 +175,11 @@ Page({
     if (status === 'refunded') {
       return 'refunded'
     }
-    const amount = Number(order.totalPrice || order.totalAmount || 0)
-    if (amount === 0) {
-      return 'free'
+    if (paymentStatus === 'paid') {
+      const amount = Number(order.totalPrice) || Number(order.totalAmount) || Number(order.finalAmount) || 0
+      if (amount === 0) {
+        return 'free'
+      }
     }
     return paymentStatus || 'unpaid'
   },

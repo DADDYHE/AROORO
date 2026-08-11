@@ -36,8 +36,8 @@ import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
 import { normalizePaymentStatus } from '@/utils/payment-status'
 
-// 团购订单实际状态：pending_payment/paid/shipped/completed/cancelled/refunded（confirmed/pending_shipment 为历史死状态）
-const TUAN_STATUS = { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunded: '已退款' }
+// 团购订单实际状态：pending_payment/paid/shipped/completed/refunded（cancelled 单有独立的"取消订单"页面，此处不下拉）
+const TUAN_STATUS = { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', refunded: '已退款' }
 const statusFilter = ref('')
 
 function fetchFn(params) {

@@ -139,7 +139,6 @@
       </block>
       <block wx:elif="{{order.status === 'refunded'}}">
         <view class="btn-secondary" bindtap="onRebuy">再次购买</view>
-        <view class="btn-secondary danger" bindtap="onDeleteOrder">删除订单</view>
       </block>
     </view>
     </root-portal>

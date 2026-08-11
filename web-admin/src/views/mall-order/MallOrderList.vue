@@ -36,7 +36,7 @@ import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
 import { normalizePaymentStatus } from '@/utils/payment-status'
 
-const MALL_STATUS = { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunded: '已退款' }
+const MALL_STATUS = { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', refunded: '已退款' }
 const statusFilter = ref('')
 
 function fetchFn(params) {
