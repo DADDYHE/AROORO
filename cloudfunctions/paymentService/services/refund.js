@@ -81,6 +81,35 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
     }
     // 安全校验：查询订单，校验调用者是订单所有者 + 实际支付金额校验
     const orderDoc = await fetchOrderAndVerifyOwnership(db, outTradeNo, openid, Number(refundAmount));
+    // ★ 提前推导 orderType（ACT_ → activity），守卫与后续事务段共用，
+    //   活动报名单本身无 orderType 字段，但 ACT_ 前缀可稳定推导出 activity
+    const orderType = orderDoc.orderType || getOrderType(outTradeNo) || 'order';
+    // ★★★ 退款守卫（必须在 httpsRequest 之前，钱打出去之前拦截）★★★
+    if (orderType === 'activity') {
+        // 5.3 签到守卫：直接读 orderDoc.signInStatus（orderDoc 即被退款报名单，activity_registrations 主集合）
+        const regSignInStatus = orderDoc.signInStatus;
+        if (regSignInStatus === 'signed') {
+            throw (0, errors_1.err)('REFUND_DENIED', '已签到的报名无法自助退款，请联系客服');
+        }
+        // 5.4 活动时间守卫：活动开始后禁止自助退款
+        if (orderDoc.activityId) {
+            try {
+                const actRes = await db.collection('activities').doc(orderDoc.activityId).field({ startTime: true }).get();
+                const activity = actRes.data;
+                if (activity && activity.startTime) {
+                    const start = new Date(activity.startTime);
+                    if (!isNaN(start.getTime()) && start.getTime() <= Date.now()) {
+                        throw (0, errors_1.err)('REFUND_DENIED', '活动已开始，无法自助退款，请联系客服');
+                    }
+                }
+            }
+            catch (e) {
+                if (isBusinessError(e))
+                    throw e;
+                logger.warn('createRefund.queryActivity.failed', { orderId: orderDoc._id, msg: (e === null || e === void 0 ? void 0 : e.message) });
+            }
+        }
+    }
     // Sprint 16: 风控前置扫描
     const { pendingReview, riskDecision, riskReasons } = await runRiskControl({
         db,
@@ -131,12 +160,10 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
     // 然后在单一事务内逐个 doc(id).update()，任一步失败整体回滚。
     // 注意：微信退款已实际发生无法回滚，事务失败时记录告警日志供人工对账。
     if (orderDoc._id) {
-        // H4+M15: 复用 pay.ts 的 getOrderType（基于完整前缀匹配）
+        // H4+M15: 复用上方提前推导的 orderType（基于完整前缀匹配），避免二次派生
         //   旧实现 `outTradeNo.split('_')[0].toLowerCase()`：
         //   - ACT_xxx → act（不匹配 activity）；FD_xxx → fd（不匹配 feeding）
         //   - 导致后续 tuan_orders 同步、佣金撤销、registration 状态同步全部跳过
-        const inferredType = getOrderType(outTradeNo);
-        const orderType = orderDoc.orderType || (inferredType || 'order');
         // 事务前：查询所有需要在事务内更新的文档 _id 列表
         let commissionIds = [];
         let serviceIncomeIds = [];
@@ -246,7 +273,8 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
             }
             for (const rid of registrationIds) {
                 await transaction.collection('activity_registrations').doc(rid).update({
-                    data: { status: 'refunded', updatedAt: db.serverDate() },
+                    // V5: 报名单同步补写 paymentStatus='refunded'，与 adminService adminRefund 对齐
+                    data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
                 });
             }
             // P1 修复：活动退款回退名额（按报名实际人数扣减，且不低于 0，防并发/脏数据扣成负数）

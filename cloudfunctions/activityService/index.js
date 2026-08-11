@@ -178,7 +178,7 @@ async function generateActivityCommissions(activityId) {
     try {
         // 查询该活动所有已确认的报名（P1 修复：分页拉全，避免 CloudBase get() 默认 100 条截断
         //   导致报名 >100 人的活动佣金漏发）
-        const registrations = await fetchAllPaged('activity_registrations', { activityId, status: 'confirmed' }, 'createdAt', 10000);
+        const registrations = await fetchAllPaged('activity_registrations', { activityId, status: _.in(['paid', 'completed']) }, 'createdAt', 10000);
         if (registrations.length === 0) {
             logger.info('generateActivityCommissions.noRegistrations', { activityId });
             return;
@@ -191,7 +191,7 @@ async function generateActivityCommissions(activityId) {
         const orders = [];
         for (let i = 0; i < orderIds.length; i += 100) {
             const ordersRes = await db.collection('orders')
-                .where({ _id: _.in(orderIds.slice(i, i + 100)), status: 'confirmed' })
+                .where({ _id: _.in(orderIds.slice(i, i + 100)), status: _.in(['paid', 'completed']) })
                 .get();
             orders.push(...(ordersRes.data || []));
         }
@@ -387,7 +387,7 @@ async function getActivityList(event, context, auth) {
     let myRegistrations = [];
     if (auth.openid) {
         const regRes = await db.collection('activity_registrations')
-            .where({ ownerId: auth.openid, status: 'confirmed' })
+            .where({ ownerId: auth.openid, status: _.in(['pending_payment', 'paid', 'completed']) })
             .field({ activityId: true })
             .get();
         myRegistrations = (regRes.data || []).map((r) => r.activityId).filter((id) => Boolean(id));
@@ -484,7 +484,7 @@ async function getActivityDetail(event, context, auth) {
             db.collection('activities').doc(activityId).get(),
             auth.openid
                 ? db.collection('activity_registrations')
-                    .where({ activityId, ownerId: auth.openid, status: 'confirmed' })
+                    .where({ activityId, ownerId: auth.openid, status: _.in(['pending_payment', 'paid', 'completed']) })
                     .limit(1)
                     .get()
                 : Promise.resolve({ data: [] }),
@@ -595,7 +595,7 @@ async function submitRegistration(event, context, auth) {
     //   未支付的待支付报名单同样占用一次报名机会，防止同一用户对同一活动
     //   反复提交生成多张待支付单并重复付款（资金风险）。
     const existReg = await db.collection('activity_registrations')
-        .where({ activityId, ownerId: openid, status: _.in(['confirmed', 'pending_payment']) })
+        .where({ activityId, ownerId: openid, status: _.in(['paid', 'pending_payment']) })
         .count();
     if (existReg.total > 0) {
         throw err('BUSINESS_ERROR', '您已报名此活动（含待支付订单），请勿重复报名');
@@ -651,10 +651,10 @@ async function submitRegistration(event, context, auth) {
             contactName: contactName || '',
             notes: notes || '',
             friends: friendsArray,
-            status: isPaid ? 'pending_payment' : 'confirmed',
-            // P0-A 修复：报名单补写 paymentStatus（付费=pending 中间态 / 免费=paid 无支付流程），
+            status: isPaid ? 'pending_payment' : 'paid',
+            // P0-A 修复：报名单补写 paymentStatus（付费=unpaid 中间态 / 免费=paid 无支付流程），
             //   paymentService.createPayment 条件更新与 orderTimeoutService 超时扫描均依赖该字段
-            paymentStatus: isPaid ? 'pending' : 'paid',
+            paymentStatus: isPaid ? 'unpaid' : 'paid',
             participantCount: pCount,
             petCount,
             pricePerPerson,
@@ -716,7 +716,7 @@ async function submitRegistration(event, context, auth) {
                 couponDiscount: coupon.discount,
                 phone: phone || '',
                 notes: notes || '',
-                status: isPaid ? 'pending_payment' : 'confirmed',
+                status: isPaid ? 'pending_payment' : 'paid',
                 ownerInfo: user ? { nickName: user.nickName, avatarUrl: user.avatarUrl, phone } : { phone },
                 createdAt: now,
                 updatedAt: now,
@@ -726,6 +726,11 @@ async function submitRegistration(event, context, auth) {
             activityOrder._id = generateId('order', openid);
             activityOrder.bookingKey = `nb_${activityOrder._id}`;
             await transaction.collection('orders').add({ data: activityOrder });
+            // ★ V5: 镜像单 add 成功后立即回写 registration.orderId（同一事务内），
+            //   修复佣金生成/服务收入/订单关联依赖 registration.orderId 而活跃路径从未写入的断裂
+            await transaction.collection('activity_registrations').doc(regResult._id).update({
+                data: { orderId: activityOrder._id, updatedAt: now },
+            });
         }
         catch (orderErr) {
             logger.warn('创建活动订单记录失败:', orderErr.message);
@@ -864,7 +869,7 @@ async function getRegistrationList(event, context, auth) {
     // M5 修复：status==='active'（进行中的已报名活动）过滤提前到查询层，
     // 分页与 total 均基于过滤后的数据集，不再对"当前页"做内存过滤导致分页错乱
     if (status === 'active') {
-        const myRegs = await fetchAllPaged('activity_registrations', { ownerId: openid, status: 'confirmed' }, 'createdAt', 1000);
+        const myRegs = await fetchAllPaged('activity_registrations', { ownerId: openid, status: _.in(['pending_payment', 'paid', 'completed']) }, 'createdAt', 1000);
         const myActivityIds = [...new Set(myRegs.map((r) => r.activityId).filter((id) => Boolean(id)))];
         if (myActivityIds.length === 0) {
             return handleSuccess({ list: [], total: 0, page, pageSize: safePageSize }, '获取成功');
@@ -896,7 +901,7 @@ async function getRegistrationList(event, context, auth) {
             return handleSuccess({ list: [], total: 0, page, pageSize: safePageSize }, '获取成功');
         }
         where.activityId = _.in(activeIds);
-        where.status = 'confirmed';
+        where.status = _.in(['pending_payment', 'paid', 'completed']);
     }
     else if (status) {
         where.status = status;
@@ -1044,9 +1049,7 @@ async function signInRegistration(event, context, auth) {
     if (reg.ownerId !== auth.openid) {
         throw err('PERMISSION_DENIED', '只能签到自己的报名');
     }
-    if (reg.status !== 'confirmed') {
-        throw err('INVALID_STATE', '当前报名状态不可签到');
-    }
+    if (!['paid', 'completed'].includes(reg.status)) { throw err('INVALID_STATE', '当前报名状态不可签到'); }
     if (reg.signInStatus === 'signed') {
         return handleSuccess({ signed: true, alreadySigned: true }, '您已签到');
     }

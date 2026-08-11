@@ -93,7 +93,8 @@ Page({
       const { registration, activityInfo } = result.data
       const statusMap = {
         pending_payment: '待付款',
-        confirmed: '已确认',
+        paid: '已支付',
+        completed: '已完成',
         cancelled: '已取消',
         refunded: '已退款',
       }

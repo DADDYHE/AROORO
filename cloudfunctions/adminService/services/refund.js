@@ -354,7 +354,8 @@ async function adminRefund(event, context, auth) {
       }
       for (const rid of registrationIds) {
         await transaction.collection('activity_registrations').doc(rid).update({
-          data: { status: 'refunded', updatedAt: db.serverDate() },
+          // V5: 报名单同步补写 paymentStatus='refunded'，与订单/镜像单支付状态一致
+          data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
         })
       }
 

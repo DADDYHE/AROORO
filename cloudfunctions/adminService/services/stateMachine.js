@@ -15,7 +15,7 @@
  *   （运行时仍消费 .js 编译产物）
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateTransition = exports.canTransition = exports.MALL_STATUS_MAP = exports.FEEDING_OPERATION_LABELS = exports.FEEDING_STATUS_MAP = exports.BOARDING_STATUS_MAP = exports.STATUS_LABELS = exports.HOST_SERVICE_TRANSITIONS = exports.MALL_ORDER_TRANSITIONS = exports.FEEDING_ORDER_TRANSITIONS = exports.BOARDING_ORDER_TRANSITIONS = void 0;
+exports.validateTransition = exports.canTransition = exports.ACTIVITY_ORDER_TRANSITIONS = exports.MALL_STATUS_MAP = exports.FEEDING_OPERATION_LABELS = exports.FEEDING_STATUS_MAP = exports.BOARDING_STATUS_MAP = exports.STATUS_LABELS = exports.HOST_SERVICE_TRANSITIONS = exports.MALL_ORDER_TRANSITIONS = exports.FEEDING_ORDER_TRANSITIONS = exports.BOARDING_ORDER_TRANSITIONS = void 0;
 /* ============================================================
  * 状态转移表
  * ============================================================ */
@@ -61,6 +61,19 @@ exports.LOGISTICS_ORDER_TRANSITIONS = {
 // 历史别名：mall/tuan 状态机已统一为 LOGISTICS_ORDER_TRANSITIONS
 exports.MALL_ORDER_TRANSITIONS = exports.LOGISTICS_ORDER_TRANSITIONS;
 exports.TUAN_ORDER_TRANSITIONS = exports.LOGISTICS_ORDER_TRANSITIONS;
+/**
+ * 活动订单统一状态机（V5）
+ * - 5 态：pending_payment / paid / completed / cancelled / refunded
+ * - 删除死状态 confirmed / pending
+ * - paid → completed（活动结束，orderTimeoutService completeActivityOrders 定时任务）/ refunded（退款）
+ */
+exports.ACTIVITY_ORDER_TRANSITIONS = {
+    pending_payment: ['paid', 'cancelled'],
+    paid: ['completed', 'refunded'],
+    completed: [],
+    cancelled: [],
+    refunded: [],
+};
 exports.HOST_SERVICE_TRANSITIONS = {
     pending_review: ['active', 'rejected'],
     active: ['suspended', 'inactive'],
@@ -153,6 +166,7 @@ const _exports = {
     BOARDING_ORDER_TRANSITIONS: exports.BOARDING_ORDER_TRANSITIONS,
     FEEDING_ORDER_TRANSITIONS: exports.FEEDING_ORDER_TRANSITIONS,
     LOGISTICS_ORDER_TRANSITIONS: exports.LOGISTICS_ORDER_TRANSITIONS,
+    ACTIVITY_ORDER_TRANSITIONS: exports.ACTIVITY_ORDER_TRANSITIONS,
     MALL_ORDER_TRANSITIONS: exports.MALL_ORDER_TRANSITIONS,
     TUAN_ORDER_TRANSITIONS: exports.TUAN_ORDER_TRANSITIONS,
     HOST_SERVICE_TRANSITIONS: exports.HOST_SERVICE_TRANSITIONS,

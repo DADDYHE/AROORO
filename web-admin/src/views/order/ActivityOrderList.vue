@@ -36,8 +36,8 @@ import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
 import { normalizePaymentStatus } from '@/utils/payment-status'
 
-// P3 修复：活动订单状态集为 pending_payment/confirmed/refunded/cancelled
-const ACTIVITY_STATUS = { pending_payment: '待支付', confirmed: '已确认', refunded: '已退款', cancelled: '已取消' }
+// V5: 活动订单统一五态（pending_payment/paid/completed/cancelled/refunded，死状态 confirmed 已移除）
+const ACTIVITY_STATUS = { pending_payment: '待支付', paid: '已支付', completed: '已完成', cancelled: '已取消', refunded: '已退款' }
 const statusFilter = ref('')
 
 function fetchFn(params) {

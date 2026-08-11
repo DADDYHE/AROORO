@@ -44,7 +44,8 @@ const REFERRAL_BOARDS = [
   { type: 'boarding', collection: 'orders', where: { type: 'boarding' }, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
   { type: 'tuan', collection: 'orders', where: { type: 'group_buy' }, statuses: ['paid', 'shipped', 'completed'] },
   { type: 'feeding', collection: 'feedingOrders', where: {}, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
-  { type: 'activity', collection: 'activity_registrations', where: {}, statuses: ['confirmed'] },
+  // V5: 活动订单死状态 confirmed 移除，改为 paid（已支付）与 completed（活动结束）
+  { type: 'activity', collection: 'activity_registrations', where: {}, statuses: ['paid', 'completed'] },
 ] as const
 
 /** 聚合金额表达式：totalAmount || totalPrice || price */

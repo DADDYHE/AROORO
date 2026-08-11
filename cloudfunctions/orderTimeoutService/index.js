@@ -873,6 +873,70 @@ async function cancelActivityOrders(result, activityTimeout) {
         result.errors.push({ type: 'activity', error: error.message });
     }
 }
+// =====================================================================
+// 业务函数：活动结束自动置 completed（V5）
+// =====================================================================
+/**
+ * 活动结束后，将已支付（paid）的活动报名单及对应 orders 镜像单置为 completed。
+ * - 活动 endTime 为 "YYYY-MM-DD HH:mm"（北京时区字符串），与北京时间比较，避免时区偏差。
+ * - 幂等：仅当 status 仍为 'paid' 才更新，避免重复推进。
+ * - 活动文档缺失（endTime 未知）时跳过，不推进。
+ */
+async function completeActivityOrders(result, now) {
+    try {
+        // 北京时区当前时间字符串（可比活动 endTime "YYYY-MM-DD HH:mm"）
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const bjNow = new Date(utc + (8 * 3600000));
+        const nowStr = `${bjNow.getFullYear()}-${String(bjNow.getMonth() + 1).padStart(2, '0')}-${String(bjNow.getDate()).padStart(2, '0')} ${String(bjNow.getHours()).padStart(2, '0')}:${String(bjNow.getMinutes()).padStart(2, '0')}`;
+        // 查询所有已支付（paid）的活动报名单
+        const paidRegs = await fetchAllExpired('activity_registrations', { status: 'paid' }, { _id: true, activityId: true, ownerId: true, participantCount: true });
+        // 按 activityId 批量查询活动 endTime，避免 N+1
+        const activityIds = [...new Set(paidRegs.map((r) => r.activityId).filter((id) => Boolean(id)))];
+        const endedActivityIds = new Set();
+        for (let i = 0; i < activityIds.length; i += 100) {
+            const actRes = await db.collection('activities')
+                .where({ _id: _.in(activityIds.slice(i, i + 100)) })
+                .field({ _id: true, endTime: true })
+                .get();
+            ;((actRes.data || [])).forEach((a) => {
+                if (a._id && a.endTime && String(a.endTime) <= nowStr) {
+                    endedActivityIds.add(a._id);
+                }
+            });
+        }
+        for (const reg of paidRegs) {
+            if (!reg.activityId || !endedActivityIds.has(reg.activityId)) { continue; }
+            try {
+                // 幂等：仅当 status 仍为 paid 才更新
+                const updRes = await db.collection('activity_registrations')
+                    .where({ _id: reg._id, status: 'paid' })
+                    .update({ data: { status: 'completed', completedAt: db.serverDate(), updatedAt: db.serverDate() } });
+                if (!updRes.updated || updRes.updated === 0) {
+                    logger.info('completeActivityOrders.skip_not_paid', { registrationId: reg._id });
+                    continue;
+                }
+                // 同步关联的 orders 镜像单（orderType='activity'）
+                if (reg.ownerId) {
+                    try {
+                        await db.collection('orders')
+                            .where({ activityId: reg.activityId, ownerId: reg.ownerId, orderType: 'activity', status: 'paid' })
+                            .update({ data: { status: 'completed', completedAt: db.serverDate(), updatedAt: db.serverDate() } });
+                    }
+                    catch (mirrorErr) {
+                        logger.warn('completeActivityOrders.mirror_update_failed', { orderId: reg.orderId, msg: mirrorErr?.message });
+                    }
+                }
+                result.completedActivityOrders++;
+            }
+            catch (error) {
+                pushError(result, { orderId: reg._id, error: error.message });
+            }
+        }
+    }
+    catch (error) {
+        result.errors.push({ type: 'activity', error: error.message });
+    }
+}
 const FAILED_OP_MAX_RETRY = 5;
 const FAILED_OP_BATCH = 50;
 /** 按 type 重新执行单条失败操作（复用 orderService 同款补偿函数） */
@@ -976,6 +1040,7 @@ async function main(event, _context) {
         cancelledMallOrders: 0,
         cancelledGroupBuyOrders: 0,
         cancelledActivityOrders: 0,
+        completedActivityOrders: 0,
         closedWechatOrders: 0,
         closeOrderFailed: 0,
         errors: [],
@@ -1011,6 +1076,7 @@ async function main(event, _context) {
             cancelMallOrders(results, mallTimeout),
             cancelGroupBuyOrders(results, groupBuyTimeout),
             cancelActivityOrders(results, activityTimeout),
+            completeActivityOrders(results, now),
         ]);
         // H4 / M10 补偿队列闭环：消费 failed_operations 中 pending 记录并重试
         //   独立 try，失败不影响上面的超时取消逻辑；底层补偿函数幂等，安全重试
@@ -1060,7 +1126,7 @@ async function main(event, _context) {
     finally {
         _isRunning = false;
     }
-    return handleSuccess(results, `处理完成：取消寄养${results.cancelledBoardingOrders}笔，喂养${results.cancelledFeedingOrders}笔，商城${results.cancelledMallOrders}笔，团购${results.cancelledGroupBuyOrders}笔，活动${results.cancelledActivityOrders}笔，微信关单${results.closedWechatOrders}笔`);
+    return handleSuccess(results, `处理完成：取消寄养${results.cancelledBoardingOrders}笔，喂养${results.cancelledFeedingOrders}笔，商城${results.cancelledMallOrders}笔，团购${results.cancelledGroupBuyOrders}笔，活动取消${results.cancelledActivityOrders}笔，活动完成${results.completedActivityOrders}笔，微信关单${results.closedWechatOrders}笔`);
 }
 exports.main = main;
 // =====================================================================

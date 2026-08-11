@@ -167,7 +167,8 @@ async function getMyIncomeOverview(event, context, auth) {
         const commissionMatch = { inviterId: openid, status: _.in(['pending', 'settled']) };
         const boardingMatch = { organizerId: openid, status: _.in(COMPLETED_BOARDING_STATUSES), type: 'boarding' };
         // 活动收入：活动创建者的报名费收入（orders 镜像单，与 adminService 旧版口径一致）
-        const activityMatch = { organizerId: openid, status: 'confirmed', orderType: 'activity' };
+        // V5: 活动订单死状态 confirmed 移除，改为 paid（已支付）与 completed（活动结束）
+        const activityMatch = { organizerId: openid, status: _.in(['paid', 'completed']), orderType: 'activity' };
         const feedingMatch = { ownerId: openid, status: 'completed' };
         const [commissionByOrderTypeAgg, commissionByOrderTypeStatusAgg, commissionByOrderTypeMonthlyAgg, commissionByOrderTypeTodayAgg, boardingTotalAgg, boardingMonthlyAgg, boardingTodayAgg, activityTotalAgg, activityMonthlyAgg, activityTodayAgg, feedingTotalAgg, feedingMonthlyAgg, feedingTodayAgg, commissionWalletRes, serviceWalletRes,] = await Promise.all([
             // H3+M5: commission 按 orderType 分组（total）

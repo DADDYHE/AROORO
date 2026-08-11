@@ -241,7 +241,8 @@ async function applyPaidStatus(orderType, existingOrder, transactionId, paidAmou
         updateData.status = 'paid';
     }
     else if (orderType === 'activity') {
-        updateData.status = 'confirmed';
+        // V5: 活动订单支付成功后状态统一为 'paid'（原 'confirmed' 为死状态，已从状态机移除）
+        updateData.status = 'paid';
     }
     else if (orderType === 'feeding') {
         updateData.status = 'confirmed';
@@ -310,7 +311,7 @@ async function applyPaidStatus(orderType, existingOrder, transactionId, paidAmou
                     // P2 修复：镜像单补写 outTradeNo/transactionId，
                     //   否则后台活动订单详情无微信单号，无法发起退款
                     data: {
-                        status: 'confirmed',
+                        status: 'paid',
                         paymentStatus: 'paid',
                         outTradeNo: existingOrder.outTradeNo || '',
                         transactionId: transactionId || '',

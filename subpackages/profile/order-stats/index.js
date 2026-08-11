@@ -39,6 +39,16 @@ const DEFAULT_STATUS_TABS = [
   { key: 'cancelled', label: '已取消' },
 ]
 
+// V5: 活动订单专用五态 tabs（无 in_progress，含 paid/completed/refunded）
+const ACTIVITY_STATUS_TABS = [
+  { key: 'all', label: '全部' },
+  { key: 'pending_payment', label: '待支付' },
+  { key: 'paid', label: '已支付' },
+  { key: 'completed', label: '已完成' },
+  { key: 'cancelled', label: '已取消' },
+  { key: 'refunded', label: '已退款' },
+]
+
 const pageI18n = require('../../../utils/page-i18n.js')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
@@ -69,7 +79,10 @@ Page({
     const orderType = options.type || 'boarding'
     const typeInfo = TYPE_MAP[orderType] || TYPE_MAP.boarding
     wx.setNavigationBarTitle({ title: typeInfo.title })
-    const statusTabs = orderType === 'mall' ? MALL_STATUS_TABS : orderType === 'group' ? GROUP_STATUS_TABS : DEFAULT_STATUS_TABS
+    const statusTabs = orderType === 'activity' ? ACTIVITY_STATUS_TABS
+      : orderType === 'mall' ? MALL_STATUS_TABS
+      : orderType === 'group' ? GROUP_STATUS_TABS
+      : DEFAULT_STATUS_TABS
     this.setData({ orderType, statusTabs })
 
     this._allOrders = []
@@ -206,9 +219,10 @@ Page({
     const filtered = this._allOrders.filter(item => {
       if (orderType === 'activity') {
         if (currentStatus === 'pending_payment' && (item.status !== 'pending_payment' || item.isEnded)) {return false}
-        if (currentStatus === 'in_progress' && (item.isEnded || item.status === 'pending_payment')) {return false}
+        if (currentStatus === 'paid' && (item.status !== 'paid' && item.status !== 'completed')) {return false}
         if (currentStatus === 'completed' && (!item.isEnded || item.status === 'pending_payment' || item.status === 'cancelled')) {return false}
         if (currentStatus === 'cancelled' && item.status !== 'cancelled' && !(item.status === 'pending_payment' && item.isEnded)) {return false}
+        if (currentStatus === 'refunded' && item.status !== 'refunded') {return false}
       } else if (orderType === 'mall' || orderType === 'group') {
         if (currentStatus === 'pending_payment' && item.status !== 'pending_payment') {return false}
         if (currentStatus === 'shipped' && item.status !== 'shipped') {return false}
