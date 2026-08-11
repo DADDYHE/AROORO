@@ -28,14 +28,15 @@ exports.BOARDING_ORDER_TRANSITIONS = {
     cancelled: [],
 };
 exports.FEEDING_ORDER_TRANSITIONS = {
-    pending_payment: ['confirmed', 'cancelled'],
-    paid: ['confirmed', 'cancelled'],
-    pending: ['confirmed', 'rejected', 'cancelled'],
-    rejected: ['pending', 'cancelled'],
-    confirmed: ['in_progress', 'cancelled'],
+    pending_payment: ['paid', 'cancelled'],
+    paid: ['confirmed', 'rejected', 'cancelled'],
+    confirmed: ['in_progress', 'completed', 'cancelled'],
     in_progress: ['completed', 'cancelled'],
     completed: [],
+    rejected: [],
     cancelled: [],
+    refunded: [],
+    deleted: [],
 };
 /**
  * 商城 + 团购统一状态机（LOGISTICS_ORDER_TRANSITIONS）

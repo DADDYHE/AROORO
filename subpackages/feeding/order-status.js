@@ -9,10 +9,13 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 const STATUS_CONFIG = {
   pending_payment: { title: '待付款', subtitle: '请尽快完成支付', icon: '/images/icons/wallet-luxury-line.svg' },
+  paid: { title: '已支付', subtitle: '等待服务人员确认', icon: '/images/icons/check-circle-luxury-line.svg' },
   confirmed: { title: '订单已确认', subtitle: '平台已接单，将安排服务人员上门', icon: '/images/icons/check-circle-luxury-line.svg' },
   in_progress: { title: '服务进行中', subtitle: '服务人员正在为您服务', icon: '/images/icons/paw-luxury-line.svg' },
   completed: { title: '服务已完成', subtitle: '感谢您的使用', icon: '/images/icons/celebration-luxury-line.svg' },
   cancelled: { title: '订单已取消', subtitle: '', icon: '/images/icons/x-circle-luxury-line.svg' },
+  rejected: { title: '订单已拒绝', subtitle: '服务人员无法提供服务', icon: '/images/icons/x-circle-luxury-line.svg' },
+  refunded: { title: '已退款', subtitle: '退款已到账', icon: '/images/icons/refresh-luxury-line.svg' },
 }
 
 // 支付状态展示映射：由 _normalizePaymentStatus 派生的状态码 → { 文案, 样式类 }

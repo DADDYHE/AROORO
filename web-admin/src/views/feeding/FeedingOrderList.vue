@@ -35,8 +35,8 @@ import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
 import { normalizePaymentStatus } from '@/utils/payment-status'
 
-// 实际状态集：支付回调直接置 confirmed（无 paid 残留）；pending 为历史遗留无写入方
-const FEEDING_STATUS = { pending_payment: '待支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝', cancelled: '已取消' }
+// 上门服务订单统一状态集：pending_payment → paid → confirmed → in_progress → completed；终态 rejected/cancelled/refunded
+const FEEDING_STATUS = { pending_payment: '待支付', paid: '已支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝', cancelled: '已取消', refunded: '已退款' }
 const statusFilter = ref('')
 
 function fetchFn(params) {

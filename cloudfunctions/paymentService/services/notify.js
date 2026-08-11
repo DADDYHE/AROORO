@@ -245,7 +245,8 @@ async function applyPaidStatus(orderType, existingOrder, transactionId, paidAmou
         updateData.status = 'paid';
     }
     else if (orderType === 'feeding') {
-        updateData.status = 'confirmed';
+        // 上门服务：支付成功回退到 paid，恢复"支付→确认"顺序（后台确认后转 confirmed）
+        updateData.status = 'paid';
     }
     // 事务前：查询需要在事务内更新的关联文档 _id 列表
     let relatedOrderIds = [];

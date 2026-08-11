@@ -82,7 +82,7 @@ const dateRange = ref(null)
 const STATUS_MAPS = {
   boarding: { pending: '待确认', paid: '已支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成' },
   mall: { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunded: '已退款' },
-  feeding: { pending: '待确认', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝' },
+  feeding: { pending_payment: '待支付', paid: '已支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝', cancelled: '已取消', refunded: '已退款' },
   tuan: { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunded: '已退款' },
   activity: { pending_payment: '待支付', paid: '已支付', completed: '已完成', cancelled: '已取消', refunded: '已退款' },
 }
