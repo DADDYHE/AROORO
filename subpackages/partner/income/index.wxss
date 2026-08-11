@@ -263,9 +263,14 @@
 }
 
 .detail-desc {
+  display: block;
+  width: 100%;
   font-size: 20rpx;
   color: var(--text-tertiary);
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .detail-buyer {
@@ -563,5 +568,14 @@
 
 .payee-input {
   margin-bottom: 12rpx;
+  border: 1rpx solid var(--lux-hairline);
   border-radius: 12rpx;
+  padding: 20rpx 22rpx;
+  background: var(--lux-card-cream);
+  font-size: 28rpx;
+  font-weight: 400;
+  color: var(--text-primary);
+  height: auto;
+  min-height: 44rpx;
+  box-sizing: border-box;
 }

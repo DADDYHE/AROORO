@@ -35,7 +35,7 @@ const { createLogger } = require('../common/logger')
 const { settleWithdrawalCompleted } = require('../common/withdrawal-settle')
 // 收款账号工具（格式校验 / 渠道可用性）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { PAYOUT_CHANNELS, validatePayee, hasPayeeChannel } = require('../common/payee-utils')
+const { PAYOUT_CHANNELS, validatePayee, hasPayeeChannel, maskPayee } = require('../common/payee-utils')
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { db } = initCloud()
@@ -827,6 +827,20 @@ export async function cancelWithdrawal(
     const walletType = w.walletType || 'commission'
     const walletRes = await db.collection('wallets').where({ openid, type: walletType }).limit(1).get()
     const walletDoc = walletRes.data && walletRes.data[0]
+    // 防静默丢钱：钱包不存在或金额非法时必须显式失败，不允许"标记已取消但余额未退回"
+    const amountNum = Number(w.amount)
+    if (!walletDoc) {
+      await db.collection('withdrawals').where({ _id: withdrawalId, cancelStarted: true }).update({
+        data: { cancelStarted: false, updatedAt: db.serverDate() },
+      })
+      throw err('BUSINESS_ERROR', '未找到用户钱包，无法退回冻结金额，请联系客服处理')
+    }
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      await db.collection('withdrawals').where({ _id: withdrawalId, cancelStarted: true }).update({
+        data: { cancelStarted: false, updatedAt: db.serverDate() },
+      })
+      throw err('BUSINESS_ERROR', '提现金额非法，无法退回冻结金额，请联系客服处理')
+    }
     const transaction = await db.startTransaction()
     try {
       await transaction.collection('withdrawals').doc(withdrawalId).update({
@@ -838,15 +852,13 @@ export async function cancelWithdrawal(
           updatedAt: db.serverDate(),
         },
       })
-      if (walletDoc) {
-        await transaction.collection('wallets').doc((walletDoc as { _id: string })._id).update({
-          data: {
-            balance: _.inc(Number(w.amount) || 0),
-            frozenAmount: _.inc(-(Number(w.amount) || 0)),
-            updatedAt: db.serverDate(),
-          },
-        })
-      }
+      await transaction.collection('wallets').doc((walletDoc as { _id: string })._id).update({
+        data: {
+          balance: _.inc(amountNum),
+          frozenAmount: _.inc(-amountNum),
+          updatedAt: db.serverDate(),
+        },
+      })
       await transaction.commit()
     } catch (txError) {
       try { await transaction.rollback() } catch (_) { /* ignore */ }
@@ -1024,6 +1036,10 @@ export async function requestWithdrawal(
       throw err('INVALID_PARAMS', '请先在「收款账号」中预留该收款方式（微信/支付宝/银行卡）')
     }
 
+    // v5.1.1 修复：创建提现记录时拍快照 payeeSnapshot（脱敏），供后台审核列表直接展示
+    // 此前遗漏此字段，导致用户已预留收款方式、列表却显示「未预留」
+    const payeeSnapshot = maskPayee(userPayee, payoutMethod) || {}
+
     // H1: 获取 nickName——优先 auth.nickName，fallback 查询 users 集合
     let nickName = auth.nickName || ''
     if (!nickName) {
@@ -1082,6 +1098,7 @@ export async function requestWithdrawal(
           nickName,
           amount: withdrawAmount,
           method: payoutMethod,
+          payeeSnapshot,
           status: 'pending',
           // H2: packageInfo 待 adminService 审批后回填（mchId/appId/package）
           transferSceneId: process.env.WECHAT_TRANSFER_SCENE_ID || '',

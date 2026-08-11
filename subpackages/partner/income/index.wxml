@@ -175,7 +175,7 @@
   <!-- 提现弹窗 -->
   <root-portal>
   <view wx:if="{{showWithdrawModal}}" class="modal-mask" bindtap="onWithdrawCancel">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-title">申请提现</view>
       <view class="modal-balance">可提现余额：¥{{withdrawBalance}}</view>
       <view class="modal-payout">
@@ -218,21 +218,21 @@
   <!-- 收款账号管理（v5.1） -->
   <root-portal>
   <view wx:if="{{payeeModalVisible}}" class="modal-mask" bindtap="closePayeeManage">
-    <view class="modal-content payee-modal" catchtap="">
+    <view class="modal-content payee-modal" catchtap="noop">
       <view class="modal-title">收款账号</view>
       <view class="payee-section">
-        <text class="payee-label">微信（微信号/手机号）</text>
-        <input class="modal-input payee-input" placeholder="选填" value="{{payeeForm.wechat}}" data-field="wechat" bindinput="onPayeeInput" />
+        <text class="payee-label">微信</text>
+        <input class="modal-input payee-input" placeholder="微信号/手机号" value="{{payeeForm.wechat}}" data-field="wechat" bindinput="onPayeeInput" />
       </view>
       <view class="payee-section">
-        <text class="payee-label">支付宝（邮箱/手机号）</text>
-        <input class="modal-input payee-input" placeholder="选填" value="{{payeeForm.alipay}}" data-field="alipay" bindinput="onPayeeInput" />
+        <text class="payee-label">支付宝</text>
+        <input class="modal-input payee-input" placeholder="邮箱/手机号" value="{{payeeForm.alipay}}" data-field="alipay" bindinput="onPayeeInput" />
       </view>
       <view class="payee-section">
         <text class="payee-label">银行卡</text>
-        <input class="modal-input payee-input" placeholder="开户行（选填）" value="{{payeeForm.bank.bankName}}" data-field="bankName" bindinput="onBankInput" />
-        <input class="modal-input payee-input" placeholder="卡号（选填）" type="number" value="{{payeeForm.bank.cardNo}}" data-field="cardNo" bindinput="onBankInput" />
-        <input class="modal-input payee-input" placeholder="持卡人（选填）" value="{{payeeForm.bank.holder}}" data-field="holder" bindinput="onBankInput" />
+        <input class="modal-input payee-input" placeholder="开户行" value="{{payeeForm.bank.bankName}}" data-field="bankName" bindinput="onBankInput" />
+        <input class="modal-input payee-input" placeholder="卡号" type="number" value="{{payeeForm.bank.cardNo}}" data-field="cardNo" bindinput="onBankInput" />
+        <input class="modal-input payee-input" placeholder="持卡人" value="{{payeeForm.bank.holder}}" data-field="holder" bindinput="onBankInput" />
       </view>
       <view class="modal-tips">
         <text>至少预留一种收款方式（提现时需选择）</text>

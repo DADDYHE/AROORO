@@ -22,12 +22,12 @@
       </el-table-column>
       <el-table-column label="模式" width="90">
         <template #default="{ row }">
-          <el-tag :type="row.mode === 'manual' ? 'warning' : 'primary'" size="small">{{ row.mode === 'manual' ? '人工' : '自动' }}</el-tag>
+          <el-tag :type="row.mode === 'manual' ? 'warning' : row.mode === 'auto' ? 'primary' : 'info'" size="small">{{ row.mode === 'manual' ? '人工' : row.mode === 'auto' ? '自动' : '待选择' }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="收款方式" min-width="150" show-overflow-tooltip>
         <template #default="{ row }">
-          <div>{{ channelLabel(row.method) }}</div>
+          <div v-if="row.payeeSnapshot">{{ channelLabel(row.method) }}</div>
           <div class="masked">{{ snapshotText(row.payeeSnapshot) }}</div>
         </template>
       </el-table-column>
@@ -125,19 +125,26 @@
           </el-select>
         </el-form-item>
         <el-form-item label="实际打款金额">
-          <el-input-number v-model="confirmForm.paidAmount" :min="0.01" :precision="2" :step="1" style="width:220px" />
-          <span v-if="Math.abs(diffInfo) > 0.01" class="diff">与申请金额不一致（{{ formatMoney(diffInfo) }}）</span>
+          <el-input-number v-model="confirmForm.paidAmount" :min="0.01" :precision="2" :controls="false" style="width:220px" />
+          <span v-if="isDiff" class="diff">与申请金额不一致（{{ formatMoney(diffInfo) }}）</span>
+          <span v-else class="diff-ok">与申请金额一致，可正常确认</span>
         </el-form-item>
         <el-form-item label="打款凭证" required>
-          <el-input v-model="confirmForm.payEvidence" type="textarea" :rows="2" placeholder="流水号 / 截图URL / 文本凭证（必填）" />
+          <el-input v-model="confirmForm.payEvidence" type="textarea" :rows="2" placeholder="凭证图片上传后自动填入（必填）" />
           <div class="evidence-upload">
-            <el-button size="small" :loading="evidenceUploading" @click="evidenceInput?.click()">上传凭证文件</el-button>
+            <el-button size="small" :loading="evidenceUploading" @click="evidenceInput?.click()">上传凭证图片</el-button>
             <span v-if="evidenceUploaded" class="hint">已上传：{{ confirmForm.payEvidence }}</span>
-            <input ref="evidenceInput" type="file" accept="image/*,.pdf,.txt" style="display:none" @change="onEvidenceFile" />
+            <input ref="evidenceInput" type="file" accept="image/*" style="display:none" @change="onEvidenceFile" />
           </div>
         </el-form-item>
-        <el-form-item label="差异原因/备注">
-          <el-input v-model="confirmForm.note" type="textarea" :rows="2" placeholder="金额不一致时必填差异原因" />
+        <el-form-item :label="isDiff ? '差异原因（必填）' : '差异原因/备注'" :required="isDiff">
+          <el-input
+            v-model="confirmForm.note"
+            type="textarea"
+            :rows="2"
+            :placeholder="isDiff ? '金额不一致，必须填写差异原因' : '金额一致时可选填备注'"
+          />
+          <span v-if="isDiff" class="diff note-req">⚠ 金额不一致，差异原因为必填项</span>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -259,6 +266,7 @@ const evidenceInput = ref(null)
 const evidenceUploading = ref(false)
 const evidenceUploaded = ref(false)
 const diffInfo = computed(() => Math.round((Number(confirmForm.paidAmount || 0) - Number(confirmRow.value?.amount || 0)) * 100) / 100)
+const isDiff = computed(() => Math.abs(diffInfo.value) > 0.01)
 
 async function openConfirm(row) {
   confirmRow.value = row
@@ -280,6 +288,11 @@ async function openConfirm(row) {
 async function onEvidenceFile(e) {
   const file = e.target.files && e.target.files[0]
   if (!file) {return}
+  if (!file.type || !file.type.startsWith('image/')) {
+    ElMessage.warning('请上传图片凭证（如打款截图）')
+    e.target.value = ''
+    return
+  }
   evidenceUploading.value = true
   try {
     const ext = (file.name.match(/\.[a-zA-Z0-9]+$/) || ['.jpg'])[0]
@@ -406,6 +419,7 @@ onMounted(async () => {
 .text-muted { color: var(--text-placeholder); }
 .masked { font-size: 12px; color: var(--text-secondary); }
 .diff { color: #f56c6c; font-size: 12px; margin-left: 8px; }
+.diff-ok { color: #67c23a; font-size: 12px; margin-left: 8px; }
 .hint { color: var(--text-tertiary); font-size: 12px; margin-top: 6px; }
 .payee-line { font-weight: 500; }
 .evidence-upload { margin-top: 8px; display: flex; align-items: center; gap: 10px; }

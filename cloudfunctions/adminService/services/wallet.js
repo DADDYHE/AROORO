@@ -160,7 +160,7 @@ async function approveWithdrawal(event, context, auth) {
       }
       const snapshot = maskPayee(payee, channel)
       const manualClaim = await db.collection('withdrawals')
-        .where({ _id: withdrawalId, status: 'pending' })
+        .where({ _id: withdrawalId, status: 'pending', rejectStarted: _.neq(true) })
         .update({
           data: {
             status: 'approved',
@@ -201,8 +201,9 @@ async function approveWithdrawal(event, context, auth) {
     const outBatchNo = buildOutBatchNo('WD')
 
     // P1-D: 条件更新防并发重复转账 — where(status=pending) 原子占位
+    // 必须与 rejectWithdrawal 的 rejectStarted 占位互斥，防止审批与拒绝交叉导致资金双付
     const claimRes = await db.collection('withdrawals')
-      .where({ _id: withdrawalId, status: 'pending' })
+      .where({ _id: withdrawalId, status: 'pending', rejectStarted: _.neq(true) })
       .update({
         data: {
           status: 'processing',
@@ -348,6 +349,21 @@ async function rejectWithdrawal(event, context, auth) {
     const walletType = w.walletType || 'commission'
     const walletRes = await db.collection('wallets').where({ openid: w.openid, type: walletType }).limit(1).get()
     const walletDoc = walletRes.data && walletRes.data[0]
+    // 防静默丢钱：钱包不存在或金额非法时必须显式失败，不允许"标记已拒绝但余额未退回"
+    const amountNum = Number(w.amount)
+    if (!walletDoc) {
+      // 清理占位后抛出，允许重试或人工处理
+      await db.collection('withdrawals').where({ _id: withdrawalId, rejectStarted: true }).update({
+        data: { rejectStarted: false, updatedAt: db.serverDate() },
+      })
+      throw err('BUSINESS_ERROR', '未找到用户钱包，无法退回冻结金额，请人工处理')
+    }
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      await db.collection('withdrawals').where({ _id: withdrawalId, rejectStarted: true }).update({
+        data: { rejectStarted: false, updatedAt: db.serverDate() },
+      })
+      throw err('BUSINESS_ERROR', '提现金额非法，无法退回冻结金额，请人工处理')
+    }
 
     const transaction = await db.startTransaction()
     try {
@@ -363,15 +379,13 @@ async function rejectWithdrawal(event, context, auth) {
       })
 
       // 2) 钱包 balance 恢复、frozenAmount 递减
-      if (walletDoc) {
-        await transaction.collection('wallets').doc(walletDoc._id).update({
-          data: {
-            balance: _.inc(Number(w.amount) || 0),
-            frozenAmount: _.inc(-(Number(w.amount) || 0)),
-            updatedAt: db.serverDate(),
-          },
-        })
-      }
+      await transaction.collection('wallets').doc(walletDoc._id).update({
+        data: {
+          balance: _.inc(amountNum),
+          frozenAmount: _.inc(-amountNum),
+          updatedAt: db.serverDate(),
+        },
+      })
 
       await transaction.commit()
     } catch (txError) {
@@ -421,8 +435,9 @@ async function retryTransfer(event, context, auth) {
     const outBatchNo = buildOutBatchNo('WDR')
 
     // P1-D: 条件更新防并发重复转账 — where(status=approved) 原子占位
+    // 必须与 cancelWithdrawal 的 cancelStarted / confirmManualTransfer 的 manualConfirmStarted 互斥
     const claimRes = await db.collection('withdrawals')
-      .where({ _id: withdrawalId, status: 'approved' })
+      .where({ _id: withdrawalId, status: 'approved', cancelStarted: _.neq(true), manualConfirmStarted: _.neq(true) })
       .update({ data: { status: 'processing', outBatchNo, updatedAt: db.serverDate() } })
     const claimCount = (claimRes && claimRes.stats && claimRes.stats.updated) || 0
     if (claimCount === 0) {

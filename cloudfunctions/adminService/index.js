@@ -479,6 +479,10 @@ const main = async (event, context) => {
                 openid: httpAuth.openid,
                 partnerId: httpAuth.adminId,
                 isPartner: enrichment?.isPartner || httpAuth.isPartner || false,
+                // 修复：HTTP 路径漏设 isSuperAdmin，导致 deleteTuanDeal 等
+                //   `!auth.isSuperAdmin` 归属校验对 web 端超管恒为真 → 误报“无权操作他人资源”。
+                //   以 DB 实时 roles 为权威（与 checkEnrichedPermission 一致），token 声明仅作兜底。
+                isSuperAdmin: enrichment ? enrichment.roles.includes('super_admin') : (httpAuth.isSuperAdmin || false),
                 _isHttpAuth: true,
             };
             if (enrichment) {
@@ -572,7 +576,7 @@ const main = async (event, context) => {
                 throw err('PERMISSION_DENIED', '权限不足或账号已停用');
             }
             const mergedEvent = revertCloudUrls({ ...event, ...(event.data || {}) });
-            const auth = { openid: decoded.openid, partnerId: decoded.adminId, isPartner: jwtEnrichment?.isPartner || decoded.isPartner || false, _isHttpAuth: true };
+            const auth = { openid: decoded.openid, partnerId: decoded.adminId, isPartner: jwtEnrichment?.isPartner || decoded.isPartner || false, isSuperAdmin: jwtEnrichment ? jwtEnrichment.roles.includes('super_admin') : (decoded.isSuperAdmin || false), _isHttpAuth: true };
             if (jwtEnrichment) {
                 auth.adminId = jwtEnrichment.admin._id;
                 auth.roles = jwtEnrichment.roles;

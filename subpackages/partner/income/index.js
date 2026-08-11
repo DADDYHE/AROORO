@@ -280,6 +280,9 @@ Page({
     this.setData({ showWithdrawModal: false, withdrawAmount: '' })
   },
 
+  // 占位：拦截内容区点击冒泡到底层 mask 的关闭逻辑
+  noop() {},
+
   // ===== 收款账号管理（v5.1） =====
   openPayeeManage() {
     const p = this.data.payee || {}

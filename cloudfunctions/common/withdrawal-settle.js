@@ -77,10 +77,11 @@ async function settleWithdrawalCompleted(withdrawalId, w, transferInfo, source, 
   }
   if (withdrawalFixed && walletDoc) {
     try {
+      const amountNum = Number(w.amount) || 0
       await db.collection('wallets').doc(walletDoc._id).update({
         data: {
-          frozenAmount: _.inc(-w.amount),
-          totalWithdrawn: _.inc(w.amount),
+          frozenAmount: _.inc(-amountNum),
+          totalWithdrawn: _.inc(amountNum),
           updatedAt: db.serverDate(),
         },
       })
