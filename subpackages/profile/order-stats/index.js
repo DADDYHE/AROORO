@@ -19,6 +19,7 @@ const MALL_STATUS_TABS = [
   { key: 'shipped', label: '已发货' },
   { key: 'completed', label: '已完成' },
   { key: 'cancelled', label: '已取消' },
+  { key: 'refunded', label: '已退款' },
 ]
 
 const GROUP_STATUS_TABS = [
@@ -27,6 +28,7 @@ const GROUP_STATUS_TABS = [
   { key: 'shipped', label: '已发货' },
   { key: 'completed', label: '已完成' },
   { key: 'cancelled', label: '已取消' },
+  { key: 'refunded', label: '已退款' },
 ]
 
 const DEFAULT_STATUS_TABS = [
@@ -212,6 +214,7 @@ Page({
         if (currentStatus === 'shipped' && item.status !== 'shipped') {return false}
         if (currentStatus === 'completed' && item.status !== 'completed') {return false}
         if (currentStatus === 'cancelled' && item.status !== 'cancelled') {return false}
+        if (currentStatus === 'refunded' && item.status !== 'refunded') {return false}
       } else {
         if (currentStatus === 'pending_payment' && item.status !== 'pending_payment') {return false}
         if (currentStatus === 'in_progress' && item.status !== 'in_progress' && item.status !== 'confirmed' && item.status !== 'paid') {return false}

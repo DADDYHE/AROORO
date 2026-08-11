@@ -15,6 +15,17 @@ const STATUS_CONFIG = {
   cancelled: { title: '订单已取消', subtitle: '', icon: '/images/icons/x-circle-luxury-line.svg' },
 }
 
+// 支付状态展示映射：由 _normalizePaymentStatus 派生的状态码 → { 文案, 样式类 }
+// 与 web-admin 的 normalizePaymentStatus 逻辑对齐（小程序端在页面内自行实现）
+const PAYMENT_DISPLAY_MAP = {
+  paid: { text: '已支付', tag: 'paid-status' },
+  paying: { text: '支付中', tag: 'unpaid-status' },
+  unpaid: { text: '待支付', tag: 'unpaid-status' },
+  refunded: { text: '已退款', tag: 'unpaid-status' },
+  closed: { text: '已关闭', tag: 'unpaid-status' },
+  free: { text: '免单', tag: 'paid-status' },
+}
+
 Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
@@ -75,6 +86,12 @@ Page({
 
         const statusConfig = STATUS_CONFIG[orderInfo.status] || STATUS_CONFIG.confirmed
         const serviceBreakdown = this._buildServiceBreakdown(orderInfo)
+
+        // 预计算支付状态展示字段，避免 wxml 内 inline 三元无法覆盖 refunded 等状态
+        const paymentStatusCode = this._normalizePaymentStatus(orderInfo)
+        const paymentDisplay = PAYMENT_DISPLAY_MAP[paymentStatusCode] || PAYMENT_DISPLAY_MAP.unpaid
+        orderInfo.paymentStatusText = paymentDisplay.text
+        orderInfo.paymentStatusTag = paymentDisplay.tag
 
         this.setData({ orderInfo, statusConfig, serviceBreakdown, isLoading: false, createdAtTs, timeoutMinutes: 30 })
         this._loadedOnce = true
@@ -140,6 +157,28 @@ Page({
     })
 
     return breakdown
+  },
+
+  // 派生支付状态码（与 web-admin normalizePaymentStatus 逻辑一致，适配小程序端）
+  // 规则：
+  //   status === 'cancelled' → paymentStatus === 'refunded' ? 'refunded' : 'closed'
+  //   status === 'refunded'  → 'refunded'
+  //   金额为 0               → 'free'
+  //   其他                   → paymentStatus || 'unpaid'
+  _normalizePaymentStatus(order) {
+    if (!order) {return 'unpaid'}
+    const { status, paymentStatus } = order
+    if (status === 'cancelled') {
+      return paymentStatus === 'refunded' ? 'refunded' : 'closed'
+    }
+    if (status === 'refunded') {
+      return 'refunded'
+    }
+    const amount = Number(order.totalPrice || order.totalAmount || 0)
+    if (amount === 0) {
+      return 'free'
+    }
+    return paymentStatus || 'unpaid'
   },
 
   async onGoPay() {

@@ -197,7 +197,7 @@
         </view>
         <view class="info-item">
           <text class="label">支付状态</text>
-          <text class="value {{orderInfo.paymentStatus === 'paid' ? 'paid-status' : 'unpaid-status'}}">{{orderInfo.paymentStatus === 'paid' ? '已支付' : orderInfo.paymentStatus === 'paying' ? '支付中' : '待支付'}}</text>
+          <text class="value {{orderInfo.paymentStatusTag}}">{{orderInfo.paymentStatusText}}</text>
         </view>
         <view class="info-item" wx:if="{{orderInfo.createdAt}}">
           <text class="label">下单时间</text>

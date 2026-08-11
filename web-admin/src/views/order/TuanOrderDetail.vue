@@ -25,7 +25,7 @@
           wx_order_state={{ order.wxOrderState }}<span v-if="order.wxShipping?.finish_shipping">（已发货 finish_shipping=true）</span>
         </el-descriptions-item>
       </el-descriptions>
-      <div style="margin-top:20px" v-if="order.status === 'paid' || order.status === 'confirmed' || order.status === 'pending_shipment'">
+      <div style="margin-top:20px" v-if="order.status === 'paid'">
         <el-button type="primary" @click="openShipDialog">发货</el-button>
         <el-button type="danger" @click="onCancelOrder">取消订单</el-button>
       </div>
