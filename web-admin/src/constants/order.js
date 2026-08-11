@@ -32,6 +32,7 @@ export const PAYMENT_STATUS_LABELS = {
   paid: '已支付',
   refunded: '已退款',
   closed: '已关闭',
+  free: '免费',
 }
 
 export const PAYMENT_STATUS_TAG_TYPE = {
@@ -40,7 +41,10 @@ export const PAYMENT_STATUS_TAG_TYPE = {
   paid: 'success',
   refunded: 'info',
   closed: 'info',
+  free: 'success',
 }
+
+// normalizePaymentStatus 已迁移至 @/utils/payment-status.js（职责分离：纯数据 vs 派生逻辑）
 
 export const WITHDRAWAL_STATUS_LABELS = {
   pending: '待审核',

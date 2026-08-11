@@ -16,8 +16,7 @@
         <el-descriptions-item label="下单时间">{{ formatDate(order.createdAt) }}</el-descriptions-item>
         <el-descriptions-item label="支付时间">{{ formatDate(order.paidAt) }}</el-descriptions-item>
         <el-descriptions-item label="支付状态">
-          <el-tag v-if="order.paymentStatus" :type="PAYMENT_STATUS_TAG_TYPE[order.paymentStatus] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus }}</el-tag>
-          <el-tag v-else type="info" size="small">未支付</el-tag>
+          <el-tag :type="PAYMENT_STATUS_TAG_TYPE[normalizePaymentStatus(order)] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[normalizePaymentStatus(order)] || '未支付' }}</el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="微信订单号" :span="2">{{ order.transactionId || order.wxTransactionId || '-' }}</el-descriptions-item>
         <el-descriptions-item v-if="order.expressCompany" label="快递公司">{{ getExpressCompanyLabel(order.expressCompany) }}</el-descriptions-item>
@@ -83,6 +82,7 @@ import { useRoute } from 'vue-router'
 import { getTuanDealOrderDetail, handleTuanOrder } from '@/api/order'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
+import { normalizePaymentStatus } from '@/utils/payment-status'
 import { EXPRESS_COMPANY_OPTIONS, getExpressCompanyLabel } from '@/constants/expressCompany'
 import { ElMessage, ElMessageBox } from 'element-plus'
 

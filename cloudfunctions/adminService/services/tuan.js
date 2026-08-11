@@ -5,7 +5,7 @@ const { createLogger } = require('../common/logger')
 const { recordAlert } = require('../common/alert')
 const { ORDER_TYPES, ORDER_TYPE_NAMES } = require('../constants')
 const { enrichBuyerFields, enrichTuanOrderNos } = require('./_enrichBuyers')
-const { TUAN_ORDER_TRANSITIONS, TUAN_STATUS_MAP, validateTransition } = require('./stateMachine')
+const { TUAN_STATUS_MAP, LOGISTICS_ORDER_TRANSITIONS, validateTransition } = require('./stateMachine')
 // 遗留修复：后台发货补微信物流推送（与 tuanService.shipTuanOrder 对齐）
 const { uploadShippingInfo, traceWaybill, followWaybill } = require('../common/wxLogistics')
 // 复用统一佣金写入器的口径工具，避免读侧与写侧再次漂移：
@@ -132,7 +132,7 @@ async function updateTuanDeal(event, context, auth) {
   if (!id) {throw err('INVALID_PARAMS', '缺少团购ID')}
   const existing = await db.collection('tuan_deals').doc(id).get()
   if (!existing.data) {throw err('NOT_FOUND', '团购不存在')}
-  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+  if (!auth.isSuperAdmin && !(auth.roles || []).includes('super_admin') && existing.data.createdBy !== auth.openid) {
     throw err('PERMISSION_DENIED', '无权操作他人资源')
   }
   const update = { updatedAt: new Date() }
@@ -222,7 +222,7 @@ async function deleteTuanDeal(event, context, auth) {
   if (!id) {throw err('INVALID_PARAMS', '缺少团购ID')}
   const existing = await db.collection('tuan_deals').doc(id).get()
   if (!existing.data) {throw err('NOT_FOUND', '团购不存在')}
-  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+  if (!auth.isSuperAdmin && !(auth.roles || []).includes('super_admin') && existing.data.createdBy !== auth.openid) {
     throw err('PERMISSION_DENIED', '无权操作他人资源')
   }
   await db.collection('tuan_deals').doc(id).remove()
@@ -234,7 +234,7 @@ async function publishTuanDeal(event, context, auth) {
   if (!id) {throw err('INVALID_PARAMS', '缺少团购ID')}
   const existing = await db.collection('tuan_deals').doc(id).get()
   if (!existing.data) {throw err('NOT_FOUND', '团购不存在')}
-  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+  if (!auth.isSuperAdmin && !(auth.roles || []).includes('super_admin') && existing.data.createdBy !== auth.openid) {
     throw err('PERMISSION_DENIED', '无权操作他人资源')
   }
   // P3: 防止把已过期的团购重新发布（否则只能等 cron 回收）
@@ -254,7 +254,7 @@ async function endTuanDeal(event, context, auth) {
   if (!id) {throw err('INVALID_PARAMS', '缺少团购ID')}
   const existing = await db.collection('tuan_deals').doc(id).get()
   if (!existing.data) {throw err('NOT_FOUND', '团购不存在')}
-  if (!auth.isSuperAdmin && existing.data.createdBy !== auth.openid) {
+  if (!auth.isSuperAdmin && !(auth.roles || []).includes('super_admin') && existing.data.createdBy !== auth.openid) {
     throw err('PERMISSION_DENIED', '无权操作他人资源')
   }
   await db.collection('tuan_deals').doc(id).update({ data: { status: 'ended', updatedAt: new Date() } })
@@ -649,9 +649,10 @@ async function getTuanDealOrderDetail(event, context, auth) {
 /**
  * P1-2: 后台团购订单操作（发货/完成/取消）。
  * 镜像 handleMallOrder 模式，针对 type='group_buy'：
- *   - ship: paid/pending_shipment/confirmed → shipped（写快递单号 + 同步 tuan_orders）
+ *   - ship: paid → shipped（写快递单号 + 同步 tuan_orders）
  *   - complete: shipped → completed（同步 tuan_orders）
- *   - cancel: pending_payment/paid/pending_shipment → cancelled（已支付走退款 + 库存回退 + 同步 tuan_orders）
+ *   - cancel: pending_payment → cancelled（未支付直写 + 库存回补 + 累计回退）
+ *             paid → refunded（已支付走退款 + 库存回补 + 累计回退）
  */
 async function handleTuanOrder(event, context, auth) {
   const { orderId, operation, expressCompany, expressNo } = event
@@ -669,14 +670,23 @@ async function handleTuanOrder(event, context, auth) {
   if (orderRes.data.type !== 'group_buy') {throw err('BUSINESS_ERROR', '非团购订单')}
   const order = orderRes.data
 
-  try {
-    validateTransition(TUAN_ORDER_TRANSITIONS, order.status, newStatus)
-  } catch (e) {
-    return handleError(e, e.message, ERROR_CODES.BUSINESS)
+  // cancel 路径跳过顶部统一校验：paid 取消走 refunded、pending_payment 取消走 cancelled，
+  // 目标状态由分支内按 order.status 分别校验（统一表里 paid 不再直写 cancelled）
+  if (operation !== 'cancel') {
+    try {
+      validateTransition(LOGISTICS_ORDER_TRANSITIONS, order.status, newStatus)
+    } catch (e) {
+      return handleError(e, e.message, ERROR_CODES.BUSINESS)
+    }
   }
 
-  // 取消：已支付订单走退款（paymentService.createRefund 内部会把 orders/tuan_orders 置 refunded）
-  if (newStatus === 'cancelled' && ['paid', 'pending_shipment'].includes(order.status)) {
+  // 取消-已支付：paid → refunded（paymentService.createRefund 内部会把 orders/tuan_orders 置 refunded）
+  if (operation === 'cancel' && order.status === 'paid') {
+    try {
+      validateTransition(LOGISTICS_ORDER_TRANSITIONS, 'paid', 'refunded')
+    } catch (e) {
+      return handleError(e, e.message, ERROR_CODES.BUSINESS)
+    }
     const paymentStatus = String(order.paymentStatus || '').toLowerCase()
     if (paymentStatus !== 'paid') {
       throw err('ORDER_STATUS_INVALID', `订单支付状态异常：${paymentStatus || '(空)'}`)
@@ -718,6 +728,42 @@ async function handleTuanOrder(event, context, auth) {
     }
     await rollbackTuanDealTotalsAdmin(order.dealId, Number(order.totalAmount) || 0)
     return handleSuccess(null, '退款申请已提交，订单将标记为已退款')
+  }
+
+  // 取消-未支付：pending_payment → cancelled
+  // 副作用从通用更新后整体搬入分支：tuan_orders 同步 + 库存回补 + 累计回退，避免漏回退
+  if (operation === 'cancel' && order.status === 'pending_payment') {
+    try {
+      validateTransition(LOGISTICS_ORDER_TRANSITIONS, 'pending_payment', 'cancelled')
+    } catch (e) {
+      return handleError(e, e.message, ERROR_CODES.BUSINESS)
+    }
+    await db.collection('orders').doc(orderId).update({
+      data: { status: 'cancelled', updatedAt: db.serverDate() },
+    })
+    if (order.tuanOrderId) {
+      try {
+        await db.collection('tuan_orders').doc(order.tuanOrderId).update({
+          data: { status: 'cancelled', updatedAt: db.serverDate() },
+        })
+      } catch (syncErr) {
+        logger.warn('handleTuanOrder.cancel.syncTuanOrder.failed', { orderId, tuanOrderId: order.tuanOrderId, msg: syncErr && syncErr.message })
+        await recordAlert('warning', 'tuan.admin.handle.syncTuanOrder.failed', '后台团购取消后 tuan_orders 同步失败', {
+          orderId, tuanOrderId: order.tuanOrderId, targetStatus: 'cancelled',
+          error: syncErr && syncErr.message,
+        })
+      }
+    }
+    try {
+      await restoreTuanDealStockAdmin(order)
+    } catch (stockErr) {
+      logger.error('handleTuanOrder.restoreStock.failed', { orderId, msg: stockErr && stockErr.message })
+      await recordAlert('warning', 'tuan.admin.cancel.restoreStock.failed', '后台取消团购订单库存回退失败', {
+        orderId, dealId: order.dealId, productId: order.productId, error: stockErr && stockErr.message,
+      })
+    }
+    await rollbackTuanDealTotalsAdmin(order.dealId, Number(order.totalAmount) || 0)
+    return handleSuccess(null, '订单已取消')
   }
 
   // 发货：写快递单号 + 状态
@@ -854,19 +900,6 @@ async function handleTuanOrder(event, context, auth) {
         })
       }
     }
-  }
-
-  // 取消未支付订单：回退 tuan_deals.products 快照库存（P0-2）
-  if (newStatus === 'cancelled' && order.status === 'pending_payment') {
-    try {
-      await restoreTuanDealStockAdmin(order)
-    } catch (stockErr) {
-      logger.error('handleTuanOrder.restoreStock.failed', { orderId, msg: stockErr && stockErr.message })
-      await recordAlert('warning', 'tuan.admin.cancel.restoreStock.failed', '后台取消团购订单库存回退失败', {
-        orderId, dealId: order.dealId, productId: order.productId, error: stockErr && stockErr.message,
-      })
-    }
-    await rollbackTuanDealTotalsAdmin(order.dealId, Number(order.totalAmount) || 0)
   }
 
   return handleSuccess(null, '操作成功')

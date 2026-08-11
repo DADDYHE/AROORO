@@ -18,8 +18,7 @@
     </el-table-column>
     <el-table-column prop="paymentStatus" label="支付状态" width="100">
       <template #default="{ row }">
-        <el-tag v-if="row.paymentStatus" :type="PAYMENT_STATUS_TAG_TYPE[row.paymentStatus] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[row.paymentStatus] || row.paymentStatus }}</el-tag>
-        <el-tag v-else type="info" size="small">未支付</el-tag>
+        <el-tag :type="PAYMENT_STATUS_TAG_TYPE[normalizePaymentStatus(row)] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[normalizePaymentStatus(row)] || '未支付' }}</el-tag>
       </template>
     </el-table-column>
     <el-table-column prop="createdAt" label="下单时间" width="180">
@@ -34,6 +33,7 @@ import { getBoardingOrders } from '@/api/hosting'
 import OrderTable from '@/components/OrderTable.vue'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
+import { normalizePaymentStatus } from '@/utils/payment-status'
 
 const BOARDING_STATUS = { pending: '待确认', paid: '已支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成' }
 const statusFilter = ref('')

@@ -13,8 +13,7 @@
         <el-descriptions-item label="实付金额">{{ formatMoney(order.totalPrice || order.totalAmount || order.finalAmount) }}</el-descriptions-item>
         <el-descriptions-item label="优惠券抵扣">{{ order.couponDiscount ? `-¥${order.couponDiscount}` : '-' }}</el-descriptions-item>
         <el-descriptions-item label="支付状态">
-          <el-tag v-if="order.paymentStatus" :type="PAYMENT_STATUS_TAG_TYPE[order.paymentStatus] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus }}</el-tag>
-          <el-tag v-else type="info" size="small">未支付</el-tag>
+          <el-tag :type="PAYMENT_STATUS_TAG_TYPE[normalizePaymentStatus(order)] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[normalizePaymentStatus(order)] || '未支付' }}</el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="参与人数">{{ order.participantCount || 1 }} 人</el-descriptions-item>
         <el-descriptions-item label="宠物">{{ petNamesText }}</el-descriptions-item>
@@ -52,6 +51,7 @@ import { getActivityOrderDetail } from '@/api/activity'
 import { adminRefund } from '@/api/refund'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
+import { normalizePaymentStatus } from '@/utils/payment-status'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()

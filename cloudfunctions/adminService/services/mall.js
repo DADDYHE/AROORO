@@ -235,7 +235,13 @@ async function cloneProduct(event, context, auth) {
 async function getMallOrders(event, context, auth) {
   const { status, page = 1, pageSize = 20, keyword, startDate, endDate } = event
   const where = { type: 'mall' }
-  if (status) {where.status = status}
+  // H5: 与 mallService 对齐——单状态筛选时精确匹配，否则排除已删除单
+  // 单状态筛选天然不会命中 deleted 单（deleted 单 status='deleted'），只有显式查 deleted 才放行
+  if (status && status !== 'all' && status !== 'deleted') {
+    where.status = status
+  } else {
+    where.status = _.neq('deleted')
+  }
   if (startDate || endDate) {
     let timeCond = null
     if (startDate) {

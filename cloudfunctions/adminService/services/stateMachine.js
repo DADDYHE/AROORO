@@ -37,24 +37,30 @@ exports.FEEDING_ORDER_TRANSITIONS = {
     completed: [],
     cancelled: [],
 };
-exports.MALL_ORDER_TRANSITIONS = {
-    pending_payment: ['confirmed', 'cancelled'],
-    paid: ['shipped', 'cancelled'],
-    confirmed: ['shipped', 'cancelled'],
-    shipped: ['completed'],
-    completed: [],
-    cancelled: [],
-};
-exports.TUAN_ORDER_TRANSITIONS = {
-    pending_payment: ['confirmed', 'cancelled'],
-    paid: ['shipped', 'cancelled'],
-    pending_shipment: ['shipped', 'cancelled'],
-    confirmed: ['shipped', 'cancelled'],
+/**
+ * 商城 + 团购统一状态机（LOGISTICS_ORDER_TRANSITIONS）
+ * - 合并自原 MALL_ORDER_TRANSITIONS / TUAN_ORDER_TRANSITIONS
+ * - 删除死状态：confirmed / pending_shipment（paymentService 不再写入，历史脏数据已清理）
+ * - paid 取消统一走 refunded（经 paymentService.createRefund），不再直写 cancelled
+ *
+ * 约束力声明:
+ * - adminService 的 handleMallOrder/handleTuanOrder 通过 validateTransition 校验
+ *   （handleTuanOrder 的 cancel 路径在分支内分别校验 paid→refunded / pending_payment→cancelled）
+ * - mallService/tuanService 用户侧操作为直写，不走 validateTransition
+ * - paymentService 的 refund 链路为直写，不走 validateTransition
+ */
+exports.LOGISTICS_ORDER_TRANSITIONS = {
+    pending_payment: ['paid', 'cancelled'],
+    paid: ['shipped', 'refunded'],
     shipped: ['completed'],
     completed: [],
     cancelled: [],
     refunded: [],
+    deleted: [],
 };
+// 历史别名：mall/tuan 状态机已统一为 LOGISTICS_ORDER_TRANSITIONS
+exports.MALL_ORDER_TRANSITIONS = exports.LOGISTICS_ORDER_TRANSITIONS;
+exports.TUAN_ORDER_TRANSITIONS = exports.LOGISTICS_ORDER_TRANSITIONS;
 exports.HOST_SERVICE_TRANSITIONS = {
     pending_review: ['active', 'rejected'],
     active: ['suspended', 'inactive'],
@@ -79,6 +85,8 @@ exports.STATUS_LABELS = {
     suspended: '已暂停',
     inactive: '未激活',
     rejected: '已拒绝',
+    refunded: '已退款',
+    deleted: '已删除',
 };
 /* ============================================================
  * 操作映射（前端 action → 目标状态）
@@ -145,6 +153,7 @@ exports.validateTransition = validateTransition;
 const _exports = {
     BOARDING_ORDER_TRANSITIONS: exports.BOARDING_ORDER_TRANSITIONS,
     FEEDING_ORDER_TRANSITIONS: exports.FEEDING_ORDER_TRANSITIONS,
+    LOGISTICS_ORDER_TRANSITIONS: exports.LOGISTICS_ORDER_TRANSITIONS,
     MALL_ORDER_TRANSITIONS: exports.MALL_ORDER_TRANSITIONS,
     TUAN_ORDER_TRANSITIONS: exports.TUAN_ORDER_TRANSITIONS,
     HOST_SERVICE_TRANSITIONS: exports.HOST_SERVICE_TRANSITIONS,

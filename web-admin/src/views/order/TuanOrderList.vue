@@ -19,8 +19,7 @@
     </el-table-column>
     <el-table-column prop="paymentStatus" label="支付状态" width="100">
       <template #default="{ row }">
-        <el-tag v-if="row.paymentStatus" :type="PAYMENT_STATUS_TAG_TYPE[row.paymentStatus] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[row.paymentStatus] || row.paymentStatus }}</el-tag>
-        <el-tag v-else type="info" size="small">未支付</el-tag>
+        <el-tag :type="PAYMENT_STATUS_TAG_TYPE[normalizePaymentStatus(row)] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[normalizePaymentStatus(row)] || '未支付' }}</el-tag>
       </template>
     </el-table-column>
     <el-table-column prop="createdAt" label="下单时间" width="180">
@@ -35,6 +34,7 @@ import { getTuanDealOrders } from '@/api/order'
 import OrderTable from '@/components/OrderTable.vue'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
+import { normalizePaymentStatus } from '@/utils/payment-status'
 
 // 团购订单实际状态：pending_payment/paid/shipped/completed/cancelled/refunded（confirmed/pending_shipment 为历史死状态）
 const TUAN_STATUS = { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成' }

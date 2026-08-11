@@ -5,6 +5,7 @@
       <el-descriptions :column="2" border>
         <el-descriptions-item label="订单号">{{ order.orderNo }}</el-descriptions-item>
         <el-descriptions-item label="状态"><el-tag :type="ORDER_STATUS_TAG_TYPE[order.status]">{{ ORDER_STATUS_LABELS[order.status] }}</el-tag></el-descriptions-item>
+        <el-descriptions-item label="支付状态"><el-tag :type="PAYMENT_STATUS_TAG_TYPE[normalizePaymentStatus(order)] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[normalizePaymentStatus(order)] || '未支付' }}</el-tag></el-descriptions-item>
         <el-descriptions-item label="商品">{{ order.productName }}<el-tag v-if="order.items && order.items.length > 1" size="small" style="margin-left:8px">等{{ order.items.length }}件</el-tag></el-descriptions-item>
         <el-descriptions-item label="金额">{{ formatMoney(order.totalAmount) }}</el-descriptions-item>
         <el-descriptions-item label="收货人">{{ order.receiverName }}</el-descriptions-item>
@@ -14,7 +15,7 @@
         <el-descriptions-item label="快递单号" v-if="order.expressNo">{{ order.expressNo }}</el-descriptions-item>
         <el-descriptions-item label="发货时间" v-if="order.shippedAt">{{ order.shippedAt }}</el-descriptions-item>
       </el-descriptions>
-      <div style="margin-top:20px" v-if="order.status === 'confirmed' || order.status === 'paid'">
+      <div style="margin-top:20px" v-if="order.status === 'paid'">
         <el-button type="primary" @click="openShipDialog">发货</el-button>
         <el-button type="danger" @click="openRefundDialog">退款</el-button>
       </div>
@@ -137,7 +138,8 @@ import { useRoute } from 'vue-router'
 import { getMallOrderDetail, shipMallOrder, completeMallOrder, getLogisticsTrack } from '@/api/mall-order'
 import { adminRefund } from '@/api/refund'
 import { formatMoney } from '@/utils/format'
-import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE } from '@/constants/order'
+import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
+import { normalizePaymentStatus } from '@/utils/payment-status'
 import { EXPRESS_COMPANY_OPTIONS, getExpressCompanyLabel } from '@/constants/expressCompany'
 import { ElMessage, ElMessageBox } from 'element-plus'
 

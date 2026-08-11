@@ -37,8 +37,7 @@
       </el-table-column>
       <el-table-column prop="paymentStatus" label="支付状态" width="100">
         <template #default="{ row }">
-          <el-tag v-if="row.paymentStatus" :type="PAYMENT_STATUS_TAG_TYPE[row.paymentStatus] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[row.paymentStatus] || row.paymentStatus }}</el-tag>
-          <el-tag v-else type="info" size="small">未支付</el-tag>
+          <el-tag :type="PAYMENT_STATUS_TAG_TYPE[normalizePaymentStatus(row)] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[normalizePaymentStatus(row)] || '未支付' }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="createdAt" label="下单时间" width="180">
@@ -67,6 +66,7 @@ import { usePagination } from '@/composables/usePagination'
 import { useAutoRefresh } from '@/composables/useAutoRefresh'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
+import { normalizePaymentStatus } from '@/utils/payment-status'
 import { ORDER_TYPE_LABELS } from '@/constants/order'
 
 const router = useRouter()
@@ -156,7 +156,7 @@ async function onExport() {
       o.productName || o.title || o.serviceName || '',
       (o.totalAmount || o.totalPrice || 0).toFixed(2),
       ORDER_STATUS_LABELS[o.status] || o.status,
-      PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus || '未支付',
+      PAYMENT_STATUS_LABELS[normalizePaymentStatus(o)] || '未支付',
       formatDate(o.createdAt)
     ])
 

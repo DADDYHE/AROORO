@@ -40,8 +40,7 @@
       </el-table-column>
       <el-table-column prop="paymentStatus" label="支付状态" width="100">
         <template #default="{ row }">
-          <el-tag v-if="row.paymentStatus" :type="PAYMENT_STATUS_TAG_TYPE[row.paymentStatus] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[row.paymentStatus] || row.paymentStatus }}</el-tag>
-          <el-tag v-else type="info" size="small">未支付</el-tag>
+          <el-tag :type="PAYMENT_STATUS_TAG_TYPE[normalizePaymentStatus(row)] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[normalizePaymentStatus(row)] || '未支付' }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="createdAt" label="下单时间" width="180">
@@ -71,6 +70,7 @@ import { useNewOrderNotify } from '@/composables/useNewOrderNotify'
 import { useAutoRefresh } from '@/composables/useAutoRefresh'
 import { formatDate, formatMoney } from '@/utils/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
+import { normalizePaymentStatus } from '@/utils/payment-status'
 import { ORDER_TYPE_LABELS } from '@/constants/order'
 
 const orderType = ref('all')
@@ -81,9 +81,9 @@ const dateRange = ref(null)
 
 const STATUS_MAPS = {
   boarding: { pending: '待确认', paid: '已支付', confirmed: '已确认', in_progress: '进行中', completed: '已完成' },
-  mall: { pending_payment: '待支付', paid: '已支付', confirmed: '已确认', shipped: '已发货', completed: '已完成' },
+  mall: { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunded: '已退款' },
   feeding: { pending: '待确认', confirmed: '已确认', in_progress: '进行中', completed: '已完成', rejected: '已拒绝' },
-  tuan: { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成' },
+  tuan: { pending_payment: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunded: '已退款' },
   activity: { pending_payment: '待支付', confirmed: '已确认', completed: '已完成' },
 }
 
@@ -183,7 +183,7 @@ async function onExport() {
       o.productName || o.title || o.serviceName || '',
       (o.totalAmount || o.totalPrice || 0).toFixed(2),
       ORDER_STATUS_LABELS[o.status] || o.status,
-      PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus || '未支付',
+      PAYMENT_STATUS_LABELS[normalizePaymentStatus(o)] || '未支付',
       formatDate(o.createdAt)
     ])
 
