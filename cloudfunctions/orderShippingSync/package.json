@@ -1,0 +1,9 @@
+{
+  "name": "orderShippingSync",
+  "version": "1.0.0",
+  "description": "订单物流状态同步定时任务（扫描 shipped 订单，调微信 query_trace 查询运单状态，已签收自动推进为 completed）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.7.0"
+  }
+}

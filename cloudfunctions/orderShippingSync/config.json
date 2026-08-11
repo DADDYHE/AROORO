@@ -1,0 +1,14 @@
+{
+  "timeout": 60,
+  "memorySize": 256,
+  "triggers": [
+    {
+      "name": "orderShippingSyncTrigger",
+      "type": "timer",
+      "config": "0 0 3 * * * *"
+    }
+  ],
+  "permissions": {
+    "openapi": []
+  }
+}
