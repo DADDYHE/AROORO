@@ -1,4 +1,4 @@
-const { handleSuccess, handleError, ERROR_CODES, paginate } = require('../common/utils')
+const { handleSuccess, handleError, ERROR_CODES, paginate, convertCloudUrls } = require('../common/utils')
 const { initCloud } = require('../common/utils')
 const { createLogger } = require('../common/logger')
 const { err } = require('../common/errors')
@@ -699,9 +699,9 @@ async function getReferralList(event, context, auth) {
       }
     })
 
-    await convertCloudAvatars(list)
+    const convertedList = await convertCloudUrls(list)
 
-    return handleSuccess({ list, total: uniqueInviterIds.length })
+    return handleSuccess({ list: convertedList, total: uniqueInviterIds.length })
   } catch (error) {
     logger.error('getReferralList', error)
     return handleError(error, '获取带货列表失败', ERROR_CODES.DATA)
@@ -758,9 +758,9 @@ async function getInvitedUsersByAdmin(event, context, auth) {
       totalSpent: (orderMap[u._id]?.totalSpent || 0).toFixed(2),
     }))
 
-    await convertCloudAvatars(list)
+    const convertedList = await convertCloudUrls(list)
 
-    return handleSuccess({ list, total: list.length })
+    return handleSuccess({ list: convertedList, total: list.length })
   } catch (error) {
     logger.error('getInvitedUsersByAdmin', error)
     return handleError(error, '获取邀请用户失败', ERROR_CODES.DATA)
@@ -820,55 +820,18 @@ async function getReferralOrders(event, context, auth) {
       ;(res.data || []).forEach(o => orders.push({ ...o, orderType, buyerNick: nickMap[o.ownerId] || o.ownerName || '' }))
     }
 
-    if (!normalizedType || normalizedType === 'mall') {
+    // 仅展示“计入佣金的生效订单”：各板块权威集合 + 状态集（已支付且未取消），
+    // 与 getReferralOrderStats / getReferralStats 的统一口径（REFERRAL_BOARDS）保持一致。
+    // 未计入佣金的订单（待支付 / 已取消等）一律不返回。
+    for (const board of REFERRAL_BOARDS) {
+      if (normalizedType && normalizedType !== board.type) continue
       try {
-        const mallRes = await db.collection('orders').where({ type: 'mall', ownerId: _.in(invitedOpenids) })
+        const where = { ownerId: _.in(invitedOpenids), status: _.in(board.statuses), ...(board.where || {}) }
+        const res = await db.collection(board.collection).where(where)
           .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
-        pushOrders(mallRes, 'mall')
+        pushOrders(res, board.type)
       } catch (e) {
-        logger.warn('getReferralOrders.mall', { code: e.errCode, msg: e.message })
-      }
-    }
-
-    if (!normalizedType || normalizedType === 'boarding') {
-      // 寄养口径与 getBoardingOrders 一致：orders 中非 mall/group_buy 的订单（兼容历史无 type 记录）
-      try {
-        const hostWhere = { ownerId: _.in(invitedOpenids), type: _.nin(['mall', 'group_buy']), orderType: _.nin(['activity']) }
-        const hostRes = await db.collection('orders').where(hostWhere)
-          .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
-        pushOrders(hostRes, 'boarding')
-      } catch (e) {
-        logger.warn('getReferralOrders.boarding', { code: e.errCode, msg: e.message })
-      }
-    }
-
-    if (!normalizedType || normalizedType === 'feeding') {
-      try {
-        const feedRes = await db.collection('feedingOrders').where({ ownerId: _.in(invitedOpenids) })
-          .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
-        pushOrders(feedRes, 'feeding')
-      } catch (e) {
-        logger.warn('getReferralOrders.feedingOrders', { code: e.errCode, msg: e.message })
-      }
-    }
-
-    if (!normalizedType || normalizedType === 'tuan') {
-      try {
-        const tuanRes = await db.collection('orders').where({ type: 'group_buy', ownerId: _.in(invitedOpenids) })
-          .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
-        pushOrders(tuanRes, 'tuan')
-      } catch (e) {
-        logger.warn('getReferralOrders.tuan', { code: e.errCode, msg: e.message })
-      }
-    }
-
-    if (!normalizedType || normalizedType === 'activity') {
-      try {
-        const actRes = await db.collection('activity_registrations').where({ ownerId: _.in(invitedOpenids) })
-          .orderBy('createdAt', 'desc').skip(skip).limit(pageSize).get()
-        pushOrders(actRes, 'activity')
-      } catch (e) {
-        logger.warn('getReferralOrders.activity_registrations', { code: e.errCode, msg: e.message })
+        logger.warn(`getReferralOrders.${board.type}`, { code: e.errCode, msg: e.message })
       }
     }
 
@@ -877,6 +840,34 @@ async function getReferralOrders(event, context, auth) {
       const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
       return tb - ta
     })
+
+    // 关联 commissions：为每笔订单补充该合作伙伴计提的佣金金额（按 orderId + inviterId 匹配）
+    if (orders.length > 0 && targetOpenid) {
+      const orderIds = orders.map(o => o._id).filter(Boolean)
+      if (orderIds.length > 0) {
+        try {
+          const commMap = {}
+          for (let i = 0; i < orderIds.length; i += 100) {
+            const chunk = orderIds.slice(i, i + 100)
+            const commRes = await db.collection('commissions')
+              .where({ orderId: _.in(chunk), inviterId: targetOpenid })
+              .field({ orderId: true, commissionAmount: true })
+              .limit(100)
+              .get()
+            ;(commRes.data || []).forEach(c => {
+              const key = c.orderId
+              if (!commMap[key]) commMap[key] = 0
+              commMap[key] += Number(c.commissionAmount) || 0
+            })
+          }
+          orders.forEach(o => {
+            o.commissionAmount = commMap[o._id] ? Math.round(commMap[o._id] * 100) / 100 : 0
+          })
+        } catch (e) {
+          logger.warn('getReferralOrders.commissions', { code: e.errCode, msg: e.message })
+        }
+      }
+    }
 
     return handleSuccess({ list: orders, total: orders.length })
   } catch (error) {

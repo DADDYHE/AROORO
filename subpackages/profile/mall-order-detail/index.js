@@ -26,7 +26,44 @@ Page({
   data: {
     isLoading: true,
     order: null,
+    actions: [],
     iconMapPin: '/images/icons/map-pin-line.svg',
+  },
+
+  // 底部操作栏配置（UI 展示层）：key 对应 onAction 分支
+  _buildActions(status) {
+    switch (status) {
+      case 'pending_payment':
+        return [
+          { key: 'cancel', text: '取消订单', type: 'secondary' },
+          { key: 'pay', text: '去付款', type: 'primary' },
+        ]
+      case 'shipped':
+        return [{ key: 'confirm', text: '确认收货', type: 'primary' }]
+      case 'completed':
+        return [
+          { key: 'rebuy', text: '再次购买', type: 'secondary' },
+          { key: 'delete', text: '删除订单', type: 'danger' },
+        ]
+      case 'cancelled':
+        return [
+          { key: 'rebuy', text: '重新购买', type: 'secondary' },
+          { key: 'delete', text: '删除订单', type: 'danger' },
+        ]
+      case 'refunded':
+        return [{ key: 'rebuy', text: '再次购买', type: 'secondary' }]
+      default:
+        return []
+    }
+  },
+
+  onAction(e) {
+    const { action } = e.detail || {}
+    if (action === 'cancel') this.onCancelOrder()
+    else if (action === 'pay') this.onGoPay()
+    else if (action === 'confirm') this.onConfirmReceive()
+    else if (action === 'rebuy') this.onRebuy()
+    else if (action === 'delete') this.onDeleteOrder()
   },
 
   onLoad(options) {
@@ -45,7 +82,7 @@ Page({
       const res = await OrderService.getMallOrderDetail(orderId)
       if (res && res.code === 0 && res.data) {
         const order = this._normalizeOrder(res.data)
-        this.setData({ order, isLoading: false })
+        this.setData({ order, actions: this._buildActions(order.status), isLoading: false })
         this._loadedOnce = true
         // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
         if (order.status === 'pending_payment') {
@@ -99,6 +136,7 @@ Page({
         'order.status': newStatus,
         'order.statusText': STATUS_TEXT_MAP[newStatus] || newStatus,
         'order.statusDesc': STATUS_DESC_MAP[newStatus] || '',
+        actions: this._buildActions(newStatus),
       })
     } catch (e) {
       // 静默降级

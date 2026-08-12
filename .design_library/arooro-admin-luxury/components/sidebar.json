@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "name": "Sidebar",
+  "slug": "sidebar",
+  "category": "Navigation",
+  "sourceKind": "from-scratch",
+  "confidence": "high",
+  "keyInsightSeed": "Deep forest green gradient sidebar with gold active indicator, collapsible to 72px icon-only mode",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "sidebar-nav",
+      "evidence": "sidebar with nav sections, items, sub-items, collapse mode"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "name": "state",
+      "values": [
+        "expanded",
+        "collapsed"
+      ]
+    },
+    {
+      "name": "item-state",
+      "values": [
+        "default",
+        "hover",
+        "active"
+      ]
+    }
+  ],
+  "representativeVariants": [
+    {
+      "whySelected": "Full sidebar navigation",
+      "traits": {
+        "width": "240px",
+        "bg": "linear-gradient(180deg, #1F3A1F, #0F2410)",
+        "collapsedWidth": "72px"
+      },
+      "childrenDigest": [
+        "sidebar-logo (display font, gold, italic, 6px letter-spacing)",
+        "sidebar-nav (sections with labels + items)",
+        "sidebar-foot (status dot + version)"
+      ]
+    },
+    {
+      "whySelected": "Nav item active state",
+      "traits": {
+        "height": "40px",
+        "radius": "8px",
+        "activeBg": "rgba(201,162,75,0.08)",
+        "activeColor": "var(--color-accent)",
+        "activeIndicator": "3px gold bar left",
+        "hoverBg": "rgba(255,255,255,0.05)",
+        "font": "sans",
+        "fontSize": "13px",
+        "color": "rgba(247,245,239,0.60)"
+      },
+      "childrenDigest": [
+        "icon",
+        "label",
+        "chevron (for parent items)"
+      ]
+    },
+    {
+      "whySelected": "Nav section label",
+      "traits": {
+        "font": "eyebrow",
+        "fontSize": "10px",
+        "fontWeight": "500",
+        "letterSpacing": "0.24em",
+        "textTransform": "uppercase",
+        "color": "rgba(201,162,75,0.50)",
+        "padding": "0 12px"
+      },
+      "childrenDigest": [
+        "text-only"
+      ]
+    }
+  ],
+  "anatomy": [
+    "sidebar-logo",
+    "sidebar-nav (nav-section × N)",
+    "nav-section (label + items)",
+    "nav-item (icon + label + chevron)",
+    "nav-sub (sub-items)",
+    "sidebar-foot"
+  ],
+  "structurePatterns": [
+    "flex column",
+    "flex: 1 for nav area",
+    "overflow-y: auto",
+    "collapse transition 0.32s"
+  ],
+  "usageHints": {
+    "priorityHint": "high",
+    "densityHint": "compact",
+    "copyStyle": "editorial"
+  },
+  "doNotInvent": [
+    "flyout-menu",
+    "multi-level-nesting > 2",
+    "sidebar-search"
+  ],
+  "unknowns": [
+    "mobile drawer behavior",
+    "active section auto-expand"
+  ]
+}

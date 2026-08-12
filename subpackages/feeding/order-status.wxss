@@ -2,7 +2,9 @@
    设计系统：AROORO Haute-Luxury v2
    token 来源：styles/variables.wxss → styles/design-tokens.wxss → styles/theme-teal.wxss（app.wxss 按序注入）
    P1-B 改造：清除 Material 蓝系、Ant 红、冷调蓝灰等外来色硬编码，
-             统一为森林绿 + 香槟金 + 奶油中性语义 token */
+             统一为森林绿 + 香槟金 + 奶油中性语义 token。
+   UI 统一改造：状态横幅 / 内容卡片 / 底部操作栏交予共享组件（order-status-banner /
+             order-card / order-action-bar），本页仅保留卡片内部内容行样式。 */
 
 @import '../../styles/loading-animation.wxss';
 
@@ -13,219 +15,20 @@
   position: relative;
 }
 
-.gallery-header {
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-  background: var(--card-color);
-  padding-bottom: 20rpx;
-}
-
-.brand-block {
-  padding: 80rpx 48rpx 64rpx;
-  position: relative;
-}
-
-.brand-block::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 300rpx;
-  height: 300rpx;
-  background: radial-gradient(circle, var(--feeding-tint) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-/* 品牌装饰条：原 绿→Material 蓝 → 绿→香槟金（点缀金，<5% 面积） */
-.brand-accent-bar {
-  position: absolute;
-  top: 0;
-  left: 48rpx;
-  width: 48rpx;
-  height: 6rpx;
-  background: linear-gradient(90deg, var(--feeding-primary) 0%, var(--accent-color) 100%);
-  border-radius: 0 0 4rpx 4rpx;
-}
-
-.brand-main {
-  position: relative;
-  margin-bottom: 24rpx;
-}
-
-.brand-text {
-  font-size: 64rpx;
-  font-weight: 300;
-  color: var(--text-primary);
-  letter-spacing: 12rpx;
-  display: block;
-  line-height: 1;
-  position: relative;
-}
-
-.brand-meta {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-}
-
-.brand-meta-line {
-  width: 40rpx;
-  height: 2rpx;
-  background: var(--gray-200);
-  position: relative;
-}
-
-.brand-meta-line::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -4rpx;
-  transform: translateY(-50%);
-  width: 6rpx;
-  height: 6rpx;
-  border-radius: 50%;
-  background: var(--feeding-primary);
-}
-
-.brand-subtitle {
-  font-size: 22rpx;
-  color: var(--text-secondary);
-  letter-spacing: 8rpx;
-  font-weight: 400;
-}
-
 .page-content {
   flex: 1;
-  padding: 0 32rpx 24rpx;
+  padding: 0 0 24rpx;
   position: relative;
   z-index: 1;
   padding-bottom: 60rpx;
 }
 
-.status-card {
-  display: flex;
-  align-items: center;
-  background: var(--card-color);
-  border-radius: 24rpx;
-  padding: 32rpx;
-  margin-bottom: 24rpx;
-  box-shadow: var(--lux-shadow-card);
-  border: 1rpx solid var(--hairline);
-  position: relative;
-  overflow: hidden;
-}
-
-.status-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3rpx;
-  background: linear-gradient(90deg, var(--activity-primary) 0%, var(--activity-secondary) 50%, transparent 100%);
-  border-radius: 24rpx 24rpx 0 0;
-}
-
-.status-icon-wrap {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 24rpx;
-  background: linear-gradient(135deg, var(--activity-tint) 0%, var(--primary-tint) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 28rpx;
-  flex-shrink: 0;
-}
-
-/* 支付倒计时（待支付订单，与后端 ORDER_TIMEOUT_MINUTES=30 超时取消对齐）
-   保留金色：属 warning/紧迫语义，B′「浅底金文字→深绿」规则对 warning 语义豁免；
-   取 --accent-deep 而非 --accent-color，保证白卡上的对比度。 */
-.pay-countdown {
-  margin-top: 10rpx;
-  display: flex;
-  align-items: baseline;
-  font-size: 24rpx;
-  color: var(--accent-deep);
-}
-
-.pay-countdown-label {
-  opacity: 0.85;
-  margin-right: 10rpx;
-  letter-spacing: 0.04em;
-}
-
-.pay-countdown-time {
-  font-weight: 600;
-  font-size: 34rpx;
-  font-feature-settings: "tnum";
-  letter-spacing: 1rpx;
-}
-
-.status-icon {
-  font-size: 48rpx;
-}
-
-.status-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6rpx;
-}
-
-.status-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.status-subtitle {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-}
-
-.info-card {
-  background: var(--card-color);
-  border-radius: 24rpx;
-  padding: 0;
-  margin-bottom: 24rpx;
-  box-shadow: var(--lux-shadow-card);
-  border: 1rpx solid var(--hairline);
-  position: relative;
-  overflow: hidden;
-}
-
-/* 卡片顶饰线：原 绿→Material 蓝 → 绿→香槟金 */
-.info-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3rpx;
-  background: linear-gradient(90deg, var(--feeding-primary) 0%, var(--accent-color) 50%, transparent 100%);
-  border-radius: 24rpx 24rpx 0 0;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 28rpx 32rpx 20rpx;
-  border-bottom: 1rpx solid var(--divider-color);
-}
-
-.card-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
+/* ===== 内容行（order-card 插槽内使用，横向留白交给 order-card 的 32rpx padding） ===== */
 .info-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28rpx 32rpx;
+  padding: 20rpx 0;
   border-bottom: 1rpx solid var(--divider-color);
 }
 
@@ -317,7 +120,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 32rpx;
+  padding: 20rpx 0;
   border-bottom: 1rpx solid var(--divider-color);
 }
 
@@ -414,18 +217,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 60rpx 32rpx;
+  padding: 60rpx 0;
   color: var(--gray-500);
   font-size: 26rpx;
   border-radius: 16rpx;
-  margin: 24rpx 32rpx 32rpx;
+  margin: 24rpx 0 32rpx;
 }
 
 .price-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20rpx 32rpx;
+  padding: 16rpx 0;
   border-bottom: 1rpx solid var(--divider-color);
 }
 
@@ -448,8 +251,8 @@
 .price-item.total {
   background: linear-gradient(135deg, var(--feeding-tint) 0%, transparent 100%);
   border-radius: 16rpx;
-  margin: 12rpx 32rpx 20rpx;
-  padding: 28rpx 32rpx;
+  margin: 12rpx 0 20rpx;
+  padding: 28rpx 24rpx;
   border: 1rpx solid var(--lux-hairline-green);
 }
 
@@ -473,7 +276,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8rpx 32rpx 8rpx 48rpx;
+  padding: 8rpx 0 8rpx 48rpx;
 }
 
 .sub-label {
@@ -499,46 +302,6 @@
 .unpaid-status {
   color: var(--text-primary);  /* B′ 金在浅底不作文字色：原 --warning-color → 炭墨（与 paid 深绿区分） */
   font-weight: 600;
-}
-
-.action-area {
-  display: flex;
-  justify-content: center;
-  margin-top: 40rpx;
-  padding-bottom: 40rpx;
-}
-
-.action-btn {
-  padding: 24rpx 80rpx;
-  border-radius: var(--zy-radius-lg);
-  font-size: 30rpx;
-}
-
-.cancel-btn {
-  background: var(--card-color);
-  color: var(--text-secondary);
-  border: 2rpx solid var(--gray-200);
-  box-shadow: var(--shadow-md);
-}
-
-.pay-btn {
-  background: linear-gradient(135deg, var(--activity-primary) 0%, var(--activity-secondary) 100%);
-  color: var(--text-on-primary);
-  border: none;
-  box-shadow: var(--shadow-glow-primary-btn);
-  font-weight: 600;
-  letter-spacing: 2rpx;
-}
-
-.pay-btn-disabled {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.loading-dot:nth-child(2) {
-}
-
-.loading-dot:nth-child(3) {
 }
 
 .empty-state {
@@ -568,8 +331,4 @@
   font-size: 28rpx;
   font-weight: 600;
   letter-spacing: 2rpx;
-}
-
-.content-bottom-space {
-  height: 60rpx;
 }

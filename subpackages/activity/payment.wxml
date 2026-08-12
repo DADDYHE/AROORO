@@ -28,73 +28,76 @@
   </view>
 
   <block wx:elif="{{mode === 'detail'}}">
-    <view class="status-header status-{{orderStatus}}">
-      <image class="status-icon" src="{{orderStatus === 'pending_payment' ? '/images/icons/wallet-luxury-line.svg' : orderStatus === 'confirmed' ? '/images/icons/check-circle-luxury-line.svg' : '/images/icons/x-circle-luxury-line.svg'}}" mode="aspectFit"></image>
-      <text class="status-title">{{orderStatusText}}</text>
-      <text class="status-subtitle" wx:if="{{orderStatus === 'pending_payment'}}">请尽快完成支付</text>
-      <text class="status-subtitle" wx:elif="{{orderStatus === 'confirmed'}}">平台已确认，期待您的参与</text>
-      <view wx:if="{{orderStatus === 'pending_payment' && payCountdown}}" class="pay-countdown">
-        <text class="pay-countdown-label">支付剩余</text>
-        <text class="pay-countdown-time">{{payCountdown}}</text>
-      </view>
-    </view>
+    <order-status-banner
+      status="{{orderStatus}}"
+      status-text="{{orderStatusText}}"
+      status-desc="{{orderStatus === 'pending_payment' ? '请尽快完成支付' : (orderStatus === 'paid' || orderStatus === 'completed') ? '平台已确认，期待您的参与' : ''}}"
+      pay-countdown="{{payCountdown}}"
+      has-icon="{{true}}"
+      icon-src="{{orderStatus === 'pending_payment' ? '/images/icons/wallet-luxury-line.svg' : (orderStatus === 'paid' || orderStatus === 'completed') ? '/images/icons/check-circle-luxury-line.svg' : '/images/icons/x-circle-luxury-line.svg'}}"
+      centered="{{true}}"
+    />
 
-    <view class="order-card">
-      <view class="activity-info" wx:if="{{activity.coverUrl || activity.title}}">
-        <image class="activity-cover" src="{{activity.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl" />
-        <view class="activity-details">
-          <text class="activity-name">{{activity.title}}</text>
-          <text class="activity-time" wx:if="{{activity.startTime}}">{{activity.startTime}}</text>
-          <view class="activity-location" wx:if="{{activity.location}}"><image class="activity-location-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image><text class="activity-location-text">{{activity.location}}</text></view>
+    <order-card>
+      <view slot="content">
+        <view class="activity-info" wx:if="{{activity.coverUrl || activity.title}}">
+          <image class="activity-cover" src="{{activity.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl" />
+          <view class="activity-details">
+            <text class="activity-name">{{activity.title}}</text>
+            <text class="activity-time" wx:if="{{activity.startTime}}">{{activity.startTime}}</text>
+            <view class="activity-location" wx:if="{{activity.location}}"><image class="activity-location-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image><text class="activity-location-text">{{activity.location}}</text></view>
+          </view>
         </view>
-      </view>
 
-      <view class="order-details">
-        <view class="detail-row">
-          <text class="detail-label">参与宠物</text>
-          <text class="detail-value">{{petNames || '无'}}</text>
-        </view>
-        <view class="detail-row" wx:if="{{participantCount > 1}}">
-          <text class="detail-label">参与人数</text>
-          <text class="detail-value">{{participantCount}}人</text>
-        </view>
-        <view class="detail-row">
-          <text class="detail-label">联系电话</text>
-          <text class="detail-value">{{phone}}</text>
-        </view>
-        <view class="detail-row" wx:if="{{notes}}">
-          <text class="detail-label">备注</text>
-          <text class="detail-value">{{notes}}</text>
+        <view class="order-details">
+          <view class="detail-row">
+            <text class="detail-label">订单号</text>
+            <text class="detail-value">{{orderNo || '-'}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">参与宠物</text>
+            <text class="detail-value">{{petNames || '无'}}</text>
+          </view>
+          <view class="detail-row" wx:if="{{participantCount > 1}}">
+            <text class="detail-label">参与人数</text>
+            <text class="detail-value">{{participantCount}}人</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">联系电话</text>
+            <text class="detail-value">{{phone}}</text>
+          </view>
+          <view class="detail-row" wx:if="{{notes}}">
+            <text class="detail-label">备注</text>
+            <text class="detail-value">{{notes}}</text>
+          </view>
         </view>
       </view>
-    </view>
+    </order-card>
 
-    <view class="price-card">
-      <view class="price-row">
-        <text class="price-label">订单金额</text>
-        <text class="price-value">¥{{originalAmount}}</text>
+    <order-card>
+      <view slot="content">
+        <view class="price-row">
+          <text class="price-label">订单金额</text>
+          <text class="price-value">¥{{originalAmount}}</text>
+        </view>
+        <view class="price-row" wx:if="{{couponDiscount > 0}}">
+          <text class="price-label">优惠券抵扣</text>
+          <text class="price-value discount">-¥{{couponDiscount}}</text>
+        </view>
+        <view class="price-row total">
+          <text class="price-label">{{couponDiscount > 0 ? '优惠后金额' : '应付金额'}}</text>
+          <text class="price-value final">¥{{finalAmount}}</text>
+        </view>
       </view>
-      <view class="price-row" wx:if="{{couponDiscount > 0}}">
-        <text class="price-label">优惠券抵扣</text>
-        <text class="price-value discount">-¥{{couponDiscount}}</text>
-      </view>
-      <view class="price-row total">
-        <text class="price-label">{{couponDiscount > 0 ? '优惠后金额' : '应付金额'}}</text>
-        <text class="price-value final">¥{{finalAmount}}</text>
-      </view>
-    </view>
+    </order-card>
 
     <root-portal>
-    <view class="pay-section" wx:if="{{orderStatus === 'pending_payment' && !activityExpired}}">
-      <button class="pay-btn" hover-class="pay-btn--pressed" bindtap="onGoPay" disabled="{{paying}}">
-        <text class="pay-btn-text">{{paying ? '处理中...' : '去支付 ¥' + finalAmount}}</text>
-      </button>
-    </view>
-    </root-portal>
-    <root-portal>
-    <view class="expired-tip" wx:if="{{orderStatus === 'pending_payment' && activityExpired}}">
-      <text class="expired-text">活动已结束，无法继续支付</text>
-    </view>
+      <order-action-bar
+        actions="{{actions}}"
+        tip="{{actionTip}}"
+        disabled="{{paying}}"
+        bindaction="onAction"
+      />
     </root-portal>
   </block>
 

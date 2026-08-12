@@ -1,17 +1,19 @@
 <template>
   <el-container class="admin-layout">
-    <el-aside :width="isCollapsed ? '64px' : '220px'" class="admin-aside">
+    <el-aside :width="isCollapsed ? '64px' : '240px'" class="admin-aside">
       <div class="logo-area">
-        <span v-if="!isCollapsed" class="logo-text">AROORO</span>
-        <span v-else class="logo-text-mini">A</span>
+        <div class="logo-mark" v-if="isCollapsed">A</div>
+        <template v-else>
+          <span class="logo-text">AROORO</span>
+          <span class="logo-sub">ADMIN</span>
+        </template>
       </div>
+      <div class="gold-line"></div>
       <el-menu
         :default-active="currentPath"
         :collapse="isCollapsed"
         router
-        background-color="#1a1b2e"
-        text-color="#9ca0b8"
-        active-text-color="#3bb8b0"
+        class="luxury-menu"
       >
         <template v-for="(menu, idx) in visibleMenus" :key="idx">
           <!-- 分组标签 -->
@@ -40,6 +42,10 @@
           </el-menu-item>
         </template>
       </el-menu>
+      <div class="aside-footer" v-if="!isCollapsed">
+        <div class="footer-brand">AROORO PET</div>
+        <div class="footer-copy">© 2025 All Rights Reserved</div>
+      </div>
     </el-aside>
     <el-container>
       <el-header class="admin-header">
@@ -53,7 +59,11 @@
         </el-breadcrumb>
         <div class="header-right">
           <el-dropdown @command="onCommand">
-            <span class="admin-name">{{ adminName }} <el-icon><ArrowDown /></el-icon></span>
+            <span class="admin-name">
+              <span class="admin-avatar">{{ avatarLetter }}</span>
+              {{ adminName }}
+              <el-icon><ArrowDown /></el-icon>
+            </span>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="logout">退出登录</el-dropdown-item>
@@ -85,6 +95,7 @@ let timer = null
 
 const currentPath = computed(() => route.path)
 const adminName = computed(() => auth.admin?.nickName || '合作伙伴')
+const avatarLetter = computed(() => (auth.admin?.nickName || 'A').charAt(0).toUpperCase())
 
 const parentMenuTitle = computed(() => {
   for (const menu of SIDEBAR_MENUS) {
@@ -98,8 +109,6 @@ const parentMenuTitle = computed(() => {
 })
 
 const visibleMenus = computed(() => {
-  // P2 修复：按角色过滤菜单——平台级（superAdminOnly）仅超级管理员可见，
-  //   合作伙伴登录不再看到用户管理/财务/提现审核等超管菜单（后端仍会二次鉴权）
   const isSuperAdmin = auth.admin?.isSuperAdmin === true
   const filtered = SIDEBAR_MENUS
     .map(menu => {
@@ -110,14 +119,12 @@ const visibleMenus = computed(() => {
       return menu
     })
     .filter(Boolean)
-  // 移除连续的 section 标签和首尾的 section 标签
   const result = []
   for (let i = 0; i < filtered.length; i++) {
     const item = filtered[i]
     if (item.type === 'section') {
       const prev = result[result.length - 1]
       const next = filtered[i + 1]
-      // 跳过连续 section 或 section 后面没有可见菜单项的情况
       if (prev?.type === 'section') continue
       if (!next || next.type === 'section') continue
     }
@@ -157,94 +164,159 @@ onUnmounted(() => {
 
 <style scoped>
 .admin-layout { height: 100vh; }
+
+/* ---- 侧边栏 ---- */
 .admin-aside {
   background: var(--bg-sidebar);
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.35s var(--ease-luxury);
   overflow-y: auto;
   overflow-x: hidden;
   border-right: none;
+  display: flex;
+  flex-direction: column;
 }
 .admin-aside::-webkit-scrollbar { width: 0; }
+
+/* ---- Logo 区域 ---- */
 .logo-area {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  background: rgba(0, 0, 0, 0.1);
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
 }
 .logo-text {
-  color: var(--color-primary);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 3px;
-}
-.logo-text-mini {
-  color: var(--color-primary);
+  color: var(--color-accent);
+  font-family: var(--font-display);
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 4px;
+  line-height: 1;
+}
+.logo-sub {
+  color: var(--text-inverse-tertiary);
+  font-family: var(--font-eyebrow);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.logo-mark {
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
 }
 
-/* 分组标签 */
+/* ---- 金色分割线 ---- */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 10%, var(--color-accent) 50%, transparent 90%);
+  opacity: 0.3;
+  margin: 0 24px 8px;
+}
+
+/* ---- 分组标签 ---- */
 .menu-section {
-  padding: 20px 20px 6px;
+  padding: 24px 24px 8px;
   user-select: none;
 }
 .menu-section-text {
+  font-family: var(--font-eyebrow);
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
+  font-weight: 500;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.28);
+  color: var(--text-inverse-tertiary);
 }
 .menu-section-divider {
   height: 1px;
-  margin: 12px 16px;
-  background: rgba(255, 255, 255, 0.06);
+  margin: 16px 20px;
+  background: var(--border-inverse);
 }
 
-/* 菜单样式 */
+/* ---- 菜单样式 ---- */
+.luxury-menu {
+  background: transparent !important;
+  border-right: none !important;
+  padding: 4px 0;
+  flex: 1;
+}
+
 .admin-aside :deep(.el-menu) {
   border-right: none;
-  padding: 4px 0;
+  background: transparent !important;
 }
+
 .admin-aside :deep(.el-menu-item) {
-  height: 40px;
-  line-height: 40px;
-  margin: 1px 8px;
+  height: 42px;
+  line-height: 42px;
+  margin: 2px 12px;
   border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
+  transition: all 0.25s var(--ease-luxury);
   font-size: 13px;
+  color: var(--text-inverse-secondary);
+  font-family: var(--font-sans);
 }
+
 .admin-aside :deep(.el-menu-item:hover) {
   background: var(--bg-sidebar-hover) !important;
+  color: var(--text-inverse) !important;
 }
+
 .admin-aside :deep(.el-menu-item.is-active) {
   background: var(--bg-sidebar-active) !important;
-  color: var(--color-primary) !important;
+  color: var(--color-accent) !important;
+  font-weight: 500;
+  position: relative;
 }
+
+.admin-aside :deep(.el-menu-item.is-active)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--color-accent);
+  border-radius: 0 2px 2px 0;
+}
+
 .admin-aside :deep(.el-sub-menu__title) {
-  height: 40px;
-  line-height: 40px;
-  margin: 1px 8px;
+  height: 42px;
+  line-height: 42px;
+  margin: 2px 12px;
   border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
+  transition: all 0.25s var(--ease-luxury);
   font-size: 13px;
+  color: var(--text-inverse-secondary);
+  font-family: var(--font-sans);
 }
+
 .admin-aside :deep(.el-sub-menu__title:hover) {
   background: var(--bg-sidebar-hover) !important;
+  color: var(--text-inverse) !important;
 }
+
 .admin-aside :deep(.el-sub-menu .el-menu) {
   background: transparent !important;
 }
+
 .admin-aside :deep(.el-sub-menu .el-menu-item) {
   min-width: auto;
-  padding-left: 48px !important;
+  padding-left: 52px !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 13px;
+  height: 38px;
+  line-height: 38px;
 }
+
+/* ---- Badge ---- */
 .approval-badge {
   position: relative;
   top: 0;
@@ -260,14 +332,38 @@ onUnmounted(() => {
   position: relative;
   top: 0;
   transform: none;
+  background: var(--color-accent);
+  font-family: var(--font-number);
 }
+
+/* ---- 底部 ---- */
+.aside-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-inverse);
+  margin-top: auto;
+}
+.footer-brand {
+  font-family: var(--font-eyebrow);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--text-inverse-tertiary);
+  margin-bottom: 4px;
+}
+.footer-copy {
+  font-size: 10px;
+  color: var(--text-inverse-tertiary);
+  opacity: 0.6;
+}
+
+/* ---- Header ---- */
 .admin-header {
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-card);
   padding: 0 var(--spacing-lg);
-  height: 56px;
+  height: 60px;
   box-shadow: var(--shadow-sm);
   z-index: 1;
 }
@@ -275,21 +371,40 @@ onUnmounted(() => {
   cursor: pointer;
   font-size: 18px;
   margin-right: var(--spacing-md);
-  color: var(--text-secondary);
-  transition: color 0.2s;
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast);
 }
-.collapse-btn:hover { color: var(--color-primary); }
+.collapse-btn:hover { color: var(--color-accent); }
+
 .header-right { margin-left: auto; }
 .admin-name {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   font-size: 13px;
   color: var(--text-secondary);
-  transition: color 0.2s;
+  font-family: var(--font-sans);
+  transition: color var(--transition-fast);
 }
 .admin-name:hover { color: var(--color-primary); }
+
+.admin-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* ---- Main ---- */
 .admin-main {
   background: var(--bg-page);
   padding: var(--spacing-lg);

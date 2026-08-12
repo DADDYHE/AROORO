@@ -52,12 +52,13 @@
 .status-tabs {
   margin: 0 var(--page-padding, 48rpx) 24rpx;
   display: flex;
+  flex-wrap: wrap;
   gap: 12rpx;
 }
 
 .status-tab {
-  flex: 1;
-  padding: 16rpx 0;
+  flex: 0 0 auto;
+  padding: 16rpx 28rpx;
   text-align: center;
   background: var(--card-color);
   border-radius: var(--zy-radius-pill);

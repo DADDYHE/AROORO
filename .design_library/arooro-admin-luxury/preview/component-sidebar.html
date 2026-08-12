@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sidebar · AROORO Admin</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Page scaffold — NOT extracted */
+body{margin:0;padding:12px;background:var(--background);font-family:var(--font-sans);color:var(--foreground)}
+.row{display:flex;gap:16px;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap}
+.label{font-family:var(--font-eyebrow);font-size:10px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--muted-foreground);width:92px;flex-shrink:0;padding-top:16px}
+.divider{border:none;border-top:1px solid var(--border);margin:12px 0}
+/* @component-css-start */
+.sidebar,.sidebar *{box-sizing:border-box}
+.sidebar{display:flex;flex-direction:column;width:240px;height:520px;background:linear-gradient(180deg,#1F3A1F,#0F2410);border-radius:var(--radius-md);overflow:hidden;flex-shrink:0;transition:width .32s}
+.sidebar-collapsed{width:72px}
+.sb-logo{padding:16px 20px;display:flex;align-items:center}
+.sb-logo-mark{font-family:var(--font-display);font-style:italic;color:var(--accent);font-size:18px;letter-spacing:.06em;white-space:nowrap}
+.sidebar-collapsed .sb-logo{justify-content:center;padding:16px 0}
+.sidebar-collapsed .sb-logo-mark{font-size:22px}
+.sb-nav{flex:1;overflow-y:auto;padding:4px 8px}
+.sb-section-label{font-family:var(--font-eyebrow);font-size:10px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:rgba(201,162,75,.5);padding:12px 12px 6px}
+.sidebar-collapsed .sb-section-label{display:none}
+.sb-item{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:var(--radius-sm);font-size:13px;color:rgba(247,245,239,.6);cursor:pointer;position:relative;transition:background .15s,border-color .15s;white-space:nowrap}
+.sidebar-collapsed .sb-item{justify-content:center;padding:0}
+.sb-item:hover{background:rgba(255,255,255,.05)}
+.sb-item.active{background:rgba(201,162,75,.08);color:var(--accent)}
+.sb-item.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--accent);border-radius:0 2px 2px 0}
+.sb-item-icon{flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sb-item-icon svg{width:20px;height:20px}
+.sb-item-label{flex:1;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sidebar-collapsed .sb-item-label{display:none}
+.sb-chevron{width:16px;height:16px;flex-shrink:0;opacity:.5}
+.sidebar-collapsed .sb-chevron{display:none}
+.sb-sub{padding:2px 0 4px 42px;display:flex;flex-direction:column;gap:2px}
+.sidebar-collapsed .sb-sub{display:none}
+.sb-sub-item{height:32px;display:flex;align-items:center;font-size:12px;color:rgba(247,245,239,.45);padding:0 8px;border-radius:var(--radius-xs);cursor:pointer;transition:background .15s;white-space:nowrap}
+.sb-sub-item:hover{background:rgba(255,255,255,.05)}
+.sb-sub-item.active{color:var(--accent)}
+.sb-foot{padding:12px 16px;display:flex;align-items:center;gap:8px;border-top:1px solid rgba(255,255,255,.08)}
+.sidebar-collapsed .sb-foot{justify-content:center;padding:12px 0}
+.sb-status-dot{width:8px;height:8px;border-radius:50%;background:var(--color-success);flex-shrink:0}
+.sb-foot-text{font-size:11px;color:rgba(247,245,239,.4);white-space:nowrap}
+.sidebar-collapsed .sb-foot-text{display:none}
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="row" data-evidence-sample="expanded-sidebar">
+<span class="label">展开</span>
+<div class="sidebar" role="navigation" aria-label="主导航">
+<div class="sb-logo"><span class="sb-logo-mark">AROORO</span></div>
+<div class="sb-nav">
+<div class="sb-section-label" data-evidence-sample="nav-section-label">总览</div>
+<div class="sb-item active" data-evidence-sample="nav-item-active" aria-current="page"><span class="sb-item-icon"><i data-lucide="grid"></i></span><span class="sb-item-label">仪表盘</span></div>
+<div class="sb-item"><span class="sb-item-icon"><i data-lucide="trending-up"></i></span><span class="sb-item-label">数据分析</span><i data-lucide="chevron-right" class="sb-chevron"></i></div>
+<div class="sb-section-label" data-evidence-sample="nav-section-label">管理</div>
+<div class="sb-item"><span class="sb-item-icon"><i data-lucide="package"></i></span><span class="sb-item-label">商品管理</span><i data-lucide="chevron-down" class="sb-chevron"></i></div>
+<div class="sb-sub"><div class="sb-sub-item">商品列表</div><div class="sb-sub-item active">分类管理</div></div>
+<div class="sb-item"><span class="sb-item-icon"><i data-lucide="users"></i></span><span class="sb-item-label">会员管理</span></div>
+<div class="sb-section-label" data-evidence-sample="nav-section-label">系统</div>
+<div class="sb-item"><span class="sb-item-icon"><i data-lucide="settings"></i></span><span class="sb-item-label">系统设置</span></div>
+</div>
+<div class="sb-foot"><span class="sb-status-dot"></span><span class="sb-foot-text">v2.4.1 在线</span></div>
+</div>
+</div>
+<hr class="divider">
+<div class="row" data-evidence-sample="collapsed-sidebar">
+<span class="label">折叠</span>
+<div class="sidebar sidebar-collapsed" role="navigation" aria-label="主导航">
+<div class="sb-logo"><span class="sb-logo-mark">A</span></div>
+<div class="sb-nav">
+<div class="sb-item active" data-evidence-sample="nav-item-active" aria-current="page"><span class="sb-item-icon"><i data-lucide="grid"></i></span></div>
+<div class="sb-item"><span class="sb-item-icon"><i data-lucide="trending-up"></i></span></div>
+<div class="sb-item"><span class="sb-item-icon"><i data-lucide="package"></i></span></div>
+<div class="sb-item"><span class="sb-item-icon"><i data-lucide="users"></i></span></div>
+<div class="sb-item"><span class="sb-item-icon"><i data-lucide="settings"></i></span></div>
+</div>
+<div class="sb-foot"><span class="sb-status-dot"></span></div>
+</div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

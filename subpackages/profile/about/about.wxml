@@ -30,8 +30,7 @@
       
       <view class="info-item">
         <text class="info-label">联系方式</text>
-        <!-- TODO: 替换为正式客服邮箱 -->
-        <text class="info-value">support@arooro.com</text>
+        <text class="info-value">arooro@163.com</text>
       </view>
     </view>
     

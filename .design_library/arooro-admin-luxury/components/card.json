@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 2,
+  "name": "Card",
+  "slug": "card",
+  "category": "Container",
+  "sourceKind": "from-scratch",
+  "confidence": "high",
+  "keyInsightSeed": "White card with hairline border, subtle shadow; stat card with tinted icon + number + trend",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "stat-card",
+      "evidence": "stat-card with icon, value, label, trend indicator"
+    },
+    {
+      "candidate": "chart-card",
+      "evidence": "card with head (title + toolbar) + body (chart)"
+    },
+    {
+      "candidate": "quick-action",
+      "evidence": "quick-action with icon + label + count"
+    },
+    {
+      "candidate": "table-card",
+      "evidence": "card wrapping data table with pagination"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "name": "variant",
+      "values": [
+        "stat",
+        "chart",
+        "quick-action",
+        "table"
+      ]
+    },
+    {
+      "name": "state",
+      "values": [
+        "default",
+        "hover"
+      ]
+    }
+  ],
+  "representativeVariants": [
+    {
+      "whySelected": "KPI stat card",
+      "traits": {
+        "variant": "stat",
+        "padding": "24px",
+        "radius": "12px",
+        "bg": "var(--color-card)",
+        "border": "1px solid var(--color-border)",
+        "shadow": "shadow-2",
+        "hoverLift": "-2px",
+        "hoverBorder": "var(--color-accent)"
+      },
+      "childrenDigest": [
+        "stat-icon (tinted)",
+        "stat-value (number font, tabular-nums)",
+        "stat-label",
+        "stat-trend (up/down)"
+      ]
+    },
+    {
+      "whySelected": "Chart container card",
+      "traits": {
+        "variant": "chart",
+        "radius": "12px",
+        "bg": "var(--color-card)",
+        "border": "1px solid var(--color-border)"
+      },
+      "childrenDigest": [
+        "card-head (title + tag/toolbar)",
+        "card-body (chart content)"
+      ]
+    },
+    {
+      "whySelected": "Quick action tile",
+      "traits": {
+        "variant": "quick-action",
+        "padding": "16px",
+        "radius": "8px",
+        "bg": "var(--color-background)",
+        "border": "1px solid var(--color-border)",
+        "hoverLift": "-2px",
+        "hoverBg": "var(--color-card)"
+      },
+      "childrenDigest": [
+        "qa-icon (tinted, 48px)",
+        "qa-label",
+        "qa-count (number font)"
+      ]
+    }
+  ],
+  "anatomy": [
+    "card-head (title + tag/toolbar)",
+    "card-body (content area)"
+  ],
+  "structurePatterns": [
+    "flex column",
+    "head with border-bottom divider",
+    "body padding 20-24px"
+  ],
+  "usageHints": {
+    "priorityHint": "high",
+    "densityHint": "normal",
+    "copyStyle": "editorial"
+  },
+  "doNotInvent": [
+    "accordion",
+    "tabs",
+    "carousel"
+  ],
+  "unknowns": [
+    "skeleton loading state",
+    "empty state"
+  ]
+}

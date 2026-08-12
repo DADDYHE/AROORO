@@ -458,7 +458,7 @@ async function exportActivityRegistrations(event, context, auth) {
 }
 
 async function getActivityOrders(event, context, auth) {
-  const { status, page = 1, pageSize = 20, startDate, endDate } = event
+  const { status, paymentStatus, page = 1, pageSize = 20, startDate, endDate } = event
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 100)
   const _ = db.command
 
@@ -470,6 +470,7 @@ async function getActivityOrders(event, context, auth) {
     where.organizerId = auth.openid || auth.partnerId || ''
   }
   if (status) {where.status = status}
+  if (paymentStatus) {where.paymentStatus = paymentStatus}
   if (startDate || endDate) {
     let timeCond = null
     if (startDate) {

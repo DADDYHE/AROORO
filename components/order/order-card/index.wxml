@@ -1,0 +1,4 @@
+<view class="order-card">
+  <text wx:if="{{title}}" class="order-card__title">{{title}}</text>
+  <slot name="content"></slot>
+</view>

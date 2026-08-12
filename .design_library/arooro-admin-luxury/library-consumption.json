@@ -1,0 +1,117 @@
+{
+  "library": "arooro-admin-luxury",
+  "brand": "AROORO Admin",
+  "brandSlug": "arooro-admin",
+  "kitType": "dashboard",
+  "language": "zh",
+  "description": "Recommended downstream read order for agents consuming the AROORO Admin luxury dashboard design library.",
+  "tokenSource": {
+    "understanding": "css.json",
+    "runtime": "colors_and_type.css",
+    "rule": "Read css.json to understand tokens; link colors_and_type.css at runtime. Do not parse colors_and_type.css for token understanding when css.json is available."
+  },
+  "componentResolution": {
+    "priority": [
+      { "order": 1, "source": "preview/component-{slug}.html", "purpose": "First source for DOM/CSS fidelity and anatomy" },
+      { "order": 2, "source": "components/{slug}.json", "purpose": "Intent, variants, states, and semantic type candidates" },
+      { "order": 3, "source": "components/_evidence/{slug}.json", "purpose": "Fallback raw evidence when preview is missing or insufficient (not present in this library)" }
+    ]
+  },
+  "readOrder": [
+    {
+      "step": 1,
+      "file": "SKILL.md",
+      "purpose": "Skill entry point — brand context, file map, concrete design essentials. Read first to grasp visual identity without opening other files."
+    },
+    {
+      "step": 2,
+      "file": "README.md",
+      "purpose": "Rich brand narrative — content fundamentals, voice & tone, visual foundations (color, typography, spacing, radius, shadow), component patterns, caveats."
+    },
+    {
+      "step": 3,
+      "file": "css.json",
+      "purpose": "Structured JSON token representation — primary source for programmatic token understanding (colors, typography, spacing, radius, shadows, sizing)."
+    },
+    {
+      "step": 4,
+      "file": "colors_and_type.css",
+      "purpose": "Runtime CSS variables — link into HTML/prototypes; do not read for understanding when css.json exists. Contains :root tokens, .dark overrides, and typography utility classes."
+    },
+    {
+      "step": 5,
+      "file": "components/index.json",
+      "purpose": "Component index — enumerates all components, cross-component patterns, and library summary. Establishes the component inventory."
+    },
+    {
+      "step": 6,
+      "file": "components.css",
+      "purpose": "Aggregated component CSS auto-extracted from preview pages — sectioned per component (Button, Card, Table, Chart, Navigation, Sidebar). Reference for exact component styling."
+    },
+    {
+      "step": 7,
+      "file": "preview/component-button.html",
+      "purpose": "Button preview — DOM/CSS fidelity source for pill primary, row actions, toggle, and pagination variants."
+    },
+    {
+      "step": 8,
+      "file": "components/button.json",
+      "purpose": "Button component contract — intent, variant dimensions, state coverage, anatomy."
+    },
+    {
+      "step": 9,
+      "file": "preview/component-card.html",
+      "purpose": "Card preview — white card with hairline border and stat card (tinted icon + number + trend)."
+    },
+    {
+      "step": 10,
+      "file": "components/card.json",
+      "purpose": "Card component contract — anatomy, structure patterns, usage hints."
+    },
+    {
+      "step": 11,
+      "file": "preview/component-table.html",
+      "purpose": "Data Table preview — editorial table with eyebrow headers, thumbnail cells, pill statuses, Inter amounts."
+    },
+    {
+      "step": 12,
+      "file": "components/table.json",
+      "purpose": "Data Table component contract — pattern model, coverage matrix, representative variants."
+    },
+    {
+      "step": 13,
+      "file": "preview/component-chart.html",
+      "purpose": "Chart preview — CSS-only gradient bar chart and conic-gradient donut with center hole + legend."
+    },
+    {
+      "step": 14,
+      "file": "components/chart.json",
+      "purpose": "Chart component contract — anatomy, CSS-only rendering patterns."
+    },
+    {
+      "step": 15,
+      "file": "preview/component-navigation.html",
+      "purpose": "Navigation preview — top header with breadcrumb, search pill, notification icon, user chip."
+    },
+    {
+      "step": 16,
+      "file": "components/navigation.json",
+      "purpose": "Navigation component contract — anatomy, structure patterns."
+    },
+    {
+      "step": 17,
+      "file": "preview/component-sidebar.html",
+      "purpose": "Sidebar preview — deep forest green gradient, gold active indicator, 72px collapse behavior."
+    },
+    {
+      "step": 18,
+      "file": "components/sidebar.json",
+      "purpose": "Sidebar component contract — anatomy, collapse model, active state semantics."
+    }
+  ],
+  "notes": [
+    "This library has no components/_evidence/ directory; component resolution uses preview HTML first, then components/{slug}.json.",
+    "All color, radius, spacing, and typography values originate from colors_and_type.css / css.json. No values should be hallucinated.",
+    "Font families: Cormorant Garamond (display/eyebrow), Noto Serif SC (headings), Noto Sans SC (body), Inter (numbers)."
+  ]
+}

@@ -1,6 +1,6 @@
 import { ref, reactive } from 'vue'
 
-export function usePagination(fetchFn, defaultPageSize = 20) {
+export function usePagination(fetchFn, defaultPageSize = 100) {
   const list = ref([])
   const loading = ref(false)
   const total = ref(0)

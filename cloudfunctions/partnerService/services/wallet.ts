@@ -168,6 +168,7 @@ export interface IncomeDetailItem {
   type: 'commission' | 'hosting' | 'boarding' | 'feeding' | 'tuan' | 'mall' | 'activity'
   typeName: string
   amount: number
+  orderAmount?: number
   orderNo: string
   description: string
   // 商品/服务名称（佣金创建时落库；旧记录可能为空，前端用 typeName 兜底）
@@ -566,6 +567,7 @@ export async function getMyIncomeDetails(
         type: normType,
         typeName: typeLabel,
         amount: Number(c.commissionAmount) || 0,
+        orderAmount: Number(c.orderAmount) || 0,
         orderNo: (c.orderNo as string) || '',
         description,
         productName: (c.productName as string) || '',

@@ -1,0 +1,64 @@
+{
+  "components": [
+    {
+      "slug": "button",
+      "name": "Button",
+      "category": "Action",
+      "sourceKind": "from-scratch",
+      "confidence": "high",
+      "variantCount": 4,
+      "priorityHint": "high",
+      "keyInsightSeed": "Pill-shaped primary with glow shadow; text-only row actions with semantic colors"
+    },
+    {
+      "slug": "card",
+      "name": "Card",
+      "category": "Container",
+      "sourceKind": "from-scratch",
+      "confidence": "high",
+      "variantCount": 3,
+      "priorityHint": "high",
+      "keyInsightSeed": "White card with hairline border, subtle shadow; stat card with tinted icon + number + trend"
+    },
+    {
+      "slug": "table",
+      "name": "Data Table",
+      "category": "Data Display",
+      "sourceKind": "from-scratch",
+      "confidence": "high",
+      "variantCount": 1,
+      "priorityHint": "high",
+      "keyInsightSeed": "Editorial table with eyebrow uppercase headers, thumbnail cells, pill statuses, number-font amounts, pagination"
+    },
+    {
+      "slug": "chart",
+      "name": "Chart",
+      "category": "Data Visualization",
+      "sourceKind": "from-scratch",
+      "confidence": "high",
+      "variantCount": 2,
+      "priorityHint": "medium",
+      "keyInsightSeed": "CSS-only bar chart with gradient bars + conic-gradient donut with center hole and legend"
+    },
+    {
+      "slug": "navigation",
+      "name": "Navigation",
+      "category": "Navigation",
+      "sourceKind": "from-scratch",
+      "confidence": "high",
+      "variantCount": 3,
+      "priorityHint": "high",
+      "keyInsightSeed": "Top header with breadcrumb, search pill, notification icon, user chip; chart toolbar toggles"
+    },
+    {
+      "slug": "sidebar",
+      "name": "Sidebar",
+      "category": "Navigation",
+      "sourceKind": "from-scratch",
+      "confidence": "high",
+      "variantCount": 3,
+      "priorityHint": "high",
+      "keyInsightSeed": "Deep forest green gradient sidebar with gold active indicator, collapsible to 72px icon-only mode"
+    }
+  ]
+}

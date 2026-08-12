@@ -80,9 +80,10 @@ async function enrichAdminOrder(order) {
 }
 
 async function getBoardingOrders(event, context, auth) {
-  const { status, page = 1, pageSize = 20, startDate, endDate } = event
+  const { status, paymentStatus, page = 1, pageSize = 20, startDate, endDate } = event
   const where = {}
   if (status) {where.status = status}
+  if (paymentStatus) {where.paymentStatus = paymentStatus}
   if (startDate || endDate) {
     let timeCond = null
     if (startDate) {

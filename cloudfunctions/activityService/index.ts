@@ -992,6 +992,7 @@ export async function submitRegistration(
         ownerId: openid,
         orderType: 'activity',
         type: 'activity',
+        orderNo: `ACT${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
         activityId,
         activityTitle: activity.title || '',
         activityCoverUrl: activity.coverUrl || '',
@@ -1141,8 +1142,20 @@ export async function getRegistrationDetail(
       logger.warn('getRegistrationDetail: 获取活动信息失败', (e as Error).message)
     }
 
+    let orderNo = ''
+    if (registration.orderId) {
+      try {
+        const orderRes = await db.collection('orders').doc(registration.orderId).get()
+        if (orderRes.data) {
+          orderNo = orderRes.data.orderNo || ''
+        }
+      } catch (e) {
+        logger.warn('getRegistrationDetail.orderNo.lookup', { registrationId, code: (e as { errCode?: unknown }).errCode, msg: (e as Error).message })
+      }
+    }
+
     return handleSuccess({
-      registration,
+      registration: Object.assign({}, registration, { orderNo }),
       activityInfo,
     }, '获取成功')
   } catch (error) {

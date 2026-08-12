@@ -89,7 +89,7 @@ let _isRunning = false;
  *
  * 限制：
  *   - 单次最多 MAX_PROCESS 条
- *   - field 仅取必要字段（_id, orderNo, waybillToken, ownerId, expressNo, shippedAt）
+ *   - field 仅取必要字段（_id, orderNo, waybillToken, ownerId, expressNo, shippedAt, tuanOrderId）
  *
  * @returns 订单文档数组
  */
@@ -106,6 +106,7 @@ async function fetchShippedOrders() {
       ownerId: true,
       expressNo: true,
       shippedAt: true,
+      tuanOrderId: true,
     })
     .orderBy('shippedAt', 'asc')
     .limit(MAX_PROCESS)
@@ -121,10 +122,15 @@ async function fetchShippedOrders() {
  *
  * 幂等保护：where status='shipped'，若已被其他路径推进则 update.stats.updated=0
  *
- * @param orderId 订单 _id
- * @returns update.stats.updated（0 表示已被并发推进，1 表示本次推进成功）
+ * 双表一致性：若 order.tuanOrderId 存在（团购订单），同步更新 tuan_orders 表状态，
+ *   避免 orders.completed 但 tuan_orders.shipped 的数据不一致。
+ *   tuan_orders 同步为 best-effort：失败告警，不阻断主流程（与 adminService.handleTuanOrder 一致）。
+ *
+ * @param {object} order 订单文档（至少含 _id，可选 tuanOrderId）
+ * @returns {Promise<{updated: number, tuanSynced: boolean, tuanError: string|null}>}
  */
-async function advanceOrderToCompleted(orderId) {
+async function advanceOrderToCompleted(order) {
+  const orderId = order._id;
   const res = await db.collection(COLLECTION)
     .where({ _id: orderId, status: 'shipped' })
     .update({
@@ -135,7 +141,59 @@ async function advanceOrderToCompleted(orderId) {
         updatedAt: db.serverDate(),
       },
     });
-  return res.stats ? res.stats.updated : 0;
+  const updated = res.stats ? res.stats.updated : 0;
+
+  let tuanSynced = false;
+  let tuanError = null;
+
+  // 团购订单双表同步（仅当主表推进成功时才执行）
+  if (updated > 0 && order.tuanOrderId) {
+    try {
+      const tuanUpd = await db.collection('tuan_orders')
+        .where({ _id: order.tuanOrderId, status: 'shipped' })
+        .update({
+          data: {
+            status: 'completed',
+            completedAt: db.serverDate(),
+            completionReason: COMPLETION_REASON,
+            updatedAt: db.serverDate(),
+          },
+        });
+      tuanSynced = (tuanUpd.stats && tuanUpd.stats.updated) > 0;
+      if (!tuanSynced) {
+        // tuan_orders 状态已不是 shipped（可能被其他路径推进），记 info 不告警
+        logger.info('advanceOrderToCompleted.tuan_skipped', {
+          orderId,
+          tuanOrderId: order.tuanOrderId,
+          reason: 'tuan_orders status not shipped (already advanced by other path)',
+        });
+      }
+    } catch (e) {
+      tuanError = e?.message || 'unknown error';
+      logger.error('advanceOrderToCompleted.tuan_sync.failed', {
+        orderId,
+        tuanOrderId: order.tuanOrderId,
+        orderNo: order.orderNo || '',
+        msg: tuanError,
+      });
+      try {
+        const { recordAlert } = require('./common/alert');
+        await recordAlert(
+          'warning',
+          'order.shipping.sync.tuan_sync.failed',
+          '物流自动签收后 tuan_orders 同步失败',
+          {
+            orderId,
+            tuanOrderId: order.tuanOrderId,
+            orderNo: order.orderNo || '',
+            error: tuanError,
+          }
+        );
+      } catch (_) { /* best-effort */ }
+    }
+  }
+
+  return { updated, tuanSynced, tuanError };
 }
 
 // =====================================================================
@@ -159,6 +217,8 @@ async function syncOneOrder(order) {
     waybillStatusLabel: '',
     advanced: false,           // 是否本次推进
     advancedSkipped: false,    // 已被并发推进
+    tuanSynced: false,         // tuan_orders 是否同步成功
+    tuanSyncError: null,       // tuan_orders 同步失败原因
     queryTraceError: null,
   };
 
@@ -193,15 +253,19 @@ async function syncOneOrder(order) {
   }
 
   // 已签收 → 推进订单为 completed
-  const updated = await advanceOrderToCompleted(order._id);
-  if (updated > 0) {
+  const advanceResult = await advanceOrderToCompleted(order);
+  if (advanceResult.updated > 0) {
     result.advanced = true;
+    result.tuanSynced = advanceResult.tuanSynced;
+    result.tuanSyncError = advanceResult.tuanError;
     logger.info('syncOneOrder.advanced', {
       orderId: order._id,
       orderNo: order.orderNo,
       expressNo: order.expressNo,
       waybillStatus: traceRes.status,
       waybillStatusLabel: traceRes.statusLabel,
+      tuanSynced: advanceResult.tuanSynced,
+      hasTuanOrderId: !!order.tuanOrderId,
     });
   } else {
     result.advancedSkipped = true;
@@ -252,6 +316,8 @@ async function main(event, _context) {
     let queryFailedCount = 0;
     let notSignedCount = 0;
     let advancedSkippedCount = 0;
+    let tuanSyncedCount = 0;
+    let tuanSyncFailedCount = 0;
 
     for (const order of orders) {
       try {
@@ -260,6 +326,8 @@ async function main(event, _context) {
         if (r.advanced) advancedCount += 1;
         if (r.advancedSkipped) advancedSkippedCount += 1;
         if (r.queryTraceError) queryFailedCount += 1;
+        if (r.advanced && r.tuanSynced) tuanSyncedCount += 1;
+        if (r.advanced && r.tuanSyncError) tuanSyncFailedCount += 1;
         if (!r.advanced && !r.advancedSkipped && !r.queryTraceError) notSignedCount += 1;
       } catch (e) {
         // 单条异常不阻断整体
@@ -277,6 +345,8 @@ async function main(event, _context) {
           waybillStatusLabel: '',
           advanced: false,
           advancedSkipped: false,
+          tuanSynced: false,
+          tuanSyncError: null,
           queryTraceError: e?.message || 'exception',
         });
       }
@@ -288,16 +358,27 @@ async function main(event, _context) {
       notSignedCount,
       queryFailedCount,
       advancedSkippedCount,
+      tuanSyncedCount,
+      tuanSyncFailedCount,
       now: now.toISOString(),
     };
     logger.info('done', summary);
 
-    // 告警通知（info 级，便于运维查询同步情况；query_trace 失败多则 warning）
-    const alertSeverity = queryFailedCount > 0 ? 'warning' : 'info';
-    const alertAction = queryFailedCount > 0 ? ALERT_ACTION.QUERY_TRACE_FAILED : ALERT_ACTION.SYNC_DONE;
-    const alertMsg = queryFailedCount > 0
-      ? `订单物流同步完成（有 ${queryFailedCount} 条查询失败）`
-      : `订单物流同步完成：${advancedCount}/${orders.length} 条自动签收`;
+    // 告警通知（info 级，便于运维查询同步情况；query_trace 失败或 tuan 同步失败则 warning）
+    const hasFailures = queryFailedCount > 0 || tuanSyncFailedCount > 0;
+    const alertSeverity = hasFailures ? 'warning' : 'info';
+    let alertAction = ALERT_ACTION.SYNC_DONE;
+    if (queryFailedCount > 0) alertAction = ALERT_ACTION.QUERY_TRACE_FAILED;
+    else if (tuanSyncFailedCount > 0) alertAction = 'order.shipping.sync.tuan_sync.failed';
+
+    let alertMsg = `订单物流同步完成：${advancedCount}/${orders.length} 条自动签收`;
+    if (queryFailedCount > 0 && tuanSyncFailedCount > 0) {
+      alertMsg = `订单物流同步完成（${queryFailedCount} 条查询失败，${tuanSyncFailedCount} 条团购同步失败）`;
+    } else if (queryFailedCount > 0) {
+      alertMsg = `订单物流同步完成（有 ${queryFailedCount} 条查询失败）`;
+    } else if (tuanSyncFailedCount > 0) {
+      alertMsg = `订单物流同步完成（${tuanSyncFailedCount} 条团购订单双表同步失败）`;
+    }
     try {
       await recordAlert(alertSeverity, alertAction, alertMsg, summary);
     } catch { /* best-effort */ }

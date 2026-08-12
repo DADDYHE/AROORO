@@ -278,7 +278,7 @@ async function getTuanDealDetail(event, context, auth) {
 }
 
 async function getTuanDealOrders(event, context, auth) {
-  const { dealId, status, page = 1, pageSize = 20, startDate, endDate } = event
+  const { dealId, status, paymentStatus, page = 1, pageSize = 20, startDate, endDate } = event
   // ★ 修复：原来查 `tuan_orders` 集合——那是个无 transactionId 的孤立集合，
   //  wx 发货信息同步的 shipped / completed 状态都写不到它上面，所以 web 端永远卡在 paid。
   // 真实团购订单已经统一在 `orders` 集合（type='group_buy'），跟商城订单共用一个集合，
@@ -287,6 +287,7 @@ async function getTuanDealOrders(event, context, auth) {
   const where = { type: 'group_buy', status: _.neq('deleted') }
   if (dealId) {where.dealId = dealId}
   if (status && status !== 'all') {where.status = status}
+  if (paymentStatus) {where.paymentStatus = paymentStatus}
   if (startDate || endDate) {
     let timeCond = null
     if (startDate) {

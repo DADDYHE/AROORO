@@ -153,6 +153,10 @@
             <view class="detail-left">
               <text class="detail-type">{{item.typeName || (item.type === 'tuan' ? '团购' : (item.type === 'mall' ? '商城' : (item.type === 'activity' ? '活动' : (item.type === 'boarding' ? '寄养' : '服务'))))}}</text>
               <text class="detail-desc">{{item.productName || item.description}}</text>
+              <view wx:if="{{item.orderAmount}}" class="detail-order-amount">
+                <text class="detail-order-amount-label">订单金额</text>
+                <text class="detail-order-amount-value">¥{{item.orderAmount}}</text>
+              </view>
               <view wx:if="{{item.buyerNickName}}" class="detail-buyer">
                 <image wx:if="{{item.buyerAvatarUrl}}" class="detail-buyer-avatar" src="{{item.buyerAvatarUrl}}" mode="aspectFill" />
                 <text class="detail-buyer-name">{{item.buyerNickName}}</text>

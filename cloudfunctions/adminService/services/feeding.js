@@ -13,7 +13,7 @@ const _ = db.command
 const logger = createLogger('adminService:feeding')
 
 async function getFeedingOrders(event, context, auth) {
-  const { status, page = 1, pageSize = 20, startDate, endDate } = event
+  const { status, paymentStatus, page = 1, pageSize = 20, startDate, endDate } = event
   const where = {}
   // P2-3 修复：非超管（partner）仅可查看归属自己的喂养订单，避免枚举全量订单（含地址/电话等 PII）
   if (!auth.isSuperAdmin && !auth.roles?.includes('super_admin')) {
@@ -21,6 +21,7 @@ async function getFeedingOrders(event, context, auth) {
     where.ownerId = myId
   }
   if (status) {where.status = status}
+  if (paymentStatus) {where.paymentStatus = paymentStatus}
   if (startDate || endDate) {
     let timeCond = null
     if (startDate) {

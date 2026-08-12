@@ -1,8 +1,20 @@
 <template>
-  <div class="login-page">
-    <div class="login-card">
-      <h1 class="login-title">AROORO</h1>
-      <p class="login-subtitle">管理后台</p>
+  <div class="login-page" ref="loginPageRef">
+    <!-- 装饰背景 -->
+    <div class="bg-decoration">
+      <div class="bg-circle bg-circle-1"></div>
+      <div class="bg-circle bg-circle-2"></div>
+      <div class="bg-grain"></div>
+    </div>
+
+    <div class="login-card" ref="loginCardRef">
+      <!-- Logo 区 -->
+      <div class="logo-section">
+        <div class="logo-ornament"></div>
+        <h1 class="login-title">AROORO</h1>
+        <p class="login-subtitle">管 理 后 台</p>
+        <div class="logo-ornament"></div>
+      </div>
 
       <div class="scan-section" v-if="scanMode">
         <div class="qrcode-wrapper">
@@ -60,7 +72,7 @@
             <el-input v-model="form.password" type="password" placeholder="密码" prefix-icon="Lock" size="large" show-password />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" size="large" :loading="loading" style="width:100%" native-type="submit">登 录</el-button>
+            <el-button type="primary" size="large" :loading="loading" class="login-btn" native-type="submit">登 录</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -83,11 +95,14 @@ import { createScanLogin } from '@/api/auth'
 import { ElMessage } from 'element-plus'
 import { RefreshRight, Loading } from '@element-plus/icons-vue'
 import QRCode from 'qrcode'
+import { gsap } from 'gsap'
 
 const router = useRouter()
 const auth = useAuthStore()
 const formRef = ref()
 const loading = ref(false)
+const loginPageRef = ref()
+const loginCardRef = ref()
 
 const scanMode = ref(false)
 const qrcodeDataUrl = ref('')
@@ -101,6 +116,22 @@ const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
+
+// GSAP 入场动画
+onMounted(async () => {
+  await nextTick()
+  if (loginCardRef.value) {
+    gsap.from(loginCardRef.value, {
+      opacity: 0,
+      y: 40,
+      duration: 1,
+      ease: 'power3.out',
+    })
+  }
+  if (scanMode.value) {
+    generateQrcode()
+  }
+})
 
 async function generateQrcode() {
   scanStatus.value = 'pending'
@@ -116,7 +147,7 @@ async function generateQrcode() {
     qrcodeDataUrl.value = await QRCode.toDataURL(qrContent, {
       width: 240,
       margin: 2,
-      color: { dark: '#1d1e2c', light: '#ffffff' },
+      color: { dark: '#1F3A1F', light: '#FFFFFF' },
     })
 
     startPolling()
@@ -204,12 +235,6 @@ async function onLogin() {
   }
 }
 
-onMounted(() => {
-  if (scanMode.value) {
-    generateQrcode()
-  }
-})
-
 onUnmounted(() => {
   stopPolling()
   clearTimeout(expireTimer)
@@ -222,49 +247,108 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(145deg, #1a1b2e 0%, #252740 50%, #1a1b2e 100%);
+  background: linear-gradient(145deg, #0F1C0F 0%, #1F3A1F 50%, #162A16 100%);
   position: relative;
   overflow: hidden;
 }
-.login-page::before {
-  content: '';
+
+/* ---- 装饰背景 ---- */
+.bg-decoration {
   position: absolute;
-  top: -50%;
-  right: -30%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(59, 184, 176, 0.08) 0%, transparent 70%);
+  inset: 0;
   pointer-events: none;
 }
-.login-card {
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+.bg-circle-1 {
+  top: -20%;
+  right: -15%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(201, 162, 75, 0.08) 0%, transparent 70%);
+}
+.bg-circle-2 {
+  bottom: -20%;
+  left: -15%;
   width: 400px;
-  padding: 48px 40px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(31, 58, 31, 0.15) 0%, transparent 70%);
+}
+.bg-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---- 登录卡片 ---- */
+.login-card {
+  width: 420px;
+  padding: 52px 44px 40px;
   background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.30), 0 0 0 1px rgba(201, 162, 75, 0.08);
   position: relative;
   z-index: 1;
 }
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  opacity: 0.5;
+}
+
+/* ---- Logo 区 ---- */
+.logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 36px;
+}
+.logo-ornament {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  margin: 8px 0;
+  opacity: 0.4;
+}
 .login-title {
   text-align: center;
-  font-size: 26px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 600;
   color: var(--color-primary);
-  margin: 0 0 4px;
-  letter-spacing: 4px;
+  margin: 4px 0;
+  letter-spacing: 6px;
+  line-height: 1;
 }
 .login-subtitle {
   text-align: center;
   color: var(--text-tertiary);
-  margin: 0 0 36px;
-  font-size: 13px;
-  letter-spacing: 2px;
+  margin: 0;
+  font-size: 11px;
+  font-family: var(--font-eyebrow);
+  letter-spacing: 4px;
+  text-transform: uppercase;
 }
 
+/* ---- 扫码区 ---- */
 .scan-section { display: flex; flex-direction: column; align-items: center; }
 .qrcode-wrapper { margin-bottom: 24px; }
 .qrcode-container { position: relative; width: 220px; height: 220px; }
-.qrcode-img { width: 220px; height: 220px; border-radius: var(--radius-md); }
+.qrcode-img {
+  width: 220px;
+  height: 220px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
 .qrcode-overlay {
   position: absolute;
   top: 0;
@@ -297,13 +381,14 @@ onUnmounted(() => {
   justify-content: center;
   gap: 12px;
   color: var(--text-tertiary);
-  background: #f8f9fb;
+  background: var(--bg-page);
   border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
 }
 
 .scan-status { text-align: center; }
 .status-icon { font-size: 24px; margin-bottom: 8px; }
-.status-text { font-size: 15px; font-weight: 500; color: var(--text-primary); margin: 0 0 4px; }
+.status-text { font-size: 15px; font-weight: 500; color: var(--text-primary); margin: 0 0 4px; font-family: var(--font-serif); }
 .scanned-text { color: var(--color-warning); }
 .confirmed-text { color: var(--color-success); }
 .denied-text { color: var(--color-danger); }
@@ -314,19 +399,38 @@ onUnmounted(() => {
   font-size: 12px;
   color: var(--text-placeholder);
   background: var(--bg-card);
+  font-family: var(--font-sans);
 }
 
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+/* ---- 密码登录区 ---- */
 .password-section :deep(.el-input__wrapper) {
   border-radius: var(--radius-sm);
+  padding: 4px 12px;
 }
-
-.password-section :deep(.el-button--primary) {
+.password-section :deep(.el-input__inner) {
+  font-family: var(--font-sans);
   height: 44px;
+}
+.password-section :deep(.el-form-item) {
+  margin-bottom: 22px;
+}
+.login-btn {
+  width: 100%;
+  height: 48px;
   font-size: 15px;
-  letter-spacing: 4px;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: 6px;
   border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.login-btn:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  box-shadow: 0 4px 20px rgba(31, 58, 31, 0.25);
 }
 </style>

@@ -48,7 +48,7 @@
       </el-table-column>
       <el-table-column label="凭证" width="90">
         <template #default="{ row }">
-          <el-link v-if="row.payEvidence" type="primary" :href="row.payEvidence" target="_blank" :underline="false">查看</el-link>
+          <el-link v-if="row.payEvidence" type="primary" :underline="false" @click="openEvidence(row)">查看</el-link>
           <span v-else>-</span>
         </template>
       </el-table-column>
@@ -153,6 +153,18 @@
       </template>
     </el-dialog>
 
+    <!-- 打款凭证预览/下载 -->
+    <el-dialog v-model="evidenceVisible" title="打款凭证" width="560px">
+      <div v-if="evidenceUrl" class="evidence-preview">
+        <el-image :src="evidenceUrl" :preview-src-list="[evidenceUrl]" fit="contain" style="width:100%;max-height:420px" />
+      </div>
+      <div v-else class="hint">凭证地址无效或已失效</div>
+      <template #footer>
+        <el-button @click="evidenceVisible = false">关闭</el-button>
+        <el-button type="primary" :download="evidenceFileName" :href="evidenceUrl" :disabled="!evidenceUrl">下载凭证</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 撤销记录检查/修复（运维诊断） -->
     <el-dialog v-model="inspectVisible" title="撤销记录检查" width="520px">
       <template v-if="inspectData">
@@ -241,6 +253,16 @@ async function onReject(id) {
   await rejectWithdrawal(id, value)
   ElMessage.success('已拒绝')
   fetch()
+}
+
+// ===== 打款凭证预览/下载 =====
+const evidenceVisible = ref(false)
+const evidenceUrl = ref('')
+const evidenceFileName = ref('')
+function openEvidence(row) {
+  evidenceUrl.value = row.payEvidence || ''
+  evidenceFileName.value = row.payEvidence ? `打款凭证-${row._id || 'withdrawal'}.png` : ''
+  evidenceVisible.value = true
 }
 
 // ===== 完整收款信息 =====
@@ -423,4 +445,5 @@ onMounted(async () => {
 .hint { color: var(--text-tertiary); font-size: 12px; margin-top: 6px; }
 .payee-line { font-weight: 500; }
 .evidence-upload { margin-top: 8px; display: flex; align-items: center; gap: 10px; }
+.evidence-preview { display: flex; justify-content: center; background: #f7f8fa; border-radius: 6px; padding: 8px; }
 </style>

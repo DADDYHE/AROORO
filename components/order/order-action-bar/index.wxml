@@ -1,0 +1,20 @@
+<view class="order-action-bar">
+  <block wx:if="{{actions.length > 0}}">
+    <view
+      wx:for="{{actions}}"
+      wx:key="key"
+      wx:for-item="act"
+      class="order-action-bar__btn order-action-bar__btn--{{act.type}} {{disabled ? 'is-disabled' : ''}}"
+      data-key="{{act.key}}"
+      bindtap="onTap"
+      hover-class="is-pressed"
+      hover-stay-time="120"
+      wx:if="{{act.show !== false}}"
+    >
+      <text class="order-action-bar__btn-text">{{act.text}}</text>
+    </view>
+  </block>
+  <view wx:elif="{{tip}}" class="order-action-bar__tip">
+    <text class="order-action-bar__tip-text">{{tip}}</text>
+  </view>
+</view>

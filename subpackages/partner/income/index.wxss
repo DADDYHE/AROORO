@@ -280,6 +280,24 @@
   margin-top: 2rpx;
 }
 
+.detail-order-amount {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 4rpx;
+}
+
+.detail-order-amount-label {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+}
+
+.detail-order-amount-value {
+  font-size: 22rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
 .detail-buyer-avatar {
   width: 24rpx;
   height: 24rpx;

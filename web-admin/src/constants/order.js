@@ -44,6 +44,17 @@ export const PAYMENT_STATUS_TAG_TYPE = {
   free: 'success',
 }
 
+// 支付状态筛选标签（用于订单列表 tab 筛选第二行）
+export const PAYMENT_STATUS_FILTER_OPTIONS = [
+  { value: '', label: '全部' },
+  { value: 'unpaid', label: '未支付' },
+  { value: 'paying', label: '支付中' },
+  { value: 'paid', label: '已支付' },
+  { value: 'refunded', label: '已退款' },
+  { value: 'closed', label: '已关闭' },
+  { value: 'free', label: '免费' },
+]
+
 // normalizePaymentStatus 已迁移至 @/utils/payment-status.js（职责分离：纯数据 vs 派生逻辑）
 
 export const WITHDRAWAL_STATUS_LABELS = {

@@ -692,6 +692,7 @@ async function submitRegistration(event, context, auth) {
                 ownerId: openid,
                 orderType: 'activity',
                 type: 'activity',
+                orderNo: `ACT${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
                 activityId,
                 activityTitle: activity.title || '',
                 activityCoverUrl: activity.coverUrl || '',
@@ -840,8 +841,20 @@ async function getRegistrationDetail(event, context, auth) {
         catch (e) {
             logger.warn('getRegistrationDetail: 获取活动信息失败', e.message);
         }
+        let orderNo = '';
+        if (registration.orderId) {
+            try {
+                const orderRes = await db.collection('orders').doc(registration.orderId).get();
+                if (orderRes.data) {
+                    orderNo = orderRes.data.orderNo || '';
+                }
+            }
+            catch (e) {
+                logger.warn('getRegistrationDetail.orderNo.lookup', { registrationId, code: e.errCode, msg: e.message });
+            }
+        }
         return handleSuccess({
-            registration,
+            registration: Object.assign({}, registration, { orderNo }),
             activityInfo,
         }, '获取成功');
     }

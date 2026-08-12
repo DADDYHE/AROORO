@@ -377,6 +377,7 @@ async function getMyIncomeDetails(event, context, auth) {
                 type: normType,
                 typeName: typeLabel,
                 amount: Number(c.commissionAmount) || 0,
+                orderAmount: Number(c.orderAmount) || 0,
                 orderNo: c.orderNo || '',
                 description,
                 productName: c.productName || '',

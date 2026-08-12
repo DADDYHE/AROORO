@@ -28,14 +28,12 @@
   </view>
 
   <block wx:elif="{{order}}">
-    <view class="status-banner status-{{order.status}}">
-      <text class="status-text">{{order.statusText}}</text>
-      <text class="status-desc">{{order.statusDesc}}</text>
-      <view wx:if="{{order.status === 'pending_payment' && payCountdown}}" class="pay-countdown">
-        <text class="pay-countdown-label">支付剩余</text>
-        <text class="pay-countdown-time">{{payCountdown}}</text>
-      </view>
-    </view>
+    <order-status-banner
+      status="{{order.status}}"
+      status-text="{{order.statusText}}"
+      status-desc="{{order.statusDesc}}"
+      pay-countdown="{{payCountdown}}"
+    />
 
     <view class="section host-section">
       <view class="section-title">寄养家庭</view>
@@ -78,8 +76,8 @@
       </view>
     </view>
 
-    <view class="section info-section">
-      <view class="section-title">订单信息</view>
+    <order-card title="订单信息">
+      <view slot="content">
       <view class="info-row">
         <text class="info-label">订单编号</text>
         <view class="info-value-row">
@@ -123,24 +121,14 @@
         <text class="info-label">订单总额</text>
         <text class="total-value">¥{{order.totalPrice}}</text>
       </view>
-    </view>
+      </view>
+    </order-card>
 
     <root-portal>
-    <view class="bottom-bar">
-      <block wx:if="{{order.status === 'pending_payment'}}">
-        <view class="btn-secondary" bindtap="onCancelOrder">取消订单</view>
-        <view class="btn-primary" bindtap="onGoPay">去付款</view>
-      </block>
-      <block wx:elif="{{order.status === 'paid' || order.status === 'confirmed'}}">
-        <view class="btn-secondary" bindtap="onCancelOrder">取消订单</view>
-      </block>
-      <block wx:elif="{{order.status === 'in_progress'}}">
-        <view class="btn-primary" bindtap="onContactHost">联系寄养家庭</view>
-      </block>
-      <block wx:elif="{{order.status === 'completed'}}">
-        <view class="btn-secondary" bindtap="onContactHost">联系寄养家庭</view>
-      </block>
-    </view>
+      <order-action-bar
+        actions="{{actions}}"
+        bindaction="onAction"
+      />
     </root-portal>
   </block>
 </view>

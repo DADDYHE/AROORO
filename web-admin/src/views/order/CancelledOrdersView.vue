@@ -32,30 +32,26 @@
       <el-table-column prop="totalAmount" label="金额" width="100">
         <template #default="{ row }">{{ formatMoney(row.totalAmount || row.totalPrice) }}</template>
       </el-table-column>
-      <el-table-column prop="status" label="订单状态" width="100">
+      <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }"><el-tag :type="ORDER_STATUS_TAG_TYPE[row.status]" size="small">{{ ORDER_STATUS_LABELS[row.status] || row.status }}</el-tag></template>
-      </el-table-column>
-      <el-table-column prop="paymentStatus" label="支付状态" width="100">
-        <template #default="{ row }">
-          <el-tag :type="PAYMENT_STATUS_TAG_TYPE[normalizePaymentStatus(row)] || 'info'" size="small">{{ PAYMENT_STATUS_LABELS[normalizePaymentStatus(row)] || '未支付' }}</el-tag>
-        </template>
       </el-table-column>
       <el-table-column prop="createdAt" label="下单时间" width="180">
         <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
       </el-table-column>
       <el-table-column label="操作" width="100" fixed="right">
         <template #default="{ row }">
-          <el-button v-if="['mall','tuan','feeding'].includes(row._orderType)" link type="primary" @click="goDetail(row)">详情</el-button>
+          <el-button v-if="['mall','tuan','feeding','activity'].includes(row._orderType)" link type="primary" @click="openDetail(row)">详情</el-button>
         </template>
       </el-table-column>
     </el-table>
     <el-pagination class="pager" layout="total, sizes, prev, pager, next" :total="total" v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" @current-change="onPageChange" @size-change="onSizeChange" />
   </el-card>
+
+  <OrderDetailDialog v-model:visible="detailVisible" :order-type="detailType" :order-id="detailId" @updated="onSearch" />
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Download } from '@element-plus/icons-vue'
 import { getBoardingOrders } from '@/api/hosting'
@@ -64,12 +60,12 @@ import { getFeedingOrders } from '@/api/feeding'
 import { getTuanDealOrders, getActivityOrders } from '@/api/order'
 import { usePagination } from '@/composables/usePagination'
 import { useAutoRefresh } from '@/composables/useAutoRefresh'
+import OrderDetailDialog from '@/components/OrderDetailDialog.vue'
 import { formatDate, formatMoney } from '@/utils/format'
-import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TAG_TYPE } from '@/constants/order'
+import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE, PAYMENT_STATUS_LABELS } from '@/constants/order'
 import { normalizePaymentStatus } from '@/utils/payment-status'
 import { ORDER_TYPE_LABELS } from '@/constants/order'
 
-const router = useRouter()
 const orderType = ref('all')
 const dateRange = ref(null)
 
@@ -127,17 +123,14 @@ function onTypeChange() {
   onSearch()
 }
 
-function goDetail(row) {
-  const type = row._orderType
-  const id = row._id || row.orderId
-  const routeMap = {
-    mall: `/order/mall/${id}`,
-    feeding: `/order/feeding/${id}`,
-    tuan: `/order/tuan/${id}`,
-  }
-  if (routeMap[type]) {
-    router.push(routeMap[type])
-  }
+// 详情弹窗
+const detailVisible = ref(false)
+const detailType = ref('')
+const detailId = ref('')
+function openDetail(row) {
+  detailType.value = row._orderType
+  detailId.value = row._id || row.orderId || ''
+  detailVisible.value = true
 }
 
 async function onExport() {

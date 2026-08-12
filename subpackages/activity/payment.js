@@ -31,6 +31,9 @@ Page({
     paying: false,
     orderStatus: '',
     orderStatusText: '',
+    orderNo: '',
+    actions: [],
+    actionTip: '',
     isLoading: true,
     // 支付倒计时计算用：原始创建时间戳 + 超时分钟（与后端 ORDER_TIMEOUT_MINUTES=30 对齐）
     createdAtTs: 0,
@@ -81,6 +84,26 @@ Page({
     }
   },
 
+  // 详情态底部操作栏配置（UI 展示层）：key 对应 onAction 分支
+  // 待支付且活动未结束 → 去支付；待支付但活动已结束 → 纯文字提示
+  _buildDetailActions(orderStatus, finalAmount, activityExpired) {
+    if (orderStatus !== 'pending_payment') {
+      return { actions: [], tip: '' }
+    }
+    if (activityExpired) {
+      return { actions: [], tip: '活动已结束，无法继续支付' }
+    }
+    return {
+      actions: [{ key: 'pay', text: `去支付 ¥${finalAmount}`, type: 'primary' }],
+      tip: '',
+    }
+  },
+
+  onAction(e) {
+    const { action } = e.detail || {}
+    if (action === 'pay') this.onGoPay()
+  },
+
   async _loadRegistrationDetail(registrationId) {
     try {
       const result = await ActivityService.getRegistrationDetail(registrationId)
@@ -110,6 +133,10 @@ Page({
         }
       }
 
+      const finalAmount = registration.finalAmount || registration.totalAmount || 0
+      const orderStatus = registration.status || ''
+      const detailActions = this._buildDetailActions(orderStatus, finalAmount, activityExpired)
+
       this.setData({
         activityId: registration.activityId,
         paymentOrderId: registration._id || registrationId,
@@ -124,10 +151,13 @@ Page({
         originalAmount: registration.originalAmount || registration.totalAmount || 0,
         couponId: registration.couponId || '',
         couponDiscount: registration.couponDiscount || 0,
-        finalAmount: registration.finalAmount || registration.totalAmount || 0,
-        orderStatus: registration.status || '',
+        finalAmount,
+        orderStatus,
         orderStatusText: statusMap[registration.status] || registration.status || '',
+        orderNo: registration.orderNo || '',
         activityExpired,
+        actions: detailActions.actions,
+        actionTip: detailActions.tip,
         // 保留原始创建时间戳，供支付倒计时计算（与后端 ORDER_TIMEOUT_MINUTES=30 对齐）
         createdAtTs: registration.createdAt ? new Date(registration.createdAt).getTime() : 0,
         timeoutMinutes: 30,

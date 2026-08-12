@@ -1,0 +1,61 @@
+{
+  "project": {
+    "resolvedLane": "library_bound",
+    "selectedIntentWorkflowRead": true,
+    "contextRequirementsLoaded": [
+      { "path": "intent-workflows/intent-page-library-bound/INTENT_WORKFLOW.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-page-library-bound/start-library-bound-project.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-page-library-bound/library-bound-page-runtime.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-page-library-bound/dispatch-contract.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-page-library-bound/design-library-ingestion.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-page-library-bound/orchestration-summary-fields.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": ".design_library/mochi-pet/SKILL.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": ".design_library/mochi-pet/README.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": ".design_library/mochi-pet/css.json", "readStatus": "loaded", "bodyRead": true },
+      { "path": ".design_library/mochi-pet/colors_and_type.css", "readStatus": "loaded", "bodyRead": true },
+      { "path": ".design_library/mochi-pet/uikit-plan.json", "readStatus": "loaded", "bodyRead": true },
+      { "path": ".design_library/mochi-pet/library-consumption.json", "readStatus": "loaded", "bodyRead": true }
+    ],
+    "contextReadScope": "library-bound lane + mochi-pet design library full extraction",
+    "validationRunDiscipline": "validate-design-workspace.mjs + validate-finish-readiness.mjs",
+    "lowValueCallWatchdog": { "noProgressNextAction": "dispatch page sub-agent with complete library packet" }
+  },
+  "designSource": {
+    "libraryIdentity": {
+      "name": "mochi-pet",
+      "id": "9Z3S0N8KHVRK25",
+      "version": 46,
+      "scope": "workspace",
+      "path": "/Users/yy/Documents/trae_projects/zuoyou/.design_library/mochi-pet",
+      "versionSource": "metadata.json"
+    },
+    "brandPrefix": "mochi",
+    "cssPath": "/Users/yy/Documents/trae_projects/zuoyou/.design_library/mochi-pet/colors_and_type.css",
+    "actualTokenNameReference": [
+      "--primary-600", "--primary-500", "--primary-400", "--primary-100", "--primary-50",
+      "--neutral-900", "--neutral-800", "--neutral-700", "--neutral-600", "--neutral-500", "--neutral-400", "--neutral-300", "--neutral-200", "--neutral-100", "--neutral-50",
+      "--background", "--surface", "--card", "--popover", "--muted",
+      "--foreground", "--muted-foreground", "--border", "--input", "--ring",
+      "--success-600", "--warning-500", "--error-600", "--info-600",
+      "--font-display", "--font-heading", "--font-body", "--font-price",
+      "--radius-sm", "--radius-md", "--radius-lg", "--radius-xl", "--radius-2xl", "--radius-pill",
+      "--shadow-1", "--shadow-2", "--shadow-3", "--shadow-4", "--shadow-5",
+      "--space-1", "--space-2", "--space-3", "--space-4", "--space-5", "--space-6", "--space-8", "--space-10", "--space-12", "--space-16",
+      "--color-primary", "--color-primary-foreground", "--color-accent", "--color-background", "--color-surface", "--color-card", "--color-popover", "--color-muted", "--color-foreground", "--color-muted-foreground", "--color-border", "--color-input", "--color-success", "--color-warning", "--color-error", "--color-info"
+    ],
+    "tokenFidelity": "strict",
+    "designDecisionSummary": "Warm coral-peach luxury palette (#D26243 primary, #FBF7F4 cream background, #FFFAF6 card). Nunito headings + Plus Jakarta Sans body. 5-level warm coral-tinted shadows. Large radius (8-28px). Applied to desktop admin dashboard with GSAP animations.",
+    "componentPlan": [],
+    "allowedComponents": ["cart-button", "category-tab", "product-card", "option-selector", "price-display", "search-bar"],
+    "forbiddenInventedComponents": []
+  },
+  "pages": [
+    {
+      "nodeId": "page-luxury-dashboard",
+      "title": "奢侈品级管理后台 Dashboard",
+      "htmlSrc": "pages/dashboard.html",
+      "componentPlan": [],
+      "tokenFidelity": "strict"
+    }
+  ]
+}

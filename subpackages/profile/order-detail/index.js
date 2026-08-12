@@ -25,8 +25,36 @@ Page({
   data: {
     isLoading: true,
     order: null,
+    actions: [],
     iconMapPin: '/images/icons/map-pin-line.svg',
     iconTimeLine: '/images/icons/time-line.svg',
+  },
+
+  // 底部操作栏配置（UI 展示层）：key 对应 onAction 分支
+  _buildActions(status) {
+    switch (status) {
+      case 'pending_payment':
+        return [
+          { key: 'cancel', text: '取消订单', type: 'secondary' },
+          { key: 'pay', text: '去付款', type: 'primary' },
+        ]
+      case 'paid':
+      case 'confirmed':
+        return [{ key: 'cancel', text: '取消订单', type: 'secondary' }]
+      case 'in_progress':
+        return [{ key: 'contact', text: '联系寄养家庭', type: 'primary' }]
+      case 'completed':
+        return [{ key: 'contact', text: '联系寄养家庭', type: 'secondary' }]
+      default:
+        return []
+    }
+  },
+
+  onAction(e) {
+    const { action } = e.detail || {}
+    if (action === 'cancel') this.onCancelOrder()
+    else if (action === 'pay') this.onGoPay()
+    else if (action === 'contact') this.onContactHost()
   },
 
   onLoad(options) {
@@ -47,7 +75,7 @@ Page({
       const res = await OrderService.getOrderDetail({ orderId, outTradeNo })
       if (res && res.code === 0 && res.data) {
         const order = this._normalizeOrder(res.data)
-        this.setData({ order, isLoading: false })
+        this.setData({ order, actions: this._buildActions(order.status), isLoading: false })
         this._loadedOnce = true
         // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
         if (order.status === 'pending_payment') {

@@ -40,9 +40,32 @@ Page({
     statusConfig: null,
     serviceBreakdown: [],
     isPaying: false,
+    // 底部操作栏配置（UI 展示层）：key 对应 onAction 分支
+    actions: [],
     // 支付倒计时计算用：原始创建时间戳 + 超时分钟（与后端 30min 超时取消对齐）
     createdAtTs: 0,
     timeoutMinutes: 30,
+  },
+
+  // 底部操作栏配置（UI 展示层）：key 对应 onAction 分支
+  _buildActions(status) {
+    switch (status) {
+      case 'pending_payment':
+        return [
+          { key: 'cancel', text: '取消订单', type: 'secondary' },
+          { key: 'pay', text: this.data.isPaying ? '支付中...' : '去支付', type: 'primary' },
+        ]
+      case 'confirmed':
+        return [{ key: 'cancel', text: '取消订单', type: 'secondary' }]
+      default:
+        return []
+    }
+  },
+
+  onAction(e) {
+    const { action } = e.detail || {}
+    if (action === 'cancel') this.onCancelOrder()
+    else if (action === 'pay') this.onGoPay()
   },
 
   onLoad(options) {
@@ -67,6 +90,8 @@ Page({
       const result = await FeedingService.getOrderStatus(this.data.orderId)
       if (result && result.code === 0) {
       const orderInfo = result.data
+      // 服务地址归一化：兼容历史数据中 address 为对象的情况，保证展示为字符串
+      orderInfo.address = this._normalizeAddress(orderInfo.address)
       // 在 formatTime 覆盖原始 createdAt 之前，先取时间戳供支付倒计时使用
       const createdAtTs = orderInfo.createdAt ? new Date(orderInfo.createdAt).getTime() : 0
       orderInfo.createdAt = formatTime(orderInfo.createdAt)
@@ -96,7 +121,7 @@ Page({
         orderInfo.paymentStatusText = paymentDisplay.text
         orderInfo.paymentStatusTag = paymentDisplay.tag
 
-        this.setData({ orderInfo, statusConfig, serviceBreakdown, isLoading: false, createdAtTs, timeoutMinutes: 30 })
+        this.setData({ orderInfo, statusConfig, serviceBreakdown, actions: this._buildActions(orderInfo.status), isLoading: false, createdAtTs, timeoutMinutes: 30 })
         this._loadedOnce = true
         // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
         if (orderInfo.status === 'pending_payment') {
@@ -162,6 +187,20 @@ Page({
     return breakdown
   },
 
+  // 服务地址归一化：历史上单地址可能存为对象（addressText / fullAddress / 省市区+detail），
+  // 统一收敛为可直接展示的字符串
+  _normalizeAddress(address) {
+    if (!address) {return ''}
+    if (typeof address === 'string') {return address}
+    if (typeof address === 'object') {
+      if (address.addressText) {return address.addressText}
+      if (address.fullAddress) {return address.fullAddress}
+      const parts = [address.province, address.city, address.district, address.detail].filter(Boolean)
+      if (parts.length > 0) {return parts.join(' ')}
+    }
+    return ''
+  },
+
   // 派生支付状态码（与 web-admin normalizePaymentStatus 逻辑一致，适配小程序端）
   // 规则：
   //   status === 'cancelled' → paymentStatus === 'refunded' ? 'refunded' : 'closed'
@@ -192,7 +231,7 @@ Page({
     const { orderInfo, orderId } = this.data
     if (!orderInfo) {return}
 
-    this.setData({ isPaying: true })
+    this.setData({ isPaying: true, actions: this._buildActions(this.data.orderInfo.status) })
 
     try {
       const payAmount = Math.round((orderInfo.totalPrice || orderInfo.totalAmount || 0) * 100)
@@ -204,11 +243,11 @@ Page({
         description: '上门喂养服务',
       })
 
-      this.setData({ isPaying: false })
+      this.setData({ isPaying: false, actions: this._buildActions(this.data.orderInfo.status) })
       this._fetchOrderStatus()
     } catch (payError) {
       console.error('[order-status] onGoPay error:', payError)
-      this.setData({ isPaying: false })
+      this.setData({ isPaying: false, actions: this._buildActions(this.data.orderInfo.status) })
 
       if (payError.isCancel) {
         this.error('PAYMENT_CANCELLED_TEXT')

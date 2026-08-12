@@ -1,0 +1,87 @@
+/* ================================================================
+   order-action-bar — 统一订单底部操作栏
+   收敛各详情页 .bottom-bar / .pay-section / .expired-tip / .action-area 的
+   固定底部容器视觉：fixed 定位 + 背景 + 上边框 + 内边距 + 按钮样式。
+   Skyline 兼容：fixed 元素由页面用 <root-portal> 包裹；无 :active，
+   按压反馈用 hover-class + transition。
+   ================================================================ */
+
+.order-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16rpx;
+  padding: 20rpx var(--page-padding, 48rpx);
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: var(--card-color);
+  border-top: 1rpx solid var(--hairline, rgba(26, 26, 23, 0.08));
+  z-index: 10;
+}
+
+/* ===== 按钮基座 ===== */
+.order-action-bar__btn {
+  min-width: 168rpx;
+  padding: 20rpx 48rpx;
+  border-radius: var(--zy-radius-lg);
+  text-align: center;
+  letter-spacing: 0.06em;
+  transition: transform var(--transition-fast, 200ms), opacity var(--transition-fast, 200ms);
+}
+
+.order-action-bar__btn.is-pressed {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+.order-action-bar__btn-text {
+  font-size: 28rpx;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+/* 主按钮 · 香槟金渐变 */
+.order-action-bar__btn--primary {
+  background: var(--gradient-primary);
+  color: var(--text-on-primary);
+  box-shadow: var(--shadow-glow-primary-btn);
+}
+
+.order-action-bar__btn--primary .order-action-bar__btn-text {
+  color: var(--text-on-primary);
+}
+
+/* 次按钮 · 描边 */
+.order-action-bar__btn--secondary {
+  background: var(--card-color);
+  color: var(--text-secondary);
+  border: 1rpx solid var(--border-color, #E2DED3);
+}
+
+/* 危险按钮 · 红色描边 */
+.order-action-bar__btn--danger {
+  background: var(--card-color);
+  color: var(--error-color);
+  border: 1rpx solid rgba(164, 82, 54, 0.2);
+}
+
+/* 禁用态 */
+.order-action-bar__btn.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ===== 纯文字提示（活动已结束等） ===== */
+.order-action-bar__tip {
+  flex: 1;
+  text-align: center;
+}
+
+.order-action-bar__tip-text {
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}

@@ -1,0 +1,62 @@
+/* ================================================================
+   order-card — 统一订单信息卡片
+   收敛各详情页 .section / .info-card / .order-card / .price-card 的
+   卡片容器视觉：同一底色 / 圆角 / 边框 / 内边距 / 标题。
+   Skyline 兼容：无 :active / 无 clip-path。
+   ================================================================ */
+
+.order-card {
+  margin: 16rpx var(--page-padding, 48rpx);
+  background: var(--card-color);
+  border-radius: var(--zy-radius-lg);
+  padding: 32rpx;
+  border: 1rpx solid var(--hairline, rgba(26, 26, 23, 0.08));
+}
+
+.order-card__title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 20rpx;
+  letter-spacing: 0.04em;
+}
+
+/* ===== 标准信息行 ===== */
+.order-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--hairline, rgba(26, 26, 23, 0.08));
+}
+
+.order-row:last-child {
+  border-bottom: none;
+}
+
+.order-row--total {
+  margin-top: 8rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--hairline, rgba(26, 26, 23, 0.08));
+  border-bottom: none;
+}
+
+.order-row__label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.order-row__value {
+  font-size: 26rpx;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.order-row--total .order-row__value {
+  font-size: 32rpx;
+}
+
+.order-row__value--discount {
+  color: var(--success-color);
+}

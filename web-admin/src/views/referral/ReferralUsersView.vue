@@ -3,19 +3,20 @@
     <el-page-header @back="$router.back()" title="带货管理" :content="`推广收入详情 - ${partnerName}`" />
 
     <el-row :gutter="20" style="margin-top:16px;margin-bottom:20px">
-      <el-col :span="8"><el-card shadow="hover"><el-statistic title="推广用户数" :value="stats.totalInvited || 0" /></el-card></el-col>
-      <el-col :span="8"><el-card shadow="hover"><el-statistic title="消费用户数" :value="stats.consumingCount || 0" /></el-card></el-col>
-      <el-col :span="8"><el-card shadow="hover"><el-statistic title="累计消费" :value="Number(stats.totalSpent) || 0" :precision="2" prefix="¥" /></el-card></el-col>
+      <el-col :span="8"><el-card shadow="hover" class="stat-card" @click="openUserDialog('invited')"><el-statistic title="推广用户数" :value="stats.totalInvited || 0" /></el-card></el-col>
+      <el-col :span="8"><el-card shadow="hover" class="stat-card" @click="openUserDialog('consuming')"><el-statistic title="消费用户数" :value="stats.consumingCount || 0" /></el-card></el-col>
+      <el-col :span="8"><el-card shadow="hover" class="stat-card" @click="openOrderDialog('')"><el-statistic title="累计消费" :value="Number(stats.totalSpent) || 0" :precision="2" prefix="¥" /></el-card></el-col>
     </el-row>
 
     <el-card style="margin-bottom:20px">
       <template #header>
         <div class="card-header">
-          <span>订单统计</span>
+          <span>推广订单统计</span>
+          <span class="card-header-tip">点击卡片查看对应订单</span>
         </div>
       </template>
       <div class="order-stats-grid">
-        <div v-for="item in orderTypeStatsList" :key="item.type" class="order-stats-item">
+        <div v-for="item in orderTypeStatsList" :key="item.type" class="order-stats-item" @click="openOrderDialog(item.type)">
           <div class="order-stats-icon" :style="{ background: item.bgColor }">
             <el-icon :size="20" :color="item.iconColor"><component :is="item.icon" /></el-icon>
           </div>
@@ -98,6 +99,61 @@
         暂无推广用户
       </div>
     </el-card>
+
+    <el-dialog v-model="orderDialogVisible" :title="`${orderDialogTitle}订单`" width="900px" top="6vh">
+      <el-table :data="orderDialogList" v-loading="orderDialogLoading" stripe height="60vh">
+        <el-table-column prop="orderNo" label="订单号" width="200" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.orderNo || row._id }}</template>
+        </el-table-column>
+        <el-table-column label="订单类型" width="110">
+          <template #default="{ row }">
+            <el-tag size="small">{{ ORDER_TYPE_LABELS[row.orderType] || row.orderType }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="金额" width="120">
+          <template #default="{ row }">{{ formatMoney(row.totalPrice || row.totalAmount) }}</template>
+        </el-table-column>
+        <el-table-column label="佣金" width="110" align="center">
+          <template #default="{ row }">
+            <span :style="{ color: (Number(row.commissionAmount) || 0) > 0 ? '#f56c6c' : '#52c41a', fontWeight: 600 }">¥{{ formatMoney(row.commissionAmount || 0) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="110">
+          <template #default="{ row }">
+            <el-tag :type="orderStatusType(row.status)" size="small">{{ ORDER_STATUS_LABELS[row.status] || row.status }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createdAt" label="下单时间" min-width="180">
+          <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
+        </el-table-column>
+      </el-table>
+      <div v-if="orderDialogList.length === 0 && !orderDialogLoading" style="text-align:center;padding:40px 0;color:var(--text-tertiary)">
+        暂无订单
+      </div>
+    </el-dialog>
+
+    <el-dialog v-model="userDialogVisible" :title="userDialogTitle" width="700px" top="6vh">
+      <el-table :data="userDialogList" stripe height="60vh">
+        <el-table-column label="用户" min-width="200">
+          <template #default="{ row }">
+            <div style="display:flex;align-items:center;gap:8px">
+              <el-avatar :size="32" :src="row.avatarUrlPreview || row.avatarUrl" />
+              <span>{{ row.nickName || '未知用户' }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createdAt" label="注册时间" width="180">
+          <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
+        </el-table-column>
+        <el-table-column prop="orderCount" label="订单数" width="100" align="center" />
+        <el-table-column prop="totalSpent" label="消费总额" width="140">
+          <template #default="{ row }">{{ formatMoney(row.totalSpent) }}</template>
+        </el-table-column>
+      </el-table>
+      <div v-if="userDialogList.length === 0" style="text-align:center;padding:40px 0;color:var(--text-tertiary)">
+        暂无数据
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -105,8 +161,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getReferralStats, getReferralOrderStats, getInvitedUsersByAdmin, getPartnerCommissionRates, updatePartnerCommissionRates } from '@/api/referral'
+import { getReferralStats, getReferralOrderStats, getInvitedUsersByAdmin, getReferralOrders, getPartnerCommissionRates, updatePartnerCommissionRates } from '@/api/referral'
 import { formatDate, formatMoney } from '@/utils/format'
+import { ORDER_STATUS_LABELS, ORDER_TYPE_LABELS } from '@/constants/order'
 import { Goods, House, Service, Connection, Trophy } from '@element-plus/icons-vue'
 
 const ORDER_TYPES = [
@@ -156,12 +213,57 @@ function onSizeChange() {
 
 function onPageChange() {}
 
+const orderDialogVisible = ref(false)
+const orderDialogTitle = ref('')
+const orderDialogList = ref([])
+const orderDialogLoading = ref(false)
+
+const userDialogVisible = ref(false)
+const userDialogTitle = ref('')
+const userDialogList = ref([])
+
+function orderStatusType(status) {
+  return { pending_payment: 'warning', paid: 'primary', shipped: '', completed: 'success', cancelled: 'info', confirmed: 'primary', in_progress: 'warning' }[status] || 'info'
+}
+
+async function openOrderDialog(type) {
+  const item = ORDER_TYPES.find(t => t.type === type)
+  orderDialogTitle.value = item ? item.label : '全部消费'
+  orderDialogVisible.value = true
+  orderDialogList.value = []
+  orderDialogLoading.value = true
+  try {
+    const res = await getReferralOrders({
+      type,
+      page: 1,
+      pageSize: 100,
+      targetOpenid: route.params.targetOpenid,
+    })
+    orderDialogList.value = res.data?.list || []
+  } catch (e) {
+    console.warn('[ReferralUsersView] 加载订单失败:', e.message)
+  } finally {
+    orderDialogLoading.value = false
+  }
+}
+
 function viewUserOrders(row) {
   router.push({
     name: 'ReferralUserOrders',
     params: { targetOpenid: route.params.targetOpenid, invitedUserId: row._id },
     query: { name: row.nickName || '', openid: row.openid || '' },
   })
+}
+
+function openUserDialog(mode) {
+  if (mode === 'invited') {
+    userDialogTitle.value = '推广用户'
+    userDialogList.value = userList.value
+  } else {
+    userDialogTitle.value = '消费用户'
+    userDialogList.value = userList.value.filter(u => u.orderCount > 0)
+  }
+  userDialogVisible.value = true
 }
 
 async function loadStats() {
@@ -246,7 +348,10 @@ onMounted(async () => {
 
 <style scoped>
 .card-header { display: flex; justify-content: space-between; align-items: center; }
+.stat-card { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.stat-card:hover { transform: translateY(-2px); }
 .card-header span { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+.card-header-tip { font-size: 12px; font-weight: 400; color: var(--text-tertiary); }
 .card-header-actions { display: flex; align-items: center; }
 .order-stats-grid {
   display: grid;
@@ -261,6 +366,7 @@ onMounted(async () => {
   border-radius: 8px;
   background: var(--el-fill-color-lighter);
   transition: background 0.2s;
+  cursor: pointer;
 }
 .order-stats-item:hover {
   background: var(--el-fill-color);

@@ -31,14 +31,14 @@ const props = defineProps({
 const emit = defineEmits(['detail'])
 
 const router = useRouter()
-const { list, loading, total, pagination, fetch, onPageChange, onSizeChange } = usePagination(props.fetchFn)
+const { list, loading, total, pagination, fetch, onPageChange, onSizeChange, resetAndFetch } = usePagination(props.fetchFn)
 
 const { autoRefresh, startAutoRefresh, stopAutoRefresh } = useAutoRefresh(() => {
   fetch()
 }, 30000)
 
 function onSearch(params = {}) {
-  fetch(params)
+  resetAndFetch(params)
 }
 
 function onDetail(row) {

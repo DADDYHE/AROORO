@@ -1,0 +1,14 @@
+<view class="order-status-banner status-{{status}} {{centered ? 'is-centered' : ''}}">
+  <image
+    wx:if="{{hasIcon && iconSrc}}"
+    class="status-icon"
+    src="{{iconSrc}}"
+    mode="aspectFit"
+  />
+  <text class="status-text">{{statusText}}</text>
+  <text wx:if="{{statusDesc}}" class="status-desc">{{statusDesc}}</text>
+  <view wx:if="{{status === 'pending_payment' && payCountdown}}" class="pay-countdown">
+    <text class="pay-countdown-label">支付剩余</text>
+    <text class="pay-countdown-time">{{payCountdown}}</text>
+  </view>
+</view>

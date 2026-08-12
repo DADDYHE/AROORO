@@ -30,29 +30,37 @@ async function getOrderStats(event) {
     if (status) {
       where.status = status
     } else {
-      // 默认排除已取消的订单
-      where.status = _.ne('cancelled')
+      // 总订单数只计入已完成的订单
+      where.status = 'completed'
     }
+    // 总收入只统计实际支付成功的订单
+    where.paymentStatus = 'paid'
     if (startDate) {where.createdAt = _.gte(parseBJTime(startDate))}
     if (endDate) {where.createdAt = _.lte(parseBJTime(endDate))}
 
     const allOrderTypes = ['mall', 'tuan', 'feeding', 'boarding', 'activity']
 
-    // 工具：拉取并内存聚合（CloudBase SDK 不支持 where().aggregate()）
+    // 工具：分批拉取并内存聚合（CloudBase SDK 不支持 where().aggregate()，且 get() 单次上限需分批取全）
     async function loadAndAggregate(coll, typeWhere, range) {
-      const res = await db.collection(coll).where(typeWhere).limit(1000).get()
-      const list = res.data || []
       let count = 0
       let amount = 0
-      for (const o of list) {
-        if (range) {
-          const t = new Date(o.createdAt)
-          if (t < range.start || t >= range.end) continue
+      let truncated = false
+      const pageSize = 1000
+      for (let page = 0; page < 100; page++) {
+        const res = await db.collection(coll).where(typeWhere).skip(page * pageSize).limit(pageSize).get()
+        const list = res.data || []
+        for (const o of list) {
+          if (range) {
+            const t = new Date(o.createdAt)
+            if (t < range.start || t >= range.end) continue
+          }
+          count++
+          amount += Number(o.totalAmount || o.totalPrice || o.price || 0)
         }
-        count++
-        amount += Number(o.totalAmount || o.totalPrice || o.price || 0)
+        if (list.length < pageSize) { truncated = false; break }
+        truncated = true
       }
-      return { count, amount: Number(amount.toFixed(2)), total: res.data?.length === 1000 ? null : count }
+      return { count, amount: Number(amount.toFixed(2)), total: truncated ? null : count }
     }
 
     const typeStats = {}
@@ -162,7 +170,7 @@ async function getOrderTrend(event) {
 
     for (const type of allTypes) {
       const coll = ORDER_COLLECTIONS[type]
-      const where = { createdAt: _.gte(startDate), status: _.ne('cancelled') }
+      const where = { createdAt: _.gte(startDate), status: _.neq('cancelled') }
       if (type === 'mall') {where.type = 'mall'}
       if (type === 'tuan') {where.type = 'group_buy'}
       if (type === 'boarding') {
@@ -195,7 +203,7 @@ async function getOrderTypeStats(event) {
     const byType = {}
     for (const type of ['mall', 'tuan', 'feeding', 'boarding', 'activity']) {
       const coll = ORDER_COLLECTIONS[type]
-      const where = { status: _.ne('cancelled') }
+      const where = { status: _.neq('cancelled') }
       if (type === 'mall') {where.type = 'mall'}
       if (type === 'tuan') {where.type = 'group_buy'}
       if (type === 'boarding') {

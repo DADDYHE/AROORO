@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 2,
+  "name": "Button",
+  "slug": "button",
+  "category": "Action",
+  "sourceKind": "from-scratch",
+  "confidence": "high",
+  "keyInsightSeed": "Pill-shaped primary with glow shadow; text-only row actions with semantic colors",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "primary-action",
+      "evidence": "btn-primary with green bg, pill radius, glow shadow"
+    },
+    {
+      "candidate": "row-action",
+      "evidence": "row-btn text-only with edit/publish/delete semantic colors"
+    },
+    {
+      "candidate": "toggle",
+      "evidence": "chart-toggle pill toggle with active state"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "name": "variant",
+      "values": [
+        "primary",
+        "toggle",
+        "row-action",
+        "pagination"
+      ]
+    },
+    {
+      "name": "size",
+      "values": [
+        "sm",
+        "md"
+      ]
+    },
+    {
+      "name": "state",
+      "values": [
+        "default",
+        "hover",
+        "active",
+        "disabled"
+      ]
+    }
+  ],
+  "representativeVariants": [
+    {
+      "whySelected": "Primary CTA in dashboard",
+      "traits": {
+        "variant": "primary",
+        "height": "36px",
+        "radius": "pill",
+        "bg": "var(--color-primary)",
+        "color": "var(--color-primary-foreground)",
+        "shadow": "glow-soft",
+        "font": "sans",
+        "fontSize": "12px",
+        "fontWeight": "500",
+        "letterSpacing": "0.04em"
+      },
+      "childrenDigest": [
+        "icon",
+        "label"
+      ]
+    },
+    {
+      "whySelected": "Row-level table actions",
+      "traits": {
+        "variant": "row-action",
+        "height": "auto",
+        "radius": "4px",
+        "bg": "transparent",
+        "font": "eyebrow",
+        "fontSize": "11px",
+        "fontWeight": "500"
+      },
+      "childrenDigest": [
+        "label-only"
+      ]
+    },
+    {
+      "whySelected": "Chart range toggle",
+      "traits": {
+        "variant": "toggle",
+        "height": "28px",
+        "radius": "pill",
+        "bg": "transparent",
+        "activeBg": "var(--color-card)",
+        "activeShadow": "shadow-2",
+        "font": "eyebrow",
+        "fontSize": "11px"
+      },
+      "childrenDigest": [
+        "label-only"
+      ]
+    },
+    {
+      "whySelected": "Pagination navigation",
+      "traits": {
+        "variant": "pagination",
+        "height": "32px",
+        "radius": "4px",
+        "bg": "var(--color-card)",
+        "border": "1px solid var(--color-border)",
+        "activeBg": "var(--color-primary)",
+        "font": "number",
+        "fontSize": "13px",
+        "fontWeight": "600"
+      },
+      "childrenDigest": [
+        "number-or-icon"
+      ]
+    }
+  ],
+  "anatomy": [
+    "icon (optional, left)",
+    "label text"
+  ],
+  "structurePatterns": [
+    "inline-flex",
+    "align-items: center",
+    "gap: 6px",
+    "pill or xs radius"
+  ],
+  "usageHints": {
+    "priorityHint": "high",
+    "densityHint": "compact",
+    "copyStyle": "action-verb"
+  },
+  "doNotInvent": [
+    "dropdown menus",
+    "split-button",
+    "button-group"
+  ],
+  "unknowns": [
+    "focus ring style",
+    "loading spinner state"
+  ]
+}

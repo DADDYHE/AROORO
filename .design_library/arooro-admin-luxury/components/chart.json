@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 2,
+  "name": "Chart",
+  "slug": "chart",
+  "category": "Data Visualization",
+  "sourceKind": "from-scratch",
+  "confidence": "high",
+  "keyInsightSeed": "CSS-only bar chart with gradient bars + conic-gradient donut with center hole and legend",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "bar-chart",
+      "evidence": "chart-bars with flex columns, gradient bars, value labels"
+    },
+    {
+      "candidate": "donut-chart",
+      "evidence": "donut with conic-gradient bg, center hole, legend list"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "name": "type",
+      "values": [
+        "bar",
+        "donut"
+      ]
+    },
+    {
+      "name": "bar-color",
+      "values": [
+        "primary-gradient",
+        "accent-gradient"
+      ]
+    }
+  ],
+  "representativeVariants": [
+    {
+      "whySelected": "Bar chart for trends",
+      "traits": {
+        "type": "bar",
+        "height": "240px",
+        "barWidth": "62% max 44px",
+        "barBg": "linear-gradient(to top, #0F2410, #3D6B3D)",
+        "successBarBg": "linear-gradient(to top, #A8894A, #C9A24B)",
+        "barRadius": "4px 4px 0 0",
+        "valueFont": "number",
+        "valueSize": "11px",
+        "xlabelFont": "eyebrow",
+        "xlabelSize": "11px"
+      },
+      "childrenDigest": [
+        "bar-col (value + bar)",
+        "chart-xlabels"
+      ]
+    },
+    {
+      "whySelected": "Donut for distribution",
+      "traits": {
+        "type": "donut",
+        "size": "168px",
+        "holeInset": "26px",
+        "holeBg": "var(--color-card)",
+        "bg": "conic-gradient(...)",
+        "totalLabelFont": "eyebrow",
+        "totalValueFont": "number",
+        "totalValueSize": "20px"
+      },
+      "childrenDigest": [
+        "donut-hole (label + value)",
+        "legend (dot + name + val + pct)"
+      ]
+    }
+  ],
+  "anatomy": [
+    "chart-toolbar (toggle buttons)",
+    "chart-bars/donut-wrap",
+    "chart-xlabels/legend"
+  ],
+  "structurePatterns": [
+    "flex align-end for bars",
+    "conic-gradient for donut",
+    "absolute positioned donut-hole"
+  ],
+  "usageHints": {
+    "priorityHint": "medium",
+    "densityHint": "normal",
+    "copyStyle": "data-first"
+  },
+  "doNotInvent": [
+    "line-chart",
+    "area-chart",
+    "scatter-plot",
+    "interactive-tooltip"
+  ],
+  "unknowns": [
+    "animation on data change",
+    "responsive breakpoints"
+  ]
+}

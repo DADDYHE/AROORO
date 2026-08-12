@@ -1,0 +1,111 @@
+/* ================================================================
+   order-status-banner — 统一订单状态横幅
+   基于各详情页现有 status-banner/status-header/status-card 三套视觉，
+   收敛为渐变横幅 + 可选图标 + 支付倒计时。
+   Skyline 兼容：无 :active / 无 clip-path；文字一律 --banner-ink。
+   --banner-ink：本横幅内所有文字的墨色，与 background 同处一条规则，
+   避免「底色改了、字色没跟着改」。底色亮度 L≤0.1833 用白，否则用炭黑。
+   ================================================================ */
+
+.order-status-banner {
+  padding: 48rpx var(--page-padding, 48rpx) 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  --banner-ink: var(--card-color);
+}
+
+/* 居中排版（活动确认页等） */
+.order-status-banner.is-centered {
+  align-items: center;
+  text-align: center;
+}
+
+/* 状态图标（可选） */
+.status-icon {
+  width: 48rpx;
+  height: 48rpx;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.order-status-banner.is-centered .status-icon {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ===== 各状态渐变底色 ===== */
+
+/* 待付款 - 金。例外：金对白仅 2.40:1 → 金底文字一律炭黑（5.27:1） */
+.order-status-banner.status-pending,
+.order-status-banner.status-pending_payment {
+  background: linear-gradient(135deg, var(--status-pending) 0%, var(--accent-deep) 100%);
+  --banner-ink: var(--text-primary);
+}
+
+/* 已付款/待确认 - 钢蓝，白字 4.56:1 */
+.order-status-banner.status-paid,
+.order-status-banner.status-shipped {
+  background: linear-gradient(135deg, var(--status-active) 0%, var(--status-active-deep) 100%);
+}
+
+/* 已确认/进行中 - 状态绿，白字 6.23:1 */
+.order-status-banner.status-confirmed,
+.order-status-banner.status-in_progress,
+.order-status-banner.status-ongoing {
+  background: linear-gradient(135deg, var(--status-progress) 0%, var(--status-progress-deep) 100%);
+}
+
+/* 已完成 - 绿，白字 5.16:1 */
+.order-status-banner.status-completed {
+  background: linear-gradient(135deg, var(--status-completed) 0%, var(--status-completed-deep) 100%);
+}
+
+/* 已取消 / 已拒绝 / 已退款 - 暖灰，白字 4.59:1 */
+.order-status-banner.status-cancelled,
+.order-status-banner.status-rejected,
+.order-status-banner.status-refunded {
+  background: linear-gradient(135deg, var(--status-cancelled) 0%, var(--status-cancelled-deep) 100%);
+}
+
+/* ===== 文字 ===== */
+.status-text {
+  font-size: 36rpx;
+  font-weight: 400;
+  color: var(--banner-ink);
+  letter-spacing: 0.06em;
+}
+
+.status-desc {
+  font-size: 24rpx;
+  color: var(--banner-ink);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+/* 支付倒计时（待支付订单，与后端 ORDER_TIMEOUT_MINUTES=30 超时取消对齐）
+   wxml 限定 status === 'pending_payment' 才渲染 → 必然落在金底上，
+   用 --banner-ink（金底解析为炭黑）→ 5.27:1。 */
+.pay-countdown {
+  margin-top: 14rpx;
+  display: flex;
+  align-items: baseline;
+  font-size: 24rpx;
+  color: var(--banner-ink);
+}
+
+.order-status-banner.is-centered .pay-countdown {
+  justify-content: center;
+}
+
+.pay-countdown-label {
+  margin-right: 10rpx;
+  letter-spacing: 0.04em;
+}
+
+.pay-countdown-time {
+  font-weight: 600;
+  font-size: 34rpx;
+  font-feature-settings: "tnum";
+  letter-spacing: 1rpx;
+}
