@@ -83,19 +83,6 @@
         </view>
       </view>
       
-      <!-- 邮箱 -->
-      <view class="form-item">
-        <view class="form-label">邮箱</view>
-        <view class="form-value">
-          <input
-            class="form-input"
-            value="{{ userInfo.email }}"
-            placeholder="请输入邮箱"
-            bindinput="onEmailChange"
-          />
-        </view>
-      </view>
-      
       <!-- 收货地址 -->
       <view class="form-item address-item" bindtap="goToAddress">
         <view class="form-label">收货地址</view>

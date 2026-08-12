@@ -6,7 +6,6 @@ const { validateFields } = require('../../validator')
 const PROFILE_VALIDATION_FIELDS = [
   { name: 'nickName', label: '昵称', required: true },
   { name: 'phone', label: '手机号', type: 'phone' },
-  { name: 'email', label: '邮箱', type: 'email' },
 ]
 
 const pageI18n = require('../../../utils/page-i18n.js')
@@ -21,7 +20,6 @@ Page({
       gender: '',
       phone: '',
       birthday: '',
-      email: '',
       address: '',
       avatarUrl: '',
     },
@@ -137,7 +135,6 @@ Page({
         gender: userInfo.gender,
         phone: userInfo.phone,
         birthday: userInfo.birthday,
-        email: userInfo.email,
         address: userInfo.address,
         avatarUrl: userInfo.avatarUrl,
         ownerName: userInfo.nickName,
@@ -182,7 +179,6 @@ Page({
           gender: roleSpecificInfo.gender || '',
           phone: roleSpecificInfo.phone || '',
           birthday: roleSpecificInfo.birthday || '',
-          email: roleSpecificInfo.email || '',
           address: roleSpecificInfo.address || '',
           avatarUrl,
         },
@@ -201,7 +197,6 @@ Page({
           gender: '',
           phone: '',
           birthday: '',
-          email: '',
           address: '',
           avatarUrl: '',
         },
@@ -351,13 +346,6 @@ Page({
   onPhoneChange(e) {
     this.setData({
       'userInfo.phone': e.detail.value,
-    })
-  },
-
-  // 邮箱输入变化
-  onEmailChange(e) {
-    this.setData({
-      'userInfo.email': e.detail.value,
     })
   },
 
