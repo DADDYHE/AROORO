@@ -59,7 +59,7 @@ const homeMyActivitiesBehavior = Behavior({
   methods: {
     async _loadMyActivities() {
       try {
-        const result = await ActivityService.getRegistrationList({ status: 'confirmed', pageSize: 20 })
+        const result = await ActivityService.getRegistrationList({ status: 'all', pageSize: 20 })
         if (result && result.code === 0) {
           const raw = (result.data && (result.data.list || result.data)) || []
           // 首页「快速签到」板块只展示当前可签到的活动：未签到且处于活动时间窗内（canSignIn）。

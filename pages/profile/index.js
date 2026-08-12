@@ -129,7 +129,7 @@ Page({
 
   async _fetchActivityCount() {
     try {
-      const result = await ActivityService.getMyRegisteredActivities({ page: 1, pageSize: 1, status: 'confirmed' })
+      const result = await ActivityService.getMyRegisteredActivities({ page: 1, pageSize: 1, status: 'all' })
       if (result && result.code === 0 && result.data) {
         this.setData({ 'stats.activityCount': result.data.total || 0 })
       }
