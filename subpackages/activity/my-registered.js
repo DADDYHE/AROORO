@@ -32,7 +32,9 @@ Page({
   },
 
   async _doFetch(params) {
-    const reqData = { action: 'getRegistrationList', page: params.page, pageSize: params.pageSize, status: 'confirmed' }
+    // 报名单有效状态为 paid/pending_payment/completed（V5 起 'confirmed' 已废弃），
+    // 用 'all' 让后端映射为有效报名集合，避免查到空列表
+    const reqData = { action: 'getRegistrationList', page: params.page, pageSize: params.pageSize, status: 'all' }
     const result = await ActivityService.call('getRegistrationList', reqData)
     if (result && result.code === 0 && result.data) {
       return result.data.list || result.data || []

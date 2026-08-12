@@ -1217,6 +1217,9 @@ export async function getRegistrationList(
     }
     where.activityId = _.in(activeIds)
     where.status = _.in(['pending_payment', 'paid', 'completed'])
+  } else if (status === 'all') {
+    // V5 起报名单有效状态为 paid/pending_payment/completed，'all' 映射为该有效集合
+    where.status = _.in(['pending_payment', 'paid', 'completed'])
   } else if (status) {
     where.status = status
   }

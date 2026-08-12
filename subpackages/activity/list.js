@@ -40,9 +40,10 @@ Page({
   async _doFetch(params) {
     const action = this.data.currentCategory === 'joined' ? 'getRegistrationList' : 'getActivityList'
     const reqData = { action, page: params.page, pageSize: params.pageSize }
-    // P3 修复：joined 分类只展示已确认报名（排除 refunded/pending_payment 的历史单）
+    // 有效报名状态为 paid/pending_payment/completed（V5 起 'confirmed' 已废弃），
+    // 用 'all' 让后端映射为有效报名集合（含待支付），避免查到空列表
     if (this.data.currentCategory === 'joined') {
-      reqData.status = 'confirmed'
+      reqData.status = 'all'
     }
     if (this.data.currentCategory === 'registerable') {
       // 可报名：服务端按 status=published（报名中）且排除已报名过滤，前端不二次过滤以免破坏分页

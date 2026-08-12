@@ -594,6 +594,8 @@ async function submitRegistration(event, context, auth) {
     // P0 修复：查重范围从 confirmed 扩展为 confirmed + pending_payment，
     //   未支付的待支付报名单同样占用一次报名机会，防止同一用户对同一活动
     //   反复提交生成多张待支付单并重复付款（资金风险）。
+    // V5: 死状态 confirmed 移除，改为 paid + completed + pending_payment
+    // （已支付/已结束/待支付均占用报名机会，防止两个 cron 独立跑时的时序窗口漏查）
     const existReg = await db.collection('activity_registrations')
         .where({ activityId, ownerId: openid, status: _.in(['paid', 'completed', 'pending_payment']) })
         .count();
@@ -916,6 +918,10 @@ async function getRegistrationList(event, context, auth) {
         where.activityId = _.in(activeIds);
         where.status = _.in(['pending_payment', 'paid', 'completed']);
     }
+    else if (status === 'all') {
+        // V5 起报名单有效状态为 paid/pending_payment/completed，'all' 映射为该有效集合
+        where.status = _.in(['pending_payment', 'paid', 'completed']);
+    }
     else if (status) {
         where.status = status;
     }
@@ -1062,7 +1068,10 @@ async function signInRegistration(event, context, auth) {
     if (reg.ownerId !== auth.openid) {
         throw err('PERMISSION_DENIED', '只能签到自己的报名');
     }
-    if (!['paid', 'completed'].includes(reg.status)) { throw err('INVALID_STATE', '当前报名状态不可签到'); }
+    // V5: 签到仅允许已支付（paid）或活动已结束（completed），待支付 pending_payment 不可签到
+    if (!['paid', 'completed'].includes(reg.status)) {
+        throw err('INVALID_STATE', '当前报名状态不可签到');
+    }
     if (reg.signInStatus === 'signed') {
         return handleSuccess({ signed: true, alreadySigned: true }, '您已签到');
     }
