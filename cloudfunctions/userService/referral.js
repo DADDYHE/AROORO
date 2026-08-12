@@ -32,16 +32,16 @@ const logger = createLogger('userService:referral');
 //     上门喂养从 feedingOrders，活动从 activity_registrations（镜像单不重复计）
 //   - 状态集 = 已支付且未取消；金额统一按 totalAmount || totalPrice || price 解析
 const REFERRAL_BOARDS = [
-  { type: 'mall', collection: 'orders', where: { type: 'mall' }, statuses: ['paid', 'shipped', 'completed'] },
-  { type: 'boarding', collection: 'orders', where: { type: 'boarding' }, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
-  { type: 'tuan', collection: 'orders', where: { type: 'group_buy' }, statuses: ['paid', 'pending_shipment', 'shipped', 'completed'] },
-  { type: 'feeding', collection: 'feedingOrders', where: {}, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
-  // V5: 活动订单死状态 confirmed 移除，改为 paid（已支付）与 completed（活动结束）
-  { type: 'activity', collection: 'activity_registrations', where: {}, statuses: ['paid', 'completed'] },
+    { type: 'mall', collection: 'orders', where: { type: 'mall' }, statuses: ['paid', 'shipped', 'completed'] },
+    { type: 'boarding', collection: 'orders', where: { type: 'boarding' }, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
+    { type: 'tuan', collection: 'orders', where: { type: 'group_buy' }, statuses: ['paid', 'shipped', 'completed'] },
+    { type: 'feeding', collection: 'feedingOrders', where: {}, statuses: ['paid', 'confirmed', 'in_progress', 'completed'] },
+    // V5: 活动订单死状态 confirmed 移除，改为 paid（已支付）与 completed（活动结束）
+    { type: 'activity', collection: 'activity_registrations', where: {}, statuses: ['paid', 'completed'] },
 ];
 /** 聚合金额表达式：totalAmount || totalPrice || price */
 function amountExpr() {
-  return { $ifNull: ['$totalAmount', { $ifNull: ['$totalPrice', { $ifNull: ['$price', 0] }] }] };
+    return { $ifNull: ['$totalAmount', { $ifNull: ['$totalPrice', { $ifNull: ['$price', 0] }] }] };
 }
 // =====================================================================
 // 辅助函数
@@ -164,6 +164,9 @@ async function getInvitedUsers(event, context, auth) {
         const invitedOpenids = invitedUsers.map((u) => u._id).filter((id) => Boolean(id));
         const orderMap = {};
         if (invitedOpenids.length > 0) {
+            // L3 修复：原 collectInto 逐条 limit(1000) 累加，大流量 KOL 的受邀用户订单被截断。
+            //   改为按 ownerId 的 per-user 聚合（group + sum + count），彻底消除截断。
+            //   orderType / tuan.totalAmount 字段修正同 getReferralStats（L3/L4）。
             // 统一口径（2026-08-04 治理）：每个板块只从一个权威集合取数，
             //   团购从 orders.type='group_buy'（不再双查 tuan_orders），
             //   状态=已支付且未取消，金额 totalAmount || totalPrice || price。
