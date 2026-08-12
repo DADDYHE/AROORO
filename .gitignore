@@ -51,6 +51,9 @@ project.private.config.json
 .trae/
 .workbuddy/
 
+# AI design library generated assets
+.design_library/
+
 # Cloud functions dependencies
 cloudfunctions/*/node_modules/
 functions/*/node_modules/
