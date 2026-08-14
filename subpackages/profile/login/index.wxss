@@ -34,11 +34,11 @@
   line-height: 1.2;
 }
 
-.brand-en {
-  font-size: 20rpx;
+.brand-slogan {
+  font-size: 22rpx;
   font-weight: 400;
   color: var(--text-tertiary);
-  letter-spacing: 0.3em;
+  letter-spacing: 0.1em;
   margin-top: 12rpx;
   line-height: 1;
 }
