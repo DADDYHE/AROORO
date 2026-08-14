@@ -63,9 +63,11 @@ Page({
   },
 
   _resolveUrl(data) {
-    const raw = data.imageUrl || ''
-    if (raw && raw.startsWith('cloud://')) return raw
-    return data.imagePreviewUrl || raw
+    // 优先用 imagePreviewUrl（https 直链）：
+    // devtools(Skyline/SummerCompiler) 预编译会把 cloud:// 当项目内本地路径 readFileSync，
+    // 触发 ENOENT + 500；改用 https 可彻底规避，且公读桶下该直链长期有效、真机同样正常加载。
+    // 仅当后端未返回预览链（极少数 legacy）时才回退 imageUrl。
+    return data.imagePreviewUrl || data.imageUrl || ''
   },
 
   onTap() {
