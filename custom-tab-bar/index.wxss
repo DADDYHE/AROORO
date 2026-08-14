@@ -283,8 +283,8 @@
 }
 
 .center-button-icon {
-  width: 38rpx;
-  height: 38rpx;
+  width: 54rpx;
+  height: 54rpx;
   position: relative;
   z-index: 2;
   margin-bottom: 0;
