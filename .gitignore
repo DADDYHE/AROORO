@@ -90,3 +90,6 @@ yarn-error.log*
 *.tmp
 *.temp
 .cache/
+
+# Icon split artifacts (DADDY's chongtuantuan-logo.svg aurora-core backup; unused by build)
+images/icons/chongtuantuan-logo.svg.aurora
