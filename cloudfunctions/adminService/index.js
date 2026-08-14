@@ -73,6 +73,9 @@ const statsHandlers = require('./services/stats');
 const i18nOverrideHandlers = require('./services/i18nOverride');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const uploadHandlers = require('./services/upload');
+// 启动首屏海报（全局唯一配置）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const splashPosterHandlers = require('./services/splashPoster');
 // P1-2: 注册退款 handler（web-admin 调用 adminRefund/queryRefund）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const refundHandlers = require('./services/refund');
@@ -97,6 +100,7 @@ exports.handlers = {
     ...refundHandlers,
     ...i18nOverrideHandlers,
     ...uploadHandlers,
+    ...splashPosterHandlers,
 };
 // =====================================================================
 // ACTION_PERMISSIONS 权限表
@@ -267,9 +271,11 @@ const ACTION_PERMISSIONS = {
     fetchActiveOverrides: null,
     // upload
     uploadFile: 'partner',
+    // 启动首屏海报（全局配置）：读取对全体已登录用户开放（不在此表 → 仅 requireLogin），写入限管理员
+    updateSplashPoster: 'partner',
 };
 const logger = createLogger('adminService');
-const NO_AUTH_REQUIRED = new Set(['webLogin', 'createScanLogin', 'pollScanLogin', 'fetchActiveOverrides']);
+const NO_AUTH_REQUIRED = new Set(['webLogin', 'createScanLogin', 'pollScanLogin', 'fetchActiveOverrides', 'getSplashPoster']);
 // =====================================================================
 // Sprint 50: 限流统一 bootstrap（全局计数 + 配置注入）
 //   admin 端使用非 strict 模式（best-effort）：权限体系已提供强保护，
