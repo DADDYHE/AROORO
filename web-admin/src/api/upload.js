@@ -11,7 +11,9 @@ export async function uploadFile(file, cloudPath) {
     reader.readAsDataURL(file)
   })
 
-  const result = await callAction('uploadFile', { cloudPath, fileContent, fileName: file.name })
+  // skipConvert：上传返回的是 cloud:// fileID，需原样回传后端存储（后端再按需解析临时 URL）；
+  // 若在此被 resolveCloudUrls 转成 CDN https，存进后端的将是会过期的临时地址。
+  const result = await callAction('uploadFile', { cloudPath, fileContent, fileName: file.name }, { skipConvert: true })
 
   if (result.code !== 0) {
     throw new Error(result.message || '上传失败')

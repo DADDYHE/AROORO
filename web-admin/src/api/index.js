@@ -49,7 +49,7 @@ function convertCloudUrls(obj) {
 }
 
 async function callAction(action, data = {}, options = {}) {
-  const { silent = false, retryCount = MAX_RETRIES } = options
+  const { silent = false, retryCount = MAX_RETRIES, skipConvert = false } = options
   let lastError = null
 
   for (let attempt = 0; attempt <= retryCount; attempt++) {
@@ -76,7 +76,7 @@ async function callAction(action, data = {}, options = {}) {
       })
 
       const res = response.data || {}
-      return handleResponseError(convertCloudUrls(res), silent)
+      return handleResponseError(skipConvert ? res : convertCloudUrls(res), silent)
     } catch (err) {
       lastError = err
       const msg = err.response?.data?.message || err.message || ''

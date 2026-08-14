@@ -104,6 +104,7 @@ export const SIDEBAR_MENUS = [
   ] },
   { title: '轮播图管理', icon: 'Picture', path: '/banner' },
   { title: '文案覆盖', icon: 'EditPen', path: '/i18n' },
+  { title: '启动首屏海报', icon: 'Monitor', path: '/splash' },
 
   { type: 'section', title: '订单' },
   { title: '全部订单', icon: 'List', path: '/order' },
