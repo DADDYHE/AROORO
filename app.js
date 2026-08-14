@@ -35,15 +35,26 @@ App({
     // Sprint 16：i18n 状态（由 utils/i18n 管理）
     locale: i18n.getLocale(),
     i18n,
+    // 启动首屏海报：同步缓存(__splashSync)供首帧展示（销闪屏），异步结果(splashPoster)刷新；
+    // __splashFetch 为幂等拉取 Promise，供独立启动页(pages/splash)订阅。
+    splashPoster: null,
+    __splashSync: null,
+    __splashFetch: null,
   },
 
   async onLaunch(options) {
     const appLaunchStartTime = Date.now()
 
+    // 最早读取启动海报本地缓存：进入首页前即由启动页(pages/splash)首帧展示，彻底消除"首页先闪一下"
+    this.globalData.__splashSync = this._readSplashCache()
+
     this._captureInviterId(options)
 
     try {
       await this._executeCriticalStartup()
+
+      // 启动海报：云函数拉取最新配置，更新本地缓存与 globalData（首帧由缓存驱动，此处仅刷新）
+      this.getSplashPosterAsync()
 
       this._executeBackgroundStartup().catch(error => {
         console.error('[APP] 后台初始化异常:', error)
@@ -138,6 +149,52 @@ App({
 
   _preloadServiceIcon() {
     console.log('[APP] 服务图标已就绪:', this.globalData.serviceIconUrl)
+  },
+
+  // ============================================================
+  // 启动首屏海报：同步缓存 + 异步拉取
+  // 同步缓存(__splashSync) 在 onLaunch 最早读取，custom-tab-bar 首帧即可展示，
+  // 彻底消除"首页先闪一下"；异步拉取更新本地缓存与 globalData.splashPoster。
+  // ============================================================
+  _readSplashCache() {
+    try {
+      const cached = wx.getStorageSync('__splash_cache')
+      if (cached && typeof cached === 'object' && 'enabled' in cached) {
+        return cached
+      }
+    } catch (e) {}
+    return null
+  },
+
+  async _fetchSplashPoster() {
+    try {
+      const { UtilityService } = require('./services/CloudFunctionService')
+      const result = await UtilityService.getSplashPoster()
+      if (result && result.code === 0 && result.data) {
+        const d = result.data
+        this.globalData.splashPoster = d
+        // 落本地缓存：下次冷启动可同步首帧展示
+        try {
+          wx.setStorageSync('__splash_cache', {
+            enabled: !!d.enabled,
+            imageUrl: d.imageUrl || '',
+            imagePreviewUrl: d.imagePreviewUrl || '',
+            durationMs: d.durationMs || 2500,
+            updatedAt: d.updatedAt || Date.now(),
+          })
+        } catch (e) {}
+        return d
+      }
+    } catch (err) {
+      console.warn('[APP] 启动海报拉取失败（不影响首屏）:', err)
+    }
+    return null
+  },
+
+  getSplashPosterAsync() {
+    if (this.__splashFetch) return this.__splashFetch
+    this.__splashFetch = this._fetchSplashPoster()
+    return this.__splashFetch
   },
 
   async _executeBackgroundStartup() {

@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/home/index",
+    "pages/splash/index",
     "pages/discover/index",
     "pages/service/index",
     "pages/quick-register/index",

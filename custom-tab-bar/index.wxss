@@ -17,38 +17,6 @@
 @import '../styles/theme-teal.wxss';
 
 /* ================================================================
-   启动屏覆盖层
-   ================================================================ */
-.splash-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100vh;
-  z-index: 99999;
-  background: var(--zy-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  transition-property: opacity;
-  transition-duration: 900ms;
-  transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
-}
-
-.splash-overlay.splash-fade-out {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.splash-image {
-  width: 100%;
-  height: 100%;
-}
-
-/* ================================================================
    导航栏容器 — 悬浮缎面胶囊（底渐变 + 纸纹 ::before + 高光 ::after）
    ================================================================ */
 .tab-bar {
@@ -344,3 +312,4 @@
   color: #C9A24B; /* 选中金（与普通钮选中态一致） */
   letter-spacing: 0.12em;
 }
+

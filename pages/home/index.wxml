@@ -246,5 +246,6 @@
 
   <view class="bottom-spacer"></view>
   </view>
-</view>
+  </view>
 </scroll-view>
+

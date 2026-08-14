@@ -1,5 +1,3 @@
-const app = getApp()
-
 Component({
   data: {
     selected: 0,
@@ -39,12 +37,16 @@ Component({
     ],
     tabBarPadding: 20,
     _isAttached: false,
-    showSplash: false,
-    splashFading: false,
   },
   attached() {
     this._isAttached = true
     this.setData({ tabBarPadding: 20 })
+    if (wx.getSystemSetting) {
+      const setting = wx.getSystemSetting()
+      if (setting && setting.reduceMotion) {
+        this.setData({ reduceMotion: setting.reduceMotion === 'enable' })
+      }
+    }
     const pages = getCurrentPages()
     if (pages.length > 0) {
       const currentPage = pages[pages.length - 1]
@@ -58,38 +60,15 @@ Component({
     }
     this._syncTabBarFromPages()
 
-    // AROORO 启动屏：冷启动仅首次显示，覆盖全屏（含 tabBar）
-    if (!app.splashShown) {
-      app.splashShown = true
-      this.setData({ showSplash: true })
-      this._splashTimer = setTimeout(() => {
-        this.dismissSplash()
-      }, 2800)
-    }
-
     // 初始化 worklet 按压弹性动效（nextTick 等节点渲染就绪后再绑定，
     // 避免 Skyline 下 attached 时 .tab-scale-N 节点尚未挂载导致 applyAnimatedStyle 报 "can not find corresponding nodes" 噪声）
     wx.nextTick(() => this._initTabPressAnimation())
   },
   detached() {
     this._isAttached = false
-    if (this._splashTimer) {
-      clearTimeout(this._splashTimer)
-      this._splashTimer = null
-    }
     this._teardownTabPressAnimation()
   },
   methods: {
-    dismissSplash() {
-      if (this._splashTimer) {
-        clearTimeout(this._splashTimer)
-        this._splashTimer = null
-      }
-      this.setData({ splashFading: true })
-      setTimeout(() => {
-        this.setData({ showSplash: false, splashFading: false })
-      }, 500)
-    },
     switchTab(e) {
       const data = e.currentTarget.dataset
       const url = data.path

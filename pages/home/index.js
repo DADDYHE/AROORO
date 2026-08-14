@@ -29,6 +29,18 @@ Page({
   },
 
   onLoad() {
+    // 启动首屏海报：独立启动页（非 tab 页 + custom 导航栏，框架级全屏，
+    // 100% 覆盖 navbar 与系统 tabBar）。仅冷启动首屏一次。
+    if (app && !app.__splashShown) {
+      const sync = app.globalData && app.globalData.__splashSync
+      // 已同步缓存且明确关闭 -> 跳过；其余（启用 / 首启未知）都进入启动页最终裁决
+      if (!(sync && sync.enabled === false)) {
+        app.__splashShown = true
+        // 冷启动首屏页面栈未就绪，navigateTo 会被静默丢弃；
+        // reLaunch 重建栈、可靠打开启动页，且销毁首页不渲染其可见帧（根绝闪屏）。
+        wx.reLaunch({ url: '/pages/splash/index' })
+      }
+    }
     this._initNavbarHeight()
     this._initGemBand()
     const locale = app && app.globalData ? app.globalData.locale : 'zh-CN'

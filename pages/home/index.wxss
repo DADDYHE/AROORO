@@ -1343,3 +1343,5 @@ page {
   50%  { opacity: 1;    transform: scale(1.05); }
   100% { opacity: 0.55; transform: scale(1); }
 }
+
+/* (启动首屏海报样式已迁移至 pages/splash 独立启动页，框架级全屏覆盖 navbar 与系统 tabBar) */

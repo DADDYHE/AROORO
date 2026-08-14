@@ -491,6 +491,11 @@ class UtilityService {
   async getBanners() {
     return this.cloud.get('utilityService', { action: 'getBanners' })
   }
+
+  // 启动首屏海报（adminService.getSplashPoster，NO_AUTH，可在登录前读取）
+  async getSplashPoster() {
+    return this.cloud.call('adminService', { action: 'getSplashPoster' }, { useCache: false })
+  }
 }
 
 class ActivityService {

@@ -1,11 +1,3 @@
-<!-- AROORO 启动屏：覆盖全屏（含 tabBar），冷启动仅显示一次 -->
-<!-- 用 root-portal 包裹，避免 Skyline 下 position:fixed 相对滚动容器失效 -->
-<root-portal wx:if="{{showSplash}}">
-  <view class="splash-overlay {{splashFading ? 'splash-fade-out' : ''}}" catchtap="dismissSplash">
-    <image class="splash-image" src="/images/splash/arooro-splash.jpg" mode="aspectFill" />
-  </view>
-</root-portal>
-
 <!-- 自定义 tabBar：用 root-portal 包裹，保证 Skyline 下 fixed 相对 viewport -->
 <!-- tab-scale-N class 用于 worklet 按压弹性动效绑定 -->
 <!-- bindtouchstart/touchend 驱动 spring 缩放反馈 -->

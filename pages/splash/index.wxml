@@ -1,0 +1,9 @@
+<!-- 启动首屏海报 · 独立全屏页（非 tab 页 + custom 导航栏 => 框架级全屏，100% 覆盖 navbar 与系统 tabBar） -->
+<view
+  wx:if="{{visible}}"
+  class="splash {{closing ? 'splash--closing' : ''}} {{reduceMotion ? 'splash--reduce' : ''}}"
+  catchtap="onTap"
+>
+  <image wx:if="{{imageUrl}}" class="splash__img" src="{{imageUrl}}" mode="aspectFill" catchtap="onTap" />
+  <view wx:if="{{showHint && imageUrl}}" class="splash__hint" catchtap="onTap">轻触关闭</view>
+</view>
