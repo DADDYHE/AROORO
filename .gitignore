@@ -93,3 +93,6 @@ yarn-error.log*
 
 # Icon split artifacts (DADDY's chongtuantuan-logo.svg aurora-core backup; unused by build)
 images/icons/chongtuantuan-logo.svg.aurora
+
+# Engineering deliverables / design exports (already excluded from WeChat package via packOptions.ignore)
+deliverables/
