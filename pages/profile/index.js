@@ -5,13 +5,15 @@ const { CouponService } = require('../../services/CouponService')
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
+const { ReduceMotionBehavior } = require('../../behaviors/reduce-motion')
+const { WorkletAnimBehavior } = require('../../behaviors/worklet-anim')
 
 const pageI18n = require('../../utils/page-i18n.js')
 const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, ReduceMotionBehavior, WorkletAnimBehavior],
   data: {
     userInfo: {
       nickName: 'AROORO用户',
@@ -24,7 +26,6 @@ Page({
       couponCount: 0,
     },
     appVersion: '1.0.0',
-    isHeaderScrolled: false,
     showHostModal: false,
     iconShoppingCart: CLOUD_ICONS.SHOPPING_CART,
     iconBell: CLOUD_ICONS.BELL,
@@ -34,6 +35,7 @@ Page({
 
   onLoad() {
     this._initNavbarHeight()
+    this.initReduceMotion()
     this.getUserInfo()
   },
 
@@ -41,6 +43,15 @@ Page({
     this._syncTabBar()
     this.getUserInfo()
     this._refreshPartnerStatus()
+  },
+
+  onReady() {
+    // 退出登录按钮弹性按压（spring 回弹手感，reduce-motion 时自动跳过）
+    this.bindPressScale('#logoutBtn', { min: 0.94 })
+  },
+
+  onUnload() {
+    this.cleanupReduceMotion()
   },
 
   _onSessionRestored() {
@@ -251,10 +262,4 @@ Page({
     }
   },
 
-  onPageScroll(e) {
-    const isScrolled = e.scrollTop > 10
-    if (isScrolled !== this.data.isHeaderScrolled) {
-      this.setData({ isHeaderScrolled: isScrolled })
-    }
-  },
 })

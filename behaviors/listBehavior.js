@@ -7,7 +7,6 @@ const ListBehavior = Behavior({
     isError: false,
     // scroll-view 兼容字段（Skyline 模式下页面级滚动 API 失效，改用 scroll-view 事件）
     _refresherTriggered: false,
-    _scrollTop: 0,
     _navbarHeight: 64, // 导航栏总高度（状态栏 + 标题栏），用于 scroll-view 高度计算
   },
 
@@ -100,7 +99,6 @@ const ListBehavior = Behavior({
     // scroll-view 滚动 → 路由到 onPageScroll
     _onScroll(e) {
       const { scrollTop } = e.detail
-      this.setData({ _scrollTop: scrollTop })
       // 视差 hook：子页面可注册 _onParallaxScroll，直接更新 worklet SharedValue（无 setData 开销）
       if (typeof this._onParallaxScroll === 'function') {
         this._onParallaxScroll(scrollTop)
@@ -112,7 +110,6 @@ const ListBehavior = Behavior({
 
     // 滚动到指定位置（替代 wx.pageScrollTo）
     _scrollTo(top, duration = 300) {
-      this.setData({ _scrollToView: '', _scrollTop: top })
       if (this._scrollContext) {
         this._scrollContext.scrollTo({ top, duration })
       }

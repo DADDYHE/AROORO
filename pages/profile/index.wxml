@@ -10,7 +10,7 @@
   lower-threshold="100"
   style="height: calc(100vh - {{_navbarHeight}}px);"
 >
-<view class="page">
+<view class="page {{rmClass}}">
   <!-- 顶部画廊区 -->
   <view class="gallery-header">
     <view class="brand-block">
@@ -220,7 +220,7 @@
   <view class="exhibit-list">
     <view class="exhibit-row">
       <view class="exhibit-profile-cell">
-        <view class="exhibit-logout-btn" bindtap="onLogout">
+        <view id="logoutBtn" class="exhibit-logout-btn" data-press-selector="#logoutBtn" bindtap="onLogout" bindtouchstart="_onPressScaleStart" bindtouchend="_onPressScaleEnd" bindtouchcancel="_onPressScaleEnd">
           <text class="exhibit-logout-text">退出登录</text>
         </view>
       </view>
