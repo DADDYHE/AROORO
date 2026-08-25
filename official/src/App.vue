@@ -1,5 +1,5 @@
 <template>
-  <div class="site">
+  <div class="site" ref="root">
     <!-- 顶部导航 -->
     <header class="nav">
       <div class="container nav-inner">
@@ -126,6 +126,9 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted, ref } from 'vue'
+import { gsap, prefersReducedMotion } from './animations'
+
 // Phase 2：用 @cloudbase/js-sdk 匿名登录后调用云函数只读 API
 // 拉取 activities / 寄养家庭 / 商城，替换下方占位数据。
 const activities = [
@@ -133,6 +136,34 @@ const activities = [
   { id: 2, tag: '户外', title: '周末户外撒欢日', location: '成都 · 环球中心', time: '08/08 20:02', desc: '大草坪放飞，专业教练带队，安全又尽兴。' },
   { id: 3, tag: '领养', title: '流浪毛孩领养日', location: '成都 · 主城区', time: '敬请期待', desc: '给无家的小生命一个 AROORO 相伴的归宿。' }
 ]
+
+const root = ref(null)
+let ctx
+
+onMounted(() => {
+  // 无障碍：用户开启「减少动态」时完全跳过动画。
+  if (prefersReducedMotion()) return
+
+  ctx = gsap.context(() => {
+    // Hero 入场
+    gsap.from('.hero-title', { y: 28, opacity: 0, duration: 0.8, ease: 'power3.out' })
+    gsap.from('.hero-desc', { y: 20, opacity: 0, duration: 0.7, delay: 0.15, ease: 'power2.out' })
+    gsap.from('.hero-actions', { y: 20, opacity: 0, duration: 0.7, delay: 0.3, ease: 'power2.out' })
+
+    // 服务卡片滚动进入视口时错落浮现
+    gsap.from('.card', {
+      y: 24,
+      opacity: 0,
+      duration: 0.6,
+      stagger: 0.12,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: '.cards', start: 'top 85%' }
+    })
+  }, root.value)
+})
+
+// 组件卸载时自动清理所有动画与 ScrollTrigger，避免内存泄漏。
+onUnmounted(() => ctx && ctx.revert())
 </script>
 
 <style scoped>
