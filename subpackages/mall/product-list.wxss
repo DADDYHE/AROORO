@@ -138,10 +138,11 @@
   background-color: var(--card-color);
   margin-bottom: 0;
   border-bottom: 1rpx solid var(--hairline);
+  opacity: 0;
   animation-name: fadeInUp;
   animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.16,1,0.3,1);
-  animation-fill-mode: forwards;
+  animation-fill-mode: both;
 }
 
 .category-header-inner {
@@ -207,10 +208,11 @@
   overflow: visible;
   transition: transform var(--dur-fast) var(--ease-refined),
               border-color var(--dur-fast) var(--ease-refined);
-  animation-name: fadeInUp;
+  opacity: 0;
+  animation-name: fadeIn;
   animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.19,1,0.22,1);
-  animation-fill-mode: forwards;
+  animation-fill-mode: both;
 }
 
 /* 交错入场延迟 */
@@ -219,7 +221,8 @@
 .product-card:nth-child(3) { animation-delay: 110ms; }
 .product-card:nth-child(4) { animation-delay: 160ms; }
 .product-card:nth-child(5) { animation-delay: 220ms; }
-.product-card:nth-child(6) { animation-delay: 110ms; }
+.product-card:nth-child(6) { animation-delay: 290ms; }
+.product-card:nth-child(n+7) { animation-delay: 320ms; }
 
 .product-card--pressed {
   transform: scale(0.98);
@@ -288,10 +291,11 @@
   justify-content: center;
   padding: 40rpx 0 16rpx;
   margin-top: 16rpx;
+  opacity: 0;
   animation-name: fadeIn;
   animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.16,1,0.3,1);
-  animation-fill-mode: forwards;
+  animation-fill-mode: both;
   animation-delay: 220ms;
 }
 
@@ -381,4 +385,16 @@
   color: var(--text-inverse);
   font-weight: 500;
   line-height: 1;
+}
+
+/* ===== 减少动态全局降级（页面私有入场动画，全局 motion.wxss 的 .rm 覆盖不到） ===== */
+.rm .category-header,
+.rm .product-card,
+.rm .view-more {
+  animation: none;
+  opacity: 1;
+}
+.floating-cart.rm {
+  transition: none;
+  opacity: 1;
 }

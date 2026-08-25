@@ -10,7 +10,7 @@
   lower-threshold="100"
   style="height: calc(100vh - {{_navbarHeight}}px);"
 >
-<view class="page-container">
+<view class="page-container {{rmClass}}">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="page-divider"></view>
   <view class="main-body">
@@ -63,7 +63,7 @@
 </scroll-view>
 
 <!-- 可拖动悬浮购物车：页面根级 fixed，不依赖 root-portal（避免页面返回时 portal 独立 webview 已被销毁导致的 routeDone / navigateBack webviewId 报错） -->
-<view class="floating-cart {{cartPosReady ? 'is-ready' : ''}} {{cartDragging ? 'is-dragging' : ''}}"
+<view class="floating-cart {{cartPosReady ? 'is-ready' : ''}} {{cartDragging ? 'is-dragging' : ''}} {{rmClass}}"
       style="transform: translate({{cartPos.x}}px, {{cartPos.y}}px);"
       hover-class="floating-cart--pressed" hover-stay-time="120"
       bindtouchstart="onCartTouchStart"
