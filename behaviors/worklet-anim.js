@@ -162,72 +162,8 @@ module.exports = {
         return this._scrollStyles[selector]
       },
 
-      // ----------------------------------------------------------------
-      // 跟手拖拽：用 shared 驱动 transform，touchmove 直接改 shared.value
-      // （无 setData 风暴，UI 线程同步驱动，中低端机稳帧）。
-      //   selector: 目标节点选择器（如 '.floating-cart'）
-      //   opts.initial: { x, y } 初始位置(px)
-      //   opts.clamp: (x, y) => ({ x, y }) 边界约束（可选）
-      // 返回 controller: { move(dx, dy), current, teardown }
-      //   · move 接收绝对坐标（已含起始偏移），内部做 clamp
-      //   · 若环境不支持 worklet，返回 null（调用方回退 setData）
-      // 注意：跟手拖拽是功能交互（移动浮钮位置），非装饰动画，故不受 reduce-motion 跳过。
-      // ----------------------------------------------------------------
-      bindDragTranslate(selector, opts = {}) {
-        if (!wx.worklet || !this.applyAnimatedStyle) return null
-        const { shared } = wx.worklet
-        const init = opts.initial || { x: 0, y: 0 }
-        const clamp = typeof opts.clamp === 'function' ? opts.clamp : null
-
-        const pos = shared({ x: init.x, y: init.y })
-        let current = { x: init.x, y: init.y }
-
-        const controller = {
-          pos,
-          get current() { return current },
-          move(nx, ny) {
-            const c = clamp ? clamp(nx, ny) : { x: nx, y: ny }
-            current = c
-            pos.x.value = c.x
-            pos.y.value = c.y
-          },
-          teardown() {
-            try {
-              if (this._cancelDrag) this._cancelDrag()
-              if (wx.worklet && typeof wx.worklet.cancelAnimation === 'function') {
-                wx.worklet.cancelAnimation(pos)
-              }
-            } catch (e) {}
-          },
-        }
-
-        if (!this._dragTranslates) this._dragTranslates = []
-        this._dragTranslates.push(controller)
-
-        wx.nextTick(() => {
-          try {
-            controller._cancelDrag = this.applyAnimatedStyle(selector, () => {
-              'worklet'
-              return {
-                transform: `translate(${pos.x.value}px, ${pos.y.value}px)`,
-              }
-            })
-          } catch (e) {
-            controller._cancelDrag = null
-          }
-        })
-
-        return controller
-      },
-
       // 统一 teardown：解绑所有 worklet 样式并 cancel SharedValue，避免泄漏。
       teardownWorkletAnims() {
-        if (this._dragTranslates) {
-          this._dragTranslates.forEach((ctrl) => {
-            if (ctrl && typeof ctrl.teardown === 'function') ctrl.teardown()
-          })
-          this._dragTranslates = []
-        }
         if (this._pressScales) {
           Object.keys(this._pressScales).forEach((k) => {
             const item = this._pressScales[k]

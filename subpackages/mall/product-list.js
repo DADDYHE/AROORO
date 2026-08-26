@@ -4,12 +4,10 @@ const mallCategories = require('./mallCategories')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
-const { ReduceMotionBehavior } = require('../../behaviors/reduce-motion')
-const { WorkletAnimBehavior } = require('../../behaviors/worklet-anim')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
-  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior, ReduceMotionBehavior, WorkletAnimBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
     currentCategory: '',
     currentCategoryLabel: '',
@@ -31,7 +29,6 @@ Page({
   async onLoad() {
     this._initNavbarHeight()
     this._initCartPos()
-    this.initReduceMotion()
     this._refreshCartCount()
     this.setData({ categories: mallCategories })
     try {
@@ -180,30 +177,6 @@ Page({
     this._refreshCartCount()
   },
 
-  onReady() {
-    this._initCartDrag()
-  },
-
-  onUnload() {
-    this.cleanupReduceMotion()
-    if (this._cartDrag) {
-      this._cartDrag.teardown()
-      this._cartDrag = null
-    }
-  },
-
-  _initCartDrag() {
-    if (!this.data.cartPosReady) return
-    this._cartDrag = this.bindDragTranslate('.floating-cart', {
-      initial: this.data.cartPos,
-      clamp: (x, y) => {
-        const maxX = this._winW - this._cartBtnPx
-        const maxY = this._winH - this._cartBtnPx
-        return { x: Math.max(0, Math.min(x, maxX)), y: Math.max(0, Math.min(y, maxY)) }
-      },
-    })
-  },
-
   _initCartPos() {
     const info = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync())
     const rpx = info.windowWidth / 750
@@ -225,10 +198,12 @@ Page({
 
   onCartTouchStart(e) {
     const t = e.touches[0]
-    const start = this._cartDrag
-      ? { x: t.clientX, y: t.clientY, btnX: this._cartDrag.current.x, btnY: this._cartDrag.current.y }
-      : { x: t.clientX, y: t.clientY, btnX: this.data.cartPos.x, btnY: this.data.cartPos.y }
-    this._dragStart = start
+    this._dragStart = {
+      x: t.clientX,
+      y: t.clientY,
+      btnX: this.data.cartPos.x,
+      btnY: this.data.cartPos.y,
+    }
     this._dragMoved = false
   },
 
@@ -241,19 +216,13 @@ Page({
       this._dragMoved = true
       this.setData({ cartDragging: true }) // 真正移动才开始抓取反馈
     }
-    if (this._cartDrag) {
-      // Skyline Worklet：直接改 shared，UI 线程同步驱动 transform，无 setData 风暴
-      this._cartDrag.move(this._dragStart.btnX + dx, this._dragStart.btnY + dy)
-    } else {
-      // WebView 回退：setData 驱动 transform
-      let nx = this._dragStart.btnX + dx
-      let ny = this._dragStart.btnY + dy
-      const maxX = this._winW - this._cartBtnPx
-      const maxY = this._winH - this._cartBtnPx
-      nx = Math.max(0, Math.min(nx, maxX))
-      ny = Math.max(0, Math.min(ny, maxY))
-      this.setData({ 'cartPos.x': nx, 'cartPos.y': ny })
-    }
+    let nx = this._dragStart.btnX + dx
+    let ny = this._dragStart.btnY + dy
+    const maxX = this._winW - this._cartBtnPx
+    const maxY = this._winH - this._cartBtnPx
+    nx = Math.max(0, Math.min(nx, maxX))
+    ny = Math.max(0, Math.min(ny, maxY))
+    this.setData({ 'cartPos.x': nx, 'cartPos.y': ny })
   },
 
   onCartTouchEnd() {
