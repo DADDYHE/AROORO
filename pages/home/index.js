@@ -22,7 +22,6 @@ Page({
     locale: 'zh-CN',
     todayDate: '',
     _refreshPulling: false,
-    reduceMotion: false,
     // 导航栏 + 顶部栏共用深绿宝石渐变带（白高光贯穿两栏）
     gemNavbarBg: 'linear-gradient(135deg, #2D4F2D 0%, #0F2410 100%)',
     gemTopbarStyle: '', // 空串 = 回落 wxss 兜底渐变（勿给默认值，否则会拼出 size:0 的空背景）
@@ -45,23 +44,9 @@ Page({
     this._initGemBand()
     const locale = app && app.globalData ? app.globalData.locale : 'zh-CN'
     this.setData({ t: pageI18n.buildTMap(locale), locale })
-    this._initReduceMotion()
     this._initToday()
     this._initBanner()
     this._initRefreshAnimation()
-  },
-
-  _initReduceMotion() {
-    if (!wx.getSystemSetting) return
-    const setting = wx.getSystemSetting()
-    this.setData({ reduceMotion: setting.reduceMotion === 'enable' })
-    if (typeof wx.onReduceMotionChange !== 'function') return
-    this._reduceMotionHandler = (res) => {
-      if (res && typeof res.reduceMotion === 'string') {
-        this.setData({ reduceMotion: res.reduceMotion === 'enable' })
-      }
-    }
-    wx.onReduceMotionChange(this._reduceMotionHandler)
   },
 
   _initToday() {
@@ -162,10 +147,6 @@ Page({
 
   onUnload() {
     this._teardownRefreshAnimation()
-    if (this._reduceMotionHandler && typeof wx.offReduceMotionChange === 'function') {
-      wx.offReduceMotionChange(this._reduceMotionHandler)
-      this._reduceMotionHandler = null
-    }
   },
 
   // ================================================================

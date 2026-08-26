@@ -13,11 +13,11 @@
 <view class="page-container">
   <view class="header-bar" wx:if="{{unreadCount > 0}}">
     <text class="unread-text">{{unreadCount}}条未读</text>
-    <view class="mark-read-btn" bindtap="onMarkAllRead"><text>全部已读</text></view>
+    <view class="mark-read-btn" bindtap="onMarkAllRead" hover-class="mark-read-btn pressed" hover-stay-time="80"><text>全部已读</text></view>
   </view>
 
   <view class="notification-list" wx:if="{{notifications.length > 0}}">
-    <view wx:for="{{notifications}}" wx:key="_id" class="notification-card {{item.isRead ? '' : 'unread'}}" data-id="{{item._id}}" data-type="{{item.type}}" data-related-id="{{item.relatedId}}" bindtap="onNotificationTap">
+    <view wx:for="{{notifications}}" wx:key="_id" class="notification-card {{item.isRead ? '' : 'unread'}}" data-id="{{item._id}}" data-type="{{item.type}}" data-related-id="{{item.relatedId}}" bindtap="onNotificationTap" hover-class="notification-card pressed" hover-stay-time="80">
       <text class="notification-icon">{{item.icon}}</text>
       <view class="notification-content">
         <text class="notification-title">{{item.title}}</text>

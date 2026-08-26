@@ -1,24 +1,6 @@
 /* subpackages/booking/pet-select.wxss */
 /* AROORO 轻奢宠物 - 宠物选择页（画廊展陈风格） */
 
-/* ===== 入场动画 ===== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(32rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* ===== 容器 ===== */
 .gallery-container {
   min-height: 100vh;
@@ -38,9 +20,9 @@
 .brand-block {
   padding: 80rpx var(--page-padding) 64rpx;
   position: relative;
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
@@ -153,9 +135,9 @@
   border-radius: var(--zy-radius-lg);
   overflow: hidden;
   border: 1rpx solid var(--hairline);
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 100ms;
   animation-fill-mode: forwards;
 }
@@ -583,7 +565,7 @@
   border: 4rpx solid var(--divider-color);
   border-top-color: var(--primary-color);
   border-radius: 50%;
-  animation-name: spin;
+  animation-name: zy-spin;
   animation-duration: 800ms;
   animation-timing-function: linear;
   animation-fill-mode: forwards;

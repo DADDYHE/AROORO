@@ -68,7 +68,7 @@
         class="confirm-btn {{canSubmit ? '' : 'disabled'}}"
         bindtap="onConfirm"
         disabled="{{!canSubmit}}"
-      >
+       hover-class="confirm-btn pressed" hover-stay-time="80">
         开始呼噜
       </button>
       <view class="cancel-link" bindtap="onCancel">

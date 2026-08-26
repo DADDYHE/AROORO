@@ -1144,78 +1144,47 @@ page {
   text-align: center;
 }
 
-/* ================================================================
-   入场动画 · Stagger 丝绸展开（Haute-Luxury 版）
-   ----------------------------------------------------------------
-   更慢更柔，幅度更小，更克制
-   ================================================================ */
-@keyframes rise-fade-in {
-  0% { opacity: 0; transform: translateY(24rpx); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes rise-fade-in-short {
-  0% { opacity: 0; transform: translateY(16rpx); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scale-fade-in {
-  0% { opacity: 0; transform: scale(0.96); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
 .stagger-item {
   opacity: 0;
   animation-fill-mode: forwards;
 }
 
-/* 可达性兜底：用户开启「减少动态效果」时，入场动画不播，内容直接可见，避免卡在 opacity:0。
-   Skyline 不支持 prefers-reduced-motion 媒体特性（报 Unsupported segment 且整段被忽略），
-   故改为由 JS 探测 reduceMotion 后给滚动容器加 .reduce-motion 类来驱动。 */
-.reduce-motion .stagger-item {
-  opacity: 1;
-  animation: none;
-}
-
 .stagger-rise {
-  animation-name: rise-fade-in;
-  animation-duration: 700ms;
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .stagger-rise-fast {
-  animation-name: rise-fade-in-short;
-  animation-duration: 500ms;
+  animation-name: zy-fade-in-up-sm;
+  animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 .stagger-scale {
-  animation-name: scale-fade-in;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
+  animation-name: zy-scale-in-soft;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Stagger 节奏：与中央 zy-enter--dN 对齐（60ms 步进，总时长封顶 500ms）
+   旧版为 120ms 线性累加至 960ms，末项要 1.44s 才落定 —— 读起来是"节拍器"且明显偏慢。
+   压到 60ms 后各项入场相互重叠，形成一道连续下行的波浪，才是"呼吸"而非"报数"。 */
 .delay-0 { animation-delay: 0ms; }
-.delay-1 { animation-delay: 120ms; }
-.delay-2 { animation-delay: 240ms; }
-.delay-3 { animation-delay: 360ms; }
-.delay-4 { animation-delay: 480ms; }
-.delay-5 { animation-delay: 600ms; }
-.delay-6 { animation-delay: 720ms; }
-.delay-7 { animation-delay: 840ms; }
-.delay-8 { animation-delay: 960ms; }
-
-/* 顶部栏淡入 */
-@keyframes topbar-fade {
-  0% { opacity: 0; transform: translateY(-12rpx); }
-  100% { opacity: 1; transform: translateY(0); }
-}
+.delay-1 { animation-delay: 80ms; }
+.delay-2 { animation-delay: 140ms; }
+.delay-3 { animation-delay: 200ms; }
+.delay-4 { animation-delay: 260ms; }
+.delay-5 { animation-delay: 320ms; }
+.delay-6 { animation-delay: 380ms; }
+.delay-7 { animation-delay: 440ms; }
+.delay-8 { animation-delay: 500ms; }
 
 .topbar-stagger {
   opacity: 0;
-  animation-name: topbar-fade;
-  animation-duration: 700ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-down-sm;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 100ms;
   animation-fill-mode: forwards;
 }
@@ -1300,7 +1269,7 @@ page {
   pointer-events: none; z-index: 1;
 }
 .aurora-bloom--breathe {
-  animation: aurora-breathe 7200ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: zy-breathe-aura 7200ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 /* 顶沿极光染边条（宠物卡 / 活动卡） */
 .aurora-edge {
@@ -1336,12 +1305,5 @@ page {
 /* 全图卡：遮罩直接写死强渐变 + 信息层抬到守护层之上 */
 .mall-card-overlay { height: 50%; background: linear-gradient(to top, rgba(15,36,16,0.5) 0%, rgba(15,36,16,0.22) 40%, rgba(15,36,16,0.10) 70%, transparent 100%); }
 .mall-card-info   { z-index: 2; }
-
-/* 极光呼吸 — 7.2s，慢到几乎察觉不到；仅首屏 2 枚角晕，全页不重复（S8 无限动画克制） */
-@keyframes aurora-breathe {
-  0%   { opacity: 0.55; transform: scale(1); }
-  50%  { opacity: 1;    transform: scale(1.05); }
-  100% { opacity: 0.55; transform: scale(1); }
-}
 
 /* (启动首屏海报样式已迁移至 pages/splash 独立启动页，框架级全屏覆盖 navbar 与系统 tabBar) */

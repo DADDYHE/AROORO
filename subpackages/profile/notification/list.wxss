@@ -22,6 +22,7 @@
 }
 
 .mark-read-btn {
+  transition: transform 160ms ease, opacity 160ms ease;
   padding: 10rpx 24rpx;
   background: var(--primary-wash, #F2F5EC);
   border-radius: var(--zy-radius-lg);
@@ -41,6 +42,7 @@
 }
 
 .notification-card {
+  transition: transform 160ms ease, opacity 160ms ease;
   display: flex;
   align-items: flex-start;
   gap: 16rpx;
@@ -128,6 +130,7 @@
 }
 
 .empty-icon {
+  animation: zy-breathe-glow 4000ms ease-in-out infinite;
   width: 80rpx;
   height: 80rpx;
   margin-bottom: 16rpx;
@@ -141,25 +144,16 @@
 
 /* 入场动画 */
 .header-bar {
-  animation-name: fadeInDown;
-  animation-duration: 400ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-down;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
 .notification-list {
-  animation-name: fadeInUp;
+  animation-name: zy-fade-in-up;
   animation-duration: 480ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-16rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}

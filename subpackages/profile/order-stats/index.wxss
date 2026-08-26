@@ -57,6 +57,7 @@
 }
 
 .status-tab {
+  transition: transform 160ms ease, opacity 160ms ease;
   flex: 0 0 auto;
   padding: 16rpx 28rpx;
   text-align: center;
@@ -94,6 +95,7 @@
 }
 
 .order-card {
+  transition: transform 160ms ease, opacity 160ms ease;
   background: var(--card-color);
   border-radius: var(--zy-radius-lg);
   padding: 28rpx;
@@ -327,6 +329,7 @@
 }
 
 .mall-cancel-btn {
+  transition: transform 160ms ease, opacity 160ms ease;
   font-size: 24rpx;
   color: var(--error-color);
   padding: 8rpx 24rpx;
@@ -354,29 +357,25 @@
 
 /* 入场动画 */
 .stats-summary {
-  animation-name: fadeInUp;
+  animation-name: zy-fade-in-up;
   animation-duration: 480ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
 .status-tabs {
-  animation-name: fadeInUp;
+  animation-name: zy-fade-in-up;
   animation-duration: 480ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 80ms;
   animation-fill-mode: forwards;
 }
 
 .orders-list {
-  animation-name: fadeInUp;
+  animation-name: zy-fade-in-up;
   animation-duration: 480ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 160ms;
   animation-fill-mode: forwards;
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}

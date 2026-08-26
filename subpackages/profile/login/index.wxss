@@ -224,6 +224,7 @@
 }
 
 .confirm-btn {
+  transition: transform 160ms ease, opacity 160ms ease;
   width: 320rpx;
   height: 88rpx;
   line-height: 88rpx;
@@ -256,6 +257,7 @@
 }
 
 .cancel-link {
+  transition: transform 160ms ease, opacity 160ms ease;
   margin-top: 32rpx;
   padding: 16rpx 0;
 }
@@ -268,34 +270,25 @@
 
 /* 入场动画 */
 .brand-exhibit {
-  animation-name: fadeInDown;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-down;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
 .exhibit-card {
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 120ms;
   animation-fill-mode: forwards;
 }
 
 .action-exhibit {
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 240ms;
   animation-fill-mode: forwards;
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(24rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-24rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}

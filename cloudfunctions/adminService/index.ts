@@ -307,6 +307,7 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   deleteProduct: 'partner',
   batchUpdateProducts: 'partner',
   cloneProduct: 'partner',
+  import1688Product: 'partner',
   getMallOrders: 'partner',
   getMallOrderDetail: 'partner',
   handleMallOrder: 'partner',
@@ -433,6 +434,12 @@ export function parseHttpEvent(event: CloudEvent, context: CloudContext): HttpIn
     return {
       action: body.action,
       data: body.data || {},
+      // 兼容：浏览器插件/网关可能把用户 JWT 放在请求体顶层 accessToken。
+      // 部分 API 网关不转发 X-User-Token 自定义头，此时退回读取 body 里的 token。
+      _bodyAccessToken:
+        ((body as Record<string, unknown>).accessToken as string)
+        || (body.data && (body.data as Record<string, unknown>).accessToken as string)
+        || '',
       _httpContext: httpContext,
       _isHttpCall: true as const,
     }
@@ -441,12 +448,17 @@ export function parseHttpEvent(event: CloudEvent, context: CloudContext): HttpIn
   }
 }
 
-export function parseHttpAuth(httpContext: { headers: Record<string, string | undefined> }): JwtDecodedToken | null {
+export function parseHttpAuth(
+  httpContext: { headers: Record<string, string | undefined> },
+  bodyAccessToken?: string,
+): JwtDecodedToken | null {
   // 认证契约：优先读取 X-User-Token（web 端用户 JWT），
   // 兼容旧约定从 Authorization 头读取（注意 Authorization 在生产环境可能被网关 API Key 占用）。
   const headers = httpContext?.headers || {}
   const authHeader = headers['x-user-token'] || headers['X-User-Token'] || headers.authorization || headers.Authorization || ''
+  // 头部优先；网关未转发 X-User-Token 时退回请求体里的 accessToken（插件已同时下发）
   const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+    || (bodyAccessToken ? String(bodyAccessToken).replace(/^Bearer\s+/i, '').trim() : '')
   if (!token) {return null}
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -570,7 +582,7 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
     }
 
     if (validHttpInfo.action !== 'webLogin' && !NO_AUTH_REQUIRED.has(validHttpInfo.action)) {
-      const httpAuth = parseHttpAuth(validHttpInfo._httpContext)
+      const httpAuth = parseHttpAuth(validHttpInfo._httpContext, validHttpInfo._bodyAccessToken)
       if (!httpAuth) {
         return { statusCode: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ code: 401, message: '未登录或Token已过期' }) }
       }
@@ -610,7 +622,9 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
         const mergedEvent = { ...validHttpInfo.data, action: validHttpInfo.action }
         logger.info(validHttpInfo.action, { openid: httpAuth.openid, source: 'http' })
         const result = await handlers[validHttpInfo.action](mergedEvent, context, auth)
-        return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(result) }
+        // HTTP 网关路径同样需要把 cloud:// 转换为 https 临时 URL（web-admin 走网关读商品图）
+        const converted = await convertCloudUrls(result)
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(converted) }
       } catch (error) {
         logger.error(validHttpInfo.action, error)
         const code = (error as { code?: number })?.code || 500
@@ -623,7 +637,8 @@ export const main = async (event: CloudEvent, context: CloudContext): Promise<un
       const auth: AuthLike = { _isHttpAuth: true }
       logger.info('webLogin', { source: 'http' })
       const result = await handlers[validHttpInfo.action](mergedEvent, context, auth)
-      return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(result) }
+      const converted = await convertCloudUrls(result)
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(converted) }
     } catch (error) {
       logger.error('webLogin', error)
       const code = (error as { code?: number })?.code || 500

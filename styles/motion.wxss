@@ -40,6 +40,11 @@ page {
   --dur-elegant: 800ms;   /* 启动屏、品牌级转场 */
   --dur-shimmer: 2000ms;  /* 金色微光循环 */
 
+  /* 呼吸循环时长（品牌/氛围面专用，慢于人体静息呼吸） */
+  --dur-breathe: 4000ms;      /* 通用呼吸：卡片光泽、空态图标 */
+  --dur-breathe-slow: 5600ms; /* 缓呼吸：品牌 banner、启动海报 */
+  --dur-breathe-aura: 7200ms; /* 氛围呼吸：首页极光带 */
+
   /* Stagger 节奏（艺术留白：元素间呼吸间隔） */
   --stagger-xs: 40ms;
   --stagger-sm: 70ms;
@@ -87,6 +92,18 @@ page {
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* 丝绸下落入场（-28rpx）——顶部标题、页头信息带 */
+@keyframes zy-fade-in-down {
+  0% { opacity: 0; transform: translateY(-28rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 小幅下落（-16rpx）——顶部 chip / 筛选栏 */
+@keyframes zy-fade-in-down-sm {
+  0% { opacity: 0; transform: translateY(-16rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 /* 缩放浮现——居中弹窗、珠宝呈现 */
 @keyframes zy-scale-in {
   0% { opacity: 0; transform: scale(0.92); }
@@ -97,6 +114,24 @@ page {
 @keyframes zy-scale-in-up {
   0% { opacity: 0; transform: scale(0.96) translateY(16rpx); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 轻缩放浮现（0.96）——比 zy-scale-in 更克制，用于内容卡/弹层内容 */
+@keyframes zy-scale-in-soft {
+  0% { opacity: 0; transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Hero 沉降（1.04→1）——大图/封面缓缓落定，最具"呼吸"感的入场 */
+@keyframes zy-hero-settle {
+  0% { opacity: 0; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* 纯淡出——启动屏退场、元素消失 */
+@keyframes zy-fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* 从右侧滑入——侧栏、返回面板 */
@@ -146,6 +181,48 @@ page {
 @keyframes zy-glow-breathe {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.03); }
+}
+
+/* ---------- 呼吸族（品牌/氛围面专用，仅 opacity + scale） ----------
+   幅度铁律：scale ≤ 1.02，opacity ≥ 0.82；慢于人体静息呼吸，只做"活着"的暗示
+   ------------------------------------------------------------------ */
+
+/* 通用呼吸——明暗微起伏（空态图标、品牌卡片光泽） */
+@keyframes zy-breathe {
+  0%, 100% { opacity: 0.86; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.015); }
+}
+
+/* 纯光呼吸——不缩放，仅明暗（文字、细线、金色描边） */
+@keyframes zy-breathe-glow {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 1; }
+}
+
+/* 缩放呼吸——不改明暗（已有半透明背景的容器） */
+@keyframes zy-breathe-scale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* 氛围呼吸——极缓大幅光晕（首页极光带、启动海报底纹）
+   注：形状沿用首页 aurora-breathe 原始参数，保持已上线的签名观感不变 */
+@keyframes zy-breathe-aura {
+  0% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.55; transform: scale(1); }
+}
+
+/* 加载脉冲（占位文字/骨架块的明暗，幅度大于呼吸，语义=正在加载） */
+@keyframes zy-pulse-soft {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* 加载点脉冲（三点式 loading，配合 nth-child 延迟） */
+@keyframes zy-dot-pulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
 }
 
 /* 骨架屏微光 */
@@ -315,13 +392,45 @@ page {
   animation-fill-mode: forwards;
 }
 
-/* ========== 6. Stagger 延迟预设（1-6 步，60ms 呼吸节奏） ========== */
+/* 下落入场：顶部标题/页头信息带（替代各页本地 fadeInDown） */
+.zy-enter-down {
+  opacity: 0;
+  animation-name: zy-fade-in-down;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 小幅下落：顶部 chip / 筛选栏 */
+.zy-enter-down-sm {
+  opacity: 0;
+  animation-name: zy-fade-in-down-sm;
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 缩放上浮：卡片浮现（比 zy-enter 更"托起"，适合封面卡/统计卡） */
+.zy-enter-card {
+  opacity: 0;
+  animation-name: zy-scale-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+/* ========== 6. Stagger 延迟预设（1-8 步，60ms 呼吸节奏） ==========
+   铁律：单页 stagger 总时长 ≤ 560ms（d8），超过则改分组编排，
+         禁止像旧版首页那样线性累加到 960ms —— 用户会感到"卡"
+   ============================================================ */
 .zy-enter--d1 { animation-delay: 80ms; }
 .zy-enter--d2 { animation-delay: 140ms; }
 .zy-enter--d3 { animation-delay: 200ms; }
 .zy-enter--d4 { animation-delay: 260ms; }
 .zy-enter--d5 { animation-delay: 320ms; }
 .zy-enter--d6 { animation-delay: 380ms; }
+.zy-enter--d7 { animation-delay: 440ms; }
+.zy-enter--d8 { animation-delay: 500ms; }
 
 /* ========== 7. 弹窗动效系统（三层分层编排） ==========
    设计哲学：遮罩铺陈 → 面板丝绸升起 → 内容依次揭示
@@ -569,3 +678,80 @@ page {
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
+
+/* 分包旧别名（partner/mall 等分包 common.wxss 曾各自定义，统一收归中央） */
+.animate-fade-in-up {
+  opacity: 0;
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation-name: zy-fade-in;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+.animate-fade-in-down {
+  opacity: 0;
+  animation-name: zy-fade-in-down;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+/* ========== 15. 呼吸工具类（仅品牌 / 氛围面使用） ==========
+   适用边界（DADDY 决策 2026-08-26：仅品牌/氛围面，不下沉到内容页）：
+     ✅ 启动海报、首页极光带、团长中心 banner、空态图标、加载态、金色 CTA 光泽
+     ❌ 商品列表、订单列表、表单、详情正文 —— 内容面保持静止，避免视觉噪音
+   幅度铁律：scale ≤ 1.02 / opacity ≥ 0.72；一屏内同时呼吸元素 ≤ 2 个
+   ============================================================ */
+
+/* 通用呼吸（4s）——空态图标、品牌卡片 */
+.zy-breathe {
+  animation-name: zy-breathe;
+  animation-duration: 4000ms;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* 纯光呼吸（4s）——文字、细线、金色描边（不缩放，最克制） */
+.zy-breathe-glow {
+  animation-name: zy-breathe-glow;
+  animation-duration: 4000ms;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* 缩放呼吸（4s）——已有半透明底的容器 */
+.zy-breathe-scale {
+  animation-name: zy-breathe-scale;
+  animation-duration: 4000ms;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* 缓呼吸（5.6s）——品牌 banner、启动海报 */
+.zy-breathe-slow {
+  animation-name: zy-breathe;
+  animation-duration: 5600ms;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* 氛围呼吸（7.2s）——首页极光带、大面积底纹 */
+.zy-breathe-aura {
+  animation-name: zy-breathe-aura;
+  animation-duration: 7200ms;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* 呼吸相位错开（同屏多元素避免"齐步走"，用负 delay 直接进入循环中段） */
+.zy-breathe--p1 { animation-delay: -1200ms; }
+.zy-breathe--p2 { animation-delay: -2400ms; }
+.zy-breathe--p3 { animation-delay: -3600ms; }

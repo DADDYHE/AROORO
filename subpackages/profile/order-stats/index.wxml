@@ -35,7 +35,7 @@
       class="status-tab {{currentStatus === item.key ? 'active' : ''}}"
       data-status="{{item.key}}"
       bindtap="switchStatus"
-    >
+     hover-class="status-tab pressed" hover-stay-time="80">
       <text class="status-tab-text">{{item.label}}</text>
     </view>
   </view>
@@ -47,7 +47,7 @@
       class="order-card {{item.orderType === 'mall' ? 'mall-card' : ''}} {{item.orderType === 'group_buy' ? 'group-card' : ''}}"
       data-id="{{item._id}}"
       bindtap="onOrderTap"
-    >
+     hover-class="order-card pressed" hover-stay-time="80">
       <view class="order-cover-row" wx:if="{{item.activityCoverUrl}}">
         <image class="order-cover" src="{{item.activityCoverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.activityCoverUrl}}" data-path="orders[{{index}}].activityCoverUrl" />
       </view>
@@ -69,7 +69,7 @@
             <text class="order-info-text">{{item.receiverName}} {{item.receiverPhone}}</text>
           </view>
         <view class="mall-actions" wx:if="{{item.status === 'pending_payment' || item.status === 'pending_shipment'}}">
-          <view class="mall-cancel-btn" data-id="{{item._id}}" catchtap="onCancelMallOrder">取消订单</view>
+          <view class="mall-cancel-btn" data-id="{{item._id}}" catchtap="onCancelMallOrder" hover-class="mall-cancel-btn pressed" hover-stay-time="80">取消订单</view>
         </view>
       </block>
       <block wx:else>

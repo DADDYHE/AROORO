@@ -13,6 +13,8 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  opacity: 0;
+  animation: zy-fade-in 420ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
 .page-content {
@@ -21,6 +23,8 @@
   position: relative;
   z-index: 1;
   padding-bottom: 60rpx;
+  opacity: 0;
+  animation: zy-fade-in-up 480ms cubic-bezier(0.16, 1, 0.3, 1) 80ms forwards;
 }
 
 /* ===== 内容行（order-card 插槽内使用，横向留白交给 order-card 的 32rpx padding） ===== */
@@ -312,6 +316,7 @@
 }
 
 .empty-icon {
+  animation: zy-breathe-glow 4000ms ease-in-out infinite;
   font-size: 80rpx;
   margin-bottom: 24rpx;
 }
@@ -324,6 +329,7 @@
 
 /* 重试按钮：原 绿→Material 蓝 → 喂养绿→深森林绿 */
 .retry-btn {
+  transition: transform 160ms ease, opacity 160ms ease;
   padding: 20rpx 64rpx;
   background: linear-gradient(135deg, var(--feeding-primary) 0%, var(--primary-color) 100%);
   border-radius: var(--zy-radius-lg);
@@ -332,3 +338,5 @@
   font-weight: 600;
   letter-spacing: 2rpx;
 }
+/* ── 微交互：按压态（hover-class 复用，详见 app.wxss 约定）── */
+.retry-btn--pressed { transform: scale(0.97); opacity: 0.92; }

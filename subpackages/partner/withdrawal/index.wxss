@@ -129,6 +129,7 @@
 }
 
 .record-confirm-btn {
+  transition: transform 160ms ease, opacity 160ms ease;
   margin: 0;
   padding: 0 28rpx;
   height: 56rpx;
@@ -144,6 +145,7 @@
 }
 
 .record-cancel-btn {
+  transition: transform 160ms ease, opacity 160ms ease;
   background: #A8A29E;
 }
 
@@ -360,3 +362,7 @@
   color: var(--text-tertiary);
   letter-spacing: 2rpx;
 }
+
+/* ── 微交互：按压态（hover-class 复用，详见 app.wxss 约定）── */
+.record-confirm-btn--pressed { transform: scale(0.97); opacity: 0.92; }
+

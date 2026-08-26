@@ -9,23 +9,6 @@ page {
   font-family: var(--font-sans);
 }
 
-/* ===== 入场动画 ===== */
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(28rpx);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
 /* ===== 页面容器 ===== */
 .gallery-container {
   min-height: 100vh;
@@ -45,9 +28,9 @@ page {
 .brand-block {
   padding: calc(var(--zy-space-xl) + env(safe-area-inset-top)) var(--page-padding) var(--zy-space-lg);
   position: relative;
-  animation-name: fadeIn;
-  animation-duration: 400ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
 }
 
@@ -112,9 +95,9 @@ page {
 /* ===== 内容区 ===== */
 .gallery-hall {
   padding: var(--zy-space-lg) var(--page-padding);
-  animation-name: fadeIn;
-  animation-duration: 400ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
 }
 
@@ -502,7 +485,7 @@ page {
   border: 2rpx solid var(--primary-tint);
   border-top-color: var(--primary-color);
   border-radius: 50%;
-  animation-name: spin;
+  animation-name: zy-spin;
   animation-duration: 1400ms;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
@@ -525,11 +508,6 @@ page {
   background: var(--primary-color);
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 .loading-dots {
   display: flex;
   gap: 12rpx;
@@ -542,9 +520,9 @@ page {
   border-radius: 50%;
   background: var(--primary-color);
   opacity: 0.25;
-  animation-name: dotPulse;
+  animation-name: zy-dot-pulse;
   animation-duration: 2400ms;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
 }
@@ -555,11 +533,6 @@ page {
 
 .loading-dot:nth-child(3) {
   animation-delay: 800ms;
-}
-
-@keyframes dotPulse {
-  0%, 100% { opacity: 0.25; transform: scale(0.85); }
-  50% { opacity: 0.9; transform: scale(1); }
 }
 
 .loading-text {

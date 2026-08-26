@@ -31,7 +31,7 @@
   <view class="share-section">
     <view class="section-title">邀请方式</view>
     <view class="share-card">
-      <button class="share-row-btn" open-type="share">
+      <button class="share-row-btn" open-type="share" hover-class="share-row-btn--pressed" hover-stay-time="80">
         <view class="share-info">
           <image class="share-icon share-icon--svg" src="/images/icons/share-luxury-node.svg" mode="aspectFit" />
           <view class="share-text">
@@ -80,7 +80,7 @@
 
   <root-portal>
   <view class="share-bottom-bar">
-    <button class="share-btn" open-type="share">
+    <button class="share-btn" open-type="share" hover-class="share-btn--pressed" hover-stay-time="80">
       <image class="share-btn-icon" src="/images/icons/share-luxury-node-light.svg" mode="aspectFit" />
       <text>分享小程序给好友</text>
     </button>

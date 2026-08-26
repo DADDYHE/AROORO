@@ -313,6 +313,7 @@
 }
 
 .empty-icon {
+  animation: zy-breathe-glow 4000ms ease-in-out infinite;
   width: 64rpx;
   height: 64rpx;
   border-radius: 50%;

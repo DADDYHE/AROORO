@@ -5,18 +5,6 @@
    Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
    ================================================================ */
 
-/* ===== 入场动画 ===== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(32rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* ===== 页面容器 ===== */
 .payment-page {
   min-height: 100vh;
@@ -29,9 +17,9 @@
   background: var(--card-color);
   text-align: center;
   border-bottom: 1rpx solid var(--hairline);
-  animation-name: fadeInUp;
-  animation-duration: 500ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
@@ -116,9 +104,9 @@
   border-radius: var(--zy-radius-lg);
   overflow: hidden;
   border: 1rpx solid var(--hairline);
-  animation-name: fadeInUp;
-  animation-duration: 500ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 80ms;
   animation-fill-mode: forwards;
 }
@@ -231,9 +219,9 @@
   border-radius: var(--zy-radius-lg);
   padding: var(--zy-space-lg);
   border: 1rpx solid var(--hairline);
-  animation-name: fadeInUp;
-  animation-duration: 500ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 160ms;
   animation-fill-mode: forwards;
 }

@@ -12,23 +12,6 @@
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 
-/* ===== 入场动画 ===== */
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(28rpx);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
 /* ===== 表单卡片 ===== */
 .form-section {
   position: relative;
@@ -39,9 +22,9 @@
   border: 1rpx solid var(--hairline);
   z-index: 1;
   overflow: hidden;
-  animation-name: fadeInUp;
-  animation-duration: 500ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
   animation-delay: 120ms;
 }
@@ -194,9 +177,9 @@
   margin: var(--zy-space-lg) var(--page-padding) var(--zy-space-lg);
   position: relative;
   z-index: 1;
-  animation-name: fadeInUp;
-  animation-duration: 500ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
   animation-delay: 240ms;
 }

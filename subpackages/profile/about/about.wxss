@@ -84,34 +84,25 @@
 
 /* 入场动画 */
 .logo-container {
-  animation-name: fadeInDown;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-down;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
 .info-section {
-  animation-name: fadeInUp;
-  animation-duration: 520ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 120ms;
   animation-fill-mode: forwards;
 }
 
 .description {
-  animation-name: fadeInUp;
-  animation-duration: 520ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 200ms;
   animation-fill-mode: forwards;
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-20rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}

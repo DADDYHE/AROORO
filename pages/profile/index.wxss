@@ -10,18 +10,6 @@
    · 无 !important，用 button::after{border:none} 重置 wx 按钮
    ================================================================ */
 
-/* ====== 入场动画（仅 opacity + transformY，Skyline 兼容） ====== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* ====== 页面容器 ====== */
 .page {
   min-height: 100vh;
@@ -33,9 +21,9 @@
 .gallery-header {
   padding: 0;
   position: relative;
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
@@ -141,9 +129,9 @@
   align-items: center;
   justify-content: space-around;
   border: 1rpx solid var(--hairline);
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 120ms;
   animation-fill-mode: forwards;
 }
@@ -187,9 +175,9 @@
 /* ====== 我的订单 — 艺术展陈风格 ====== */
 .order-exhibit-section {
   margin: var(--zy-space-lg) var(--page-padding) var(--zy-space-xl);
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 200ms;
   animation-fill-mode: forwards;
 }
@@ -612,9 +600,9 @@
 /* ====== 区块通用 ====== */
 .section {
   margin: 0 var(--page-padding) var(--zy-space-lg);
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 280ms;
   animation-fill-mode: forwards;
 }
@@ -1219,9 +1207,9 @@
   border: 1rpx solid var(--hairline);
   margin: 0 var(--page-padding) var(--zy-space-lg);
   transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 360ms;
   animation-fill-mode: forwards;
 }
@@ -1243,9 +1231,9 @@
 .version-wrap {
   text-align: center;
   padding-top: 8rpx;
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 420ms;
   animation-fill-mode: forwards;
 }
@@ -1271,14 +1259,10 @@
   justify-content: center;
   z-index: 1000;
   opacity: 0;
-  animation-name: modalFadeIn;
+  animation-name: zy-overlay-in;
   animation-duration: 320ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
-}
-
-@keyframes modalFadeIn {
-  to { opacity: 1; }
 }
 
 .modal-content {
@@ -1290,18 +1274,11 @@
   border: 1rpx solid var(--hairline);
   opacity: 0;
   transform: translateY(16rpx) scale(0.98);
-  animation-name: modalContentIn;
-  animation-duration: 400ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-popup-reveal;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 80ms;
   animation-fill-mode: forwards;
-}
-
-@keyframes modalContentIn {
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .modal-header {

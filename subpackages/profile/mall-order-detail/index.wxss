@@ -91,6 +91,7 @@
 
 /* 通用区块 */
 .section {
+  transition: transform 160ms ease, opacity 160ms ease;
   margin: 16rpx var(--page-padding, 48rpx);
   background: var(--card-color);
   border-radius: var(--zy-radius-lg);
@@ -107,6 +108,7 @@
 }
 
 .product-section {
+  transition: transform 160ms ease, opacity 160ms ease;
 }
 
 .product-row {
@@ -263,6 +265,7 @@
 }
 
 .copy-btn {
+  transition: transform 160ms ease, opacity 160ms ease;
   font-size: 22rpx;
   color: var(--text-primary);
   padding: 4rpx 16rpx;
@@ -348,29 +351,21 @@
 
 /* 入场动画 */
 .status-banner {
-  animation-name: fadeInDown;
+  animation-name: zy-fade-in-down;
   animation-duration: 480ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
 .section {
-  animation-name: fadeInUp;
+  transition: transform 160ms ease, opacity 160ms ease;
+  animation-name: zy-fade-in-up;
   animation-duration: 480ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
-.section:nth-child(2) { animation-delay: 80ms; }
-.section:nth-child(3) { animation-delay: 160ms; }
-.section:nth-child(4) { animation-delay: 240ms; }
+.section:nth-child(2) { animation-delay: 140ms; }
+.section:nth-child(3) { animation-delay: 200ms; }
+.section:nth-child(4) { animation-delay: 260ms; }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-20rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}

@@ -332,7 +332,16 @@ export async function convertCloudUrls<T = unknown>(result: T): Promise<T> {
   function collectCloudIds(obj: unknown): void {
     if (!obj || typeof obj !== 'object') {return}
     if (obj instanceof Date) {return}
-    if (Array.isArray(obj)) { obj.forEach(collectCloudIds); return }
+    if (Array.isArray(obj)) {
+      for (const item of obj) {
+        if (typeof item === 'string' && item.startsWith('cloud://')) {
+          cloudIds.push(item)
+        } else {
+          collectCloudIds(item)
+        }
+      }
+      return
+    }
     for (const key of Object.keys(obj as Record<string, unknown>)) {
       const v = (obj as Record<string, unknown>)[key]
       if (typeof v === 'string' && v.startsWith('cloud://')) {
@@ -363,7 +372,15 @@ export async function convertCloudUrls<T = unknown>(result: T): Promise<T> {
   function replaceUrls(obj: unknown): unknown {
     if (!obj || typeof obj !== 'object') {return obj}
     if (obj instanceof Date) {return obj}
-    if (Array.isArray(obj)) {return obj.map(replaceUrls)}
+    if (Array.isArray(obj)) {
+      // 数组内可能直接是 cloud:// 字符串（如 images[]），需单独替换
+      return obj.map(v => {
+        if (typeof v === 'string' && v.startsWith('cloud://') && urlMap[v]) {
+          return urlMap[v]
+        }
+        return replaceUrls(v)
+      })
+    }
     const res: Record<string, unknown> = {}
     for (const key of Object.keys(obj as Record<string, unknown>)) {
       const v = (obj as Record<string, unknown>)[key]

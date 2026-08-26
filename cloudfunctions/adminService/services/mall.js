@@ -12,6 +12,60 @@ const { db } = initCloud()
 const _ = db.command
 const logger = createLogger('adminService:mall')
 
+const https = require('https')
+const { URL } = require('url')
+
+// 1688 外链图在浏览器/小程序端会因防盗链或跨域裂图。
+// 导入时把图下载后转存到 CloudBase 存储，前端永远走自家 CDN。
+async function store1688Image(srcUrl) {
+  if (!srcUrl || !/^https?:\/\//.test(srcUrl)) { return srcUrl }
+  const { cloud } = initCloud()
+  return new Promise((resolve) => {
+    const req = https.get(srcUrl, { timeout: 12000, headers: { 'User-Agent': 'Mozilla/5.0', Referer: 'https://detail.1688.com/' } }, res => {
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        // 跟随一次重定向
+        res.resume()
+        return store1688Image(res.headers.location).then(resolve, () => resolve(srcUrl))
+      }
+      if (!res.statusCode || res.statusCode >= 400) { res.resume(); return resolve(srcUrl) }
+      const chunks = []
+      res.on('data', c => chunks.push(c))
+      res.on('end', async () => {
+        try {
+          const buf = Buffer.concat(chunks)
+          if (buf.length < 512) { return resolve(srcUrl) } // 太小疑似防盗链占位图
+          const ext = (srcUrl.split('?')[0].match(/\.(jpg|jpeg|png|gif|webp|bmp)(?:$|[?#])/i) || [,'jpg'])[1].toLowerCase()
+          const stamp = Date.now().toString(36)
+          const rand = Math.random().toString(36).slice(2, 8)
+          const cloudPath = `products/1688/${stamp}_${rand}.${ext}`
+          const up = await cloud.uploadFile({ cloudPath, fileContent: buf })
+          resolve(up.fileID)
+        } catch (e) {
+          logger.warn('store1688Image.uploadFailed', { srcUrl, msg: e?.message })
+          resolve(srcUrl) // 降级：保留原外链，不阻断导入
+        }
+      })
+    })
+    req.on('error', () => resolve(srcUrl))
+    req.on('timeout', () => { req.destroy(); resolve(srcUrl) })
+  })
+}
+
+// 并发受限地转存一组图片（失败项保持原 URL）
+async function store1688Images(urls, concurrency = 5) {
+  const out = []
+  let i = 0
+  async function worker() {
+    while (i < urls.length) {
+      const idx = i++
+      out[idx] = await store1688Image(urls[idx])
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, urls.length || 1) }, () => worker())
+  await Promise.all(workers)
+  return out
+}
+
 const PRODUCT_LIST_PROJECTION = {
   _id: true, name: true, subTitle: true, description: true,
   coverImage: true, coverUrl: true, images: true, detailImages: true,
@@ -120,6 +174,195 @@ async function createProduct(event, context, auth) {
   product._id = generateId('product', auth.openid || auth.adminId)
   const res = await db.collection('products').add({ data: product })
   return handleSuccess({ id: res._id }, '创建成功')
+}
+
+// ===================== 1688 一键导入（插件 action: import1688Product） =====================
+// 入参（由浏览器插件在 1688 详情页抓取并转发）：
+//   { offerId, title, sourceUrl, categoryPath, specGroups, skus, images, detailImages, basePrice, detailUrl }
+// 规则（与插件 manifest 约定一致）：
+//   - 售价 = 1688 原价 × 1.5；库存照搬
+//   - 按 offerId 去重：已存在本人商品则覆盖更新，否则新建草稿
+//   - 分类按 categoryPath 末级名称匹配已有分类，未匹配则置 uncategorized
+async function import1688Product(event, context, auth) {
+  const {
+    offerId, title, sourceUrl, categoryPath,
+    specGroups, skus, images, detailImages, basePrice, detailUrl,
+  } = event
+  if (!offerId) {throw err('INVALID_PARAMS', '缺少 1688 商品ID(offerId)')}
+  if (!title) {throw err('INVALID_PARAMS', '缺少商品标题')}
+
+  const safeNum = (v, d = 0) => {
+    const n = Number(v)
+    return Number.isFinite(n) ? n : d
+  }
+  // 1688 原价（起批价）；多规格时优先用各 SKU 自身零售价
+  const base = safeNum(basePrice)
+
+  // ---- 分类匹配：取 categoryPath 末级名称，模糊匹配已有 categories ----
+  let category = 'uncategorized'
+  let categoryId = ''
+  let categoryName = ''
+  const pathSegs = String(categoryPath || '').split(/[>/／\s]+/).map(s => s.trim()).filter(Boolean)
+  const lastSeg = pathSegs[pathSegs.length - 1] || ''
+  if (lastSeg) {
+    try {
+      const cats = await db.collection('categories').limit(100).get()
+      const list = (cats.data || []).map(c => ({ key: c.key || '', label: c.label || '', id: c._id }))
+      const hit = list.find(c => c.label === lastSeg || c.key === lastSeg)
+      if (hit) {
+        category = hit.key || 'uncategorized'
+        categoryId = hit.id || ''
+        categoryName = hit.label || lastSeg
+      } else {
+        categoryName = lastSeg
+      }
+    } catch (e) {
+      logger.warn('import1688Product.categoryMatch', { msg: e?.message })
+      categoryName = lastSeg
+    }
+  }
+
+  const isMultiSku = Array.isArray(skus) && skus.length > 0
+
+  // ---- 1688 外链图转存 CloudBase 存储（解决前端裂图/防盗链）----
+  const rawImages = Array.isArray(images) ? images.filter(u => /^https?:\/\//.test(u)) : []
+  const rawDetail = Array.isArray(detailImages) ? detailImages.filter(u => /^https?:\/\//.test(u)) : []
+  const rawSkuImages = isMultiSku
+    ? skus.map(s => s.imageUrl).filter(u => /^https?:\/\//.test(u || ''))
+    : []
+  // 合并去重后批量转存，减少重复上传
+  const allUrls = [...new Set([...rawImages, ...rawDetail, ...rawSkuImages])]
+  let storedMap = {}
+  try {
+    const stored = await store1688Images(allUrls, 5)
+    allUrls.forEach((u, i) => { storedMap[u] = stored[i] })
+  } catch (e) {
+    logger.warn('import1688Product.storeImagesFailed', { msg: e?.message })
+  }
+  const toStored = (u) => (u && storedMap[u]) ? storedMap[u] : (u || '')
+
+  const coverImage = rawImages.length > 0 ? toStored(rawImages[0]) : ''
+  const storedImages = rawImages.map(toStored)
+  const storedDetail = rawDetail.map(toStored)
+
+  // ---- 构建产品文档（结构与 createProduct 保持一致，便于 web-admin 编辑） ----
+  const product = {
+    name: title,
+    subTitle: '',
+    description: '',
+    category,
+    categoryId,
+    categoryName,
+    skuType: isMultiSku ? 'multi' : 'single',
+    coverImage,
+    coverUrl: coverImage,
+    images: storedImages,
+    detailImages: storedDetail,
+    tags: [],
+    isFeatured: false,
+    sortOrder: 0,
+    source: '1688',
+    sourceOfferId: String(offerId),
+    sourceUrl: sourceUrl || '',
+    detailUrl: detailUrl || '',
+    createdBy: auth.openid,
+    status: 'draft',
+    createdAt: db.serverDate(),
+    updatedAt: db.serverDate(),
+  }
+
+  if (isMultiSku) {
+    product.specGroups = (specGroups || []).map(g => ({
+      name: g.name || '',
+      values: Array.isArray(g.values) ? g.values : [],
+    }))
+    product.skus = skus.map(sku => {
+      // retail 优先取 SKU 零售价；0/无效（1688 常以 0 占位）时回退 sku.price 或起批价
+      const retail = safeNum(sku.retailPrice) || safeNum(sku.price) || base
+      const ourPrice = Math.round(retail * 1.5 * 100) / 100
+      return {
+        skuId: sku.skuId != null ? String(sku.skuId) : `sku_${String(offerId)}_${Math.random().toString(36).slice(2, 8)}`,
+        specIds: sku.specIds || {},
+        specText: sku.specText || '',
+        price: ourPrice,
+        originalPrice: retail,
+        stock: safeNum(sku.stock),
+        soldCount: 0,
+        skuCode: sku.skuCode || `1688_${String(offerId)}_${String(sku.skuId != null ? sku.skuId : Math.random().toString(36).slice(2, 6))}`,
+        image: toStored(sku.imageUrl || ''),
+      }
+    })
+    product.price = product.skus.length > 0 ? product.skus[0].price : 0
+    product.originalPrice = product.skus.length > 0 ? (product.skus[0].originalPrice || 0) : 0
+    product.stock = product.skus.reduce((s, x) => s + x.stock, 0)
+    product.totalStock = product.stock
+    const skuPrices = product.skus.map(s => Number(s.price)).filter(p => Number.isFinite(p))
+    product.minPrice = skuPrices.length ? Math.min(...skuPrices) : product.price
+    product.maxPrice = skuPrices.length ? Math.max(...skuPrices) : product.price
+    product.soldCount = 0
+  } else {
+    const ourPrice = Math.round(base * 1.5 * 100) / 100
+    product.price = ourPrice
+    product.originalPrice = base
+    product.stock = 0
+    product.totalStock = 0
+    product.minPrice = ourPrice
+    product.maxPrice = ourPrice
+    product.soldCount = 0
+  }
+
+  // ---- 去重：本人名下已导入过该 offerId 则覆盖更新 ----
+  const existRes = await db.collection('products')
+    .where({ sourceOfferId: String(offerId), createdBy: auth.openid })
+    .get()
+  const exist = existRes.data && existRes.data[0]
+
+  let productId
+  let created
+  if (exist && exist._id) {
+    const updateData = {
+      name: product.name,
+      subTitle: product.subTitle,
+      description: product.description,
+      category: product.category,
+      categoryId: product.categoryId,
+      categoryName: product.categoryName,
+      skuType: product.skuType,
+      coverImage: product.coverImage,
+      coverUrl: product.coverUrl,
+      images: product.images,
+      detailImages: product.detailImages,
+      sourceUrl: product.sourceUrl,
+      detailUrl: product.detailUrl,
+      specGroups: product.specGroups,
+      skus: product.skus,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      stock: product.stock,
+      totalStock: product.totalStock,
+      minPrice: product.minPrice,
+      maxPrice: product.maxPrice,
+      updatedAt: db.serverDate(),
+    }
+    await db.collection('products').doc(exist._id).update({ data: updateData })
+    productId = exist._id
+    created = false
+  } else {
+    product._id = generateId('product', auth.openid || auth.adminId)
+    const res = await db.collection('products').add({ data: product })
+    productId = res._id
+    created = true
+  }
+
+  const skuCount = isMultiSku ? product.skus.length : 1
+  logger.info('import1688Product', { offerId, productId, created, skuCount })
+  return handleSuccess({
+    productId,
+    created,
+    category,
+    categoryName,
+    skuCount,
+  }, created ? '导入成功（草稿）' : '同步成功（覆盖更新）')
 }
 
 async function updateProduct(event, context, auth) {
@@ -634,7 +877,7 @@ async function deleteCategory(event) {
 
 module.exports = {
   getProductList, getProductDetail, createProduct, updateProduct, deleteProduct,
-  batchUpdateProducts, cloneProduct,
+  batchUpdateProducts, cloneProduct, import1688Product,
   getMallOrders, getMallOrderDetail, handleMallOrder, shipMallOrder, completeMallOrder,
   getLogisticsTrack,
   getProductStats, getCategoryStats,

@@ -8,27 +8,6 @@
    Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
    ================================================================ */
 
-/* ===== 入场动画 ===== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(32rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
 /* ===== 页面容器 ===== */
 .page-container {
   min-height: 100vh;
@@ -139,22 +118,22 @@
   border: 1rpx solid var(--hairline);
   position: relative;
   overflow: hidden;
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
 .info-card:nth-child(2) {
-  animation-delay: 80ms;
+  animation-delay: 140ms;
 }
 
 .info-card:nth-child(3) {
-  animation-delay: 160ms;
+  animation-delay: 200ms;
 }
 
 .info-card:nth-child(4) {
-  animation-delay: 240ms;
+  animation-delay: 260ms;
 }
 
 .info-card::before {

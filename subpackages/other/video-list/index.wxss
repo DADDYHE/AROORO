@@ -4,18 +4,6 @@
    Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
    ================================================================ */
 
-/* ===== 入场动画 ===== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(24rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* ===== 页面容器 ===== */
 .container {
   min-height: 100vh;
@@ -26,9 +14,9 @@
 .content-area {
   padding: var(--page-padding);
   padding-top: var(--zy-space-lg);
-  animation-name: fadeInUp;
-  animation-duration: 500ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 

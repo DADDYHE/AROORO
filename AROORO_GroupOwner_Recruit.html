@@ -2,976 +2,562 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>AROORO · 群主招募计划</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <style>
     :root {
-      --bg: #FAF9F7;
-      --bg-subtle: #F3F2EF;
-      --bg-card: #F6F5F2;
-      --bg-inverse: #0A0A0A;
-      --ink: #000000;
-      --ink-2: #555555;
-      --ink-3: #999999;
-      --ink-4: #BBBBBB;
-      --border: #E0E0E0;
-      --border-dark: #000000;
-      --accent-hover: #F0EFEC;
-      --font-cn: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      --font-en: 'DM Sans', 'Helvetica Neue', sans-serif;
-      --font-serif: 'Fraunces', 'Georgia', serif;
-      --section-pad-y: 5rem;
-      --section-pad-x: 8vw;
+      /* ── Haute-Luxury v2 Brand Tokens ── */
+      --bg: #F7F5EF;            /* cream 暖石底 */
+      --bg-alt: #ECE4D4;        /* warm stone 暖石 */
+      --green: #1F3A1F;         /* 深森林绿 · 结构 */
+      --green-900: #0F2410;
+      --green-grad: linear-gradient(165deg, #2D4F2D 0%, #0F2410 100%);
+      --gold: #C9A24B;          /* 一支金 · 功能信号 */
+      --gold-hover: #A8894A;
+      --gold-soft: #F0E6D0;
+      --gold-glow: rgba(201,162,75,0.20);
+      --aurora: #9FE0BE;        /* 极光绿 */
+      --ink: #1A1A17;           /* text1 炭墨 */
+      --ink-2: #5A564C;         /* text2 */
+      --ink-3: #9E9889;         /* text3 */
+      --cream-text: #F7F5EF;
+      --border: #E2DED3;
+      --border-strong: #D6D2C7;
+      --surface: #FFFFFF;
+
+      --font-cn: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+      --font-en: 'Cormorant Garamond', 'Times New Roman', serif;
+      --font-en-body: 'Cormorant Garamond', Georgia, serif;
+
+      --section-pad-y: 9rem;
+      --section-pad-x: 9vw;
+      --content-max: 1140px;
+
+      /* ── Motion (对齐小程序 motion token) ── */
+      --ease-std: cubic-bezier(0.4, 0, 0.2, 1);
+      --ease-emph: cubic-bezier(0.2, 0, 0, 1);
+      --dur-base: 0.25s;
     }
 
-    /* ─── GSAP Initial States (prevent FOUC) ─── */
-    .gsap-fade-up { opacity: 0; transform: translateY(40px); }
-    .gsap-fade-in { opacity: 0; }
-    .gsap-fade-left { opacity: 0; transform: translateX(-40px); }
-    .gsap-fade-right { opacity: 0; transform: translateX(40px); }
-    .gsap-scale-in { opacity: 0; transform: scale(0.92); }
-    .gsap-mask-reveal { opacity: 0; transform: translateY(60px); }
-    .gsap-split-char { opacity: 0; transform: translateY(80px) rotateX(-40deg); transform-origin: bottom; }
-    .gsap-draw-line { transform: scaleX(0); transform-origin: center; }
-
-    /* ─── Editorial Serif Accents ─── */
-    .cover-title { font-family: var(--font-en); }
-    .pull-quote { font-family: var(--font-serif); font-style: italic; font-weight: 300; }
-    .cover-desc { font-family: var(--font-serif); font-weight: 300; font-style: italic; }
-    .cta-title { font-family: var(--font-serif); font-weight: 400; }
-    .section-title .serif-italic { font-family: var(--font-serif); font-style: italic; font-weight: 400; }
-
-    /* ─── Magnetic Hover Targets ─── */
-    .magnetic { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform; }
-    .card-item, .module-cell, .nav-cta, .cta-button, .step-cell, .pillar-cell, .wallet-card, .vs-side, .ops-col, .flow-node, .list-item { will-change: transform; }
-
-    /* ─── Scroll Hint Pulse ─── */
-    .scroll-hint { opacity: 0; }
-
-    /* ─── Noise Texture Overlay ─── */
-    .noise-overlay {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9998;
-      opacity: 0.035;
-      mix-blend-mode: multiply;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
-
-    /* ─── Selection Style ─── */
-    ::selection { background: var(--ink); color: var(--bg); }
+    /* ─── Reveal initial states (防 FOUC) ─── */
+    .gsap-rise { opacity: 0; transform: translateY(34px); }
+    .gsap-fade { opacity: 0; }
+    .gsap-left { opacity: 0; transform: translateX(-28px); }
+    .gsap-right { opacity: 0; transform: translateX(28px); }
+    .gsap-scale { opacity: 0; transform: scale(0.94); }
+    .gsap-draw { transform: scaleX(0); transform-origin: left center; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; overflow-x: hidden; }
-
+    html { scroll-behavior: smooth; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
     body {
       font-family: var(--font-cn);
       background: var(--bg);
       color: var(--ink);
-      line-height: 1.5;
+      line-height: 1.8;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
       overflow-x: hidden;
-      font-size: 14px;
+      font-size: 16px;
+      font-weight: 400;
     }
+    ::selection { background: var(--gold); color: var(--green-900); }
 
-    /* ─── Background Pattern ─── */
-    .bg-pattern {
+    /* ─── 奢侈品级细节：金线视口边框（仅宽屏） ─── */
+    .luxe-frame {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      inset: 18px;
+      border: 1px solid var(--gold);
+      opacity: 0.22;
       pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-      opacity: 0.025;
+      z-index: 9998;
     }
-    .bg-pattern span {
-      position: absolute;
-      font-family: var(--font-en);
-      font-weight: 700;
-      font-size: 8vw;
-      color: var(--ink);
-      letter-spacing: 0.15em;
-      user-select: none;
-      white-space: nowrap;
+    @media (max-width: 768px) { .luxe-frame { display: none; } }
+
+    /* ─── 极光微粒噪点 ─── */
+    .noise-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 9997;
+      opacity: 0.03; mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
-    /* ─── Navigation ─── */
+    /* ─── 导航 ─── */
     .top-nav {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 52px;
-      background: rgba(250,249,247,0.88);
+      position: fixed; top: 0; left: 0; width: 100%;
+      height: 64px;
+      background: rgba(247,245,239,0.82);
       backdrop-filter: saturate(180%) blur(20px);
       -webkit-backdrop-filter: saturate(180%) blur(20px);
       z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 2rem;
-      border-bottom: 1px solid var(--border);
-      transition: all 0.3s ease;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 3rem;
+      border-bottom: 1px solid transparent;
+      transition: all var(--dur-base) var(--ease-std);
     }
-    .top-nav.scrolled { background: rgba(250,249,247,0.96); }
+    .top-nav.scrolled { border-bottom: 1px solid var(--border); background: rgba(247,245,239,0.94); }
     .nav-logo {
-      font-family: var(--font-en);
-      font-weight: 700;
-      font-size: 1.1rem;
-      letter-spacing: 0.08em;
-      color: var(--ink);
+      display: flex; align-items: center; gap: 0.6rem;
       text-decoration: none;
     }
-    .nav-links {
-      display: flex;
-      gap: 1.8rem;
-      align-items: center;
+    .nav-logo .brand-mark {
+      height: 38px; width: 38px; flex: none;
+      filter: drop-shadow(0 1px 4px rgba(247,245,239,0.45));
     }
-    .nav-link {
-      font-size: 0.78rem;
-      color: var(--ink-2);
-      text-decoration: none;
-      transition: color 0.2s;
-      cursor: pointer;
-      font-weight: 400;
-      letter-spacing: 0.02em;
+
+    /* ─── 品牌 LOGO 集成 ─── */
+    .brand-mark { display: block; }
+    .brand-seal { display: flex; justify-content: center; }
+    .brand-seal .brand-mark { height: 64px; width: 64px; }
+    /* ─── 收尾页竖版带字标 LOGO ─── */
+    .footer-mark {
+      display: block; margin: 0 auto 1.4rem;
+      filter: drop-shadow(0 2px 16px rgba(247,245,239,0.35));
     }
-    .nav-link:hover { color: var(--ink); }
-    .nav-link.active { color: var(--ink); font-weight: 500; }
-    .nav-cta {
-      padding: 0.35rem 0.9rem;
-      border: 1px solid var(--ink);
-      background: var(--ink);
-      color: var(--bg);
-      font-size: 0.75rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      transition: all 0.2s;
+    .footer-tag {
+      font-family: var(--font-cn); letter-spacing: 0.34em; font-size: 0.8rem;
+      color: var(--gold); margin-bottom: 2rem;
     }
-    .nav-cta:hover { background: transparent; color: var(--ink); }
+    .footer-rule { width: 56px; height: 1px; background: var(--gold); opacity: 0.5; margin: 0 auto 2rem; }
+    .footer-copy {
+      font-family: var(--font-cn); font-size: 0.72rem; line-height: 1.9;
+      color: rgba(247,245,239,0.6); letter-spacing: 0.04em;
+    }
     @media (max-width: 768px) {
-      .nav-links { gap: 1rem; }
+      .closing-logo { height: 84px; width: 84px; }
+      .closing-footer { padding-top: 3rem; }
+      .brand-seal .brand-mark { height: 52px; width: 52px; }
+    }
+    .nav-links { display: flex; gap: 2.2rem; align-items: center; }
+    .nav-link {
+      font-size: 0.82rem; color: var(--ink-2); text-decoration: none;
+      transition: color 0.2s; cursor: pointer; letter-spacing: 0.04em;
+      position: relative; font-family: var(--font-cn);
+    }
+    .nav-link::after {
+      content: ''; position: absolute; left: 0; bottom: -6px; height: 1px; width: 0;
+      background: var(--gold); transition: width 0.3s var(--ease-emph);
+    }
+    .nav-link:hover, .nav-link.active { color: var(--green); }
+    .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+    .nav-cta {
+      padding: 0.45rem 1.2rem; border: 1px solid var(--gold);
+      background: transparent; color: var(--gold);
+      font-size: 0.78rem; letter-spacing: 0.1em; cursor: pointer;
+      transition: all 0.3s var(--ease-emph); font-family: var(--font-cn);
+    }
+    .nav-cta:hover { background: var(--gold); color: var(--green-900); }
+    @media (max-width: 768px) {
+      .top-nav { padding: 0 1.4rem; }
+      .nav-links { gap: 1.1rem; }
       .nav-link:not(.nav-cta) { display: none; }
     }
 
-    /* ─── Sections ─── */
+    /* ─── 章节通用 ─── */
     .section {
-      position: relative;
-      z-index: 1;
-      border-bottom: 1px solid var(--border-dark);
+      position: relative; z-index: 1;
       padding: var(--section-pad-y) var(--section-pad-x);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      min-height: auto;
+      display: flex; flex-direction: column; justify-content: center;
       overflow: hidden;
     }
-    .section:last-child { border-bottom: none; }
+    .section-inner { max-width: var(--content-max); margin: 0 auto; width: 100%; }
 
-    /* ─── Editorial Section Index Marker ─── */
-    .section[data-num]::before {
-      content: attr(data-num);
-      position: absolute;
-      top: 2rem;
-      right: var(--section-pad-x);
-      font-family: var(--font-en);
-      font-size: clamp(8rem, 18vw, 16rem);
-      font-weight: 700;
-      color: var(--ink);
-      opacity: 0;
-      line-height: 0.8;
-      letter-spacing: -0.05em;
-      pointer-events: none;
-      z-index: 0;
-      user-select: none;
-      transform: translateY(30px);
-      transition: opacity 1.2s ease, transform 1.2s ease;
-    }
-    .section[data-num].in-view::before {
-      opacity: 0.025;
-      transform: translateY(0);
-    }
-    .section > * { position: relative; z-index: 1; }
-
-    .section-compact { padding: 4rem var(--section-pad-x); }
-    .section-compact .section-header { margin-bottom: 1.5rem; }
-
-    /* ─── Section Header ─── */
-    .section-header { margin-bottom: 2rem; }
     .section-label {
-      font-family: var(--font-en);
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--ink-3);
-      margin-bottom: 0.6rem;
+      font-family: var(--font-en); font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.32em; text-transform: uppercase; color: var(--gold);
+      margin-bottom: 1.4rem; display: flex; align-items: center; gap: 0.8rem;
+    }
+    .section-label::before {
+      content: ''; width: 28px; height: 1px; background: var(--gold); display: inline-block;
     }
     .section-title {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: clamp(1.6rem, 4vw, 2.6rem);
-      line-height: 1.2;
-      color: var(--ink);
-      letter-spacing: 0.02em;
+      font-family: var(--font-cn); font-weight: 700;
+      font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.3; color: var(--green);
+      letter-spacing: 0.03em;
+    }
+    .section-title .serif-italic {
+      font-family: var(--font-cn); font-weight: 500; color: var(--gold);
     }
     .section-subtitle {
-      font-size: 0.95rem;
-      color: var(--ink-2);
-      margin-top: 0.6rem;
-      font-weight: 400;
-      letter-spacing: 0.01em;
-      max-width: 640px;
-      line-height: 1.6;
+      font-size: 1rem; color: var(--ink-2); margin-top: 1.1rem; font-weight: 400;
+      max-width: 620px; line-height: 1.9; letter-spacing: 0.01em;
+    }
+    .section-header { margin-bottom: 3.5rem; }
+
+    @media (max-width: 768px) {
+      :root { --section-pad-y: 5rem; --section-pad-x: 7vw; }
+      .section-header { margin-bottom: 2.2rem; }
     }
 
-    /* ─── Cover ─── */
+    /* ─── 大号章节序号水印（金描边） ─── */
+    .section-watermark {
+      position: absolute; top: 1.5rem; right: var(--section-pad-x);
+      font-family: var(--font-en); font-weight: 700;
+      font-size: clamp(7rem, 16vw, 14rem); line-height: 0.8;
+      color: transparent; -webkit-text-stroke: 1px var(--gold);
+      opacity: 0.10; pointer-events: none; user-select: none; letter-spacing: -0.02em;
+      z-index: 0;
+    }
+    .section-inner > * { position: relative; z-index: 1; }
+
+    /* ════════ COVER ════════ */
     .cover-section {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      position: relative;
-      padding: 2rem;
+      min-height: 100vh; min-height: 100svh;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      text-align: center; position: relative; padding: 2rem;
+      background: var(--green-grad); color: var(--cream-text);
+      overflow: hidden;
+    }
+    .cover-aura {
+      position: absolute; width: 70vw; height: 70vw; max-width: 820px; max-height: 820px;
+      top: 50%; left: 50%; transform: translate(-50%, -58%);
+      background: radial-gradient(circle, var(--aurora) 0%, rgba(159,224,190,0.18) 32%, transparent 68%);
+      opacity: 0.5; pointer-events: none; filter: blur(8px);
+    }
+    .cover-aura::after {
+      content: ''; position: absolute; inset: 18%;
+      background: radial-gradient(circle, rgba(201,162,75,0.35) 0%, transparent 60%);
+      opacity: 0.6;
+    }
+    .cover-logo {
+      width: clamp(76px, 16vw, 96px); height: auto;
+      margin-bottom: 1.6rem; position: relative;
+      filter: drop-shadow(0 0 14px rgba(247,245,239,0.35));
     }
     .cover-label {
-      font-family: var(--font-en);
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--ink-3);
-      margin-bottom: 1rem;
+      font-family: var(--font-en); font-size: 0.74rem; font-weight: 500;
+      letter-spacing: 0.42em; text-transform: uppercase; color: var(--gold);
+      margin-bottom: 2rem; position: relative;
     }
     .cover-title {
-      font-family: var(--font-en);
-      font-weight: 700;
-      font-size: clamp(3rem, 10vw, 6.5rem);
-      letter-spacing: 0.03em;
-      color: var(--ink);
-      line-height: 1;
+      font-family: var(--font-en); font-weight: 600;
+      font-size: clamp(3.5rem, 13vw, 9rem); letter-spacing: 0.06em;
+      color: var(--cream-text); line-height: 1;
+      position: relative;
     }
     .cover-divider {
-      width: 60px;
-      height: 1px;
-      background: var(--ink);
-      margin: 1.5rem auto;
+      width: 64px; height: 1px; background: var(--gold);
+      margin: 2rem auto; position: relative;
     }
     .cover-desc {
-      font-family: var(--font-cn);
-      font-size: 1.15rem;
-      font-weight: 400;
-      color: var(--ink-2);
-      max-width: 540px;
-      line-height: 1.6;
+      font-family: var(--font-cn); font-size: clamp(1rem, 2vw, 1.3rem);
+      font-weight: 300; color: rgba(247,245,239,0.86);
+      max-width: 560px; line-height: 1.95; letter-spacing: 0.02em; position: relative;
     }
     .cover-tagline {
-      font-size: 0.85rem;
-      color: var(--ink-3);
-      margin-top: 1.5rem;
-      letter-spacing: 0.05em;
+      font-size: 0.86rem; color: var(--gold); margin-top: 2rem;
+      letter-spacing: 0.28em; position: relative;
     }
     .scroll-hint {
-      position: absolute;
-      bottom: 2rem;
-      font-family: var(--font-en);
-      font-size: 0.72rem;
-      letter-spacing: 0.15em;
-      color: var(--ink-3);
-      animation: scrollBounce 2s ease-in-out infinite;
+      position: absolute; bottom: 2.4rem;
+      font-family: var(--font-en); font-size: 0.7rem; letter-spacing: 0.3em;
+      color: rgba(247,245,239,0.6); opacity: 0; position: absolute;
+      display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
     }
-    @keyframes scrollBounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(6px); }
-    }
+    .scroll-hint::after { content: ''; width: 1px; height: 40px; background: linear-gradient(var(--gold), transparent); }
+    @keyframes scrollPulse { 0%,100% { opacity: 0.5; transform: translateY(0);} 50% { opacity: 1; transform: translateY(6px);} }
 
-    /* ─── Summary Grid ─── */
+    /* ─── 引言陈述 ─── */
     .summary-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 1fr;
-      gap: 2rem;
-      margin-top: 0.5rem;
+      display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 4.5rem; margin-top: 0.5rem;
     }
-    @media (max-width: 768px) {
-      .summary-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 860px) { .summary-grid { grid-template-columns: 1fr; gap: 2.5rem; } }
     .summary-statement {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: clamp(1.35rem, 2.8vw, 1.9rem);
-      letter-spacing: 0.02em;
-      line-height: 1.4;
-      color: var(--ink);
+      font-family: var(--font-cn); font-weight: 500;
+      font-size: clamp(1.3rem, 2.6vw, 1.85rem); letter-spacing: 0.02em;
+      line-height: 1.95; color: var(--green);
     }
-    .summary-statement .highlight { position: relative; }
+    .summary-statement .highlight { position: relative; color: var(--gold); font-weight: 700; }
     .summary-statement .highlight::after {
-      content: '';
-      position: absolute;
-      bottom: 2px;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: var(--ink);
+      content: ''; position: absolute; bottom: 1px; left: 0; width: 100%; height: 2px; background: var(--gold); opacity: 0.55;
     }
     .summary-sub {
-      font-size: 0.9rem;
-      color: var(--ink-2);
-      margin-top: 1.2rem;
-      line-height: 1.7;
+      font-size: 0.96rem; color: var(--ink-2); margin-top: 1.8rem; line-height: 1.95;
     }
-    .metric-row { display: flex; flex-direction: column; gap: 1.1rem; }
-    .metric-row-item {
-      padding-bottom: 0.9rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .metric-row-item:last-child { border-bottom: none; }
+    .metric-row { display: flex; flex-direction: column; gap: 0; }
+    .metric-row-item { padding: 1.6rem 0; border-bottom: 1px solid var(--border); position: relative; }
+    .metric-row-item:first-child { border-top: 1px solid var(--border); }
     .metric-row-value {
-      font-family: var(--font-en);
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--ink);
+      font-family: var(--font-en); font-size: 2.6rem; font-weight: 600; color: var(--green);
+      line-height: 1; letter-spacing: 0.01em;
     }
-    .metric-row-label {
-      font-size: 0.75rem;
-      color: var(--ink-3);
-      margin-top: 0.2rem;
-      letter-spacing: 0.02em;
-    }
-    .metric-row-desc {
-      font-size: 0.8rem;
-      color: var(--ink-2);
-      margin-top: 0.25rem;
-      line-height: 1.5;
-    }
+    .metric-row-value .unit { font-size: 1.2rem; color: var(--gold); margin-left: 0.2rem; }
+    .metric-row-label { font-size: 0.8rem; color: var(--ink-3); margin-top: 0.5rem; letter-spacing: 0.06em; }
+    .metric-row-desc { font-size: 0.86rem; color: var(--ink-2); margin-top: 0.3rem; line-height: 1.7; }
 
-    /* ─── Numbered List ─── */
-    .list-item {
-      display: grid;
-      grid-template-columns: 50px 1fr 24px;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.7rem 0;
-      border-bottom: 1px solid var(--border);
-      transition: background 0.25s ease;
-      cursor: default;
-    }
-    .list-item:hover {
-      background: var(--accent-hover);
-      margin: 0 -1.5rem;
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-    .list-item:last-child { border-bottom: none; }
-    .list-num {
-      font-family: var(--font-en);
-      font-size: 0.9rem;
-      font-weight: 400;
-      color: var(--ink-3);
-    }
-    .list-content h3 {
-      font-family: var(--font-cn);
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--ink);
-      margin-bottom: 0.15rem;
-      letter-spacing: 0.02em;
-    }
-    .list-content p {
-      font-size: 0.78rem;
-      color: var(--ink-2);
-      line-height: 1.45;
-    }
-    .list-arrow {
-      font-size: 1.2rem;
-      color: var(--ink-3);
-      transition: transform 0.3s ease, color 0.2s;
-    }
-    .list-item:hover .list-arrow {
-      transform: translateX(4px);
-      color: var(--ink);
-    }
-
-    /* ─── Cards Grid ─── */
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      margin-top: 0.8rem;
-      border: 1px solid var(--border-dark);
-    }
-    .cards-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
-    .cards-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-    @media (max-width: 768px) {
-      .cards-grid, .cards-grid.cols-2, .cards-grid.cols-4 { grid-template-columns: 1fr; }
-    }
+    /* ─── 卡片网格 ─── */
+    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; margin-top: 0.8rem; grid-auto-rows: 1fr; }
+    .cards-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 860px) { .cards-grid, .cards-grid.cols-3 { grid-template-columns: 1fr; grid-auto-rows: auto; } }
     .card-item {
-      padding: 1.5rem 1.6rem;
-      border-right: 1px solid var(--border-dark);
-      border-bottom: 1px solid var(--border-dark);
-      transition: background 0.3s ease;
+      padding: 2rem 1.9rem; background: var(--surface);
+      border: 1px solid var(--border); border-top: 2px solid var(--gold);
+      transition: transform 0.4s var(--ease-emph), box-shadow 0.4s var(--ease-std), border-color 0.4s;
       position: relative;
     }
-    .card-item::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0;
-      width: 3px; height: 100%;
-      background: var(--ink);
-      transform: scaleY(0);
-      transform-origin: bottom;
-      transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-    .card-item:hover::before { transform: scaleY(1); transform-origin: top; }
-    .card-item:hover { background: var(--accent-hover); }
-    .cards-grid:not(.cols-2):not(.cols-4) .card-item:nth-child(3n) { border-right: none; }
-    .cards-grid.cols-2 .card-item:nth-child(2n) { border-right: none; }
-    .cards-grid.cols-4 .card-item:nth-child(4n) { border-right: none; }
-    .cards-grid:not(.cols-2):not(.cols-4) .card-item:nth-last-child(-n+3) { border-bottom: none; }
-    .cards-grid.cols-2 .card-item:nth-last-child(-n+2) { border-bottom: none; }
-    .cards-grid.cols-4 .card-item:nth-last-child(-n+4) { border-bottom: none; }
-    @media (max-width: 768px) {
-      .card-item { border-right: none !important; }
-      .card-item:last-child { border-bottom: none; }
+    .card-item:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16rpx 48rpx -16rpx rgba(26,26,23,0.18);
+      box-shadow: 0 18px 44px -18px rgba(31,58,31,0.22);
+      border-color: var(--gold-soft);
     }
     .card-role {
-      font-family: var(--font-en);
-      font-size: 0.65rem;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--ink-3);
-      margin-bottom: 0.7rem;
+      font-family: var(--font-en); font-size: 0.66rem; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem;
     }
     .card-title {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--ink);
-      letter-spacing: 0.01em;
-      margin-bottom: 0.5rem;
-      line-height: 1.3;
+      font-family: var(--font-cn); font-weight: 700; font-size: 1.12rem;
+      color: var(--green); letter-spacing: 0.02em; margin-bottom: 0.7rem; line-height: 1.5;
     }
-    .card-desc {
-      font-size: 0.85rem;
-      color: var(--ink-2);
-      line-height: 1.6;
-    }
+    .card-desc { font-size: 0.9rem; color: var(--ink-2); line-height: 1.9; font-weight: 400; }
 
-    /* ─── VS Comparison ─── */
-    .vs-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      margin-top: 0.8rem;
-      border: 1px solid var(--border-dark);
-    }
-    @media (max-width: 768px) {
-      .vs-container { grid-template-columns: 1fr; }
-    }
+    /* ─── VS 对比 ─── */
+    .vs-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; margin-top: 0.8rem; }
+    @media (max-width: 860px) { .vs-container { grid-template-columns: 1fr; } }
     .vs-side {
-      padding: 1.8rem 2rem;
-      border-right: 1px solid var(--border-dark);
-      position: relative;
+      padding: 2.6rem 2.4rem; border: 1px solid var(--border);
+      background: var(--surface); position: relative;
     }
-    .vs-side:last-child { border-right: none; }
-    @media (max-width: 768px) {
-      .vs-side { border-right: none; border-bottom: 1px solid var(--border-dark); }
-      .vs-side:last-child { border-bottom: none; }
+    .vs-side.winner {
+      background: var(--green-grad); border-color: transparent; color: var(--cream-text);
+      box-shadow: 0 18px 50px -20px rgba(15,36,16,0.5);
     }
-    .vs-side.winner { background: var(--ink); color: var(--bg); }
-    .vs-side.winner .vs-label,
-    .vs-side.winner .vs-value,
-    .vs-side.winner .vs-desc { color: var(--bg); }
-    .vs-side.winner .vs-value { color: var(--bg); }
+    .vs-side.winner .vs-label, .vs-side.winner .vs-desc { color: rgba(247,245,239,0.82); }
+    .vs-side.winner .vs-value { color: var(--cream-text); }
+    .vs-side.winner::after {
+      content: '推荐'; position: absolute; top: 1.4rem; right: 1.4rem;
+      font-family: var(--font-cn); font-size: 0.66rem; letter-spacing: 0.16em;
+      color: var(--green-900); background: var(--gold); padding: 0.25rem 0.7rem;
+    }
     .vs-label {
-      font-family: var(--font-en);
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--ink-3);
-      margin-bottom: 0.7rem;
+      font-family: var(--font-en); font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 1rem;
     }
     .vs-value {
-      font-family: var(--font-en);
-      font-size: clamp(1.8rem, 3.5vw, 2.4rem);
-      font-weight: 700;
-      color: var(--ink);
-      line-height: 1.1;
-      margin-bottom: 0.6rem;
+      font-family: var(--font-en); font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 600;
+      color: var(--green); line-height: 1.05; margin-bottom: 0.8rem;
     }
-    .vs-desc {
-      font-size: 0.85rem;
-      color: var(--ink-2);
-      line-height: 1.6;
-    }
+    .vs-desc { font-size: 0.9rem; color: var(--ink-2); line-height: 1.9; }
 
-    /* ─── Data Table ─── */
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      font-size: 0.88rem;
-    }
+    /* ─── 数据表 ─── */
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 1.4rem; font-size: 0.92rem; }
     .data-table thead th {
-      background: var(--ink);
-      color: var(--bg);
-      padding: 0.8rem 1.1rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      font-size: 0.78rem;
-      text-align: left;
-      border-right: 1px solid var(--bg);
+      background: var(--green); color: var(--cream-text); padding: 1rem 1.2rem;
+      font-weight: 500; letter-spacing: 0.08em; font-size: 0.78rem; text-align: left;
+      font-family: var(--font-cn); border-right: 1px solid rgba(247,245,239,0.12);
     }
     .data-table thead th:last-child { border-right: none; }
     .data-table tbody td {
-      padding: 0.8rem 1.1rem;
-      border-bottom: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-      color: var(--ink);
+      padding: 0.95rem 1.2rem; border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border); color: var(--ink); font-weight: 400;
     }
     .data-table tbody td:last-child { border-right: none; }
-    .data-table tbody tr:hover { background: var(--accent-hover); }
+    .data-table tbody tr { transition: background 0.25s; }
+    .data-table tbody tr:hover { background: var(--gold-soft); }
     .data-table tbody tr:last-child td { border-bottom: none; }
-    .data-table .num {
-      font-family: var(--font-en);
-      font-weight: 700;
+    .data-table .num { font-family: var(--font-en); font-weight: 600; color: var(--green); }
+
+    /* ─── 演算盒 ─── */
+    .calc-box {
+      margin-top: 2rem; padding: 2rem 2.2rem; border: 1px solid var(--border);
+      background: var(--surface); position: relative;
+    }
+    .calc-box::before {
+      content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--gold);
+    }
+    .calc-head { font-size: 1rem; font-weight: 700; color: var(--green); margin-bottom: 1.4rem; letter-spacing: 0.03em; }
+    .calc-row { display: flex; align-items: center; gap: 1.4rem; margin-bottom: 1.1rem; }
+    .calc-item { flex: 1; }
+    .calc-num { font-family: var(--font-en); font-size: 1.9rem; font-weight: 600; line-height: 1.1; color: var(--green); }
+    .calc-item.winner {
+      background: var(--green-grad); color: var(--cream-text); padding: 1.1rem 1.4rem;
+    }
+    .calc-item.winner .calc-num { color: var(--cream-text); }
+    .calc-item.winner .calc-label { color: rgba(247,245,239,0.78); }
+    .calc-label { font-size: 0.8rem; color: var(--ink-3); margin-top: 0.3rem; line-height: 1.6; }
+    .calc-arrow { font-size: 1.4rem; color: var(--gold); flex-shrink: 0; }
+    .calc-note {
+      margin-top: 0.8rem; padding-top: 1rem; border-top: 1px dashed var(--border-strong);
+      font-size: 0.86rem; color: var(--ink-2); line-height: 1.9;
     }
 
-    /* ─── Wallet Visual ─── */
-    .wallet-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      margin-top: 0.8rem;
-      border: 1px solid var(--border-dark);
-    }
-    @media (max-width: 768px) { .wallet-grid { grid-template-columns: 1fr; } }
+    /* ─── 钱包 ─── */
+    .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; margin-top: 0.8rem; }
+    @media (max-width: 860px) { .wallet-grid { grid-template-columns: 1fr; } }
     .wallet-card {
-      padding: 1.8rem 1.8rem;
-      border-right: 1px solid var(--border-dark);
+      padding: 2.6rem 2.4rem; border: 1px solid var(--border); background: var(--surface);
+      transition: transform 0.4s var(--ease-emph), box-shadow 0.4s var(--ease-std);
     }
-    .wallet-card:last-child { border-right: none; }
-    @media (max-width: 768px) {
-      .wallet-card { border-right: none; border-bottom: 1px solid var(--border-dark); }
-      .wallet-card:last-child { border-bottom: none; }
-    }
+    .wallet-card:hover { transform: translateY(-5px); box-shadow: 0 18px 44px -18px rgba(31,58,31,0.2); }
     .wallet-tag {
-      display: inline-block;
-      font-family: var(--font-en);
-      font-size: 0.62rem;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0.2rem 0.6rem;
-      border: 1px solid var(--ink);
-      margin-bottom: 0.7rem;
+      display: inline-block; font-family: var(--font-en); font-size: 0.64rem; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase; padding: 0.3rem 0.8rem;
+      border: 1px solid var(--gold); color: var(--gold); margin-bottom: 1rem;
     }
-    .wallet-name {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: 1.15rem;
-      margin-bottom: 0.5rem;
-    }
-    .wallet-desc {
-      font-size: 0.85rem;
-      color: var(--ink-2);
-      line-height: 1.6;
-      margin-bottom: 1rem;
-    }
-    .wallet-sources {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-    }
+    .wallet-name { font-family: var(--font-cn); font-weight: 700; font-size: 1.25rem; color: var(--green); margin-bottom: 0.7rem; }
+    .wallet-desc { font-size: 0.9rem; color: var(--ink-2); line-height: 1.95; margin-bottom: 1.3rem; }
+    .wallet-sources { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     .wallet-source {
-      font-size: 0.72rem;
-      padding: 0.25rem 0.6rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--ink-2);
+      font-size: 0.76rem; padding: 0.3rem 0.7rem; background: var(--bg);
+      border: 1px solid var(--border); color: var(--ink-2);
     }
-    .wallet-source.wallet-soon {
-      color: var(--ink-4);
-      border-style: dashed;
-      font-style: italic;
-    }
+    .wallet-source.wallet-soon { color: var(--ink-3); border-style: dashed; font-style: italic; }
 
-    /* ─── Timeline / Steps ─── */
-    .steps-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      margin-top: 0.8rem;
-      border: 1px solid var(--border-dark);
+    /* ─── 支柱 ─── */
+    .pillars-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; margin-top: 0.8rem; }
+    @media (max-width: 860px) { .pillars-grid { grid-template-columns: 1fr; } }
+    .pillar-cell {
+      padding: 2.6rem 2.2rem; background: var(--surface); border: 1px solid var(--border);
+      transition: transform 0.4s var(--ease-emph), border-color 0.4s; position: relative;
     }
-    @media (max-width: 768px) {
-      .steps-row { grid-template-columns: 1fr 1fr; }
+    .pillar-cell:hover { transform: translateY(-5px); border-color: var(--gold-soft); }
+    .pillar-num {
+      font-family: var(--font-en); font-size: 3.4rem; font-weight: 600; line-height: 1;
+      color: transparent; -webkit-text-stroke: 1px var(--gold); margin-bottom: 1rem;
     }
+    .pillar-title { font-family: var(--font-cn); font-weight: 700; font-size: 1.2rem; color: var(--green); margin-bottom: 0.7rem; }
+    .pillar-desc { font-size: 0.9rem; color: var(--ink-2); line-height: 1.95; }
+
+    /* ─── 步骤 ─── */
+    .steps-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6rem; margin-top: 0.8rem; }
+    @media (max-width: 860px) { .steps-row { grid-template-columns: 1fr 1fr; } }
     .step-cell {
-      padding: 1.5rem 1.5rem;
-      border-right: 1px solid var(--border-dark);
-      border-bottom: 1px solid var(--border-dark);
-      position: relative;
+      padding: 2rem 1.8rem; background: var(--surface); border: 1px solid var(--border);
+      border-top: 2px solid var(--gold); position: relative;
+      transition: transform 0.4s var(--ease-emph), box-shadow 0.4s var(--ease-std);
     }
-    .step-cell:nth-child(4n) { border-right: none; }
-    .step-cell:nth-last-child(-n+4) { border-bottom: none; }
-    @media (max-width: 768px) {
-      .step-cell:nth-child(4n) { border-right: 1px solid var(--border-dark); }
-      .step-cell:nth-child(2n) { border-right: none; }
-      .step-cell:nth-last-child(-n+2) { border-bottom: none; }
-    }
-    .step-num {
-      font-family: var(--font-en);
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      color: var(--ink-3);
-      margin-bottom: 0.4rem;
-    }
-    .step-title {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: 1rem;
-      margin-bottom: 0.4rem;
-    }
-    .step-desc {
-      font-size: 0.82rem;
-      color: var(--ink-2);
-      line-height: 1.6;
-    }
+    .step-cell:hover { transform: translateY(-5px); box-shadow: 0 16px 40px -18px rgba(31,58,31,0.2); }
+    .step-num { font-family: var(--font-en); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; color: var(--gold); margin-bottom: 0.7rem; }
+    .step-title { font-family: var(--font-cn); font-weight: 700; font-size: 1.1rem; color: var(--green); margin-bottom: 0.6rem; }
+    .step-desc { font-size: 0.86rem; color: var(--ink-2); line-height: 1.9; }
 
-    /* ─── Withdrawal Flow ─── */
-    .flow-chain {
-      display: flex;
-      align-items: stretch;
-      gap: 0;
-      margin-top: 0.8rem;
-      border: 1px solid var(--border-dark);
-      overflow-x: auto;
-    }
+    /* ─── 流程链 ─── */
+    .flow-chain { display: flex; align-items: stretch; gap: 0; margin-top: 0.8rem; border: 1px solid var(--border); background: var(--surface); overflow-x: auto; }
     .flow-node {
-      flex: 1;
-      min-width: 110px;
-      padding: 0.8rem 0.9rem;
-      border-right: 1px solid var(--border-dark);
-      text-align: center;
-      position: relative;
+      flex: 1; min-width: 116px; padding: 1.2rem 1rem; border-right: 1px solid var(--border);
+      text-align: center; position: relative;
     }
     .flow-node:last-child { border-right: none; }
-    .flow-node.final { background: var(--ink); color: var(--bg); }
-    .flow-node.final .flow-node-label,
-    .flow-node.final .flow-node-name { color: var(--bg); }
-    .flow-node-label {
-      font-family: var(--font-en);
-      font-size: 0.62rem;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--ink-3);
-      margin-bottom: 0.3rem;
-    }
-    .flow-node-name {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: 0.82rem;
-      color: var(--ink);
-    }
+    .flow-node.final { background: var(--green-grad); color: var(--cream-text); }
+    .flow-node.final .flow-node-label, .flow-node.final .flow-node-name { color: var(--cream-text); }
+    .flow-node-label { font-family: var(--font-en); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 0.4rem; }
+    .flow-node-name { font-family: var(--font-cn); font-weight: 700; font-size: 0.88rem; color: var(--green); }
 
-    /* ─── Ops Checklist ─── */
-    .ops-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      margin-top: 0.8rem;
-      border: 1px solid var(--border-dark);
-    }
-    @media (max-width: 768px) { .ops-grid { grid-template-columns: 1fr; } }
+    /* ─── 运营清单 ─── */
+    .ops-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; margin-top: 0.8rem; }
+    @media (max-width: 860px) { .ops-grid { grid-template-columns: 1fr; } }
     .ops-col {
-      padding: 1.5rem 1.6rem;
-      border-right: 1px solid var(--border-dark);
+      padding: 2.4rem 2.1rem; background: var(--surface); border: 1px solid var(--border);
+      transition: transform 0.4s var(--ease-emph);
     }
-    .ops-col:last-child { border-right: none; }
-    @media (max-width: 768px) {
-      .ops-col { border-right: none; border-bottom: 1px solid var(--border-dark); }
-      .ops-col:last-child { border-bottom: none; }
-    }
-    .ops-col-header {
-      font-family: var(--font-en);
-      font-size: 0.68rem;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--ink-3);
-      margin-bottom: 0.3rem;
-    }
-    .ops-col-title {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: 1.1rem;
-      margin-bottom: 0.9rem;
-    }
+    .ops-col:hover { transform: translateY(-5px); }
+    .ops-col-header { font-family: var(--font-en); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.4rem; }
+    .ops-col-title { font-family: var(--font-cn); font-weight: 700; font-size: 1.18rem; color: var(--green); margin-bottom: 1.1rem; }
     .ops-list { list-style: none; }
     .ops-list li {
-      padding: 0.6rem 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.83rem;
-      color: var(--ink-2);
-      line-height: 1.6;
-      display: grid;
-      grid-template-columns: 18px 1fr;
-      gap: 0.6rem;
-      align-items: start;
+      padding: 0.7rem 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; color: var(--ink-2);
+      line-height: 1.85; display: grid; grid-template-columns: 20px 1fr; gap: 0.7rem; align-items: start;
     }
     .ops-list li:last-child { border-bottom: none; }
-    .ops-check {
-      font-family: var(--font-en);
-      font-weight: 700;
-      color: var(--ink);
-      font-size: 0.8rem;
-    }
+    .ops-check { font-family: var(--font-en); font-weight: 600; color: var(--gold); font-size: 0.9rem; }
 
-    /* ─── Asset Pillars ─── */
-    .pillars-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      margin-top: 0.8rem;
-      border: 1px solid var(--border-dark);
-    }
-    @media (max-width: 768px) { .pillars-grid { grid-template-columns: 1fr; } }
-    .pillar-cell {
-      padding: 1.8rem 1.8rem;
-      border-right: 1px solid var(--border-dark);
-      position: relative;
-    }
-    .pillar-cell:last-child { border-right: none; }
-    @media (max-width: 768px) {
-      .pillar-cell { border-right: none; border-bottom: 1px solid var(--border-dark); }
-      .pillar-cell:last-child { border-bottom: none; }
-    }
-    .pillar-num {
-      font-family: var(--font-en);
-      font-size: 2.8rem;
-      font-weight: 700;
-      color: var(--bg-subtle);
-      -webkit-text-stroke: 1px var(--ink);
-      line-height: 1;
-      margin-bottom: 0.8rem;
-    }
-    .pillar-title {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-    }
-    .pillar-desc {
-      font-size: 0.85rem;
-      color: var(--ink-2);
-      line-height: 1.6;
-    }
-
-    /* ─── Product Modules ─── */
-    .modules-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      margin-top: 0.8rem;
-      border: 1px solid var(--border-dark);
-    }
-    @media (max-width: 768px) { .modules-grid { grid-template-columns: 1fr 1fr; } }
+    /* ─── 产品模块 ─── */
+    .modules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; margin-top: 0.8rem; }
+    @media (max-width: 860px) { .modules-grid { grid-template-columns: 1fr; } }
     .module-cell {
-      padding: 1.5rem 1.5rem;
-      border-right: 1px solid var(--border-dark);
-      border-bottom: 1px solid var(--border-dark);
-      transition: background 0.3s;
+      padding: 2.1rem 1.9rem; background: var(--surface); border: 1px solid var(--border);
+      border-top: 2px solid var(--gold); transition: transform 0.4s var(--ease-emph), box-shadow 0.4s var(--ease-std);
       position: relative;
     }
-    .module-cell::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0;
-      width: 3px; height: 100%;
-      background: var(--ink);
-      transform: scaleY(0);
-      transform-origin: bottom;
-      transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-    .module-cell:hover::before { transform: scaleY(1); transform-origin: top; }
-    .module-cell:hover { background: var(--accent-hover); }
-    .modules-grid .module-cell:nth-child(3n) { border-right: none; }
-    .modules-grid .module-cell:nth-last-child(-n+3) { border-bottom: none; }
-    @media (max-width: 768px) {
-      .modules-grid .module-cell:nth-child(3n) { border-right: 1px solid var(--border-dark); }
-      .modules-grid .module-cell:nth-child(2n) { border-right: none; }
-      .modules-grid .module-cell:nth-last-child(-n+2) { border-bottom: none; }
-    }
-    .module-name {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: 1.05rem;
-      margin-bottom: 0.4rem;
-    }
-    .module-en {
-      font-family: var(--font-en);
-      font-size: 0.68rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--ink-3);
-      margin-bottom: 0.6rem;
-    }
-    .module-desc {
-      font-size: 0.83rem;
-      color: var(--ink-2);
-      line-height: 1.6;
-      margin-bottom: 0.7rem;
-    }
-    .module-earn {
-      font-size: 0.72rem;
-      color: var(--ink);
-      font-weight: 500;
-      padding-top: 0.4rem;
-      border-top: 1px solid var(--border);
-    }
+    .module-cell:hover { transform: translateY(-6px); box-shadow: 0 18px 44px -18px rgba(31,58,31,0.22); }
+    .module-name { font-family: var(--font-cn); font-weight: 700; font-size: 1.15rem; color: var(--green); margin-bottom: 0.5rem; }
+    .module-en { font-family: var(--font-en); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.8rem; }
+    .module-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.9; margin-bottom: 0.9rem; }
+    .module-earn { font-size: 0.78rem; color: var(--green); font-weight: 500; padding-top: 0.7rem; border-top: 1px solid var(--border); letter-spacing: 0.02em; }
     .module-status {
-      display: inline-block;
-      font-family: var(--font-en);
-      font-size: 0.6rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0.15rem 0.5rem;
-      margin-bottom: 0.6rem;
-      border: 1px solid var(--border);
-      color: var(--ink-2);
+      display: inline-block; font-family: var(--font-en); font-size: 0.62rem; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 0.2rem 0.6rem; margin-bottom: 0.8rem; border: 1px solid var(--border); color: var(--ink-2);
     }
-    .module-status.status-live {
-      color: var(--ink);
-      border-color: var(--ink);
-      background: var(--bg-card);
-    }
-    .module-status.status-soon {
-      color: var(--ink-4);
-      border-style: dashed;
-      font-style: italic;
-    }
+    .module-status.status-live { color: var(--green); border-color: var(--green); background: rgba(31,58,31,0.05); }
+    .module-status.status-soon { color: var(--ink-3); border-style: dashed; font-style: italic; }
 
-    /* ─── CTA Section ─── */
-    .cta-section {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .cta-title {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: clamp(1.6rem, 4vw, 2.6rem);
-      letter-spacing: 0.03em;
-      line-height: 1.25;
-      margin-bottom: 1rem;
-      max-width: 640px;
-    }
-    .cta-desc {
-      font-size: 1rem;
-      color: var(--ink-2);
-      max-width: 500px;
-      line-height: 1.7;
-      margin-bottom: 2rem;
-    }
-    .cta-button {
-      display: inline-block;
-      padding: 1rem 2.5rem;
-      background: var(--ink);
-      color: var(--bg);
-      font-family: var(--font-cn);
-      font-weight: 500;
-      font-size: 1rem;
-      letter-spacing: 0.05em;
-      text-decoration: none;
-      border: 1px solid var(--ink);
-      transition: all 0.3s;
-      cursor: pointer;
-    }
-    .cta-button:hover {
-      background: transparent;
-      color: var(--ink);
-    }
-    .cta-contact {
-      margin-top: 2rem;
-      display: flex;
-      gap: 2rem;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .cta-contact-item {
-      font-size: 0.8rem;
-      color: var(--ink-2);
-    }
-    .cta-contact-item span {
-      font-family: var(--font-en);
-      color: var(--ink);
-      font-weight: 500;
-    }
-
-    /* ─── Pull Quote ─── */
+    /* ─── 引言金句 ─── */
     .pull-quote {
-      font-family: var(--font-cn);
-      font-weight: 700;
-      font-size: clamp(1.4rem, 3vw, 2rem);
-      line-height: 1.45;
-      letter-spacing: 0.01em;
-      max-width: 760px;
-      margin-top: 1rem;
-      position: relative;
-      padding-left: 1.8rem;
-      border-left: 3px solid var(--ink);
+      font-family: var(--font-cn); font-weight: 500; font-size: clamp(1.4rem, 3vw, 2.1rem);
+      line-height: 1.7; letter-spacing: 0.01em; max-width: 820px; margin-top: 2.5rem;
+      position: relative; padding-left: 2rem; color: var(--green);
+      border-left: 2px solid var(--gold);
     }
 
-    /* ─── Footnote ─── */
-    .footnote {
-      font-size: 0.75rem;
-      color: var(--ink-3);
-      margin-top: 1rem;
-      line-height: 1.6;
-      letter-spacing: 0.01em;
+    /* ─── 信任条 ─── */
+    .trust-strip { margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; }
+    @media (max-width: 860px) { .trust-strip { grid-template-columns: 1fr; } }
+    .trust-item { border: 1px solid var(--border); padding: 1.8rem 1.9rem; background: var(--surface); }
+    .trust-title { font-size: 0.95rem; font-weight: 700; color: var(--green); margin-bottom: 0.7rem; letter-spacing: 0.02em; }
+    .trust-desc { font-size: 0.86rem; color: var(--ink-2); line-height: 1.95; }
+
+    /* ─── 脚注 ─── */
+    .footnote { font-size: 0.78rem; color: var(--ink-3); margin-top: 3rem; line-height: 1.85; letter-spacing: 0.01em; }
+    .footnote-inline { display: block; font-size: 0.7rem; color: var(--ink-3); font-weight: 400; margin-top: 0.2rem; }
+
+    /* ════════ CTA ════════ */
+    .cta-section {
+      text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      min-height: 100vh; min-height: 100svh; background: var(--green-grad); color: var(--cream-text);
+      position: relative; padding: 6rem var(--section-pad-x); gap: 4.5rem;
+    }
+    .cta-main { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 680px; }
+    .closing-footer {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      width: 100%; max-width: 520px; padding-top: 3.5rem;
+    }
+    .closing-logo { height: 116px; width: 116px; }
+    .cta-section .section-label { color: var(--gold); justify-content: center; }
+    .cta-section .section-label::before { display: none; }
+    .cta-title {
+      font-family: var(--font-cn); font-weight: 700; font-size: clamp(1.8rem, 4.5vw, 3rem);
+      letter-spacing: 0.03em; line-height: 1.4; margin-bottom: 1.4rem; max-width: 680px;
+    }
+    .cta-title .serif-italic { font-family: var(--font-cn); font-weight: 500; color: var(--gold); }
+    .cta-desc { font-size: 1.05rem; color: rgba(247,245,239,0.84); max-width: 520px; line-height: 1.95; margin-bottom: 2.6rem; font-weight: 300; }
+    .cta-button {
+      display: inline-block; padding: 1.1rem 3rem; background: var(--gold); color: var(--green-900);
+      font-family: var(--font-cn); font-weight: 700; font-size: 1.02rem; letter-spacing: 0.08em;
+      text-decoration: none; border: 1px solid var(--gold);
+      transition: all 0.35s var(--ease-emph); cursor: pointer;
+      box-shadow: 0 12px 36px -12px rgba(201,162,75,0.6);
+    }
+    .cta-button:hover { background: transparent; color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+    .cta-contact { margin-top: 2.6rem; display: flex; gap: 2.4rem; flex-wrap: wrap; justify-content: center; }
+    .cta-contact-item { font-size: 0.84rem; color: rgba(247,245,239,0.78); letter-spacing: 0.04em; }
+    .cta-contact-item span { font-family: var(--font-en); color: var(--gold); font-weight: 500; }
+    .closing-wordmark {
+      font-family: var(--font-en); font-weight: 600;
+      font-size: clamp(3.5rem, 13vw, 9rem); letter-spacing: 0.06em;
+      color: var(--cream-text); line-height: 1; margin-top: 2.8rem;
     }
 
     @media (max-width: 768px) {
-      .section { padding: 3rem 6vw; }
-      .section-compact { padding: 2.5rem 6vw; }
-      :root { --section-pad-y: 3rem; --section-pad-x: 6vw; }
+      .calc-row { flex-direction: column; gap: 0.6rem; align-items: flex-start; }
+      .calc-arrow { transform: rotate(90deg); }
+      .trust-strip { grid-template-columns: 1fr; }
+      .section-watermark { font-size: 6rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Custom Cursor -->
-
-  <!-- Noise Texture Overlay -->
+  <div class="luxe-frame"></div>
   <div class="noise-overlay"></div>
 
-  <!-- Background Pattern -->
-  <div class="bg-pattern">
-    <span style="top: 8%; left: -5%;">AROORO</span>
-    <span style="top: 38%; left: 10%;">DIGITAL ASSET</span>
-    <span style="top: 68%; left: -8%;">GROUP OWNER</span>
-    <span style="top: 88%; left: 15%;">2026</span>
-  </div>
-
-  <!-- Navigation -->
+  <!-- 导航 -->
   <nav class="top-nav" id="nav">
-    <a href="#cover" class="nav-logo">AROORO</a>
+    <a href="#cover" class="nav-logo" aria-label="AROORO 首页">
+      <img src="assets/arooro-logo.svg" alt="AROORO 标志" class="brand-mark" width="300" height="300" decoding="async">
+    </a>
     <div class="nav-links">
       <a href="#pain" class="nav-link">痛点</a>
       <a href="#earnings" class="nav-link">收益</a>
@@ -984,978 +570,771 @@
   </nav>
 
   <!-- ════════ 01 COVER ════════ -->
-  <section class="section cover-section" id="cover">
+  <section class="cover-section" id="cover">
+    <div class="cover-aura"></div>
+    <img src="assets/arooro-logo.svg" alt="AROORO 品牌标志" class="cover-logo" width="300" height="300" decoding="async">
     <div class="cover-label">Group Owner Program · 2026</div>
     <h1 class="cover-title">AROORO</h1>
-    <div class="cover-divider"></div>
+    <div class="cover-divider gsap-draw"></div>
     <p class="cover-desc">把你的社交关系，变成可增值的数字资产。<br>不是又一个分销平台，而是群主的资产操作系统。</p>
     <div class="cover-tagline">安心呼噜 · 放心托付</div>
-    <div class="scroll-hint">SCROLL ↓</div>
+    <div class="scroll-hint">SCROLL</div>
   </section>
 
   <!-- ════════ 02 核心主张 ════════ -->
-  <section class="section section-compact" id="manifesto" data-num="01">
-    <div class="section-header">
-      <div class="section-label">01 — Manifesto</div>
-      <h2 class="section-title">群主需要的不是流量入口，而是<span class="serif-italic">资产所有者</span></h2>
-    </div>
-    <div class="summary-grid">
-      <div>
-        <p class="summary-statement">
-          你精心运营的<span class="highlight">宠物社群</span>，<br>
-          在传统团购工具上每促成一单，<br>
-          只留下<span class="highlight">微薄的佣金</span>。<br><br>
-          用户买完即走，<span class="highlight">数据归平台</span>。<br>
-          这不是合作，这是<span class="highlight">流量出租</span>。
-        </p>
-        <p class="summary-sub">AROORO 把这件事重做一遍：用户永久绑定在你名下，平台只留运营成本，大部分利润归群主。资产可沉淀、可增值、可继承。</p>
+  <section class="section" id="manifesto">
+    <div class="section-watermark">01</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">01 — Manifesto</div>
+        <h2 class="section-title">群主需要的不是流量入口，而是<span class="serif-italic">资产所有者</span></h2>
       </div>
-      <div class="metric-row">
-        <div class="metric-row-item">
-          <div class="metric-row-value">数倍</div>
-          <div class="metric-row-label">VS 传统团购收益</div>
-          <div class="metric-row-desc">平台只留运营成本，大部分利润归群主</div>
+      <div class="summary-grid">
+        <div>
+          <p class="summary-statement">
+            你精心运营的<span class="highlight">宠物社群</span>，<br>
+            在传统团购工具上每促成一单，<br>
+            只留下<span class="highlight">微薄的佣金</span>。<br><br>
+            用户买完即走，<span class="highlight">数据归平台</span>。<br>
+            这不是合作，这是<span class="highlight">流量出租</span>。
+          </p>
+          <p class="summary-sub">AROORO 把这件事重做一遍：用户永久绑定在你名下，平台只留运营成本，大部分利润归群主。资产可沉淀、可增值。</p>
         </div>
-        <div class="metric-row-item">
-          <div class="metric-row-value">永久</div>
-          <div class="metric-row-label">用户绑定关系</div>
-          <div class="metric-row-desc">一次邀请，终身管道收益</div>
-        </div>
-        <div class="metric-row-item">
-          <div class="metric-row-value">动态</div>
-          <div class="metric-row-label">分润配置</div>
-          <div class="metric-row-desc">各板块独立可调，确保可持续运营</div>
+        <div class="metric-row">
+          <div class="metric-row-item">
+            <div class="metric-row-value">3–6 倍</div>
+            <div class="metric-row-label">VS 传统团购收益</div>
+            <div class="metric-row-desc">同样的货，收入翻 3 倍起</div>
+          </div>
+          <div class="metric-row-item">
+            <div class="metric-row-value">永久</div>
+            <div class="metric-row-label">用户绑定关系</div>
+            <div class="metric-row-desc">一次邀请，终身管道收益</div>
+          </div>
+          <div class="metric-row-item">
+            <div class="metric-row-value">动态</div>
+            <div class="metric-row-label">分润配置</div>
+            <div class="metric-row-desc">各板块独立可调，确保可持续运营</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ════════ 03 群主痛点 ════════ -->
-  <section class="section section-compact" id="pain" data-num="02">
-    <div class="section-header">
-      <div class="section-label">02 — The Death Spiral</div>
-      <h2 class="section-title">群主的<span class="serif-italic">死亡螺旋</span></h2>
-      <p class="section-subtitle">商业活动减少、粉丝不见面、死群、转化萎缩——这不是你的错，是工具的错。</p>
-    </div>
-    <div class="cards-grid">
-      <div class="card-item">
-        <div class="card-role">Step 01</div>
-        <div class="card-title">商业活动减少</div>
-        <div class="card-desc">品牌方投放收缩，群主能承接的商业活动越来越少。自办活动需自担成本，投入产出难以平衡。</div>
+  <section class="section" id="pain">
+    <div class="section-watermark">02</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">02 — The Death Spiral</div>
+        <h2 class="section-title">群主的<span class="serif-italic">死亡螺旋</span></h2>
+        <p class="section-subtitle">商业活动减少、粉丝不见面、死群、转化萎缩——这不是你的错，是工具的错。</p>
       </div>
-      <div class="card-item">
-        <div class="card-role">Step 02</div>
-        <div class="card-title">粉丝不见面</div>
-        <div class="card-desc">缺少线下触点，群成员只是头像。信任无法沉淀，关系停留在"加过好友"。</div>
-      </div>
-      <div class="card-item">
-        <div class="card-role">Step 03</div>
-        <div class="card-title">群慢慢死掉</div>
-        <div class="card-desc">没有内容、没有活动、没有交易，活跃度持续下滑，群逐渐变成僵尸。</div>
-      </div>
-      <div class="card-item">
-        <div class="card-role">Step 04</div>
-        <div class="card-title">转化率萎缩</div>
-        <div class="card-desc">带货转化率同步缩水，收入越少越没动力运营，进入恶性循环。</div>
-      </div>
-      <div class="card-item">
-        <div class="card-role">Step 05</div>
-        <div class="card-title">用户被薅走</div>
-        <div class="card-desc">传统团购工具卖完一单，用户数据留在平台。下次平台直接触达，群主被彻底绕开。</div>
-      </div>
-      <div class="card-item">
-        <div class="card-role">Step 06</div>
-        <div class="card-title">收入归零</div>
-        <div class="card-desc">最后一波佣金结算完，群主手上只剩一个空群和一地鸡毛。</div>
-      </div>
-    </div>
-    <p class="pull-quote" style="margin-top: 1.2rem;">问题的本质是：你从来不是资产所有者，你只是平台的免费流量入口。</p>
-  </section>
-
-  <section class="section section-compact" id="breakthrough" data-num="03">
-    <div class="section-header">
-      <div class="section-label">03 — Breakthrough</div>
-      <h2 class="section-title">AROORO 做的<span class="serif-italic">三件事</span></h2>
-    </div>
-    <div class="cards-grid cols-3">
-      <div class="card-item">
-        <div class="card-role">01</div>
-        <div class="card-title">平台补贴活动成本，群主零成本办活动</div>
-        <div class="card-desc">前期由平台补贴活动物料与试吃装成本，群主只负责把人聚起来。活动成本从"自担费用"变成"零成本启动"。</div>
-      </div>
-      <div class="card-item">
-        <div class="card-role">02</div>
-        <div class="card-title">用户永久绑定，数据归群主</div>
-        <div class="card-desc">通过你的邀请注册的用户，永久绑定在你名下。TA 以后在商城、团购、寄养、喂养的每一笔消费，你都有分润。</div>
-      </div>
-      <div class="card-item">
-        <div class="card-role">03</div>
-        <div class="card-title">大部分利润归群主，可持续运营</div>
-        <div class="card-desc">平台只留运营成本，大部分利润分给群主。各板块佣金率独立可调，确保在可持续运营的基础上，让群主拿到行业领先的分润。</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-compact" id="earnings" data-num="04">
-    <div class="section-header">
-      <div class="section-label">04 — Earnings Comparison</div>
-      <h2 class="section-title">替换团购工具，收益<span class="serif-italic">数倍增长</span></h2>
-      <p class="section-subtitle">同样卖给你的群成员，传统团购工具与 AROORO 的回报对比。</p>
-    </div>
-    <div class="vs-container">
-      <div class="vs-side">
-        <div class="vs-label">传统团购工具</div>
-        <div class="vs-value">1%–3%</div>
-        <div class="vs-desc">每单佣金 1%–3%，一次性结算。用户买完归平台，下次触达跟你无关。</div>
-      </div>
-      <div class="vs-side winner">
-        <div class="vs-label">AROORO</div>
-        <div class="vs-value">数倍</div>
-        <div class="vs-desc">平台只留运营成本，大部分利润归群主。用户永久绑定，后续所有消费持续产生管道收益。</div>
-      </div>
-    </div>
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>订单类型</th>
-          <th>典型客单价</th>
-          <th>传统团购佣金</th>
-          <th>AROORO 示例分润</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>宠团团团购（尿垫/零食）</td>
-          <td class="num">¥50</td>
-          <td class="num">¥0.5–1.5</td>
-          <td class="num">¥7.5–15</td>
-        </tr>
-        <tr>
-          <td>品牌商城（主粮）</td>
-          <td class="num">¥200</td>
-          <td class="num">¥2–6</td>
-          <td class="num">¥20–40</td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="footnote">* 以上为示例测算，团购板块按 15%–30%、商城板块按 10%–20% 估算。实际佣金率按系统配置动态调整，平台只留运营成本，大部分利润归群主。佣金按订单实付金额计算。</p>
-  </section>
-
-  <section class="section section-compact" id="wallets" data-num="05">
-    <div class="section-header">
-      <div class="section-label">05 — Dual Wallet System</div>
-      <h2 class="section-title">两个钱包，<span class="serif-italic">两种身份</span></h2>
-      <p class="section-subtitle">资产收入与劳动收入分开结算，互不干扰。</p>
-    </div>
-    <div class="wallet-grid">
-      <div class="wallet-card">
-        <div class="wallet-tag">Wallet A</div>
-        <div class="wallet-name">佣金钱包 · Commission</div>
-        <div class="wallet-desc">你邀请的用户在平台下单，按订单金额分润给你。这是"资产收入"——你不用发货、不用售后，只管把人邀请进来。</div>
-        <div class="wallet-sources">
-          <span class="wallet-source">宠团团团购</span>
-          <span class="wallet-source">品牌商城</span>
-          <span class="wallet-source">活动报名</span>
-          <span class="wallet-source">寄养订单</span>
-          <span class="wallet-source">上门喂养</span>
+      <div class="cards-grid">
+        <div class="card-item">
+          <div class="card-role">Step 01</div>
+          <div class="card-title">商业活动减少</div>
+          <div class="card-desc">品牌方投放收缩，群主能承接的商业活动越来越少。自办活动需自担成本，投入产出难以平衡。</div>
+        </div>
+        <div class="card-item">
+          <div class="card-role">Step 02</div>
+          <div class="card-title">粉丝不见面</div>
+          <div class="card-desc">缺少线下触点，群成员只是头像。信任无法沉淀，关系停留在"加过好友"。</div>
+        </div>
+        <div class="card-item">
+          <div class="card-role">Step 03</div>
+          <div class="card-title">群慢慢死掉</div>
+          <div class="card-desc">没有内容、没有活动、没有交易，活跃度持续下滑，群逐渐变成僵尸。</div>
+        </div>
+        <div class="card-item">
+          <div class="card-role">Step 04</div>
+          <div class="card-title">转化率萎缩</div>
+          <div class="card-desc">带货转化率同步缩水，收入越少越没动力运营，进入恶性循环。</div>
+        </div>
+        <div class="card-item">
+          <div class="card-role">Step 05</div>
+          <div class="card-title">用户被薅走</div>
+          <div class="card-desc">传统团购工具卖完一单，用户数据留在平台。下次平台直接触达，群主被彻底绕开。</div>
+        </div>
+        <div class="card-item">
+          <div class="card-role">Step 06</div>
+          <div class="card-title">收入归零</div>
+          <div class="card-desc">最后一波佣金结算完，群主手上只剩一个空群和一地鸡毛。</div>
         </div>
       </div>
-      <div class="wallet-card">
-        <div class="wallet-tag">Wallet B</div>
-        <div class="wallet-name">服务收入钱包 · Service Income</div>
-        <div class="wallet-desc">你作为活动主办者/寄养家庭/喂养师，直接为用户提供服务获得的收入。这是"劳动收入"——你亲自履约，钱直接进你口袋。</div>
-        <div class="wallet-sources">
-          <span class="wallet-source">活动主办收入</span>
-          <span class="wallet-source wallet-soon">寄养服务 · 即将开放</span>
-          <span class="wallet-source wallet-soon">喂养服务 · 即将开放</span>
+      <p class="pull-quote">问题的本质是：你从来不是资产所有者，你只是平台的免费流量入口。</p>
+    </div>
+  </section>
+
+  <!-- ════════ 03b 突破 ════════ -->
+  <section class="section" id="breakthrough">
+    <div class="section-watermark">03</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">03 — Breakthrough</div>
+        <h2 class="section-title">AROORO 做的<span class="serif-italic">三件事</span></h2>
+      </div>
+      <div class="cards-grid cols-3">
+        <div class="card-item">
+          <div class="card-role">01</div>
+          <div class="card-title">活动工具已上线，群主低成本办活动</div>
+          <div class="card-desc">线下聚会、试吃会、遛狗局——报名签到、照片抽奖、问卷全流程工具已就绪。群主只需负责把人聚起来，活动成本透明可控，主办收入归群主。</div>
+        </div>
+        <div class="card-item">
+          <div class="card-role">02</div>
+          <div class="card-title">用户永久绑定，收益归群主</div>
+          <div class="card-desc">通过你的邀请注册的用户，永久绑定在你名下。TA 以后在商城、团购、寄养、喂养的每一笔消费，你都有分润。</div>
+        </div>
+        <div class="card-item">
+          <div class="card-role">03</div>
+          <div class="card-title">大部分利润归群主，可持续运营</div>
+          <div class="card-desc">平台只留运营成本，大部分利润分给群主。各板块佣金率独立可调，确保在可持续运营的基础上，让群主拿到行业领先的分润。</div>
         </div>
       </div>
     </div>
-    <table class="data-table" style="margin-top: 1rem;">
-      <thead>
-        <tr>
-          <th>钱包</th>
-          <th>收入来源</th>
-          <th>是否需要自己履约</th>
-          <th>提现规则</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>佣金钱包</td>
-          <td>邀请用户的消费分润</td>
-          <td>否，纯管道收益</td>
-          <td>¥1 起提，每日 10 次</td>
-        </tr>
-        <tr>
-          <td>服务收入钱包</td>
-          <td>自己提供服务的收入</td>
-          <td>是，亲自履约</td>
-          <td>¥1 起提，每日 10 次</td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="footnote">* 两个钱包相互独立，可分别提现。服务收入钱包中，活动主办收入当前可用，寄养与喂养服务即将开放。</p>
   </section>
 
-  <section class="section section-compact" id="asset" data-num="06">
-    <div class="section-header">
-      <div class="section-label">06 — Asset Ownership</div>
-      <h2 class="section-title">资产确权：你的用户，<span class="serif-italic">永久归你</span></h2>
-      <p class="section-subtitle">这是 AROORO 和所有分销平台最根本的区别。</p>
+  <!-- ════════ 04 收益对比 ════════ -->
+  <section class="section" id="earnings">
+    <div class="section-watermark">04</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">04 — Earnings Comparison</div>
+        <h2 class="section-title">替换团购工具，收益<span class="serif-italic">翻 3 倍</span></h2>
+        <p class="section-subtitle">同样卖给你的群成员，传统团购工具与 AROORO 的回报对比。</p>
+      </div>
+      <div class="vs-container">
+        <div class="vs-side">
+          <div class="vs-label">传统团购工具</div>
+          <div class="vs-value">1%–3%</div>
+          <div class="vs-desc">每单佣金 1%–3%，一次性结算。用户买完归平台，下次触达跟你无关。</div>
+        </div>
+        <div class="vs-side winner">
+          <div class="vs-label">AROORO</div>
+          <div class="vs-value">3–6 倍</div>
+          <div class="vs-desc">同样的货、同样的价格，群主拿到的是传统工具 3–6 倍的收益。用户永久绑定，后续所有消费持续产生管道收益。</div>
+        </div>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>订单类型</th>
+            <th>典型客单价</th>
+            <th>传统团购佣金</th>
+            <th>AROORO 示例分润</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>宠团团团购（尿垫/零食）</td>
+            <td class="num">¥50</td>
+            <td class="num">¥0.5–1.5</td>
+            <td class="num">¥7.5（15%）</td>
+          </tr>
+          <tr>
+            <td>品牌商城（主粮）<span class="footnote-inline">品牌招商中，上线后生效</span></td>
+            <td class="num">¥200</td>
+            <td class="num">¥2–6</td>
+            <td class="num">¥20（10%）</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="footnote">* 以上为示例测算：团购板块按实付金额 15% 起步、销量阶梯最高 20%；商城板块按 10% 起步。实际佣金率按系统配置动态调整，平台只留运营成本，大部分利润归群主。佣金按订单实付金额计算，满账期自动结算。</p>
+      <div class="calc-box">
+        <div class="calc-head">算给你看 · 一包尿垫的真实差距</div>
+        <div class="calc-row">
+          <div class="calc-item">
+            <div class="calc-num">¥1</div>
+            <div class="calc-label">传统团购工具 · 每包 20 元佣金不到 1 元</div>
+          </div>
+          <div class="calc-arrow">→</div>
+          <div class="calc-item winner">
+            <div class="calc-num">¥3</div>
+            <div class="calc-label">AROORO · 同样的 20 元售价，你拿 15%</div>
+          </div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-item">
+            <div class="calc-num">≈¥4,000</div>
+            <div class="calc-label">月 GMV 10 万 · 传统工具按 4%</div>
+          </div>
+          <div class="calc-arrow">→</div>
+          <div class="calc-item winner">
+            <div class="calc-num">≈¥15,000</div>
+            <div class="calc-label">月 GMV 10 万 · AROORO 按 15%</div>
+          </div>
+        </div>
+        <p class="calc-note">同样的群、同样的货、同样的价格——只是把中间环节的分成，让给了真正经营社群的你。</p>
+      </div>
     </div>
-    <div class="pillars-grid">
-      <div class="pillar-cell">
-        <div class="pillar-num">01</div>
-        <div class="pillar-title">永久绑定</div>
-        <div class="pillar-desc">通过你的邀请注册的用户，永久绑定在你名下。TA 以后在平台任何模块的消费，你都持续获得分润。不是一锤子买卖，是终身管道。</div>
-      </div>
-      <div class="pillar-cell">
-        <div class="pillar-num">02</div>
-        <div class="pillar-title">数据归属</div>
-        <div class="pillar-desc">你邀请的用户列表、消费记录、资产明细，全部沉淀在你的合作伙伴后台。你可以看到每个用户的累计贡献、活跃度、订单明细。数据是你的，不是平台的。</div>
-      </div>
-      <div class="pillar-cell">
-        <div class="pillar-num">03</div>
-        <div class="pillar-title">复利增长</div>
-        <div class="pillar-desc">用户越多，订单越多，分润越多。资产持续增值，沉淀越久价值越高。前期积累的每一个用户，都是未来持续产生收益的种子。</div>
-      </div>
-    </div>
-    <p class="pull-quote">你不是在帮平台拉新，你是在为自己建一座会增值的资产。</p>
   </section>
 
-  <section class="section section-compact" id="withdraw" data-num="07">
-    <div class="section-header">
-      <div class="section-label">07 — Withdrawal</div>
-      <h2 class="section-title">提现规则：<span class="serif-italic">¥1 起提</span>，微信转账到账</h2>
-      <p class="section-subtitle">没有起提门槛套路，没有手动结算等待。</p>
+  <!-- ════════ 05 双钱包 ════════ -->
+  <section class="section" id="wallets">
+    <div class="section-watermark">05</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">05 — Dual Wallet System</div>
+        <h2 class="section-title">两个钱包，<span class="serif-italic">两种身份</span></h2>
+        <p class="section-subtitle">资产收入与劳动收入分开结算，互不干扰。</p>
+      </div>
+      <div class="wallet-grid">
+        <div class="wallet-card">
+          <div class="wallet-tag">Wallet A</div>
+          <div class="wallet-name">佣金钱包 · Commission</div>
+          <div class="wallet-desc">你邀请的用户在平台下单，按订单金额分润给你。这是"资产收入"——你不用发货、不用售后，只管把人邀请进来。</div>
+          <div class="wallet-sources">
+            <span class="wallet-source">宠团团团购</span>
+            <span class="wallet-source">品牌商城</span>
+            <span class="wallet-source">活动报名</span>
+            <span class="wallet-source">寄养订单</span>
+            <span class="wallet-source">上门喂养</span>
+          </div>
+        </div>
+        <div class="wallet-card">
+          <div class="wallet-tag">Wallet B</div>
+          <div class="wallet-name">服务收入钱包 · Service Income</div>
+          <div class="wallet-desc">你作为活动主办者/寄养家庭/喂养师，直接为用户提供服务获得的收入。这是"劳动收入"——你亲自履约，钱直接进你口袋。</div>
+          <div class="wallet-sources">
+            <span class="wallet-source">活动主办收入</span>
+            <span class="wallet-source wallet-soon">寄养服务 · 筹备中</span>
+            <span class="wallet-source wallet-soon">喂养服务 · 筹备中</span>
+          </div>
+        </div>
+      </div>
+      <table class="data-table" style="margin-top: 1.6rem;">
+        <thead>
+          <tr>
+            <th>钱包</th>
+            <th>收入来源</th>
+            <th>是否需要自己履约</th>
+            <th>提现规则</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>佣金钱包</td>
+            <td>邀请用户的消费分润</td>
+            <td>否，纯管道收益</td>
+            <td>¥1 起提，每日 10 次</td>
+          </tr>
+          <tr>
+            <td>服务收入钱包</td>
+            <td>自己提供服务的收入</td>
+            <td>是，亲自履约</td>
+            <td>¥1 起提，每日 10 次</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="footnote">* 两个钱包相互独立，可分别提现。服务收入钱包中，活动主办收入当前可用，寄养与喂养服务筹备中。</p>
     </div>
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>规则项</th>
-          <th>说明</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>最低提现金额</td>
-          <td class="num">¥1 / 笔</td>
-        </tr>
-        <tr>
-          <td>单笔上限</td>
-          <td class="num">¥500 / 笔</td>
-        </tr>
-        <tr>
-          <td>提现频次</td>
-          <td>每个钱包每日限 1 次</td>
-        </tr>
-        <tr>
-          <td>到账方式</td>
-          <td>微信商家转账到微信零钱，需在小程序内确认收款</td>
-        </tr>
-        <tr>
-          <td>审核时间</td>
-          <td>一般为次日审核通过，1–3 个工作日内完成</td>
-        </tr>
-        <tr>
-          <td>确认时效</td>
-          <td>收到转账后需在 24 小时内点击"确认收款"，逾期自动退回</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="flow-chain">
-      <div class="flow-node">
-        <div class="flow-node-label">Step 01</div>
-        <div class="flow-node-name">申请提现</div>
-      </div>
-      <div class="flow-node">
-        <div class="flow-node-label">Step 02</div>
-        <div class="flow-node-name">平台审核</div>
-      </div>
-      <div class="flow-node">
-        <div class="flow-node-label">Step 03</div>
-        <div class="flow-node-name">微信转账</div>
-      </div>
-      <div class="flow-node">
-        <div class="flow-node-label">Step 04</div>
-        <div class="flow-node-name">确认收款</div>
-      </div>
-      <div class="flow-node final">
-        <div class="flow-node-label">Step 05</div>
-        <div class="flow-node-name">已到账</div>
-      </div>
-    </div>
-    <p class="footnote">* 转账失败或超时未确认，资金自动退回钱包余额，可重新申请。提现记录在合作伙伴后台全程可查。</p>
   </section>
 
-  <section class="section section-compact" id="ops" data-num="08">
-    <div class="section-header">
-      <div class="section-label">08 — Daily Operations</div>
-      <h2 class="section-title">群主日常<span class="serif-italic">运营清单</span></h2>
-      <p class="section-subtitle">三件事，循环做。不需要懂技术，不需要囤货。</p>
-    </div>
-    <div class="ops-grid">
-      <div class="ops-col">
-        <div class="ops-col-header">Action 01</div>
-        <div class="ops-col-title">替换团购工具</div>
-        <ul class="ops-list">
-          <li><span class="ops-check">→</span><span>将群内团购从快团团等工具切换为 AROORO 宠团团</span></li>
-          <li><span class="ops-check">→</span><span>同样的选品、同样的群成员，只是换了成交工具</span></li>
-          <li><span class="ops-check">→</span><span>用户在团购过程中自然完成注册，永久绑定在你名下</span></li>
-          <li><span class="ops-check">→</span><span>在"推荐管理"页查看邀请人数、订单、累计贡献</span></li>
-          <li><span class="ops-check">→</span><span>用户后续在平台任何模块的消费，持续产生分润</span></li>
-        </ul>
+  <!-- ════════ 06 资产确权 ════════ -->
+  <section class="section" id="asset">
+    <div class="section-watermark">06</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">06 — Asset Ownership</div>
+        <h2 class="section-title">资产确权：你的用户，<span class="serif-italic">永久归你</span></h2>
+        <p class="section-subtitle">这是 AROORO 和所有分销平台最根本的区别。</p>
       </div>
-      <div class="ops-col">
-        <div class="ops-col-header">Action 02</div>
-        <div class="ops-col-title">零成本办活动</div>
-        <ul class="ops-list">
-          <li><span class="ops-check">→</span><span>在"活动管理"创建线下聚会/试吃会/遛狗局</span></li>
-          <li><span class="ops-check">→</span><span>平台补贴活动物料成本，群主零成本启动</span></li>
-          <li><span class="ops-check">→</span><span>群成员在小程序报名，活动当天签到打卡</span></li>
-          <li><span class="ops-check">→</span><span>平台发起的收费活动，群主参与报名费分成</span></li>
-          <li><span class="ops-check">→</span><span>群主自行组织的收费活动，报名费归群主所有</span></li>
-        </ul>
+      <div class="pillars-grid">
+        <div class="pillar-cell">
+          <div class="pillar-num">01</div>
+          <div class="pillar-title">永久绑定</div>
+          <div class="pillar-desc">通过你的邀请注册的用户，永久绑定在你名下。TA 以后在平台任何模块的消费，你都持续获得分润。不是一锤子买卖，是终身管道。</div>
+        </div>
+        <div class="pillar-cell">
+          <div class="pillar-num">02</div>
+          <div class="pillar-title">数据归属</div>
+          <div class="pillar-desc">你邀请的用户列表、消费记录、资产明细，全部沉淀在你的合作伙伴后台。你可以看到每个用户的累计贡献、活跃度、订单明细——每个用户带来的每一分收益，都永久记录在你名下。</div>
+        </div>
+        <div class="pillar-cell">
+          <div class="pillar-num">03</div>
+          <div class="pillar-title">复利增长</div>
+          <div class="pillar-desc">用户越多，订单越多，分润越多。资产持续增值，沉淀越久价值越高。前期积累的每一个用户，都是未来持续产生收益的种子。</div>
+        </div>
       </div>
-      <div class="ops-col">
-        <div class="ops-col-header">Action 03</div>
-        <div class="ops-col-title">带货与转化</div>
-        <ul class="ops-list">
-          <li><span class="ops-check">→</span><span>选品：宠团团团购（高频低客单）+ 商城主粮（低频高客单）</span></li>
-          <li><span class="ops-check">→</span><span>分享商品链接到群，用户下单后即计入你的分润</span></li>
-          <li><span class="ops-check">→</span><span>在"佣金管理"页按订单类型查看明细</span></li>
-          <li><span class="ops-check">→</span><span>优惠券定向发券，激活沉睡用户</span></li>
-          <li><span class="ops-check">→</span><span>余额达 ¥1 即可提现，微信转账到账</span></li>
-        </ul>
+      <p class="pull-quote">你不是在帮平台拉新，你是在为自己建一座会增值的资产。</p>
+      <div class="trust-strip">
+        <div class="trust-item">
+          <div class="trust-title">平台为什么能持续给你高分成</div>
+          <div class="trust-desc">团购板块是获客策略：平台不靠团购差价盈利，靠商城抽佣、活动收入与增值服务覆盖成本。你赚得越多，平台生态越活，这是可持续的共赢——不是烧钱补贴，烧钱补贴撑不过一年。</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-title">平台承诺</div>
+          <div class="trust-desc">供应商严选：仅合作 1688 履约评级 ≥4.5 的源头工厂，48 小时发货；商品质量问题平台先行赔付，售后成本由平台承担——群主只负责信任背书，不承担履约风险。</div>
+        </div>
       </div>
     </div>
-    <p class="pull-quote" style="margin-top: 1rem;">循环做这三件事，你的资产会复利增长：用户越多 → 订单越多 → 分润越多 → 收入越多。</p>
   </section>
 
-  <section class="section section-compact" id="product" data-num="09">
-    <div class="section-header">
-      <div class="section-label">09 — Product System</div>
-      <h2 class="section-title">六大产品模块，<span class="serif-italic">全覆盖宠物消费场景</span></h2>
-      <p class="section-subtitle">用户绑定一次，所有场景的消费都给你分润。</p>
+  <!-- ════════ 07 提现 ════════ -->
+  <section class="section" id="withdraw">
+    <div class="section-watermark">07</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">07 — Withdrawal</div>
+        <h2 class="section-title">提现规则：<span class="serif-italic">¥1 起提</span>，微信转账到账</h2>
+        <p class="section-subtitle">没有起提门槛套路，佣金满账期自动结算，提现审核 1–3 个工作日到账。</p>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>规则项</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>最低提现金额</td><td class="num">¥1 / 笔</td></tr>
+          <tr><td>单笔上限</td><td class="num">¥500 / 笔</td></tr>
+          <tr><td>提现频次</td><td>每个钱包每日限 10 次</td></tr>
+          <tr><td>到账方式</td><td>微信商家转账到微信零钱，需在小程序内确认收款</td></tr>
+          <tr><td>审核时间</td><td>一般为次日审核通过，1–3 个工作日内完成</td></tr>
+          <tr><td>确认时效</td><td>收到转账后需在 24 小时内点击"确认收款"，逾期自动退回</td></tr>
+        </tbody>
+      </table>
+      <div class="flow-chain">
+        <div class="flow-node"><div class="flow-node-label">Step 01</div><div class="flow-node-name">申请提现</div></div>
+        <div class="flow-node"><div class="flow-node-label">Step 02</div><div class="flow-node-name">平台审核</div></div>
+        <div class="flow-node"><div class="flow-node-label">Step 03</div><div class="flow-node-name">微信转账</div></div>
+        <div class="flow-node"><div class="flow-node-label">Step 04</div><div class="flow-node-name">确认收款</div></div>
+        <div class="flow-node final"><div class="flow-node-label">Step 05</div><div class="flow-node-name">已到账</div></div>
+      </div>
+      <p class="footnote">* 转账失败或超时未确认，资金自动退回钱包余额，可重新申请。提现记录在合作伙伴后台全程可查。</p>
     </div>
-    <div class="modules-grid">
-      <div class="module-cell">
-        <div class="module-status status-live">已上线</div>
-        <div class="module-name">宠团团</div>
-        <div class="module-en">Group Buy</div>
-        <div class="module-desc">团购分销引擎，高频低客单。尿垫、零食、驱虫药，群成员拼团购买。替换快团团等传统工具，用户自然注册绑定。</div>
-        <div class="module-earn">动态分润</div>
-      </div>
-      <div class="module-cell">
-        <div class="module-status status-live">已上线 · 待品牌入驻</div>
-        <div class="module-name">品牌商城</div>
-        <div class="module-en">Mall</div>
-        <div class="module-desc">品牌主粮、用品入驻，低频高客单。群主分享商品链接，用户下单后即计入分润。</div>
-        <div class="module-earn">动态分润（稍低档位）</div>
-      </div>
-      <div class="module-cell">
-        <div class="module-status status-live">已上线</div>
-        <div class="module-name">活动工具</div>
-        <div class="module-en">Activity</div>
-        <div class="module-desc">线下聚会、试吃会、遛狗局。平台补贴活动成本，群主零成本办活动。报名签到、照片抽奖问卷全流程。</div>
-        <div class="module-earn">分润 + 主办收入</div>
-      </div>
-      <div class="module-cell">
-        <div class="module-status status-soon">功能就绪 · 尚未开放</div>
-        <div class="module-name">上门喂养</div>
-        <div class="module-en">Feeding</div>
-        <div class="module-desc">喂养师/美容师上门服务，春节国庆刚需。高频低客单。群主自主接单功能即将开放。</div>
-        <div class="module-earn">动态分润 + 服务收入</div>
-      </div>
-      <div class="module-cell">
-        <div class="module-status status-soon">待上线</div>
-        <div class="module-name">寄养</div>
-        <div class="module-en">Boarding</div>
-        <div class="module-desc">节假日寄养高峰，推荐附近寄养家庭。客单价高，复购稳定。群主作为寄养家庭的服务收入功能即将开放。</div>
-        <div class="module-earn">动态分润 + 服务收入</div>
-      </div>
-      <div class="module-cell">
-        <div class="module-status status-live">已上线</div>
-        <div class="module-name">优惠券</div>
-        <div class="module-en">Coupon</div>
-        <div class="module-desc">领券中心促转化，群主可定向发券激活沉睡用户，提升复购率。</div>
-        <div class="module-earn">提升转化率</div>
-      </div>
-    </div>
-    <p class="footnote">* 各模块分润率按系统配置动态调整，平台只留运营成本，大部分利润归群主。寄养与上门喂养的服务收入功能即将开放。</p>
   </section>
 
-  <section class="section section-compact" id="join" data-num="10">
-    <div class="section-header">
-      <div class="section-label">10 — How to Join</div>
-      <h2 class="section-title">四步加入，<span class="serif-italic">即刻开工</span></h2>
-      <p class="section-subtitle">不需要面试，不需要保证金，审核通过即可开始邀请用户。</p>
+  <!-- ════════ 08 运营清单 ════════ -->
+  <section class="section" id="ops">
+    <div class="section-watermark">08</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">08 — Daily Operations</div>
+        <h2 class="section-title">群主日常<span class="serif-italic">运营清单</span></h2>
+        <p class="section-subtitle">三件事，循环做。不需要懂技术，不需要囤货。</p>
+      </div>
+      <div class="ops-grid">
+        <div class="ops-col">
+          <div class="ops-col-header">Action 01</div>
+          <div class="ops-col-title">替换团购工具</div>
+          <ul class="ops-list">
+            <li><span class="ops-check">→</span><span>将群内团购从快团团等工具切换为 AROORO 宠团团</span></li>
+            <li><span class="ops-check">→</span><span>同样的选品、同样的群成员，同样的价格——你拿到的分成翻 3 倍</span></li>
+            <li><span class="ops-check">→</span><span>用户在团购过程中自然完成注册，永久绑定在你名下</span></li>
+            <li><span class="ops-check">→</span><span>在"推荐管理"页查看邀请人数、订单、累计贡献</span></li>
+            <li><span class="ops-check">→</span><span>用户后续在平台任何模块的消费，持续产生分润</span></li>
+          </ul>
+        </div>
+        <div class="ops-col">
+          <div class="ops-col-header">Action 02</div>
+          <div class="ops-col-title">办活动拉新</div>
+          <ul class="ops-list">
+            <li><span class="ops-check">→</span><span>在"活动管理"创建线下聚会/试吃会/遛狗局</span></li>
+            <li><span class="ops-check">→</span><span>活动工具已上线：报名、签到、抽奖、问卷全流程就绪</span></li>
+            <li><span class="ops-check">→</span><span>群成员在小程序报名，活动当天签到打卡</span></li>
+            <li><span class="ops-check">→</span><span>自办收费活动（聚会/试吃/遛狗局），报名费全额归群主</span></li>
+          </ul>
+        </div>
+        <div class="ops-col">
+          <div class="ops-col-header">Action 03</div>
+          <div class="ops-col-title">带货与转化</div>
+          <ul class="ops-list">
+            <li><span class="ops-check">→</span><span>选品：宠团团团购（高频低客单）+ 品牌商城主粮（筹备中，上线后开放）</span></li>
+            <li><span class="ops-check">→</span><span>分享商品链接到群，用户下单后即计入你的分润</span></li>
+            <li><span class="ops-check">→</span><span>在"佣金管理"页按订单类型查看明细</span></li>
+            <li><span class="ops-check">→</span><span>优惠券定向发券，激活沉睡用户</span></li>
+            <li><span class="ops-check">→</span><span>余额达 ¥1 即可提现，微信转账到账</span></li>
+          </ul>
+        </div>
+      </div>
+      <p class="pull-quote">循环做这三件事，你的资产会复利增长：用户越多 → 订单越多 → 分润越多 → 收入越多。</p>
     </div>
-    <div class="steps-row">
-      <div class="step-cell">
-        <div class="step-num">STEP 01</div>
-        <div class="step-title">提交申请</div>
-        <div class="step-desc">在小程序"我的 → 成为合作伙伴"填写真实姓名、电话、申请理由（你的群规模、宠物类型等）。</div>
-      </div>
-      <div class="step-cell">
-        <div class="step-num">STEP 02</div>
-        <div class="step-title">平台审核</div>
-        <div class="step-desc">超级管理员审核申请，通常 1–3 个工作日内通过。可在"申请状态"页查看进度。</div>
-      </div>
-      <div class="step-cell">
-        <div class="step-num">STEP 03</div>
-        <div class="step-title">开通后台</div>
-        <div class="step-desc">审核通过后，合作伙伴中心解锁：佣金管理、推荐管理、活动管理、提现等 7 大功能模块。</div>
-      </div>
-      <div class="step-cell">
-        <div class="step-num">STEP 04</div>
-        <div class="step-title">开始邀请</div>
-        <div class="step-desc">获取专属邀请码，发到你的群。用户注册后永久绑定，用户下单后即计入分润。</div>
-      </div>
-    </div>
-    <table class="data-table" style="margin-top: 1rem;">
-      <thead>
-        <tr>
-          <th>合作伙伴后台模块</th>
-          <th>功能</th>
-          <th>状态</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>佣金管理</td><td>查看带货佣金明细，按订单类型分类</td><td>已上线</td></tr>
-        <tr><td>收入管理</td><td>查看服务收入明细（当前支持活动主办）</td><td>已上线</td></tr>
-        <tr><td>推荐管理</td><td>查看邀请用户列表、推荐订单统计</td><td>已上线</td></tr>
-        <tr><td>活动管理</td><td>创建/管理线下活动，签到打卡</td><td>已上线</td></tr>
-        <tr><td>提现</td><td>申请提现，查看提现记录与状态</td><td>已上线</td></tr>
-        <tr><td>寄养档案</td><td>作为寄养家庭管理寄养订单</td><td>即将开放</td></tr>
-        <tr><td>上门服务</td><td>作为喂养师管理上门订单</td><td>即将开放</td></tr>
-      </tbody>
-    </table>
   </section>
 
-  <section class="section section-compact" id="team" data-num="11">
-    <div class="section-header">
-      <div class="section-label">11 — About</div>
-      <h2 class="section-title">关于<span class="serif-italic">AROORO</span></h2>
+  <!-- ════════ 09 产品模块 ════════ -->
+  <section class="section" id="product">
+    <div class="section-watermark">09</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">09 — Product System</div>
+        <h2 class="section-title">六大产品模块，<span class="serif-italic">全覆盖宠物消费场景</span></h2>
+        <p class="section-subtitle">用户绑定一次，所有场景的消费都给你分润。</p>
+      </div>
+      <div class="modules-grid">
+        <div class="module-cell">
+          <div class="module-status status-live">已上线</div>
+          <div class="module-name">宠团团</div>
+          <div class="module-en">Group Buy</div>
+          <div class="module-desc">团购分销引擎，高频低客单。尿垫、零食、驱虫药，群成员拼团购买。替换快团团等传统工具，用户自然注册绑定。</div>
+          <div class="module-earn">动态分润</div>
+        </div>
+        <div class="module-cell">
+          <div class="module-status status-soon">筹备中 · 品牌招商</div>
+          <div class="module-name">品牌商城</div>
+          <div class="module-en">Mall</div>
+          <div class="module-desc">品牌主粮、用品入驻，低频高客单。群主分享商品链接，用户下单后即计入分润。品牌招商进行中，上线后开放带货。</div>
+          <div class="module-earn">动态分润（稍低档位）</div>
+        </div>
+        <div class="module-cell">
+          <div class="module-status status-live">已上线</div>
+          <div class="module-name">活动工具</div>
+          <div class="module-en">Activity</div>
+          <div class="module-desc">线下聚会、试吃会、遛狗局。报名签到、照片抽奖、问卷全流程已上线。群主自办收费活动，报名费全额归群主。</div>
+          <div class="module-earn">分润 + 主办收入</div>
+        </div>
+        <div class="module-cell">
+          <div class="module-status status-soon">功能就绪 · 尚未开放</div>
+          <div class="module-name">上门喂养</div>
+          <div class="module-en">Feeding</div>
+          <div class="module-desc">喂养师/美容师上门服务，春节国庆刚需。高频低客单。群主自主接单功能筹备中。</div>
+          <div class="module-earn">动态分润 + 服务收入</div>
+        </div>
+        <div class="module-cell">
+          <div class="module-status status-soon">待上线</div>
+          <div class="module-name">寄养</div>
+          <div class="module-en">Boarding</div>
+          <div class="module-desc">节假日寄养高峰，推荐附近寄养家庭。客单价高，复购稳定。群主作为寄养家庭的服务收入功能筹备中。</div>
+          <div class="module-earn">动态分润 + 服务收入</div>
+        </div>
+        <div class="module-cell">
+          <div class="module-status status-live">已上线</div>
+          <div class="module-name">优惠券</div>
+          <div class="module-en">Coupon</div>
+          <div class="module-desc">领券中心促转化，群主可定向发券激活沉睡用户，提升复购率。</div>
+          <div class="module-earn">提升转化率</div>
+        </div>
+      </div>
+      <p class="footnote">* 各模块分润率按系统配置动态调整，平台只留运营成本，大部分利润归群主。寄养与上门喂养的服务收入功能筹备中。</p>
     </div>
-    <p class="summary-statement" style="max-width: 800px;">
-      AROORO 由<span class="highlight">成都零克乐克宠物服务有限公司</span>运营，是一个以"安心呼噜，放心托付"为宗旨的宠物生活服务平台。我们相信，群主不应只是平台的免费流量入口，而应是数字资产的真正所有者——因此打造了这套为群主而生的资产操作系统。
-    </p>
   </section>
 
-  <!-- ════════ 13 CTA ════════ -->
-  <section class="section cta-section" id="cta">
-    <div class="section-label">12 — Start Now</div>
-    <h2 class="cta-title">把你的群，变成你的<span class="serif-italic" style="font-weight:400;">资产</span></h2>
-    <p class="cta-desc">已有自己的宠物社群？还在用传统团购工具赚微薄佣金？<br>是时候把社交关系变成可增值的数字资产了。</p>
-    <a href="#" class="cta-button">申请成为合作伙伴 →</a>
-    <div class="cta-contact">
-      <div class="cta-contact-item">邮箱：<span>AROORO@163.com</span></div>
-      <div class="cta-contact-item">所在地：<span>中国·成都</span></div>
+  <!-- ════════ 10 加入步骤 ════════ -->
+  <section class="section" id="join">
+    <div class="section-watermark">10</div>
+    <div class="section-inner">
+      <div class="brand-seal" style="margin-bottom: 2.2rem;">
+        <img src="assets/arooro-logo.svg" alt="AROORO 品牌标志" class="brand-mark" width="300" height="300" decoding="async">
+      </div>
+      <div class="section-header">
+        <div class="section-label">10 — How to Join</div>
+        <h2 class="section-title">四步加入，<span class="serif-italic">即刻开工</span></h2>
+        <p class="section-subtitle">不需要面试，不需要保证金，审核通过即可开始邀请用户。</p>
+      </div>
+      <div class="steps-row">
+        <div class="step-cell">
+          <div class="step-num">STEP 01</div>
+          <div class="step-title">提交申请</div>
+          <div class="step-desc">在小程序"我的 → 成为合作伙伴"填写真实姓名、电话、申请理由（你的群规模、宠物类型等）。</div>
+        </div>
+        <div class="step-cell">
+          <div class="step-num">STEP 02</div>
+          <div class="step-title">平台审核</div>
+          <div class="step-desc">超级管理员审核申请，通常 1–3 个工作日内通过。可在"申请状态"页查看进度。</div>
+        </div>
+        <div class="step-cell">
+          <div class="step-num">STEP 03</div>
+          <div class="step-title">开通后台</div>
+          <div class="step-desc">审核通过后，合作伙伴中心解锁：佣金管理、推荐管理、活动管理、提现等 7 大功能模块。</div>
+        </div>
+        <div class="step-cell">
+          <div class="step-num">STEP 04</div>
+          <div class="step-title">开始邀请</div>
+          <div class="step-desc">获取专属邀请链接，发到你的群。用户通过链接注册后永久绑定在你名下，用户下单后即计入分润。</div>
+        </div>
+      </div>
+      <table class="data-table" style="margin-top: 1.6rem;">
+        <thead>
+          <tr>
+            <th>合作伙伴后台模块</th>
+            <th>功能</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>佣金管理</td><td>查看带货佣金明细，按订单类型分类</td><td>已上线</td></tr>
+          <tr><td>收入管理</td><td>查看服务收入明细（当前支持活动主办）</td><td>已上线</td></tr>
+          <tr><td>推荐管理</td><td>查看邀请用户列表、推荐订单统计</td><td>已上线</td></tr>
+          <tr><td>活动管理</td><td>创建/管理线下活动，签到打卡</td><td>已上线</td></tr>
+          <tr><td>提现</td><td>申请提现，查看提现记录与状态</td><td>已上线</td></tr>
+          <tr><td>寄养档案</td><td>作为寄养家庭管理寄养订单</td><td>筹备中</td></tr>
+          <tr><td>上门服务</td><td>作为喂养师管理上门订单</td><td>筹备中</td></tr>
+        </tbody>
+      </table>
     </div>
-    <p class="footnote" style="margin-top: 2.5rem;">AROORO · 成都零克乐克宠物服务有限公司 · 2026<br>安心呼噜，放心托付</p>
+  </section>
+
+  <!-- ════════ 11 关于 ════════ -->
+  <section class="section" id="team">
+    <div class="section-watermark">11</div>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-label">11 — About</div>
+        <h2 class="section-title">关于<span class="serif-italic">AROORO</span></h2>
+      </div>
+      <p class="summary-statement" style="max-width: 860px;">
+        AROORO 由<span class="highlight">成都零克乐克宠物服务有限公司</span>运营，是一个以"安心呼噜，放心托付"为宗旨的宠物生活服务平台。我们相信，群主不应只是平台的免费流量入口，而应是数字资产的真正所有者——因此打造了这套为群主而生的资产操作系统。
+      </p>
+    </div>
+  </section>
+
+  <!-- ════════ 12 CTA ════════ -->
+  <section class="cta-section closing" id="cta">
+    <div class="cta-main">
+      <div class="section-label">12 — Start Now</div>
+      <h2 class="cta-title">把你的群，变成你的<span class="serif-italic">资产</span></h2>
+      <p class="cta-desc">已有自己的宠物社群？还在用传统团购工具赚微薄佣金？<br>是时候把社交关系变成可增值的数字资产了。</p>
+      <a href="#" class="cta-button">申请成为合作伙伴 →</a>
+      <div class="closing-wordmark">AROORO</div>
+    </div>
+
+    <div class="closing-footer">
+      <img src="assets/arooro-logo.svg" alt="AROORO 标志" class="footer-mark closing-logo" width="300" height="300" loading="lazy" decoding="async">
+      <div class="footer-tag">安心呼噜 · 放心托付</div>
+      <div class="footer-rule"></div>
+      <div class="cta-contact">
+        <div class="cta-contact-item">邮箱：<span>AROORO@163.com</span></div>
+        <div class="cta-contact-item">所在地：<span>中国·成都</span></div>
+      </div>
+      <div class="footer-copy">AROORO · 成都零克乐克宠物服务有限公司 · 2026<br>把你的社交关系，变成可增值的数字资产</div>
+    </div>
   </section>
 
   <script>
     // ════════════════════════════════════════════════════════
-    // AROORO · Cinematic GSAP Animation System
+    // AROORO · Haute-Luxury Motion System
+    // 缓动对齐小程序 motion token：easeEmphasized cubic-bezier(0.2,0,0,1)
     // ════════════════════════════════════════════════════════
     gsap.registerPlugin(ScrollTrigger);
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const EASE = 'power3.out'; // ≈ cubic-bezier(0.2,0,0,1)
 
-    // ─── 1. Cover Cinematic Intro Timeline ───
+    // ─── 1. 封面电影感入场（克制优雅，无 gimmick） ───
     function initCoverIntro() {
       const title = document.querySelector('.cover-title');
       const titleText = title.textContent;
       title.innerHTML = titleText.split('').map(c =>
-        c === ' ' ? '<span class="char" style="display:inline-block;width:0.3em;">&nbsp;</span>' :
-        `<span class="char" style="display:inline-block;">${c}</span>`
+        c === ' ' ? '<span class="char" style="display:inline-block;width:0.3em;">&nbsp;</span>'
+                 : `<span class="char" style="display:inline-block;">${c}</span>`
       ).join('');
-
       const chars = title.querySelectorAll('.char');
       const divider = document.querySelector('.cover-divider');
       const label = document.querySelector('.cover-label');
+      const logo = document.querySelector('.cover-logo');
       const desc = document.querySelector('.cover-desc');
       const tagline = document.querySelector('.cover-tagline');
       const scrollHint = document.querySelector('.scroll-hint');
-      const bgPattern = document.querySelectorAll('.bg-pattern span');
+      const aura = document.querySelector('.cover-aura');
 
-      // Set initial state for chars BEFORE timeline (prevent FOUC)
-      gsap.set(chars, { opacity: 0, y: 80, rotateX: -40, transformOrigin: 'bottom' });
+      gsap.set(chars, { opacity: 0, y: 36 });
+      gsap.set(aura, { opacity: 0, scale: 1.08 });
 
-      const tl = gsap.timeline({ delay: 0.3 });
-
-      tl.from(label, { y: 20, opacity: 0, duration: 0.8, ease: 'power3.out' })
-        .to(chars, {
-          opacity: 1,
-          y: 0,
-          rotateX: 0,
-          duration: 1.1,
-          stagger: 0.05,
-          ease: 'power4.out'
-        }, '-=0.3')
-        .from(divider, { scaleX: 0, duration: 0.9, ease: 'power3.inOut' }, '-=0.6')
-        .from(desc, { y: 30, opacity: 0, duration: 1, ease: 'power3.out' }, '-=0.5')
-        .from(tagline, { y: 20, opacity: 0, duration: 0.8, ease: 'power3.out' }, '-=0.4')
-        .from(bgPattern, {
-          opacity: 0,
-          y: 80,
-          duration: 1.2,
-          stagger: 0.15,
-          ease: 'power2.out'
-        }, '-=0.8')
-        .to(scrollHint, { opacity: 1, duration: 0.8, ease: 'power2.out' }, '-=0.3')
-        .to(scrollHint, {
-          y: 6,
-          duration: 1.6,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut'
-        });
+      const tl = gsap.timeline({ delay: 0.25 });
+      tl.to(aura, { opacity: 0.5, scale: 1, duration: 1.6, ease: 'power2.out' })
+        .from(label, { y: 18, opacity: 0, duration: 0.9, ease: EASE }, '-=1.1')
+        .from(logo, { y: 18, opacity: 0, duration: 0.9, ease: EASE }, '<')
+        .to(chars, { opacity: 1, y: 0, duration: 1.1, stagger: 0.06, ease: EASE }, '-=0.5')
+        .to(divider, { scaleX: 1, duration: 1.0, ease: 'power3.inOut' }, '-=0.55')
+        .from(desc, { y: 26, opacity: 0, duration: 1.1, ease: EASE }, '-=0.55')
+        .from(tagline, { y: 18, opacity: 0, duration: 0.9, ease: EASE }, '-=0.4')
+        .to(scrollHint, { opacity: 0.6, duration: 0.8, ease: 'power2.out' }, '-=0.3')
+        .to(scrollHint, { opacity: 0.5, duration: 1.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
     }
 
-    // ─── 2. Section Reveal Animations ───
+    // ─── 2. 章节渐显（留白 + 优雅上移） ───
     function initSectionReveals() {
-      // Section index markers: toggle in-view class for fade-up
-      document.querySelectorAll('.section[data-num]').forEach(section => {
-        ScrollTrigger.create({
-          trigger: section,
-          start: 'top 75%',
-          onEnter: () => section.classList.add('in-view'),
-          onLeaveBack: () => section.classList.remove('in-view')
-        });
-      });
-
-      // Section headers: label slides in, title fades up, subtitle fades
       document.querySelectorAll('.section-header').forEach(header => {
         const label = header.querySelector('.section-label');
         const title = header.querySelector('.section-title');
         const subtitle = header.querySelector('.section-subtitle');
-
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: header,
-            start: 'top 85%',
-            toggleActions: 'play none none none'
-          }
-        });
-
-        if (label) tl.from(label, { x: -30, opacity: 0, duration: 0.7, ease: 'power3.out' });
-        if (title) tl.from(title, { y: 40, opacity: 0, duration: 0.9, ease: 'power3.out' }, '-=0.4');
-        if (subtitle) tl.from(subtitle, { y: 20, opacity: 0, duration: 0.7, ease: 'power3.out' }, '-=0.5');
+        const tl = gsap.timeline({ scrollTrigger: { trigger: header, start: 'top 86%', toggleActions: 'play none none none' } });
+        if (label) tl.from(label, { y: 18, opacity: 0, duration: 0.7, ease: EASE });
+        if (title) tl.from(title, { y: 34, opacity: 0, duration: 0.9, ease: EASE }, '-=0.4');
+        if (subtitle) tl.from(subtitle, { y: 18, opacity: 0, duration: 0.7, ease: EASE }, '-=0.5');
       });
 
-      // Summary grid items
+      // 章节大序号水印淡入
+      document.querySelectorAll('.section-watermark').forEach(wm => {
+        gsap.fromTo(wm, { opacity: 0, y: 30 }, {
+          opacity: 0.10, y: 0, duration: 1.4, ease: EASE,
+          scrollTrigger: { trigger: wm.closest('.section'), start: 'top 80%' }
+        });
+      });
+
+      // 引言陈述
       document.querySelectorAll('.summary-grid').forEach(grid => {
-        gsap.from(grid.children, {
-          scrollTrigger: { trigger: grid, start: 'top 80%' },
-          y: 60,
-          opacity: 0,
-          duration: 1,
-          stagger: 0.2,
-          ease: 'power3.out'
-        });
+        gsap.from(grid.children, { scrollTrigger: { trigger: grid, start: 'top 82%' }, y: 44, opacity: 0, duration: 1, stagger: 0.18, ease: EASE });
       });
 
-      // Metric row items with count-up
+      // 指标行 + 数字滚动
       document.querySelectorAll('.metric-row').forEach(row => {
         const items = row.querySelectorAll('.metric-row-item');
         items.forEach((item, i) => {
           const valueEl = item.querySelector('.metric-row-value');
           const original = valueEl ? valueEl.textContent : '';
-          const numberMatch = original.match(/[\d.]+/);
-          const prefix = numberMatch ? original.substring(0, numberMatch.index) : '';
-          const suffix = numberMatch ? original.substring(numberMatch.index + numberMatch[0].length) : '';
-          const targetNum = numberMatch ? parseFloat(numberMatch[0]) : 0;
-
-          gsap.from(item, {
-            scrollTrigger: { trigger: item, start: 'top 88%' },
-            y: 30,
-            opacity: 0,
-            duration: 0.8,
-            delay: i * 0.1,
-            ease: 'power3.out'
-          });
-
-          if (numberMatch && targetNum > 0) {
+          gsap.from(item, { scrollTrigger: { trigger: item, start: 'top 88%' }, y: 28, opacity: 0, duration: 0.8, delay: i * 0.1, ease: EASE });
+          // 纯文字指标直接显示；数字型做轻量计数
+          const numMatch = original.match(/[\d.,]+/);
+          if (numMatch) {
+            const prefix = original.substring(0, numMatch.index);
+            const suffix = original.substring(numMatch.index + numMatch[0].length);
+            const target = parseFloat(numMatch[0].replace(/,/g, ''));
             const counter = { val: 0 };
             gsap.to(counter, {
-              val: targetNum,
-              duration: 1.6,
-              delay: i * 0.1 + 0.3,
-              ease: 'power2.out',
+              val: target, duration: 1.6, delay: i * 0.1 + 0.25, ease: 'power2.out',
               scrollTrigger: { trigger: item, start: 'top 88%' },
-              onUpdate: () => {
-                const decimals = numberMatch[0].includes('.') ? 1 : 0;
-                valueEl.textContent = prefix + counter.val.toFixed(decimals) + suffix;
-              },
+              onUpdate: () => { valueEl.textContent = prefix + counter.val.toFixed(numMatch[0].includes('.') ? 1 : 0) + suffix; },
               onComplete: () => { valueEl.textContent = original; }
             });
           }
         });
       });
 
-      // Cards grids: stagger reveal
-      document.querySelectorAll('.cards-grid').forEach(grid => {
-        const cards = grid.querySelectorAll('.card-item');
-        gsap.from(cards, {
-          scrollTrigger: { trigger: grid, start: 'top 82%' },
-          y: 50,
-          opacity: 0,
-          duration: 0.8,
-          stagger: 0.08,
-          ease: 'power3.out'
+      // 卡片等高对齐：grid-auto-rows:1fr 在自适应高度网格里跨行不等高，
+      // 这里直接测量同网格最高卡片并把其余卡片拉齐，任何视口都生效。
+      function equalizeCardGrids() {
+        document.querySelectorAll('.cards-grid, .modules-grid, .ops-grid, .pillars-grid').forEach(grid => {
+          const items = Array.from(grid.children);
+          if (!items.length) return;
+          items.forEach(it => { it.style.height = ''; });
+          const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length;
+          if (cols <= 1) return; // 单列时保持自然高度
+          const maxH = Math.max(...items.map(it => it.getBoundingClientRect().height));
+          items.forEach(it => { it.style.height = maxH + 'px'; });
         });
+      }
+      equalizeCardGrids();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(equalizeCardGrids);
+      let _rz; window.addEventListener('resize', () => { clearTimeout(_rz); _rz = setTimeout(equalizeCardGrids, 150); });
+
+      // 卡片网格
+      document.querySelectorAll('.cards-grid, .modules-grid, .ops-grid').forEach(grid => {
+        const cells = grid.querySelectorAll('.card-item, .module-cell, .ops-col');
+        gsap.from(cells, { scrollTrigger: { trigger: grid, start: 'top 84%' }, y: 42, opacity: 0, duration: 0.8, stagger: 0.08, ease: EASE });
       });
 
-      // Modules grid
-      document.querySelectorAll('.modules-grid').forEach(grid => {
-        const cells = grid.querySelectorAll('.module-cell');
-        gsap.from(cells, {
-          scrollTrigger: { trigger: grid, start: 'top 80%' },
-          y: 40,
-          opacity: 0,
-          duration: 0.7,
-          stagger: 0.1,
-          ease: 'power3.out'
-        });
-      });
-
-      // Pillars grid: dramatic reveal with number
+      // 支柱
       document.querySelectorAll('.pillars-grid').forEach(grid => {
-        const cells = grid.querySelectorAll('.pillar-cell');
-        cells.forEach((cell, i) => {
+        grid.querySelectorAll('.pillar-cell').forEach((cell, i) => {
           const num = cell.querySelector('.pillar-num');
-          const title = cell.querySelector('.pillar-title');
-          const desc = cell.querySelector('.pillar-desc');
-
-          const tl = gsap.timeline({
-            scrollTrigger: { trigger: cell, start: 'top 85%' }
-          });
-
-          tl.from(num, { scale: 0.5, opacity: 0, duration: 0.9, ease: 'back.out(1.4)' })
-            .from(title, { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
-            .from(desc, { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4');
+          const tl = gsap.timeline({ scrollTrigger: { trigger: cell, start: 'top 86%' } });
+          tl.from(num, { scale: 0.6, opacity: 0, duration: 0.9, ease: 'power3.out' })
+            .from(cell.querySelector('.pillar-title'), { y: 18, opacity: 0, duration: 0.6, ease: EASE }, '-=0.4')
+            .from(cell.querySelector('.pillar-desc'), { y: 18, opacity: 0, duration: 0.6, ease: EASE }, '-=0.4');
         });
       });
 
-      // VS Comparison: split reveal from center
+      // VS 对比：从中心两侧展开
       document.querySelectorAll('.vs-container').forEach(vs => {
         const sides = vs.querySelectorAll('.vs-side');
-        gsap.from(sides[0], {
-          scrollTrigger: { trigger: vs, start: 'top 80%' },
-          x: -60,
-          opacity: 0,
-          duration: 1,
-          ease: 'power3.out'
-        });
-        gsap.from(sides[1], {
-          scrollTrigger: { trigger: vs, start: 'top 80%' },
-          x: 60,
-          opacity: 0,
-          duration: 1,
-          ease: 'power3.out'
-        });
+        gsap.from(sides[0], { scrollTrigger: { trigger: vs, start: 'top 82%' }, x: -40, opacity: 0, duration: 1, ease: EASE });
+        gsap.from(sides[1], { scrollTrigger: { trigger: vs, start: 'top 82%' }, x: 40, opacity: 0, duration: 1, ease: EASE });
       });
 
-      // Data tables: row stagger
+      // 数据表
       document.querySelectorAll('.data-table').forEach(table => {
-        const rows = table.querySelectorAll('tbody tr');
-        gsap.from(rows, {
-          scrollTrigger: { trigger: table, start: 'top 85%' },
-          y: 20,
-          opacity: 0,
-          duration: 0.5,
-          stagger: 0.06,
-          ease: 'power2.out'
-        });
-        gsap.from(table.querySelector('thead'), {
-          scrollTrigger: { trigger: table, start: 'top 85%' },
-          y: -15,
-          opacity: 0,
-          duration: 0.5,
-          ease: 'power2.out'
-        });
+        gsap.from(table.querySelector('thead'), { scrollTrigger: { trigger: table, start: 'top 86%' }, y: -14, opacity: 0, duration: 0.5, ease: EASE });
+        gsap.from(table.querySelectorAll('tbody tr'), { scrollTrigger: { trigger: table, start: 'top 86%' }, y: 18, opacity: 0, duration: 0.5, stagger: 0.06, ease: 'power2.out' });
       });
 
-      // Wallet cards: reveal
+      // 钱包
       document.querySelectorAll('.wallet-card').forEach((card, i) => {
-        gsap.from(card, {
-          scrollTrigger: { trigger: card, start: 'top 85%' },
-          y: 50,
-          opacity: 0,
-          duration: 0.9,
-          delay: i * 0.15,
-          ease: 'power3.out'
-        });
+        gsap.from(card, { scrollTrigger: { trigger: card, start: 'top 86%' }, y: 44, opacity: 0, duration: 0.9, delay: i * 0.15, ease: EASE });
       });
 
-      // Steps row: sequential reveal
+      // 步骤
       document.querySelectorAll('.steps-row').forEach(row => {
-        const cells = row.querySelectorAll('.step-cell');
-        cells.forEach((cell, i) => {
-          gsap.from(cell, {
-            scrollTrigger: { trigger: cell, start: 'top 88%' },
-            y: 40,
-            opacity: 0,
-            duration: 0.7,
-            delay: i * 0.12,
-            ease: 'power3.out'
-          });
+        row.querySelectorAll('.step-cell').forEach((cell, i) => {
+          gsap.from(cell, { scrollTrigger: { trigger: cell, start: 'top 88%' }, y: 36, opacity: 0, duration: 0.7, delay: i * 0.1, ease: EASE });
         });
       });
 
-      // Flow chain: sequential reveal like a pipeline
+      // 流程链
       document.querySelectorAll('.flow-chain').forEach(chain => {
-        const nodes = chain.querySelectorAll('.flow-node');
-        nodes.forEach((node, i) => {
-          gsap.from(node, {
-            scrollTrigger: { trigger: chain, start: 'top 85%' },
-            scaleX: 0,
-            opacity: 0,
-            duration: 0.6,
-            delay: i * 0.15,
-            ease: 'power3.out',
-            transformOrigin: 'left'
-          });
+        chain.querySelectorAll('.flow-node').forEach((node, i) => {
+          gsap.from(node, { scrollTrigger: { trigger: chain, start: 'top 86%' }, scaleX: 0.7, opacity: 0, duration: 0.6, delay: i * 0.12, ease: EASE, transformOrigin: 'left' });
         });
       });
 
-      // Ops grid columns
-      document.querySelectorAll('.ops-col').forEach((col, i) => {
-        const items = col.querySelectorAll('.ops-list li');
-        gsap.from(col, {
-          scrollTrigger: { trigger: col, start: 'top 82%' },
-          y: 40,
-          opacity: 0,
-          duration: 0.8,
-          delay: i * 0.15,
-          ease: 'power3.out'
-        });
-        gsap.from(items, {
-          scrollTrigger: { trigger: col, start: 'top 82%' },
-          x: -20,
-          opacity: 0,
-          duration: 0.4,
-          stagger: 0.08,
-          delay: i * 0.15 + 0.3,
-          ease: 'power2.out'
-        });
-      });
-
-      // List items (numbered)
-      document.querySelectorAll('.list-item').forEach((item, i) => {
-        gsap.from(item, {
-          scrollTrigger: { trigger: item, start: 'top 90%' },
-          x: -30,
-          opacity: 0,
-          duration: 0.6,
-          ease: 'power3.out'
-        });
-      });
-
-      // Pull quotes: dramatic reveal
+      // 金句
       document.querySelectorAll('.pull-quote').forEach(quote => {
-        gsap.from(quote, {
-          scrollTrigger: { trigger: quote, start: 'top 85%' },
-          y: 40,
-          opacity: 0,
-          duration: 1.2,
-          ease: 'power3.out'
-        });
-        // Animate the left border drawing
-        gsap.fromTo(quote, {
-          borderLeftWidth: 0
-        }, {
-          borderLeftWidth: '3px',
-          duration: 1,
-          ease: 'power2.out',
-          scrollTrigger: { trigger: quote, start: 'top 85%' },
-          delay: 0.2
-        });
+        gsap.from(quote, { scrollTrigger: { trigger: quote, start: 'top 86%' }, y: 34, opacity: 0, duration: 1.1, ease: EASE });
+        gsap.fromTo(quote, { borderLeftWidth: 0 }, { borderLeftWidth: '2px', duration: 1, ease: EASE, scrollTrigger: { trigger: quote, start: 'top 86%' }, delay: 0.2 });
       });
 
-      // CTA section: dramatic entrance
-      const ctaSection = document.querySelector('.cta-section');
-      if (ctaSection) {
-        const label = ctaSection.querySelector('.section-label');
-        const title = ctaSection.querySelector('.cta-title');
-        const desc = ctaSection.querySelector('.cta-desc');
-        const button = ctaSection.querySelector('.cta-button');
-        const contact = ctaSection.querySelectorAll('.cta-contact-item');
-        const footnote = ctaSection.querySelector('.footnote');
-
-        const tl = gsap.timeline({
-          scrollTrigger: { trigger: ctaSection, start: 'top 70%' }
-        });
-
-        tl.from(label, { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' })
-          .from(title, { y: 50, opacity: 0, duration: 1.2, ease: 'power3.out' }, '-=0.3')
-          .from(desc, { y: 30, opacity: 0, duration: 0.9, ease: 'power3.out' }, '-=0.7')
-          .from(button, { y: 20, opacity: 0, scale: 0.95, duration: 0.7, ease: 'back.out(1.5)' }, '-=0.5')
-          .from(contact, { y: 20, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'power3.out' }, '-=0.3')
-          .from(footnote, { opacity: 0, duration: 0.8, ease: 'power2.out' }, '-=0.3');
+      // CTA
+      const cta = document.querySelector('.cta-section');
+      if (cta) {
+        const tl = gsap.timeline({ scrollTrigger: { trigger: cta, start: 'top 72%' } });
+        tl.from(cta.querySelector('.section-label'), { y: 18, opacity: 0, duration: 0.6, ease: EASE })
+          .from(cta.querySelector('.cta-title'), { y: 44, opacity: 0, duration: 1.2, ease: EASE }, '-=0.3')
+          .from(cta.querySelector('.cta-desc'), { y: 26, opacity: 0, duration: 0.9, ease: EASE }, '-=0.7')
+          .from(cta.querySelector('.cta-button'), { y: 18, opacity: 0, scale: 0.96, duration: 0.7, ease: 'back.out(1.5)' }, '-=0.5')
+          .from(cta.querySelector('.closing-wordmark'), { y: 18, opacity: 0, duration: 0.7, ease: EASE }, '-=0.4')
+          .from(cta.querySelector('.closing-footer'), { y: 24, opacity: 0, duration: 0.9, ease: EASE }, '-=0.3');
       }
     }
 
-    // ─── 3. Magnetic Hover Effect ───
+    // ─── 3. 磁吸 CTA（轻量微交互） ───
     function initMagneticHover() {
       if (isMobile) return;
-
       document.querySelectorAll('.nav-cta, .cta-button').forEach(el => {
         el.addEventListener('mousemove', (e) => {
-          const rect = el.getBoundingClientRect();
-          const x = e.clientX - rect.left - rect.width / 2;
-          const y = e.clientY - rect.top - rect.height / 2;
-          gsap.to(el, { x: x * 0.3, y: y * 0.3, duration: 0.4, ease: 'power2.out' });
+          const r = el.getBoundingClientRect();
+          const x = (e.clientX - r.left - r.width / 2) * 0.25;
+          const y = (e.clientY - r.top - r.height / 2) * 0.25;
+          gsap.to(el, { x, y, duration: 0.4, ease: 'power2.out' });
         });
-        el.addEventListener('mouseleave', () => {
-          gsap.to(el, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
-        });
-      });
-
-      // Card subtle tilt
-      document.querySelectorAll('.card-item, .module-cell, .pillar-cell, .wallet-card').forEach(el => {
-        el.addEventListener('mousemove', (e) => {
-          const rect = el.getBoundingClientRect();
-          const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-          const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
-          gsap.to(el, {
-            y: -4,
-            duration: 0.4,
-            ease: 'power2.out'
-          });
-        });
-        el.addEventListener('mouseleave', () => {
-          gsap.to(el, { y: 0, duration: 0.6, ease: 'power3.out' });
-        });
+        el.addEventListener('mouseleave', () => gsap.to(el, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.4)' }));
       });
     }
 
-    // ─── 4. Background Parallax ───
-    function initParallax() {
-      if (isMobile) return;
-
-      document.querySelectorAll('.bg-pattern span').forEach((span, i) => {
-        const speed = (i + 1) * 0.15;
-        gsap.to(span, {
-          y: () => window.innerHeight * speed * 0.5,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: 'body',
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: 1.5
-          }
-        });
-      });
-
-      // Noise overlay subtle parallax
-      gsap.to('.noise-overlay', {
-        y: () => window.innerHeight * 0.3,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: 'body',
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 2
-        }
-      });
-    }
-
-    // ─── 5. Nav Scroll State & Active Link ───
+    // ─── 4. 导航状态 ───
     function initNav() {
       const nav = document.getElementById('nav');
       const navLinks = document.querySelectorAll('.nav-link:not(.nav-cta)');
-      const sections = document.querySelectorAll('.section');
-
-      // Nav background on scroll
-      gsap.to(nav, {
-        backgroundColor: 'rgba(250,249,247,0.96)',
-        duration: 0.3,
-        ease: 'power2.out',
-        scrollTrigger: {
-          trigger: 'body',
-          start: 'top -40',
-          end: 'top -40',
-          toggleActions: 'play none none reverse'
-        }
+      const sections = document.querySelectorAll('.section, .cta-section');
+      ScrollTrigger.create({
+        trigger: 'body', start: 'top -40', end: 'top -40',
+        toggleActions: 'play none none reverse',
+        onEnter: () => nav.classList.add('scrolled'),
+        onLeaveBack: () => nav.classList.remove('scrolled')
       });
-
-      // Active link tracking
       sections.forEach(section => {
         ScrollTrigger.create({
-          trigger: section,
-          start: 'top 50%',
-          end: 'bottom 50%',
+          trigger: section, start: 'top 50%', end: 'bottom 50%',
           onToggle: (self) => {
             if (self.isActive) {
-              const id = section.id;
-              navLinks.forEach(link => {
-                link.classList.toggle('active', link.getAttribute('href') === '#' + id);
-              });
+              navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === '#' + section.id));
             }
           }
         });
       });
     }
 
-    // ─── 6. Section Pin Progress Indicator (subtle) ───
+    // ─── 5. 进度细线（金） ───
     function initProgressIndicator() {
       const indicator = document.createElement('div');
-      indicator.style.cssText = `
-        position: fixed;
-        top: 0; left: 0;
-        height: 2px;
-        background: #000;
-        z-index: 99997;
-        transform-origin: left;
-        transform: scaleX(0);
-        will-change: transform;
-      `;
+      indicator.style.cssText = `position:fixed;top:0;left:0;height:2px;background:var(--gold);z-index:99999;transform-origin:left;transform:scaleX(0);will-change:transform;width:100%;`;
       document.body.appendChild(indicator);
-
-      gsap.to(indicator, {
-        scaleX: 1,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: 'body',
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 0.3
-        }
-      });
+      gsap.to(indicator, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: 'body', start: 'top top', end: 'bottom bottom', scrub: 0.3 } });
     }
 
-    // ─── 7. Refresh on font load ───
-    document.fonts.ready.then(() => {
-      ScrollTrigger.refresh();
-    });
+    document.fonts.ready.then(() => ScrollTrigger.refresh());
 
-    // ════════════════════════════════════════════════════════
-    // Initialize All
-    // ════════════════════════════════════════════════════════
     window.addEventListener('load', () => {
       if (reduceMotion) {
-        // If user prefers reduced motion, just show everything
-        document.querySelectorAll('[class*="gsap-"]').forEach(el => {
-          el.style.opacity = '1';
-          el.style.transform = 'none';
-        });
-        return;
+        document.querySelectorAll('[class*="gsap-"]').forEach(el => { el.style.opacity = '1'; el.style.transform = 'none'; });
+        return; // 尊重系统「减少动态」——直接静态呈现
       }
-
       initCoverIntro();
       initSectionReveals();
       initMagneticHover();
-      initParallax();
       initNav();
       initProgressIndicator();
-
-      // Refresh after a tick to ensure proper layout
       setTimeout(() => ScrollTrigger.refresh(), 100);
     });
   </script>

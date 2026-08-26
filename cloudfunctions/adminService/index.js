@@ -205,6 +205,7 @@ const ACTION_PERMISSIONS = {
     deleteProduct: 'partner',
     batchUpdateProducts: 'partner',
     cloneProduct: 'partner',
+    import1688Product: 'partner',
     getMallOrders: 'partner',
     getMallOrderDetail: 'partner',
     handleMallOrder: 'partner',
@@ -307,25 +308,30 @@ function parseHttpEvent(event, context) {
         if (!body || !body.action) {
             return { _isHttpCall: true, _parseError: new Error('缺少 action 字段') };
         }
-        const httpContext = context?.HTTP_CONTEXT || { headers: event.headers || {} };
-        return {
-            action: body.action,
-            data: body.data || {},
-            _httpContext: httpContext,
-            _isHttpCall: true,
-        };
+    const httpContext = context?.HTTP_CONTEXT || { headers: event.headers || {} };
+    return {
+        action: body.action,
+        data: body.data || {},
+        // 兼容：浏览器插件/网关可能把用户 JWT 放在请求体顶层 accessToken。
+        // 部分 API 网关不转发 X-User-Token 自定义头，此时退回读取 body 里的 token。
+        _bodyAccessToken: (body && body.accessToken) || (body && body.data && body.data.accessToken) || '',
+        _httpContext: httpContext,
+        _isHttpCall: true,
+    };
     }
     catch (e) {
         return { _isHttpCall: true, _parseError: e };
     }
 }
 exports.parseHttpEvent = parseHttpEvent;
-function parseHttpAuth(httpContext) {
+function parseHttpAuth(httpContext, bodyAccessToken) {
     // 认证契约：优先读取 X-User-Token（web 端用户 JWT），
     // 兼容旧约定从 Authorization 头读取（注意 Authorization 在生产环境可能被网关 API Key 占用）。
     const headers = httpContext?.headers || {};
     const authHeader = headers['x-user-token'] || headers['X-User-Token'] || headers.authorization || headers.Authorization || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+    // 头部优先；网关未转发 X-User-Token 时退回请求体里的 accessToken（插件已同时下发）
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+        || (bodyAccessToken ? String(bodyAccessToken).replace(/^Bearer\s+/i, '').trim() : '');
     if (!token) {
         return null;
     }
@@ -463,7 +469,7 @@ const main = async (event, context) => {
             return { statusCode: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ code: 400, message: `未知操作: ${validHttpInfo.action}` }) };
         }
         if (validHttpInfo.action !== 'webLogin' && !NO_AUTH_REQUIRED.has(validHttpInfo.action)) {
-            const httpAuth = parseHttpAuth(validHttpInfo._httpContext);
+            const httpAuth = parseHttpAuth(validHttpInfo._httpContext, validHttpInfo._bodyAccessToken);
             if (!httpAuth) {
                 return { statusCode: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ code: 401, message: '未登录或Token已过期' }) };
             }
@@ -504,7 +510,9 @@ const main = async (event, context) => {
                 const mergedEvent = { ...validHttpInfo.data, action: validHttpInfo.action };
                 logger.info(validHttpInfo.action, { openid: httpAuth.openid, source: 'http' });
                 const result = await exports.handlers[validHttpInfo.action](mergedEvent, context, auth);
-                return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(result) };
+                // HTTP 网关路径同样需要把 cloud:// 转换为 https 临时 URL（web-admin 走网关读商品图）
+                const converted = await convertCloudUrls(result);
+                return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(converted) };
             }
             catch (error) {
                 logger.error(validHttpInfo.action, error);
@@ -517,7 +525,8 @@ const main = async (event, context) => {
             const auth = { _isHttpAuth: true };
             logger.info('webLogin', { source: 'http' });
             const result = await exports.handlers[validHttpInfo.action](mergedEvent, context, auth);
-            return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(result) };
+            const converted = await convertCloudUrls(result);
+            return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(converted) };
         }
         catch (error) {
             logger.error('webLogin', error);

@@ -6,34 +6,6 @@
    排版哲学：杂志式大字距 + 轻字重 + 发丝描边取代阴影
    ================================================================ */
 
-/* ===== 入场动画（仅 transform / opacity，GPU 加速） ===== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(24rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 /* ===== 页面容器 ===== */
 .tuan-page {
   height: 100vh;
@@ -42,8 +14,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation-name: fadeIn;
-  animation-duration: 600ms;
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
 }
@@ -53,9 +25,9 @@
   padding: 0;
   position: relative;
   flex-shrink: 0;
-  animation-name: fadeInUp;
-  animation-duration: 700ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
@@ -133,9 +105,9 @@
   border: 1rpx solid var(--hairline);
   transition: transform 280ms cubic-bezier(0.25, 0.1, 0.25, 1),
               border-color 280ms cubic-bezier(0.25, 0.1, 0.25, 1);
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
@@ -405,9 +377,9 @@
   border-radius: 50%;
   background: var(--accent-color);
   opacity: 0.4;
-  animation-name: dotPulse;
+  animation-name: zy-dot-pulse;
   animation-duration: 1400ms;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
 }
@@ -418,17 +390,6 @@
 
 .loading-dot:nth-child(3) {
   animation-delay: 400ms;
-}
-
-@keyframes dotPulse {
-  0%, 80%, 100% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  40% {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
 
 .tuan-no-more {
@@ -444,13 +405,14 @@
 .tuan-empty {
   text-align: center;
   padding: var(--zy-space-2xl) var(--page-padding);
-  animation-name: fadeIn;
-  animation-duration: 600ms;
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
 }
 
 .empty-icon {
+  animation: zy-breathe-glow 4000ms ease-in-out infinite;
   font-size: 72rpx;
   display: block;
   opacity: 0.35;
@@ -498,8 +460,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation-name: fadeIn;
-  animation-duration: 320ms;
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
 }
@@ -511,9 +473,9 @@
   padding: 56rpx 40rpx 40rpx;
   position: relative;
   border: 1rpx solid var(--hairline);
-  animation-name: scaleIn;
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-scale-in-soft;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 

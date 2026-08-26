@@ -4,28 +4,6 @@
    Hero 全出血大图 + 发丝描边卡片 + 克制动效
    Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
    ================================================================ */
-/* ===== 入场动画 ===== */
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(32rpx);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
-@keyframes heroFadeIn {
-  0% { opacity: 0; transform: scale(1.04); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
 /* ===== 页面容器 ===== */
 .page-container {
   min-height: 100vh;
@@ -47,9 +25,9 @@
   padding-top: 62.5%;
   overflow: hidden;
   background-color: var(--activity-tint);
-  animation-name: heroFadeIn;
+  animation-name: zy-hero-settle;
   animation-duration: 800ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
@@ -92,9 +70,9 @@
   right: 0;
   padding: var(--zy-space-xl) var(--page-padding);
   z-index: 10;
-  animation-name: fadeInUp;
-  animation-duration: 700ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 200ms;
   animation-fill-mode: forwards;
 }
@@ -202,9 +180,9 @@
   border-radius: var(--zy-radius-lg);
   border: 1rpx solid var(--hairline);
   overflow: hidden;
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 300ms;
   animation-fill-mode: forwards;
 }
@@ -321,9 +299,9 @@
 /* ==================== Highlight Section（亮点标签） ==================== */
 .highlight-section {
   margin: var(--zy-space-lg) var(--page-padding) var(--zy-space-lg);
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 380ms;
   animation-fill-mode: forwards;
 }
@@ -370,9 +348,9 @@
   border-radius: var(--zy-radius-lg);
   padding: var(--zy-space-lg);
   border: 1rpx solid var(--hairline);
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 460ms;
   animation-fill-mode: forwards;
 }
@@ -452,9 +430,9 @@
   border-radius: var(--zy-radius-lg);
   padding: var(--zy-space-lg);
   border: 1rpx solid var(--hairline);
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-delay: 540ms;
   animation-fill-mode: forwards;
 }
@@ -724,16 +702,11 @@
   border: 3rpx solid var(--activity-tint);
   border-top-color: var(--activity-primary);
   border-radius: 50%;
-  animation-name: spin;
+  animation-name: zy-spin;
   animation-duration: 800ms;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 .loading-text {

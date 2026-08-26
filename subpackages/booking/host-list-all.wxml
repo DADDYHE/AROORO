@@ -39,7 +39,7 @@
   <view class="filter-bar">
     <view class="filter-section">
       <view class="filter-options">
-        <view class="filter-option" bindtap="showFilterModal">
+        <view class="filter-option" bindtap="showFilterModal" hover-class="filter-option--pressed" hover-stay-time="80">
           <text>筛选</text>
           <image class="filter-arrow" src="/images/icons/chevron-down-luxury-line.svg" mode="aspectFit"></image>
         </view>
@@ -49,7 +49,7 @@
 
   <!-- 寄养家庭列表 -->
   <view class="hosts-list">
-    <view class="host-card" wx:for="{{hosts}}" wx:key="id" data-id="{{item.id}}" bindtap="selectHost">
+    <view class="host-card" wx:for="{{hosts}}" wx:key="id" data-id="{{item.id}}" bindtap="selectHost" hover-class="host-card--pressed" hover-stay-time="80">
       <!-- 封面图片轮播 -->
       <view class="host-cover-container">
         <swiper class="host-swiper" autoplay interval="3000" circular indicator-dots indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#ffffff">
@@ -95,7 +95,7 @@
             <text class="price">¥{{item.price}}</text>
             <text class="price-unit">/{{item.priceUnit || '天'}}</text>
           </view>
-          <button class="book-btn" bindtap="bookHost" data-id="{{item.id}}">
+          <button class="book-btn" bindtap="bookHost" data-id="{{item.id}}" hover-class="book-btn--pressed" hover-stay-time="80">
             <text>立即预约</text>
           </button>
         </view>
@@ -135,7 +135,7 @@
   <view class="modal-content {{showFilterModal ? 'visible' : ''}}" catchtap="">
     <view class="modal-header">
       <text class="modal-title">筛选条件</text>
-      <view class="modal-close-btn" bindtap="closeFilterModal">
+      <view class="modal-close-btn" bindtap="closeFilterModal" hover-class="modal-close-btn--pressed" hover-stay-time="80">
         <image class="modal-close" src="/images/icons/close-luxury-line.svg" mode="aspectFit"></image>
       </view>
     </view>
@@ -144,15 +144,15 @@
       <view class="filter-group">
         <text class="filter-group-title">宠物类型</text>
         <view class="filter-checkboxes">
-          <view class="checkbox-item {{filters.petTypes.dog ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'dog')">
+          <view class="checkbox-item {{filters.petTypes.dog ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'dog')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
             <text>狗狗</text>
           </view>
-          <view class="checkbox-item {{filters.petTypes.cat ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'cat')">
+          <view class="checkbox-item {{filters.petTypes.cat ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'cat')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
             <text>猫咪</text>
           </view>
-          <view class="checkbox-item {{filters.petTypes.other ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'other')">
+          <view class="checkbox-item {{filters.petTypes.other ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'other')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
             <text>其他</text>
           </view>
@@ -162,15 +162,15 @@
       <view class="filter-group">
         <text class="filter-group-title">服务类型</text>
         <view class="filter-checkboxes">
-          <view class="checkbox-item {{filters.services.board ? 'checked' : ''}}" bindtap="toggleFilter('services', 'board')">
+          <view class="checkbox-item {{filters.services.board ? 'checked' : ''}}" bindtap="toggleFilter('services', 'board')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
             <text>寄养</text>
           </view>
-          <view class="checkbox-item {{filters.services.walk ? 'checked' : ''}}" bindtap="toggleFilter('services', 'walk')">
+          <view class="checkbox-item {{filters.services.walk ? 'checked' : ''}}" bindtap="toggleFilter('services', 'walk')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
             <text>遛狗</text>
           </view>
-          <view class="checkbox-item {{filters.services.feed ? 'checked' : ''}}" bindtap="toggleFilter('services', 'feed')">
+          <view class="checkbox-item {{filters.services.feed ? 'checked' : ''}}" bindtap="toggleFilter('services', 'feed')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
             <text>喂食</text>
           </view>
@@ -188,8 +188,8 @@
     </view>
     
     <view class="modal-footer">
-      <button class="reset-btn" bindtap="resetFilters">重置</button>
-      <button class="apply-btn" bindtap="applyFilters">应用</button>
+      <button class="reset-btn" bindtap="resetFilters" hover-class="reset-btn--pressed" hover-stay-time="80">重置</button>
+      <button class="apply-btn" bindtap="applyFilters" hover-class="apply-btn--pressed" hover-stay-time="80">应用</button>
     </view>
   </view>
 </view>

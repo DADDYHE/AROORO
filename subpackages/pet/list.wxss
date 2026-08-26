@@ -184,9 +184,9 @@
   align-items: center;
   justify-content: center;
   padding: 120rpx var(--zy-space-lg) 80rpx;
-  animation-name: fadeIn;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
 }
 

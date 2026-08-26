@@ -20,7 +20,7 @@
 
 <!-- ===== 内容滚动区（banner 已移入此滚动容器，与内容一起上滑） ===== -->
 <scroll-view
-  class="home-scroll {{reduceMotion ? 'reduce-motion' : ''}}"
+  class="home-scroll"
   scroll-y
   enhanced
   refresher-enabled="{{true}}"

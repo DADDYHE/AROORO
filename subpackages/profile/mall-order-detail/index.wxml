@@ -97,7 +97,7 @@
           <text class="info-label">订单编号</text>
           <view class="info-value-row">
             <text class="info-value">{{order.orderNo}}</text>
-            <view class="copy-btn" bindtap="onCopyOrderNo">复制</view>
+            <view class="copy-btn" bindtap="onCopyOrderNo" hover-class="copy-btn pressed" hover-stay-time="80">复制</view>
           </view>
         </view>
         <view class="info-row">

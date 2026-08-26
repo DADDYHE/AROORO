@@ -81,6 +81,8 @@
   height: 3rpx;
   background: var(--lux-gold-line-solid);
   border-radius: 0 0 3rpx 3rpx;
+  /* 品牌 banner 呼吸光泽（缓 5.6s，纯光 opacity，最克制；不与父级入场冲突） */
+  animation: zy-breathe-glow 5600ms ease-in-out infinite;
 }
 
 .brand-main {
@@ -716,35 +718,18 @@
   left: 0;
 }
 
-/* ---------- 入场动画 ---------- */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(24rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 .animate-fade-in-up {
-  animation-name: fadeInUp;
-  animation-duration: 500ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
   opacity: 0;
 }
 
 .animate-fade-in {
-  animation-name: fadeIn;
-  animation-duration: 400ms;
-  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
   opacity: 0;
 }
@@ -829,4 +814,165 @@
 
 .loading-dot:nth-child(3) {
   animation-delay: 300ms;
+}
+
+/* ============================================================
+   结构级入场（团长中心 · 丝绸沉降 + 60ms 呼吸节奏）
+   ------------------------------------------------------------
+   设计约定（改动前务必先读）：
+   1. 只挂「数据加载完成后才渲染」的内容层（brand-block / gallery-card），
+      不挂 .gallery-container —— 容器在 loading 态就已挂载，
+      挂上去只会让 loading 圈淡入，正文反而拿不到入场。
+   2. 每条分支只动画一层，避免父子 opacity 相乘变浑。
+      .gallery-header 是 .brand-block 的纯包裹层，故只动画 .brand-block。
+   3. 仅动 transform + opacity；animation 用展开属性
+      （Skyline 简写不支持 CSS 变量）；fill-mode 只用 forwards。
+   4. 带 delay 的一律显式 opacity: 0，避免首帧闪现。
+   5. ⚠️ fill-mode: forwards 会把 transform/opacity 锁在终值，
+      所以「带入场动画的元素不能再用 transform 做按压」——
+      按压反馈请放在其子节点，或改用 background/border/shadow。
+   ============================================================ */
+
+/* 页首品牌区：自上方轻沉（-16rpx），先于内容落定 */
+.brand-block {
+  opacity: 0;
+  animation-name: zy-fade-in-down-sm;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 筛选 / Tab 区：紧随品牌区上浮 */
+.filter-section {
+  opacity: 0;
+  animation-name: zy-fade-in-up-sm;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-delay: 80ms;
+  animation-fill-mode: forwards;
+}
+
+/* 仪表盘卡片：丝绸上浮，基准 140ms（接在品牌区之后） */
+.gallery-card {
+  opacity: 0;
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-delay: 140ms;
+  animation-fill-mode: forwards;
+}
+
+/* 首屏 6 张依次落位（60ms 步进，与中央 zy-enter--d* 同节奏） */
+.gallery-hall > .gallery-card:nth-child(1) { animation-delay: 140ms; }
+.gallery-hall > .gallery-card:nth-child(2) { animation-delay: 200ms; }
+.gallery-hall > .gallery-card:nth-child(3) { animation-delay: 260ms; }
+.gallery-hall > .gallery-card:nth-child(4) { animation-delay: 320ms; }
+.gallery-hall > .gallery-card:nth-child(5) { animation-delay: 380ms; }
+.gallery-hall > .gallery-card:nth-child(6) { animation-delay: 440ms; }
+/* 第 7 张起不再累加：既免去首屏外的空等，也让「加载更多」追加项即时淡入 */
+.gallery-hall > .gallery-card:nth-child(n+7) { animation-delay: 0ms; }
+
+/* 空态：更慢更轻，留白感 */
+.gallery-empty {
+  opacity: 0;
+  animation-name: zy-fade-in;
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-delay: 200ms;
+  animation-fill-mode: forwards;
+}
+
+/* 列表终止线 */
+.list-end {
+  opacity: 0;
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 固定底部操作栏：自底升起 */
+.action-bar {
+  opacity: 0;
+  animation-name: zy-footer-rise;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-delay: 200ms;
+  animation-fill-mode: forwards;
+}
+
+/* ============================================================
+   微交互（按压过渡 · 沿用 app.wxss 的「基类 transition + X--pressed」约定）
+   用法：<view class="gallery-card" hover-class="gallery-card--pressed"
+                hover-stay-time="80">
+   ============================================================ */
+
+/* 叶子级可点元素：transform 按压（父级动画不会锁子级 transform） */
+.gallery-entrance,
+.btn-primary,
+.btn-accent,
+.btn-outline,
+.btn-ghost,
+.action-btn,
+.modal-btn,
+.sheet-close,
+.fab-btn,
+.image-grid-item {
+  transition-property: transform, opacity, background-color, border-color, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.gallery-entrance--pressed {
+  background-color: var(--primary-wash);
+  transform: scale(0.99);
+}
+
+.btn-primary--pressed,
+.btn-accent--pressed,
+.action-btn--pressed,
+.modal-btn--pressed {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-glow-primary-xs);
+}
+
+.btn-outline--pressed,
+.btn-ghost--pressed {
+  transform: scale(0.97);
+  background-color: var(--primary-wash);
+  border-color: var(--primary-soft);
+}
+
+.sheet-close--pressed,
+.image-grid-item--pressed {
+  transform: scale(0.94);
+  opacity: 0.85;
+}
+
+.fab-btn--pressed {
+  transform: scale(0.94);
+  box-shadow: var(--shadow-glow-primary-xs);
+}
+
+/* 整卡可点：卡片自身带入场动画 → transform 被 forwards 锁死，
+   故按压只走 background / border（视觉上是「压入台面」） */
+.gallery-card {
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.gallery-card--pressed {
+  background-color: var(--primary-wash);
+  border-color: rgba(31, 58, 31, 0.12);
+  box-shadow: var(--shadow-glow-primary-xs);
+}
+
+/* 表单聚焦过渡（JS 切 focused 类时平滑） */
+.form-input,
+.form-textarea,
+.form-picker {
+  transition-property: border-color, background-color, box-shadow;
+  transition-duration: 240ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
 }

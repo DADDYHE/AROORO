@@ -141,6 +141,7 @@ Page({
         expandedCategory: category,
         currentCategory: category,
         currentSubCategory: '',
+        currentSubCategoryLabel: '',
         page: 1,
       })
       const catConfig = this.data.categories.find(c => c.key === category)

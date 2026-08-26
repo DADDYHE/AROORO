@@ -5,23 +5,6 @@
    Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
    ================================================================ */
 @import '../../styles/loading-animation.wxss';
-/* ===== 入场动画 ===== */
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(28rpx);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
 /* ===== 页面容器 ===== */
 .page-container {
   min-height: 100vh;
@@ -166,15 +149,15 @@
   border: 1rpx solid var(--hairline);
   position: relative;
   overflow: hidden;
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
 /* 第二张卡片延迟入场 */
 .info-card:nth-child(2) {
-  animation-delay: 110ms;
+  animation-delay: 140ms;
 }
 
 /* ── 商品信息 ── */
@@ -759,9 +742,9 @@
   justify-content: center;
   min-height: 100vh;
   padding: 0 40rpx;
-  animation-name: fadeIn;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
 }
 

@@ -3,38 +3,6 @@
 @import '../../styles/components.wxss';
 /* 寄养确认订单 - AROORO 豪华宠物寄养 */
 
-/* ========== 入场动画 ========== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(24rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes subtleShine {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(200%);
-  }
-}
-
 /* ========== 页面容器 ========== */
 .page-container {
   min-height: 100vh;
@@ -50,9 +18,9 @@
   position: relative;
   border-bottom: 1rpx solid var(--hairline);
   z-index: 1;
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
@@ -103,16 +71,16 @@
   margin-bottom: var(--zy-space-lg);
   position: relative;
   overflow: hidden;
-  animation-name: fadeInUp;
-  animation-duration: 600ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
 .info-card:nth-child(1) { animation-delay: 80ms; }
-.info-card:nth-child(2) { animation-delay: 160ms; }
-.info-card:nth-child(3) { animation-delay: 240ms; }
-.info-card:nth-child(4) { animation-delay: 320ms; }
+.info-card:nth-child(2) { animation-delay: 140ms; }
+.info-card:nth-child(3) { animation-delay: 200ms; }
+.info-card:nth-child(4) { animation-delay: 260ms; }
 
 /* 香槟金顶部装饰线 - 替代彩虹渐变 */
 .info-card::before {
@@ -452,9 +420,9 @@
   height: 100%;
   background: rgba(255, 255, 255, 0.08);
   transform: translateX(-100%);
-  animation-name: subtleShine;
+  animation-name: zy-shimmer-sweep;
   animation-duration: 3000ms;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-timing-function: linear;
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
   animation-delay: 2000ms;
@@ -478,9 +446,9 @@
   border-radius: 50%;
   background: var(--primary-color);
   display: inline-block;
-  animation-name: pulse;
+  animation-name: zy-pulse-soft;
   animation-duration: 1400ms;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
 }

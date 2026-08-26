@@ -42,7 +42,7 @@
         <view class="host-avatar-placeholder" wx:else></view>
         <view class="host-info">
           <text class="host-name">{{order.hostName || '寄养家庭'}}</text>
-          <view class="host-contact" bindtap="onContactHost" wx:if="{{order.hostPhone}}">
+          <view class="host-contact" bindtap="onContactHost" wx:if="{{order.hostPhone}}" hover-class="host-contact--pressed" hover-stay-time="80">
             <text class="host-phone">{{order.hostPhone}}</text>
             <view class="call-btn">联系</view>
           </view>
@@ -82,7 +82,7 @@
         <text class="info-label">订单编号</text>
         <view class="info-value-row">
           <text class="info-value">{{order.orderNo}}</text>
-          <view class="copy-btn" bindtap="onCopyOrderNo">复制</view>
+          <view class="copy-btn" bindtap="onCopyOrderNo" hover-class="copy-btn pressed" hover-stay-time="80">复制</view>
         </view>
       </view>
       <view class="info-row">

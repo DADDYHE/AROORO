@@ -5,23 +5,6 @@
    Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky / 伪元素
    ================================================================ */
 
-/* ===== 入场动画 ===== */
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(24rpx);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
 /* ===== 页面容器 ===== */
 .page-container {
   min-height: 100vh;
@@ -138,9 +121,9 @@
   background-color: var(--card-color);
   margin-bottom: 0;
   border-bottom: 1rpx solid var(--hairline);
-  animation-name: fadeInUp;
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
@@ -207,19 +190,19 @@
   overflow: visible;
   transition: transform var(--dur-fast) var(--ease-refined),
               border-color var(--dur-fast) var(--ease-refined);
-  animation-name: fadeInUp;
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.19,1,0.22,1);
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
 /* 交错入场延迟 */
-.product-card:nth-child(1) { animation-delay: 40ms; }
-.product-card:nth-child(2) { animation-delay: 70ms; }
-.product-card:nth-child(3) { animation-delay: 110ms; }
-.product-card:nth-child(4) { animation-delay: 160ms; }
-.product-card:nth-child(5) { animation-delay: 220ms; }
-.product-card:nth-child(6) { animation-delay: 110ms; }
+.product-card:nth-child(1) { animation-delay: 80ms; }
+.product-card:nth-child(2) { animation-delay: 140ms; }
+.product-card:nth-child(3) { animation-delay: 200ms; }
+.product-card:nth-child(4) { animation-delay: 260ms; }
+.product-card:nth-child(5) { animation-delay: 320ms; }
+.product-card:nth-child(6) { animation-delay: 380ms; }
 
 .product-card--pressed {
   transform: scale(0.98);
@@ -288,9 +271,9 @@
   justify-content: center;
   padding: 40rpx 0 16rpx;
   margin-top: 16rpx;
-  animation-name: fadeIn;
+  animation-name: zy-fade-in;
   animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   animation-fill-mode: forwards;
   animation-delay: 220ms;
 }

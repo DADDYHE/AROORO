@@ -52,7 +52,7 @@
         >
           <!-- 环境照片 -->
           <swiper-item wx:if="{{currentMediaType === 'photos'}}" wx:for="{{host.photos || []}}" wx:key="index">
-            <view class="photo-wrapper" catchtap="goToPhotosPage">
+            <view class="photo-wrapper" catchtap="goToPhotosPage" hover-class="photo-wrapper--pressed" hover-stay-time="80">
               <image lazy-load class="main-photo" src="{{item}}" mode="scaleToFill" binderror="onCloudImageError" data-src="{{item}}" data-path="host.photos[{{index}}]"></image>
               <!-- 第4张及之后的照片添加查看更多提示 -->
               <view class="more-tip" wx:if="{{index === 3 && host.photos.length > 4}}" catchtap="viewMorePhotos">
@@ -64,7 +64,7 @@
           
           <!-- 日常视频 -->
           <swiper-item wx:if="{{currentMediaType === 'videos'}}" wx:for="{{host.videos || []}}" wx:key="index">
-            <view class="video-wrapper" catchtap="goToVideosPage">
+            <view class="video-wrapper" catchtap="goToVideosPage" hover-class="video-wrapper--pressed" hover-stay-time="80">
               <video 
                 class="main-video" 
                 src="{{item}}" 
@@ -83,13 +83,13 @@
         
         <!-- 媒体类型切换按钮 - 放在同一个背景中 -->
         <view class="media-type-buttons">
-          <view class="media-type-btn interaction-btn {{currentMediaType === 'photos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="photos">
+          <view class="media-type-btn interaction-btn {{currentMediaType === 'photos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="photos" hover-class="media-type-btn--pressed" hover-stay-time="80">
             环境照片
           </view>
-          <view class="media-type-btn interaction-btn {{currentMediaType === 'videos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="videos">
+          <view class="media-type-btn interaction-btn {{currentMediaType === 'videos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="videos" hover-class="media-type-btn--pressed" hover-stay-time="80">
             日常视频
           </view>
-          <view class="media-type-btn interaction-btn album-btn {{currentMediaType === 'album' ? 'active' : ''}}" catchtap="switchMediaType" data-type="album">
+          <view class="media-type-btn interaction-btn album-btn {{currentMediaType === 'album' ? 'active' : ''}}" catchtap="switchMediaType" data-type="album" hover-class="media-type-btn--pressed" hover-stay-time="80">
             <view class="album-separator"></view>
             <text class="album-text">相册</text>
             <view class="album-arrow"></view>
@@ -127,7 +127,7 @@
       <view 
         class="booking-btn interaction-btn {{host.isAcceptingOrders === false ? 'disabled' : ''}}" 
         catchtap="{{host.isAcceptingOrders === false ? '' : 'contactFamily'}}"
-      >
+       hover-class="booking-btn--pressed" hover-stay-time="80">
         {{host.isAcceptingOrders === false ? '已暂停接待' : '联系家庭'}}
       </view>
 
