@@ -1,7 +1,4 @@
-const { ReduceMotionBehavior } = require('../behaviors/reduce-motion')
-
 Component({
-  behaviors: [ReduceMotionBehavior],
   data: {
     selected: 0,
     color: '#666666',
@@ -44,7 +41,12 @@ Component({
   attached() {
     this._isAttached = true
     this.setData({ tabBarPadding: 20 })
-    this.initReduceMotion()
+    if (wx.getSystemSetting) {
+      const setting = wx.getSystemSetting()
+      if (setting && setting.reduceMotion) {
+        this.setData({ reduceMotion: setting.reduceMotion === 'enable' })
+      }
+    }
     const pages = getCurrentPages()
     if (pages.length > 0) {
       const currentPage = pages[pages.length - 1]
@@ -65,7 +67,6 @@ Component({
   detached() {
     this._isAttached = false
     this._teardownTabPressAnimation()
-    this.cleanupReduceMotion()
   },
   methods: {
     switchTab(e) {
@@ -112,8 +113,6 @@ Component({
     // worklet 在 UI 线程同步驱动，无 setData 开销，60fps 流畅
     // ================================================================
     _initTabPressAnimation() {
-      // 减少动态：跳过按压弹性动效（Worklet 动画无法被 WXSS .rm 规则压制，必须在 JS 内跳过）
-      if (this.data.reduceMotion) return
       if (!wx.worklet || !this.applyAnimatedStyle) return
       const { shared, Easing } = wx.worklet
       // easeOutBack：超过目标值后回弹，产生弹性反馈

@@ -1,23 +1,28 @@
 const app = getApp()
-const { ReduceMotionBehavior } = require('../../behaviors/reduce-motion')
 
 // 启动首屏海报 · 独立全屏页
 // 由首页 onLoad 在冷启动首屏一次 navigateTo 进入；本页非 tab 页、navigationStyle:custom
 // => 框架级 100% 全屏，覆盖 navbar 与系统 tabBar（用户级 root-portal 无法覆盖系统级 tabBar）。
 // 数据：app.globalData.__splashSync（同步缓存，首帧即展示销闪屏）+ app.getSplashPosterAsync()（异步刷新）。
 Page({
-  behaviors: [ReduceMotionBehavior],
   data: {
     visible: false,
     imageUrl: '',
     showHint: false,
     closing: false,
+    reduceMotion: false,
     _duration: 2500,
     _timer: null,
   },
 
   onLoad() {
-    this.initReduceMotion()
+    // 减少动态效果（一次性展示，无需实时监听）
+    if (wx.getSystemSetting) {
+      try {
+        const setting = wx.getSystemSetting()
+        if (setting && setting.reduceMotion === 'enable') this.setData({ reduceMotion: true })
+      } catch (e) {}
+    }
 
     const sync = app.globalData && app.globalData.__splashSync
     // 已同步缓存且明确关闭 -> 不展示，立即退出
@@ -86,7 +91,6 @@ Page({
 
   onUnload() {
     if (this._timer) { clearTimeout(this._timer); this._timer = null }
-    this.cleanupReduceMotion()
     if (app) app.__splashShown = true
   },
 })
