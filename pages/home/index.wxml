@@ -159,36 +159,8 @@
     </view>
   </view>
 
-  <!-- ===== Section 5: 团购好物 ===== -->
-  <view class="section section-featured stagger-item stagger-rise delay-3" wx:if="{{tuanDeals.length}}">
-    <view class="section-head">
-      <text class="section-title">团购好物</text>
-      <text class="section-link" bindtap="handleViewAllTuan" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
-    </view>
-    <scroll-view class="featured-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
-      <view class="featured-list">
-      <view class="mall-card" wx:for="{{tuanDeals}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleTuanTap" hover-class="mall-card--pressed" hover-stay-time="120">
-        <image wx:if="{{item.coverUrl}}" class="mall-card-img" src="{{item.coverUrl}}" mode="aspectFill" />
-        <view wx:else class="mall-card-img mall-card-img-ph">
-          <text class="featured-img-ph-text">团</text>
-        </view>
-        <view class="mall-card-overlay"></view>
-        <view class="aurora-lume-line"></view>
-        <view class="mall-card-guard"></view>
-        <view class="mall-card-info">
-          <text class="mall-card-name">{{item.title}}</text>
-          <view class="mall-card-price-row">
-            <text class="mall-card-price">¥{{item.minPrice}}</text>
-            <text class="mall-card-sold" wx:if="{{item.totalOrders > 0}}">已拼{{item.totalOrders}}件</text>
-          </view>
-        </view>
-      </view>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- ===== Section 5.5: 商城好物 ===== -->
-  <view class="section section-featured stagger-item stagger-rise delay-4" wx:if="{{mallProducts.length}}">
+  <!-- ===== Section 5: 商城好物 ===== -->
+  <view class="section section-featured stagger-item stagger-rise delay-3" wx:if="{{mallProducts.length}}">
     <view class="section-head">
       <text class="section-title">商城好物</text>
       <text class="section-link" bindtap="handleViewAllMallProducts" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
@@ -218,7 +190,35 @@
     </scroll-view>
   </view>
 
-  <!-- ===== Section 6: 近期活动 ===== -->
+  <!-- ===== Section 6: 团购好物 ===== -->
+  <view class="section section-featured stagger-item stagger-rise delay-4" wx:if="{{tuanDeals.length}}">
+    <view class="section-head">
+      <text class="section-title">团购好物</text>
+      <text class="section-link" bindtap="handleViewAllTuan" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
+    </view>
+    <scroll-view class="featured-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
+      <view class="featured-list">
+      <view class="mall-card" wx:for="{{tuanDeals}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleTuanTap" hover-class="mall-card--pressed" hover-stay-time="120">
+        <image wx:if="{{item.coverUrl}}" class="mall-card-img" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view wx:else class="mall-card-img mall-card-img-ph">
+          <text class="featured-img-ph-text">团</text>
+        </view>
+        <view class="mall-card-overlay"></view>
+        <view class="aurora-lume-line"></view>
+        <view class="mall-card-guard"></view>
+        <view class="mall-card-info">
+          <text class="mall-card-name">{{item.title}}</text>
+          <view class="mall-card-price-row">
+            <text class="mall-card-price">¥{{item.minPrice}}</text>
+            <text class="mall-card-sold" wx:if="{{item.totalOrders > 0}}">已拼{{item.totalOrders}}件</text>
+          </view>
+        </view>
+      </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- ===== Section 7: 近期活动 ===== -->
   <view class="section stagger-item stagger-rise delay-5" wx:if="{{latestActivities.length}}">
     <view class="section-head">
       <text class="section-title">近期活动</text>

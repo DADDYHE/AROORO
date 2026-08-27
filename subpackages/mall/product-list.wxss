@@ -231,14 +231,15 @@
   font-size: 24rpx;
   color: var(--text-primary);
   text-align: center;
-  line-height: 1.4;
+  line-height: 34rpx;
   font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   width: 100%;
   letter-spacing: 0.02em;
   font-family: var(--font-serif);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  height: 68rpx;
 }
 
 .product-price-row {
@@ -257,11 +258,13 @@
   font-family: var(--font-sans);
 }
 
-.product-original-price {
+.product-price-from {
   font-size: 20rpx;
-  color: var(--text-tertiary);
-  text-decoration: line-through;
+  color: var(--mall-primary);
   font-weight: 400;
+  line-height: 1;
+  font-family: var(--font-sans);
+  letter-spacing: 0.02em;
 }
 
 /* ===== 查看更多（编辑式：发丝描边胶囊 + 金色字距） ===== */

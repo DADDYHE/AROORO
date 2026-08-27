@@ -44,10 +44,10 @@
           <view class="product-img-wrap">
             <image lazy-load class="product-img" src="{{item.coverUrl}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="currentProducts[{{index}}].coverUrl" />
           </view>
-          <text class="product-label">{{item.name}}</text>
+          <view class="product-label">{{item.name}}</view>
           <view class="product-price-row">
             <text class="product-price">¥{{item.minPrice || item.price}}</text>
-            <text wx:if="{{item.originalPrice && item.originalPrice > (item.minPrice || item.price)}}" class="product-original-price">¥{{item.originalPrice}}</text>
+            <text wx:if="{{item.skuType === 'multi'}}" class="product-price-from">起</text>
           </view>
         </view>
       </view>

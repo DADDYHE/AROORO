@@ -1,4 +1,4 @@
-<zy-navbar title="商品详情" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,68 +8,85 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="page-container" wx:if="{{product}}">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-  <!-- 商品图片画廊 -->
+  <!-- 深绿沉浸画廊（B · 精品橱窗式） -->
   <view class="image-gallery">
     <swiper class="gallery-swiper" current="{{currentImageIndex}}" bindchange="onImageChange">
       <swiper-item wx:for="{{product.images || [product.coverUrl || product.coverImage]}}" wx:key="index">
-        <!-- 首图包装容器（曾用 share-element 做共享元素飞跃；Skyline 下该动画易触发图片无限加载卡死，已移除） -->
         <view wx:if="{{index === 0}}" class="gallery-image-share">
           <image class="gallery-image" src="{{item}}" mode="aspectFill" lazy-load data-url="{{item}}" bindtap="onPreviewGalleryImage" binderror="onCloudImageError" data-src="{{item}}" data-path="product.images[{{index}}]" />
         </view>
         <image wx:else class="gallery-image" src="{{item}}" mode="aspectFill" lazy-load data-url="{{item}}" bindtap="onPreviewGalleryImage" binderror="onCloudImageError" data-src="{{item}}" data-path="product.images[{{index}}]" />
       </swiper-item>
     </swiper>
-    <view class="gallery-indicator" wx:if="{{product.images.length > 1}}">
-      <view wx:for="{{product.images}}" wx:key="index"
-        class="indicator-dot {{currentImageIndex === index ? 'active' : ''}}"></view>
-    </view>
-    <view class="gallery-badge">
-      <text class="badge-tag on_sale">在售</text>
+    <!-- 顶部 scrim（沉浸白箭头在浅色商品图上保持可读） -->
+    <view class="gallery-top-scrim"></view>
+    <!-- 纸牌徽章 -->
+    <view class="gallery-badge" style="top: {{_navbarHeight + 16}}px;">
       <text class="badge-tag featured" wx:if="{{product.isFeatured}}">推荐</text>
     </view>
-    <view class="gallery-actions">
+    <!-- 分享 -->
+    <view class="gallery-actions" style="top: {{_navbarHeight + 16}}px;">
       <view class="gallery-action-btn" hover-class="gallery-action-btn--pressed" hover-stay-time="120" bindtap="onShare">
         <image class="gallery-action-icon" src="{{iconShare}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconShare}}" data-path="iconShare" />
       </view>
     </view>
+    <!-- 品牌字标层 -->
+    <view class="gallery-brand">
+      <text class="gallery-brand-eyebrow">AROORO ATELIER</text>
+      <view class="gallery-brand-line"></view>
+    </view>
+    <!-- 页码 -->
+    <view class="gallery-page">{{currentImageIndex + 1 < 10 ? '0' + (currentImageIndex + 1) : currentImageIndex + 1}} / {{product.images.length < 10 ? '0' + product.images.length : product.images.length}}</view>
+    <!-- 指示器 -->
+    <view class="gallery-indicator" wx:if="{{product.images.length > 1}}">
+      <view wx:for="{{product.images}}" wx:key="index"
+        class="indicator-dot {{currentImageIndex === index ? 'active' : ''}}"></view>
+    </view>
   </view>
 
+  <!-- 纸面流内容区（A · 编辑杂志式） -->
   <view class="page-content">
-    <!-- 商品信息卡片 -->
-    <view class="info-card">
-      <text class="product-name">{{product.name}}</text>
-      <text class="product-subtitle" wx:if="{{product.subTitle}}">{{product.subTitle}}</text>
-      <view class="price-section">
-        <text class="current-price">{{displayPrice}}</text>
-        <text class="original-price" wx:if="{{displayOriginalPrice}}">{{displayOriginalPrice}}</text>
-        <text class="discount-tag" wx:if="{{discount > 0}}">{{discount}}% OFF</text>
+    <!-- 商品信息区（纸面 · 孤品价签） -->
+    <view class="product-info-section">
+      <view class="section-label">
+        <view class="label-accent"></view>
+        <text>AROORO · MALL</text>
       </view>
-      <view class="meta-row">
-        <text class="meta-item">已售 <text class="value">{{product.soldCount || 0}}</text></text>
-        <text class="meta-item">库存 <text class="value">{{product.totalStock || product.stock || 0}}</text></text>
+      <text class="info-name">{{product.name}}</text>
+      <text class="info-subtitle" wx:if="{{product.subTitle}}">{{product.subTitle}}</text>
+      <view class="info-divider"></view>
+      <view class="info-price-row">
+        <text class="info-price">{{displayPrice}}</text>
+        <text class="info-original" wx:if="{{displayOriginalPrice}}">{{displayOriginalPrice}}</text>
       </view>
     </view>
 
-    <!-- 商品详情卡片 -->
-    <view class="info-card">
+    <!-- 商品详情分节 -->
+    <view class="details-section">
       <view class="section-label">
         <view class="label-accent"></view>
         <text>商品详情</text>
       </view>
       <text class="description-text" wx:if="{{product.description}}">{{product.description}}</text>
-      <text class="description-text" wx:else>暂无详细描述</text>
       <view class="detail-images" wx:if="{{product.detailImages && product.detailImages.length > 0}}">
         <image wx:for="{{product.detailImages}}" wx:key="index"
           class="detail-image" src="{{item}}" mode="widthFix" lazy-load data-url="{{item}}" bindtap="onPreviewDetailImage" binderror="onCloudImageError" data-src="{{item}}" data-path="product.detailImages[{{index}}]" />
       </view>
     </view>
+
+    <!-- 品牌页脚 -->
+    <view class="brand-footer">
+      <view class="footer-gold-line"></view>
+      <text class="footer-brand">AROORO</text>
+      <text class="footer-tagline">安心呼噜 · 放心托付</text>
+    </view>
   </view>
 
-  <!-- 底部操作栏 -->
+  <!-- 底部操作栏（纸感条） -->
   <root-portal>
   <view class="bottom-bar">
     <view class="bar-actions">
@@ -92,15 +109,10 @@
   </root-portal>
 </view>
 
-<!-- 规格选择弹窗 -->
+<!-- 规格选择弹窗（选品台） -->
 <root-portal>
 <view class="sku-popup-mask {{skuPopupVisible ? 'show' : ''}}" bindtap="onCloseSkuPopup"></view>
 <view class="sku-popup {{skuPopupVisible ? 'show' : ''}}">
-  <view class="sku-popup-brand-bar popup-stagger">
-    <view class="brand-gold-thread"></view>
-    <text class="sku-popup-brand-text">AROORO · 安心呼噜 放心托付</text>
-    <image class="brand-separator" src="/images/icons/separator-mall-luxury.svg" mode="aspectFit"></image>
-  </view>
   <view class="sku-popup-close-btn popup-stagger" hover-class="sku-popup-close-btn--pressed" hover-stay-time="120" bindtap="onCloseSkuPopup"><image class="sku-popup-close-icon" src="/images/icons/close-luxury-line.svg" mode="aspectFit"></image></view>
 
   <view class="sku-popup-image-wrap popup-stagger">
