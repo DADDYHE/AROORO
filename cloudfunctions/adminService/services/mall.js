@@ -66,6 +66,84 @@ async function store1688Images(urls, concurrency = 5) {
   return out
 }
 
+// ---- mantas 图片转存（复用 CloudBase 存储，避免前端裂图/防盗链） ----
+// mantas 价格/图片需登录，服务端无登录抓不到；故插件在已登录页面内把图转成
+// data:URL 传过来，云函数直接解码入库（最可靠）。http URL 走服务端带 Referer 下载兜底。
+async function fetchStoreImage(url, folder, referer) {
+  if (!url || !/^https?:\/\//.test(url)) { return url }
+  const { cloud } = initCloud()
+  return new Promise((resolve) => {
+    const req = https.get(url, { timeout: 12000, headers: { 'User-Agent': 'Mozilla/5.0', Referer: referer } }, res => {
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.resume()
+        return fetchStoreImage(res.headers.location, folder, referer).then(resolve, () => resolve(url))
+      }
+      if (!res.statusCode || res.statusCode >= 400) { res.resume(); return resolve(url) }
+      const chunks = []
+      res.on('data', c => chunks.push(c))
+      res.on('end', async () => {
+        try {
+          const buf = Buffer.concat(chunks)
+          if (buf.length < 512) { return resolve(url) }
+          const ext = (url.split('?')[0].match(/\.(jpg|jpeg|png|gif|webp|bmp)(?:$|[?#])/i) || [,'jpg'])[1].toLowerCase()
+          const stamp = Date.now().toString(36)
+          const rand = Math.random().toString(36).slice(2, 8)
+          const cloudPath = `${folder}/${stamp}_${rand}.${ext}`
+          const up = await cloud.uploadFile({ cloudPath, fileContent: buf })
+          resolve(up.fileID)
+        } catch (e) {
+          logger.warn('fetchStoreImage.uploadFailed', { url, msg: e?.message })
+          resolve(url)
+        }
+      })
+    })
+    req.on('error', () => resolve(url))
+    req.on('timeout', () => { req.destroy(); resolve(url) })
+  })
+}
+
+async function storeDataUrlImage(dataUrl, folder = 'products/mantas') {
+  if (!dataUrl || !/^data:image\//.test(dataUrl)) { return '' }
+  const { cloud } = initCloud()
+  try {
+    const m = dataUrl.match(/^data:image\/([a-zA-Z]+);base64,(.*)$/)
+    if (!m) { return '' }
+    const ext = m[1] === 'jpeg' ? 'jpg' : m[1]
+    const buf = Buffer.from(m[2], 'base64')
+    if (buf.length < 200) { return '' }
+    const stamp = Date.now().toString(36)
+    const rand = Math.random().toString(36).slice(2, 8)
+    const cloudPath = `${folder}/${stamp}_${rand}.${ext}`
+    const up = await cloud.uploadFile({ cloudPath, fileContent: buf })
+    return up.fileID
+  } catch (e) {
+    logger.warn('storeDataUrlImage.fail', { msg: e?.message })
+    return ''
+  }
+}
+
+async function storeMantasImage(src) {
+  if (!src) { return '' }
+  if (/\.tcb\.qcloud\.la\//.test(src)) { return src } // 已是自家存储 URL（分张上传的 fileId），透传不二次转存
+  if (/^data:image\//.test(src)) { return storeDataUrlImage(src) }
+  if (/^https?:\/\//.test(src)) { return fetchStoreImage(src, 'products/mantas', 'https://mall.mantas.cn/') }
+  return src
+}
+
+async function storeMantasImages(urls, concurrency = 5) {
+  const out = []
+  let i = 0
+  async function worker() {
+    while (i < urls.length) {
+      const idx = i++
+      out[idx] = await storeMantasImage(urls[idx])
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, urls.length || 1) }, () => worker())
+  await Promise.all(workers)
+  return out
+}
+
 const PRODUCT_LIST_PROJECTION = {
   _id: true, name: true, subTitle: true, description: true,
   coverImage: true, coverUrl: true, images: true, detailImages: true,
@@ -279,7 +357,7 @@ async function import1688Product(event, context, auth) {
     product.skus = skus.map(sku => {
       // retail 优先取 SKU 零售价；0/无效（1688 常以 0 占位）时回退 sku.price 或起批价
       const retail = safeNum(sku.retailPrice) || safeNum(sku.price) || base
-      const ourPrice = Math.round(retail * 1.5 * 100) / 100
+      const ourPrice = Math.round(retail * 1.5)
       return {
         skuId: sku.skuId != null ? String(sku.skuId) : `sku_${String(offerId)}_${Math.random().toString(36).slice(2, 8)}`,
         specIds: sku.specIds || {},
@@ -301,7 +379,7 @@ async function import1688Product(event, context, auth) {
     product.maxPrice = skuPrices.length ? Math.max(...skuPrices) : product.price
     product.soldCount = 0
   } else {
-    const ourPrice = Math.round(base * 1.5 * 100) / 100
+    const ourPrice = Math.round(base * 1.5)
     product.price = ourPrice
     product.originalPrice = base
     product.stock = 0
@@ -363,6 +441,231 @@ async function import1688Product(event, context, auth) {
     categoryName,
     skuCount,
   }, created ? '导入成功（草稿）' : '同步成功（覆盖更新）')
+}
+
+// ===================== mantas 一键导入（action: importMantasProduct） =====================
+// 入参（由浏览器插件在 mall.mantas.cn 已登录详情页抓取并转发）：
+//   { mantasSkuId, title, sourceUrl, categoryPath, specGroups, skus, images, detailImages, basePrice, shippingFee, markup }
+// 规则：
+//   - 售价 = mantas 订货价 × markup（默认 1.5）
+//   - SKU 编码 = MGY{订货价}Y{运费}HZ{序号}（每规格一个，序号从 1 递增；运费每次导入输入一次、整商品共用）
+//   - 按 mantasSkuId 去重：已存在本人商品则覆盖更新
+//   - 图片：data:URL 直接解码入库；http URL 服务端带 Referer 转存（失败保留原链）
+async function importMantasProduct(event, context, auth) {
+  const {
+    mantasSkuId, title, sourceUrl, categoryPath,
+    specGroups, skus, images, detailImages, basePrice, shippingFee, markup,
+  } = event
+  if (!mantasSkuId) { throw err('INVALID_PARAMS', '缺少 mantas 商品ID(mantasSkuId)') }
+  if (!title) { throw err('INVALID_PARAMS', '缺少商品标题') }
+  if (shippingFee === undefined || shippingFee === null || shippingFee === '') {
+    throw err('INVALID_PARAMS', '缺少运费（导入时需输入）')
+  }
+  const ship = Number(shippingFee)
+  if (!Number.isFinite(ship) || ship < 0) { throw err('INVALID_PARAMS', '运费必须为非负数字') }
+  const mk = Number(markup) > 0 ? Number(markup) : 1.5
+  const safeNum = (v, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d }
+  const base = safeNum(basePrice)
+
+  // 分类匹配：取 categoryPath 末级名称，模糊匹配已有 categories（同 1688）
+  let category = 'uncategorized'
+  let categoryId = ''
+  let categoryName = ''
+  const pathSegs = String(categoryPath || '').split(/[>/／\s]+/).map(s => s.trim()).filter(Boolean)
+  const lastSeg = pathSegs[pathSegs.length - 1] || ''
+  if (lastSeg) {
+    try {
+      const cats = await db.collection('categories').limit(100).get()
+      const list = (cats.data || []).map(c => ({ key: c.key || '', label: c.label || '', id: c._id }))
+      const hit = list.find(c => c.label === lastSeg || c.key === lastSeg)
+      if (hit) {
+        category = hit.key || 'uncategorized'
+        categoryId = hit.id || ''
+        categoryName = hit.label || lastSeg
+      } else {
+        categoryName = lastSeg
+      }
+    } catch (e) {
+      logger.warn('importMantasProduct.categoryMatch', { msg: e?.message })
+      categoryName = lastSeg
+    }
+  }
+
+  const isMultiSku = Array.isArray(skus) && skus.length > 0
+
+  // 图片：合并去重后批量转存（data URL / fileID 透传，http URL 兜底转存）
+  const imgOk = (u) => /^(https?:|data:image\/|cloud:\/\/)/.test(u || '')
+  const rawImages = Array.isArray(images) ? images.filter(imgOk) : []
+  const rawDetail = Array.isArray(detailImages) ? detailImages.filter(imgOk) : []
+  const rawSkuImages = isMultiSku
+    ? skus.map(s => s.image || s.imageUrl).filter(u => imgOk(u || ''))
+    : []
+  const allUrls = [...new Set([...rawImages, ...rawDetail, ...rawSkuImages])]
+  let storedMap = {}
+  try {
+    const stored = await storeMantasImages(allUrls, 5)
+    allUrls.forEach((u, i) => { storedMap[u] = stored[i] })
+  } catch (e) {
+    logger.warn('importMantasProduct.storeImagesFailed', { msg: e?.message })
+  }
+  const toStored = (u) => (u && storedMap[u]) ? storedMap[u] : (u || '')
+
+  const coverImage = rawImages.length > 0 ? toStored(rawImages[0]) : ''
+  const storedImages = rawImages.map(toStored)
+  const storedDetail = rawDetail.map(toStored)
+
+  // SKU 编码：MGY{订货价}Y{运费}HZ{序号}
+  const buildSkuCode = (price, seq) => `MGY${price}Y${ship}HZ${seq}`
+
+  const product = {
+    name: title,
+    subTitle: '',
+    description: '',
+    category,
+    categoryId,
+    categoryName,
+    skuType: isMultiSku ? 'multi' : 'single',
+    coverImage,
+    coverUrl: coverImage,
+    images: storedImages,
+    detailImages: storedDetail,
+    tags: [],
+    isFeatured: false,
+    sortOrder: 0,
+    source: 'mantas',
+    sourceSkuId: String(mantasSkuId),
+    sourceUrl: sourceUrl || '',
+    shippingFee: ship,
+    markup: mk,
+    createdBy: auth.openid || auth.adminId || '',
+    status: 'draft',
+    createdAt: db.serverDate(),
+    updatedAt: db.serverDate(),
+  }
+
+  if (isMultiSku) {
+    product.specGroups = (specGroups || []).map(g => ({
+      name: g.name || '',
+      values: Array.isArray(g.values) ? g.values : [],
+    }))
+    product.skus = skus.map((sku, idx) => {
+      const seq = idx + 1
+      const mantasPrice = safeNum(sku.price) || safeNum(sku.retailPrice) || safeNum(sku.originalPrice) || base
+      const ourPrice = Math.round(mantasPrice * mk)
+      return {
+        skuId: sku.skuId != null ? String(sku.skuId) : `m_${String(mantasSkuId)}_${seq}`,
+        specIds: sku.specIds || {},
+        specText: sku.specText || '',
+        price: ourPrice,
+        originalPrice: mantasPrice,
+        stock: safeNum(sku.stock),
+        soldCount: 0,
+        skuCode: buildSkuCode(mantasPrice, seq),
+        image: toStored(sku.image || sku.imageUrl || ''),
+      }
+    })
+    product.price = product.skus.length > 0 ? product.skus[0].price : 0
+    product.originalPrice = product.skus.length > 0 ? (product.skus[0].originalPrice || 0) : 0
+    product.stock = product.skus.reduce((s, x) => s + x.stock, 0)
+    product.totalStock = product.stock
+    const skuPrices = product.skus.map(s => Number(s.price)).filter(p => Number.isFinite(p))
+    product.minPrice = skuPrices.length ? Math.min(...skuPrices) : product.price
+    product.maxPrice = skuPrices.length ? Math.max(...skuPrices) : product.price
+    product.soldCount = 0
+  } else {
+    const mantasPrice = safeNum(basePrice)
+    const ourPrice = Math.round(mantasPrice * mk)
+    product.price = ourPrice
+    product.originalPrice = mantasPrice
+    product.stock = 0
+    product.totalStock = 0
+    product.minPrice = ourPrice
+    product.maxPrice = ourPrice
+    product.soldCount = 0
+    // 单规格也落一条 sku，保证 skuCode 与多规格一致
+    product.skus = [{
+      skuId: `m_${String(mantasSkuId)}_1`,
+      specIds: {},
+      specText: '',
+      price: ourPrice,
+      originalPrice: mantasPrice,
+      stock: 0,
+      soldCount: 0,
+      skuCode: buildSkuCode(mantasPrice, 1),
+      image: coverImage,
+    }]
+  }
+
+  // 去重：本人名下已导入过该 mantasSkuId 则覆盖更新（web 登录时 openid 为空，用 adminId 归属）
+  const owner = auth.openid || auth.adminId || ''
+  const dedupWhere = owner
+    ? { sourceSkuId: String(mantasSkuId), createdBy: owner }
+    : { sourceSkuId: String(mantasSkuId) }
+  const existRes = await db.collection('products').where(dedupWhere).get()
+  const exist = existRes.data && existRes.data[0]
+
+  let productId
+  let created
+  if (exist && exist._id) {
+    const updateData = {
+      name: product.name,
+      subTitle: product.subTitle,
+      description: product.description,
+      category: product.category,
+      categoryId: product.categoryId,
+      categoryName: product.categoryName,
+      skuType: product.skuType,
+      coverImage: product.coverImage,
+      coverUrl: product.coverUrl,
+      images: product.images,
+      detailImages: product.detailImages,
+      sourceUrl: product.sourceUrl,
+      shippingFee: product.shippingFee,
+      markup: product.markup,
+      specGroups: product.specGroups,
+      skus: product.skus,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      stock: product.stock,
+      totalStock: product.totalStock,
+      minPrice: product.minPrice,
+      maxPrice: product.maxPrice,
+      updatedAt: db.serverDate(),
+    }
+    await db.collection('products').doc(exist._id).update({ data: updateData })
+    productId = exist._id
+    created = false
+  } else {
+    product._id = generateId('product', auth.openid || auth.adminId)
+    const res = await db.collection('products').add({ data: product })
+    productId = res._id
+    created = true
+  }
+
+  const skuCount = product.skus.length
+  logger.info('importMantasProduct', { mantasSkuId, productId, created, skuCount })
+  return handleSuccess({
+    productId,
+    created,
+    category,
+    categoryName,
+    skuCount,
+  }, created ? '导入成功（草稿）' : '同步成功（覆盖更新）')
+}
+
+// 分张上传：插件在已登录页面把单张图转 dataURL 后，单独调本 action 转存 CloudBase 存储，
+// 返回 fileID；最后 importMantasProduct 只收 fileID 列表 → 请求体极小，绕开网关 ~6MB payload 上限。
+// 入参：{ image }（data:URL 或 http(s) URL，单张）；返回 { fileId }
+async function uploadMantasImage(event, context, auth) {
+  const { image } = event
+  if (!image) { throw err('INVALID_PARAMS', '缺少图片(image)') }
+  if (!/^(data:image\/|https?:)/.test(image)) { throw err('INVALID_PARAMS', '图片格式不支持（需 data:URL 或 http(s) URL）') }
+  const fileId = await storeMantasImage(image)
+  if (!fileId || fileId === image) {
+    throw err('STORE_FAILED', '图片转存失败，请重试')
+  }
+  logger.info('uploadMantasImage', { fileId: String(fileId).slice(0, 60), ok: true })
+  return handleSuccess({ fileId })
 }
 
 async function updateProduct(event, context, auth) {
@@ -877,7 +1180,7 @@ async function deleteCategory(event) {
 
 module.exports = {
   getProductList, getProductDetail, createProduct, updateProduct, deleteProduct,
-  batchUpdateProducts, cloneProduct, import1688Product,
+  batchUpdateProducts, cloneProduct, import1688Product, importMantasProduct, uploadMantasImage,
   getMallOrders, getMallOrderDetail, handleMallOrder, shipMallOrder, completeMallOrder,
   getLogisticsTrack,
   getProductStats, getCategoryStats,

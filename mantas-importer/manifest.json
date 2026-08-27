@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "AROORO mantas 商品一键导入",
+  "version": "1.0.0",
+  "description": "从 mall.mantas.cn 已登录商品详情页抓取数据，生成 MGY 编码（MGY{订货价}Y{运费}HZ{序号}），一键导入 AROORO 商品库。",
+  "permissions": ["activeTab", "scripting", "storage", "declarativeNetRequest"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://mall.mantas.cn/*",
+    "https://cloudbase-d7getcjqy33b13475.api.tcloudbasegateway.com/*",
+    "https://*.tcloudbaseapp.com/*",
+    "https://arooro.icu/*",
+    "https://www.arooro.icu/*",
+    "http://localhost/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "导入 mantas 商品到 AROORO"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mall.mantas.cn/*"],
+      "js": ["mantas-inject.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.tcloudbaseapp.com/*",
+        "https://arooro.icu/*",
+        "https://www.arooro.icu/*",
+        "http://localhost/*"
+      ],
+      "js": ["token-bridge.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

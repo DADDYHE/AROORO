@@ -308,6 +308,8 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   batchUpdateProducts: 'partner',
   cloneProduct: 'partner',
   import1688Product: 'partner',
+  importMantasProduct: 'partner',
+  uploadMantasImage: 'partner',
   getMallOrders: 'partner',
   getMallOrderDetail: 'partner',
   handleMallOrder: 'partner',

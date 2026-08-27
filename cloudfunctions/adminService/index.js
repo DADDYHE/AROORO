@@ -206,6 +206,8 @@ const ACTION_PERMISSIONS = {
     batchUpdateProducts: 'partner',
     cloneProduct: 'partner',
     import1688Product: 'partner',
+    importMantasProduct: 'partner',
+    uploadMantasImage: 'partner',
     getMallOrders: 'partner',
     getMallOrderDetail: 'partner',
     handleMallOrder: 'partner',
