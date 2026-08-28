@@ -6,7 +6,6 @@ export interface WeChatPayConfig {
     appId: string;
     mchId: string;
     serialNo: string;
-    platformSerialNo: string;
     privateKey: string;
     notifyUrl: string;
     certificate: string;

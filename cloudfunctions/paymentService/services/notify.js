@@ -536,25 +536,16 @@ async function paymentNotify(event, _context, _auth) {
         }
         // H3+P0 修复（2026-08-28，依据官方文档 pay.weixin.qq.com/doc/v3/merchant/4013053249）：
         //   Wechatpay-Serial 头在【微信支付公钥模式】下是"公钥 ID"（PUB_KEY_ID_xxx），
-        //   仅用于标识微信用哪把公钥签名，官方验签流程【不要求】比对 serial——
-        //   只需用微信支付公钥对 时间戳\n随机串\n报文\n 做 SHA256-RSA 验签。
-        //   原实现（0162dc8）拿 WECHAT_PAY.serialNo（商户 API 证书序列号）比对 serial，
-        //   两个不同实体必然不相等 → 7/25 后所有回调 401 被拒（P0 资损）。
-        //   修复：serial 缺失仍拒绝（微信必带），但不做无依据的序列号比对；
-        //   仅当显式配置 WECHAT_PAY_PLATFORM_SERIAL_NO（公钥 ID）时做严格比对（可选加固）。
+        //   仅用于在"缓存多把公钥做轮换"时选择对应公钥验签；官方验签流程【不要求】比对 serial。
+        //   本项目使用固定微信支付公钥（WECHAT_PAY_CERTIFICATE），直接用其对
+        //   时间戳\n随机串\n报文\n 做 SHA256-RSA 验签即为完整安全校验（官方标准）。
+        //   serial 缺失仍拒绝（微信回调必带），但【不做 serial 比对】——
+        //   原实现（0162dc8）拿商户 API 证书序列号比对 serial 导致 7/25 后全部回调 401 被拒（P0 资损）。
+        //   曾引入可选 platformSerialNo 配置做严格比对，后移除：无公钥轮换场景下比对零增益，
+        //   且配置填错（公钥ID/证书序列号混淆）会再次全量拒回调，属高风险配置项。
         if (!serial) {
             logger.warn('paymentNotify: 缺少 serial');
             return httpResponse(401, 'FAIL', '缺少证书序列号');
-        }
-        const expectedSerial = WECHAT_PAY.platformSerialNo;
-        if (expectedSerial) {
-            if (serial !== expectedSerial) {
-                logger.warn('paymentNotify: serial 不匹配', { serial, expectedSerial });
-                return httpResponse(401, 'FAIL', '证书序列号不匹配');
-            }
-        }
-        else {
-            logger.warn('paymentNotify: platformSerialNo 未配置，跳过 serial 比对（官方验签仅需 RSA 验签）', { serial });
         }
         verifySignature(rawBody, timestamp, nonce, signature, wechatpayCertificate);
         const apiV3Key = WECHAT_PAY.apiV3Key;
