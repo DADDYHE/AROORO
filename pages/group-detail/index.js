@@ -7,6 +7,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
 const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 const skuHelper = require('../../utils/skuHelper')
+const { requireLogin } = require('../../utils/require-login')
 
 Page({
   ...pageI18n.mixin(),
@@ -279,14 +280,9 @@ Page({
     this.setData({ showBuyModal: false })
   },
 
-  onSubmitOrder() {
+  async onSubmitOrder() {
+    if (!(await requireLogin())) {return}
     const app = getApp()
-    const isLoggedIn = app && app.globalData && app.globalData.isLoggedIn
-    if (!isLoggedIn) {
-      const { authService } = require('../../services/AuthService')
-      authService.startLogin()
-      return
-    }
 
     const product = this.data.products[this.data.selectedProductIndex]
     if (!product) { return }

@@ -8,6 +8,7 @@ const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { requireLogin } = require('../../utils/require-login')
 
 Page({
   ...pageI18n.mixin(),
@@ -136,12 +137,8 @@ Page({
   // onToggleCouponSelector, onSelectCoupon, onRemoveCoupon, _loadAvailableCoupons 已由 couponSelectorBehavior 提供
   // 本页通过传 opts（business:'activity' / items:[activity._id] / amount）复用其行为版，避免与 behavior 同名方法冲突告警
 
-  onShowPetPicker() {
-    const isLoggedIn = authService.isLoggedIn()
-    if (!isLoggedIn) {
-      authService.startLogin()
-      return
-    }
+  async onShowPetPicker() {
+    if (!(await requireLogin())) {return}
     this._refreshMyPets()
     this.setData({ showPetPicker: true })
   },

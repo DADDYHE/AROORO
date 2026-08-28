@@ -6,6 +6,7 @@ const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const countdownBehavior = require('../../behaviors/countdownBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { requireLogin } = require('../../utils/require-login')
 
 Page({
   ...pageI18n.mixin(),
@@ -40,13 +41,9 @@ Page({
     timeoutMinutes: 30,
   },
 
-  onLoad(options) {
+  async onLoad(options) {
     this._initNavbarHeight()
-    const app = getApp()
-    const isLoggedIn = app && app.globalData && app.globalData.isLoggedIn
-    if (!isLoggedIn) {
-      const { authService } = require('../../services/AuthService')
-      authService.startLogin()
+    if (!(await requireLogin())) {
       return
     }
 

@@ -8,6 +8,7 @@ const { computeFinalAmount } = require('../../utils/coupon-amount')
 const { isHoliday } = require('../../utils/holidays')
 const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
 const picker = require('./utils/dateCountPicker')
+const { requireLogin } = require('../../utils/require-login')
 
 const KEY_OPTIONS = ['密码锁', '存放快递柜', '家中有人', '其他']
 
@@ -74,14 +75,10 @@ Page({
     showCouponSelector: false,
   },
 
-  onLoad() {
+  async onLoad() {
     this._initNavbarHeight()
     this._initCouponSelector('totalPrice')
-    const app = getApp()
-    const isLoggedIn = app && app.globalData && app.globalData.isLoggedIn
-    if (!isLoggedIn) {
-      const { authService } = require('../../services/AuthService')
-      authService.startLogin()
+    if (!(await requireLogin())) {
       return
     }
     this._loadOrderInfo()
