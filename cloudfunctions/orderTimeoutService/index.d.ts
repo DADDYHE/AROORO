@@ -192,6 +192,7 @@ export interface TimeoutResult {
     cancelledMallOrders: number;
     cancelledGroupBuyOrders: number;
     cancelledActivityOrders: number;
+    completedActivityOrders: number;
     closedWechatOrders: number;
     closeOrderFailed: number;
     errors: Array<{
@@ -199,6 +200,7 @@ export interface TimeoutResult {
         orderId?: string;
         error?: string;
         stockRestoreError?: string;
+        totalsRollbackError?: string;
     }>;
 }
 /** 寄养订单超时（分钟） */
@@ -265,6 +267,10 @@ export declare function unlockOrderCoupons(orderId: string, couponId?: string): 
  *   - 非 SKU 模式：回补 products[i].stock/sold
  */
 export declare function restoreTuanDealStock(dealId: string | undefined, productId: string | undefined, skuId: string | null | undefined, quantity: number | undefined): Promise<void>;
+/**
+ * P1-3: 取消订单时回退 tuan_deals 累计单数/金额（与下单事务 inc 对称）
+ */
+export declare function rollbackTuanDealTotals(dealId: string | undefined, amount: number): Promise<void>;
 /**
  * 取消 orders 中 type=group_buy 记录时，同步把 tuan_orders 表对应记录也置为 cancelled。
  *

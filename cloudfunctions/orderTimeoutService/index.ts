@@ -833,7 +833,7 @@ async function cancelBoardingOrders(result: TimeoutResult, boardingTimeout: Date
     //   扫描时 status 已变 cancelled 而漏处理，库存/团名额永久丢失
     const expiredBoardingOrders = await fetchAllExpired<OrderDoc>('orders', {
       status: 'pending_payment',
-      paymentStatus: _.in(['unpaid', 'paying', null]),
+      paymentStatus: _.in(['unpaid', null]),
       createdAt: _.lte(boardingTimeout),
       type: _.in(['boarding', null]),
     }, { _id: true, outTradeNo: true })
@@ -880,7 +880,7 @@ async function cancelFeedingOrders(result: TimeoutResult, feedingTimeout: Date):
   try {
     const expiredFeedingOrders = await fetchAllExpired<FeedingOrderDoc>('feedingOrders', {
       status: 'pending_payment',
-      paymentStatus: _.in(['unpaid', 'paying', null]),
+      paymentStatus: _.in(['unpaid', null]),
       createdAt: _.lte(feedingTimeout),
     }, { _id: true, outTradeNo: true })
 
@@ -926,7 +926,7 @@ async function cancelMallOrders(result: TimeoutResult, mallTimeout: Date): Promi
     const expiredMallOrders = await fetchAllExpired<OrderDoc>('orders', {
       type: 'mall',
       status: 'pending_payment',
-      paymentStatus: _.in(['unpaid', 'paying', null]),
+      paymentStatus: _.in(['unpaid', null]),
       createdAt: _.lte(mallTimeout),
     }, { _id: true, productId: true, skuId: true, quantity: true, outTradeNo: true, items: true })
 
@@ -990,7 +990,7 @@ async function cancelGroupBuyOrders(result: TimeoutResult, groupBuyTimeout: Date
     const expiredGroupBuyOrders = await fetchAllExpired<OrderDoc>('orders', {
       type: 'group_buy',
       status: 'pending_payment',
-      paymentStatus: _.in(['unpaid', 'paying', null]),
+      paymentStatus: _.in(['unpaid', null]),
       createdAt: _.lte(groupBuyTimeout),
     }, { _id: true, productId: true, skuId: true, quantity: true, dealId: true, outTradeNo: true, tuanOrderId: true, totalAmount: true })
 
@@ -1056,7 +1056,7 @@ async function cancelActivityOrders(result: TimeoutResult, activityTimeout: Date
       // 故原 'unpaid' 或 _.in(['unpaid', null]) 均因实际值为 'pending' 而恒扫 0 → 活动超时取消一直失效。
       // 现放宽到 _.in(['unpaid', 'pending', null]) 覆盖"显式 unpaid / 活动实际 pending / 字段缺失"三种待支付报名。
       // 回退名额仍仅在 paymentStatus==='paid' 时执行（见下），pending 单从未占名额，绝不回退，名额不会变负。
-      paymentStatus: _.in(['unpaid', 'pending', null]),
+      paymentStatus: _.in(['unpaid', null]),
       createdAt: _.lte(activityTimeout),
     }, { _id: true, activityId: true, ownerId: true, participantCount: true, outTradeNo: true, paymentStatus: true, orderId: true, couponId: true })
 

@@ -94,7 +94,9 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
         // 5.4 活动时间守卫：活动开始后禁止自助退款
         if (orderDoc.activityId) {
             try {
-                const actRes = await db.collection('activities').doc(orderDoc.activityId).field({ startTime: true }).get();
+                const actRes = await db.collection('activities').doc(orderDoc.activityId)
+                    .field({ startTime: true })
+                    .get();
                 const activity = actRes.data;
                 if (activity && activity.startTime) {
                     const start = new Date(activity.startTime);
@@ -104,9 +106,9 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
                 }
             }
             catch (e) {
-                if (isBusinessError(e))
+                if ((0, errors_1.isBusinessError)(e))
                     throw e;
-                logger.warn('createRefund.queryActivity.failed', { orderId: orderDoc._id, msg: (e === null || e === void 0 ? void 0 : e.message) });
+                logger.warn('createRefund.queryActivity.failed', { orderId: orderDoc._id, msg: e?.message });
             }
         }
     }
@@ -293,6 +295,12 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
             for (const rid of registrationIds) {
                 await transaction.collection('activity_registrations').doc(rid).update({
                     // V5: 报名单同步补写 paymentStatus='refunded'，与 adminService adminRefund 对齐
+                    data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
+                });
+            }
+            // V5 A 修复：同步 orders 镜像单（orderType='activity'）状态，保持 web 后台活动订单与主集合一致
+            for (const mid of mirrorOrderIds) {
+                await transaction.collection('orders').doc(mid).update({
                     data: { status: 'refunded', paymentStatus: 'refunded', updatedAt: db.serverDate() },
                 });
             }

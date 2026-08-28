@@ -261,6 +261,14 @@ export const createPayment: WrappedHandler<SuccessResult<CreatePaymentResult>> =
     throw err('ORDER_ALREADY_PAID', '订单已支付', { orderId })
   }
 
+  // P0 修复（2026-08-28）：已取消订单禁止发起支付。
+  //   原实现只校验 paymentStatus，不校验 status=cancelled，
+  //   导致被超时/主动取消的订单仍可调起微信支付（createPayment 放行 →
+  //   notify.ts cancelled 防护拒绝置 paid → 用户扣款但订单取消，P0 资损）。
+  if (orderData.status === 'cancelled') {
+    throw err('ORDER_STATUS_CHANGED', '订单已取消，无法支付', { orderId, status: orderData.status })
+  }
+
   // H2: 旧逻辑 `if (amount && orderData.totalPrice && ...)` 在 totalPrice=0/缺失时跳过比对
   //   该校验与下方 actualAmount 比对语义重复，统一在下方 actualAmount 校验中处理
   //   避免 totalPrice 与 amountField 字段不一致时双重判断产生分歧

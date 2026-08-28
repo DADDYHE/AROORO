@@ -233,7 +233,14 @@ async function convertCloudUrls(result) {
             return;
         }
         if (Array.isArray(obj)) {
-            obj.forEach(collectCloudIds);
+            for (const item of obj) {
+                if (typeof item === 'string' && item.startsWith('cloud://')) {
+                    cloudIds.push(item);
+                }
+                else {
+                    collectCloudIds(item);
+                }
+            }
             return;
         }
         for (const key of Object.keys(obj)) {
@@ -275,7 +282,13 @@ async function convertCloudUrls(result) {
             return obj;
         }
         if (Array.isArray(obj)) {
-            return obj.map(replaceUrls);
+            // 数组内可能直接是 cloud:// 字符串（如 images[]），需单独替换
+            return obj.map(v => {
+                if (typeof v === 'string' && v.startsWith('cloud://') && urlMap[v]) {
+                    return urlMap[v];
+                }
+                return replaceUrls(v);
+            });
         }
         const res = {};
         for (const key of Object.keys(obj)) {

@@ -161,6 +161,8 @@ export const BusinessErrors: Record<BusinessErrorCode, BusinessErrorSpec> = {
   // H5: createPayment 条件更新未命中——订单已被并发流程推进
   ORDER_STATUS_CHANGED: { code: 'ORDER_STATUS_CHANGED', message: '订单状态已变更', httpStatus: 409, severity: 'BUSINESS' },
   REFUND_FAILED: { code: 'REFUND_FAILED', message: '退款失败', httpStatus: 500, severity: 'BUSINESS' },
+  // 退款被拒（签到/活动开始守卫拦截）——补注册，refund.ts 已在用
+  REFUND_DENIED: { code: 'REFUND_DENIED', message: '退款被拒绝', httpStatus: 409, severity: 'BUSINESS' },
 
   // ========== 支付 ==========
   PAYMENT_CREATE_FAILED: { code: 'PAYMENT_CREATE_FAILED', message: '创建支付单失败', httpStatus: 500, severity: 'BUSINESS' },
