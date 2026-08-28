@@ -1,4 +1,5 @@
 const { CartService } = require('./CartService')
+const { requireLogin } = require('../../utils/require-login')
 
 const pageI18n = require('../../utils/page-i18n.js')
 const { ListBehavior } = require('../../behaviors/listBehavior')
@@ -192,7 +193,8 @@ Page({
     wx.navigateBack()
   },
 
-  onCheckout() {
+  async onCheckout() {
+    if (!(await requireLogin())) {return}
     const checkedItems = CartService.getCheckedItems().filter(i => !i._invalid)
     if (checkedItems.length === 0) {
       this.error('PRODUCT_SELECT_REQUIRED')

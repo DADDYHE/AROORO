@@ -3,6 +3,7 @@ const { getAccentColor, translateScopes, isTemplateExpired, getClaimBtnState } =
 
 const pageI18n = require('../../utils/page-i18n.js')
 const { ListBehavior } = require('../../behaviors/listBehavior')
+const { requireLogin } = require('../../utils/require-login')
 
 Page({
   ...pageI18n.mixin(),
@@ -66,6 +67,7 @@ Page({
   },
 
   async onClaimCoupon(e) {
+    if (!(await requireLogin())) {return}
     const { id } = e.currentTarget.dataset
     if (!id) {return}
     const idx = this._findIndex(id)

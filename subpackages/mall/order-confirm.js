@@ -7,6 +7,7 @@ const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const { computeFinalAmount } = require('../../utils/coupon-amount')
 const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
+const { requireLogin } = require('../../utils/require-login')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
@@ -283,6 +284,10 @@ Page({
 
   async onSubmit() {
     if (this.data.submitting) {return}
+
+    // 强制登录守卫：未登录→记录来源页并跳品牌登录页（含本页 options，回跳不丢参数）；
+    // 登录成功后 navigateBack 回本页，用户重点提交即可。
+    if (!(await requireLogin())) {return}
 
     const { address, fromTuan, tuanData } = this.data
 

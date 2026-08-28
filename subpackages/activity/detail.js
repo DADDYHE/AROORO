@@ -5,6 +5,7 @@ const { getLocation } = require('../../utils/geolocation')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath, buildShareQuery } = require('../../utils/share')
+const { requireLogin } = require('../../utils/require-login')
 
 const CATEGORY_MAP = {
   outdoor: '户外活动',
@@ -364,7 +365,8 @@ Page({
     }
   },
 
-  onRegister() {
+  async onRegister() {
+    if (!(await requireLogin())) {return}
     const { activity, isRegistered, activityStatus, registrationEnded } = this.data
     if (!activity) {return}
 

@@ -5,6 +5,7 @@ const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
 const skuHelper = require('../../utils/skuHelper')
+const { requireLogin } = require('../../utils/require-login')
 
 const pageI18n = require('../../utils/page-i18n.js')
 const { CLOUD_ICONS } = require('../../utils/cloudIcons')
@@ -273,9 +274,10 @@ Page({
     }
   },
 
-  onBuyNow() {
+  async onBuyNow() {
     const { product } = this.data
     if (!product) {return}
+    if (!(await requireLogin())) {return}
 
     if (product.skuType === 'multi' && product.skus && product.skus.length > 0) {
       this.onOpenSkuPopup()
@@ -286,9 +288,10 @@ Page({
     }
   },
 
-  onAddToCart() {
+  async onAddToCart() {
     const { product } = this.data
     if (!product) {return}
+    if (!(await requireLogin())) {return}
 
     if (product.skuType === 'multi' && product.skus && product.skus.length > 0) {
       this.onOpenSkuPopup()
