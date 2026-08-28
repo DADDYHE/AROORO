@@ -310,12 +310,13 @@ class AuthService {
   }
 
   async startLogin() {
-    const loggedIn = this.isLoggedIn()
-    console.log('[AuthService] startLogin, isLoggedIn:', loggedIn)
-
-    if (loggedIn) {
-      return this.login({})
+    if (this.isLoggedIn()) {
+      console.log('[AuthService] 已登录，无需重复登录')
+      return { success: true, message: '已登录' }
     }
+
+    // 记录来源页（供登录成功后回跳原页面）；幂等：已记录则保留
+    this._recordLoginReturnTo()
 
     try {
       if (typeof wx.requirePrivacyAuthorize === 'function') {
@@ -331,6 +332,20 @@ class AuthService {
     wx.navigateTo({
       url: '/subpackages/profile/login/index',
     })
+  }
+
+  _recordLoginReturnTo() {
+    const app = getApp()
+    if (!app || !app.globalData) {return}
+    if (app.globalData.loginReturnTo) {return}
+    const cur = (getCurrentPages() || []).slice(-1)[0]
+    if (cur && cur.route) {
+      app.globalData.loginReturnTo = {
+        route: '/' + cur.route,
+        options: cur.options || {},
+      }
+      console.log('[AuthService] 记录登录来源页:', app.globalData.loginReturnTo)
+    }
   }
 
   async logout() {

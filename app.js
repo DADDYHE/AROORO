@@ -40,6 +40,9 @@ App({
     splashPoster: null,
     __splashSync: null,
     __splashFetch: null,
+    // 强制登录：来源页记录（route + options），供登录成功后回跳原页面。
+    // 由 requireLogin / startLogin 写入，登录页回跳后清理。
+    loginReturnTo: null,
   },
 
   async onLaunch(options) {
