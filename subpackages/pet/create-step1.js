@@ -5,6 +5,7 @@ const { ListBehavior } = require('../../behaviors/listBehavior')
 const { chooseAndUploadAvatar } = require('./utils/avatarUpload')
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { requireLogin } = require('../../utils/require-login')
 
 Page({
   ...pageI18n.mixin(),
@@ -43,6 +44,13 @@ Page({
     const now = new Date()
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     this.setData({ isLoggedIn, todayStr })
+  },
+
+  async onShow() {
+    const isLoggedIn = authService.isLoggedIn()
+    if (isLoggedIn !== this.data.isLoggedIn) {
+      this.setData({ isLoggedIn })
+    }
   },
 
   loginWithWechat() {
@@ -114,8 +122,7 @@ Page({
   },
 
   async completeCreate() {
-    if (!this.data.isLoggedIn) {
-      this.showModal({ titleKey: 'BIZ_L2PGX', contentKey: 'BIZ_414LG6', confirmText: '去登录' })
+    if (!(await requireLogin())) {
       return
     }
 

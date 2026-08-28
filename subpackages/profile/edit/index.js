@@ -9,6 +9,7 @@ const PROFILE_VALIDATION_FIELDS = [
 ]
 
 const pageI18n = require('../../../utils/page-i18n.js')
+const { requireLogin } = require('../../../utils/require-login')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
@@ -107,8 +108,12 @@ Page({
     if (isLoggedIn) {
       this.loadUserInfo()
     } else {
-      this.showModal({ titleKey: 'BIZ_L2PGX', contentKey: 'BIZ_WS2EDE', confirmText: '去登录' })
+      requireLogin()
     }
+  },
+
+  _onSessionRestored() {
+    this.checkLoginAndLoadUserInfo()
   },
 
   // 从数据库获取用户信息

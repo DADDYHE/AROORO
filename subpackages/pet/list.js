@@ -6,6 +6,7 @@ const { ListBehavior } = require('../../behaviors/listBehavior')
 const { buildSharePath } = require('../../utils/share')
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { requireLogin } = require('../../utils/require-login')
 
 Page({
   ...pageI18n.mixin(),
@@ -71,9 +72,8 @@ Page({
     }
   },
 
-  createNewPet() {
-    if (!this.data.isLoggedIn) {
-      this.showModal({ titleKey: 'BIZ_L2PGX', contentKey: 'BIZ_414LG6', confirmText: '去登录' })
+  async createNewPet() {
+    if (!(await requireLogin())) {
       return
     }
 
