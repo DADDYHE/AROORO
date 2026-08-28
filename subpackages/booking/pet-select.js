@@ -7,6 +7,7 @@ const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const { buildSharePath } = require('../../utils/share')
 const { isHoliday } = require('../../utils/holidays')
+const { requireLogin } = require('../../utils/require-login')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
@@ -63,13 +64,17 @@ Page({
       const forceRefresh = options && options.forceRefresh === 'true'
       this.getPetProfiles(forceRefresh)
     } else {
-      this.showModal({ titleKey: 'BIZ_L2PGX', contentKey: 'BIZ_13ZN79L', confirmText: '去登录' })
+      requireLogin()
     }
   },
 
   async onShow() {
     this.resetSelectionStatus()
-    if (this.data.isLoggedIn && !this.data.isLoading) {
+    const isLoggedIn = authService.isLoggedIn()
+    if (isLoggedIn !== this.data.isLoggedIn) {
+      this.setData({ isLoggedIn })
+    }
+    if (isLoggedIn && !this.data.isLoading) {
       this.getPetProfiles(true)
     }
   },
@@ -325,7 +330,7 @@ Page({
 
   addNewPet() {
     if (!this.data.isLoggedIn) {
-      this.showModal({ titleKey: 'BIZ_L2PGX', contentKey: 'BIZ_414LG6', confirmText: '去登录' })
+      requireLogin()
       return
     }
 

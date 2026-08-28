@@ -11,7 +11,6 @@
   style="height: calc(100vh - {{_navbarHeight}}px);"
 >
 <view class="gallery-container">
-  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="gallery-header">
     <view class="brand-block">
       <view class="brand-accent-bar"></view>
