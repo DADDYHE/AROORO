@@ -680,6 +680,32 @@ async function withRetryableTransaction(body, label, maxAttempts = 3) {
 }
 // =====================================================================
 // =====================================================================
+// L4 防御纵深：确保下单用户 users 记录存在（防前端被绕过时用户无记录，导致邀请链/积分缺失）。
+// 已存在则跳过；不存在则按 userService 建号口径 upsert（_id=openid）。正常路径前端已强制登录建号，此处仅兜底。
+async function ensureMallBuyer(openid, inviterId) {
+    if (!openid) {
+        return;
+    }
+    try {
+        const exist = await db.collection('users').doc(openid).get().catch(() => null);
+        if (exist && exist.data) {
+            return;
+        }
+        const userData = {
+            openid,
+            role: 'user',
+            createdAt: db.serverDate(),
+            updatedAt: db.serverDate(),
+        };
+        if (inviterId && inviterId !== openid) {
+            userData.inviterId = inviterId;
+        }
+        await db.collection('users').doc(openid).set({ data: userData });
+    }
+    catch (e) {
+        console.warn('[mallService] ensureMallBuyer 建号失败（不影响下单）:', e?.message);
+    }
+}
 // Handler 11: createOrder（商城下单）
 // =====================================================================
 async function createOrder(event, _context, auth) {
@@ -687,6 +713,8 @@ async function createOrder(event, _context, auth) {
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
     }
+    // L4: 防御纵深，确保下单用户 users 记录存在（防前端被绕过）
+    await ensureMallBuyer(openid, event.inviterId);
     const { productId, skuId, quantity = 1, receiverName, receiverPhone, receiverAddress, couponId, couponDiscount, originalAmount } = event;
     if (!productId) {
         throw err('INVALID_PARAMS', '缺少商品ID');
@@ -842,6 +870,8 @@ async function createMultiOrder(event, _context, auth) {
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
     }
+    // L4: 防御纵深，确保下单用户 users 记录存在（防前端被绕过）
+    await ensureMallBuyer(openid, event.inviterId);
     const { items, receiverName, receiverPhone, receiverAddress, couponId, couponDiscount, originalAmount } = event;
     if (!items || !Array.isArray(items) || items.length === 0) {
         throw err('INVALID_PARAMS', '缺少商品列表');
