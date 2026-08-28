@@ -10,6 +10,7 @@
   lower-threshold="100"
   style="height: calc(100vh - {{_navbarHeight}}px);"
 >
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <view class="gallery-container">
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
