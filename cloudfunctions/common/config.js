@@ -18,9 +18,9 @@ const WECHAT_PAY = {
     appId: process.env.WECHAT_APPID || APP_ID,
     mchId: process.env.WECHAT_MCHID || '',
     serialNo: process.env.WECHAT_SERIAL_NO || '',
-    // P0 修复（2026-08-28）：微信支付【平台证书】序列号（回调头 Wechatpay-Serial 比对用）。
-    //   注意与 serialNo（商户 API 证书序列号）区分——两者是不同的证书。
-    //   未配置时回调跳过 serial 比对（RSA 验签兜底），配置后严格比对。
+    // P0 修复（2026-08-28）：可选加固——微信支付【公钥 ID】（PUB_KEY_ID_xxx，公钥模式下
+    //   回调头 Wechatpay-Serial 的值）。官方验签仅需 WECHAT_PAY_CERTIFICATE(公钥) RSA 验签，
+    //   不要求比对 serial；此字段仅在需要额外严格比对时配置，未配置时回调跳过比对正常验签。
     platformSerialNo: process.env.WECHAT_PAY_PLATFORM_SERIAL_NO || '',
     privateKey: process.env.WECHAT_PRIVATE_KEY || '',
     // P2 修复：转账场景 ID（新版商家转账必填，需在商户平台申请对应场景）
