@@ -227,6 +227,16 @@ App({
         } catch (e) {
           console.warn('[APP] 通知页面会话恢复失败:', e)
         }
+      } else if (typeof page.onShow === 'function') {
+        // 兜底：页面未实现 _onSessionRestored 时，调用 onShow 触发刷新，
+        // 确保登录回跳后原页用户态/数据刷新（老用户头像昵称/专属内容等）。
+        // 注：navigateBack 回到原页时 onShow 会自动再触发一次，本兜底与自动触发
+        // 重复但幂等（列表刷新类 onShow 应设计为幂等），收益是未实现钩子的页面也能刷新。
+        try {
+          page.onShow()
+        } catch (e) {
+          console.warn('[APP] 兜底刷新页面 onShow 失败:', e)
+        }
       }
     })
   },
