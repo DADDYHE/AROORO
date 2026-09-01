@@ -1,4 +1,5 @@
 const app = getApp()
+const { prefetchHomeData } = require('../../utils/homePrefetch')
 
 // 启动首屏海报 · 独立全屏页
 // 由首页 onLoad 在冷启动首屏一次 navigateTo 进入；本页非 tab 页、navigationStyle:custom
@@ -16,6 +17,11 @@ Page({
   },
 
   onLoad() {
+    // 性能优化（P2）：冷启动展示窗口（1~5s）内预取首页 6 个数据接口，
+    // splash 退出 reLaunch 回首页后 onShow 直接命中前端缓存，首帧零等待。
+    // fire-and-forget，失败静默，不影响海报展示。
+    prefetchHomeData(app)
+
     // 减少动态效果（一次性展示，无需实时监听）
     if (wx.getSystemSetting) {
       try {
