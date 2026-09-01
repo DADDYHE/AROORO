@@ -1,6 +1,6 @@
 // 通用导航栏组件 — Skyline 模式下替代原生导航栏
 // 自动适配状态栏高度和胶囊按钮位置
-// 返回按钮按压反馈用 CSS :active 实现（避免 worklet 在 root-portal 内的触摸命中问题）
+// 返回按钮按压反馈用 hover-class + --pressed 修饰类实现（wxml 配 hover-class="zy-navbar__left--pressed"）
 
 // 全局缓存窗口/胶囊信息，避免每个 navbar 实例重复调用 wx.getWindowInfo 注册监听器
 let _cachedLayout = null

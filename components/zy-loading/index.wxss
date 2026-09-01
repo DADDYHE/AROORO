@@ -304,60 +304,9 @@
 }
 
 /* ================================================================
-   关键帧定义 — Skyline 兼容（仅 transform & opacity）
+   关键帧来源 — Skyline 兼容（仅 transform & opacity）
+   ----------------------------------------------------------------
+   lux-* 系列 keyframes 统一定义于全局 styles/loading-animation.wxss
+   （app.wxss 全局引入，keyframeStyleIsolation:false 下组件可直接引用），
+   本组件不再重复定义，避免与全局副本漂移。
    ================================================================ */
-
-/* ---------- 陀飞轮金环 ---------- */
-@keyframes lux-ring-spin {
-  from { transform: rotate(0deg); opacity: 0.7; }
-  50% { opacity: 1; }
-  to { transform: rotate(360deg); opacity: 0.7; }
-}
-
-@keyframes lux-ring-spin-reverse {
-  from { transform: rotate(360deg); opacity: 0.5; }
-  50% { opacity: 0.9; }
-  to { transform: rotate(0deg); opacity: 0.5; }
-}
-
-@keyframes lux-ring-spin-inner {
-  from { transform: rotate(0deg); opacity: 0.6; }
-  50% { opacity: 1; }
-  to { transform: rotate(360deg); opacity: 0.6; }
-}
-
-@keyframes lux-dot-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.4); opacity: 1; }
-}
-
-/* ---------- 金粒瀑布 ---------- */
-@keyframes lux-cascade-fall {
-  0% { transform: translateY(0); opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translateY(200rpx); opacity: 0; }
-}
-
-/* ---------- 丝缎波纹 ---------- */
-@keyframes lux-silk-wave {
-  0%, 100% { transform: scaleX(0.3); opacity: 0.3; }
-  50% { transform: scaleX(1); opacity: 1; }
-}
-
-/* ---------- 品牌呼吸 ---------- */
-@keyframes lux-ring-expand {
-  0% { transform: scale(0.5); opacity: 0.8; }
-  100% { transform: scale(2); opacity: 0; }
-}
-
-@keyframes lux-breath {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
-
-/* ---------- 通用文字脉冲 ---------- */
-@keyframes lux-text-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}

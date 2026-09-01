@@ -166,7 +166,7 @@
   background-color: var(--overlay-color);
   border-radius: 18rpx;
   padding: 4rpx;
-  backdrop-filter: blur(5px);
+  /* Skyline 不支持 backdrop-filter（毛玻璃静默失效），用纯色半透明底替代 */
   z-index: 3;
 }
 
@@ -518,8 +518,8 @@
   border-radius: 10rpx;
   font-size: 28rpx;
   font-weight: bold;
+  /* Skyline 不支持 backdrop-filter，用纯色半透明底替代 */
   z-index: 10;
-  backdrop-filter: blur(3px);
 }
 
 .icon-container {

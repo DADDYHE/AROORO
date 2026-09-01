@@ -508,7 +508,7 @@ page {
 .show .popup-stagger:nth-child(5) { animation-delay: 400ms; }
 .show .popup-stagger:nth-child(6) { animation-delay: 460ms; }
 .show .popup-stagger:nth-child(7) { animation-delay: 520ms; }
-.show .popup-stagger:nth-child(8) { animation-delay: 580ms; }
+.show .popup-stagger:nth-child(8) { animation-delay: 500ms; }
 
 /* 柔和 stagger（底部按钮等次要元素） */
 .popup-stagger-soft {
