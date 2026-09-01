@@ -319,7 +319,7 @@ class HostService {
     return this.cloud.call('hostService', { action: 'getHostDetail', hostId }, { useCache: false })
   }
 
-  /** 获取当前登录用户自己的寄养档案（含 status/rejectReason） */
+  /** 获取当前登录用户自己的家庭寄养档案（含 status/rejectReason） */
   async getMyProfile() {
     return this.cloud.call('hostService', { action: 'getHostProfile' }, { useCache: false })
   }
