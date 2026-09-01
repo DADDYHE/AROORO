@@ -1,5 +1,7 @@
 const { HostService, OrderService, AdminService } = require('../../../services/CloudFunctionService')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
+const pageI18n = require('../../../utils/page-i18n.js')
+const i18n = require('../../../utils/i18n.js')
 
 // 档案状态 → 展示文案
 const STATUS_TEXT = {
@@ -24,6 +26,8 @@ const ORDER_STATUS_TEXT = {
 Page({
   behaviors: [ListBehavior],
   data: {
+    // 注入 i18n t-map，使 WXML 可绑定 {{ t.BIZ_XXX }}（根治 BIZ_BX46V0 死 key）
+    ...pageI18n.buildTMap(i18n.getLocale()),
     isLoading: true,
     profile: null,
     hasProfile: false,

@@ -1,4 +1,4 @@
-<zy-navbar title="家庭寄养" />
+<zy-navbar title="{{t.BIZ_BX46V0}}" />
 <scroll-view
   scroll-y
   enhanced
@@ -32,7 +32,7 @@
       <view class="brand-block">
         <view class="brand-accent-bar"></view>
         <view class="brand-main">
-          <text class="brand-text">家庭寄养</text>
+          <text class="brand-text">{{t.BIZ_BX46V0}}</text>
         </view>
         <view class="brand-meta">
           <view class="brand-meta-line"></view>
