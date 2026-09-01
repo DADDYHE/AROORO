@@ -199,7 +199,30 @@
     "pages/home/index": {
       "network": "wifi",
       "packages": [
-        "partner"
+        "partner",
+        "booking",
+        "pet",
+        "mall",
+        "coupon",
+        "activity"
+      ]
+    },
+    "pages/boarding/index": {
+      "network": "wifi",
+      "packages": [
+        "booking"
+      ]
+    },
+    "pages/discover/index": {
+      "network": "wifi",
+      "packages": [
+        "mall"
+      ]
+    },
+    "pages/service/index": {
+      "network": "wifi",
+      "packages": [
+        "feeding"
       ]
     }
   }

@@ -64,6 +64,10 @@
         "type": "folder"
       },
       {
+        "value": ".github",
+        "type": "folder"
+      },
+      {
         "value": "temp_icons",
         "type": "folder"
       },
