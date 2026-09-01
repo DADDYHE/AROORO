@@ -133,7 +133,27 @@ Page({
       this.error('BIZ_160DFJX')
       return
     }
+    // P1：点击跳转瞬间后台预热目标页首屏数据（与子页面 onLoad 同参数写 30s 缓存），
+    //   跳转后子页面命中缓存 → 首次进入也秒开；失败静默（子页面自身有兜底）
+    this._prewarmModule(id)
     wx.navigateTo({ url: mod.path })
+  },
+
+  // fire-and-forget 预热：不 await、失败静默，仅承担「把数据提前拉进前端缓存」职责
+  _prewarmModule(id) {
+    const CACHE = { useCache: true, cacheTime: 30000 }
+    try {
+      const warm = (p) => p.catch(err => console.warn('[partner/home] prewarm failed:', err?.message || err))
+      if (id === 'income') {
+        warm(AdminService.getPartnerIncomeBundle({ pageSize: 20 }, CACHE))
+      } else if (id === 'serviceIncome') {
+        warm(AdminService.getServiceIncomeBundle({ pageSize: 20 }, CACHE))
+      } else if (id === 'referral') {
+        warm(AdminService.getReferralBundle({ pageSize: 20 }, CACHE))
+      }
+    } catch (e) {
+      console.warn('[partner/home] prewarm error:', e?.message || e)
+    }
   },
 
   onApplyTap() {

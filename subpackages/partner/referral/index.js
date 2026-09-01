@@ -42,55 +42,69 @@ Page({
     }
   },
 
-  // forceRefresh=true：下拉等主动操作，穿透 30s 前端缓存
+  // onShow 被动刷新：优先 BFF 聚合（3 次 → 1 次），失败回退原 3 连
   async _refreshData(forceRefresh = false) {
+    const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
     try {
-      const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
+      const bundle = await this._loadBundle(opts)
+      if (bundle) {
+        this._applyBundle(bundle, false)
+        return
+      }
+    } catch (e) {
+      console.warn('[partner/referral] bundle failed, fallback to legacy:', e?.message || e)
+    }
+    await this._legacyLoad(opts, false)
+  },
+
+  async _loadData({ forceRefresh = false } = {}) {
+    this.setData({ isLoading: true })
+    const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
+    try {
+      const bundle = await this._loadBundle(opts)
+      if (bundle) {
+        this._applyBundle(bundle, true)
+        return
+      }
+    } catch (e) {
+      console.warn('[partner/referral] bundle failed, fallback to legacy:', e?.message || e)
+    }
+    await this._legacyLoad(opts, true)
+  },
+
+  async _loadBundle(opts) {
+    const res = await AdminService.getReferralBundle({ pageSize: this.data.pageSize }, opts)
+    if (!res || res.code !== 0 || !res.data) { return null }
+    return res.data
+  },
+
+  // 兜底：原 3 连
+  async _legacyLoad(opts, showLoading) {
+    try {
       const [usersRes, statsRes, referralRes] = await Promise.all([
         AdminService.getMyInvitedUsers({ page: 1, pageSize: this.data.pageSize }, opts),
         AdminService.getReferralOrderStats({ type: 'all' }, opts),
         AdminService.getReferralStats(opts),
       ])
-      const list = usersRes.code === 0 && usersRes.data ? usersRes.data.list || [] : []
-      const total = usersRes.code === 0 && usersRes.data ? usersRes.data.total || 0 : 0
-      const stats = this._buildStats(
-        referralRes.code === 0 && referralRes.data ? referralRes.data : null,
-        statsRes.code === 0 && statsRes.data ? statsRes.data : null
-      )
-      this.setData({ users: list, total, stats, page: 1, hasMore: list.length >= this.data.pageSize })
+      this._applyBundle({
+        users: usersRes.code === 0 && usersRes.data ? usersRes.data : null,
+        orderStats: statsRes.code === 0 && statsRes.data ? statsRes.data : null,
+        referralStats: referralRes.code === 0 && referralRes.data ? referralRes.data : null,
+      }, showLoading)
     } catch (e) {
-      console.warn('[partner/referral] _refreshData error:', e)
+      console.error('[partner/referral] _loadData error:', e)
+      if (showLoading) { this.setData({ isLoading: false }) }
     }
   },
 
-  async _loadData({ forceRefresh = false } = {}) {
-    this.setData({ isLoading: true })
-    try {
-      const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
-      const [usersRes, statsRes, referralRes] = await Promise.all([
-        AdminService.getMyInvitedUsers({ page: this.data.page, pageSize: this.data.pageSize }, opts),
-        AdminService.getReferralOrderStats({ type: 'all' }, opts),
-        AdminService.getReferralStats(opts),
-      ])
-
-      const list = usersRes.code === 0 && usersRes.data ? usersRes.data.list || [] : []
-      const total = usersRes.code === 0 && usersRes.data ? usersRes.data.total || 0 : 0
-      const stats = this._buildStats(
-        referralRes.code === 0 && referralRes.data ? referralRes.data : null,
-        statsRes.code === 0 && statsRes.data ? statsRes.data : null
-      )
-
-      this.setData({
-        isLoading: false,
-        users: list,
-        total,
-        hasMore: list.length >= this.data.pageSize,
-        stats,
-      })
-    } catch (e) {
-      console.error('[partner/referral] _loadData error:', e)
-      this.setData({ isLoading: false })
-    }
+  // bundle 与 legacy 共用落地
+  _applyBundle(bundle, showLoading) {
+    const list = bundle.users && bundle.users.list ? bundle.users.list : []
+    const total = bundle.users && bundle.users.total ? bundle.users.total : 0
+    const stats = this._buildStats(bundle.referralStats, bundle.orderStats)
+    const next = { users: list, total, stats, page: 1, hasMore: list.length >= this.data.pageSize }
+    if (showLoading) { next.isLoading = false }
+    this.setData(next)
   },
 
   onAvatarError(e) {

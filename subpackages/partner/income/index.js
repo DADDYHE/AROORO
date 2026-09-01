@@ -50,18 +50,35 @@ Page({
   // forceRefresh=true：提现等写操作后主动刷新，穿透 30s 前端缓存，保证回显最新
   async _loadData({ forceRefresh = false } = {}) {
     this.setData({ isLoading: true })
+    const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
+    // P1：优先 BFF 聚合（5 次调用 → 1 次，1 冷启 + 1 RTT），失败回退旧 5 连
     try {
-      const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
+      const bundle = await this._loadBundle(opts)
+      if (bundle) {
+        this._renderOverview(bundle.overview, bundle.wallet, bundle.commissionRates, bundle.payee, bundle.details)
+        return
+      }
+    } catch (e) {
+      console.warn('[partner/income] bundle failed, fallback to legacy:', e?.message || e)
+    }
+    await this._legacyLoad(opts)
+  },
+
+  async _loadBundle(opts) {
+    const res = await AdminService.getPartnerIncomeBundle({ pageSize: this.data.pageSize }, opts)
+    if (!res || res.code !== 0 || !res.data) { return null }
+    return res.data
+  },
+
+  // 兜底：原 5 连（overview+wallet 并行 → rates → payee → details），保持 rates/payee 独立容错
+  async _legacyLoad(opts) {
+    try {
       const [overviewRes, walletRes] = await Promise.all([
         AdminService.getMyIncomeOverview(opts),
         AdminService.getMyWallet({}, opts),
       ])
-
       const overview = overviewRes.code === 0 && overviewRes.data ? overviewRes.data : null
       const wallet = walletRes.code === 0 && walletRes.data ? walletRes.data : null
-
-      const TYPE_NAMES = { tuan: '团购', mall: '商城', activity: '活动', feeding: '喂养', hosting: '寄养' }
-      // 佣金率查询独立容错：失败（如云函数未部署最新版）不阻塞收入/钱包展示
       let ratesData = null
       try {
         const ratesRes = await AdminService.getMyCommissionRates(opts)
@@ -70,70 +87,96 @@ Page({
         console.warn('[partner/income] getMyCommissionRates failed:', e?.message || e)
         ratesData = null
       }
-      const commissionRates = ratesData && ratesData.rates
-        ? Object.keys(TYPE_NAMES).map(key => ({ key, name: TYPE_NAMES[key], rate: ratesData.rates[key] || 0 }))
-        : Object.keys(TYPE_NAMES).map(key => ({ key, name: TYPE_NAMES[key], rate: 0 }))
-
-      let totalIncomeText = ''
-      let commissionText = ''
-      let hostingText = ''
-      let feedingText = ''
-      // walletCardTotalIncome：钱包卡片"总收入"展示值
-      // 与"累计佣金"卡片保持一致，避免 commissions 累加 vs wallets.totalIncome 历史记账口径不同导致数据不一致
-      let walletCardTotalIncome = ''
-      // 钱包卡片金额格式化到小数点后两位
-      let walletBalanceText = ''
-      let walletTotalWithdrawnText = ''
-      if (overview) {
-        const ct = overview.commission?.total || 0
-        const at = overview.activity?.total || 0
-        const ht = overview.boarding?.total || 0
-        const ft = overview.feeding?.total || 0
-        totalIncomeText = (ct + at + ht + ft).toFixed(2)
-        commissionText = ct.toFixed(2)
-        activityText = at.toFixed(2)
-        hostingText = ht.toFixed(2)
-        feedingText = ft.toFixed(2)
-        walletCardTotalIncome = totalIncomeText
-      }
-      if (wallet) {
-        walletBalanceText = (Number(wallet.balance) || 0).toFixed(2)
-        walletTotalWithdrawnText = (Number(wallet.totalWithdrawn) || 0).toFixed(2)
-      }
-
-      this.setData({
-        overview, wallet, commissionRates, totalIncomeText, commissionText, activityText, hostingText, feedingText,
-        walletCardTotalIncome, walletBalanceText, walletTotalWithdrawnText,
-        withdrawBalance: wallet ? Number(wallet.balance) || 0 : 0,
-        isLoading: false,
-      })
-      // v5.1：收款账号（失败不阻塞收入展示）
+      let payee = null
       try {
         const payeeRes = await AdminService.getMyPayeeAccounts(opts)
-        if (payeeRes.code === 0 && payeeRes.data && payeeRes.data.payee) {
-          const p = payeeRes.data.payee
-          this.setData({
-            payee: p,
-            payeeForm: {
-              wechat: p.wechat || '',
-              alipay: p.alipay || '',
-              bank: {
-                bankName: (p.bank && p.bank.bankName) || '',
-                cardNo: (p.bank && p.bank.cardNo) || '',
-                holder: (p.bank && p.bank.holder) || '',
-              },
-            },
-          })
-          this.syncCurrentChannel()
-        }
+        if (payeeRes.code === 0 && payeeRes.data && payeeRes.data.payee) { payee = payeeRes.data.payee }
       } catch (e) {
         console.warn('[partner/income] getMyPayeeAccounts failed:', e?.message || e)
       }
-      this._loadDetails(false, true)
+      this._renderOverview(overview, wallet, ratesData, payee, null)
     } catch (e) {
       console.error('[partner/income] _loadData error:', e)
       this.setData({ isLoading: false })
     }
+  },
+
+  // bundle 与 legacy 共用渲染：金额文本/佣金率/payee/首屏详情一次落地
+  _renderOverview(overview, wallet, ratesData, payee, detailsBundle) {
+    const summary = this._computeSummary(overview, wallet)
+    this.setData({
+      overview,
+      wallet,
+      commissionRates: this._buildRates(ratesData),
+      ...summary,
+      withdrawBalance: wallet ? Number(wallet.balance) || 0 : 0,
+      isLoading: false,
+    })
+    if (payee) { this._applyPayee(payee) }
+    if (detailsBundle) {
+      const list = detailsBundle.list || []
+      this.setData({
+        details: list,
+        detailTotal: detailsBundle.total || 0,
+        hasMore: list.length >= this.data.pageSize,
+      })
+    } else {
+      this._loadDetails(false, true)
+    }
+  },
+
+  _computeSummary(overview, wallet) {
+    let totalIncomeText = ''
+    let commissionText = ''
+    let activityText = ''
+    let hostingText = ''
+    let feedingText = ''
+    // walletCardTotalIncome：钱包卡片"总收入"展示值
+    // 与"累计佣金"卡片保持一致，避免 commissions 累加 vs wallets.totalIncome 历史记账口径不同导致数据不一致
+    let walletCardTotalIncome = ''
+    // 钱包卡片金额格式化到小数点后两位
+    let walletBalanceText = ''
+    let walletTotalWithdrawnText = ''
+    if (overview) {
+      const ct = overview.commission?.total || 0
+      const at = overview.activity?.total || 0
+      const ht = overview.boarding?.total || 0
+      const ft = overview.feeding?.total || 0
+      totalIncomeText = (ct + at + ht + ft).toFixed(2)
+      commissionText = ct.toFixed(2)
+      activityText = at.toFixed(2)
+      hostingText = ht.toFixed(2)
+      feedingText = ft.toFixed(2)
+      walletCardTotalIncome = totalIncomeText
+    }
+    if (wallet) {
+      walletBalanceText = (Number(wallet.balance) || 0).toFixed(2)
+      walletTotalWithdrawnText = (Number(wallet.totalWithdrawn) || 0).toFixed(2)
+    }
+    return { totalIncomeText, commissionText, activityText, hostingText, feedingText, walletCardTotalIncome, walletBalanceText, walletTotalWithdrawnText }
+  },
+
+  _buildRates(ratesData) {
+    const TYPE_NAMES = { tuan: '团购', mall: '商城', activity: '活动', feeding: '喂养', hosting: '寄养' }
+    return ratesData && ratesData.rates
+      ? Object.keys(TYPE_NAMES).map(key => ({ key, name: TYPE_NAMES[key], rate: ratesData.rates[key] || 0 }))
+      : Object.keys(TYPE_NAMES).map(key => ({ key, name: TYPE_NAMES[key], rate: 0 }))
+  },
+
+  _applyPayee(payee) {
+    this.setData({
+      payee,
+      payeeForm: {
+        wechat: payee.wechat || '',
+        alipay: payee.alipay || '',
+        bank: {
+          bankName: (payee.bank && payee.bank.bankName) || '',
+          cardNo: (payee.bank && payee.bank.cardNo) || '',
+          holder: (payee.bank && payee.bank.holder) || '',
+        },
+      },
+    })
+    this.syncCurrentChannel()
   },
 
   // useCache=true 仅用于 onLoad 被动首屏；tab 切换/分页为主动行为，穿透缓存保证新鲜

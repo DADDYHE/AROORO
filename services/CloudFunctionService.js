@@ -659,6 +659,23 @@ class AdminService {
     return this.cloud.call('partnerService', { action: 'getPartnerHome' }, { useCache: false })
   }
 
+  // ===== 子页面首屏聚合（BFF P1）：每页 1 次调用取代 3~5 次 =====
+
+  /** income 页：overview + wallet + rates + payee + 首屏详情（5 次 → 1 次） */
+  async getPartnerIncomeBundle(data = {}, options = {}) {
+    return this.cloud.call('partnerService', { action: 'getPartnerIncomeBundle', ...data }, { useCache: false, ...options })
+  }
+
+  /** service-income 页：overview + wallet(serviceIncome) + payee + 首屏详情（4 次 → 1 次） */
+  async getServiceIncomeBundle(data = {}, options = {}) {
+    return this.cloud.call('partnerService', { action: 'getServiceIncomeBundle', ...data }, { useCache: false, ...options })
+  }
+
+  /** referral 页：invitedUsers + orderStats + stats（3 次 → 1 次） */
+  async getReferralBundle(data = {}, options = {}) {
+    return this.cloud.call('partnerService', { action: 'getReferralBundle', ...data }, { useCache: false, ...options })
+  }
+
   async getMyInvitedUsers(data = {}, options = {}) {
     return this.cloud.call('partnerService', { action: 'getMyInvitedUsers', ...data }, { useCache: false, ...options })
   }

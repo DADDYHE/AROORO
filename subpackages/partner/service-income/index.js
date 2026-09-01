@@ -57,63 +57,103 @@ Page({
   // forceRefresh=true：提现等写操作/下拉后主动刷新，穿透 30s 前端缓存
   async _loadData({ forceRefresh = false } = {}) {
     this.setData({ isLoading: true })
+    const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
+    // P1：优先 BFF 聚合（4 次调用 → 1 次），失败回退旧多连
     try {
-      const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
+      const bundle = await this._loadBundle(opts)
+      if (bundle) {
+        this._renderOverview(bundle.overview, bundle.wallet, bundle.payee, bundle.details)
+        return
+      }
+    } catch (e) {
+      console.warn('[service-income] bundle failed, fallback to legacy:', e?.message || e)
+    }
+    await this._legacyLoad(opts)
+  },
+
+  async _loadBundle(opts) {
+    const res = await AdminService.getServiceIncomeBundle({ pageSize: this.data.pageSize }, opts)
+    if (!res || res.code !== 0 || !res.data) { return null }
+    return res.data
+  },
+
+  // 兜底：原多连（overview+wallet 并行 → payee → details），保持 payee 独立容错
+  async _legacyLoad(opts) {
+    try {
       const [overviewRes, walletRes] = await Promise.all([
         AdminService.getServiceIncomeOverview(opts),
         AdminService.getMyWallet({ walletType: 'serviceIncome' }, opts),
       ])
-      
-      if (overviewRes.code === 0 && overviewRes.data) {
-        const d = overviewRes.data
-        this.setData({
-          overview: {
-            activity: d.activity || { total: 0, monthly: 0, today: 0, count: 0 },
-            boarding: d.boarding || { total: 0, monthly: 0, today: 0, count: 0 },
-            feeding: d.feeding || { total: 0, monthly: 0, today: 0, count: 0 },
-            totalIncome: d.totalIncome || 0,
-            monthlyIncome: d.monthlyIncome || 0,
-            todayIncome: d.todayIncome || 0,
-          },
-        })
-      }
-
-      if (walletRes.code === 0 && walletRes.data) {
-        const balance = Number(walletRes.data.balance) || 0
-        this.setData({
-          serviceBalanceText: balance.toFixed(2),
-          withdrawBalance: balance,
-          withdrawBalanceText: balance.toFixed(2),
-        })
-      }
+      let payee = null
       try {
         const payeeRes = await AdminService.getMyPayeeAccounts(opts)
-        if (payeeRes.code === 0 && payeeRes.data && payeeRes.data.payee) {
-          const p = payeeRes.data.payee
-          this.setData({
-            payee: p,
-            payeeForm: {
-              wechat: p.wechat || '',
-              alipay: p.alipay || '',
-              bank: {
-                bankName: (p.bank && p.bank.bankName) || '',
-                cardNo: (p.bank && p.bank.cardNo) || '',
-                holder: (p.bank && p.bank.holder) || '',
-              },
-            },
-          })
-          this.syncCurrentChannel()
-        }
+        if (payeeRes.code === 0 && payeeRes.data && payeeRes.data.payee) { payee = payeeRes.data.payee }
       } catch (e) {
         console.warn('[service-income] getMyPayeeAccounts failed:', e?.message || e)
       }
-      
-      await this._loadDetails(false, true)
+      this._renderOverview(
+        overviewRes.code === 0 && overviewRes.data ? overviewRes.data : null,
+        walletRes.code === 0 && walletRes.data ? walletRes.data : null,
+        payee,
+        null
+      )
     } catch (e) {
       console.error('[service-income] _loadData error:', e)
-    } finally {
       this.setData({ isLoading: false })
     }
+  },
+
+  // bundle 与 legacy 共用渲染：概览/钱包/payee/首屏详情一次落地
+  _renderOverview(overviewData, wallet, payee, detailsBundle) {
+    if (overviewData) {
+      const d = overviewData
+      this.setData({
+        overview: {
+          activity: d.activity || { total: 0, monthly: 0, today: 0, count: 0 },
+          boarding: d.boarding || { total: 0, monthly: 0, today: 0, count: 0 },
+          feeding: d.feeding || { total: 0, monthly: 0, today: 0, count: 0 },
+          totalIncome: d.totalIncome || 0,
+          monthlyIncome: d.monthlyIncome || 0,
+          todayIncome: d.todayIncome || 0,
+        },
+      })
+    }
+    if (wallet) {
+      const balance = Number(wallet.balance) || 0
+      this.setData({
+        serviceBalanceText: balance.toFixed(2),
+        withdrawBalance: balance,
+        withdrawBalanceText: balance.toFixed(2),
+      })
+    }
+    if (payee) { this._applyPayee(payee) }
+    if (detailsBundle) {
+      const list = detailsBundle.list || []
+      this.setData({
+        details: list,
+        detailTotal: detailsBundle.total || 0,
+        hasMore: list.length >= this.data.pageSize,
+      })
+    } else {
+      this._loadDetails(false, true)
+    }
+    this.setData({ isLoading: false })
+  },
+
+  _applyPayee(payee) {
+    this.setData({
+      payee,
+      payeeForm: {
+        wechat: payee.wechat || '',
+        alipay: payee.alipay || '',
+        bank: {
+          bankName: (payee.bank && payee.bank.bankName) || '',
+          cardNo: (payee.bank && payee.bank.cardNo) || '',
+          holder: (payee.bank && payee.bank.holder) || '',
+        },
+      },
+    })
+    this.syncCurrentChannel()
   },
 
   // useCache=true 仅用于 onLoad 被动首屏；tab 切换/分页为主动行为，穿透缓存保证新鲜
