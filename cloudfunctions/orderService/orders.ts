@@ -1552,9 +1552,10 @@ export async function handleBoardingOrder(event: EventLike, _context: ContextLik
     }
   }
 
-  // 取消订单时取消佣金记录和收入记录
-  if (newStatus === 'cancelled') {
+  // 拒单/取消订单时取消佣金记录和收入记录
+  if (newStatus === 'cancelled' || newStatus === 'rejected') {
     // P1 修复：已支付订单被商家取消必须发起退款（用户已付款，不能只改状态不退钱）。
+    //   P2 补丁（2026-09-01）：rejected 同样触发——此前拒单只改状态不退钱，属资损缺口。
     //   与 updateOrderStatus 的退款分支对齐：调用 paymentService.createRefund（金额单位为分）。
     const cancelOd = orderRes.data as {
       paymentStatus?: string
@@ -1575,7 +1576,7 @@ export async function handleBoardingOrder(event: EventLike, _context: ContextLik
             outTradeNo: cancelOd.outTradeNo,
             refundAmount: Math.round(refundYuan * 100),
             totalAmount: Math.round(refundYuan * 100),
-            reason: '商家取消订单',
+            reason: newStatus === 'rejected' ? '商家拒单，自动退款' : '商家取消订单',
           },
         })
         const result = (callRes.result || {}) as { code?: number, message?: string, error?: unknown }

@@ -43,6 +43,14 @@ const { db } = initCloud();
 const _ = db.command;
 const logger = createLogger('partnerService:wallet');
 // =====================================================================
+// 收入概览结果缓存（2026-09-01 性能优化）
+//   getMyIncomeOverview 一次调用跑 15 个聚合查询，无索引时可达秒级。
+//   概览是只读汇总，30s 内重复读直接命中缓存（收入数字最多延迟 30s 更新，无资金风险）。
+//   实例内内存缓存：不同实例各自缓存，天然无需失效广播。
+// =====================================================================
+const OVERVIEW_TTL_MS = 30 * 1000;
+const _overviewCache = new Map();
+// =====================================================================
 // 辅助函数
 // =====================================================================
 const EMPTY_COMMISSION = { total: 0, pending: 0, settled: 0, monthly: 0, today: 0 };
@@ -74,6 +82,14 @@ function normalizeWalletType(raw) {
 // =====================================================================
 async function getMyIncomeOverview(event, context, auth) {
     const { openid } = auth;
+    if (!openid) {
+        return handleError(err('AUTH_REQUIRED', '未登录'), '未登录', ERROR_CODES.AUTH);
+    }
+    // 性能优化：命中 30s 内缓存直接返回（只读汇总，延迟可接受）
+    const cached = _overviewCache.get(openid);
+    if (cached && Date.now() - cached.at < OVERVIEW_TTL_MS) {
+        return cached.data;
+    }
     try {
         let user = null;
         try {
@@ -302,7 +318,9 @@ async function getMyIncomeOverview(event, context, auth) {
             serviceIncome: serviceIncomeWallet,
         };
         // L1: API 字段名改为 boarding（与 commissions.orderType / orders.type 规范值一致），值指向 boarding 局部变量
-        return handleSuccess({ commission, activity, boarding, feeding, serviceIncome, wallet });
+        const result = handleSuccess({ commission, activity, boarding, feeding, serviceIncome, wallet });
+        _overviewCache.set(openid, { at: Date.now(), data: result });
+        return result;
     }
     catch (error) {
         logger.error('getMyIncomeOverview', error);
@@ -384,7 +402,6 @@ async function getMyIncomeDetails(event, context, auth) {
                 status: c.status || 'pending',
                 createdAt: c.createdAt,
                 buyerId: c.ownerId || '',
-                productName: c.productName || '',
             };
         });
         // P2 修复：批量补买家昵称/头像（与旧版 adminService 明细结构对齐，供前端明细页展示）
@@ -834,7 +851,6 @@ async function requestWithdrawal(event, context, auth) {
         if (!hasPayeeChannel(userPayee, payoutMethod)) {
             throw err('INVALID_PARAMS', '请先在「收款账号」中预留该收款方式（微信/支付宝/银行卡）');
         }
-
         // v5.1.1 修复：创建提现记录时拍快照 payeeSnapshot（脱敏），供后台审核列表直接展示
         // 此前遗漏此字段，导致用户已预留收款方式、列表却显示「未预留」
         const payeeSnapshot = maskPayee(userPayee, payoutMethod) || {};

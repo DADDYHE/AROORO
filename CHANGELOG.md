@@ -7,6 +7,12 @@
 ## [Unreleased]
 
 ### Added
+- **合伙人中心首屏聚合接口（BFF，性能优化）**：`partnerService.getPartnerHome`（services/home.ts）——一次云调用内聚合 getMyPermissions + getApplicationStatus + getMyIncomeOverview，3 次冷启/3 次 RTT → 1 次；前端 partner/home 优先调聚合、失败自动回退旧三连
+- **app.json `preloadRule`**：进入 `pages/profile`（all 网络）与 `pages/home`（wifi）时预下载 partner 分包，消除点进合伙人中心的分包下载等待
+- **前端 onShow 30s 节流**：partner/home 从子页返回不再无条件全量刷新
+- **subpackages/partner/hosting-profile-edit/**：寄养档案 3 步编辑表单（基本信息/服务与定价/资质与相册，chooseMedia ≤9/批直传云存储，存量 fileID 走 getTempFileURL 展示），对接 hostService.createHostProfile/updateHostProfile
+- **寄养档案自助管理（P1）**：hosting-profile 改造为档案管理页（无档案引导创建 / 状态卡+驳回原因+重新提审 / 接单开关 updateHostAcceptingOrders）；HostService 服务层新增 getMyProfile/createHostProfile/updateHostProfile/updateHostAcceptingOrders（走 hostService）
+- **寄养订单履约（P2）**：hosting-profile 订单卡新增接单/拒单/完成操作（走 orderService.handleBoardingOrder：合伙人权限 + organizerId 越权校验 + 状态机守卫 + 接单风控 + complete 触发佣金/服务收入 + 拒单/取消自动退款）；**修复资损缺口**：orderService.handleBoardingOrder 此前仅 cancelled 触发退款，rejected（拒单）只改状态不退钱 → 现拒单同样自动发起退款
 - **cloudfunctions/common/rate-limit-config.ts**：限流配置中心（6 业务类型差异化默认值 + db 热更新 + TTL 缓存 + 紧急关停）
 - **cloudfunctions/common/rate-limit-bootstrap.ts**：统一注入入口（rate_limits 计数 + rate_limit_configs 配置一次性注入）
 - **cloudfunctions/common/rate-limit-monitor.ts**：限流监控（4 类指标 + 告警 webhook + 阈值可配 + withRateLimitMonitored 包装器）

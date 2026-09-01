@@ -318,6 +318,26 @@ class HostService {
   async getHostInfo(hostId) {
     return this.cloud.call('hostService', { action: 'getHostDetail', hostId }, { useCache: false })
   }
+
+  /** 获取当前登录用户自己的寄养档案（含 status/rejectReason） */
+  async getMyProfile() {
+    return this.cloud.call('hostService', { action: 'getHostProfile' }, { useCache: false })
+  }
+
+  /** 创建寄养家庭档案（提交后进入 pending_review 审核） */
+  async createHostProfile(data) {
+    return this.cloud.post('hostService', { action: 'createHostProfile', ...data })
+  }
+
+  /** 更新寄养家庭档案（updateType=basicInfo 全量字段；resubmit=true 时 rejected 重提审核） */
+  async updateHostProfile(data) {
+    return this.cloud.post('hostService', { action: 'updateHostProfile', ...data })
+  }
+
+  /** 切换接单开关 */
+  async updateHostAcceptingOrders(isAcceptingOrders) {
+    return this.cloud.post('hostService', { action: 'updateHostAcceptingOrders', isAcceptingOrders })
+  }
 }
 
 /**
@@ -356,6 +376,11 @@ class OrderService {
   /** 取消订单 */
   async cancelOrder(data) {
     return this.cloud.post('orderService', { action: 'cancelOrder', ...data })
+  }
+
+  /** 合伙人寄养订单操作：confirm 接单 / reject 拒单 / complete 完成（状态机+佣金+退款在服务端） */
+  async handleBoardingOrder(orderId, operation) {
+    return this.cloud.post('orderService', { action: 'handleBoardingOrder', orderId, operation })
   }
 
   /** 发起微信支付，amount 单位为元（Sprint 32: 迁移到 paymentService/createPayment） */
@@ -624,6 +649,14 @@ class AdminService {
 
   async getMyPermissions() {
     return this.cloud.call('partnerService', { action: 'getMyPermissions' }, { useCache: false })
+  }
+
+  /**
+   * 合伙人中心首屏聚合（BFF）：一次返回 isPartner / hasPendingApplication / incomeSummary
+   * 性能优化：取代 getMyPermissions + getApplicationStatus + getMyIncomeOverview 三连
+   */
+  async getPartnerHome() {
+    return this.cloud.call('partnerService', { action: 'getPartnerHome' }, { useCache: false })
   }
 
   async getMyInvitedUsers(data = {}) {

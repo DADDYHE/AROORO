@@ -171,6 +171,7 @@
         "activity-create/index",
         "activity-detail/index",
         "hosting-profile/index",
+        "hosting-profile-edit/index",
         "feeding/index",
         "income/index",
         "service-income/index",
@@ -187,5 +188,19 @@
         "index"
       ]
     }
-  ]
+  ],
+  "preloadRule": {
+    "pages/profile/index": {
+      "network": "all",
+      "packages": [
+        "partner"
+      ]
+    },
+    "pages/home/index": {
+      "network": "wifi",
+      "packages": [
+        "partner"
+      ]
+    }
+  }
 }

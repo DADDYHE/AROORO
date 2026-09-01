@@ -257,16 +257,23 @@ async function updateHostProfile(event, _context, auth) {
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
     }
-    const { updateType, description, photos, videos } = event;
+    const { updateType, description, photos, videos, resubmit } = event;
+    let existingStatus = '';
     try {
-        await db.collection('hostProfiles').doc(openid).get();
+        const existing = await db.collection('hostProfiles').doc(openid).get();
+        existingStatus = (existing.data || {}).status || '';
     }
     catch (e) {
         throw err('NOT_FOUND', '您尚未创建寄养家庭配置');
     }
     const updateData = { updatedAt: db.serverDate() };
     if (updateType === 'basicInfo') {
-        Object.assign(updateData, filterFields(FIELD_WHITELISTS.hostBasic, event));
+        // P1 档案自助编辑：hostBasic 全量 + 服务/简介/相册一次提交（status/rating 等保护字段不在白名单）
+        const editableFields = [
+            ...FIELD_WHITELISTS.hostBasic,
+            'serviceTypes', 'description', 'photos', 'videos', 'tags',
+        ];
+        Object.assign(updateData, filterFields(editableFields, event));
         if (event.hostName !== undefined && event.hostName !== null) {
             updateData.name = event.hostName;
         }
@@ -292,11 +299,21 @@ async function updateHostProfile(event, _context, auth) {
             Object.assign(updateData, filterFields(FIELD_WHITELISTS.hostDefault, event));
         }
     }
+    // 重新提审：仅 rejected 允许自助改回待审核；status 不可通过白名单打穿
+    if (resubmit === true) {
+        if (existingStatus === 'rejected') {
+            updateData.status = 'pending_review';
+        }
+        else if (existingStatus !== 'pending_review') {
+            throw err('BUSINESS_ERROR', '当前状态无需重新提交审核');
+        }
+    }
     if (Object.keys(updateData).length > 1) {
         await db.collection('hostProfiles').doc(openid).update({ data: updateData });
         deleteCache('host_list');
+        deleteCache(`host_profile_${openid}`);
     }
-    return handleSuccess(null, '更新成功');
+    return handleSuccess({ status: updateData.status || existingStatus }, '更新成功');
 }
 exports.updateHostProfile = updateHostProfile;
 // =====================================================================
@@ -414,9 +431,17 @@ async function getHostProfile(event, _context, auth) {
         throw err('AUTH_REQUIRED', '未登录');
     }
     try {
-        const profileResult = await db.collection('hostProfiles').doc(openid).get();
-        deleteCache(`host_profile_${openid}`);
-        return handleSuccess(profileResult.data, '获取成功');
+        // 无档案是预期状态（首访合伙人），用 where 查询避免 doc().get() 对不存在文档直接 reject
+        //   → 返回 code 0 + data null，前端据此展示创建引导，不进错误上报通道
+        const profileResult = await db.collection('hostProfiles')
+            .where({ _id: openid })
+            .limit(1)
+            .get();
+        const profile = (profileResult.data && profileResult.data[0]) || null;
+        if (profile) {
+            deleteCache(`host_profile_${openid}`);
+        }
+        return handleSuccess(profile, profile ? '获取成功' : '尚未创建寄养家庭档案');
     }
     catch (error) {
         return handleError(error, '获取寄养家庭档案失败', ERROR_CODES.DATA);

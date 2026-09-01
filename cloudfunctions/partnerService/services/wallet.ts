@@ -43,6 +43,15 @@ const _ = db.command
 const logger = createLogger('partnerService:wallet')
 
 // =====================================================================
+// 收入概览结果缓存（2026-09-01 性能优化）
+//   getMyIncomeOverview 一次调用跑 15 个聚合查询，无索引时可达秒级。
+//   概览是只读汇总，30s 内重复读直接命中缓存（收入数字最多延迟 30s 更新，无资金风险）。
+//   实例内内存缓存：不同实例各自缓存，天然无需失效广播。
+// =====================================================================
+const OVERVIEW_TTL_MS = 30 * 1000
+const _overviewCache = new Map<string, { at: number; data: unknown }>()
+
+// =====================================================================
 // 类型定义
 // =====================================================================
 
@@ -178,7 +187,6 @@ export interface IncomeDetailItem {
   buyerId?: string
   buyerNickName?: string
   buyerAvatarUrl?: string
-  productName?: string
 }
 
 export interface IncomeDetailsResult {
@@ -232,6 +240,12 @@ export async function getMyIncomeOverview(
   auth: AuthLike
 ): Promise<unknown> {
   const { openid } = auth
+  if (!openid) { return handleError(err('AUTH_REQUIRED', '未登录'), '未登录', ERROR_CODES.AUTH) }
+  // 性能优化：命中 30s 内缓存直接返回（只读汇总，延迟可接受）
+  const cached = _overviewCache.get(openid)
+  if (cached && Date.now() - cached.at < OVERVIEW_TTL_MS) {
+    return cached.data
+  }
   try {
     let user: unknown = null
     try {
@@ -488,7 +502,9 @@ export async function getMyIncomeOverview(
     }
 
     // L1: API 字段名改为 boarding（与 commissions.orderType / orders.type 规范值一致），值指向 boarding 局部变量
-    return handleSuccess({ commission, activity, boarding, feeding, serviceIncome, wallet })
+    const result = handleSuccess({ commission, activity, boarding, feeding, serviceIncome, wallet })
+    _overviewCache.set(openid, { at: Date.now(), data: result })
+    return result
   } catch (error) {
     logger.error('getMyIncomeOverview', error)
     return handleError(error, '获取收入概览失败', ERROR_CODES.DATA)
@@ -574,7 +590,6 @@ export async function getMyIncomeDetails(
         status: (c.status as string) || 'pending',
         createdAt: c.createdAt as Date,
         buyerId: (c.ownerId as string) || '',
-        productName: (c.productName as string) || '',
       } as IncomeDetailItem
     })
 

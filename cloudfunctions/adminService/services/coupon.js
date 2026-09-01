@@ -798,6 +798,36 @@ async function initIndexes() {
       keys: [{ Name: 'ownerId', Direction: '1' }, { Name: 'createdAt', Direction: '-1' }],
       unique: false,
     },
+    // ===== 合伙人收入聚合性能索引（2026-09-01，partnerService.getMyIncomeOverview 15 聚合提速）=====
+    {
+      // 佣金按月/日聚合 + 收入明细分页：where({inviterId, status, createdAt gte}) orderBy createdAt desc
+      //   覆盖 getMyIncomeOverview commissions 4 次聚合 与 getMyIncomeDetails 列表/计数
+      collection: 'commissions',
+      indexName: 'idx_inviterId_status_createdAt',
+      keys: [{ Name: 'inviterId', Direction: '1' }, { Name: 'status', Direction: '1' }, { Name: 'createdAt', Direction: '-1' }],
+      unique: false,
+    },
+    {
+      // 寄养收入聚合：where({organizerId, status in[completed,finished], type:'boarding', completedAt gte})
+      collection: 'orders',
+      indexName: 'idx_organizerId_status_type_completedAt',
+      keys: [{ Name: 'organizerId', Direction: '1' }, { Name: 'status', Direction: '1' }, { Name: 'type', Direction: '1' }, { Name: 'completedAt', Direction: '-1' }],
+      unique: false,
+    },
+    {
+      // 活动收入聚合：where({organizerId, status in[paid,completed], orderType:'activity', paidAt gte})
+      collection: 'orders',
+      indexName: 'idx_organizerId_status_orderType_paidAt',
+      keys: [{ Name: 'organizerId', Direction: '1' }, { Name: 'status', Direction: '1' }, { Name: 'orderType', Direction: '1' }, { Name: 'paidAt', Direction: '-1' }],
+      unique: false,
+    },
+    {
+      // 喂养收入聚合：where({ownerId, status:'completed', completedAt gte})
+      collection: 'feedingOrders',
+      indexName: 'idx_ownerId_status_completedAt',
+      keys: [{ Name: 'ownerId', Direction: '1' }, { Name: 'status', Direction: '1' }, { Name: 'completedAt', Direction: '-1' }],
+      unique: false,
+    },
   ]
 
   const results = []

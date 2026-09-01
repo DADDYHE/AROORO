@@ -126,6 +126,7 @@ export interface IncomeDetailItem {
     type: 'commission' | 'hosting' | 'boarding' | 'feeding' | 'tuan' | 'mall' | 'activity';
     typeName: string;
     amount: number;
+    orderAmount?: number;
     orderNo: string;
     description: string;
     productName?: string;
@@ -134,7 +135,6 @@ export interface IncomeDetailItem {
     buyerId?: string;
     buyerNickName?: string;
     buyerAvatarUrl?: string;
-    productName?: string;
 }
 export interface IncomeDetailsResult {
     list: IncomeDetailItem[];

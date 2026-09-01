@@ -2,6 +2,7 @@
 
 > 指令来源：DADDY「检查索引是否正确建立」。
 > 关联：orderService 审查（H2 / H4 补偿闭环）、userService 审查（M4）。
+> 追加（2026-09-01）：合伙人收入聚合性能索引 4 条，见第 7 节。
 
 ## 0. 核查能力与边界（先说清）
 
@@ -75,3 +76,19 @@
 ## 6. 顺带发现（非索引，供参考）
 
 `cloudbaserc.json` 里 `userService.timeout` 仍为 `10`，而 `userService/config.json` 已在 P0/P1 修复中改为 `20`。两者是不同配置源，若通过 `tcb` 按 `cloudbaserc.json` 部署会覆盖回 10，导致长事务（如 `addresses.setDefault` 事务、邀约统计聚合）有超时风险。建议把 `cloudbaserc.json` 的 `userService.timeout` 也改为 `20`（及 orderService 等需长耗时的函数）。
+
+## 7. 合伙人收入聚合性能索引（2026-09-01 追加，已建并验证）
+
+> 背景：partnerService.getMyIncomeOverview 内 15 个无索引聚合查询 → BFF 单次调用 2.2s。
+> 30s 实例缓存已治标；以下 4 索引治本（已 MCP 直建落库 + 补进 initIndexes 声明）。
+
+| 集合 | 索引名 | 字段 / 方向 | 唯一 | 覆盖查询 |
+|---|---|---|---|---|
+| commissions | idx_inviterId_status_createdAt | inviterId:1, status:1, createdAt:-1 | 否 | overview 佣金 4 聚合（含 monthly/today createdAt 范围）+ getMyIncomeDetails 列表 orderBy createdAt desc |
+| orders | idx_organizerId_status_type_completedAt | organizerId:1, status:1, type:1, completedAt:-1 | 否 | boarding 收入 3 聚合：where({organizerId, status in[completed,finished], type:'boarding', completedAt gte}) |
+| orders | idx_organizerId_status_orderType_paidAt | organizerId:1, status:1, orderType:1, paidAt:-1 | 否 | activity 收入 3 聚合：where({organizerId, status in[paid,completed], orderType:'activity', paidAt gte}) |
+| feedingOrders | idx_ownerId_status_completedAt | ownerId:1, status:1, completedAt:-1 | 否 | feeding 收入 3 聚合：where({ownerId, status:'completed', completedAt gte}) |
+
+- 核查结论：wallets 已有 `(openid,type)` 唯一索引、users 已有 `idx_inviterId_createdAt`、withdrawals 查询全走 _id 主键——均无需新增。
+- 执行方式：MCP `writeNoSqlDatabaseStructure → updateCollection → CreateIndexes` 直建（RequestIds 79f7894d / 6e5b0824 / 35db53d6），约 40s 后 listIndexes 确认全部落盘（Since 2026-09-01T22:08:08）。
+- 代码化声明：已补进 `cloudfunctions/adminService/services/coupon.js` initIndexes（末尾 4 条），下次部署 adminService + 跑 initIndexes action 可自愈/迁移恢复。本地 coupon.js 改动无需立即部署（索引已直建生效）。

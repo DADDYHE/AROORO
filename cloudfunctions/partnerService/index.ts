@@ -115,6 +115,9 @@ const walletHandlers: Record<string, PartnerActionHandler> = require('./services
 const referralHandlers: Record<string, PartnerActionHandler> = require('./services/referral')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const incomeHandlers: Record<string, PartnerActionHandler> = require('./services/income')
+// 首屏聚合子模块（BFF）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const homeHandlers: Record<string, PartnerActionHandler> = require('./services/home')
 
 // =====================================================================
 // 类型定义
@@ -155,6 +158,9 @@ export interface PartnerHandlers {
   getMyInvitedUsers: PartnerActionHandler
   getReferralOrders: PartnerActionHandler
   getReferralOrderStats: PartnerActionHandler
+
+  // 首屏聚合（BFF：3 次调用合并为 1 次，性能优化）
+  getPartnerHome: PartnerActionHandler
 }
 
 // =====================================================================
@@ -188,6 +194,9 @@ export const handlers: PartnerHandlers = {
   getMyInvitedUsers: referralHandlers.getMyInvitedUsers,
   getReferralOrders: referralHandlers.getReferralOrders,
   getReferralOrderStats: referralHandlers.getReferralOrderStats,
+
+  // 首屏聚合（BFF）
+  getPartnerHome: homeHandlers.getPartnerHome,
 }
 
 // =====================================================================
@@ -221,6 +230,9 @@ const ACTION_PERMISSIONS: Record<keyof PartnerHandlers, PartnerPermission> = {
   getMyInvitedUsers: 'partner',
   getReferralOrders: 'partner',
   getReferralOrderStats: 'partner',
+
+  // 首屏聚合：仅需登录（内部自行判断是否返回收入数据）
+  getPartnerHome: null,
 }
 
 // =====================================================================

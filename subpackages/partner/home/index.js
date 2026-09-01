@@ -45,13 +45,36 @@ Page({
   },
 
   onShow() {
-    if (!this.data.isLoading) {this._loadData()}
+    // 节流：30s 内不重复全量刷新（从子页返回时避免无谓的云调用）
+    const now = Date.now()
+    if (this._lastLoadedAt && now - this._lastLoadedAt < 30000) { return }
+    this._loadData()
   },
 
   async _loadData() {
     this.setData({ isLoading: true })
+    const startAt = Date.now()
     try {
-      // 先获取权限和申请状态（无需合作伙伴身份）
+      // 性能优化（2026-09-01）：优先走 BFF 聚合接口，1 次云调用取代 3 次
+      //   3 次冷启 + 3 次 RTT → 1 次冷启 + 1 次 RTT
+      const bundle = await this._loadBundle()
+      if (bundle) {
+        this.setData({
+          isLoading: false,
+          isPartner: bundle.isPartner,
+          hasPendingApplication: bundle.hasPendingApplication,
+          incomeSummary: bundle.incomeSummary,
+        })
+        this._lastLoadedAt = Date.now()
+        console.log('[partner/home] load cost(ms):', Date.now() - startAt)
+        return
+      }
+    } catch (e) {
+      console.warn('[partner/home] bundle failed, fallback to legacy:', e.message || e)
+    }
+
+    // 兜底：聚合接口不可用时回退旧的三连调用（并行 + 串行 income）
+    try {
       const [permRes, appRes] = await Promise.all([
         AdminService.getMyPermissions(),
         AdminService.getApplicationStatus(),
@@ -61,7 +84,6 @@ Page({
       const hasPending = appRes.code === 0 && appRes.data ? appRes.data.hasPending || false : false
 
       let incomeSummary = null
-      // 只有合作伙伴才获取收入数据
       if (isPartner) {
         try {
           const incomeRes = await AdminService.getMyIncomeOverview()
@@ -84,9 +106,22 @@ Page({
         hasPendingApplication: hasPending,
         incomeSummary,
       })
+      this._lastLoadedAt = Date.now()
     } catch (e) {
       console.error('[partner/home] _loadData error:', e)
       this.setData({ isLoading: false })
+    }
+  },
+
+  /** 调用 BFF 聚合接口；返回 null 表示不可用（需回退） */
+  async _loadBundle() {
+    const res = await AdminService.getPartnerHome()
+    if (!res || res.code !== 0 || !res.data) { return null }
+    const d = res.data
+    return {
+      isPartner: d.isPartner === true,
+      hasPendingApplication: d.hasPendingApplication === true,
+      incomeSummary: d.incomeSummary || null,
     }
   },
 

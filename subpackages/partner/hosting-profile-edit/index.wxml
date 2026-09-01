@@ -1,0 +1,167 @@
+<view class="edit-page">
+  <!-- 步骤条 -->
+  <view class="step-bar">
+    <block wx:for="{{stepTitles}}" wx:key="index">
+      <view class="step-item">
+        <view class="step-no {{step >= index + 1 ? 'step-no--active' : ''}}">0{{index + 1}}</view>
+        <text class="step-label {{step >= index + 1 ? 'step-label--active' : ''}}">{{item}}</text>
+      </view>
+      <view wx:if="{{index < stepTitles.length - 1}}" class="step-line {{step > index + 1 ? 'step-line--active' : ''}}"></view>
+    </block>
+  </view>
+
+  <!-- Step 1 基本信息 -->
+  <view wx:if="{{step === 1}}" class="form-section">
+    <view class="section-title">基本信息</view>
+
+    <view class="field-row">
+      <text class="field-label required">家庭名称</text>
+      <input class="field-input" placeholder-class="input-placeholder" placeholder="如：山间小院·宠物之家" value="{{form.hostName}}" data-field="hostName" bindinput="onInput" />
+    </view>
+    <view class="field-row">
+      <text class="field-label">真实姓名</text>
+      <input class="field-input" placeholder-class="input-placeholder" placeholder="用于平台核验，仅平台可见" value="{{form.realName}}" data-field="realName" bindinput="onInput" />
+    </view>
+    <view class="field-row">
+      <text class="field-label required">联系电话</text>
+      <input class="field-input" type="number" maxlength="11" placeholder-class="input-placeholder" placeholder="11 位手机号" value="{{form.phone}}" data-field="phone" bindinput="onInput" />
+    </view>
+    <view class="field-row">
+      <text class="field-label required">所在地址</text>
+      <input class="field-input" placeholder-class="input-placeholder" placeholder="小区/街道，展示时隐去门牌" value="{{form.address}}" data-field="address" bindinput="onInput" />
+    </view>
+    <view class="field-row">
+      <text class="field-label">住宅户型</text>
+      <picker range="{{housingOptions}}" value="{{housingIndex}}" bindchange="onHousingChange">
+        <view class="field-picker {{form.housingType ? '' : 'field-picker--placeholder'}}">{{form.housingType || '请选择户型'}}</view>
+      </picker>
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">是否有院子</text>
+      <view class="choice-group">
+        <view wx:for="{{yesNoOptions}}" wx:key="key" class="choice-chip {{form.hasYard === item.key ? 'choice-chip--on' : ''}}" data-field="hasYard" data-key="{{item.key}}" bindtap="onYesNoChange">{{item.label}}</view>
+      </view>
+    </view>
+    <view class="field-row">
+      <text class="field-label">家中自有宠物</text>
+      <view class="choice-group">
+        <view wx:for="{{yesNoOptions}}" wx:key="key" class="choice-chip {{form.hasOtherPets === item.key ? 'choice-chip--on' : ''}}" data-field="hasOtherPets" data-key="{{item.key}}" bindtap="onYesNoChange">{{item.label}}</view>
+      </view>
+    </view>
+    <view class="field-row field-row--area">
+      <text class="field-label">自有宠物情况说明</text>
+      <textarea class="field-textarea" placeholder-class="input-placeholder" placeholder="如：一只 3 岁金毛，性格温顺，已接种疫苗" value="{{form.nativePetInfo}}" data-field="nativePetInfo" bindinput="onInput" maxlength="200" />
+    </view>
+  </view>
+
+  <!-- Step 2 服务与定价 -->
+  <view wx:if="{{step === 2}}" class="form-section">
+    <view class="section-title">服务与定价</view>
+
+    <view class="field-row field-row--col">
+      <text class="field-label required">可接宠物类型</text>
+      <view class="choice-group">
+        <view wx:for="{{petTypeOptions}}" wx:key="key" class="choice-chip {{form.petTypes.indexOf(item.key) > -1 ? 'choice-chip--on' : ''}}" data-key="{{item.key}}" bindtap="onTogglePetType">{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="field-row field-row--col">
+      <text class="field-label required">提供服务</text>
+      <view class="choice-group">
+        <view wx:for="{{serviceTypeOptions}}" wx:key="key" class="choice-chip {{form.serviceTypes.indexOf(item.key) > -1 ? 'choice-chip--on' : ''}}" data-key="{{item.key}}" bindtap="onToggleServiceType">{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="field-row">
+      <text class="field-label required">最大接宠数</text>
+      <input class="field-input" type="number" placeholder-class="input-placeholder" placeholder="同时最多照看几只" value="{{form.maxPets}}" data-field="maxPets" bindinput="onInput" />
+    </view>
+    <view class="field-row">
+      <text class="field-label required">日单价（元/天）</text>
+      <input class="field-input" type="digit" placeholder-class="input-placeholder" placeholder="如：88" value="{{form.pricePerDay}}" data-field="pricePerDay" bindinput="onInput" />
+    </view>
+
+    <view class="field-row field-row--area">
+      <text class="field-label">家庭介绍</text>
+      <textarea class="field-textarea" placeholder-class="input-placeholder" placeholder="介绍您的寄养环境、日常安排、经验特长等" value="{{form.description}}" data-field="description" bindinput="onInput" maxlength="500" />
+    </view>
+  </view>
+
+  <!-- Step 3 资质与相册 -->
+  <view wx:if="{{step === 3}}" class="form-section">
+    <view class="section-title">资质与相册</view>
+
+    <view class="field-row field-row--col">
+      <text class="field-label required">环境相册（{{form.photos.length}}/{{maxPhotos}}）</text>
+      <text class="field-hint">真实环境照片可显著提升用户信任，至少 1 张</text>
+      <view class="upload-grid">
+        <view wx:for="{{form.photos}}" wx:key="temp" class="upload-cell">
+          <image class="upload-img" src="{{item.temp}}" mode="aspectFill" />
+          <view class="upload-remove" data-index="{{index}}" catchtap="onRemovePhoto">×</view>
+        </view>
+        <view wx:if="{{form.photos.length < maxPhotos}}" class="upload-add" bindtap="onChoosePhotos">＋</view>
+      </view>
+    </view>
+
+    <view class="field-row field-row--col">
+      <text class="field-label">环境视频（可选）</text>
+      <view class="upload-grid">
+        <view wx:for="{{form.videos}}" wx:key="temp" class="upload-cell">
+          <image class="upload-img" src="{{item.temp}}" mode="aspectFill" />
+          <view class="upload-remove" catchtap="onRemoveVideo">×</view>
+        </view>
+        <view wx:if="{{form.videos.length === 0}}" class="upload-add" bindtap="onChooseVideo">＋</view>
+      </view>
+    </view>
+
+    <view class="field-row field-row--col">
+      <text class="field-label">身份证正反面（仅平台审核用）</text>
+      <view class="cert-row">
+        <view class="cert-cell" data-field="idCardFront" bindtap="onChooseCert">
+          <block wx:if="{{form.idCardFront}}">
+            <image class="cert-img" src="{{form.idCardFront.temp}}" mode="aspectFill" />
+            <view class="upload-remove" data-field="idCardFront" catchtap="onRemoveCert">×</view>
+          </block>
+          <text wx:else class="cert-text">人像面</text>
+        </view>
+        <view class="cert-cell" data-field="idCardBack" bindtap="onChooseCert">
+          <block wx:if="{{form.idCardBack}}">
+            <image class="cert-img" src="{{form.idCardBack.temp}}" mode="aspectFill" />
+            <view class="upload-remove" data-field="idCardBack" catchtap="onRemoveCert">×</view>
+          </block>
+          <text wx:else class="cert-text">国徽面</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="field-row field-row--col">
+      <text class="field-label">宠物疫苗/健康证明（可选）</text>
+      <view class="cert-row">
+        <view class="cert-cell cert-cell--single" data-field="healthCertificate" bindtap="onChooseCert">
+          <block wx:if="{{form.healthCertificate}}">
+            <image class="cert-img" src="{{form.healthCertificate.temp}}" mode="aspectFill" />
+            <view class="upload-remove" data-field="healthCertificate" catchtap="onRemoveCert">×</view>
+          </block>
+          <text wx:else class="cert-text">上传证明照片</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">紧急联系人</text>
+      <input class="field-input" placeholder-class="input-placeholder" placeholder="姓名" value="{{form.emergencyContactName}}" data-field="emergencyContactName" bindinput="onInput" />
+    </view>
+    <view class="field-row">
+      <text class="field-label">紧急联系电话</text>
+      <input class="field-input" type="number" maxlength="11" placeholder-class="input-placeholder" placeholder="11 位手机号" value="{{form.emergencyContactPhone}}" data-field="emergencyContactPhone" bindinput="onInput" />
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="footer-actions">
+    <button wx:if="{{step > 1}}" class="btn-ghost" bindtap="prevStep">上一步</button>
+    <button wx:if="{{step < 3}}" class="btn-primary" bindtap="nextStep">下一步</button>
+    <button wx:if="{{step === 3}}" class="btn-primary {{submitting ? 'btn-disabled' : ''}}" disabled="{{submitting}}" bindtap="onSubmit">{{submitting ? '提交中...' : (isRejected ? '重新提交审核' : '提交审核')}}</button>
+  </view>
+</view>

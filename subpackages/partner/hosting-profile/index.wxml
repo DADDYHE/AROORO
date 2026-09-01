@@ -43,28 +43,38 @@
     </view>
 
     <view class="gallery-hall">
+      <!-- 无档案：引导创建 -->
       <view wx:if="{{!hasProfile}}" class="gallery-card">
         <view class="card-accent"></view>
         <view class="card-body">
           <text class="pending-title">暂无寄养档案</text>
-          <button class="contact-cs-btn" open-type="contact">联系客服申请</button>
+          <text class="pending-desc">创建寄养家庭档案并提交审核，通过后即可在「家庭寄养」频道上架接单。</text>
+          <button class="contact-cs-btn" bindtap="goCreate">创建寄养档案</button>
         </view>
       </view>
 
       <block wx:else>
+        <!-- 档案状态卡 -->
         <view class="gallery-card profile-card">
           <view class="card-accent"></view>
           <view class="card-body">
             <view class="info-row">
               <view class="info-key">状态</view>
               <view class="info-val">
-                <text class="status-tag {{profile.status === 'active' ? 'tag-active' : 'tag-inactive'}}">{{profile.status === 'active' ? '营业中' : (profile.status === 'pending_review' ? '审核中' : '已下架')}}</text>
+                <text class="status-tag {{profile.status === 'active' ? 'tag-active' : (profile.status === 'rejected' ? 'tag-rejected' : 'tag-inactive')}}">{{statusText}}</text>
               </view>
             </view>
             <view class="info-divider"></view>
             <view class="info-row">
               <view class="info-key">接单状态</view>
-              <view class="info-val">{{profile.isAcceptingOrders ? '接受订单' : '暂停接单'}}</view>
+              <view class="info-val">
+                <switch
+                  checked="{{profile.isAcceptingOrders}}"
+                  disabled="{{profile.status !== 'active' || acceptSwitching}}"
+                  color="#1F3A1F"
+                  bindchange="onAcceptToggle"
+                />
+              </view>
             </view>
             <view class="info-divider"></view>
             <view class="info-row">
@@ -76,17 +86,33 @@
               <view class="info-key">最大容量</view>
               <view class="info-val">{{profile.maxPets || 0}} 只</view>
             </view>
-            <view class="info-divider"></view>
+            <view class="info-divider" wx:if="{{profile.address}}"></view>
             <view class="info-row" wx:if="{{profile.address}}">
               <view class="info-key">地址</view>
               <view class="info-val">{{profile.address}}</view>
             </view>
-            <view class="info-divider" wx:if="{{profile.address}}"></view>
+            <view class="info-divider" wx:if="{{profile.phone}}"></view>
             <view class="info-row" wx:if="{{profile.phone}}">
               <view class="info-key">联系电话</view>
               <view class="info-val">{{profile.phone}}</view>
             </view>
           </view>
+        </view>
+
+        <!-- 驳回原因 + 重新提审 -->
+        <view wx:if="{{profile.status === 'rejected'}}" class="gallery-card">
+          <view class="card-accent"></view>
+          <view class="card-body">
+            <text class="pending-title">档案审核未通过</text>
+            <text class="pending-desc" wx:if="{{profile.rejectReason}}">驳回原因：{{profile.rejectReason}}</text>
+            <text class="pending-desc" wx:else>档案未通过审核，请修改后重新提交。</text>
+            <button class="contact-cs-btn" bindtap="goEdit">修改并重新提交</button>
+          </view>
+        </view>
+
+        <!-- 编辑入口 -->
+        <view wx:if="{{profile.status !== 'rejected'}}" class="action-row">
+          <button class="edit-profile-btn" bindtap="goEdit">编辑档案</button>
         </view>
 
         <view class="gallery-entrance">
@@ -103,12 +129,18 @@
           <view class="card-accent"></view>
           <view class="card-body">
             <view class="card-header">
-              <text class="card-title">{{item.hostName || '寄养订单'}}</text>
-              <text class="card-status status-{{item.status}}">{{item.status === 'pending_payment' ? '待确认' : (item.status === 'confirmed' ? '已确认' : (item.status === 'checked_in' ? '已入住' : (item.status === 'completed' ? '已完成' : '已取消')))}}</text>
+              <text class="card-title">寄养订单{{item.orderNo ? ' · ' + item.orderNo : ''}}</text>
+              <text class="card-status status-{{item.status}}">{{item.statusText}}</text>
             </view>
             <view class="card-info">
               <text class="card-info-item" wx:if="{{item.ownerName}}">宠物主人：{{item.ownerName}}</text>
+              <text class="card-info-item" wx:if="{{item.startDate || item.endDate}}">寄养日期：{{item.startDate || '-'}} 至 {{item.endDate || '-'}}</text>
               <text class="card-info-item">金额：¥{{item.totalPrice || item.totalAmount || 0}}</text>
+            </view>
+            <view wx:if="{{item.status === 'paid' || item.status === 'confirmed' || item.status === 'in_progress'}}" class="order-actions">
+              <button wx:if="{{item.status === 'paid'}}" class="order-btn order-btn--ghost" data-id="{{item._id}}" data-op="reject" catchtap="onOrderAction">拒单</button>
+              <button wx:if="{{item.status === 'paid'}}" class="order-btn order-btn--primary" data-id="{{item._id}}" data-op="confirm" catchtap="onOrderAction">接单</button>
+              <button wx:if="{{item.status === 'confirmed' || item.status === 'in_progress'}}" class="order-btn order-btn--primary" data-id="{{item._id}}" data-op="complete" catchtap="onOrderAction">完成寄养</button>
             </view>
           </view>
         </view>

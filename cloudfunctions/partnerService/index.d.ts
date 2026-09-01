@@ -81,6 +81,7 @@ export interface PartnerHandlers {
     getMyInvitedUsers: PartnerActionHandler;
     getReferralOrders: PartnerActionHandler;
     getReferralOrderStats: PartnerActionHandler;
+    getPartnerHome: PartnerActionHandler;
 }
 export declare const handlers: PartnerHandlers;
 export declare const main: (event: CloudEvent, context: CloudContext) => Promise<unknown>;
