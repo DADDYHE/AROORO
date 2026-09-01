@@ -1,6 +1,6 @@
 {
   "usingComponents": {
-    "zy-action-sheet": "../../components/zy-action-sheet/index"
+    "zy-action-sheet": "../components/zy-action-sheet/index"
   },
   "navigationBarTitleText": "更新宠物档案"
 }

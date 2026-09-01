@@ -2,7 +2,7 @@
   "navigationBarTitleText": "订单详情",
   "enablePullDownRefresh": true,
   "usingComponents": {
-    "logistics-card": "/components/logistics-card/index",
+    "logistics-card": "/subpackages/profile/components/logistics-card/index",
     "order-status-banner": "/components/order/order-status-banner/index",
     "order-card": "/components/order/order-card/index",
     "order-action-bar": "/components/order/order-action-bar/index"
