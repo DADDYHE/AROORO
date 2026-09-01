@@ -18,7 +18,7 @@
           <image wx:if="{{item.checked && !item._invalid}}" src="/images/icons/check-luxury-line.svg" mode="aspectFit" class="cart-check-icon"></image>
         </view>
       </view>
-      <image class="item-image" src="{{item.productImage}}" mode="aspectFill" data-id="{{item.productId}}" bindtap="onGoDetail" binderror="onCartImageError" data-index="{{index}}" />
+      <image class="item-image" src="{{item.productImage}}" mode="aspectFill" data-id="{{item.productId}}" bindtap="onGoDetail" binderror="onCartImageError" data-index="{{index}}" lazy-load />
       <view class="item-info">
         <text class="item-name">{{item.productName}}</text>
         <text class="item-sku" wx:if="{{item.skuText}}">{{item.skuText}}</text>

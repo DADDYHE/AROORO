@@ -11,7 +11,7 @@
     <view class="hero-section">
       <image
         wx:if="{{activity.coverUrl}}"
-        lazy-load
+       lazy-load
         class="hero-cover"
         src="{{activity.coverUrl}}"
         mode="aspectFill"
@@ -19,7 +19,7 @@
       />
       <image
         wx:else
-        lazy-load
+       lazy-load
         class="hero-cover"
         src="/images/default-activity.svg"
         mode="aspectFill"
@@ -140,7 +140,7 @@
       </view>
       <view class="organizer-content">
         <view class="organizer-avatar-wrap {{activity.organizer.hasValidAvatar ? 'has-avatar' : ''}}">
-          <image wx:if="{{activity.organizer.hasValidAvatar}}" class="organizer-avatar-img" src="{{activity.organizer.avatar}}" mode="aspectFill" binderror="onOrganizerAvatarError" />
+          <image wx:if="{{activity.organizer.hasValidAvatar}}" class="organizer-avatar-img" src="{{activity.organizer.avatar}}" mode="aspectFill" binderror="onOrganizerAvatarError" lazy-load />
           <view wx:else class="organizer-avatar-fallback">
             <text class="organizer-avatar-letter">{{activity.organizer.name}}</text>
           </view>

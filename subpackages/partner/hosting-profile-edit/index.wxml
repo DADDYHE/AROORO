@@ -97,7 +97,7 @@
       <text class="field-hint">真实环境照片可显著提升用户信任，至少 1 张</text>
       <view class="upload-grid">
         <view wx:for="{{form.photos}}" wx:key="temp" class="upload-cell">
-          <image class="upload-img" src="{{item.temp}}" mode="aspectFill" />
+          <image class="upload-img" src="{{item.temp}}" mode="aspectFill" lazy-load />
           <view class="upload-remove" data-index="{{index}}" catchtap="onRemovePhoto">×</view>
         </view>
         <view wx:if="{{form.photos.length < maxPhotos}}" class="upload-add" bindtap="onChoosePhotos">＋</view>
@@ -108,7 +108,7 @@
       <text class="field-label">环境视频（可选）</text>
       <view class="upload-grid">
         <view wx:for="{{form.videos}}" wx:key="temp" class="upload-cell">
-          <image class="upload-img" src="{{item.temp}}" mode="aspectFill" />
+          <image class="upload-img" src="{{item.temp}}" mode="aspectFill" lazy-load />
           <view class="upload-remove" catchtap="onRemoveVideo">×</view>
         </view>
         <view wx:if="{{form.videos.length === 0}}" class="upload-add" bindtap="onChooseVideo">＋</view>
@@ -120,14 +120,14 @@
       <view class="cert-row">
         <view class="cert-cell" data-field="idCardFront" bindtap="onChooseCert">
           <block wx:if="{{form.idCardFront}}">
-            <image class="cert-img" src="{{form.idCardFront.temp}}" mode="aspectFill" />
+            <image class="cert-img" src="{{form.idCardFront.temp}}" mode="aspectFill" lazy-load />
             <view class="upload-remove" data-field="idCardFront" catchtap="onRemoveCert">×</view>
           </block>
           <text wx:else class="cert-text">人像面</text>
         </view>
         <view class="cert-cell" data-field="idCardBack" bindtap="onChooseCert">
           <block wx:if="{{form.idCardBack}}">
-            <image class="cert-img" src="{{form.idCardBack.temp}}" mode="aspectFill" />
+            <image class="cert-img" src="{{form.idCardBack.temp}}" mode="aspectFill" lazy-load />
             <view class="upload-remove" data-field="idCardBack" catchtap="onRemoveCert">×</view>
           </block>
           <text wx:else class="cert-text">国徽面</text>
@@ -140,7 +140,7 @@
       <view class="cert-row">
         <view class="cert-cell cert-cell--single" data-field="healthCertificate" bindtap="onChooseCert">
           <block wx:if="{{form.healthCertificate}}">
-            <image class="cert-img" src="{{form.healthCertificate.temp}}" mode="aspectFill" />
+            <image class="cert-img" src="{{form.healthCertificate.temp}}" mode="aspectFill" lazy-load />
             <view class="upload-remove" data-field="healthCertificate" catchtap="onRemoveCert">×</view>
           </block>
           <text wx:else class="cert-text">上传证明照片</text>

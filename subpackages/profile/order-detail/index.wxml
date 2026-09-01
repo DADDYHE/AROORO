@@ -38,7 +38,7 @@
     <view class="section host-section">
       <view class="section-title">寄养家庭</view>
       <view class="host-row">
-        <image class="host-avatar" wx:if="{{order.hostAvatar}}" src="{{order.hostAvatar}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{order.hostAvatar}}" data-path="order.hostAvatar" />
+        <image class="host-avatar" wx:if="{{order.hostAvatar}}" src="{{order.hostAvatar}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{order.hostAvatar}}" data-path="order.hostAvatar" lazy-load />
         <view class="host-avatar-placeholder" wx:else></view>
         <view class="host-info">
           <text class="host-name">{{order.hostName || '寄养家庭'}}</text>
@@ -54,7 +54,7 @@
       <view class="section-title">寄养宠物</view>
       <view class="pet-list">
         <view class="pet-item" wx:for="{{order.petList}}" wx:key="_id">
-          <image class="pet-avatar" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" />
+          <image class="pet-avatar" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load />
           <view class="pet-avatar-placeholder" wx:else></view>
           <view class="pet-info">
             <text class="pet-name">{{item.name}}</text>

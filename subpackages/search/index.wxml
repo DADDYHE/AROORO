@@ -84,7 +84,7 @@
           data-item="{{item}}"
           bindtap="handleItemTap"
         >
-          <image wx:if="{{item._coverUrl}}" class="result-img" src="{{item._coverUrl}}" mode="aspectFill" />
+          <image wx:if="{{item._coverUrl}}" class="result-img" src="{{item._coverUrl}}" mode="aspectFill" lazy-load />
           <view wx:else class="result-img result-img-ph">
             <text class="result-img-ph-text">{{item._typeLabel}}</text>
           </view>

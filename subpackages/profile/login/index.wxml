@@ -33,6 +33,7 @@
               class="avatar-preview"
               src="{{avatarUrl}}"
               mode="aspectFill"
+             lazy-load
             />
             <view wx:else class="avatar-placeholder">
               <text class="avatar-placeholder-icon">+</text>

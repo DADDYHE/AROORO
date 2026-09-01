@@ -49,11 +49,11 @@
       bindtap="onOrderTap"
      hover-class="order-card pressed" hover-stay-time="80">
       <view class="order-cover-row" wx:if="{{item.activityCoverUrl}}">
-        <image class="order-cover" src="{{item.activityCoverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.activityCoverUrl}}" data-path="orders[{{index}}].activityCoverUrl" />
+        <image class="order-cover" src="{{item.activityCoverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.activityCoverUrl}}" data-path="orders[{{index}}].activityCoverUrl" lazy-load />
       </view>
       <block wx:if="{{item.orderType === 'mall' || item.orderType === 'group_buy'}}">
         <view class="mall-product-row">
-          <image class="mall-product-img" wx:if="{{item.productCoverUrl}}" src="{{item.productCoverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.productCoverUrl}}" data-path="orders[{{index}}].productCoverUrl" />
+          <image class="mall-product-img" wx:if="{{item.productCoverUrl}}" src="{{item.productCoverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.productCoverUrl}}" data-path="orders[{{index}}].productCoverUrl" lazy-load />
           <view class="mall-product-info">
             <text class="mall-product-name">{{item.orderTitle}}</text>
             <text class="mall-product-sku" wx:if="{{item.skuText}}">{{item.skuText}}</text>

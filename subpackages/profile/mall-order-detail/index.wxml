@@ -37,7 +37,7 @@
 
     <view class="section product-section" bindtap="onGoProductDetail">
       <view class="product-row">
-        <image class="product-img" wx:if="{{order.productImage}}" src="{{order.productImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{order.productImage}}" data-path="order.productImage" />
+        <image class="product-img" wx:if="{{order.productImage}}" src="{{order.productImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{order.productImage}}" data-path="order.productImage" lazy-load />
         <view class="product-img-placeholder" wx:else></view>
         <view class="product-info">
           <text class="product-name">{{order.productName}}</text>
@@ -53,7 +53,7 @@
       <!-- P1-C: 合并单列出全部商品 -->
       <block wx:if="{{order.itemCount > 1}}">
         <view class="product-row" wx:for="{{order.items}}" wx:key="index" wx:for-item="sub" wx:for-index="subIdx">
-          <image class="product-img" wx:if="{{sub.productImage}}" src="{{sub.productImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{sub.productImage}}" data-path="order.items[{{subIdx}}].productImage" />
+          <image class="product-img" wx:if="{{sub.productImage}}" src="{{sub.productImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{sub.productImage}}" data-path="order.items[{{subIdx}}].productImage" lazy-load />
           <view class="product-img-placeholder" wx:else></view>
           <view class="product-info">
             <text class="product-name">{{sub.productName}}</text>

@@ -158,7 +158,7 @@
                 <text class="detail-order-amount-value">¥{{item.orderAmount}}</text>
               </view>
               <view wx:if="{{item.buyerNickName}}" class="detail-buyer">
-                <image wx:if="{{item.buyerAvatarUrl}}" class="detail-buyer-avatar" src="{{item.buyerAvatarUrl}}" mode="aspectFill" />
+                <image wx:if="{{item.buyerAvatarUrl}}" class="detail-buyer-avatar" src="{{item.buyerAvatarUrl}}" mode="aspectFill" lazy-load />
                 <text class="detail-buyer-name">{{item.buyerNickName}}</text>
               </view>
             </view>

@@ -41,7 +41,7 @@
     <order-card>
       <view slot="content">
         <view class="activity-info" wx:if="{{activity.coverUrl || activity.title}}">
-          <image class="activity-cover" src="{{activity.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl" />
+          <image class="activity-cover" src="{{activity.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl" lazy-load />
           <view class="activity-details">
             <text class="activity-name">{{activity.title}}</text>
             <text class="activity-time" wx:if="{{activity.startTime}}">{{activity.startTime}}</text>
@@ -108,7 +108,7 @@
 
     <view class="order-card">
       <view class="activity-info">
-        <image class="activity-cover" src="{{activity.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl" />
+        <image class="activity-cover" src="{{activity.coverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{activity.coverUrl}}" data-path="activity.coverUrl" lazy-load />
         <view class="activity-details">
           <text class="activity-name">{{activity.title}}</text>
           <text class="activity-time">{{activity.startTime}}</text>

@@ -116,7 +116,7 @@
   <view class="sku-popup-close-btn popup-stagger" hover-class="sku-popup-close-btn--pressed" hover-stay-time="120" bindtap="onCloseSkuPopup"><image class="sku-popup-close-icon" src="/images/icons/close-luxury-line.svg" mode="aspectFit"></image></view>
 
   <view class="sku-popup-image-wrap popup-stagger">
-    <image class="sku-popup-image" src="{{skuPopupImage || product.coverUrl || product.coverImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage || product.coverUrl || product.coverImage}}" data-path="product.coverUrl" />
+    <image class="sku-popup-image" src="{{skuPopupImage || product.coverUrl || product.coverImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage || product.coverUrl || product.coverImage}}" data-path="product.coverUrl" lazy-load />
   </view>
 
   <scroll-view class="sku-popup-body popup-stagger" scroll-y enhanced show-scrollbar="{{false}}">

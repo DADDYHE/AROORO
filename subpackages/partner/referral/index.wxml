@@ -71,7 +71,7 @@
         <view class="card-accent"></view>
         <view class="card-body">
           <view class="user-row">
-            <image class="user-avatar" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onAvatarError" data-index="{{index}}" />
+            <image class="user-avatar" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onAvatarError" data-index="{{index}}" lazy-load />
             <view class="user-info">
               <text class="user-name">{{item.nickName || '用户'}}</text>
               <text class="user-stat">订单 {{item.orderCount || 0}} · 消费 ¥{{item.totalSpent || 0}}</text>

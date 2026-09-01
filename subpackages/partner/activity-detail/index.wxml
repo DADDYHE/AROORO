@@ -31,7 +31,7 @@
     <view class="scroll-container">
       <view class="page-content">
         <view class="hero-section" wx:if="{{activity.coverUrl}}">
-          <image class="hero-cover" src="{{activity.coverUrl}}" mode="aspectFill" />
+          <image class="hero-cover" src="{{activity.coverUrl}}" mode="aspectFill" lazy-load />
           <view class="hero-overlay"></view>
         </view>
 
@@ -133,7 +133,7 @@
                   bindtap="onPreviewImage"
                   data-src="{{item}}"
                 >
-                  <image class="grid-image" src="{{item}}" mode="aspectFill" />
+                  <image class="grid-image" src="{{item}}" mode="aspectFill" lazy-load />
                 </view>
               </view>
             </view>

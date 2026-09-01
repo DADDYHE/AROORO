@@ -39,7 +39,7 @@
       <!-- 团购模式 -->
       <block wx:if="{{fromTuan && tuanData}}">
         <view class="product-row">
-          <image class="product-img" src="{{tuanData.productImage || '/images/default-product.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{tuanData.productImage}}" data-path="tuanData.productImage" />
+          <image class="product-img" src="{{tuanData.productImage || '/images/default-product.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{tuanData.productImage}}" data-path="tuanData.productImage" lazy-load />
           <view class="product-info">
             <text class="product-name">{{tuanData.productName}}</text>
             <text class="product-sku" wx:if="{{skuText}}">{{skuText}}</text>
@@ -54,7 +54,7 @@
       <!-- 单商品模式 -->
       <block wx:elif="{{!fromCart && product}}">
         <view class="product-row">
-          <image class="product-img" src="{{product.coverImage || product.coverUrl || (product.images && product.images[0])}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{product.coverImage || product.coverUrl}}" data-path="product.coverImage" />
+          <image class="product-img" src="{{product.coverImage || product.coverUrl || (product.images && product.images[0])}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{product.coverImage || product.coverUrl}}" data-path="product.coverImage" lazy-load />
           <view class="product-info">
             <text class="product-name">{{product.name}}</text>
             <text class="product-sku" wx:if="{{skuText}}">{{skuText}}</text>
@@ -74,7 +74,7 @@
       <!-- 购物车模式 -->
       <block wx:if="{{fromCart && cartItems.length > 0}}">
         <view class="product-row" wx:for="{{cartItems}}" wx:key="cartItemId">
-          <image class="product-img" src="{{item.productImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.productImage}}" data-path="cartItems[{{index}}].productImage" />
+          <image class="product-img" src="{{item.productImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.productImage}}" data-path="cartItems[{{index}}].productImage" lazy-load />
           <view class="product-info">
             <text class="product-name">{{item.productName}}</text>
             <text class="product-sku" wx:if="{{item.skuText}}">{{item.skuText}}</text>

@@ -26,7 +26,7 @@
 
   <view class="product-list">
     <view class="product-card" wx:for="{{products}}" wx:key="index" data-index="{{index}}" hover-class="product-card--pressed" hover-stay-time="120" bindtap="onProductTap">
-      <image class="product-img" src="{{item.image || '/images/default-product.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.image}}" data-path="products[{{index}}].image" />
+      <image class="product-img" src="{{item.image || '/images/default-product.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.image}}" data-path="products[{{index}}].image" lazy-load />
       <view class="product-info">
         <text class="product-name">{{item.name}}</text>
         <view class="product-price-row">
@@ -50,7 +50,7 @@
   <view class="detail-images" wx:if="{{deal.images && deal.images.length > 0}}">
     <image class="detail-img" wx:for="{{deal.images}}" wx:key="*this" src="{{item}}" mode="widthFix"
       data-urls="{{deal.images}}" data-index="{{index}}" bindtap="onImagePreview"
-      binderror="onCloudImageError" data-src="{{item}}" data-path="deal.images[{{index}}]" />
+      binderror="onCloudImageError" data-src="{{item}}" data-path="deal.images[{{index}}]" lazy-load />
   </view>
 
   <root-portal>
@@ -93,7 +93,7 @@
   <view class="sku-popup-close-btn popup-stagger" hover-class="sku-popup-close-btn--pressed" hover-stay-time="120" bindtap="onCloseBuyModal"><image class="sku-popup-close-icon" src="/images/icons/close-luxury-line.svg" mode="aspectFit"></image></view>
 
   <view class="sku-popup-image-wrap popup-stagger">
-    <image class="sku-popup-image" src="{{skuPopupImage || (products[selectedProductIndex].image || '/images/default-product.svg')}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage}}" data-path="skuPopupImage" />
+    <image class="sku-popup-image" src="{{skuPopupImage || (products[selectedProductIndex].image || '/images/default-product.svg')}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{skuPopupImage}}" data-path="skuPopupImage" lazy-load />
   </view>
 
   <scroll-view class="sku-popup-body popup-stagger" scroll-y enhanced show-scrollbar="{{false}}">

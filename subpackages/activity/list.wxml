@@ -71,7 +71,7 @@
           <view class="activity-organizer">
             <view class="organizer-info">
             <view class="organizer-avatar-wrap {{item.organizer.hasValidAvatar ? 'has-avatar' : ''}}">
-              <image wx:if="{{item.organizer.hasValidAvatar}}" class="organizer-avatar" src="{{item.organizer.avatar}}" mode="aspectFill" binderror="onAvatarImageError" data-index="{{index}}" />
+              <image wx:if="{{item.organizer.hasValidAvatar}}" class="organizer-avatar" src="{{item.organizer.avatar}}" mode="aspectFill" binderror="onAvatarImageError" data-index="{{index}}" lazy-load />
               <view wx:else class="organizer-avatar-fallback">
                 <text class="organizer-avatar-letter">{{item.organizer.name}}</text>
               </view>

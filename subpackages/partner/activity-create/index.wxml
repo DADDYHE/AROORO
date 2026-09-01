@@ -47,7 +47,7 @@
           <view class="form-field">
             <text class="form-label">封面图片</text>
             <view class="image-upload-area" bindtap="onChooseCover">
-              <image wx:if="{{formData.coverUrl}}" class="cover-preview" src="{{formData.coverUrl}}" mode="aspectFill" />
+              <image wx:if="{{formData.coverUrl}}" class="cover-preview" src="{{formData.coverUrl}}" mode="aspectFill" lazy-load />
               <view wx:else class="upload-placeholder">
                 <text class="upload-icon">+</text>
                 <text class="upload-text">上传封面</text>
@@ -59,7 +59,7 @@
             <text class="form-label">活动图片 (最多15张)</text>
             <view class="image-grid">
               <view wx:for="{{formData.images}}" wx:key="*this" class="image-grid-item">
-                <image class="grid-image" src="{{item}}" mode="aspectFill" />
+                <image class="grid-image" src="{{item}}" mode="aspectFill" lazy-load />
                 <view class="image-remove" catchtap="onRemoveImage" data-index="{{index}}">×</view>
               </view>
               <view wx:if="{{formData.images.length < 15}}" class="image-grid-item image-add" bindtap="onChooseImages">

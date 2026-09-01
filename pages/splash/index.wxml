@@ -4,6 +4,6 @@
   class="splash {{closing ? 'splash--closing' : ''}} {{reduceMotion ? 'splash--reduce' : ''}}"
   catchtap="onTap"
 >
-  <image wx:if="{{imageUrl}}" class="splash__img" src="{{imageUrl}}" mode="aspectFill" catchtap="onTap" />
+  <image wx:if="{{imageUrl}}" class="splash__img" src="{{imageUrl}}" mode="aspectFill" catchtap="onTap" lazy-load />
   <view wx:if="{{showHint && imageUrl}}" class="splash__hint" catchtap="onTap">轻触关闭</view>
 </view>
