@@ -1079,22 +1079,36 @@ async function getProductStats(event, context, auth) {
   })
 }
 
+// 分类商品数精确统计：单次 get 上限 1000 条，必须分页扫全量，否则商品过千后计数偏小。
+// 按 _id 升序 + skip 分页保证分页稳定；MAX_PAGES 为安全阀，防止异常情况下死循环。
 async function getCategoryStats() {
+  const PAGE_SIZE = 1000
+  const MAX_PAGES = 100
   try {
-    const res = await db.collection('products')
-      .field({ category: true, categoryId: true })
-      .limit(1000)
-      .get()
-
     const stats = {}
-    for (const item of res.data || []) {
-      if (item.category) {
-        stats[item.category] = (stats[item.category] || 0) + 1
+    let page = 0
+    let scanned = 0
+    while (page < MAX_PAGES) {
+      const res = await db.collection('products')
+        .field({ category: true, categoryId: true })
+        .orderBy('_id', 'asc')
+        .skip(page * PAGE_SIZE)
+        .limit(PAGE_SIZE)
+        .get()
+      const rows = res.data || []
+      for (const item of rows) {
+        if (item.category) {
+          stats[item.category] = (stats[item.category] || 0) + 1
+        }
+        if (item.categoryId) {
+          stats[item.categoryId] = (stats[item.categoryId] || 0) + 1
+        }
       }
-      if (item.categoryId) {
-        stats[item.categoryId] = (stats[item.categoryId] || 0) + 1
-      }
+      scanned += rows.length
+      if (rows.length < PAGE_SIZE) break
+      page++
     }
+    logger.info('getCategoryStats', { scanned, page })
     return handleSuccess(stats, '获取成功')
   } catch (error) {
     logger.error('getCategoryStats', error)
