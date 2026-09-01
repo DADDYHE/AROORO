@@ -33,7 +33,7 @@
         <text class="price-unit">元</text>
       </view>
       <view class="price-tag free-tag" wx:else>
-        <text class="price-value">免费</text>
+        <text class="price-value">{{t.BIZ_ELQK}}</text>
       </view>
     </view>
   </view>
@@ -85,7 +85,7 @@
             data-index="{{index}}"
             bindtap="onSelectGender"
           >
-            <text>弟弟</text>
+            <text>{{t.BIZ_GP9C}}</text>
             <view class="gender-decoration"></view>
           </view>
           <view 
@@ -95,7 +95,7 @@
             data-index="{{index}}"
             bindtap="onSelectGender"
           >
-            <text>妹妹</text>
+            <text>{{t.BIZ_FR4W}}</text>
             <view class="gender-decoration"></view>
           </view>
         </view>

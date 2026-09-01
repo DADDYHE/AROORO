@@ -109,7 +109,7 @@
   <view class="lux-silk-line" style="background: var(--lux-gold-600, #A8894A); animation-delay: 300ms;"></view>
   <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 400ms;"></view>
 </view>
-    <text class="loading-more-text">加载中</text>
+    <text class="loading-more-text">{{t.BIZ_CSIK0}}</text>
   </view>
   <view class="no-more" wx:if="{{!hasMore && hosts.length > 0}}">
     <text class="no-more-text">— 没有更多了 —</text>
@@ -146,15 +146,15 @@
         <view class="filter-checkboxes">
           <view class="checkbox-item {{filters.petTypes.dog ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'dog')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
-            <text>狗狗</text>
+            <text>{{t.BIZ_K5WG}}</text>
           </view>
           <view class="checkbox-item {{filters.petTypes.cat ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'cat')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
-            <text>猫咪</text>
+            <text>{{t.BIZ_K1Y7}}</text>
           </view>
           <view class="checkbox-item {{filters.petTypes.other ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'other')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
-            <text>其他</text>
+            <text>{{t.BIZ_EAE8}}</text>
           </view>
         </view>
       </view>
@@ -164,7 +164,7 @@
         <view class="filter-checkboxes">
           <view class="checkbox-item {{filters.services.board ? 'checked' : ''}}" bindtap="toggleFilter('services', 'board')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>
-            <text>寄养</text>
+            <text>{{t.BIZ_G20N}}</text>
           </view>
           <view class="checkbox-item {{filters.services.walk ? 'checked' : ''}}" bindtap="toggleFilter('services', 'walk')" hover-class="checkbox-item--pressed" hover-stay-time="80">
             <view class="checkbox"></view>

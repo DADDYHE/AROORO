@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 // subpackages/activity/friend.js
 const pageI18n = require('../../utils/page-i18n.js')
 const { ListBehavior } = require('../../behaviors/listBehavior')
@@ -10,6 +13,7 @@ Page({
    * 页面的初始数据
    */
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     index: -1,
     petName: '',
     petGender: 'male',

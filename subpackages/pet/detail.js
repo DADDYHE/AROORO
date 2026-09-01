@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const PetCardGenerator = require('./utils/generatePetCard')
 const app = getApp()
 const { petService, petStore, petFormatter } = require('./index')
@@ -16,6 +19,7 @@ Page({
   },
 
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     pet: {},
     userInfo: {},
     isLoggedIn: false,

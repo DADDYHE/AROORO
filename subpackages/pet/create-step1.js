@@ -1,3 +1,5 @@
+const __i18n = require('../../utils/i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { authService } = require('../../services/AuthService')
 const { petService } = require('./index')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
@@ -132,7 +134,7 @@ Page({
       return
     }
 
-    wx.showLoading({ title: '创建中...', mask: true })
+    wx.showLoading({ title: __i18nT('BIZ_XOJLY8'), mask: true })
 
     try {
       const submitData = {

@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { AddressService } = require('../../../utils/AddressService')
 const app = getApp()
 
@@ -8,6 +11,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     addresses: [],
     selectedAddressId: '',
     isLoading: false,
@@ -163,7 +167,7 @@ Page({
       isDefault: editingAddress.isDefault || false,
     }
 
-    wx.showLoading({ title: '保存中...' })
+    wx.showLoading({ title: __i18nT('BIZ_VTS3P8') })
 
     try {
       let result

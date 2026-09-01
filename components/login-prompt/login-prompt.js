@@ -1,9 +1,13 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 Component({
   properties: {
     visible: { type: Boolean, value: false },
   },
 
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     _leaving: false,
   },
 

@@ -19,7 +19,7 @@
       </view>
       <view class="brand-meta">
         <view class="brand-meta-line"></view>
-        <text class="brand-subtitle">上门服务</text>
+        <text class="brand-subtitle">{{t.BIZ_AGSVKI}}</text>
       </view>
     </view>
   </view>
@@ -37,7 +37,7 @@
   <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
         </view>
-        <text class="loading-text">加载中</text>
+        <text class="loading-text">{{t.BIZ_CSIK0}}</text>
       </view>
     </view>
 
@@ -121,7 +121,7 @@
           </view>
           <view class="pet-right" wx:if="{{petServices[item.id]}}">
             <view class="pet-service-tags">
-              <text class="service-tag" wx:if="{{petServices[item.id].feeding}}">喂养</text>
+              <text class="service-tag" wx:if="{{petServices[item.id].feeding}}">{{t.BIZ_EZP5}}</text>
               <text class="service-tag walk-tag" wx:if="{{petServices[item.id].walkMinutes > 0}}">遛狗{{petServices[item.id].walkMinutes}}分钟</text>
             </view>
             <text class="pet-service-dates" wx:if="{{petServices[item.id].serviceDatesText}}">{{petServices[item.id].serviceDatesText}}</text>

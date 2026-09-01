@@ -82,7 +82,7 @@
   <view class="lux-silk-line" style="background: var(--lux-gold-600, #A8894A); animation-delay: 300ms;"></view>
   <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 400ms;"></view>
 </view>
-    <text class="loading-more-text">加载中</text>
+    <text class="loading-more-text">{{t.BIZ_CSIK0}}</text>
   </view>
   <view wx:elif="{{list.length === 0}}" class="empty-state">
     <view class="empty-title">暂无覆盖</view>
@@ -128,7 +128,7 @@
   <view class="lux-silk-line" style="background: var(--lux-gold-600, #A8894A); animation-delay: 300ms;"></view>
   <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 400ms;"></view>
 </view>
-      <text class="loading-more-text">加载中</text>
+      <text class="loading-more-text">{{t.BIZ_CSIK0}}</text>
     </view>
     <view wx:elif="{{!hasMore && list.length > 0}}" class="load-more">— 已加载全部 ({{total}}) —</view>
   </view>
@@ -226,7 +226,7 @@
           <text>{{previewData.locales[loc].value}}</text>
           <text class="preview-status">{{previewData.locales[loc].status === 'active' ? '已启用' : '已禁用'}}</text>
         </view>
-        <view wx:else class="preview-value empty">未配置</view>
+        <view wx:else class="preview-value empty">{{t.BIZ_FTE97}}</view>
       </view>
       <view class="modal-actions">
         <view class="btn btn-primary" bindtap="onClosePreview">关闭</view>

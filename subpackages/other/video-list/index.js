@@ -1,3 +1,5 @@
+const __i18n = require('../../../utils/i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 // 视频列表页面逻辑
 const shareEntryBehavior = require('../../../behaviors/shareEntryBehavior')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
@@ -82,7 +84,7 @@ Page({
     const userInfo = app?.globalData?.userInfo
     const inviterId = ((userInfo?.isPartner || userInfo?.permissions?.length) && userInfo?.openid) ? userInfo.openid : ''
     return {
-      title: '查看视频列表',
+      title: __i18nT('BIZ_6RDYGY'),
       path: inviterId ? `/subpackages/other/video-list/index?inviterId=${inviterId}` : '/subpackages/other/video-list/index',
     }
   },

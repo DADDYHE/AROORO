@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { orderManager } = require('../../services/OrderManager')
 const { HostService, OrderService, PetService } = require('../../services/CloudFunctionService')
 const { authService } = require('../../services/AuthService')
@@ -16,6 +19,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, couponSelectorBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     hostId: '',
     hostName: '',
     hostPrice: 0,

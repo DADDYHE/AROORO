@@ -1,4 +1,4 @@
-<zy-navbar title="宠团团" showBack="{{false}}" />
+<zy-navbar title="{{t.BIZ_DUE3K}}" showBack="{{false}}" />
 <scroll-view
   scroll-y
   enhanced
@@ -16,7 +16,7 @@
     <view class="brand-accent-bar"></view>
     <view class="brand-block">
       <view class="brand-main">
-        <text class="tuan-title">宠团团</text>
+        <text class="tuan-title">{{t.BIZ_DUE3K}}</text>
       </view>
       <view class="brand-meta">
         <view class="brand-meta-line"></view>
@@ -69,7 +69,7 @@
   <view class="lux-silk-line" style="background: var(--lux-gold-600, #A8894A); animation-delay: 300ms;"></view>
   <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 400ms;"></view>
 </view>
-        <text class="loading-more-text">加载中</text>
+        <text class="loading-more-text">{{t.BIZ_CSIK0}}</text>
       </view>
       <view class="tuan-no-more" wx:if="{{!hasMore && dealList.length > 0}}">没有更多了</view>
       <view class="tuan-empty" wx:if="{{!loading && dealList.length === 0}}">

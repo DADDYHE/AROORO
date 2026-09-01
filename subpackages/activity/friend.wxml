@@ -37,7 +37,7 @@
           data-gender="male"
           bindtap="onSelectGender"
         >
-          <text>弟弟</text>
+          <text>{{t.BIZ_GP9C}}</text>
           <view class="gender-decoration"></view>
         </view>
         <view 
@@ -45,7 +45,7 @@
           data-gender="female"
           bindtap="onSelectGender"
         >
-          <text>妹妹</text>
+          <text>{{t.BIZ_FR4W}}</text>
           <view class="gender-decoration"></view>
         </view>
       </view>

@@ -18,14 +18,14 @@
     <view class="tab-bar-item tab-bar-item-center {{selected === 2 ? 'active' : ''}}" data-path="/pages/discover/index" data-index="{{2}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
       <view class="center-button tab-scale-2">
         <image class="center-button-icon" src="/images/icons/chongtuantuan-logo.svg" mode="aspectFit" />
-        <text class="center-button-text">宠团团</text>
+        <text class="center-button-text">{{t.BIZ_DUE3K}}</text>
       </view>
     </view>
     <view class="tab-bar-item {{selected === 3 ? 'active' : ''}}" data-path="/pages/service/index" data-index="{{3}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
       <view class="tab-bar-icon-wrap tab-scale-3">
         <image class="tab-bar-icon" src="{{selected === 3 ? '/images/icons/service-gold.svg' : '/images/icons/service-line-white.svg'}}" mode="aspectFit" />
       </view>
-      <text class="tab-bar-text">上门服务</text>
+      <text class="tab-bar-text">{{t.BIZ_AGSVKI}}</text>
     </view>
     <view class="tab-bar-item {{selected === 4 ? 'active' : ''}}" data-path="/pages/profile/index" data-index="{{4}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
       <view class="tab-bar-icon-wrap tab-scale-4">

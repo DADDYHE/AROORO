@@ -1,5 +1,9 @@
+const __i18n = require('../utils/i18n.js')
+const __pageI18n = require('../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 Component({
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     selected: 0,
     color: '#666666',
     selectedColor: '#4F5E35',

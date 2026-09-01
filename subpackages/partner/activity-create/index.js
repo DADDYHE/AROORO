@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { AdminService } = require('../../../services/CloudFunctionService')
 
 const pageI18n = require('../../../utils/page-i18n.js')
@@ -7,10 +10,11 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     isEdit: false,
     activityId: '',
     pageTitle: '创建活动',
-    pageSubtitle: '填写活动信息',
+    pageSubtitle: __i18nT('BIZ_14GI85L'),
     isSubmitting: false,
     formData: {
       title: '',
@@ -58,15 +62,15 @@ Page({
         isEdit: true,
         activityId: options.id,
         pageTitle: '编辑活动',
-        pageSubtitle: '修改活动信息',
+        pageSubtitle: __i18nT('BIZ_BQGK3Q'),
       })
-      wx.setNavigationBarTitle({ title: '编辑活动' })
+      wx.setNavigationBarTitle({ title: __i18nT('BIZ_GMLT8O') })
       this._loadActivity(options.id)
     }
   },
 
   async _loadActivity(activityId) {
-    wx.showLoading({ title: '加载中' })
+    wx.showLoading({ title: __i18nT('BIZ_CSIK0') })
     try {
       const res = await AdminService.getActivityDetail(activityId)
       if (res.code === 0 && res.data) {
@@ -240,7 +244,7 @@ Page({
   },
 
   async _uploadImage(tempPath, targetField) {
-    wx.showLoading({ title: '上传中' })
+    wx.showLoading({ title: __i18nT('BIZ_BTDW7') })
     try {
       const cloudPath = `activities/${Date.now()}_${Math.random().toString(36).substr(2, 8)}.jpg`
       const uploadRes = await wx.cloud.uploadFile({
@@ -255,7 +259,7 @@ Page({
   },
 
   async _uploadImages(tempPaths) {
-    wx.showLoading({ title: '上传中' })
+    wx.showLoading({ title: __i18nT('BIZ_BTDW7') })
     const results = []
     for (const path of tempPaths) {
       try {

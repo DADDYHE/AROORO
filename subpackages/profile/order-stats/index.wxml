@@ -19,7 +19,7 @@
     <view class="summary-divider"></view>
     <view class="summary-item">
       <text class="summary-num">{{stats.completedCount}}</text>
-      <text class="summary-label">已完成</text>
+      <text class="summary-label">{{t.BIZ_E7HBQ}}</text>
     </view>
     <view class="summary-divider"></view>
     <view class="summary-item">
@@ -117,7 +117,7 @@
   <view class="lux-silk-line" style="background: var(--lux-gold-600, #A8894A); animation-delay: 300ms;"></view>
   <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 400ms;"></view>
 </view>
-    <text class="loading-more-text">加载中</text>
+    <text class="loading-more-text">{{t.BIZ_CSIK0}}</text>
   </view>
 </view>
 </scroll-view>

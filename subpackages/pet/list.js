@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { petStore, petService } = require('./index.js')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
@@ -12,6 +15,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     petProfiles: [],
     isLoggedIn: false,
     isLoading: false,
@@ -190,7 +194,7 @@ Page({
 
   onShareAppMessage() {
     return {
-      title: '我的宠物',
+      title: __i18nT('BIZ_CV3AU4'),
       path: buildSharePath('/subpackages/pet/list'),
     }
   },

@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 /**
  * 运营后台 - i18n 文案热覆盖（Sprint 23）
  *
@@ -30,6 +33,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: false,
     isSaving: false,
     list: [],

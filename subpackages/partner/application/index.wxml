@@ -23,7 +23,7 @@
   <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
       </view>
-      <text class="loading-text">加载中</text>
+      <text class="loading-text">{{t.BIZ_CSIK0}}</text>
     </view>
   </view>
 
@@ -32,7 +32,7 @@
       <view class="brand-block">
         <view class="brand-accent-bar"></view>
         <view class="brand-main">
-          <text class="brand-text">申请状态</text>
+          <text class="brand-text">{{t.BIZ_FD7PYN}}</text>
         </view>
         <view class="brand-meta">
           <view class="brand-meta-line"></view>
@@ -90,7 +90,7 @@
           <input class="form-input" placeholder="请输入真实姓名" value="{{formData.realName}}" bindinput="onInputRealName" />
         </view>
         <view class="form-field">
-          <text class="form-label">手机号</text>
+          <text class="form-label">{{t.BIZ_EWBD4}}</text>
           <input class="form-input" placeholder="请输入手机号" type="number" maxlength="11" value="{{formData.phone}}" bindinput="onInputPhone" />
         </view>
         <view class="form-field">

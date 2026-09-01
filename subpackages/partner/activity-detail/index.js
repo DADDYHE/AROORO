@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { AdminService } = require('../../../services/CloudFunctionService')
 
 const STATUS_MAP = {
@@ -25,6 +28,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     activity: null,
     isLoading: true,
     statusText: '',
@@ -185,7 +189,7 @@ Page({
   },
 
   async _updateStatus(newStatus) {
-    wx.showLoading({ title: '处理中' })
+    wx.showLoading({ title: __i18nT('BIZ_DLJHN') })
     try {
       const res = await AdminService.updateActivity({
         activityId: this._activityId,
@@ -206,7 +210,7 @@ Page({
   },
 
   async onViewRegistrations() {
-    wx.showLoading({ title: '加载中' })
+    wx.showLoading({ title: __i18nT('BIZ_CSIK0') })
     try {
       const res = await AdminService.getActivityRegistrations({
         activityId: this._activityId,

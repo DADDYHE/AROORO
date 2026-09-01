@@ -40,7 +40,7 @@
   <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
       </view>
-      <text class="loading-text">加载中</text>
+      <text class="loading-text">{{t.BIZ_CSIK0}}</text>
     </view>
   </view>
 

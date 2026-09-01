@@ -1,4 +1,4 @@
-<zy-navbar title="创建活动" />
+<zy-navbar title="{{t.BIZ_AR8ZM4}}" />
 <scroll-view
   scroll-y
   enhanced

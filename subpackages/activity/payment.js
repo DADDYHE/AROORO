@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { ActivityService } = require('./services/ActivityService')
 const { CouponService } = require('../../services/CouponService')
 const PaymentService = require('../../services/PaymentService')
@@ -12,6 +15,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     mode: 'new',
     registrationId: '',
     paymentOrderId: '',
@@ -49,10 +53,10 @@ Page({
 
     if (options.registrationId) {
       this.setData({ mode: 'detail', registrationId: options.registrationId })
-      wx.setNavigationBarTitle({ title: '订单详情' })
+      wx.setNavigationBarTitle({ title: __i18nT('BIZ_HYWFKI') })
       this._loadRegistrationDetail(options.registrationId)
     } else if (options.data) {
-      wx.setNavigationBarTitle({ title: '确认支付' })
+      wx.setNavigationBarTitle({ title: __i18nT('BIZ_FRROCF') })
       try {
         const registrationData = JSON.parse(decodeURIComponent(options.data))
         this.setData({

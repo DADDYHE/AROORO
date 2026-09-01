@@ -1,3 +1,5 @@
+const __i18n = require('../../../utils/i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 function chooseAndUploadAvatar({ cloudPrefix = 'pet-avatarUrls', onSuccess, onError }) {
   wx.showActionSheet({
     itemList: ['从相册选择', '拍照'],
@@ -33,7 +35,7 @@ function chooseAndUploadAvatar({ cloudPrefix = 'pet-avatarUrls', onSuccess, onEr
 
   async function doUpload(tempFilePath) {
     try {
-      wx.showLoading({ title: '上传中...', mask: true })
+      wx.showLoading({ title: __i18nT('BIZ_1B2ADFB'), mask: true })
       const fileName = `${cloudPrefix}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
       const uploadResult = await wx.cloud.uploadFile({
         cloudPath: fileName,

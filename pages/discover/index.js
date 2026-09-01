@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { TuanService } = require('../../services/TuanService')
 const { CouponService } = require('../../services/CouponService')
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
@@ -19,6 +22,7 @@ Page({
   behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior],
 
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     dealList: [],
     total: 0,
     refreshing: false,

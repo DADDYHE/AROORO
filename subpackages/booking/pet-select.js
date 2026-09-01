@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { authService } = require('../../services/AuthService')
 const { PetService } = require('../../services/CloudFunctionService')
 const { BookingData } = require('../../utils/BookingDataService')
@@ -15,6 +18,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     pets: [],
     selectedPets: [],
     isLoggedIn: false,
@@ -389,7 +393,7 @@ Page({
   // 用户点击右上角分享
   onShareAppMessage() {
     return {
-      title: '选择宠物',
+      title: __i18nT('BIZ_IKY2TL'),
       path: buildSharePath('/subpackages/booking/pet-select'),
     }
   },

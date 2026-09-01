@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { ActivityService } = require('./services/ActivityService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
@@ -10,6 +13,7 @@ Page({
   behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
 
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     activities: [],
     currentCategory: 'registerable',
     iconTimeLine: CLOUD_ICONS.TIME,
@@ -105,7 +109,7 @@ Page({
 
   onShareAppMessage() {
     return {
-      title: 'AROORO 宠团活动 - 精彩宠物社区活动等你来',
+      title: __i18nT('BIZ_1KFHDTR'),
       path: buildSharePath('/subpackages/activity/list'),
     }
   },

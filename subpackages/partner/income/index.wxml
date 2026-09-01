@@ -23,7 +23,7 @@
   <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
       </view>
-      <text class="loading-text">加载中</text>
+      <text class="loading-text">{{t.BIZ_CSIK0}}</text>
     </view>
   </view>
 
@@ -58,17 +58,17 @@
             </view>
             <view class="overview-stat">
               <text class="overview-stat-value">¥{{activityText}}</text>
-              <text class="overview-stat-label">活动</text>
+              <text class="overview-stat-label">{{t.BIZ_J171}}</text>
             </view>
           </view>
           <view class="overview-row overview-row-bottom">
             <view class="overview-stat">
               <text class="overview-stat-value">¥{{hostingText}}</text>
-              <text class="overview-stat-label">寄养</text>
+              <text class="overview-stat-label">{{t.BIZ_G20N}}</text>
             </view>
             <view class="overview-stat">
               <text class="overview-stat-value">¥{{feedingText}}</text>
-              <text class="overview-stat-label">服务</text>
+              <text class="overview-stat-label">{{t.BIZ_HZCK}}</text>
             </view>
           </view>
         </view>
@@ -119,12 +119,12 @@
       </view>
 
       <view class="tab-bar">
-        <view class="tab-item {{activeTab === 'all' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="all">全部</view>
-        <view class="tab-item {{activeTab === 'tuan' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="tuan">团购</view>
-        <view class="tab-item {{activeTab === 'mall' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="mall">商城</view>
-        <view class="tab-item {{activeTab === 'activity' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="activity">活动</view>
-        <view class="tab-item {{activeTab === 'boarding' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="boarding">寄养</view>
-        <view class="tab-item {{activeTab === 'feeding' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="feeding">服务</view>
+        <view class="tab-item {{activeTab === 'all' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="all">{{t.BIZ_EN40}}</view>
+        <view class="tab-item {{activeTab === 'tuan' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="tuan">{{t.BIZ_FJWR}}</view>
+        <view class="tab-item {{activeTab === 'mall' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="mall">{{t.BIZ_EZIG}}</view>
+        <view class="tab-item {{activeTab === 'activity' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="activity">{{t.BIZ_J171}}</view>
+        <view class="tab-item {{activeTab === 'boarding' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="boarding">{{t.BIZ_G20N}}</view>
+        <view class="tab-item {{activeTab === 'feeding' ? 'tab-active' : ''}}" bindtap="onTabChange" data-tab="feeding">{{t.BIZ_HZCK}}</view>
       </view>
 
       <view wx:if="{{isDetailLoading}}" class="detail-loading">
@@ -137,7 +137,7 @@
           <view class="lux-cascade-dot"></view>
           <view class="lux-cascade-dot"></view>
         </view>
-        <text class="loading-text">加载中</text>
+        <text class="loading-text">{{t.BIZ_CSIK0}}</text>
       </view>
 
       <view wx:elif="{{details.length === 0}}" class="gallery-empty">
@@ -170,7 +170,7 @@
         </view>
       </view>
       <view wx:if="{{isLoadingMore}}" class="loading-more">
-        <text class="loading-text">加载中</text>
+        <text class="loading-text">{{t.BIZ_CSIK0}}</text>
       </view>
       </block>
     </view>

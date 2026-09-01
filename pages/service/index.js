@@ -1,3 +1,5 @@
+const __i18n = require('../../utils/i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
@@ -173,7 +175,7 @@ Page({
 
   onShareAppMessage() {
     return {
-      title: 'AROORO - 宠物服务一站式体验',
+      title: __i18nT('BIZ_TNRJ2L'),
       path: buildSharePath('/pages/service/index'),
     }
   },

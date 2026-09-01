@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { HostService, FavoriteService } = require('../../services/CloudFunctionService')
 const { extractCityAndDistrict } = require('../../utils/addressUtils')
 const { authService } = require('../../services/AuthService')
@@ -14,6 +17,7 @@ Page({
    * 页面的初始数据
    */
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     currentMediaType: 'photos', // 当前显示的媒体类型：photos、videos、album
     currentTab: 0, // 当前显示的标签页，0 为照片，1 为视频
     photosScrollLeft: 0, // 照片滚动位置

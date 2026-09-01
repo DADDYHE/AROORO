@@ -69,7 +69,7 @@
           />
         </view>
         <view class="form-item">
-          <view class="form-label">手机号</view>
+          <view class="form-label">{{t.BIZ_EWBD4}}</view>
           <input
             class="form-input"
             placeholder="请输入手机号"

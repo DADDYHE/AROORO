@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { orderManager, ORDER_EVENTS } = require('../../../services/OrderManager')
 const { OrderService } = require('../../../services/CloudFunctionService')
 const { TuanService } = require('../../../services/TuanService')
@@ -6,11 +9,11 @@ const { STATUS_TEXT_MAP, LOGISTICS_STATUS_TEXT_MAP } = require('../utils/orderCo
 const { formatDate, formatDateTime, parseDate } = require('../utils/dateUtils')
 
 const TYPE_MAP = {
-  activity: { title: '活动订单', label: '活动' },
-  service: { title: '服务订单', label: '服务' },
-  group: { title: '团购订单', label: '团购' },
-  boarding: { title: '寄养订单', label: '寄养' },
-  mall: { title: '商城订单', label: '商城' },
+  activity: { title: __i18nT('BIZ_E4R43K'), label: '活动' },
+  service: { title: __i18nT('BIZ_DCOTNR'), label: '服务' },
+  group: { title: __i18nT('BIZ_BJUOQM'), label: '团购' },
+  boarding: { title: __i18nT('BIZ_BXA2JU'), label: '寄养' },
+  mall: { title: __i18nT('BIZ_B4Q6UZ'), label: '商城' },
 }
 
 const MALL_STATUS_TABS = [
@@ -80,6 +83,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     orders: [],
     orderType: 'boarding',
     currentStatus: 'all',

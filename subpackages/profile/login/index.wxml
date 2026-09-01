@@ -73,7 +73,7 @@
         开始呼噜
       </button>
       <view class="cancel-link" bindtap="onCancel">
-        <text class="cancel-text">稍后再说</text>
+        <text class="cancel-text">{{t.BIZ_FQWK14}}</text>
       </view>
     </view>
   </view>

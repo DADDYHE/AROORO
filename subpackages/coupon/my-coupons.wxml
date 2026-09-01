@@ -73,7 +73,7 @@
     <view class="claim-entry-fab" bindtap="onGoClaimCenter">
       <view class="claim-entry-icon">+</view>
       <view class="claim-entry-text">
-        <view class="claim-entry-title">领券中心</view>
+        <view class="claim-entry-title">{{t.BIZ_JKZ6SO}}</view>
         <view class="claim-entry-desc">领取更多优惠券</view>
       </view>
       <view class="claim-entry-arrow">›</view>

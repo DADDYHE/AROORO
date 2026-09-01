@@ -1,3 +1,5 @@
+const __i18n = require('../../../utils/i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { HostService } = require('../../../services/CloudFunctionService')
 
 const PET_TYPE_OPTIONS = [
@@ -52,7 +54,7 @@ Page({
   // ---------- 档案回填 ----------
 
   async _loadProfile() {
-    wx.showLoading({ title: '加载中' })
+    wx.showLoading({ title: __i18nT('BIZ_CSIK0') })
     try {
       const res = await HostService.getMyProfile()
       if (res.code === 0 && res.data && (res.data._id || res.data.openid)) {
@@ -238,7 +240,7 @@ Page({
   },
 
   async _uploadPhotos(tempPaths) {
-    wx.showLoading({ title: '上传中' })
+    wx.showLoading({ title: __i18nT('BIZ_BTDW7') })
     const uploaded = []
     for (const path of tempPaths) {
       try {
@@ -258,7 +260,7 @@ Page({
   },
 
   async _uploadFile(tempPath, field, thumbPath) {
-    wx.showLoading({ title: '上传中' })
+    wx.showLoading({ title: __i18nT('BIZ_BTDW7') })
     try {
       const ext = field === 'videos' ? '.mp4' : '.jpg'
       const cloudPath = `hostProfiles/${field}/${Date.now()}_${Math.random().toString(36).slice(2, 10)}${ext}`

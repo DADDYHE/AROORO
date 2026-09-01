@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { CouponService } = require('../../services/CouponService')
 const { getAccentColor, translateScopes, isTemplateExpired, getClaimBtnState } = require('./coupon-utils')
 
@@ -9,6 +12,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     templates: [],
     page: 1,
     pageSize: 20,

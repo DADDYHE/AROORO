@@ -44,7 +44,7 @@
   <view class="exhibit-stats">
     <view class="exhibit-stat" bindtap="onMyPets">
       <text class="exhibit-stat-num">{{stats.petCount}}</text>
-      <text class="exhibit-stat-label">我的宠物</text>
+      <text class="exhibit-stat-label">{{t.BIZ_CV3AU4}}</text>
     </view>
     <view class="exhibit-stat" bindtap="onMyActivities">
       <text class="exhibit-stat-num">{{stats.activityCount}}</text>
@@ -75,7 +75,7 @@
           <image class="exhibit-icon-img" src="/images/icons/discover-line.svg" mode="aspectFit" />
         </view>
         <view class="exhibit-row-info">
-          <text class="exhibit-row-title">团购订单</text>
+          <text class="exhibit-row-title">{{t.BIZ_BJUOQM}}</text>
           <text class="exhibit-row-desc">查看团购参与记录</text>
         </view>
         <view class="exhibit-row-arrow"></view>
@@ -89,7 +89,7 @@
           <image class="exhibit-icon-img" src="{{iconShoppingCart}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconShoppingCart}}" data-path="iconShoppingCart" />
         </view>
         <view class="exhibit-row-info">
-          <text class="exhibit-row-title">商城订单</text>
+          <text class="exhibit-row-title">{{t.BIZ_B4Q6UZ}}</text>
           <text class="exhibit-row-desc">查看宠物商城购买记录</text>
         </view>
         <view class="exhibit-row-arrow"></view>
@@ -103,7 +103,7 @@
           <image class="exhibit-icon-img" src="{{iconBell}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconBell}}" data-path="iconBell" />
         </view>
         <view class="exhibit-row-info">
-          <text class="exhibit-row-title">活动订单</text>
+          <text class="exhibit-row-title">{{t.BIZ_E4R43K}}</text>
           <text class="exhibit-row-desc">查看活动报名记录</text>
         </view>
         <view class="exhibit-row-arrow"></view>
@@ -117,7 +117,7 @@
           <image class="exhibit-icon-img" src="{{iconDoorOpen}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconDoorOpen}}" data-path="iconDoorOpen" />
         </view>
         <view class="exhibit-row-info">
-          <text class="exhibit-row-title">服务订单</text>
+          <text class="exhibit-row-title">{{t.BIZ_DCOTNR}}</text>
           <text class="exhibit-row-desc">查看服务预约记录</text>
         </view>
         <view class="exhibit-row-arrow"></view>
@@ -131,7 +131,7 @@
           <image class="exhibit-icon-img" src="{{iconHomeHeart}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconHomeHeart}}" data-path="iconHomeHeart" />
         </view>
         <view class="exhibit-row-info">
-          <text class="exhibit-row-title">寄养订单</text>
+          <text class="exhibit-row-title">{{t.BIZ_BXA2JU}}</text>
           <text class="exhibit-row-desc">查看寄养服务记录</text>
         </view>
         <view class="exhibit-row-arrow"></view>

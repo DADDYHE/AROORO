@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { FavoriteService, HostService } = require('../../../services/CloudFunctionService')
 const { extractCityAndDistrict } = require('../../../utils/addressUtils')
 const { authService } = require('../../../services/AuthService')
@@ -12,6 +15,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     favoriteFamilies: [],
     hostList: [],
     isLoading: true,

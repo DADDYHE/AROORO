@@ -732,11 +732,6 @@ const BIZ_I18N = {
     'en-US': '确定截止报名？',
     'ja-JP': '确定截止报名？',
   },
-  BIZ_13ZN79L: {
-    'zh-CN': '您需要先登录才能查看宠物列表',
-    'en-US': '您需要先登录才能查看宠物列表',
-    'ja-JP': '您需要先登录才能查看宠物列表',
-  },
   BIZ_145653V: {
     'zh-CN': '登录中...',
     'en-US': '登录中...',
@@ -777,20 +772,10 @@ const BIZ_I18N = {
     'en-US': '确认已收到商品吗？',
     'ja-JP': '确认已收到商品吗？',
   },
-  BIZ_190P12T: {
-    'zh-CN': '请先选择服务地址',
-    'en-US': '请先选择服务地址',
-    'ja-JP': '请先选择服务地址',
-  },
   BIZ_193KKBU: {
     'zh-CN': '定时喂食和喝水',
     'en-US': '定时喂食和喝水',
     'ja-JP': '定时喂食和喝水',
-  },
-  BIZ_19A391K: {
-    'zh-CN': '安心寄养家庭',
-    'en-US': '安心寄养家庭',
-    'ja-JP': '安心寄养家庭',
   },
   BIZ_19DSWT: {
     'zh-CN': '所有服务人员均经过实名认证、背景调查和专业培训，确保为您提供安全可靠的服务。',
@@ -892,11 +877,6 @@ const BIZ_I18N = {
     'en-US': '请尽快完成付款，超时订单将自动取消',
     'ja-JP': '请尽快完成付款，超时订单将自动取消',
   },
-  BIZ_1LMLMHL: {
-    'zh-CN': '查看收入与提现',
-    'en-US': '查看收入与提现',
-    'ja-JP': '查看收入与提现',
-  },
   BIZ_1MGFW86: {
     'zh-CN': '本地已更新，但同步到服务器失败，请检查网络后重试',
     'en-US': '本地已更新，但同步到服务器失败，请检查网络后重试',
@@ -962,11 +942,6 @@ const BIZ_I18N = {
     'en-US': '未设置名称',
     'ja-JP': '未设置名称',
   },
-  BIZ_1UGW5S9: {
-    'zh-CN': '宠物体重必须在 0-200kg 之间',
-    'en-US': '宠物体重必须在 0-200kg 之间',
-    'ja-JP': '宠物体重必须在 0-200kg 之间',
-  },
   BIZ_1VT7QXX: {
     'zh-CN': '缺少hostProfileId',
     'en-US': '缺少hostProfileId',
@@ -1016,11 +991,6 @@ const BIZ_I18N = {
     'zh-CN': '订单已完成，感谢您的购买',
     'en-US': '订单已完成，感谢您的购买',
     'ja-JP': '订单已完成，感谢您的购买',
-  },
-  BIZ_414LG6: {
-    'zh-CN': '您需要先登录才能创建宠物档案',
-    'en-US': '您需要先登录才能创建宠物档案',
-    'ja-JP': '您需要先登录才能创建宠物档案',
   },
   BIZ_54TFDI: {
     'zh-CN': 'AROORO - 安心寄养，让爱宠如家',
@@ -1076,11 +1046,6 @@ const BIZ_I18N = {
     'zh-CN': '/images/icons/service-line.svg',
     'en-US': '/images/icons/service-line.svg',
     'ja-JP': '/images/icons/service-line.svg',
-  },
-  BIZ_A0D703: {
-    'zh-CN': '订单已创建，您可以稍后在订单中重新支付。',
-    'en-US': '订单已创建，您可以稍后在订单中重新支付。',
-    'ja-JP': '订单已创建，您可以稍后在订单中重新支付。',
   },
   BIZ_A0MKA1: {
     'zh-CN': '请在个人中心联系客服',
@@ -1152,11 +1117,6 @@ const BIZ_I18N = {
     'en-US': '即将开始',
     'ja-JP': '即将开始',
   },
-  BIZ_AX323V: {
-    'zh-CN': '即将过期',
-    'en-US': '即将过期',
-    'ja-JP': '即将过期',
-  },
   BIZ_AX9TQ9: {
     'zh-CN': '洗澡和美容服务',
     'en-US': '洗澡和美容服务',
@@ -1191,11 +1151,6 @@ const BIZ_I18N = {
     'zh-CN': '固定金额',
     'en-US': '固定金额',
     'ja-JP': '固定金额',
-  },
-  BIZ_BGUS51: {
-    'zh-CN': '城市公园',
-    'en-US': '城市公园',
-    'ja-JP': '城市公园',
   },
   BIZ_BJUOQM: {
     'zh-CN': '团购订单',
@@ -1376,11 +1331,6 @@ const BIZ_I18N = {
     'zh-CN': '截止报名',
     'en-US': '截止报名',
     'ja-JP': '截止报名',
-  },
-  BIZ_CU6NP: {
-    'zh-CN': '去登录',
-    'en-US': '去登录',
-    'ja-JP': '去登录',
   },
   BIZ_CV3AU4: {
     'zh-CN': '我的宠物',
@@ -1687,20 +1637,10 @@ const BIZ_I18N = {
     'en-US': '嘴套',
     'ja-JP': '嘴套',
   },
-  BIZ_F63VG8: {
-    'zh-CN': '留在本页',
-    'en-US': '留在本页',
-    'ja-JP': '留在本页',
-  },
   BIZ_F6CTXR: {
     'zh-CN': '存放快递柜',
     'en-US': '存放快递柜',
     'ja-JP': '存放快递柜',
-  },
-  BIZ_FD64DW: {
-    'zh-CN': '下单过程中出现错误，订单已创建，您可以在订单中完成支付。',
-    'en-US': '下单过程中出现错误，订单已创建，您可以在订单中完成支付。',
-    'ja-JP': '下单过程中出现错误，订单已创建，您可以在订单中完成支付。',
   },
   BIZ_FD7PYN: {
     'zh-CN': '申请状态',
@@ -1942,11 +1882,6 @@ const BIZ_I18N = {
     'en-US': '可以指定同一位服务人员吗？',
     'ja-JP': '可以指定同一位服务人员吗？',
   },
-  BIZ_HYHL9N: {
-    'zh-CN': '宠物服务师',
-    'en-US': '宠物服务师',
-    'ja-JP': '宠物服务师',
-  },
   BIZ_HYWFKI: {
     'zh-CN': '订单详情',
     'en-US': '订单详情',
@@ -2162,11 +2097,6 @@ const BIZ_I18N = {
     'en-US': '服务过程中宠物出现问题怎么办？',
     'ja-JP': '服务过程中宠物出现问题怎么办？',
   },
-  BIZ_OXMZ0V: {
-    'zh-CN': '等待寄养家庭确认您的订单',
-    'en-US': '等待寄养家庭确认您的订单',
-    'ja-JP': '等待寄养家庭确认您的订单',
-  },
   BIZ_PADF: {
     'zh-CN': '邮箱',
     'en-US': '邮箱',
@@ -2197,11 +2127,6 @@ const BIZ_I18N = {
     'en-US': '食具',
     'ja-JP': '食具',
   },
-  BIZ_QIKS: {
-    'zh-CN': '面议',
-    'en-US': '面议',
-    'ja-JP': '面议',
-  },
   BIZ_QILL: {
     'zh-CN': '零食',
     'en-US': '零食',
@@ -2227,11 +2152,6 @@ const BIZ_I18N = {
     'en-US': '查看审核进度',
     'ja-JP': '查看审核进度',
   },
-  BIZ_RM9YKH: {
-    'zh-CN': '/images/icons/share-luxury-arrow.svg',
-    'en-US': '/images/icons/share-luxury-arrow.svg',
-    'ja-JP': '/images/icons/share-luxury-arrow.svg',
-  },
   BIZ_TPU7LQ: {
     'zh-CN': '购物车数据异常',
     'en-US': '购物车数据异常',
@@ -2246,11 +2166,6 @@ const BIZ_I18N = {
     'zh-CN': '保存中...',
     'en-US': '保存中...',
     'ja-JP': '保存中...',
-  },
-  BIZ_WS2EDE: {
-    'zh-CN': '您需要先登录才能编辑个人信息',
-    'en-US': '您需要先登录才能编辑个人信息',
-    'ja-JP': '您需要先登录才能编辑个人信息',
   },
   BIZ_XOJLY8: {
     'zh-CN': '创建中...',

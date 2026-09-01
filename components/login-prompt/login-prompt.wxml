@@ -16,7 +16,7 @@
           <text class="btn-text">立即登录</text>
         </view>
         <view class="card-skip login-reveal" bindtap="onClose" hover-class="card-skip--pressed" hover-stay-time="120">
-          <text class="skip-text">稍后再说</text>
+          <text class="skip-text">{{t.BIZ_FQWK14}}</text>
         </view>
       </view>
     </view>

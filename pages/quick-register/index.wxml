@@ -46,7 +46,7 @@
             <block wx:if="{{item.pricePerPerson > 0 && item.pricePerPet > 0}}">¥{{item.pricePerPerson}}/人 ¥{{item.pricePerPet}}/宠</block>
             <block wx:elif="{{item.pricePerPerson > 0}}">¥{{item.pricePerPerson}}/人</block>
             <block wx:elif="{{item.pricePerPet > 0}}">¥{{item.pricePerPet}}/宠</block>
-            <block wx:else>免费</block>
+            <block wx:else>{{t.BIZ_ELQK}}</block>
           </view>
         </view>
 

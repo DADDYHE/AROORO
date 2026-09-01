@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { AdminService } = require('../../../services/CloudFunctionService')
 
 const pageI18n = require('../../../utils/page-i18n.js')
@@ -7,6 +10,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: true,
     hasPendingApplication: false,
     isPartner: false,
@@ -15,10 +19,10 @@ Page({
       { id: 'income', title: '佣金管理', desc: '查看佣金与提现', icon: 'income', iconPath: '/images/icons/wallet-luxury-line.svg', path: '/subpackages/partner/income/index' },
       { id: 'serviceIncome', title: '收入管理', desc: '查看服务收入', icon: 'serviceIncome', iconPath: '/images/icons/dollar-sign-line.svg', path: '/subpackages/partner/service-income/index' },
       { id: 'referral', title: '推荐管理', desc: '查看带货数据', icon: 'referral', iconPath: '/images/icons/users-luxury-line.svg', path: '/subpackages/partner/referral/index' },
-      { id: 'activity', title: '活动管理', desc: '管理活动与报名', icon: 'activity', iconPath: '/images/icons/celebration-luxury-line.svg', path: '/subpackages/partner/activity-list/index' },
+      { id: 'activity', title: __i18nT('BIZ_E4OKK2'), desc: '管理活动与报名', icon: 'activity', iconPath: '/images/icons/celebration-luxury-line.svg', path: '/subpackages/partner/activity-list/index' },
       { id: 'hosting', title: '家庭寄养', desc: '管理寄养家庭信息', icon: 'hosting', iconPath: '/images/icons/home-luxury-line.svg', path: '/subpackages/partner/hosting-profile/index' },
-      { id: 'feeding', title: '上门服务', desc: '管理服务与订单', icon: 'feeding', iconPath: '/images/icons/paw-luxury-line.svg', path: '/subpackages/partner/feeding/index' },
-      { id: 'application', title: '申请状态', desc: '查看审核进度', icon: 'application', iconPath: '/images/icons/clipboard-luxury-line.svg', path: '/subpackages/partner/application/index' },
+      { id: 'feeding', title: __i18nT('BIZ_AGSVKI'), desc: '管理服务与订单', icon: 'feeding', iconPath: '/images/icons/paw-luxury-line.svg', path: '/subpackages/partner/feeding/index' },
+      { id: 'application', title: __i18nT('BIZ_FD7PYN'), desc: '查看审核进度', icon: 'application', iconPath: '/images/icons/clipboard-luxury-line.svg', path: '/subpackages/partner/application/index' },
     ],
   },
 

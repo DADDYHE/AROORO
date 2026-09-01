@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
@@ -7,6 +10,7 @@ Page({
   behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
 
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     activeTab: 0,
     serviceType: 'feeding',
     _workletTabEnabled: false,
@@ -270,7 +274,7 @@ Page({
 
   onShareAppMessage() {
     return {
-      title: 'AROORO 宠物服务详情',
+      title: __i18nT('BIZ_P8XTPQ'),
       path: buildSharePath('/subpackages/feeding/service-detail'),
     }
   },

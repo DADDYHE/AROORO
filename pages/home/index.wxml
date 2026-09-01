@@ -68,7 +68,7 @@
   <view class="section my-pets-section stagger-item stagger-rise-fast delay-1" wx:if="{{isLoggedIn}}">
     <view class="my-pets-header">
       <view class="my-pets-title-wrap">
-        <text class="section-title">我的宠物</text>
+        <text class="section-title">{{t.BIZ_CV3AU4}}</text>
         <view class="pet-add-btn" catchtap="handleAddPet" hover-class="pet-add-btn--pressed" hover-stay-time="120">
           <text class="pet-add-icon">+</text>
           <text class="pet-add-text">添加</text>
@@ -108,7 +108,7 @@
       <view class="my-act-card stagger-item stagger-scale" wx:for="{{signableActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap" hover-class="my-act-card--pressed" hover-stay-time="120" style="animation-delay: {{220 + index * 80}}ms;">
         <view class="aurora-edge"></view>
         <image wx:if="{{item.coverUrl}}" class="my-act-img" src="{{item.coverUrl}}" mode="aspectFill" lazy-load />
-        <view wx:else class="my-act-img my-act-img-ph"><text class="my-act-img-ph-text">活动</text></view>
+        <view wx:else class="my-act-img my-act-img-ph"><text class="my-act-img-ph-text">{{t.BIZ_J171}}</text></view>
         <view class="my-act-body">
           <text class="my-act-name">{{item.title}}</text>
           <view class="aurora-gold-rule"></view>
@@ -142,8 +142,8 @@
       <view class="qs-icon qs-icon-activity">
         <image class="qs-emoji-img" src="/images/icons/megaphone-line.svg" mode="aspectFit" />
       </view>
-      <text class="qs-title">线下活动</text>
-      <text class="qs-subtitle">精彩社区活动</text>
+      <text class="qs-title">{{t.BIZ_GBGR95}}</text>
+      <text class="qs-subtitle">{{t.BIZ_NVE8AC}}</text>
       <view class="qs-accent qs-accent-activity"></view>
     </view>
     <view class="qs-item stagger-item stagger-scale" data-action="mall" bindtap="handleBannerTap" hover-class="qs-item--pressed" hover-stay-time="120" style="animation-delay: 420ms;">
@@ -152,8 +152,8 @@
       <view class="qs-icon qs-icon-mall">
         <image class="qs-emoji-img" src="/images/icons/shopping-cart-2-line.svg" mode="aspectFit" />
       </view>
-      <text class="qs-title">宠物商城</text>
-      <text class="qs-subtitle">精选好物推荐</text>
+      <text class="qs-title">{{t.BIZ_C17HZL}}</text>
+      <text class="qs-subtitle">{{t.BIZ_1W1XKN3}}</text>
       <view class="qs-accent qs-accent-mall"></view>
     </view>
     </view>
@@ -229,7 +229,7 @@
         <view class="aurora-edge"></view>
         <image wx:if="{{item.coverUrl}}" class="activity-h-img" src="{{item.coverUrl}}" mode="aspectFill" lazy-load />
         <view wx:else class="activity-h-img activity-h-img-ph">
-          <text class="activity-h-img-ph-text">活动</text>
+          <text class="activity-h-img-ph-text">{{t.BIZ_J171}}</text>
         </view>
         <view class="activity-h-body">
           <text class="activity-h-name">{{item.title}}</text>

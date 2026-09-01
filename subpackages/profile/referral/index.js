@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const CloudFunctionService = require('../../../services/CloudFunctionService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
@@ -7,6 +10,7 @@ Page({
   behaviors: [ListBehavior, cloudImageBehavior],
 
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     stats: { totalInvited: 0, consumingCount: 0, totalSpent: '0' },
   },
 
@@ -62,7 +66,7 @@ Page({
 
   onShareAppMessage() {
     return {
-      title: 'AROORO - 安心寄养，让爱宠如家',
+      title: __i18nT('BIZ_54TFDI'),
       path: buildSharePath('/pages/home/index'),
     }
   },

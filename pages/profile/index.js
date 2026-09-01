@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 // 个人中心页面 - 极简画廊风格
 const { authService } = require('../../services/AuthService')
 const { PetService, ActivityService, CloudFunctionService } = require('../../services/CloudFunctionService')
@@ -13,6 +16,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     userInfo: {
       nickName: 'AROORO用户',
       avatarUrl: '',

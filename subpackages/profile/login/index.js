@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { authService } = require('../../../services/AuthService')
 
 const pageI18n = require('../../../utils/page-i18n.js')
@@ -7,6 +10,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     avatarUrl: '',
     nickName: '',
     canSubmit: false,
@@ -71,7 +75,7 @@ Page({
       return
     }
 
-    wx.showLoading({ title: '登录中...', mask: true })
+    wx.showLoading({ title: __i18nT('BIZ_145653V'), mask: true })
 
     const loginData = { nickName }
     if (uploadedAvatarId) {

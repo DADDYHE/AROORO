@@ -24,7 +24,7 @@
   <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
       </view>
-      <text class="loading-text">加载中</text>
+      <text class="loading-text">{{t.BIZ_CSIK0}}</text>
     </view>
   </view>
 
@@ -101,7 +101,7 @@
             <view class="icon-dot feeding-dot"></view>
           </view>
           <view class="frame-info">
-            <text class="frame-title">上门服务</text>
+            <text class="frame-title">{{t.BIZ_AGSVKI}}</text>
             <text class="frame-amount">¥{{overview.feeding.total || 0}}</text>
           </view>
           <view class="frame-stat">
@@ -124,21 +124,21 @@
           data-tab="all" 
           bindtap="onTabChange"
         >
-          <text>全部</text>
+          <text>{{t.BIZ_EN40}}</text>
         </view>
         <view 
           class="nav-pill {{activeTab === 'activity' ? 'active' : ''}}" 
           data-tab="activity" 
           bindtap="onTabChange"
         >
-          <text>活动</text>
+          <text>{{t.BIZ_J171}}</text>
         </view>
         <view 
           class="nav-pill {{activeTab === 'boarding' ? 'active' : ''}}" 
           data-tab="boarding" 
           bindtap="onTabChange"
         >
-          <text>寄养</text>
+          <text>{{t.BIZ_G20N}}</text>
         </view>
         <view 
           class="nav-pill {{activeTab === 'feeding' ? 'active' : ''}}" 
@@ -161,7 +161,7 @@
             <view class="lux-cascade-dot"></view>
             <view class="lux-cascade-dot"></view>
           </view>
-          <text class="loading-text">加载中</text>
+          <text class="loading-text">{{t.BIZ_CSIK0}}</text>
         </view>
 
         <block wx:elif="{{details.length === 0}}">
@@ -189,7 +189,7 @@
           </view>
 
           <view wx:if="{{isLoadingMore}}" class="loading-more">
-            <text class="loading-text">加载中</text>
+            <text class="loading-text">{{t.BIZ_CSIK0}}</text>
           </view>
           <view wx:elif="{{details.length > 0}}" class="end-mark">
             <view class="end-dot"></view>

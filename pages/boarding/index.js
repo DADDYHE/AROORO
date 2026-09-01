@@ -1,3 +1,6 @@
+const __i18n = require('../../utils/i18n.js')
+const __pageI18n = require('../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { HostService } = require('../../services/CloudFunctionService')
 const { extractCityAndDistrict } = require('../../utils/addressUtils')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
@@ -12,6 +15,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, tabBarSyncBehavior, shareEntryBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: true,
     hasMore: true,
     page: 1,

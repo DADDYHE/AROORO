@@ -1,4 +1,4 @@
-<zy-navbar title="活动管理" />
+<zy-navbar title="{{t.BIZ_E4OKK2}}" />
 <scroll-view
   scroll-y
   enhanced
@@ -23,7 +23,7 @@
   <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
       </view>
-      <text class="loading-text">加载中</text>
+      <text class="loading-text">{{t.BIZ_CSIK0}}</text>
     </view>
   </view>
 
@@ -32,7 +32,7 @@
       <view class="brand-block">
         <view class="brand-accent-bar"></view>
         <view class="brand-main">
-          <text class="brand-text">活动管理</text>
+          <text class="brand-text">{{t.BIZ_E4OKK2}}</text>
         </view>
         <view class="brand-meta">
           <view class="brand-meta-line"></view>
@@ -93,7 +93,7 @@
         <text class="empty-text">{{searchKeyword ? '未找到相关活动' : '暂无活动'}}</text>
         <text class="empty-hint" wx:if="{{!searchKeyword}}">点击右下角按钮创建第一个活动</text>
         <view wx:if="{{!searchKeyword}}" class="empty-action" bindtap="onEmptyCreate">
-          <text class="empty-action-text">创建活动</text>
+          <text class="empty-action-text">{{t.BIZ_AR8ZM4}}</text>
         </view>
       </view>
 
@@ -121,7 +121,7 @@
             <view class="card-prices">
               <text class="card-price" wx:if="{{item.pricePerPerson}}">¥{{item.pricePerPerson}}/人</text>
               <text class="card-price card-price-pet" wx:if="{{item.pricePerPet}}">¥{{item.pricePerPet}}/宠</text>
-              <text class="card-price card-free" wx:if="{{!item.pricePerPerson && !item.pricePerPet}}">免费</text>
+              <text class="card-price card-free" wx:if="{{!item.pricePerPerson && !item.pricePerPet}}">{{t.BIZ_ELQK}}</text>
             </view>
           </view>
         </view>

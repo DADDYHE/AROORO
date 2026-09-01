@@ -197,7 +197,7 @@
           
           <view class="extra-service-item">
             <view class="extra-info">
-              <text class="extra-name">清洁</text>
+              <text class="extra-name">{{t.BIZ_JB8C}}</text>
               <text class="extra-desc">清洗猫砂盆或小范围区域卫生</text>
             </view>
             <text class="extra-price">40元</text>
@@ -439,7 +439,7 @@
           
           <view class="extra-service-item">
             <view class="extra-info">
-              <text class="extra-name">清洁</text>
+              <text class="extra-name">{{t.BIZ_JB8C}}</text>
               <text class="extra-desc">清洗猫砂盆或小范围区域卫生</text>
             </view>
             <text class="extra-price">40元</text>

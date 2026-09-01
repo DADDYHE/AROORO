@@ -1,3 +1,6 @@
+const __i18n = require('../../../utils/i18n.js')
+const __pageI18n = require('../../../utils/page-i18n.js')
+const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { AdminService } = require('../../../services/CloudFunctionService')
 // 主包 utils（分包不可互相 require，跨分包引用会导致 module not defined）
 const { formatTime } = require('../../../utils/dateUtils')
@@ -15,6 +18,7 @@ const STATUS_MAP = {
 Page({
   behaviors: [ListBehavior],
   data: {
+  ...__pageI18n.buildTMap(__i18n.getLocale()),
     list: [],
     total: 0,
     page: 1,

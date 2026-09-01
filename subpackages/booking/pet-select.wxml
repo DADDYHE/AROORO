@@ -1,4 +1,4 @@
-<zy-navbar title="选择宠物" />
+<zy-navbar title="{{t.BIZ_IKY2TL}}" />
 <scroll-view
   scroll-y
   enhanced
@@ -16,7 +16,7 @@
     <view class="brand-block">
       <view class="brand-accent-bar"></view>
       <view class="brand-main">
-        <text class="brand-text">选择宠物</text>
+        <text class="brand-text">{{t.BIZ_IKY2TL}}</text>
       </view>
       <view class="brand-meta">
         <view class="brand-meta-line"></view>
@@ -37,7 +37,7 @@
   <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
       </view>
-      <text class="loading-text">加载中</text>
+      <text class="loading-text">{{t.BIZ_CSIK0}}</text>
     </view>
   </view>
 

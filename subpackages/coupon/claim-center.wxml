@@ -1,4 +1,4 @@
-<zy-navbar title="领券中心" />
+<zy-navbar title="{{t.BIZ_JKZ6SO}}" />
 <scroll-view
   scroll-y
   enhanced
