@@ -12,7 +12,7 @@ Component({
       },
       {
         pagePath: '/pages/boarding/index',
-        iconPath: '/images/icons/boarding-line.svg',
+        iconPath: '/images/icons/boarding-line-white.svg',
         selectedIconPath: '/images/icons/boarding-gold.svg',
         text: '家庭寄养',
       },
