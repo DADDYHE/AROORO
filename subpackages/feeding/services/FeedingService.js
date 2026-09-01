@@ -1,8 +1,9 @@
 const { CloudFunctionService } = require('../../../services/CloudFunctionService')
 
 class FeedingService {
-  static async call(action, data = {}) {
-    return CloudFunctionService.call('feedingService', { action, ...data })
+  // 性能优化（2026-09-02）：options 透传，读类调用可显式开启缓存（默认仍无缓存，行为不变）
+  static async call(action, data = {}, options = {}) {
+    return CloudFunctionService.call('feedingService', { action, ...data }, options)
   }
 
   static createFeedingOrder(data) { return this.call('createFeedingOrder', data) }

@@ -431,8 +431,8 @@ class OrderService {
     return this.cloud.call('mallService', { action: 'getGroupBuyOrders', ...data }, { useCache: false })
   }
 
-  async getFeedingOrders(data = {}) {
-    return this.cloud.call('feedingService', { action: 'getFeedingOrders', ...data }, { useCache: false })
+  async getFeedingOrders(data = {}, options = {}) {
+    return this.cloud.call('feedingService', { action: 'getFeedingOrders', ...data }, { useCache: false, ...options })
   }
 }
 

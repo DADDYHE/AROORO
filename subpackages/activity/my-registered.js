@@ -35,7 +35,11 @@ Page({
     // 报名单有效状态为 paid/pending_payment/completed（V5 起 'confirmed' 已废弃），
     // 用 'all' 让后端映射为有效报名集合，避免查到空列表
     const reqData = { action: 'getRegistrationList', page: params.page, pageSize: params.pageSize, status: 'all' }
-    const result = await ActivityService.call('getRegistrationList', reqData)
+    // 性能优化：仅首屏被动加载开缓存（30s）；onShow 重拉命中缓存=隐式节流；分页/下拉刷新（_forceRefresh）穿透
+    const result = await ActivityService.call('getRegistrationList', reqData, {
+      useCache: params.page === 1 && !this._forceRefresh,
+      cacheTime: 30000,
+    })
     if (result && result.code === 0 && result.data) {
       return result.data.list || result.data || []
     }
@@ -94,6 +98,10 @@ Page({
     wx.navigateTo({ url: `/subpackages/activity/detail?id=${id}` })
   },
 
-  onPullDownRefresh() { this._onPullDownRefresh() },
+  onPullDownRefresh() {
+    // 下拉刷新为主动行为，强制穿透缓存（复用 ListBehavior 刷新语义）
+    this._forceRefresh = true
+    return this._onPullDownRefresh().finally(() => { this._forceRefresh = false })
+  },
   onReachBottom() { this._onReachBottom() },
 })

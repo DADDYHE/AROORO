@@ -18,10 +18,21 @@ Page({
     this._loadPageData()
   },
 
-  onShow() { this._resetAndLoad() },
+  // 性能优化：onShow 30s 节流——被动重拉限频，避免切 tab 往返反复请求
+  onShow() {
+    const now = Date.now()
+    if (!this._lastRefreshAt || now - this._lastRefreshAt > 30000) {
+      this._lastRefreshAt = now
+      this._resetAndLoad()
+    }
+  },
 
   async _doFetch(params) {
-    const result = await NotificationService.getNotificationList({ page: params.page, pageSize: params.pageSize })
+    // 性能优化：仅首屏被动加载开缓存（30s）；分页/下拉刷新（_forceRefresh）穿透
+    const result = await NotificationService.getNotificationList(
+      { page: params.page, pageSize: params.pageSize },
+      { useCache: params.page === 1 && !this._forceRefresh, cacheTime: 30000 }
+    )
     if (result && result.code === 0) {
       this.setData({ unreadCount: result.data.unreadCount || 0 })
       return (result.data.list || [])
@@ -49,7 +60,10 @@ Page({
   },
 
   async _markAsRead(notificationId) {
-    try { await NotificationService.markNotificationRead(notificationId) } catch (error) { console.error(error) }
+    try {
+      await NotificationService.markNotificationRead(notificationId)
+      this._lastRefreshAt = 0 // 已读成功 → 下次 onShow 强制重拉（unreadCount 需同步）
+    } catch (error) { console.error(error) }
   },
 
   async onMarkAllRead() {
@@ -60,6 +74,10 @@ Page({
     } catch (error) { this.error('OPERATION_FAILED') }
   },
 
-  onPullDownRefresh() { this._onPullDownRefresh() },
+  onPullDownRefresh() {
+    // 下拉刷新为主动行为，强制穿透缓存（复用 ListBehavior 刷新语义）
+    this._forceRefresh = true
+    return this._onPullDownRefresh().finally(() => { this._forceRefresh = false })
+  },
   onReachBottom() { this._onReachBottom() },
 })

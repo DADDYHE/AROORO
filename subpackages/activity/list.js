@@ -51,7 +51,11 @@ Page({
     } else if (this.data.currentCategory !== 'all' && this.data.currentCategory !== 'joined') {
       reqData.category = this.data.currentCategory
     }
-    const result = await ActivityService.call(action, reqData)
+    // 性能优化：仅首屏被动加载开缓存（30s）；分页/下拉刷新（_forceRefresh）穿透
+    const result = await ActivityService.call(action, reqData, {
+      useCache: params.page === 1 && !this._forceRefresh,
+      cacheTime: 30000,
+    })
     if (result && result.code === 0 && result.data) {
       return result.data.list || result.data || []
     }
@@ -92,7 +96,11 @@ Page({
     wx.navigateTo({ url: `/subpackages/activity/register?id=${id}` })
   },
 
-  onPullDownRefresh() { this._onPullDownRefresh() },
+  onPullDownRefresh() {
+    // 下拉刷新为主动行为，强制穿透缓存（复用 ListBehavior 刷新语义）
+    this._forceRefresh = true
+    return this._onPullDownRefresh().finally(() => { this._forceRefresh = false })
+  },
   onReachBottom() { this._onReachBottom() },
 
   onShareAppMessage() {

@@ -28,7 +28,7 @@ Page({
       const res = await OrderService.getFeedingOrders({
         page: this.data.page,
         pageSize: this.data.pageSize,
-      })
+      }, { useCache: !append && this.data.page === 1, cacheTime: 30000 })
       if (res.code === 0 && res.data) {
         const list = res.data.list || []
         this.setData({

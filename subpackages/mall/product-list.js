@@ -38,31 +38,22 @@ Page({
     this._initNavbarHeight()
     this._initCartPos()
     this._refreshCartCount()
-    this.setData({ categories: mallCategories })
-    try {
-      await this._loadCategoriesFromServer()
-    } catch (e) {
-      console.error('[product-list] _loadCategoriesFromServer 失败:', e)
-    }
-    try {
-      await this._loadCategoryStats()
-    } catch (e) {
-      console.error('[product-list] _loadCategoryStats 失败:', e)
-    }
-    if (this.data.categories.length > 0) {
-      const firstCat = this.data.categories[0]
-      this.setData({
-        expandedCategory: firstCat.key,
-        currentCategory: firstCat.key,
-        currentCategoryLabel: firstCat.label,
-      })
-    }
+    // 性能优化：先落本地静态分类并锁定默认分类，首屏商品不再等待服务端分类串行返回
+    const firstCat = mallCategories[0]
+    this.setData({
+      categories: mallCategories,
+      expandedCategory: firstCat ? firstCat.key : '',
+      currentCategory: firstCat ? firstCat.key : '',
+      currentCategoryLabel: firstCat ? firstCat.label : '',
+    })
+    // 三路并行：首屏商品 / 服务端分类（统计过滤依赖分类结构，链在其后执行）
     this._loadProducts()
+    this._loadCategoriesFromServer().then(() => this._loadCategoryStats())
   },
 
   async _loadCategoriesFromServer() {
     try {
-      const result = await MallService.listCategories()
+      const result = await MallService.listCategories({ useCache: true, cacheTime: 30000 })
       if (result && result.code === 0 && result.data && result.data.length > 0) {
         const cats = result.data.map(cat => ({
           key: cat.key,
@@ -81,7 +72,7 @@ Page({
 
   async _loadCategoryStats() {
     try {
-      const result = await MallService.getCategoryStats()
+      const result = await MallService.getCategoryStats({ useCache: true, cacheTime: 30000 })
       const stats = (result && result.code === 0 && result.data) ? result.data : {}
 
       const source = this.data.categories
@@ -114,7 +105,11 @@ Page({
     }
 
     try {
-      const result = await MallService.getProductList(params)
+      // 性能优化：仅首屏/切分类（page=1）开缓存；加载更多（append）穿透
+      const result = await MallService.getProductList(params, {
+        useCache: !append && this.data.page === 1,
+        cacheTime: 30000,
+      })
 
       if (result && result.code === 0) {
         const newList = (result.data.list || []).map(p => ({ ...p, priceFrom: hasPriceFrom(p) }))
