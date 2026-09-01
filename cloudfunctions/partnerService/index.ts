@@ -118,6 +118,9 @@ const incomeHandlers: Record<string, PartnerActionHandler> = require('./services
 // 首屏聚合子模块（BFF）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const homeHandlers: Record<string, PartnerActionHandler> = require('./services/home')
+// 子页面首屏聚合（BFF P1：income / service-income / referral 各 1 次调用）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const bundleHandlers: Record<string, PartnerActionHandler> = require('./services/bundle')
 
 // =====================================================================
 // 类型定义
@@ -161,6 +164,10 @@ export interface PartnerHandlers {
 
   // 首屏聚合（BFF：3 次调用合并为 1 次，性能优化）
   getPartnerHome: PartnerActionHandler
+  // 子页面首屏聚合（BFF P1）
+  getPartnerIncomeBundle: PartnerActionHandler
+  getServiceIncomeBundle: PartnerActionHandler
+  getReferralBundle: PartnerActionHandler
 }
 
 // =====================================================================
@@ -197,6 +204,11 @@ export const handlers: PartnerHandlers = {
 
   // 首屏聚合（BFF）
   getPartnerHome: homeHandlers.getPartnerHome,
+
+  // 子页面首屏聚合（BFF P1）
+  getPartnerIncomeBundle: bundleHandlers.getPartnerIncomeBundle,
+  getServiceIncomeBundle: bundleHandlers.getServiceIncomeBundle,
+  getReferralBundle: bundleHandlers.getReferralBundle,
 }
 
 // =====================================================================
@@ -233,6 +245,10 @@ const ACTION_PERMISSIONS: Record<keyof PartnerHandlers, PartnerPermission> = {
 
   // 首屏聚合：仅需登录（内部自行判断是否返回收入数据）
   getPartnerHome: null,
+  // 子页面首屏聚合：需合作伙伴身份（内部各子项均查 partner 数据）
+  getPartnerIncomeBundle: 'partner',
+  getServiceIncomeBundle: 'partner',
+  getReferralBundle: 'partner',
 }
 
 // =====================================================================

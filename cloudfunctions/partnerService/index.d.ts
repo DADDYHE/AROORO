@@ -82,6 +82,9 @@ export interface PartnerHandlers {
     getReferralOrders: PartnerActionHandler;
     getReferralOrderStats: PartnerActionHandler;
     getPartnerHome: PartnerActionHandler;
+    getPartnerIncomeBundle: PartnerActionHandler;
+    getServiceIncomeBundle: PartnerActionHandler;
+    getReferralBundle: PartnerActionHandler;
 }
 export declare const handlers: PartnerHandlers;
 export declare const main: (event: CloudEvent, context: CloudContext) => Promise<unknown>;

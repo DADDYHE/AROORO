@@ -15,7 +15,9 @@
     "cloudfunctions/partnerService/services/application.ts",
     "cloudfunctions/partnerService/services/referral.ts",
     "cloudfunctions/partnerService/services/wallet.ts",
-    "cloudfunctions/partnerService/services/home.ts"
+    "cloudfunctions/partnerService/services/home.ts",
+    "cloudfunctions/partnerService/services/income.ts",
+    "cloudfunctions/partnerService/services/bundle.ts"
   ],
   "exclude": [
     "node_modules",
