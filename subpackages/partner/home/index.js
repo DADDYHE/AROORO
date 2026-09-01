@@ -16,7 +16,7 @@ Page({
       { id: 'serviceIncome', title: '收入管理', desc: '查看服务收入', icon: 'serviceIncome', iconPath: '/images/icons/dollar-sign-line.svg', path: '/subpackages/partner/service-income/index' },
       { id: 'referral', title: '推荐管理', desc: '查看带货数据', icon: 'referral', iconPath: '/images/icons/users-luxury-line.svg', path: '/subpackages/partner/referral/index' },
       { id: 'activity', title: '活动管理', desc: '管理活动与报名', icon: 'activity', iconPath: '/images/icons/celebration-luxury-line.svg', path: '/subpackages/partner/activity-list/index' },
-      { id: 'hosting', title: '寄养档案', desc: '管理寄养家庭信息', icon: 'hosting', iconPath: '/images/icons/home-luxury-line.svg', path: '/subpackages/partner/hosting-profile/index' },
+      { id: 'hosting', title: '家庭寄养', desc: '管理寄养家庭信息', icon: 'hosting', iconPath: '/images/icons/home-luxury-line.svg', path: '/subpackages/partner/hosting-profile/index' },
       { id: 'feeding', title: '上门服务', desc: '管理服务与订单', icon: 'feeding', iconPath: '/images/icons/paw-luxury-line.svg', path: '/subpackages/partner/feeding/index' },
       { id: 'application', title: '申请状态', desc: '查看审核进度', icon: 'application', iconPath: '/images/icons/clipboard-luxury-line.svg', path: '/subpackages/partner/application/index' },
     ],
