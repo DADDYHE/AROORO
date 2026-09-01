@@ -594,16 +594,16 @@ class AdminService {
     return this.cloud.post('adminService', { action: 'handleBoardingOrder', orderId, operation })
   }
 
-  async getMyIncomeOverview() {
-    return this.cloud.call('partnerService', { action: 'getMyIncomeOverview' }, { useCache: false })
+  async getMyIncomeOverview(options = {}) {
+    return this.cloud.call('partnerService', { action: 'getMyIncomeOverview' }, { useCache: false, ...options })
   }
 
-  async getMyIncomeDetails(data = {}) {
-    return this.cloud.call('partnerService', { action: 'getMyIncomeDetails', ...data }, { useCache: false })
+  async getMyIncomeDetails(data = {}, options = {}) {
+    return this.cloud.call('partnerService', { action: 'getMyIncomeDetails', ...data }, { useCache: false, ...options })
   }
 
-  async getMyWallet(data = {}) {
-    return this.cloud.call('partnerService', { action: 'getMyWallet', ...data }, { useCache: false })
+  async getMyWallet(data = {}, options = {}) {
+    return this.cloud.call('partnerService', { action: 'getMyWallet', ...data }, { useCache: false, ...options })
   }
 
   async requestWithdrawal(amount, walletType = 'commission', payoutMethod = '') {
@@ -614,8 +614,8 @@ class AdminService {
     return this.cloud.post('partnerService', { action: 'confirmWithdrawal', withdrawalId })
   }
 
-  async getMyPayeeAccounts() {
-    return this.cloud.call('partnerService', { action: 'getMyPayeeAccounts' }, { useCache: false })
+  async getMyPayeeAccounts(options = {}) {
+    return this.cloud.call('partnerService', { action: 'getMyPayeeAccounts' }, { useCache: false, ...options })
   }
 
   async updatePayeeAccounts(payee) {
@@ -631,12 +631,12 @@ class AdminService {
   }
 
   // 服务收入（活动创建者、寄养服务者、上门服务者）
-  async getServiceIncomeOverview() {
-    return this.cloud.call('partnerService', { action: 'getServiceIncomeOverview' }, { useCache: false })
+  async getServiceIncomeOverview(options = {}) {
+    return this.cloud.call('partnerService', { action: 'getServiceIncomeOverview' }, { useCache: false, ...options })
   }
 
-  async getServiceIncomeDetails(data = {}) {
-    return this.cloud.call('partnerService', { action: 'getServiceIncomeDetails', ...data }, { useCache: false })
+  async getServiceIncomeDetails(data = {}, options = {}) {
+    return this.cloud.call('partnerService', { action: 'getServiceIncomeDetails', ...data }, { useCache: false, ...options })
   }
 
   async getApplicationStatus() {
@@ -659,20 +659,20 @@ class AdminService {
     return this.cloud.call('partnerService', { action: 'getPartnerHome' }, { useCache: false })
   }
 
-  async getMyInvitedUsers(data = {}) {
-    return this.cloud.call('partnerService', { action: 'getMyInvitedUsers', ...data }, { useCache: false })
+  async getMyInvitedUsers(data = {}, options = {}) {
+    return this.cloud.call('partnerService', { action: 'getMyInvitedUsers', ...data }, { useCache: false, ...options })
   }
 
   async getReferralOrders(data = {}) {
     return this.cloud.call('partnerService', { action: 'getReferralOrders', ...data }, { useCache: false })
   }
 
-  async getReferralOrderStats(data = {}) {
-    return this.cloud.call('partnerService', { action: 'getReferralOrderStats', ...data }, { useCache: false })
+  async getReferralOrderStats(data = {}, options = {}) {
+    return this.cloud.call('partnerService', { action: 'getReferralOrderStats', ...data }, { useCache: false, ...options })
   }
 
-  async getReferralStats(data = {}) {
-    return this.cloud.call('partnerService', { action: 'getReferralStats', ...data }, { useCache: false })
+  async getReferralStats(data = {}, options = {}) {
+    return this.cloud.call('partnerService', { action: 'getReferralStats', ...data }, { useCache: false, ...options })
   }
 
   // ===== i18n override (Sprint 23) =====
@@ -735,8 +735,8 @@ class AdminService {
     return this.cloud.call('adminService', { action: 'getBoardingOrders', ...data }, { useCache: false })
   }
 
-  async getMyCommissionRates() {
-    return this.cloud.call('partnerService', { action: 'getMyCommissionRates' }, { useCache: false })
+  async getMyCommissionRates(options = {}) {
+    return this.cloud.call('partnerService', { action: 'getMyCommissionRates' }, { useCache: false, ...options })
   }
 }
 

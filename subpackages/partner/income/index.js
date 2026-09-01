@@ -47,12 +47,14 @@ Page({
     this._loadData()
   },
 
-  async _loadData() {
+  // forceRefresh=true：提现等写操作后主动刷新，穿透 30s 前端缓存，保证回显最新
+  async _loadData({ forceRefresh = false } = {}) {
     this.setData({ isLoading: true })
     try {
+      const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
       const [overviewRes, walletRes] = await Promise.all([
-        AdminService.getMyIncomeOverview(),
-        AdminService.getMyWallet(),
+        AdminService.getMyIncomeOverview(opts),
+        AdminService.getMyWallet({}, opts),
       ])
 
       const overview = overviewRes.code === 0 && overviewRes.data ? overviewRes.data : null
@@ -62,7 +64,7 @@ Page({
       // 佣金率查询独立容错：失败（如云函数未部署最新版）不阻塞收入/钱包展示
       let ratesData = null
       try {
-        const ratesRes = await AdminService.getMyCommissionRates()
+        const ratesRes = await AdminService.getMyCommissionRates(opts)
         ratesData = ratesRes.code === 0 && ratesRes.data ? ratesRes.data : null
       } catch (e) {
         console.warn('[partner/income] getMyCommissionRates failed:', e?.message || e)
@@ -107,7 +109,7 @@ Page({
       })
       // v5.1：收款账号（失败不阻塞收入展示）
       try {
-        const payeeRes = await AdminService.getMyPayeeAccounts()
+        const payeeRes = await AdminService.getMyPayeeAccounts(opts)
         if (payeeRes.code === 0 && payeeRes.data && payeeRes.data.payee) {
           const p = payeeRes.data.payee
           this.setData({
@@ -127,18 +129,22 @@ Page({
       } catch (e) {
         console.warn('[partner/income] getMyPayeeAccounts failed:', e?.message || e)
       }
-      this._loadDetails()
+      this._loadDetails(false, true)
     } catch (e) {
       console.error('[partner/income] _loadData error:', e)
       this.setData({ isLoading: false })
     }
   },
 
-  async _loadDetails(append = false) {
+  // useCache=true 仅用于 onLoad 被动首屏；tab 切换/分页为主动行为，穿透缓存保证新鲜
+  async _loadDetails(append = false, useCache = false) {
     const loadingKey = append ? 'isLoadingMore' : 'isDetailLoading'
     this.setData({ [loadingKey]: true })
     try {
-      const res = await AdminService.getMyIncomeDetails({ type: this.data.activeTab, page: this.data.page, pageSize: this.data.pageSize })
+      const res = await AdminService.getMyIncomeDetails(
+        { type: this.data.activeTab, page: this.data.page, pageSize: this.data.pageSize },
+        useCache ? { useCache: true, cacheTime: 30000 } : {}
+      )
       if (res.code === 0 && res.data) {
         let list = res.data.list || []
         // v5.1：佣金状态展示（待结算/已结算/已取消/已冲销）
@@ -265,7 +271,7 @@ Page({
       if (res.code === 0) {
         wx.showToast({ title: '提现申请已提交', icon: 'success' })
         this.setData({ showWithdrawModal: false, withdrawAmount: '' })
-        this._loadData()
+        this._loadData({ forceRefresh: true })
       } else {
         wx.showToast({ title: res.message || '提现失败', icon: 'none' })
       }

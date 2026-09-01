@@ -43,17 +43,25 @@ Page({
   },
 
   onShow() {
-    if (!this.data.isLoading) {
+    if (this.data.isLoading) {return}
+    const now = Date.now()
+    // 30s 节流：窗口内返回走被动缓存加载（秒开），窗口外强制刷新（保证收入最新）
+    if (this._lastShowRefresh && now - this._lastShowRefresh < 30000) {
       this._loadData()
+      return
     }
+    this._lastShowRefresh = now
+    this._loadData({ forceRefresh: true })
   },
 
-  async _loadData() {
+  // forceRefresh=true：提现等写操作/下拉后主动刷新，穿透 30s 前端缓存
+  async _loadData({ forceRefresh = false } = {}) {
     this.setData({ isLoading: true })
     try {
+      const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
       const [overviewRes, walletRes] = await Promise.all([
-        AdminService.getServiceIncomeOverview(),
-        AdminService.getMyWallet({ walletType: 'serviceIncome' }),
+        AdminService.getServiceIncomeOverview(opts),
+        AdminService.getMyWallet({ walletType: 'serviceIncome' }, opts),
       ])
       
       if (overviewRes.code === 0 && overviewRes.data) {
@@ -79,7 +87,7 @@ Page({
         })
       }
       try {
-        const payeeRes = await AdminService.getMyPayeeAccounts()
+        const payeeRes = await AdminService.getMyPayeeAccounts(opts)
         if (payeeRes.code === 0 && payeeRes.data && payeeRes.data.payee) {
           const p = payeeRes.data.payee
           this.setData({
@@ -100,7 +108,7 @@ Page({
         console.warn('[service-income] getMyPayeeAccounts failed:', e?.message || e)
       }
       
-      await this._loadDetails()
+      await this._loadDetails(false, true)
     } catch (e) {
       console.error('[service-income] _loadData error:', e)
     } finally {
@@ -108,15 +116,19 @@ Page({
     }
   },
 
-  async _loadDetails(append = false) {
+  // useCache=true 仅用于 onLoad 被动首屏；tab 切换/分页为主动行为，穿透缓存保证新鲜
+  async _loadDetails(append = false, useCache = false) {
     const loadingKey = append ? 'isLoadingMore' : 'isDetailLoading'
     this.setData({ [loadingKey]: true })
     try {
-      const res = await AdminService.getServiceIncomeDetails({
-        type: this.data.activeTab,
-        page: this.data.page,
-        pageSize: this.data.pageSize,
-      })
+      const res = await AdminService.getServiceIncomeDetails(
+        {
+          type: this.data.activeTab,
+          page: this.data.page,
+          pageSize: this.data.pageSize,
+        },
+        useCache ? { useCache: true, cacheTime: 30000 } : {}
+      )
 
       if (res.code === 0 && res.data) {
         const list = res.data.list || []
@@ -152,7 +164,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    this._loadData().then(() => {
+    this._loadData({ forceRefresh: true }).then(() => {
       wx.stopPullDownRefresh()
     })
   },
@@ -225,7 +237,7 @@ Page({
       if (res.code === 0) {
         wx.showToast({ title: '提现申请已提交', icon: 'success' })
         this.setData({ showWithdrawModal: false, withdrawAmount: '' })
-        this._loadData()
+        this._loadData({ forceRefresh: true })
       } else {
         wx.showToast({ title: res.message || '提现失败', icon: 'none' })
       }

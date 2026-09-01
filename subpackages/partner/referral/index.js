@@ -21,7 +21,14 @@ Page({
 
   onShow() {
     if (this.data.users.length > 0) {
-      this._refreshData()
+      const now = Date.now()
+      // 30s 节流：窗口内返回走被动缓存加载（秒开），窗口外强制刷新（统计/列表最新）
+      if (this._lastShowRefresh && now - this._lastShowRefresh < 30000) {
+        this._refreshData()
+        return
+      }
+      this._lastShowRefresh = now
+      this._refreshData(true)
     }
   },
 
@@ -35,12 +42,14 @@ Page({
     }
   },
 
-  async _refreshData() {
+  // forceRefresh=true：下拉等主动操作，穿透 30s 前端缓存
+  async _refreshData(forceRefresh = false) {
     try {
+      const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
       const [usersRes, statsRes, referralRes] = await Promise.all([
-        AdminService.getMyInvitedUsers({ page: 1, pageSize: this.data.pageSize }),
-        AdminService.getReferralOrderStats({ type: 'all' }),
-        AdminService.getReferralStats(),
+        AdminService.getMyInvitedUsers({ page: 1, pageSize: this.data.pageSize }, opts),
+        AdminService.getReferralOrderStats({ type: 'all' }, opts),
+        AdminService.getReferralStats(opts),
       ])
       const list = usersRes.code === 0 && usersRes.data ? usersRes.data.list || [] : []
       const total = usersRes.code === 0 && usersRes.data ? usersRes.data.total || 0 : 0
@@ -54,13 +63,14 @@ Page({
     }
   },
 
-  async _loadData() {
+  async _loadData({ forceRefresh = false } = {}) {
     this.setData({ isLoading: true })
     try {
+      const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
       const [usersRes, statsRes, referralRes] = await Promise.all([
-        AdminService.getMyInvitedUsers({ page: this.data.page, pageSize: this.data.pageSize }),
-        AdminService.getReferralOrderStats({ type: 'all' }),
-        AdminService.getReferralStats(),
+        AdminService.getMyInvitedUsers({ page: this.data.page, pageSize: this.data.pageSize }, opts),
+        AdminService.getReferralOrderStats({ type: 'all' }, opts),
+        AdminService.getReferralStats(opts),
       ])
 
       const list = usersRes.code === 0 && usersRes.data ? usersRes.data.list || [] : []
@@ -114,6 +124,6 @@ Page({
 
   onPullDownRefresh() {
     this.setData({ page: 1 })
-    this._loadData().then(() => wx.stopPullDownRefresh())
+    this._loadData({ forceRefresh: true }).then(() => wx.stopPullDownRefresh())
   },
 })
