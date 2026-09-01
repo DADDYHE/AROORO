@@ -254,7 +254,7 @@ Page({
     if (action === 'none' || !action) { return }
 
     const routes = {
-      boarding: '/subpackages/booking/host-list-all',
+      boarding: '/pages/boarding/index',
       feeding: '/subpackages/feeding/confirm-service',
       activity: '/subpackages/activity/list',
       mall: '/subpackages/mall/product-list',
@@ -263,7 +263,7 @@ Page({
       partner: '/subpackages/partner/home/index',
     }
 
-    const tabPages = ['/pages/discover/index']
+    const tabPages = ['/pages/discover/index', '/pages/boarding/index']
 
     const detailRoutes = {
       activity_detail: '/subpackages/activity/detail?id=',

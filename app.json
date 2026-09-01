@@ -6,7 +6,8 @@
     "pages/service/index",
     "pages/quick-register/index",
     "pages/profile/index",
-    "pages/group-detail/index"
+    "pages/group-detail/index",
+    "pages/boarding/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -27,8 +28,8 @@
         "text": "首页"
       },
       {
-        "pagePath": "pages/quick-register/index",
-        "text": "一键报名"
+        "pagePath": "pages/boarding/index",
+        "text": "家庭寄养"
       },
       {
         "pagePath": "pages/discover/index",
@@ -81,7 +82,6 @@
       "pages": [
         "pet-select",
         "confirm",
-        "host-list-all",
         "host-detail"
       ]
     },

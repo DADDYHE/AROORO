@@ -1,15 +1,17 @@
 const { HostService } = require('../../services/CloudFunctionService')
 const { extractCityAndDistrict } = require('../../utils/addressUtils')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
+const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
+const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
+const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, tabBarSyncBehavior, shareEntryBehavior],
   data: {
-    isHeaderScrolled: false,
     isLoading: true,
     hasMore: true,
     page: 1,
@@ -33,15 +35,9 @@ Page({
   },
 
   onShow() {
+    this._syncTabBar()
     if (this.data.hosts.length === 0 && !this.data.isLoading) {
       this.getHostList()
-    }
-  },
-
-  onPageScroll(e) {
-    const isHeaderScrolled = e.scrollTop > 50
-    if (isHeaderScrolled !== this.data.isHeaderScrolled) {
-      this.setData({ isHeaderScrolled })
     }
   },
 
@@ -127,7 +123,7 @@ Page({
         this.errorDynamic(result?.message, 'GET_FAILED')
       }
     } catch (error) {
-      console.error('[host-list-all] 获取寄养家庭列表失败', error)
+      console.error('[boarding] 获取寄养家庭列表失败', error)
       this.setData({ isLoading: false, errorMsg: '网络异常，请稍后重试' })
       this.error('GET_RETRY')
     } finally {
@@ -198,9 +194,16 @@ Page({
     wx.navigateTo({
       url: `/subpackages/booking/confirm?hostId=${actualId}`,
       fail: err => {
-        console.error('[host-list-all] 跳转失败:', err)
+        console.error('[boarding] 跳转失败:', err)
         this.showModal({ titleKey: 'NAVIGATE_FAILED', contentKey: 'BIZ_1BCURQC', showCancel: false })
       },
     })
+  },
+
+  onShareAppMessage() {
+    return {
+      title: 'AROORO - 家庭寄养，安心呼噜放心托付',
+      path: buildSharePath('/pages/boarding/index'),
+    }
   },
 })

@@ -9,11 +9,11 @@
       </view>
       <text class="tab-bar-text">首页</text>
     </view>
-    <view class="tab-bar-item {{selected === 1 ? 'active' : ''}}" data-path="/pages/quick-register/index" data-index="{{1}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
+    <view class="tab-bar-item {{selected === 1 ? 'active' : ''}}" data-path="/pages/boarding/index" data-index="{{1}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
       <view class="tab-bar-icon-wrap tab-scale-1">
-        <image class="tab-bar-icon" src="{{selected === 1 ? '/images/icons/calendar-gold.svg' : '/images/icons/calendar-icon-white.svg'}}" mode="aspectFit" />
+        <image class="tab-bar-icon" src="{{selected === 1 ? '/images/icons/boarding-gold.svg' : '/images/icons/boarding-line-white.svg'}}" mode="aspectFit" />
       </view>
-      <text class="tab-bar-text">一键报名</text>
+      <text class="tab-bar-text">家庭寄养</text>
     </view>
     <view class="tab-bar-item tab-bar-item-center {{selected === 2 ? 'active' : ''}}" data-path="/pages/discover/index" data-index="{{2}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
       <view class="center-button tab-scale-2">

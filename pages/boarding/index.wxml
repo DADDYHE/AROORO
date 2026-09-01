@@ -1,4 +1,4 @@
-<zy-navbar title="寄养家庭" />
+<zy-navbar title="家庭寄养" showBack="{{false}}" />
 <scroll-view
   scroll-y
   enhanced
@@ -11,19 +11,16 @@
   style="height: calc(100vh - {{_navbarHeight}}px);"
 >
 <view class="hosts-container">
-  <!-- 顶部品牌标识栏 -->
-  <view class="home-header {{isHeaderScrolled ? 'scrolled' : ''}}">
-    <view class="header-gradient-bg"></view>
-    <view class="header-content">
-      <view class="brand-section">
-        <view class="brand-main">
-          <view class="brand-text">
-            <text class="brand-title">AROORO</text>
-            <text class="brand-slogan">安心呼噜，放心托付</text>
-          </view>
-        </view>
-      </view>
-
+  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
+  <!-- 顶部品牌标识栏：杂志式标题区（对齐 service 页 Haute-Luxury 语法） -->
+  <view class="gallery-header zy-enter">
+    <view class="brand-accent-bar"></view>
+    <view class="brand-main">
+      <text class="brand-text">家庭寄养</text>
+    </view>
+    <view class="brand-meta">
+      <view class="brand-meta-line"></view>
+      <text class="brand-subtitle">安心呼噜，放心托付</text>
     </view>
   </view>
 
@@ -31,7 +28,7 @@
   <view class="search-header">
     <view class="search-bar">
       <image class="search-icon" src="/images/icons/search-luxury-line.svg" mode="aspectFit"></image>
-      <input class="search-input" placeholder="搜索寄养家庭、位置、服务..." value="{{searchKeyword}}" bindinput="handleSearchInput" bindconfirm="handleSearch" confirm-type="search" />
+      <input class="search-input" placeholder-class="input-placeholder" placeholder="搜索寄养家庭、位置、服务..." value="{{searchKeyword}}" bindinput="handleSearchInput" bindconfirm="handleSearch" confirm-type="search" />
     </view>
   </view>
 
@@ -127,6 +124,9 @@
     <text class="empty-title">暂无寄养家庭</text>
     <text class="empty-subtitle">请尝试调整搜索条件</text>
   </view>
+
+  <!-- 底部留白（避开自定义 TabBar） -->
+  <view class="bottom-spacer"></view>
 </view>
 
 <!-- 筛选弹窗 -->
@@ -180,9 +180,9 @@
       <view class="filter-group">
         <text class="filter-group-title">价格范围</text>
         <view class="price-range">
-          <input class="price-input" placeholder="最低" value="{{filters.price.min}}" bindinput="handlePriceInput" data-type="min" />
+          <input class="price-input" placeholder-class="input-placeholder" placeholder="最低" value="{{filters.price.min}}" bindinput="handlePriceInput" data-type="min" />
           <text class="price-separator">-</text>
-          <input class="price-input" placeholder="最高" value="{{filters.price.max}}" bindinput="handlePriceInput" data-type="max" />
+          <input class="price-input" placeholder-class="input-placeholder" placeholder="最高" value="{{filters.price.max}}" bindinput="handlePriceInput" data-type="max" />
         </view>
       </view>
     </view>

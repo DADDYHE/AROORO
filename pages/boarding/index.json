@@ -1,0 +1,10 @@
+{
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "navigationBarTitleText": "家庭寄养",
+  "navigationBarTextStyle": "black",
+  "navigationBarBackgroundColor": "#F7F5EF",
+  "backgroundColor": "#F7F5EF",
+  "enablePullDownRefresh": false
+}

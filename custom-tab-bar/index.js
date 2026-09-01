@@ -11,10 +11,10 @@ Component({
         text: '首页',
       },
       {
-        pagePath: '/pages/quick-register/index',
-        iconPath: '/images/icons/calendar-icon.svg',
-        selectedIconPath: '/images/icons/calendar-icon.svg',
-        text: '一键报名',
+        pagePath: '/pages/boarding/index',
+        iconPath: '/images/icons/boarding-line.svg',
+        selectedIconPath: '/images/icons/boarding-gold.svg',
+        text: '家庭寄养',
       },
       {
         pagePath: '/pages/discover/index',
