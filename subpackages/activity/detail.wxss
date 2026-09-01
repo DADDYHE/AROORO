@@ -18,13 +18,14 @@
   padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
 }
 
-/* ==================== Hero Section（全出血大图 + 渐变遮罩） ==================== */
+/* ==================== Hero Section（顶天沉浸画廊 · B 方案） ==================== */
+/* 高度 = 原内容区 469rpx + 导航栏占位约 150rpx，保证顶天后内容区视觉高度不变 */
 .hero-section {
   position: relative;
   width: 100%;
-  padding-top: 62.5%;
+  height: 620rpx;
   overflow: hidden;
-  background-color: var(--activity-tint);
+  background-color: var(--lux-green-700);
   animation-name: zy-hero-settle;
   animation-duration: 800ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -45,6 +46,17 @@
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+/* 顶部 scrim：保证透明导航栏的白色返回箭头在浅色封面上可读（Skyline 单层渐变） */
+.hero-top-scrim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 280rpx;
+  background: linear-gradient(to bottom, rgba(15, 36, 16, 0.62) 0%, rgba(15, 36, 16, 0) 100%);
+  pointer-events: none;
 }
 
 .hero-overlay {
@@ -175,10 +187,10 @@
 
 /* ==================== Info Card ==================== */
 .info-card {
-  margin: var(--zy-space-lg) var(--page-padding) var(--zy-space-lg);
-  background-color: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  border: 1rpx solid var(--hairline);
+  margin: 0;
+  /* 水平版心交给容器，内部 .info-cell 不再叠加水平内边距 */
+  padding: 0 var(--page-padding);
+  border-bottom: 1rpx solid var(--hairline);
   overflow: hidden;
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
@@ -196,6 +208,7 @@
   width: 1rpx;
   background-color: var(--hairline);
   flex-shrink: 0;
+  margin: 0 var(--zy-space-lg);
 }
 
 .info-row-divider {
@@ -210,7 +223,7 @@
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  padding: var(--zy-space-lg) var(--zy-space-lg);
+  padding: var(--zy-space-lg) 0;
   background-color: transparent;
 }
 
@@ -298,7 +311,8 @@
 
 /* ==================== Highlight Section（亮点标签） ==================== */
 .highlight-section {
-  margin: var(--zy-space-lg) var(--page-padding) var(--zy-space-lg);
+  margin: var(--zy-space-lg) 0;
+  padding: 0 var(--page-padding);
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -343,11 +357,9 @@
 
 /* ==================== Section Card（通用内容卡） ==================== */
 .section-card {
-  margin: var(--zy-space-lg) var(--page-padding) var(--zy-space-lg);
-  background-color: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  padding: var(--zy-space-lg);
-  border: 1rpx solid var(--hairline);
+  margin: 0;
+  padding: var(--zy-space-lg) var(--page-padding);
+  border-bottom: 1rpx solid var(--hairline);
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -404,15 +416,18 @@
 }
 
 /* ==================== Image Gallery Large ==================== */
+/* 破格全出血：抵消父级 48rpx 版心，组图顶到屏幕左右边缘（A 方案节奏点） */
 .image-gallery-large {
   display: flex;
   flex-direction: column;
-  gap: var(--zy-space-lg);
+  gap: 16rpx;
+  margin-left: calc(-1 * var(--page-padding));
+  margin-right: calc(-1 * var(--page-padding));
 }
 
 .gallery-item-large {
   width: 100%;
-  border-radius: var(--zy-radius-md);
+  border-radius: 0;
   overflow: hidden;
   background-color: var(--activity-tint);
 }
@@ -420,16 +435,14 @@
 .gallery-image-large {
   width: 100%;
   display: block;
-  border-radius: var(--zy-radius-md);
+  border-radius: 0;
 }
 
 /* ==================== Organizer Card ==================== */
 .organizer-card {
-  margin: var(--zy-space-lg) var(--page-padding) var(--zy-space-lg);
-  background-color: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  padding: var(--zy-space-lg);
-  border: 1rpx solid var(--hairline);
+  margin: 0;
+  padding: var(--zy-space-lg) var(--page-padding);
+  border-bottom: 1rpx solid var(--hairline);
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);

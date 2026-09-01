@@ -13,17 +13,17 @@
   padding-bottom: calc(80rpx + env(safe-area-inset-bottom));
 }
 
-/* ===== 顶部品牌头部 ===== */
+/* ===== 顶部品牌头部（B · 深绿沉浸标题版） ===== */
 .gallery-header {
   padding: 0;
   position: relative;
   overflow: hidden;
-  background: var(--card-color);
+  background: var(--lux-green-grad);
   padding-bottom: 8rpx;
 }
 
 .brand-block {
-  padding: 72rpx var(--page-padding) 48rpx;
+  padding: 220rpx var(--page-padding) 88rpx;
   position: relative;
 }
 
@@ -34,7 +34,7 @@
   right: 0;
   width: 320rpx;
   height: 320rpx;
-  background: radial-gradient(circle, var(--feeding-tint) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(201, 162, 75, 0.16) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -44,7 +44,7 @@
   left: var(--page-padding);
   width: 48rpx;
   height: 6rpx;
-  background: linear-gradient(90deg, var(--feeding-primary) 0%, var(--feeding-secondary) 100%);
+  background: var(--lux-gold-500);
   border-radius: 0 0 4rpx 4rpx;
 }
 
@@ -56,7 +56,7 @@
 .brand-text {
   font-size: 56rpx;
   font-weight: 300;
-  color: var(--text-primary);
+  color: #F7F5EF;
   letter-spacing: 0.12em;
   display: block;
   line-height: 1;
@@ -72,7 +72,7 @@
 .brand-meta-line {
   width: 40rpx;
   height: 2rpx;
-  background: var(--border-color);
+  background: rgba(247, 245, 239, 0.35);
   position: relative;
 }
 
@@ -85,12 +85,12 @@
   width: 6rpx;
   height: 6rpx;
   border-radius: 50%;
-  background: var(--feeding-primary);
+  background: var(--lux-gold-500);
 }
 
 .brand-subtitle {
   font-size: 22rpx;
-  color: var(--text-secondary);
+  color: rgba(247, 245, 239, 0.72);
   letter-spacing: 0.08em;
   font-weight: 400;
   font-family: var(--font-sans);
@@ -99,7 +99,7 @@
 /* ===== 主 Tab 栏 ===== */
 .tab-bar {
   display: flex;
-  background: var(--card-color);
+  background: transparent;
   padding: 0 var(--page-padding);
   position: relative;
   border-bottom: 1rpx solid var(--hairline);
@@ -204,29 +204,18 @@
   font-weight: 500;
 }
 
-/* ===== 区块卡片 ===== */
+/* ===== 区块（A · 整版纸面流，拆白卡） ===== */
 .section-card {
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  background: transparent;
+  border-radius: 0;
   padding: var(--zy-space-lg) var(--page-padding) var(--zy-space-xl);
-  margin: 0 var(--page-padding) var(--zy-space-lg);
-  border: 1rpx solid var(--hairline);
+  margin: 0;
+  border-bottom: 1rpx solid var(--hairline);
   position: relative;
-  overflow: hidden;
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
-}
-
-.section-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2rpx;
-  background: linear-gradient(90deg, var(--feeding-primary) 0%, var(--feeding-secondary) 50%, transparent 100%);
 }
 
 .section-header {
@@ -935,7 +924,7 @@
 
 /* 画廊入口 */
 .gallery-entrance {
-  background: var(--card-color);
+  background: transparent;
   padding: 56rpx var(--page-padding) 44rpx;
   position: relative;
   display: flex;
@@ -1034,11 +1023,10 @@
 /* 画廊卡片 */
 .gallery-card {
   display: flex;
-  background: var(--card-color);
-  border-radius: var(--zy-radius-sm);
+  background: transparent;
+  border-radius: 0;
   overflow: hidden;
   margin-bottom: 24rpx;
-  border: 1rpx solid var(--hairline);
 }
 
 .gallery-card-rail {
@@ -1242,7 +1230,7 @@
 
 .gallery-guarantee-badge {
   width: calc(33.333% - 8rpx);
-  background: var(--card-color);
+  background: transparent;
   border: 1rpx solid var(--hairline);
   border-radius: var(--zy-radius-xs);
   padding: 16rpx 8rpx;
@@ -1263,10 +1251,9 @@
 
 .gallery-guarantee-item {
   display: flex;
-  background: var(--card-color);
-  border-radius: var(--zy-radius-sm);
+  background: transparent;
+  border-radius: 0;
   overflow: hidden;
-  border: 1rpx solid var(--hairline);
 }
 
 .gallery-guarantee-rail {
@@ -1306,10 +1293,10 @@
 }
 
 .faq-item {
-  background: var(--card-color);
-  border-radius: var(--zy-radius-sm);
+  background: transparent;
+  border-radius: 0;
   overflow: hidden;
-  border: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid var(--hairline);
 }
 
 .faq-q {

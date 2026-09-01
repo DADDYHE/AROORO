@@ -1,4 +1,4 @@
-<zy-navbar title="宠物详情" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,7 +8,7 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="gallery-container">
   <view wx:if="{{isLoading}}" class="loading-container">

@@ -63,17 +63,29 @@
   padding-top: 0rpx;
 }
 
-/* 照片显示区域 - 顶部背景图效果 */
+/* 照片显示区域 - 顶部背景图效果（B · 沉浸画廊） */
 .media-section-header {
   background-color: var(--card-color);
   border-radius: 0;
-  margin-bottom: 30rpx;
+  margin-bottom: 0;
   margin-top: 0;
   margin-left: 0;
   margin-right: 0;
   padding: 0;
   box-shadow: none;
   overflow: hidden;
+}
+
+/* 顶部压暗渐变：保透明导航白箭头可读（同活动详情语法） */
+.hero-top-scrim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 280rpx;
+  background: linear-gradient(180deg, rgba(15, 36, 16, 0.62) 0%, rgba(15, 36, 16, 0) 100%);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .media-content-header {
@@ -263,14 +275,14 @@
   animation: zy-fade-in 420ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
-/* 寄养家庭基本信息 */
+/* 寄养家庭基本信息（A · 拆卡为整版分节） */
 .host-info {
   display: flex;
-  background-color: var(--card-color);
-  border-radius: 16rpx;
-  padding: 40rpx;
-  margin: 0 30rpx 30rpx;
-  box-shadow: var(--lux-shadow-card);
+  background-color: transparent;
+  border-radius: 0;
+  padding: var(--zy-space-lg) var(--page-padding);
+  margin: 0;
+  border-bottom: 1rpx solid var(--hairline);
 }
 
 .avatar-container {
@@ -318,11 +330,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: var(--card-color);
-  border-radius: 16rpx;
-  padding: 40rpx;
-  margin: 0 30rpx 30rpx;
-  box-shadow: var(--lux-shadow-card);
+  background-color: transparent;
+  border-radius: 0;
+  padding: var(--zy-space-lg) var(--page-padding);
+  margin: 0;
+  border-bottom: 1rpx solid var(--hairline);
 }
 
 .action-buttons {
@@ -377,11 +389,11 @@
 .tags-section {
   display: flex;
   flex-wrap: wrap;
-  background-color: var(--card-color);
-  border-radius: 16rpx;
-  padding: 40rpx;
-  margin: 0 30rpx 30rpx;
-  box-shadow: var(--lux-shadow-card);
+  background-color: transparent;
+  border-radius: 0;
+  padding: var(--zy-space-lg) var(--page-padding);
+  margin: 0;
+  border-bottom: 1rpx solid var(--hairline);
 }
 
 .tag {
@@ -400,11 +412,11 @@
 
 /* 通用 section 样式 */
 .section {
-  background-color: var(--card-color);
-  border-radius: 16rpx;
-  padding: 40rpx;
-  margin: 0 30rpx 30rpx;
-  box-shadow: var(--lux-shadow-card);
+  background-color: transparent;
+  border-radius: 0;
+  padding: var(--zy-space-lg) var(--page-padding);
+  margin: 0;
+  border-bottom: 1rpx solid var(--hairline);
   opacity: 0;
   animation: zy-fade-in-up 480ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

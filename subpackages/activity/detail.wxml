@@ -1,9 +1,9 @@
-<zy-navbar title="活动详情" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
   bindscroll="_onScroll"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="page-container" wx:if="{{activity}}">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
@@ -24,6 +24,7 @@
         src="/images/default-activity.svg"
         mode="aspectFill"
       />
+      <view class="hero-top-scrim"></view>
       <view class="hero-overlay"></view>
       <view class="hero-content">
         <view class="hero-badge-row">

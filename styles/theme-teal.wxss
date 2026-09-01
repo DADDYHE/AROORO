@@ -348,7 +348,8 @@ page {
 
   /* ===== 团购板块色（groupbuy，兼容旧 group-detail 页面） ===== */
   --groupbuy-primary: #A86348;
-  --groupbuy-gradient: linear-gradient(135deg, #A86348 0%, #8B4A32 100%);
+  /* 深化一档：对 cream 文字 4.24:1 → 5.2:1（WCAG AA） */
+  --groupbuy-gradient: linear-gradient(135deg, #9A5638 0%, #7E4228 100%);
   --groupbuy-light: #F0DFD6;
   --groupbuy-tint: rgba(168, 99, 72, 0.08);
   --shadow-glow-groupbuy: 0 8rpx 24rpx rgba(168, 99, 72, 0.25);

@@ -6,6 +6,14 @@ const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
 const { buildSharePath } = require('../../utils/share')
 
+// 「起」价标记规则：多规格（skuType=multi 且 skus 多于一个）或多价格（minPrice≠maxPrice）才显示；单规格或单价格一律不显示
+function hasPriceFrom(p) {
+  const skus = Array.isArray(p.skus) ? p.skus : []
+  const multiSpec = p.skuType === 'multi' && skus.length > 1
+  const multiPrice = p.minPrice != null && p.maxPrice != null && Number(p.minPrice) !== Number(p.maxPrice)
+  return multiSpec || multiPrice
+}
+
 Page({
   behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
@@ -109,7 +117,7 @@ Page({
       const result = await MallService.getProductList(params)
 
       if (result && result.code === 0) {
-        const newList = result.data.list || []
+        const newList = (result.data.list || []).map(p => ({ ...p, priceFrom: hasPriceFrom(p) }))
         const products = append
           ? [...this.data.currentProducts, ...newList]
           : newList

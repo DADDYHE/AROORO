@@ -1,4 +1,4 @@
-<zy-navbar title="团购详情" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,11 +8,12 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="tuan-detail" wx:if="{{!loading && deal}}">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="detail-title-area">
+    <view class="title-accent-bar"></view>
     <text class="detail-title">{{deal.title}}</text>
   </view>
 
@@ -89,11 +90,6 @@
 <root-portal>
 <view class="sku-popup-mask {{showBuyModal ? 'show' : ''}}" bindtap="onCloseBuyModal"></view>
 <view class="sku-popup {{showBuyModal ? 'show' : ''}}">
-  <view class="sku-popup-brand-bar popup-stagger">
-    <view class="brand-gold-thread"></view>
-    <text class="sku-popup-brand-text">AROORO · 安心呼噜 放心托付</text>
-    <image class="brand-separator" src="/images/icons/separator-tuan-luxury.svg" mode="aspectFit"></image>
-  </view>
   <view class="sku-popup-close-btn popup-stagger" hover-class="sku-popup-close-btn--pressed" hover-stay-time="120" bindtap="onCloseBuyModal"><image class="sku-popup-close-icon" src="/images/icons/close-luxury-line.svg" mode="aspectFit"></image></view>
 
   <view class="sku-popup-image-wrap popup-stagger">
@@ -108,7 +104,7 @@
           <text class="sku-product-price">¥{{skuPopupPrice}}</text>
           <text class="sku-product-stock">库存 {{skuPopupStock}}件</text>
         </view>
-        <text class="sku-product-selected" wx:if="{{selectedSkuText}}">{{selectedSkuText}}</text>
+        <text class="sku-product-selected" wx:if="{{selectedSkuText}}">已选: {{selectedSkuText}}</text>
       </view>
 
       <view class="sku-spec-section" wx:for="{{popupSpecGroups}}" wx:key="specId">

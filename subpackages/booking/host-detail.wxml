@@ -1,4 +1,4 @@
-<zy-navbar title="家庭详情" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,7 +8,7 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
@@ -37,8 +37,9 @@
     <view class="media-section-header">
       <view class="media-content-header">
         <view class="photo-content">
+        <view class="hero-top-scrim"></view>
         <!-- 轮播图内容根据当前类型切换 -->
-        <swiper 
+        <swiper
           class="main-photos {{isAnimating ? 'hidden' : ''}}" 
           indicator-dots="{{true}}" 
           autoplay="{{false}}" 

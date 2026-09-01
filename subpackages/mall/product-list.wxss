@@ -7,9 +7,9 @@
 
 /* ===== 页面容器 ===== */
 .page-container {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .page-divider {
@@ -107,10 +107,10 @@
   font-weight: 500;
 }
 
-/* ===== 右侧内容区 ===== */
+/* ===== 右侧内容区（独立滚动，分类栏固定不随商品滑动） ===== */
 .content-area {
   flex: 1;
-  overflow-y: auto;
+  height: 100%;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 

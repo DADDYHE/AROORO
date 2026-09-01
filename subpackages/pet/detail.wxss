@@ -5,6 +5,44 @@
    ================================================================ */
 @import './common.wxss';
 
+/* ===== B · 深绿沉浸标题版（页级覆盖，不影响 common 共用页） ===== */
+.gallery-header {
+  background: var(--lux-green-grad);
+  border-bottom: none;
+}
+
+.brand-block {
+  padding: 220rpx var(--page-padding) 64rpx;
+}
+
+.brand-accent-bar {
+  background: var(--lux-gold-500);
+}
+
+.brand-text {
+  color: #F7F5EF;
+}
+
+.brand-meta-line {
+  background: rgba(247, 245, 239, 0.35);
+}
+
+.brand-meta-line::after {
+  background: var(--lux-gold-500);
+}
+
+.brand-subtitle {
+  color: rgba(247, 245, 239, 0.72);
+}
+
+/* ===== A · 拆档案白卡为纸面分节 ===== */
+.gallery-collection {
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1rpx solid var(--hairline);
+}
+
 /* ===== 详情页头像（稍大） ===== */
 .portrait-frame {
   width: 240rpx;
