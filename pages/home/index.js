@@ -107,19 +107,25 @@ Page({
 
   onShow() {
     this._syncTabBar()
-    this._initPage()
     this._refreshUserData()
+    // 性能优化（2026-09-01）：30s 节流——tab 切回时不重复全量云调用
+    const now = Date.now()
+    if (this._lastInitAt && now - this._lastInitAt < 30000) { return }
+    this._lastInitAt = now
+    this._initPage()
   },
 
   _onSessionRestored() {
     this._refreshUserData()
+    this._lastInitAt = 0 // 登录回跳强制刷新一次
+    this._initPage()
   },
 
-  _initPage() {
-    this._loadBannerData()
-    this._loadTuanDeals()
-    this._loadLatestActivities()
-    this._loadMallProducts()
+  _initPage(forceRefresh) {
+    this._loadBannerData(forceRefresh)
+    this._loadTuanDeals(forceRefresh)
+    this._loadLatestActivities(forceRefresh)
+    this._loadMallProducts(forceRefresh)
   },
 
   _refreshUserData() {
@@ -140,7 +146,8 @@ Page({
   },
 
   onPullDownRefresh() {
-    this._initPage()
+    this._lastInitAt = 0 // 下拉刷新强制穿透缓存
+    this._initPage(true)
     this._refreshUserData()
     wx.stopPullDownRefresh()
   },

@@ -21,9 +21,11 @@ const homeTuanBehavior = Behavior({
   },
 
   methods: {
-    async _loadTuanDeals() {
+    async _loadTuanDeals(forceRefresh) {
       try {
-        const result = await TuanService.getTuanDealList({ page: 1, pageSize: 4 })
+        // 性能优化（2026-09-01）：30s 缓存 + 下拉/节流窗口外强制刷新
+        const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
+        const result = await TuanService.getTuanDealList({ page: 1, pageSize: 4 }, opts)
         if (result && result.code === 0 && result.data) {
           const list = (result.data.list || []).map(deal => ({
             _id: deal._id,

@@ -1,6 +1,6 @@
 // 个人中心页面 - 极简画廊风格
 const { authService } = require('../../services/AuthService')
-const { PetService, ActivityService } = require('../../services/CloudFunctionService')
+const { PetService, ActivityService, CloudFunctionService } = require('../../services/CloudFunctionService')
 const { CouponService } = require('../../services/CouponService')
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
@@ -40,11 +40,18 @@ Page({
   onShow() {
     this._syncTabBar()
     this.getUserInfo()
+    // 性能优化（2026-09-01）：30s 节流——partner 状态为低频变化数据，tab 切回时不重复裸调用
+    // 3 个统计计数由 getUserInfo 触发，已各自带缓存兜底（pet/activity 走 get() 5min、coupon 30s）
+    const now = Date.now()
+    if (this._lastPartnerCheckAt && now - this._lastPartnerCheckAt < 30000) { return }
+    this._lastPartnerCheckAt = now
     this._refreshPartnerStatus()
   },
 
   _onSessionRestored() {
     this.getUserInfo()
+    this._lastPartnerCheckAt = 0 // 登录回跳强制刷新一次
+    this._refreshPartnerStatus()
   },
 
   async getUserInfo() {
@@ -91,13 +98,11 @@ Page({
 
   async _refreshPartnerStatus() {
     try {
-      const res = await wx.cloud.callFunction({
-        name: 'userService',
-        data: { action: 'checkAdminStatus' },
-        timeout: 20000,
-      })
-      if (res.result && res.result.code === 0 && res.result.data) {
-        const { isPartner } = res.result.data
+      // 性能优化（2026-09-01）：裸 wx.cloud.callFunction 改走 Service 层统一入口，
+      // 获得 30s 缓存能力（partner 状态为低频变化数据，节流 + 缓存双保险）
+      const res = await CloudFunctionService.call('userService', { action: 'checkAdminStatus' }, { useCache: true, cacheTime: 30000 })
+      if (res && res.code === 0 && res.data) {
+        const { isPartner } = res.data
         if (this.data.userInfo.isPartner !== Boolean(isPartner)) {
           this.setData({ 'userInfo.isPartner': Boolean(isPartner) })
           const app = getApp()
@@ -140,7 +145,8 @@ Page({
 
   async _fetchCouponCount() {
     try {
-      const result = await CouponService.getMyCoupons({ status: 'unused', page: 1, pageSize: 1 })
+      // 性能优化（2026-09-01）：30s 缓存，tab 切回避免重复云调用
+      const result = await CouponService.getMyCoupons({ status: 'unused', page: 1, pageSize: 1 }, { useCache: true, cacheTime: 30000 })
       if (result && result.code === 0 && result.data) {
         this.setData({ 'stats.couponCount': result.data.total || 0 })
       }

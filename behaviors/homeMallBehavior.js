@@ -21,15 +21,16 @@ const homeMallBehavior = Behavior({
   },
 
   methods: {
-    async _loadMallProducts() {
+    async _loadMallProducts(forceRefresh) {
       try {
         // 直接调用 mallService 云函数，避免主包引用分包模块（subpackages/mall/MallService）
         // 注：去掉 isFeatured 筛选，避免商品未标记 isFeatured 时返回空列表
+        // 性能优化（2026-09-01）：30s 缓存 + 下拉/节流窗口外强制刷新
         const result = await CloudFunctionService.call('mallService', {
           action: 'getProductList',
           page: 1,
           pageSize: 6,
-        })
+        }, forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 })
         console.log('[homeMall] getProductList result:', result)
         if (result && result.code === 0 && result.data) {
           const list = (result.data.list || []).map(product => ({

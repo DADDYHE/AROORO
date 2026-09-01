@@ -65,7 +65,8 @@ Page({
     if (this._popupDismissed) { return }
 
     try {
-      const result = await CouponService.getPopupCoupon({ page: 'tuan' })
+      // 性能优化（2026-09-01）：30s 缓存，tab 切回避免重复查询弹窗券
+      const result = await CouponService.getPopupCoupon({ page: 'tuan' }, { useCache: true, cacheTime: 30000 })
       if (result && result.code === 0 && result.data) {
         const coupon = result.data
         coupon.accentColor = ACCENT_COLORS[coupon.type] || '#C9A24B'
