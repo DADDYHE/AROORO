@@ -449,9 +449,44 @@ export async function getProductList(
     ]
   }
 
-  const result = await paginate(db, 'products', {
-    page, pageSize, where, projection: PRODUCT_LIST_FIELDS,
-  })
+  // 默认排序在服务端固化（前端零传参）：精选优先 → 有货优先 → 最新上架优先
+  // 缺货沉底用 aggregate addFields 现算 _stockFlag，无需冗余字段/回填
+  const $ = _.aggregate
+  const safePage = Math.max(1, Number(page) || 1)
+  const safePageSize = Math.min(Math.max(1, Number(pageSize) || 10), 100)
+  const offset = (safePage - 1) * safePageSize
+
+  const coll = db.collection('products')
+  const countResult = await coll.where(where).count()
+  const total = countResult.total
+
+  // aggregate 的 project 只接受 1/0，从布尔投影映射
+  const aggProjection: Record<string, number> = {}
+  for (const key of Object.keys(PRODUCT_LIST_FIELDS)) { aggProjection[key] = 1 }
+
+  const aggRes = await coll.aggregate()
+    .match(where)
+    .addFields({
+      _stockFlag: $.cond({
+        if: $.gt([$.ifNull(['$totalStock', $.ifNull(['$stock', 1])]), 0]),
+        then: 1,
+        else: 0,
+      }),
+    })
+    .sort({ _stockFlag: -1, isFeatured: -1, createdAt: -1 })
+    .project(aggProjection)
+    .skip(offset)
+    .limit(safePageSize)
+    .end()
+
+  const result = {
+    list: (aggRes.list || []) as ProductRecord[],
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.ceil(total / safePageSize),
+    hasNext: safePage * safePageSize < total,
+  }
 
   const cloudUrls: string[] = []
   for (const item of (result.list as ProductRecord[])) {
