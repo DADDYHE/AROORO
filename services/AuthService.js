@@ -164,14 +164,16 @@ class AuthService {
 
       return { success: true, message: '登录成功' }
     } catch (error) {
+      const msg = (error && (error.message || error.errMsg || error.errorMessage)) || '登录失败'
       console.error('[AuthService] 授权登录失败:', error)
-      return { success: false, message: error.message || '登录失败' }
+      return { success: false, message: msg }
     }
   }
 
-  async _doCloudLogin(app, options = {}) {
+  // 云调用偶发失败（网络抖动 / 冷启动）会自动重试一次，避免用户只看到「登录失败」
+  async _doCloudLogin(app, options = {}, retry = 0) {
     try {
-      console.log('[AuthService] 调用云函数登录')
+      console.log('[AuthService] 调用云函数登录', retry ? `(重试 ${retry})` : '')
 
       const inviterId = app.globalData.pendingInviterId || wx.getStorageSync('pendingInviterId') || ''
 
@@ -222,6 +224,10 @@ class AuthService {
       return { success: true, user, isNewUser }
     } catch (error) {
       console.error('[AuthService] 云函数登录失败:', error)
+      if (retry < 1) {
+        console.log('[AuthService] 自动重试登录')
+        return this._doCloudLogin(app, options, retry + 1)
+      }
       throw error
     }
   }
