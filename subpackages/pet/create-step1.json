@@ -1,6 +1,6 @@
 {
   "navigationBarTitleText": "创建宠物档案",
   "usingComponents": {
-    "zy-action-sheet": "../components/zy-action-sheet/index"
+    "zy-action-sheet": "./components/zy-action-sheet/index"
   }
 }
