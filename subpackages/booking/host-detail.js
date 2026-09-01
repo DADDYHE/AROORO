@@ -338,7 +338,7 @@ Page({
    */
   async checkFavoriteStatus(hostId) {
     try {
-      const result = await FavoriteService.getFavorites({})
+      const result = await FavoriteService.getFavorites({}, { useCache: false })
 
       if (result.code === 0 && result.data) {
 

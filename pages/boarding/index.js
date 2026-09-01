@@ -43,7 +43,7 @@ Page({
 
   onPullDownRefresh() {
     this.setData({ page: 1, hosts: [], hasMore: true })
-    this.getHostList(() => { wx.stopPullDownRefresh() })
+    this.getHostList(() => { wx.stopPullDownRefresh() }, true)
   },
 
   onReachBottom() {
@@ -52,7 +52,7 @@ Page({
     }
   },
 
-  async getHostList(callback) {
+  async getHostList(callback, forceRefresh) {
     this.setData({ isLoading: true, errorMsg: '', showEmptyState: false })
 
     try {
@@ -64,7 +64,8 @@ Page({
         filters: this.data.filters,
       }
 
-      const result = await HostService.getHostList(params)
+      const opts = forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 }
+      const result = await HostService.getHostList(params, opts)
 
       if (result && result.code === 0) {
         const hostData = (result.data && result.data.list) || []

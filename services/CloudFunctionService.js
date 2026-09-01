@@ -310,8 +310,8 @@ class HostService {
   }
 
   /** 获取寄养家庭列表，支持筛选条件 */
-  async getHostList(data = {}) {
-    return this.cloud.get('hostService', { action: 'getHostList', ...data })
+  async getHostList(data = {}, options = {}) {
+    return this.cloud.call('hostService', { action: 'getHostList', ...data }, { useCache: true, ...options })
   }
 
   /** 获取指定寄养家庭详情 */
@@ -441,9 +441,9 @@ class FavoriteService {
     this.cloud = cloudService
   }
 
-  async getFavorites(params = {}) {
+  async getFavorites(params = {}, options = {}) {
     // 默认拉取寄养家庭收藏；调用方可通过 params.targetType 覆盖
-    return this.cloud.get('favoriteService', { action: 'list', targetType: 'host', ...params })
+    return this.cloud.call('favoriteService', { action: 'list', targetType: 'host', ...params }, { useCache: true, ...options })
   }
 
   async addFavorite(data) {

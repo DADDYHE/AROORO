@@ -26,9 +26,7 @@ Page({
 
   onLoad() {
     this._initNavbarHeight()
-    setTimeout(() => {
-      this.checkLoginAndLoadData()
-    }, 800)
+    // 数据加载统一走 onShow（50ms 延迟触发），避免与 onLoad 双重加载
   },
 
   onShow() {
@@ -88,7 +86,7 @@ Page({
         const favoriteHostIds = favoriteList.map(item => item.targetId || item.hostProfileId || item._id || item.id).filter(Boolean)
 
         if (favoriteHostIds.length > 0) {
-          const hostResult = await HostService.getHostList({ ids: favoriteHostIds, pageSize: favoriteHostIds.length })
+          const hostResult = await HostService.getHostList({ ids: favoriteHostIds, pageSize: favoriteHostIds.length }, { useCache: false })
           if (hostResult.code === 0 && hostResult.data) {
             const hostList = hostResult.data.list || hostResult.data || []
             processedFavorites = hostList.map(host => ({
@@ -121,9 +119,8 @@ Page({
   // 获取收藏的寄养家庭列表
   async getFavoriteFamilies() {
     try {
-      const result = await FavoriteService.getFavorites({
-        _t: Date.now(), // 添加时间戳参数，避免缓存
-      })
+      // 收藏状态需实时，显式绕过缓存（避免 _t 时间戳污染缓存区）
+      const result = await FavoriteService.getFavorites({}, { useCache: false })
       return result
     } catch (error) {
       console.error('[APP] 获取收藏列表失败:', error)

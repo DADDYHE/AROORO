@@ -246,7 +246,7 @@ Page({
         return
       }
 
-      const result = await HostService.getHostList({ hostId: this.data.hostId })
+      const result = await HostService.getHostList({ hostId: this.data.hostId }, { useCache: false })
 
       if (result.code === 0) {
         const hostList = result.data.list || result.data
