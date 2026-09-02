@@ -137,17 +137,38 @@ describe('集成测试：活动报名子链路', () => {
       expect(res.data.list.every(a => a.joined === false)).toBe(true)
     })
 
-    test('已登录时 joined 字段反映本人报名状态', async () => {
+    test('已登录且传 withJoined 时 joined 字段反映本人报名状态', async () => {
       mockDb._collections.activities = { docs: [
         { _id: 'a1', status: 'published', createdBy: 'admin1' },
         { _id: 'a2', status: 'published', createdBy: 'admin1' },
       ] }
       mockDb._collections.activity_registrations = { docs: [
-        { _id: 'r1', activityId: 'a1', ownerId: 'oUser1', status: 'confirmed' },
+        { _id: 'r1', activityId: 'a1', ownerId: 'oUser1', status: 'paid' },
       ] }
-      const res = await callActivity('getActivityList', {}, 'oUser1')
+      const res = await callActivity('getActivityList', { withJoined: true }, 'oUser1')
       expect(res.data.list.find(a => a._id === 'a1').joined).toBe(true)
       expect(res.data.list.find(a => a._id === 'a2').joined).toBe(false)
+    })
+
+    test('云资源优化：不传 withJoined 时跳过报名查询，joined 恒为 false', async () => {
+      mockDb._collections.activities = { docs: [
+        { _id: 'a1', status: 'published', createdBy: 'admin1' },
+      ] }
+      mockDb._collections.activity_registrations = { docs: [
+        { _id: 'r1', activityId: 'a1', ownerId: 'oUser1', status: 'paid' },
+      ] }
+      const res = await callActivity('getActivityList', {}, 'oUser1')
+      expect(res.data.list.find(a => a._id === 'a1').joined).toBe(false)
+    })
+
+    test('读时虚拟状态：published 且已过开始时间 → registration_stopped', async () => {
+      mockDb._collections.activities = { docs: [
+        { _id: 'a1', status: 'published', startTime: '2026-01-01 10:00', createdBy: 'admin1' },
+        { _id: 'a2', status: 'published', startTime: '2099-01-01 10:00', createdBy: 'admin1' },
+      ] }
+      const res = await callActivity('getActivityList', {}, 'oUser1')
+      expect(res.data.list.find(a => a._id === 'a1').status).toBe('registration_stopped')
+      expect(res.data.list.find(a => a._id === 'a2').status).toBe('published')
     })
 
     test('按 status 显式过滤', async () => {
@@ -186,7 +207,7 @@ describe('集成测试：活动报名子链路', () => {
         { _id: 'a1', title: '宠物聚会', status: 'published', createdBy: 'admin1' },
       ] }
       mockDb._collections.activity_registrations = { docs: [
-        { _id: 'r1', activityId: 'a1', ownerId: 'oUser1', status: 'confirmed' },
+        { _id: 'r1', activityId: 'a1', ownerId: 'oUser1', status: 'paid' },
       ] }
       const res = await callActivity('getActivityDetail', { activityId: 'a1' }, 'oUser1')
       expect(res.data.isRegistered).toBe(true)
@@ -254,8 +275,9 @@ describe('集成测试：活动报名子链路', () => {
           _id: activityId,
           title: '宠物聚会',
           status: 'published',
-          startTime: '2026-09-01 10:00',
-          endTime: '2026-09-01 18:00',
+          // 未来时间：避免触发"开始即截止报名"读时门禁（见 deriveDisplayStatus / submitRegistration）
+          startTime: '2099-09-01 10:00',
+          endTime: '2099-09-01 18:00',
           maxParticipants,
           currentParticipants,
           createdBy,
@@ -290,7 +312,7 @@ describe('集成测试：活动报名子链路', () => {
     test('已报名 → 拒绝重复报名', async () => {
       setupActivity()
       mockDb._collections.activity_registrations.docs = [
-        { _id: 'r1', activityId: 'a1', ownerId: 'oUser1', status: 'confirmed' },
+        { _id: 'r1', activityId: 'a1', ownerId: 'oUser1', status: 'paid' },
       ]
       const res = await callActivity('submitRegistration', { ...baseEvent, activityId: 'a1' }, 'oUser1')
       expect(res.code).not.toBe(0)
@@ -341,8 +363,8 @@ describe('集成测试：活动报名子链路', () => {
     test('只返回当前用户的报名', async () => {
       mockDb._collections.activity_registrations = { docs: [
         { _id: 'r1', activityId: 'a1', ownerId: 'oUser1', status: 'pending_payment' },
-        { _id: 'r2', activityId: 'a2', ownerId: 'oUser1', status: 'confirmed' },
-        { _id: 'r3', activityId: 'a1', ownerId: 'oOther', status: 'confirmed' },
+        { _id: 'r2', activityId: 'a2', ownerId: 'oUser1', status: 'paid' },
+        { _id: 'r3', activityId: 'a1', ownerId: 'oOther', status: 'completed' },
       ] }
       const res = await callActivity('getRegistrationList', {}, 'oUser1')
       // 简化验证：进入 handler 即可

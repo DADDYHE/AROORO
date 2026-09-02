@@ -71,30 +71,34 @@ const mockDb = {
           }
           return true
         })
-        return {
-          count: async () => ({ total: docs.length }),
-          limit: () => ({ get: async () => ({ data: docs }) }),
-          // field(selection)：实现字段投影（仅保留 selection 中为 true 的字段），
-          // 并支持链式 .get() / .limit().get()
-          field: (selection) => {
-            let projected = docs
-            if (selection && typeof selection === 'object') {
-              const keys = Object.keys(selection).filter(k => selection[k])
-              if (keys.length) {
-                projected = docs.map(d => {
-                  const p = {}
-                  for (const k of keys) { p[k] = d[k] }
-                  return p
-                })
+        // 自引用链：field/orderBy/skip/limit 任意组合后均可 get/count
+        // （checkDateAvailability 分批拉取走 where().field().skip().limit().get()，
+        //   旧 mock 的 field 后无 skip，且无 skip 截断会导致分批死循环）
+        const makeChain = (list) => {
+          const chain = {
+            count: async () => ({ total: list.length }),
+            get: async () => ({ data: list }),
+            limit: (n) => makeChain(list.slice(0, n)),
+            skip: (n) => makeChain(list.slice(n)),
+            orderBy: () => chain,
+            field: (selection) => {
+              let projected = list
+              if (selection && typeof selection === 'object') {
+                const keys = Object.keys(selection).filter(k => selection[k])
+                if (keys.length) {
+                  projected = list.map(d => {
+                    const p = {}
+                    for (const k of keys) { p[k] = d[k] }
+                    return p
+                  })
+                }
               }
-            }
-            return {
-              get: async () => ({ data: projected }),
-              limit: () => ({ get: async () => ({ data: projected }) }),
-            }
-          },
-          get: async () => ({ data: docs }),
+              return makeChain(projected)
+            },
+          }
+          return chain
         }
+        return makeChain(docs)
       },
       add: async ({ data }) => {
         const newDoc = { ...data }

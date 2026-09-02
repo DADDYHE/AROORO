@@ -35,7 +35,7 @@ const { list, loading, total, pagination, fetch, onPageChange, onSizeChange, res
 
 const { autoRefresh, startAutoRefresh, stopAutoRefresh } = useAutoRefresh(() => {
   fetch()
-}, 30000)
+}, 60000)
 
 function onSearch(params = {}) {
   resetAndFetch(params)

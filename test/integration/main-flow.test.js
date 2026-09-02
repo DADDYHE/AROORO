@@ -59,15 +59,35 @@ const mockDb = {
           }
           return true
         })
-        return {
+        // 自引用链：field/orderBy/skip/limit 任意组合后均可 get（createOrder 的
+        // _checkDateAvailability 走 where().field().get() 直连）
+        const chain = {
           count: async () => ({ total: docs.length }),
-          limit: () => ({ get: async () => ({ data: docs }) }),
-          field: () => ({ limit: () => ({ get: async () => ({ data: docs }) }) }),
           get: async () => ({ data: docs }),
-          orderBy: () => ({
-            skip: () => ({ limit: n => ({ get: async () => ({ data: docs }) }) }),
-          }),
+          limit: () => chain,
+          skip: () => chain,
+          orderBy: () => chain,
+          field: () => chain,
+          // 条件更新（createPayment H5：where(_id + paymentStatus in [...]).update）
+          update: async ({ data }) => {
+            let updated = 0
+            docs.forEach(doc => {
+              for (const [k, v] of Object.entries(data || {})) {
+                if (v && typeof v === 'object' && v._op === 'inc') {
+                  doc[k] = (Number(doc[k]) || 0) + Number(v.v)
+                } else if (v && typeof v === 'object' && v._op === 'push') {
+                  if (!Array.isArray(doc[k])) {doc[k] = []}
+                  doc[k].push(...(v.v || []))
+                } else {
+                  doc[k] = v
+                }
+              }
+              updated++
+            })
+            return { stats: { updated } }
+          },
         }
+        return chain
       },
       add: async ({ data }) => {
         const newDoc = { ...data }
@@ -127,6 +147,15 @@ beforeEach(() => {
     mockDb._collections[k] = { docs: [] }
   }
   jest.clearAllMocks()
+  // 重置风控限流 store：orderService / paymentService 各自消费自身 common/ 分发副本
+  // （与根目录 common 是不同模块实例），跨用例不重置会导致 createOrder / createPayment
+  // 的 per-user 限流计数累积，后续用例被误伤为 RATE_LIMITED（data 返回 null）
+  for (const svc of ['orderService', 'paymentService']) {
+    const svcStore = require(`../../cloudfunctions/${svc}/common/risk-rate-limit`)
+    if (svcStore._resetStore) {svcStore._resetStore()}
+  }
+  const rootStore = require('../../cloudfunctions/common/risk-rate-limit')
+  if (rootStore._resetStore) {rootStore._resetStore()}
 })
 
 // ===== 加载被测模块 =====
@@ -169,7 +198,8 @@ describe('集成测试：寄养订单主链路', () => {
 
     const orderId = orderRes.data.orderId
     expect(orderId).toBeDefined()
-    expect(orderRes.data.status).toBe('pending')
+    // V5：初始状态为 pending_payment（原 pending 已废弃）
+    expect(orderRes.data.status).toBe('pending_payment')
     expect(orderRes.data.paymentStatus).toBe('unpaid')
     expect(orderRes.data.totalPrice).toBe(600)
     expect(orderRes.data.ownerId).toBe(ownerId)
@@ -182,9 +212,10 @@ describe('集成测试：寄养订单主链路', () => {
       type: 'order', orderId, amount: 60000,
     }, {}, { openid: ownerId })
 
-    // Sprint 25: WrappedHandler 成功路径直接返回原始数据
-    expect(payRes.outTradeNo).toMatch(/^ORDER_/)
-    expect(payRes.paymentParams.package).toBe('prepay_id=PREPAY_INTG')
+    // H7 修复后：createPayment 返回 handleSuccess 包装（code=0 + data 承载原始数据）
+    expect(payRes.code).toBe(0)
+    expect(payRes.data.outTradeNo).toMatch(/^ORDER_/)
+    expect(payRes.data.paymentParams.package).toBe('prepay_id=PREPAY_INTG')
 
     // 订单状态：paymentStatus = paying
     let orderDoc = mockDb._collections.orders.docs.find(o => o._id === orderId)

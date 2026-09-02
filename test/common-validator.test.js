@@ -127,9 +127,10 @@ describe('common/validator', () => {
   })
 
   describe('FIELD_WHITELISTS', () => {
-    test('应包含 6 个预定义白名单', () => {
+    test('应包含 7 个预定义白名单', () => {
+      // 2026-08-05 2ad522e：feeder 域移除，新增 couponTemplate（优惠券板块）
       expect(Object.keys(FIELD_WHITELISTS).sort()).toEqual(
-        ['activity', 'feeder', 'hostBasic', 'hostDefault', 'pet', 'product', 'user'].sort()
+        ['activity', 'couponTemplate', 'hostBasic', 'hostDefault', 'pet', 'product', 'user'].sort()
       )
     })
 

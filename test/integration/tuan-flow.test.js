@@ -29,7 +29,14 @@ const mockDb = {
           },
           update: async ({ data }) => {
             const doc = self._collections[name].docs.find(d => d._id === id)
-            if (doc) {Object.assign(doc, data)}
+            if (!doc) {return}
+            for (const [k, v] of Object.entries(data || {})) {
+              if (v && typeof v === 'object' && v._op === 'inc') {
+                doc[k] = (Number(doc[k]) || 0) + Number(v.v)
+              } else {
+                doc[k] = v
+              }
+            }
           },
           field: () => docChain,
         }
@@ -81,6 +88,13 @@ const mockDb = {
       },
     }
   },
+  // createTuanOrder 使用事务（transaction.collection / commit / rollback）：
+  // mock 退化为普通集合语义（无隔离性，行为断言足够）
+  startTransaction: async () => ({
+    collection: (name) => mockDb.collection(name),
+    commit: async () => ({}),
+    rollback: async () => ({}),
+  }),
   command: {
     in: arr => ({ _op: 'in', v: arr }),
     eq: v => ({ _op: 'eq', v }),
@@ -112,6 +126,13 @@ beforeEach(() => {
   for (const k of Object.keys(mockDb._collections)) {
     mockDb._collections[k] = { docs: [] }
   }
+  // 重置风控限流 store：tuanService 消费的是自身 common/ 分发副本（与根目录 common
+  // 是不同模块实例），跨用例不重置会导致 createTuanOrder 的 per-user 限流计数累积，
+  // 后续用例被误伤为 RATE_LIMITED
+  const svcStore = require('../../cloudfunctions/tuanService/common/risk-rate-limit')
+  if (svcStore._resetStore) {svcStore._resetStore()}
+  const rootStore = require('../../cloudfunctions/common/risk-rate-limit')
+  if (rootStore._resetStore) {rootStore._resetStore()}
 })
 
 const { main: tuanMain } = require('../../cloudfunctions/tuanService/index')
@@ -270,7 +291,8 @@ describe('集成测试：团长/团购子链路', () => {
       expect(tuanOrders.length).toBe(1)
       expect(orders.length).toBe(1)
       expect(tuanOrders[0].ownerId).toBe('oUser1')
-      expect(tuanOrders[0].status).toBe('pending')
+      // V5：tuan_orders 状态与 orders 同步使用 pending_payment（原 pending 已废弃）
+      expect(tuanOrders[0].status).toBe('pending_payment')
       expect(orders[0].type).toBe('group_buy')
       expect(orders[0].status).toBe('pending_payment')
 

@@ -32,6 +32,9 @@ const wxMock = {
 
 global.wx = wxMock
 global.getCurrentPages = jest.fn(() => [{ route: 'pages/index/index' }])
+// partner 页面已接入 ListBehavior（behaviors/listBehavior.js），jest 环境无小程序
+// 全局 Behavior 构造器——stub 为透传
+global.Behavior = global.Behavior || (definition => definition)
 
 // =========================================================================
 // 模拟 getApp（默认未登录）
@@ -47,9 +50,12 @@ function loadHome() {
   global.Page = jest.fn(opts => { pages.push(opts) })
   jest.resetModules()
   jest.doMock('../services/CloudFunctionService', () => ({ AdminService: {} }))
-  jest.doMock('../utils/page-i18n.js', () => ({ mixin: () => ({}) }))
+  jest.doMock('../utils/page-i18n.js', () => ({ buildTMap: () => ({}), mixin: () => ({}) }))
   require('../subpackages/partner/home/index.js')
   const pageOpts = pages[0]
+  // 合并 behaviors 的 methods（真实小程序框架行为；jest 下手动合并，
+  // 否则 onLoad 调用的 _initNavbarHeight 等 behavior 方法缺失）
+  ;(pageOpts.behaviors || []).forEach(b => { Object.assign(pageOpts, (b && b.methods) || {}) })
   pageOpts._loadData = jest.fn()
   pageOpts.error = jest.fn()
   return pageOpts
@@ -64,9 +70,11 @@ function loadApplication() {
   jest.resetModules()
   jest.doMock('../services/CloudFunctionService', () => ({ AdminService: {} }))
   jest.doMock('../utils/dateUtils', () => ({ parseDate: d => (d ? new Date(d) : null) }))
-  jest.doMock('../utils/page-i18n.js', () => ({ mixin: () => ({}) }))
+  jest.doMock('../utils/page-i18n.js', () => ({ buildTMap: () => ({}), mixin: () => ({}) }))
   require('../subpackages/partner/application/index.js')
   const pageOpts = pages[0]
+  // 合并 behaviors 的 methods（同 loadHome）
+  ;(pageOpts.behaviors || []).forEach(b => { Object.assign(pageOpts, (b && b.methods) || {}) })
   pageOpts._loadData = jest.fn()
   pageOpts.error = jest.fn()
   return pageOpts

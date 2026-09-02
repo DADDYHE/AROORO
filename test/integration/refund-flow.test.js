@@ -22,6 +22,18 @@ const mockDb = {
   collection(name) {
     if (!this._collections[name]) {this._collections[name] = { docs: [] }}
     const self = this
+    const applyUpdate = (doc, data) => {
+      for (const [k, v] of Object.entries(data || {})) {
+        if (v && typeof v === 'object' && v._op === 'inc') {
+          doc[k] = (Number(doc[k]) || 0) + Number(v.v)
+        } else if (v && typeof v === 'object' && v._op === 'push') {
+          if (!Array.isArray(doc[k])) {doc[k] = []}
+          doc[k].push(...(v.v || []))
+        } else {
+          doc[k] = v
+        }
+      }
+    }
     return {
       doc: id => ({
         get: async () => {
@@ -30,7 +42,12 @@ const mockDb = {
         },
         update: async ({ data }) => {
           const doc = self._collections[name].docs.find(d => d._id === id)
-          if (doc) {Object.assign(doc, data)}
+          if (doc) {applyUpdate(doc, data)}
+        },
+        set: async ({ data }) => {
+          const doc = self._collections[name].docs.find(d => d._id === id)
+          if (doc) {applyUpdate(doc, data)}
+          else {self._collections[name].docs.push({ _id: id, ...data })}
         },
       }),
       where: query => {
@@ -48,18 +65,43 @@ const mockDb = {
           }
           return true
         })
-        return {
+        // 自引用链：field/orderBy/skip/limit 任意组合后均可 get/count/update
+        const chain = {
           count: async () => ({ total: docs.length }),
-          limit: () => ({ get: async () => ({ data: docs }) }),
           get: async () => ({ data: docs }),
+          limit: () => chain,
+          skip: () => chain,
+          orderBy: () => chain,
+          field: () => chain,
+          update: async ({ data }) => {
+            let updated = 0
+            docs.forEach(doc => {applyUpdate(doc, data); updated++})
+            return { stats: { updated } }
+          },
         }
+        return chain
+      },
+      add: async ({ data }) => {
+        const newDoc = { ...data }
+        self._collections[name].docs.push(newDoc)
+        return { _id: newDoc._id }
       },
     }
   },
   command: {
     in: arr => ({ _op: 'in', v: arr }),
     eq: v => ({ _op: 'eq', v }),
+    inc: v => ({ _op: 'inc', v }),
+    push: v => ({ _op: 'push', v }),
   },
+  serverDate: () => 'MOCK_DATE',
+  // createRefund 使用事务（transaction.collection / commit / rollback）：
+  // mock 退化为普通集合语义（无隔离性，行为断言足够）
+  startTransaction: async () => ({
+    collection: (name) => mockDb.collection(name),
+    commit: async () => ({}),
+    rollback: async () => ({}),
+  }),
 }
 
 let mockWechatResponse = null
@@ -102,6 +144,13 @@ beforeEach(() => {
   }
   mockWechatResponse = null
   jest.clearAllMocks()
+  // 重置风控限流 store：paymentService 消费自身 common/ 分发副本（与根目录 common
+  // 是不同模块实例），跨用例不重置会导致 createRefund 的 refund 类型限流计数累积，
+  // 后续用例被误伤为 RATE_LIMITED（Sprint 24 原始数据契约断言 res.code undefined 失败）
+  const svcStore = require('../../cloudfunctions/paymentService/common/risk-rate-limit')
+  if (svcStore._resetStore) {svcStore._resetStore()}
+  const rootStore = require('../../cloudfunctions/common/risk-rate-limit')
+  if (rootStore._resetStore) {rootStore._resetStore()}
 })
 
 const { createRefund, queryRefund } = require('../../cloudfunctions/paymentService/services/refund')
@@ -192,9 +241,9 @@ describe('集成测试：售后/退款子链路', () => {
       mockDb._collections.orders = { docs: [
         { _id: 'OT1', outTradeNo: 'OTN_1', ownerId: 'oOwner', totalPrice: 50, paidAmount: 50 },
       ] }
-      // 入参 100/100，但订单实际只付了 50
+      // 订单实际支付 50 元（paidAmount 单位元），申请退 100 元（refundAmount 单位分 = 10000）
       const res = await createRefund(
-        { outTradeNo: 'OTN_1', refundAmount: 100, totalAmount: 100 },
+        { outTradeNo: 'OTN_1', refundAmount: 10000, totalAmount: 10000 },
         {},
         { openid: 'oOwner' }
       )
@@ -286,11 +335,15 @@ describe('集成测试：售后/退款子链路', () => {
     })
 
     test('正常查询 → 透传微信结果', async () => {
+      // P3 修复后：查询须同时传 outTradeNo（按订单校验归属，防越权查询他人退款单）
+      mockDb._collections.orders = { docs: [
+        { _id: 'OT1', outTradeNo: 'OTN_Q1', ownerId: 'o1', totalPrice: 100 },
+      ] }
       mockWechatResponse = {
         refund_id: 'wx_r_q1', status: 'SUCCESS', amount: { refund: 50, total: 100 },
       }
       const res = await queryRefund(
-        { outRefundNo: 'REFUND_001' },
+        { outRefundNo: 'REFUND_001', outTradeNo: 'OTN_Q1' },
         {},
         { openid: 'o1' }
       )

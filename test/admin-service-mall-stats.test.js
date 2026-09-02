@@ -58,35 +58,42 @@ describe('adminService/services/mall 统计与详情聚焦', () => {
 
   describe('getCategoryStats', () => {
     test('按 category / categoryId 聚合计数', async () => {
-      // 覆盖 db.collection('products').field().limit().get 返回值
+      // 覆盖 db.collection('products').field().orderBy().skip().limit().get 返回值
+      // （M9：实现改为分页扫描直至拉完，链上多 orderBy/skip 两级）
       const realDb = require('wx-server-sdk').database()
-      realDb.collection = () => ({
-        field: () => ({
-          limit: () => ({
-            get: async () => ({
-              data: [
-                { category: 'food', categoryId: 'c1' },
-                { category: 'food', categoryId: 'c1' },
-                { category: 'toy', categoryId: 'c2' },
-                { categoryId: 'c3' }, // 无 category，仅按 categoryId 计数
-              ],
-            }),
+      realDb.collection = () => {
+        const chain = {
+          get: async () => ({
+            data: [
+              { category: 'food', categoryId: 'c1' },
+              { category: 'food', categoryId: 'c1' },
+              { category: 'toy', categoryId: 'c2' },
+              { categoryId: 'c3' }, // 无 category，仅按 categoryId 计数
+            ],
           }),
-        }),
-      })
+        }
+        chain.limit = () => chain
+        chain.skip = () => chain
+        chain.orderBy = () => chain
+        chain.field = () => chain
+        return chain
+      }
       const r = await mall.getCategoryStats()
       expect(dataOf(r)).toMatchObject({ food: 2, c1: 2, toy: 1, c2: 1, c3: 1 })
     })
 
     test('查询异常应降级返回空对象（不抛错）', async () => {
       const realDb = require('wx-server-sdk').database()
-      realDb.collection = () => ({
-        field: () => ({
-          limit: () => ({
-            get: async () => { throw new Error('db down') },
-          }),
-        }),
-      })
+      realDb.collection = () => {
+        const chain = {
+          get: async () => { throw new Error('db down') },
+        }
+        chain.limit = () => chain
+        chain.skip = () => chain
+        chain.orderBy = () => chain
+        chain.field = () => chain
+        return chain
+      }
       const r = await mall.getCategoryStats()
       expect(dataOf(r)).toEqual({})
     })

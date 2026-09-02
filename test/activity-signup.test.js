@@ -198,11 +198,12 @@ beforeEach(() => {
 })
 
 describe('submitRegistration - 重复报名 / 名额扣减 / 名额满', () => {
-  test('1. 重复报名被拒（幂等）：已 confirmed 报名 → 抛 BUSINESS_ERROR', async () => {
+  test('1. 重复报名被拒（幂等）：已 paid 报名 → 抛 BUSINESS_ERROR', async () => {
     seedActivity()
-    // 预置一条同用户同活动的 confirmed 报名
+    // 预置一条同用户同活动的 paid 报名（V5 起 confirmed 已废弃，有效集合为
+    // paid / pending_payment / completed，见 submitRegistration 查重条件）
     mockDb._store('activity_registrations').docs = [
-      { _id: 'r_exist', activityId: ACT_ID, ownerId: USER, status: 'confirmed' },
+      { _id: 'r_exist', activityId: ACT_ID, ownerId: USER, status: 'paid' },
     ]
     const before = mockDb._store('activity_registrations').docs.length
 
@@ -223,10 +224,10 @@ describe('submitRegistration - 重复报名 / 名额扣减 / 名额满', () => {
     const act = mockDb._store('activities').docs[0]
     expect(act.currentParticipants).toBe(1)
 
-    // 报名记录已写入且状态为 confirmed（免费活动）
+    // 报名记录已写入且状态为 paid（V5 起免费活动直接写 paid，无支付流程）
     const regs = mockDb._store('activity_registrations').docs
     expect(regs.length).toBe(1)
-    expect(regs[0].status).toBe('confirmed')
+    expect(regs[0].status).toBe('paid')
     expect(regs[0].ownerId).toBe(USER)
 
     // 同步写入活动订单

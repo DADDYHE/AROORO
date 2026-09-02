@@ -348,7 +348,7 @@ describe('集成测试：团长结算子链路', () => {
           { _id: 'c2', inviterId: 'L1', status: 'pending', commissionAmount: 80 },
         ],
       })
-      const res = await tuanAdmin.settleTuanCommissions(
+      const res = await tuanAdmin.settleCommissions(
         { ids: ['c1', 'c2'] },
         {},
         { openid: 'admin001' }
@@ -364,7 +364,7 @@ describe('集成测试：团长结算子链路', () => {
     test('ids 为空 → INVALID_PARAMS（抛 BusinessError）', async () => {
       let caught = null
       try {
-        await tuanAdmin.settleTuanCommissions(
+        await tuanAdmin.settleCommissions(
           { ids: [] },
           {},
           { openid: 'admin001' }
@@ -379,7 +379,7 @@ describe('集成测试：团长结算子链路', () => {
     test('ids 缺字段 → INVALID_PARAMS（抛 BusinessError）', async () => {
       let caught = null
       try {
-        await tuanAdmin.settleTuanCommissions(
+        await tuanAdmin.settleCommissions(
           {},
           {},
           { openid: 'admin001' }
@@ -397,7 +397,7 @@ describe('集成测试：团长结算子链路', () => {
           { _id: 'c1', inviterId: 'L1', status: 'settled', commissionAmount: 50, settledAt: new Date(0), settledBy: 'old' },
         ],
       })
-      await tuanAdmin.settleTuanCommissions({ ids: ['c1'] }, {}, { openid: 'newAdmin' })
+      await tuanAdmin.settleCommissions({ ids: ['c1'] }, {}, { openid: 'newAdmin' })
       const c1 = mockDb._collections.commissions.docs.find(d => d._id === 'c1')
       expect(c1.status).toBe('settled')
       // P1-B: 已结算记录被跳过（where status=pending 命中 0 条），原 settledBy 保留
@@ -412,7 +412,7 @@ describe('集成测试：团长结算子链路', () => {
           { _id: 'c2', inviterId: 'L1', status: 'settled', commissionAmount: 30, settledAt: oldTime, settledBy: 'prev' },
         ],
       })
-      await tuanAdmin.settleTuanCommissions({ ids: ['c1', 'c2'] }, {}, { openid: 'adminX' })
+      await tuanAdmin.settleCommissions({ ids: ['c1', 'c2'] }, {}, { openid: 'adminX' })
       const c1 = mockDb._collections.commissions.docs.find(d => d._id === 'c1')
       const c2 = mockDb._collections.commissions.docs.find(d => d._id === 'c2')
       // c1 之前是 pending，现在有 settledAt/settledBy
@@ -467,7 +467,7 @@ describe('集成测试：团长结算子链路', () => {
 
       // 5. 批量结算
       const ids = comms.map(c => c._id)
-      const settleRes = await tuanAdmin.settleTuanCommissions(
+      const settleRes = await tuanAdmin.settleCommissions(
         { ids },
         {},
         { openid: 'admin001' }
@@ -507,7 +507,7 @@ describe('集成测试：团长结算子链路', () => {
       const l1CommId = comms.find(c => c.inviterId === 'L1')._id
 
       // 只结算 L1 的那笔
-      await tuanAdmin.settleTuanCommissions({ ids: [l1CommId] }, {}, { openid: 'admin' })
+      await tuanAdmin.settleCommissions({ ids: [l1CommId] }, {}, { openid: 'admin' })
 
       // 验证：L1 全部 settled，L2 仍 pending
       const stats = await tuanAdmin.getTuanCommissionStats({}, {}, {})
@@ -533,7 +533,7 @@ describe('集成测试：团长结算子链路', () => {
         ],
       })
       const before = mockDb._collections.commissions.docs[0]
-      await tuanAdmin.settleTuanCommissions({ ids: ['c1'] }, {}, { openid: 'new' })
+      await tuanAdmin.settleCommissions({ ids: ['c1'] }, {}, { openid: 'new' })
       const after = mockDb._collections.commissions.docs[0]
       expect(after.status).toBe('settled')
       expect(after.status).not.toBe('pending')

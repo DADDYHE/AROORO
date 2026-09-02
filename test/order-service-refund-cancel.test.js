@@ -120,14 +120,17 @@ describe('orderService/orders 退款/取消/超时/状态机聚焦', () => {
   })
 
   describe('超时单状态流转', () => {
-    test('超时未支付订单推进状态应抛 ORDER_TIMEOUT', async () => {
+    test('超时未支付订单：超时守卫已移交 orderTimeoutService，状态机仍按转移表放行', async () => {
+      // V5 架构：updateOrderStatus 不再做 ORDER_TIMEOUT 内联校验，
+      // 超时取消由 orderTimeoutService 定时任务负责（有专属测试 order-timeout-service-behavior.test.js）。
+      // cron 兜底前的窗口期内，合法转移（pending_payment → paid，如支付回调补单）仍被状态机放行。
       putOrder({
         _id: 'ord_t1', ownerId: OPENID, status: 'pending_payment',
         timeoutAt: Date.now() - 100000,
       })
       const r = await orders.updateOrderStatus({ orderId: 'ord_t1', status: 'paid' }, {}, { openid: OPENID })
-      expect(r.code).not.toBe(0)
-      expect(r.error?.type).toBe('ORDER_TIMEOUT')
+      expect(r.code).toBe(0)
+      expect(r.data.status).toBe('paid')
     })
   })
 

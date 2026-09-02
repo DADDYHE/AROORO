@@ -79,12 +79,13 @@ beforeEach(() => {
 const orders = require('../../cloudfunctions/orderService/orders')
 
 describe('集成测试：订单通知子链路', () => {
+  // V5 状态机：pending_payment → paid → confirmed → in_progress → completed
   const setupOrder = ({
     orderId = 'o1',
     ownerId = 'oOwner',
     hostOpenid = 'oHost',
     hostId = 'h1',
-    initialStatus = 'pending',
+    initialStatus = 'pending_payment',
   } = {}) => {
     mockDb._collections.users = { docs: [
       { _id: ownerId, openid: ownerId, nickName: '宠物主' },
@@ -100,7 +101,8 @@ describe('集成测试：订单通知子链路', () => {
   }
 
   test('status 变更 → 写入 owner + host 两条通知', async () => {
-    setupOrder()
+    // V5：confirmed 的合法源状态为 paid（host 接单）
+    setupOrder({ initialStatus: 'paid' })
     await orders.updateOrderStatus({ orderId: 'o1', status: 'confirmed' }, {}, { openid: 'oHost' })
 
     const notifs = mockDb._collections.notifications.docs
@@ -131,7 +133,8 @@ describe('集成测试：订单通知子链路', () => {
   })
 
   test('通知写入是 fire-and-forget：失败不阻塞主流程', async () => {
-    setupOrder()
+    // V5：confirmed 的合法源状态为 paid（host 接单）
+    setupOrder({ initialStatus: 'paid' })
     // 让 notifications.add 抛错
     const origAdd = mockDb.collection('notifications').add
     mockDb.collection('notifications').add = async () => { throw new Error('SEND_FAILED') }

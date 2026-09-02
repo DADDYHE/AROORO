@@ -117,7 +117,7 @@ function onSearch() {
 
 const { autoRefresh, startAutoRefresh, stopAutoRefresh } = useAutoRefresh(() => {
   onSearch()
-}, 30000)
+}, 60000)
 
 function onTypeChange() {
   onSearch()

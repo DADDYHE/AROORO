@@ -60,8 +60,10 @@ describe('Sprint 46: utilityService TypeScript 迁移', () => {
   describe('7. getBanners 字段映射', () => {
     let code
     beforeAll(() => { code = readFileSafe(path.join(TS_DIR, 'index.ts')) })
-    test('image 来自 imageUrl', () => { expect(code).toMatch(/image:\s*b\.imageUrl/) })
-    test('action 来自 actionType', () => { expect(code).toMatch(/action:\s*b\.actionType/) })
+    // BannerItem 字段已与 DB banners 集合 / 首页 wxml 绑定对齐（imageUrl / actionType），
+    // 原 image / action 为改名前旧断言（a1630c5 之后改名，此处同步更新）
+    test('imageUrl 字段映射', () => { expect(code).toMatch(/imageUrl:\s*b\.imageUrl/) })
+    test('actionType 字段映射', () => { expect(code).toMatch(/actionType:\s*b\.actionType/) })
   })
 
   describe('8. getHostInfo', () => {

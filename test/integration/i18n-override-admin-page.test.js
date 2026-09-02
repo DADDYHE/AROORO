@@ -28,6 +28,8 @@ jest.mock('../../utils/page-i18n', () => {
   const i18nUtil = require('../../utils/i18n')
   const t = key => i18nUtil.t(key, 'zh-CN')
   return {
+    // 页面 data 初始化用到 buildTMap（t 映射表），返回空对象即可（断言不依赖 t 内容）
+    buildTMap: () => ({}),
     mixin: () => ({
       data: { t: {} },
       onLoad() {},
@@ -100,6 +102,9 @@ describe('partner i18n-override page', () => {
       capturedConfig = config
     })
     global.getApp = jest.fn(() => ({ globalData: { locale: 'zh-CN' } }))
+    // 页面已接入 ListBehavior（behaviors/listBehavior.js），jest 环境无小程序全局
+    // Behavior 构造器——stub 为透传（Behavior 定义对象在 Page config 中原样保留）
+    global.Behavior = global.Behavior || (definition => definition)
 
     require('../../subpackages/partner/i18n-override/index')
     pageInstance = {
@@ -148,7 +153,8 @@ describe('partner i18n-override page', () => {
         total: 1,
       },
     })
-    await pageInstance._loadData(true)
+    // 页面签名 _loadData(isLoadMore)：false/缺省 = 首屏刷新（page 重置 1）
+    await pageInstance._loadData(false)
     expect(pageInstance.data.list.length).toBe(1)
     expect(pageInstance.data.total).toBe(1)
     expect(pageInstance.data.page).toBe(1)
@@ -170,7 +176,8 @@ describe('partner i18n-override page', () => {
         total: 2,
       },
     })
-    await pageInstance._loadData(false, true)
+    // 页面签名 _loadData(isLoadMore)：true = 加载下一页（page+1，list 追加）
+    await pageInstance._loadData(true)
     expect(pageInstance.data.list.length).toBe(2)
     expect(pageInstance.data.page).toBe(2)
   })
@@ -180,7 +187,7 @@ describe('partner i18n-override page', () => {
       code: 500,
       message: 'server error',
     })
-    await pageInstance._loadData(true)
+    await pageInstance._loadData(false)
     expect(showToastMock).toHaveBeenCalledWith(expect.objectContaining({ title: 'server error' }))
   })
 

@@ -76,11 +76,46 @@ const mockDb = {
         self._collections[name].docs.push(newDoc)
         return { _id: newDoc._id }
       },
+      // 最小 aggregate mock：覆盖 recalcHostRating 的 match({hostId}).group({_id:null, sum(1), sum('$rating')})
+      aggregate: () => {
+        const agg = {
+          _match: null,
+          _group: null,
+          match: (m) => { agg._match = m; return agg },
+          group: (g) => { agg._group = g; return agg },
+          end: async () => {
+            let docs = self._collections[name].docs
+            if (agg._match) {
+              docs = docs.filter(doc => {
+                for (const [k, v] of Object.entries(agg._match)) {
+                  if (doc[k] !== v) {return false}
+                }
+                return true
+              })
+            }
+            const row = { _id: null }
+            if (agg._group) {
+              for (const [key, expr] of Object.entries(agg._group)) {
+                if (key === '_id') {continue}
+                if (expr && typeof expr === 'object' && '__sum' in expr) {
+                  row[key] = expr.__sum === 1
+                    ? docs.length
+                    : docs.reduce((s, d) => s + (Number(d[String(expr.__sum).replace('$', '')]) || 0), 0)
+                }
+              }
+            }
+            return { list: [row] }
+          },
+        }
+        return agg
+      },
     }
   },
   command: {
     in: arr => ({ _op: 'in', v: arr }),
     eq: v => ({ _op: 'eq', v }),
+    // recalcHostRating 的 $.sum(...)：sum(1)=计数，sum('$field')=字段求和
+    aggregate: { sum: (v) => ({ __sum: v }) },
   },
   serverDate: () => 'MOCK_DATE',
 }
@@ -97,8 +132,13 @@ beforeEach(() => {
     mockDb._collections[k] = { docs: [] }
   }
   // Sprint 17：重置风控限流 store，避免跨测试用例相互污染
-  const { _resetStore } = require('../../cloudfunctions/common/risk-rate-limit')
-  _resetStore()
+  // 注意：orders.js 消费的是 orderService/common/ 下的分发副本（sync-cloud-common 生成，
+  // 与根目录 common 是两个模块实例），两个都要重置，否则全量跑时 per-target 限流计数
+  // 跨用例累积（evaluation 5 次/分/target），duplicate 用例的第二次提交被误伤为 RATE_LIMITED
+  const rootStore = require('../../cloudfunctions/common/risk-rate-limit')
+  if (rootStore._resetStore) {rootStore._resetStore()}
+  const svcStore = require('../../cloudfunctions/orderService/common/risk-rate-limit')
+  if (svcStore._resetStore) {svcStore._resetStore()}
 })
 
 const orders = require('../../cloudfunctions/orderService/orders')

@@ -53,7 +53,10 @@ if (code) {
   check('BANNERS_CACHE_TTL=300000', /BANNERS_CACHE_TTL\s*=\s*300000/.test(code))
   check('BANNER_FETCH_LIMIT=10', /BANNER_FETCH_LIMIT\s*=\s*10/.test(code))
   checkTtlHit()
-  check('image 来自 imageUrl', /image:\s*b\.imageUrl/.test(code))
+  // BannerItem 字段已与 DB banners 集合 / 首页 wxml 绑定对齐（imageUrl / actionType），
+  // 原 image / action 为改名前旧断言（a1630c5 之后改名，本检查同步更新）
+  check('imageUrl 字段映射', /imageUrl:\s*b\.imageUrl/.test(code))
+  check('actionType 字段映射', /actionType:\s*b\.actionType/.test(code))
   check('MISSING_REQUIRED 抛出', /err\(['"]MISSING_REQUIRED['"]/.test(code))
   check('HOST_NOT_FOUND 抛出', /err\(['"]HOST_NOT_FOUND['"]/.test(code))
   check('Runtime shim', /_mod\.exports\s*=\s*\{/.test(code))

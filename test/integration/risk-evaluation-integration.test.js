@@ -97,8 +97,13 @@ beforeEach(() => {
     mockDb._collections[k] = { docs: [] }
   }
   // Sprint 17：重置风控限流 store，避免跨测试用例相互污染
-  const { _resetStore } = require('../../cloudfunctions/common/risk-rate-limit')
-  _resetStore()
+  // 注意：orders.js 消费的是 orderService/common/ 下的分发副本（sync-cloud-common 生成，
+  // 与根目录 common 是两个模块实例），两个都要重置，否则全量跑时 per-target 限流计数
+  // 跨用例累积，后续用例被误伤为 RATE_LIMITED
+  const rootStore = require('../../cloudfunctions/common/risk-rate-limit')
+  if (rootStore._resetStore) {rootStore._resetStore()}
+  const svcStore = require('../../cloudfunctions/orderService/common/risk-rate-limit')
+  if (svcStore._resetStore) {svcStore._resetStore()}
 })
 
 const orders = require('../../cloudfunctions/orderService/orders')

@@ -62,8 +62,9 @@ describe('Sprint 14: validator.js → .ts 迁移', () => {
 
   test('FIELD_WHITELISTS 应包含 7 个业务域', () => {
     const { FIELD_WHITELISTS } = require(path.join(COMMON, 'validator.js'))
+    // 2026-08-05 2ad522e：feeder 域移除，新增 couponTemplate（优惠券板块）
     expect(Object.keys(FIELD_WHITELISTS).sort()).toEqual(
-      ['activity', 'feeder', 'hostBasic', 'hostDefault', 'pet', 'product', 'user']
+      ['activity', 'couponTemplate', 'hostBasic', 'hostDefault', 'pet', 'product', 'user']
     )
     expect(FIELD_WHITELISTS.user).toContain('nickName')
     expect(FIELD_WHITELISTS.activity).toContain('title')

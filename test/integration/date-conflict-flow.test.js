@@ -109,14 +109,16 @@ describe('Sprint 13: 寄养日期冲突子链路', () => {
       expect(res.data.available).toBe(false)
     })
 
-    test('无 hostId 也能查询（空 hostId = 不会匹配）', async () => {
+    test('缺 hostId → available=false（hostId 必填，fail-fast）', async () => {
+      // V5：hostId 缺失时 fail-fast 返回 available=false（原"空 hostId 不匹配"行为已收紧，
+      // 日期冲突校验必须限定寄养家庭，无 hostId 的查询无业务意义）
       mockDb._collections.orders.docs = [
         { _id: 'o1', hostId: 'h1', startDate: '2026-06-10', endDate: '2026-06-12', status: 'confirmed' },
       ]
       const res = await orders.checkDateAvailability({
         startDate: '2026-06-10', endDate: '2026-06-15',
       }, {}, { openid: 'oOwner' })
-      expect(res.data.available).toBe(true)
+      expect(res.data.available).toBe(false)
     })
   })
 
@@ -133,7 +135,8 @@ describe('Sprint 13: 寄养日期冲突子链路', () => {
 
     test('请求包含已有：请求 6-08 ~ 6-20，已有 6-12 ~ 6-14', async () => {
       mockDb._collections.orders.docs = [
-        { _id: 'o1', hostId: 'h1', startDate: '2026-06-12', endDate: '2026-06-14', status: 'ongoing' },
+        // V5：ongoing 已更名 in_progress（冲突判定状态集为 confirmed / in_progress）
+        { _id: 'o1', hostId: 'h1', startDate: '2026-06-12', endDate: '2026-06-14', status: 'in_progress' },
       ]
       const res = await orders.checkDateAvailability({
         hostId: 'h1', startDate: '2026-06-08', endDate: '2026-06-20',
@@ -183,10 +186,10 @@ describe('Sprint 13: 寄养日期冲突子链路', () => {
     })
   })
 
-  describe('状态过滤：仅 confirmed/ongoing 冲突', () => {
-    test('pending 状态不冲突', async () => {
+  describe('状态过滤：仅 confirmed/in_progress 冲突', () => {
+    test('pending_payment 状态不冲突', async () => {
       mockDb._collections.orders.docs = [
-        { _id: 'o1', hostId: 'h1', startDate: '2026-06-10', endDate: '2026-06-15', status: 'pending' },
+        { _id: 'o1', hostId: 'h1', startDate: '2026-06-10', endDate: '2026-06-15', status: 'pending_payment' },
       ]
       const res = await orders.checkDateAvailability({
         hostId: 'h1', startDate: '2026-06-10', endDate: '2026-06-15',
@@ -224,9 +227,10 @@ describe('Sprint 13: 寄养日期冲突子链路', () => {
       expect(res.data.available).toBe(false)
     })
 
-    test('ongoing 状态冲突', async () => {
+    test('in_progress 状态冲突', async () => {
       mockDb._collections.orders.docs = [
-        { _id: 'o1', hostId: 'h1', startDate: '2026-06-10', endDate: '2026-06-15', status: 'ongoing' },
+        // V5：ongoing 已更名 in_progress
+        { _id: 'o1', hostId: 'h1', startDate: '2026-06-10', endDate: '2026-06-15', status: 'in_progress' },
       ]
       const res = await orders.checkDateAvailability({
         hostId: 'h1', startDate: '2026-06-12', endDate: '2026-06-14',

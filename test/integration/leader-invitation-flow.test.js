@@ -65,11 +65,54 @@ const mockDb = {
         self._collections[name].docs.push(newDoc)
         return { _id: newDoc._id }
       },
+      // 最小 aggregate mock：覆盖 referral.ts 两种聚合形态
+      //  1) getReferralStats：group({_id:null, total, owners:$addToSet})
+      //  2) getInvitedUsers：group({_id:'$ownerId', count, total})（按 ownerId 分组多行）
+      // 金额口径与 amountExpr 一致：totalAmount || totalPrice || price
+      aggregate: () => {
+        const agg = {
+          _match: null,
+          _group: null,
+          match: (m) => { agg._match = m; return agg },
+          group: (g) => { agg._group = g; return agg },
+          end: async () => {
+            let docs = self._collections[name].docs
+            if (agg._match) {
+              docs = docs.filter(d => matchDoc(d, agg._match))
+            }
+            if (!agg._group || docs.length === 0) {return { data: [] }}
+            const groupSpec = agg._group
+            const amount = (d) => Number(d.totalAmount || d.totalPrice || d.price) || 0
+            if (groupSpec._id === '$ownerId') {
+              // per-user 分组：每个 ownerId 一行
+              const byOwner = {}
+              docs.forEach(d => {
+                const key = d.ownerId
+                if (!key) {return}
+                if (!byOwner[key]) {byOwner[key] = { _id: key, count: 0, total: 0 }}
+                byOwner[key].count += 1
+                byOwner[key].total += amount(d)
+              })
+              return { data: Object.values(byOwner) }
+            }
+            // 单桶：_id: null
+            const owners = [...new Set(docs.map(d => d.ownerId).filter(Boolean))]
+            const total = docs.reduce((s, d) => s + amount(d), 0)
+            return { data: [{ _id: null, total, owners }] }
+          },
+        }
+        return agg
+      },
     }
   },
   command: {
     in: arr => ({ _op: 'in', v: arr }),
     eq: v => ({ _op: 'eq', v }),
+    // referral.ts 的 $.sum(...) / $.addToSet(...)（aggregate mock 内部自算，这里只需可调用）
+    aggregate: {
+      sum: (v) => ({ __sum: v }),
+      addToSet: (v) => ({ __addToSet: v }),
+    },
   },
   serverDate: () => Date.now(),
 }
@@ -134,10 +177,11 @@ describe('Sprint 14: 团长邀请关系子链路', () => {
         { _id: 'u2', inviterId: 'oLeader', createdAt: Date.now() },
         { _id: 'u3', inviterId: 'oLeader', createdAt: Date.now() }
       )
+      // 2026-08-04 统一口径：orders 板块按 type 区分（mall/boarding/group_buy）
       mockDb._collections.orders.docs = [
-        { _id: 'ord1', ownerId: 'u1', status: 'completed', totalPrice: 200 },
-        { _id: 'ord2', ownerId: 'u1', status: 'pending', totalPrice: 100 }, // pending 不算
-        { _id: 'ord3', ownerId: 'u2', status: 'completed', totalPrice: 50 },
+        { _id: 'ord1', ownerId: 'u1', type: 'boarding', status: 'completed', totalPrice: 200 },
+        { _id: 'ord2', ownerId: 'u1', type: 'boarding', status: 'pending', totalPrice: 100 }, // pending 不算
+        { _id: 'ord3', ownerId: 'u2', type: 'boarding', status: 'completed', totalPrice: 50 },
         // u3 无订单
       ]
       const res = await call('getReferralStats', {}, 'oLeader')
@@ -153,19 +197,16 @@ describe('Sprint 14: 团长邀请关系子链路', () => {
         { _id: 'u3', inviterId: 'oLeader', createdAt: Date.now() },
         { _id: 'u4', inviterId: 'oLeader', createdAt: Date.now() }
       )
-      // u1: orders 100
+      // 2026-08-04 统一口径：商城/寄养/团购统一从 orders 按 type 取数，
+      // 上门喂养 feedingOrders、活动 activity_registrations 各自权威集合
+      // u1: 商城 100；u2: 喂养 50；u3: 团购 80；u4: 活动 30
       mockDb._collections.orders.docs = [
-        { _id: 'o1', ownerId: 'u1', status: 'completed', totalPrice: 100 },
+        { _id: 'o1', ownerId: 'u1', type: 'mall', status: 'completed', totalPrice: 100 },
+        { _id: 't1', ownerId: 'u3', type: 'group_buy', status: 'completed', totalPrice: 80 },
       ]
-      // u2: feedingOrders 50
       mockDb._collections.feedingOrders.docs = [
         { _id: 'f1', ownerId: 'u2', status: 'completed', totalPrice: 50 },
       ]
-      // u3: tuan_orders 80
-      mockDb._collections.tuan_orders.docs = [
-        { _id: 't1', ownerId: 'u3', status: 'completed', totalPrice: 80 },
-      ]
-      // u4: activity_registrations 30
       mockDb._collections.activity_registrations.docs = [
         { _id: 'a1', ownerId: 'u4', status: 'completed', totalPrice: 30 },
       ]
@@ -180,11 +221,9 @@ describe('Sprint 14: 团长邀请关系子链路', () => {
         { _id: 'u1', inviterId: 'oLeader', createdAt: Date.now() }
       )
       mockDb._collections.orders.docs = [
-        { _id: 'o1', ownerId: 'u1', status: 'completed', totalPrice: 100 },
-        { _id: 'o2', ownerId: 'u1', status: 'completed', totalPrice: 50 },
-      ]
-      mockDb._collections.tuan_orders.docs = [
-        { _id: 't1', ownerId: 'u1', status: 'completed', totalPrice: 30 },
+        { _id: 'o1', ownerId: 'u1', type: 'boarding', status: 'completed', totalPrice: 100 },
+        { _id: 'o2', ownerId: 'u1', type: 'boarding', status: 'completed', totalPrice: 50 },
+        { _id: 't1', ownerId: 'u1', type: 'group_buy', status: 'completed', totalPrice: 30 },
       ]
       const res = await call('getReferralStats', {}, 'oLeader')
       // totalSpent 累加所有金额
@@ -213,10 +252,11 @@ describe('Sprint 14: 团长邀请关系子链路', () => {
         { _id: 'u2', inviterId: 'oLeader', nickName: '用户2', avatarUrl: 'a2', createdAt: 2000 },
         { _id: 'u3', inviterId: 'oOther', nickName: '其他团长用户', createdAt: 1000 } // 别人邀请
       )
+      // 2026-08-04 统一口径：orders 板块按 type 区分
       mockDb._collections.orders.docs = [
-        { _id: 'o1', ownerId: 'u1', status: 'completed', totalPrice: 200 },
-        { _id: 'o2', ownerId: 'u1', status: 'completed', totalPrice: 50 },
-        { _id: 'o3', ownerId: 'u2', status: 'pending', totalPrice: 999 }, // 不算
+        { _id: 'o1', ownerId: 'u1', type: 'boarding', status: 'completed', totalPrice: 200 },
+        { _id: 'o2', ownerId: 'u1', type: 'boarding', status: 'completed', totalPrice: 50 },
+        { _id: 'o3', ownerId: 'u2', type: 'boarding', status: 'pending', totalPrice: 999 }, // 不算
       ]
 
       const res = await call('getInvitedUsers', { page: 1, pageSize: 20 }, 'oLeader')
@@ -237,14 +277,13 @@ describe('Sprint 14: 团长邀请关系子链路', () => {
       mockDb._collections.users.docs.push(
         { _id: 'u1', inviterId: 'oLeader', nickName: '用户1', createdAt: 1000 }
       )
+      // 2026-08-04 统一口径：团购从 orders.type='group_buy' 取数（tuan_orders 不再统计）
       mockDb._collections.orders.docs = [
-        { _id: 'o1', ownerId: 'u1', status: 'completed', totalPrice: 100 },
+        { _id: 'o1', ownerId: 'u1', type: 'boarding', status: 'completed', totalPrice: 100 },
+        { _id: 't1', ownerId: 'u1', type: 'group_buy', status: 'completed', totalPrice: 80 },
       ]
       mockDb._collections.feedingOrders.docs = [
         { _id: 'f1', ownerId: 'u1', status: 'completed', totalPrice: 50 },
-      ]
-      mockDb._collections.tuan_orders.docs = [
-        { _id: 't1', ownerId: 'u1', status: 'completed', totalPrice: 80 },
       ]
 
       const res = await call('getInvitedUsers', { page: 1, pageSize: 20 }, 'oLeader')

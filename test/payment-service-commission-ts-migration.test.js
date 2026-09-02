@@ -148,9 +148,11 @@ describe('Sprint 27: paymentService/commission 委托层迁移', () => {
   })
 
   describe('5. pay.ts / notify.ts 解构风格 require', () => {
-    test('pay.ts 使用解构风格 require commission', () => {
+    test('pay.ts 不再直接消费 commission（佣金写入收敛到 notify.ts 支付回调）', () => {
+      // 佣金职责收敛：pay.ts 仅负责预付单创建/查询/关闭，佣金写入统一由
+      // notify.ts（支付成功回调）执行——pay.ts 不应出现 commission require
       const payCode = fs.readFileSync(path.join(SERVICES, 'pay.ts'), 'utf8')
-      expect(payCode).toMatch(/const\s*\{[^}]*createCommissionRecord[^}]*\}\s*=\s*require\(['"]\.\/commission['"]\)/)
+      expect(payCode).not.toMatch(/require\(['"]\.\/commission['"]\)/)
     })
     test('notify.ts 使用解构风格 require commission', () => {
       const notifyCode = fs.readFileSync(path.join(SERVICES, 'notify.ts'), 'utf8')

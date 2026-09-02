@@ -83,7 +83,8 @@ beforeEach(() => {
 })
 
 /**
- * Helper: 创建一个标准寄养订单（owner = oOwner, host = oHost, status = pending）
+ * Helper: 创建一个标准寄养订单（owner = oOwner, host = oHost, status = pending_payment）
+ * V5 状态机（boarding-state-machine）：pending_payment → paid → confirmed → in_progress → completed
  */
 function createBoardingOrder(overrides = {}) {
   const order = {
@@ -92,7 +93,7 @@ function createBoardingOrder(overrides = {}) {
     hostId: 'oHost',
     organizerId: 'oHost',
     orderType: 'hosting',
-    status: 'pending',
+    status: 'pending_payment',
     totalPrice: 300,
     petIds: ['pet_1'],
     startDate: '2026-06-10',
@@ -107,8 +108,8 @@ function createBoardingOrder(overrides = {}) {
 
 describe('Sprint 12: 寄养订单子链路', () => {
   describe('updateOrderStatus：正常流转', () => {
-    test('pending → paid', async () => {
-      createBoardingOrder({ status: 'pending' })
+    test('pending_payment → paid', async () => {
+      createBoardingOrder({ status: 'pending_payment' })
       const res = await orders.updateOrderStatus(
         { orderId: 'ord_001', status: 'paid' },
         {},
@@ -118,8 +119,9 @@ describe('Sprint 12: 寄养订单子链路', () => {
       expect(res.data.status).toBe('paid')
     })
 
-    test('pending → confirmed（host 接单）', async () => {
-      createBoardingOrder({ status: 'pending' })
+    test('paid → confirmed（host 接单）', async () => {
+      // V5：host 接单前置条件为已支付（pending_payment → confirmed 不在状态机转移表）
+      createBoardingOrder({ status: 'paid' })
       const res = await orders.updateOrderStatus(
         { orderId: 'ord_001', status: 'confirmed' },
         {},
@@ -151,8 +153,8 @@ describe('Sprint 12: 寄养订单子链路', () => {
       expect(res.data.status).toBe('completed')
     })
 
-    test('完整链路：pending → paid → confirmed → in_progress → completed', async () => {
-      createBoardingOrder({ status: 'pending' })
+    test('完整链路：pending_payment → paid → confirmed → in_progress → completed', async () => {
+      createBoardingOrder({ status: 'pending_payment' })
 
       // 1. pending → paid
       let res = await orders.updateOrderStatus(
@@ -193,8 +195,8 @@ describe('Sprint 12: 寄养订单子链路', () => {
   })
 
   describe('updateOrderStatus：拒绝非法流转', () => {
-    test('pending → in_progress（越级）应拒绝', async () => {
-      createBoardingOrder({ status: 'pending' })
+    test('pending_payment → in_progress（越级）应拒绝', async () => {
+      createBoardingOrder({ status: 'pending_payment' })
       const res = await orders.updateOrderStatus(
         { orderId: 'ord_001', status: 'in_progress' },
         {},
@@ -204,8 +206,8 @@ describe('Sprint 12: 寄养订单子链路', () => {
       expect(res.error?.type).toBe('BUSINESS_ERROR')
     })
 
-    test('pending → completed（越级）应拒绝', async () => {
-      createBoardingOrder({ status: 'pending' })
+    test('pending_payment → completed（越级）应拒绝', async () => {
+      createBoardingOrder({ status: 'pending_payment' })
       const res = await orders.updateOrderStatus(
         { orderId: 'ord_001', status: 'completed' },
         {},
@@ -237,7 +239,7 @@ describe('Sprint 12: 寄养订单子链路', () => {
 
   describe('updateOrderStatus：权限校验', () => {
     test('非 owner / host 操作应 PERMISSION_DENIED', async () => {
-      createBoardingOrder({ status: 'pending' })
+      createBoardingOrder({ status: 'pending_payment' })
       const res = await orders.updateOrderStatus(
         { orderId: 'ord_001', status: 'paid' },
         {},
@@ -248,7 +250,7 @@ describe('Sprint 12: 寄养订单子链路', () => {
     })
 
     test('未登录应 AUTH_REQUIRED', async () => {
-      createBoardingOrder({ status: 'pending' })
+      createBoardingOrder({ status: 'pending_payment' })
       const res = await orders.updateOrderStatus(
         { orderId: 'ord_001', status: 'paid' },
         {},
@@ -281,15 +283,18 @@ describe('Sprint 12: 寄养订单子链路', () => {
       expect(res.error?.type).toBe('ORDER_ALREADY_REFUNDED')
     })
 
-    test('已超时未支付的订单拒绝任何状态变更', async () => {
-      createBoardingOrder({ status: 'pending', timeoutAt: Date.now() - 1000 })
+    test('已超时未支付的订单：超时守卫已移交 orderTimeoutService，状态机仍按转移表判定', async () => {
+      // V5 架构：updateOrderStatus 不再做 ORDER_TIMEOUT 内联校验，
+      // 超时取消由 orderTimeoutService 定时任务负责（有专属测试 order-timeout-service-behavior.test.js）。
+      // cron 兜底前的窗口期内，合法转移（pending_payment → paid，如支付回调补单）仍被状态机放行。
+      createBoardingOrder({ status: 'pending_payment', timeoutAt: Date.now() - 1000 })
       const res = await orders.updateOrderStatus(
         { orderId: 'ord_001', status: 'paid' },
         {},
         { openid: 'oOwner' }
       )
-      expect(res.code).not.toBe(0)
-      expect(res.error?.type).toBe('ORDER_TIMEOUT')
+      expect(res.code).toBe(0)
+      expect(res.data.status).toBe('paid')
     })
   })
 
