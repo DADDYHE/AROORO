@@ -4,8 +4,8 @@
  * 业务功能：
  *   - 小程序端用户身份、地址、通知、邀请等统一入口
  *   - 4 个服务子模块：auth / notifications / referral / addresses
- *   - 共 21 个 action，覆盖：
- *     * 身份相关（login / getIdentity / syncIdentity / check / update / phone / all / getConfig / checkAdminStatus）
+ *   - 共 22 个 action（2026-09-02 新增 getMyProfileSummary 个人中心 3 统计聚合），覆盖：
+ *     * 身份相关（login / getIdentity / syncIdentity / check / update / phone / all / getConfig / checkAdminStatus / getMyProfileSummary）
  *     * 通知（getNotificationList / markNotificationRead / markAllNotificationsRead / getNotificationDetail）
  *     * 邀请（getReferralStats / getInvitedUsers）
  *     * 地址（addressList / addressAdd / addressUpdate / addressRemove / addressSetDefault）
@@ -69,6 +69,7 @@ export interface UserHandlers {
   all: UserActionHandler
   getConfig: UserActionHandler
   checkAdminStatus: UserActionHandler
+  getMyProfileSummary: UserActionHandler
 
   // 通知
   getNotificationList: UserActionHandler
@@ -103,6 +104,7 @@ export const handlers: UserHandlers = {
   all: authHandlers.getAllUserInfo,
   getConfig: authHandlers.getConfig,
   checkAdminStatus: authHandlers.checkAdminStatus,
+  getMyProfileSummary: authHandlers.getMyProfileSummary,
 
   // 通知
   getNotificationList: notificationHandlers.getNotificationList,

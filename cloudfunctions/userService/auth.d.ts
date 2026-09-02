@@ -11,6 +11,7 @@
  *   - 获取全部用户信息（getAllUserInfo）
  *   - 获取配置（getConfig）
  *   - 检查管理员状态（checkAdminStatus）
+ *   - 个人中心统计聚合（getMyProfileSummary）
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
@@ -89,6 +90,11 @@ export interface AllUserInfoResult {
         phoneNumber: string;
     } | null;
 }
+export interface ProfileSummaryResult {
+    petCount: number;
+    activityCount: number;
+    couponCount: number;
+}
 export interface WxContext {
     OPENID?: string;
     APPID?: string;
@@ -104,6 +110,7 @@ export declare function getPhoneNumber(event: CloudEvent): Promise<unknown>;
 export declare function getAllUserInfo(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 export declare function getConfig(): Promise<unknown>;
 export declare function checkAdminStatus(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
+export declare function getMyProfileSummary(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown>;
 declare const _default: {
     login: typeof login;
     getIdentity: typeof getIdentity;
@@ -114,5 +121,6 @@ declare const _default: {
     getAllUserInfo: typeof getAllUserInfo;
     getConfig: typeof getConfig;
     checkAdminStatus: typeof checkAdminStatus;
+    getMyProfileSummary: typeof getMyProfileSummary;
 };
 export default _default;

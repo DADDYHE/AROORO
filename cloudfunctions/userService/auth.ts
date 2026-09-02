@@ -11,6 +11,7 @@
  *   - 获取全部用户信息（getAllUserInfo）
  *   - 获取配置（getConfig）
  *   - 检查管理员状态（checkAdminStatus）
+ *   - 个人中心统计聚合（getMyProfileSummary）
  *
  * 迁移目标：
  *   - 强类型化所有 db 操作、handler 签名、返回结构
@@ -39,6 +40,8 @@ const { isPartner: isPartnerFn } = require('./common/permissions')
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { cloud, db } = initCloud()
+// 个人中心统计聚合（getMyProfileSummary）需 in 运算符，与 referral.ts 同款声明
+const _ = db.command
 const logger = createLogger('userService:auth')
 
 // =====================================================================
@@ -122,6 +125,12 @@ export interface PhoneData {
 export interface AllUserInfoResult {
   userInfo: CheckResult | null
   phone: { phoneNumber: string } | null
+}
+
+export interface ProfileSummaryResult {
+  petCount: number
+  activityCount: number
+  couponCount: number
 }
 
 export interface WxContext {
@@ -563,6 +572,42 @@ export async function checkAdminStatus(
   }
 }
 
+// 个人中心统计聚合（Phase 2，2026-09-02）
+// 背景：profile/index 原 3 个 count（pet/activity/coupon）各自打独立云函数取 total，
+//   首次加载 = 3 次冷启动 + 3 次网络往返。本 action 一次调用内并行 3 集合 count。
+// 口径（与各 service 完全一致，勿漂移）：
+//   - pets{ownerId, isActive:1}           → petService.getPetList total
+//   - activity_registrations{ownerId, status in 有效集} → activityService.getRegistrationList status:'all'
+//   - user_coupons{ownerId, status:'unused'} → couponService.getMyCoupons status:'unused'
+export async function getMyProfileSummary(
+  event: CloudEvent,
+  context: CloudContext,
+  auth: AuthLike
+): Promise<unknown> {
+  const { openid } = auth
+  if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
+
+  try {
+    const [petRes, regRes, couponRes] = await Promise.all([
+      db.collection('pets').where({ ownerId: openid, isActive: 1 }).count(),
+      db.collection('activity_registrations').where({
+        ownerId: openid,
+        status: _.in(['pending_payment', 'paid', 'completed']),
+      }).count(),
+      db.collection('user_coupons').where({ ownerId: openid, status: 'unused' }).count(),
+    ])
+    const result: ProfileSummaryResult = {
+      petCount: petRes.total || 0,
+      activityCount: regRes.total || 0,
+      couponCount: couponRes.total || 0,
+    }
+    return handleSuccess(result, '获取个人统计成功')
+  } catch (error) {
+    logger.error('getMyProfileSummary', error)
+    return handleError(error, '获取个人统计失败', ERROR_CODES.DATA)
+  }
+}
+
 // =====================================================================
 // Runtime shim: CommonJS 兼容
 // =====================================================================
@@ -579,6 +624,7 @@ _mod.exports = {
   getAllUserInfo,
   getConfig,
   checkAdminStatus,
+  getMyProfileSummary,
 }
 _mod.exports.default = _mod.exports
 
@@ -592,6 +638,7 @@ export default {
   getAllUserInfo,
   getConfig,
   checkAdminStatus,
+  getMyProfileSummary,
 }
 
 // M2 已启用 getIdentity 缓存读取（auth.ts:299 调 getCache(cacheKey)），getCache 已被业务使用，无需 void 抑制
