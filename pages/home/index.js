@@ -19,7 +19,6 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior, homeBannerBehavior, homePetBehavior, homeActivityBehavior, homeTuanBehavior, homeMallBehavior, homeMyActivitiesBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
     t: pageI18n.buildTMap('zh-CN'),
     isLoggedIn: false,
     userInfo: null,

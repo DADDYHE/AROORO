@@ -16,7 +16,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     userInfo: {
       nickName: 'AROORO用户',
       avatarUrl: '',

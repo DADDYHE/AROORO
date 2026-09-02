@@ -19,7 +19,7 @@ Page({
   },
 
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     pet: {},
     userInfo: {},
     isLoggedIn: false,

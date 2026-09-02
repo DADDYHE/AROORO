@@ -10,7 +10,7 @@ Page({
   behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
 
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     activeTab: 0,
     serviceType: 'feeding',
     _workletTabEnabled: false,

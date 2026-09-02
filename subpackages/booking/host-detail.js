@@ -17,7 +17,7 @@ Page({
    * 页面的初始数据
    */
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     currentMediaType: 'photos', // 当前显示的媒体类型：photos、videos、album
     currentTab: 0, // 当前显示的标签页，0 为照片，1 为视频
     photosScrollLeft: 0, // 照片滚动位置

@@ -28,7 +28,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     activity: null,
     isLoading: true,
     statusText: '',

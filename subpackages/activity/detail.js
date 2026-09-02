@@ -32,7 +32,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     activity: null,
     isLoading: true,
     loadError: false,

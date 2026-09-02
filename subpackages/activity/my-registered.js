@@ -12,7 +12,7 @@ Page({
   behaviors: [ListBehavior, cloudImageBehavior],
 
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     activities: [],
   },
 

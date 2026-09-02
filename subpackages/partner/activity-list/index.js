@@ -7,7 +7,7 @@ const { ListBehavior } = require('../../../behaviors/listBehavior')
 Page({
   behaviors: [ListBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: true,
     isRefreshing: false,
     isSearching: false,

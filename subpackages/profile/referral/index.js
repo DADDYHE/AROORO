@@ -10,7 +10,7 @@ Page({
   behaviors: [ListBehavior, cloudImageBehavior],
 
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     stats: { totalInvited: 0, consumingCount: 0, totalSpent: '0' },
   },
 

@@ -22,7 +22,7 @@ Page({
   behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior],
 
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     dealList: [],
     total: 0,
     refreshing: false,

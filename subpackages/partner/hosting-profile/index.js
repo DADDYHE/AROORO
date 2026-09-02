@@ -29,7 +29,7 @@ const ORDER_STATUS_TEXT = {
 Page({
   behaviors: [ListBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     // 注入 i18n t-map，使 WXML 可绑定 {{ t.BIZ_XXX }}（根治 BIZ_BX46V0 死 key）
     ...pageI18n.buildTMap(i18n.getLocale()),
     isLoading: true,

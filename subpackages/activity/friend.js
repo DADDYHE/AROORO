@@ -13,7 +13,7 @@ Page({
    * 页面的初始数据
    */
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     index: -1,
     petName: '',
     petGender: 'male',

@@ -83,7 +83,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     orders: [],
     orderType: 'boarding',
     currentStatus: 'all',

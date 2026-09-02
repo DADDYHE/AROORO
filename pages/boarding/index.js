@@ -15,7 +15,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, tabBarSyncBehavior, shareEntryBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: true,
     hasMore: true,
     page: 1,

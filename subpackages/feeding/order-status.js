@@ -37,7 +37,7 @@ Page({
   behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
 
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     orderId: '',
     orderInfo: null,
     isLoading: true,

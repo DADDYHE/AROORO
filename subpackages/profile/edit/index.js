@@ -19,7 +19,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     userInfo: {
       nickName: '',
       gender: '',

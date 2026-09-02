@@ -26,7 +26,7 @@ Page({
   ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
   data: {
-  ...__pageI18n.buildTMap(__i18n.getLocale()),
+    t: __pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: true,
     order: null,
     actions: [],
