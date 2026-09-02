@@ -242,6 +242,17 @@ class AuthService {
   }
 
   async _refreshAdminStatus(app) {
+    // 云资源优化：本地 12h TTL——窗口内跳过云端刷新（每次冷启动省 1 次云函数调用）。
+    // isPartner 仅影响合伙人入口展示；登录响应已带最新值，审批结果延迟 12h 可接受，
+    // 合伙人中心内部数据（getPartnerHome 等）不受此 TTL 影响、始终实时拉取。
+    const PARTNER_CHECK_TTL = 12 * 3600 * 1000
+    try {
+      const cachedInfo = wx.getStorageSync(USER_INFO)
+      if (cachedInfo && cachedInfo.isPartnerCheckedAt && Date.now() - cachedInfo.isPartnerCheckedAt < PARTNER_CHECK_TTL) {
+        return
+      }
+    } catch (e) { /* storage 异常不阻断刷新 */ }
+
     try {
       const res = await wx.cloud.callFunction({
         name: 'userService',
@@ -256,6 +267,7 @@ class AuthService {
           const cached = wx.getStorageSync(USER_INFO)
           if (cached) {
             cached.isPartner = isPartner || false
+            cached.isPartnerCheckedAt = Date.now()
             wx.setStorageSync(USER_INFO, cached)
           }
           if (changed && typeof app._notifySessionRestored === 'function') {
@@ -279,6 +291,9 @@ class AuthService {
         hasPhone: user.hasPhone || false,
         role: user.role || 'user',
         isPartner: user.isPartner || false,
+        // 登录响应的 isPartner 为最新值，视作已完成一次伙伴状态校验
+        // （供 _refreshAdminStatus 的 12h TTL 跳过窗口判定）
+        isPartnerCheckedAt: Date.now(),
       })
     } catch (e) {
       console.warn('[AuthService] 持久化登录状态失败:', e)

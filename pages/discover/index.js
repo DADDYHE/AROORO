@@ -59,7 +59,8 @@ Page({
   },
 
   async _doFetch(params) {
-    const res = await TuanService.getTuanDealList({ page: params.page, pageSize: params.pageSize })
+    // 云资源优化：无限滚动列表不消费 total，跳过 count 查询
+    const res = await TuanService.getTuanDealList({ page: params.page, pageSize: params.pageSize, skipTotal: true })
     const data = res?.data || res || {}
     return data.list || data.data || []
   },

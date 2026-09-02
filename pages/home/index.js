@@ -124,11 +124,45 @@ Page({
     this._initPage()
   },
 
+  // 云资源优化：首页 BFF 聚合——一次 getHomeFeed 返回全部板块
+  // （banner/团购/活动/商城 + 登录时宠物/可签到活动），替代原先 6 次独立云函数调用。
+  // 30s 缓存与 onShow 节流窗口一致；下拉刷新 forceRefresh 穿透缓存。
+  // BFF 失败时降级为逐板块单独加载（保持可用性）。
+  async _loadHomeFeed(forceRefresh) {
+    const { CloudFunctionService } = require('../../services/CloudFunctionService')
+    const isLoggedIn = !!(app.globalData && app.globalData.isLoggedIn)
+    try {
+      const result = await CloudFunctionService.call('utilityService', {
+        action: 'getHomeFeed',
+        withUser: isLoggedIn,
+      }, forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 })
+
+      if (result && result.code === 0 && result.data) {
+        const d = result.data
+        this._applyBannerData(d.banners || [])
+        this._applyTuanDeals(d.tuanDeals || [])
+        this._applyLatestActivities(d.activities || [])
+        this._applyMallProducts(d.products || [])
+        if (d.myPets) { this._applyMyPets(d.myPets) }
+        if (d.myActivities) { this._applyMyActivities(d.myActivities) }
+        return
+      }
+      throw new Error((result && result.message) || 'getHomeFeed 返回为空')
+    } catch (error) {
+      // 降级：逐板块单独加载
+      this._loadBannerData(forceRefresh)
+      this._loadTuanDeals(forceRefresh)
+      this._loadLatestActivities(forceRefresh)
+      this._loadMallProducts(forceRefresh)
+      if (isLoggedIn) {
+        this._loadMyPets()
+        this._loadMyActivities()
+      }
+    }
+  },
+
   _initPage(forceRefresh) {
-    this._loadBannerData(forceRefresh)
-    this._loadTuanDeals(forceRefresh)
-    this._loadLatestActivities(forceRefresh)
-    this._loadMallProducts(forceRefresh)
+    this._loadHomeFeed(forceRefresh)
   },
 
   _refreshUserData() {
@@ -142,9 +176,11 @@ Page({
     // 登录态变化时 topbar 显隐，需重新计算 scroll-view 布局
     this._updateScrollLayout()
 
-    if (isLoggedIn) {
-      this._loadMyPets()
-      this._loadMyActivities()
+    // 云资源优化：登录态板块（宠物/可签到活动）随 _initPage 的 feed 聚合返回
+    //（onShow 30s 节流窗口内不重复调用）；登出时清理残留的登录态板块数据
+    if (!isLoggedIn) {
+      if (typeof this._applyMyPets === 'function') { this._applyMyPets([]) }
+      if (typeof this._applyMyActivities === 'function') { this._applyMyActivities([]) }
     }
   },
 

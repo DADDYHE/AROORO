@@ -30,26 +30,31 @@ const homeMallBehavior = Behavior({
           action: 'getProductList',
           page: 1,
           pageSize: 6,
+          skipTotal: true,
         }, forceRefresh ? { useCache: false } : { useCache: true, cacheTime: 30000 })
-        console.log('[homeMall] getProductList result:', result)
         if (result && result.code === 0 && result.data) {
-          const list = (result.data.list || []).map(product => ({
-            _id: product._id,
-            name: product.name || '',
-            coverUrl: product.coverUrl || '',
-            price: product.minPrice || product.price || 0,
-            originalPrice: product.originalPrice || 0,
-            soldCount: product.soldCount || 0,
-            subTitle: product.subTitle || '',
-          }))
-          this.setData({ mallProducts: list })
+          this._applyMallProducts(result.data.list || [])
         } else {
-          this.setData({ mallProducts: [] })
+          this._applyMallProducts([])
         }
       } catch (error) {
         console.error('[homeMall] _loadMallProducts error:', error)
-        this.setData({ mallProducts: [] })
+        this._applyMallProducts([])
       }
+    },
+
+    /** 应用商城商品板块数据（首页 BFF getHomeFeed 分发与单独加载共用） */
+    _applyMallProducts(list) {
+      const mallProducts = (Array.isArray(list) ? list : []).map(product => ({
+        _id: product._id,
+        name: product.name || '',
+        coverUrl: product.coverUrl || '',
+        price: product.minPrice || product.price || 0,
+        originalPrice: product.originalPrice || 0,
+        soldCount: product.soldCount || 0,
+        subTitle: product.subTitle || '',
+      }))
+      this.setData({ mallProducts })
     },
 
     handleViewAllMallProducts() {

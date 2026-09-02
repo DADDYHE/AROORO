@@ -48,6 +48,10 @@ Page({
       status: 'published',
       page: params.page,
       pageSize: params.pageSize,
+      // 本页依赖 joined（isRegistered）做"已报名"拦截，需显式声明；
+      // 无限滚动列表不消费 total，跳过 count 查询
+      withJoined: true,
+      skipTotal: true,
     })
 
     if (result && result.code === 0) {

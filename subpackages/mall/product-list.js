@@ -46,47 +46,77 @@ Page({
       currentCategory: firstCat ? firstCat.key : '',
       currentCategoryLabel: firstCat ? firstCat.label : '',
     })
-    // 三路并行：首屏商品 / 服务端分类（统计过滤依赖分类结构，链在其后执行）
+    // 两路并行：首屏商品 / 商城目录聚合（一次返回分类+统计，原 listCategories+getCategoryStats 两次串行）
     this._loadProducts()
-    this._loadCategoriesFromServer().then(() => this._loadCategoryStats())
+    this._loadCatalog()
   },
 
-  async _loadCategoriesFromServer() {
+  // 商城目录聚合：一次云函数返回 categories + stats（云资源优化 2026-09-02）
+  // 失败时回退：服务端分类 → 本地分类 + 独立统计接口，保证可用性
+  async _loadCatalog() {
+    let cats = null
+    let stats = {}
     try {
-      const result = await MallService.listCategories({ useCache: true, cacheTime: 30000 })
-      if (result && result.code === 0 && result.data && result.data.length > 0) {
-        const cats = result.data.map(cat => ({
+      const result = await MallService.getMallCatalog({ useCache: true, cacheTime: 30000 })
+      if (result && result.code === 0 && result.data) {
+        cats = (result.data.categories || []).map(cat => ({
           key: cat.key,
           label: cat.label,
-          subcats: (cat.subcats || []).map(sub => ({
-            key: sub.key,
-            label: sub.label,
-          })),
+          subcats: (cat.subcats || []).map(sub => ({ key: sub.key, label: sub.label })),
         }))
-        this.setData({ categories: cats })
+        stats = result.data.stats || {}
       }
     } catch (e) {
-      console.error('[product-list] _loadCategoriesFromServer 失败:', e)
+      console.error('[product-list] getMallCatalog 失败:', e)
     }
+    if (!cats || cats.length === 0) {
+      // 降级：单独拉服务端分类
+      cats = await this._fetchCategoriesFallback()
+    }
+    if (!cats || cats.length === 0) {
+      // 双重降级：沿用本地静态分类
+      cats = this.data.categories
+    }
+    if (!stats || Object.keys(stats).length === 0) {
+      // 降级：单独拉统计（失败则跳过过滤，用全部分类）
+      stats = await this._fetchStatsFallback().catch(() => ({}))
+    }
+    this._applyCatalog(cats, stats)
   },
 
-  async _loadCategoryStats() {
-    try {
-      const result = await MallService.getCategoryStats({ useCache: true, cacheTime: 30000 })
-      const stats = (result && result.code === 0 && result.data) ? result.data : {}
+  _fetchCategoriesFallback() {
+    return MallService.listCategories({ useCache: true, cacheTime: 30000 })
+      .then(result => {
+        if (result && result.code === 0 && result.data && result.data.length > 0) {
+          return result.data.map(cat => ({
+            key: cat.key,
+            label: cat.label,
+            subcats: (cat.subcats || []).map(sub => ({ key: sub.key, label: sub.label })),
+          }))
+        }
+        return null
+      })
+      .catch(() => null)
+  },
 
-      const source = this.data.categories
-      const filtered = source
-        .filter(cat => stats[cat.key])
-        .map(cat => ({
-          ...cat,
-          subcats: (cat.subcats || []).filter(sub => stats[sub.key]),
-        }))
+  _fetchStatsFallback() {
+    return MallService.getCategoryStats({ useCache: true, cacheTime: 30000 })
+      .then(result => (result && result.code === 0 && result.data) ? result.data : {})
+  },
 
-      this.setData({ categories: filtered.length > 0 ? filtered : source })
-    } catch (e) {
-      console.error('[product-list] _loadCategoryStats 失败:', e)
-    }
+  // 应用分类 + 统计：按 stats 过滤出"有商品"的分类（无统计时保留全部分类）
+  _applyCatalog(cats, stats) {
+    const hasStats = stats && Object.keys(stats).length > 0
+    const source = Array.isArray(cats) && cats.length > 0 ? cats : this.data.categories
+    const filtered = hasStats
+      ? source
+          .filter(cat => stats[cat.key])
+          .map(cat => ({
+            ...cat,
+            subcats: (cat.subcats || []).filter(sub => stats[sub.key]),
+          }))
+      : source
+    this.setData({ categories: filtered.length > 0 ? filtered : source })
   },
 
   async _loadProducts(append = false) {
@@ -96,6 +126,8 @@ Page({
     const params = {
       page: this.data.page,
       pageSize: this.data.pageSize,
+      // 云资源优化：无限滚动列表不消费 total，跳过 count 查询
+      skipTotal: true,
     }
 
     if (this.data.currentSubCategory) {

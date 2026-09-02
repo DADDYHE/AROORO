@@ -55,6 +55,13 @@ Page({
     } else if (this.data.currentCategory !== 'all' && this.data.currentCategory !== 'joined') {
       reqData.category = this.data.currentCategory
     }
+    // 云资源优化：后端 myRegistrations 查询改为按需（registerable/withJoined）；
+    // 列表项依赖 joined 渲染"已报名"徽章，getActivityList 时显式声明需要 joined；
+    // 无限滚动列表不消费 total，跳过 count 查询
+    if (action === 'getActivityList') {
+      reqData.withJoined = true
+      reqData.skipTotal = true
+    }
     // 性能优化：仅首屏被动加载开缓存（30s）；分页/下拉刷新（_forceRefresh）穿透
     const result = await ActivityService.call(action, reqData, {
       useCache: params.page === 1 && !this._forceRefresh,

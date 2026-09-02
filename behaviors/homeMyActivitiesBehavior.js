@@ -62,19 +62,24 @@ const homeMyActivitiesBehavior = Behavior({
         const result = await ActivityService.getRegistrationList({ status: 'all', pageSize: 20 })
         if (result && result.code === 0) {
           const raw = (result.data && (result.data.list || result.data)) || []
-          // 首页「快速签到」板块只展示当前可签到的活动：未签到且处于活动时间窗内（canSignIn）。
-          // 已签到 / 未开始 / 已结束的活动均不显示在此板块；最多 6 条。
-          const items = raw
-            .map(buildMyActivity)
-            .filter((it) => it.canSignIn)
-            .slice(0, 6)
-          this.setData({ signableActivities: items })
+          this._applyMyActivities(raw)
         } else {
-          this.setData({ signableActivities: [] })
+          this._applyMyActivities([])
         }
       } catch (error) {
-        this.setData({ signableActivities: [] })
+        this._applyMyActivities([])
       }
+    },
+
+    /** 应用我的活动板块数据（首页 BFF getHomeFeed 分发与单独加载共用）
+     * 首页「快速签到」板块只展示当前可签到的活动：未签到且处于活动时间窗内（canSignIn）。
+     * 已签到 / 未开始 / 已结束的活动均不显示在此板块；最多 6 条。 */
+    _applyMyActivities(raw) {
+      const items = (Array.isArray(raw) ? raw : [])
+        .map(buildMyActivity)
+        .filter((it) => it.canSignIn)
+        .slice(0, 6)
+      this.setData({ signableActivities: items })
     },
 
     async onSignIn(e) {

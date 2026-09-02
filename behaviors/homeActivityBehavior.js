@@ -24,16 +24,21 @@ const homeActivityBehavior = Behavior({
   methods: {
     async _loadLatestActivities() {
       try {
-        const result = await ActivityService.getActivityList({ status: 'published' })
+        const result = await ActivityService.getActivityList({ status: 'published', skipTotal: true })
         if (result && result.code === 0) {
-          const sorted = sortAndSliceActivities(result.data?.list || [], 5)
-          this.setData({ latestActivities: sorted })
+          this._applyLatestActivities(result.data?.list || [])
         } else {
-          this.setData({ latestActivities: [] })
+          this._applyLatestActivities([])
         }
       } catch (error) {
-        this.setData({ latestActivities: [] })
+        this._applyLatestActivities([])
       }
+    },
+
+    /** 应用最新活动板块数据（首页 BFF getHomeFeed 分发与单独加载共用） */
+    _applyLatestActivities(list) {
+      const sorted = sortAndSliceActivities(Array.isArray(list) ? list : [], 5)
+      this.setData({ latestActivities: sorted })
     },
   },
 })

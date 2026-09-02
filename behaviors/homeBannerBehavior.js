@@ -51,14 +51,18 @@ const homeBannerBehavior = Behavior({
       try {
         const result = await UtilityService.getBanners()
         if (result && result.code === 0 && result.data) {
-          const list = result.data.list || []
-          this.setData({ bannerList: list })
+          this._applyBannerData(result.data.list || [])
         } else {
-          this.setData({ bannerList: [] })
+          this._applyBannerData([])
         }
       } catch (error) {
-        this.setData({ bannerList: [] })
+        this._applyBannerData([])
       }
+    },
+
+    /** 应用 banner 板块数据（首页 BFF getHomeFeed 分发与单独加载共用） */
+    _applyBannerData(list) {
+      this.setData({ bannerList: Array.isArray(list) ? list : [] })
     },
   },
 })
