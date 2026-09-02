@@ -13,6 +13,17 @@ try {
   console.error('[app.js] AuthService 导入失败:', error)
 }
 
+// 会话恢复同步点（2026-09-02 修复首页预取竞态）
+// ------------------------------------------------------------------
+// 问题：小程序不保证页面 onLoad 会等待 App.onLaunch 的 await 完成，
+// 因此 splash 页 onLoad 读 globalData.isLoggedIn 时，
+// _executeCriticalStartup 里的 await tryRestoreSession() 往往尚未 resolve，
+// 读到的是初始值 false。预取 getHomeFeed(withUser:false) 与首页随后的
+// getHomeFeed(withUser:true) cacheKey 不同 => 预取完全失效。
+// 修法：暴露本 Promise，凡依赖登录态的启动期预取都必须 await 它。
+let _resolveSessionReady = () => {}
+const sessionReadyPromise = new Promise(resolve => { _resolveSessionReady = resolve })
+
 App({
   globalData: {
     envId: require('./config.js').envId,
@@ -45,6 +56,10 @@ App({
     loginReturnTo: null,
   },
 
+  // 会话恢复完成同步点：启动期预取（homePrefetch 等）须 await 后再读 isLoggedIn，
+  // 否则会与 _executeCriticalStartup 的异步恢复产生竞态。见文件头注释。
+  sessionReady: sessionReadyPromise,
+
   async onLaunch(options) {
     const appLaunchStartTime = Date.now()
 
@@ -66,6 +81,8 @@ App({
       console.log('[APP] 关键启动完成，耗时:', Date.now() - appLaunchStartTime, 'ms')
     } catch (error) {
       console.error('[APP] 启动失败:', error)
+      // 兜底放行：启动异常时不能让等待 sessionReady 的预取永久挂起
+      _resolveSessionReady()
     }
   },
 
@@ -143,7 +160,12 @@ App({
         console.warn('[APP] 会话恢复失败（不影响应用使用）:', sessionError.message)
         this.globalData.userInfo = null
         this.globalData.isLoggedIn = false
+      } finally {
+        // 登录态已落定（成功或失败），放行所有等待 sessionReady 的预取
+        _resolveSessionReady()
       }
+    } else {
+      _resolveSessionReady()
     }
 
     await appStartupOptimizer.executeCriticalPhase(this)
@@ -170,6 +192,15 @@ App({
   },
 
   async _fetchSplashPoster() {
+    // 云资源优化：启动海报为低频运营配置，本地缓存 12h 内视为新鲜，跳过云端拉取
+    // （每次冷启动省 1 次云函数调用 + 2 次后端读；splash 页首帧由 __splashSync 驱动，
+    //  此处返回缓存数据结构与云端一致，splash 页渲染逻辑不受影响）
+    const SPLASH_FETCH_TTL = 12 * 3600 * 1000
+    const sync = this.globalData.__splashSync
+    if (sync && sync.fetchedAt && Date.now() - sync.fetchedAt < SPLASH_FETCH_TTL) {
+      this.globalData.splashPoster = sync
+      return sync
+    }
     try {
       const { UtilityService } = require('./services/CloudFunctionService')
       const result = await UtilityService.getSplashPoster()
@@ -184,6 +215,9 @@ App({
             imagePreviewUrl: d.imagePreviewUrl || '',
             durationMs: d.durationMs || 2500,
             updatedAt: d.updatedAt || Date.now(),
+            // 本地拉取时间（非配置更新时间）：12h TTL 判定基准，
+            // 配置本身很旧时不触发重复拉取
+            fetchedAt: Date.now(),
           })
         } catch (e) {}
         return d
