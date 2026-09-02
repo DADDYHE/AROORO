@@ -1,0 +1,108 @@
+/* zy-skeleton · 骨架屏组件
+   底色：var(--skeleton-base)（theme-teal 令牌级联，亮/暗自动切换）
+   扫光：伪元素 + absolute + overflow:hidden + transform —— 与 booking/confirm.wxss:414-429
+   已上线的 .confirm-btn::before 同模式（Skyline 真机验证过），keyframes 组件内自带。 */
+
+.zy-skeleton {
+  width: 100%;
+}
+
+/* 骨架块 */
+.sk-block {
+  position: relative;
+  overflow: hidden;
+  background: var(--skeleton-base, #ECE8DE);
+  border-radius: 8rpx;
+}
+
+/* 扫光层（40% 宽高光条，translateX 循环；纯色高光避免渐变简写风险） */
+.sk-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: var(--skeleton-shimmer, rgba(255, 255, 255, 0.45));
+  transform: translateX(-100%);
+  animation: zy-sk-sweep 1800ms cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes zy-sk-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+/* ===== list：列表行 ===== */
+.sk-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 24rpx 0;
+}
+
+.sk-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sk-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-left: 24rpx;
+}
+
+/* ===== grid：两列卡片 ===== */
+.sk-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 24rpx;
+}
+
+.sk-card {
+  width: calc((100% - 24rpx) / 2);
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.sk-card-img {
+  width: 100%;
+  height: 320rpx;
+  border-radius: 12rpx;
+}
+
+/* ===== detail：大图 + 标题 + 段落 ===== */
+.sk-hero {
+  width: 100%;
+  border-radius: 0;
+}
+
+.sk-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding: 32rpx 48rpx 0;
+}
+
+/* ===== 文字线 ===== */
+.sk-line {
+  width: 100%;
+  height: 28rpx;
+}
+
+.sk-line--lg {
+  height: 40rpx;
+}
+
+.sk-line--w45 { width: 45%; }
+.sk-line--w50 { width: 50%; }
+.sk-line--w60 { width: 60%; }
+.sk-line--w70 { width: 70%; }
+.sk-line--w80 { width: 80%; }

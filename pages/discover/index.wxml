@@ -27,6 +27,7 @@
 
   <view class="tuan-list">
     <view class="tuan-list-inner">
+      <zy-skeleton wx:if="{{loading && dealList.length === 0}}" type="list" count="{{5}}" />
       <view class="deal-card" wx:for="{{dealList}}" wx:key="_id" hover-class="deal-card--pressed" hover-stay-time="120">
         <view class="deal-top" data-id="{{item._id}}" bindtap="onDealTap">
           <view class="deal-title-row">
@@ -61,7 +62,7 @@
         </view>
       </view>
 
-      <view class="tuan-loading" wx:if="{{loading}}">
+      <view class="tuan-loading" wx:if="{{loading && dealList.length > 0}}">
         <view class="lux-silk">
   <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 0ms;"></view>
   <view class="lux-silk-line" style="background: var(--lux-gold-600, #A8894A); animation-delay: 100ms;"></view>

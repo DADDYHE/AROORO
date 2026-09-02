@@ -12,23 +12,9 @@
 >
 <view class="container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-  <!-- 加载中状态 -->
-  <view wx:if="{{isLoading}}" class="loading-container">
-    <view class="loading-content">
-      <view class="lux-cascade">
-  <view class="lux-cascade-dot" style="left: 20rpx; background: #C9A24B; animation-delay: 0ms;"></view>
-  <view class="lux-cascade-dot" style="left: 36rpx; background: #A8894A; animation-delay: 150ms;"></view>
-  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
-  <view class="lux-cascade-dot" style="left: 68rpx; background: #A8894A; animation-delay: 450ms;"></view>
-  <view class="lux-cascade-dot" style="left: 84rpx; background: #C9A24B; animation-delay: 600ms;"></view>
-  <view class="lux-cascade-dot" style="left: 100rpx; background: #A8894A; animation-delay: 750ms;"></view>
-  <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
+  <!-- 加载中状态：骨架屏 -->
+  <zy-skeleton wx:if="{{isLoading}}" type="detail" heroHeight="{{450}}" />
 
-      </view>
-      <text class="loading-text">{{t.BIZ_CSIK0}}</text>
-    </view>
-  </view>
-  
   <view wx:else>
   
   <!-- 轮播图容器 -->

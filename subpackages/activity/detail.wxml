@@ -5,6 +5,7 @@
   bindscroll="_onScroll"
   style="height: 100vh;"
 >
+<zy-skeleton wx:if="{{isLoading}}" type="detail" heroHeight="{{620}}" />
 <view class="page-container" wx:if="{{activity}}">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="page-content">
@@ -193,23 +194,6 @@
   </root-portal>
 </view>
 
-<root-portal>
-<view class="loading-container" wx:if="{{isLoading}}">
-  <view class="loading-content">
-    <view class="lux-cascade">
-  <view class="lux-cascade-dot" style="left: 20rpx; background: #C9A24B; animation-delay: 0ms;"></view>
-  <view class="lux-cascade-dot" style="left: 36rpx; background: #A8894A; animation-delay: 150ms;"></view>
-  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
-  <view class="lux-cascade-dot" style="left: 68rpx; background: #A8894A; animation-delay: 450ms;"></view>
-  <view class="lux-cascade-dot" style="left: 84rpx; background: #C9A24B; animation-delay: 600ms;"></view>
-  <view class="lux-cascade-dot" style="left: 100rpx; background: #A8894A; animation-delay: 750ms;"></view>
-  <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
-
-    </view>
-    <text class="loading-text">{{t.BIZ_CSIK0}}</text>
-  </view>
-</view>
-</root-portal>
 
 
 <root-portal>

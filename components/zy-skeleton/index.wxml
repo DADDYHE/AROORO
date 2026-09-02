@@ -1,0 +1,37 @@
+<!-- zy-skeleton · 纯常规流布局（Skyline 安全，无绝对定位子节点） -->
+<view class="zy-skeleton zy-skeleton--{{type}}">
+
+  <!-- 列表行：圆头像 + 两行文字 -->
+  <block wx:if="{{type === 'list'}}">
+    <view class="sk-row" wx:for="{{items}}" wx:key="*this">
+      <view class="sk-block sk-avatar"></view>
+      <view class="sk-lines">
+        <view class="sk-block sk-line sk-line--w70"></view>
+        <view class="sk-block sk-line sk-line--w45"></view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 两列卡片网格：图 + 两行 -->
+  <block wx:elif="{{type === 'grid'}}">
+    <view class="sk-grid">
+      <view class="sk-card" wx:for="{{items}}" wx:key="*this">
+        <view class="sk-block sk-card-img"></view>
+        <view class="sk-block sk-line sk-line--w80"></view>
+        <view class="sk-block sk-line sk-line--w50"></view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 详情：大图 + 标题 + 段落 -->
+  <block wx:elif="{{type === 'detail'}}">
+    <view class="sk-block sk-hero" style="height: {{heroHeight}}rpx;"></view>
+    <view class="sk-detail-body">
+      <view class="sk-block sk-line sk-line--lg sk-line--w60"></view>
+      <view class="sk-block sk-line"></view>
+      <view class="sk-block sk-line"></view>
+      <view class="sk-block sk-line sk-line--w70"></view>
+    </view>
+  </block>
+
+</view>

@@ -45,6 +45,7 @@
   </view>
 
   <!-- 寄养家庭列表 -->
+  <zy-skeleton wx:if="{{isLoading && hosts.length === 0}}" type="list" count="{{3}}" />
   <view class="hosts-list">
     <view class="host-card" wx:for="{{hosts}}" wx:key="id" data-id="{{item.id}}" bindtap="selectHost" hover-class="host-card--pressed" hover-stay-time="80">
       <!-- 封面图片轮播 -->
@@ -100,8 +101,8 @@
     </view>
   </view>
 
-  <!-- 加载状态 -->
-  <view wx:if="{{isLoading}}" class="loading-more">
+  <!-- 加载状态（翻页指示：仅已有数据时显示，首屏走骨架屏） -->
+  <view wx:if="{{isLoading && hosts.length > 0}}" class="loading-more">
     <view class="lux-silk">
   <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 0ms;"></view>
   <view class="lux-silk-line" style="background: var(--lux-gold-600, #A8894A); animation-delay: 100ms;"></view>

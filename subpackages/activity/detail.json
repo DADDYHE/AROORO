@@ -1,6 +1,7 @@
 {
   "usingComponents": {
-    "login-prompt": "../../components/login-prompt/login-prompt"
+    "login-prompt": "../../components/login-prompt/login-prompt",
+    "zy-skeleton": "../../components/zy-skeleton/index"
   },
   "navigationBarTitleText": "活动详情"
 }

@@ -10,6 +10,7 @@
   lower-threshold="100"
   style="height: 100vh;"
 >
+<zy-skeleton wx:if="{{loading}}" type="detail" heroHeight="{{0}}" />
 <view class="tuan-detail" wx:if="{{!loading && deal}}">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="detail-title-area">

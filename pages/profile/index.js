@@ -23,9 +23,9 @@ Page({
       openid: '',
     },
     stats: {
-      petCount: 0,
-      activityCount: 0,
-      couponCount: 0,
+      petCount: '-',
+      activityCount: '-',
+      couponCount: '-',
     },
     appVersion: '1.0.0',
     isHeaderScrolled: false,
@@ -75,9 +75,9 @@ Page({
           isPartner: Boolean(globalUserInfo.isPartner) || Boolean(globalUserInfo.permissions?.length),
         },
         stats: {
-          petCount: 0,
-          activityCount: 0,
-          couponCount: 0,
+          petCount: '-',
+          activityCount: '-',
+          couponCount: '-',
         },
       })
       this._fetchPetCount()

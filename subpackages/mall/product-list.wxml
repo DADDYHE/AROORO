@@ -38,6 +38,7 @@
         </view>
       </view>
       <view class="content-divider"></view>
+      <zy-skeleton wx:if="{{isLoading && currentProducts.length === 0}}" type="grid" count="{{6}}" />
       <view class="product-grid">
         <view wx:for="{{currentProducts}}" wx:key="_id" class="product-card" data-id="{{item._id}}" hover-class="product-card--pressed" hover-stay-time="80" bindtap="onProductTap">
           <view class="product-img-wrap">

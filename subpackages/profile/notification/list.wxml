@@ -16,6 +16,7 @@
     <view class="mark-read-btn" bindtap="onMarkAllRead" hover-class="mark-read-btn pressed" hover-stay-time="80"><text>全部已读</text></view>
   </view>
 
+  <zy-skeleton wx:if="{{isLoading && notifications.length === 0}}" type="list" count="{{6}}" />
   <view class="notification-list" wx:if="{{notifications.length > 0}}">
     <view wx:for="{{notifications}}" wx:key="_id" class="notification-card {{item.isRead ? '' : 'unread'}}" data-id="{{item._id}}" data-type="{{item.type}}" data-related-id="{{item.relatedId}}" bindtap="onNotificationTap" hover-class="notification-card pressed" hover-stay-time="80">
       <text class="notification-icon">{{item.icon}}</text>

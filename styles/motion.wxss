@@ -589,7 +589,8 @@ page {
 /* ========== 9. 骨架屏 ========== */
 .skeleton-shimmer {
   position: relative;
-  background: #F5F5F0;
+  /* 原硬编码 #F5F5F0：暗态下是刺眼白块。改走 --skeleton-base（theme-teal 真源） */
+  background: var(--skeleton-base, #ECE8DE);
   overflow: hidden;
 }
 

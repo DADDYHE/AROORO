@@ -339,6 +339,7 @@ page {
   --metallic-gold-dark: #A8894A;
   --shadow-emboss: inset 0 1rpx 0 rgba(255, 255, 255, 0.6);
   --skeleton-base: #ECE8DE;
+  --skeleton-shimmer: rgba(255, 255, 255, 0.55); /* 骨架扫光高光，暖石底上需足够可见 */
   --gray-450: #9E9889;
   --gray-350: #D6D2C7;
   --activity-primary-mid: #3D6B3D;
@@ -427,6 +428,7 @@ page {
   --text-on-glass-2: #CFCABA;
   --hairline-glass: rgba(240, 237, 228, 0.16);
   --skeleton-base: #23251E;                   /* 暗态补档：亮态 #ECE8DE 在暗底会成刺眼白块占位 */
+  --skeleton-shimmer: rgba(255, 255, 255, 0.14); /* 暗态压低高光，避免扫光变成白闪 */
 }
 
 /* ===== 毛玻璃降级 ===== */
