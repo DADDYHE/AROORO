@@ -48,6 +48,8 @@ Page({
 
   onLoad() {
     this._initNavbarHeight()
+    // 置位防首 onShow 竞态：onLoad 已发起加载，首个 onShow 的 !hasLoadedOnce 分支不再重复拉 getUserInfo
+    this.setData({ hasLoadedOnce: true })
     this.checkLoginAndLoadUserInfo()
   },
 

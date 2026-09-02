@@ -66,6 +66,12 @@ Page({
   },
 
   onShow() {
+    // 首屏由 onLoad 独占（onLoad 紧跟的首 onShow 跳过，避免进页双拉 getActivityDetail）；
+    // 后续 onShow（报名/支付页返回）silent 刷新以同步报名状态
+    if (!this._firstShowHandled) {
+      this._firstShowHandled = true
+      return
+    }
     if (this._activityId) {
       this._loadActivity(this._activityId, true)
     }

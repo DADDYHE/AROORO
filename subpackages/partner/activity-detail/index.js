@@ -57,6 +57,12 @@ Page({
   },
 
   onShow() {
+    // 首屏由 onLoad 独占（首 onShow 跳过，避免进页双拉）；
+    // 后续 onShow（从编辑页返回）silent 刷新以同步最新状态/报名摘要
+    if (!this._loaded) {
+      this._loaded = true
+      return
+    }
     if (this._activityId) {
       this._loadActivity(this._activityId, true)
     }

@@ -31,6 +31,9 @@ class PetStore {
 
     // 事件监听器
     this.listeners = new Map()
+
+    // 在途列表请求（in-flight 去重）：onLoad 与 onShow 并发触发时共享同一请求，避免双拉
+    this._inFlightFetch = null
   }
 
   /**
@@ -46,6 +49,20 @@ class PetStore {
       return this.state.petList
     }
 
+    // in-flight 去重：已有真实请求在途时复用，杜绝并发双拉（结果会写入 state 并通知订阅者）
+    if (this._inFlightFetch) {
+      return this._inFlightFetch
+    }
+
+    this._inFlightFetch = this._doFetchPetList()
+    try {
+      return await this._inFlightFetch
+    } finally {
+      this._inFlightFetch = null
+    }
+  }
+
+  async _doFetchPetList() {
     this.setState({ isLoading: true, error: null })
 
     try {
@@ -246,6 +263,7 @@ class PetStore {
    * 重置 Store
    */
   reset() {
+    this._inFlightFetch = null
     this.state = {
       petList: [],
       currentPet: null,

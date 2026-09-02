@@ -22,13 +22,21 @@ Page({
 
   onLoad(options) {
     this._initNavbarHeight()
-    this.loadAddresses()
+    // 首屏 forceRefresh 拉最新（原首个 onShow 的强刷职责前移，首 onShow 跳过 → 全程仅 1 次网络）
+    this.loadAddresses(true)
     if (options.selectedId) {
       this.setData({ selectedAddressId: options.selectedId })
     }
   },
 
   onShow() {
+    // 首屏由 onLoad 独占（首 onShow 跳过，避免进页双拉 getList）；
+    // 后续 onShow（增删改/选择返回）forceRefresh 刷新列表；请求在途时不再叠加
+    if (!this._firstShowHandled) {
+      this._firstShowHandled = true
+      return
+    }
+    if (this.data.isLoading) {return}
     this.loadAddresses(true)
   },
 

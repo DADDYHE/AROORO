@@ -53,6 +53,12 @@ Page({
   },
 
   onShow() {
+    // 首屏由 onLoad 独占（首 onShow 跳过，避免进页双拉 detail + 可用券）；
+    // 后续 onShow（支付/选宠页返回）保留刷新语义
+    if (!this._firstShowHandled) {
+      this._firstShowHandled = true
+      return
+    }
     const { activityId } = this.data
     if (activityId && !this.data.showPetPicker) {
       this._loadActivity()

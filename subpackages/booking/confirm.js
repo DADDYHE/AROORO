@@ -250,20 +250,17 @@ Page({
         return
       }
 
-      const result = await HostService.getHostList({ hostId: this.data.hostId }, { useCache: false })
+      // 直查单条（getHostDetail），取代 getHostList 拉整页再 .find——host 不在第一页会查不到
+      const result = await HostService.getHostInfo(this.data.hostId)
 
-      if (result.code === 0) {
-        const hostList = result.data.list || result.data
-        const host = hostList.find(h => h._id === this.data.hostId || h.id === this.data.hostId)
-
-        if (host) {
-          const price = host.pricePerDay || host.price || 0
-          this._batchUpdate({
-            hostName: host.hostName || '寄养家庭',
-            hostPrice: price,
-            priceCalculated: true,
-          }, () => this.calculatePrice())
-        }
+      if (result && result.code === 0 && result.data) {
+        const host = result.data
+        const price = host.pricePerDay || host.price || 0
+        this._batchUpdate({
+          hostName: host.hostName || '寄养家庭',
+          hostPrice: price,
+          priceCalculated: true,
+        }, () => this.calculatePrice())
       }
     } catch (error) {
       this._batchUpdate({ hostName: '寄养家庭', hostPrice: 0 })

@@ -142,6 +142,8 @@ Page({
   },
 
   async _loadOrders() {
+    // 防重入：onShow 与 LIST_UPDATED 事件并发触发时只发一次请求
+    if (this.data.isLoading) {return}
     this.setData({ isLoading: true })
     try {
       const { orderType, page } = this.data
