@@ -24,6 +24,9 @@ const ERROR_CODE_MAP = {
 
 const DEFAULT_CACHE_TIME = 5 * 60 * 1000
 
+// tcb 直链缩略参数（全站唯一注入点，见 utils/cloudThumb.js 头注释）
+const { applyCloudThumbs: _applyCloudThumbs } = require('../utils/cloudThumb')
+
 function _resolveErrorMessage(result) {
   if (!result) {return null}
   const severity = ERROR_CODE_MAP[result.code]
@@ -156,11 +159,13 @@ class CloudFunctionService {
 
     const requestPromise = this._executeWithRetry(name, data, retryCount, retryDelay)
       .then(result => {
+        // 图片 URL 缩略参数注入（转换后再入缓存，缓存零重复开销）
+        const transformed = _applyCloudThumbs(result)
         if (useCache) {
           const cacheKey = `${REQUEST_CACHE_KEY_PREFIX}${name}_${dataStr}`
-          this.setCache(cacheKey, result, cacheTime)
+          this.setCache(cacheKey, transformed, cacheTime)
         }
-        return result
+        return transformed
       })
       .catch(error => {
         this._reportToErrorManager(name, data, error)
@@ -515,6 +520,12 @@ class UtilityService {
 
   async getBanners() {
     return this.cloud.get('utilityService', { action: 'getBanners' })
+  }
+
+  // 首页聚合 BFF：一次返回 banner/团购/活动/商城（+登录态宠物/可签到活动），
+  // 云资源优化（2026-09-02）：替代原先 6 次独立云函数调用
+  async getHomeFeed(withUser, options = {}) {
+    return this.cloud.call('utilityService', { action: 'getHomeFeed', withUser }, options)
   }
 
   // 启动首屏海报（adminService.getSplashPoster，NO_AUTH，可在登录前读取）

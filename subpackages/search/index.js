@@ -1,4 +1,5 @@
 const { ListBehavior } = require('../../behaviors/listBehavior')
+const { applyCloudThumbs } = require('../../utils/cloudThumb')
 
 const HOT_KEYWORDS = ['猫粮', '狗粮', '寄养', '洗澡', '逗猫棒', '冻干']
 
@@ -142,7 +143,7 @@ Page({
 
       const result = (res && res.result) || {}
       const data = result.data || { list: [], total: 0 }
-      const list = (data.list || []).map((item) => this._normalizeItem(item))
+      const list = applyCloudThumbs((data.list || []).map((item) => this._normalizeItem(item)))
 
       this.setData({ results: list, loading: false })
     } catch (err) {

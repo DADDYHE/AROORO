@@ -3,6 +3,7 @@ const { requireLogin } = require('../../utils/require-login')
 
 const pageI18n = require('../../utils/page-i18n.js')
 const { ListBehavior } = require('../../behaviors/listBehavior')
+const { thumbUrl } = require('../../utils/cloudThumb')
 
 Page({
   ...pageI18n.mixin(),
@@ -59,7 +60,7 @@ Page({
       for (const f of res.fileList || []) {
         if (f.tempFileURL && indexMap[f.fileID]) {
           for (const idx of indexMap[f.fileID]) {
-            updates[`cartItems[${idx}].productImage`] = f.tempFileURL
+            updates[`cartItems[${idx}].productImage`] = thumbUrl(f.tempFileURL)
           }
         }
       }
