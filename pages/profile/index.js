@@ -45,7 +45,7 @@ Page({
     this._syncTabBar()
     this.getUserInfo()
     // 性能优化（2026-09-01）：30s 节流——partner 状态为低频变化数据，tab 切回时不重复裸调用
-    // 3 个统计计数由 getUserInfo 触发，已各自带缓存兜底（pet/activity 走 get() 5min、coupon 30s）
+    // 3 个统计计数由 getUserInfo 触发，Phase 2 已收敛为单次 getMyProfileSummary（30s 缓存兜底）
     const now = Date.now()
     if (this._lastPartnerCheckAt && now - this._lastPartnerCheckAt < 30000) { return }
     this._lastPartnerCheckAt = now
@@ -80,9 +80,7 @@ Page({
           couponCount: '-',
         },
       })
-      this._fetchPetCount()
-      this._fetchActivityCount()
-      this._fetchCouponCount()
+      this._fetchProfileSummary()
       return
     }
 
@@ -125,6 +123,36 @@ Page({
     }
   },
 
+  // 个人中心 3 统计聚合（Phase 2 2026-09-02）：
+  //   原 _fetchPetCount/_fetchActivityCount/_fetchCouponCount 三连各自打独立云函数（3 次冷启动），
+  //   收敛为单次 userService.getMyProfileSummary（服务端并行 count，口径同各 service）。
+  //   30s 缓存：tab 切回命中缓存秒回显；失败自动降级回原 3 连，新 action 未部署/异常时数字不回归。
+  async _fetchProfileSummary() {
+    try {
+      const result = await CloudFunctionService.call(
+        'userService',
+        { action: 'getMyProfileSummary' },
+        { useCache: true, cacheTime: 30000 }
+      )
+      if (result && result.code === 0 && result.data) {
+        const { petCount, activityCount, couponCount } = result.data
+        this.setData({
+          'stats.petCount': petCount || 0,
+          'stats.activityCount': activityCount || 0,
+          'stats.couponCount': couponCount || 0,
+        })
+        return
+      }
+      throw new Error('聚合接口返回异常')
+    } catch (error) {
+      console.warn('[profile] getMyProfileSummary 失败，降级三连:', error && error.message)
+      this._fetchPetCount()
+      this._fetchActivityCount()
+      this._fetchCouponCount()
+    }
+  },
+
+  // ↓ 降级路径（仅 getMyProfileSummary 失败时触发），保留原实现
   async _fetchPetCount() {
     try {
       const result = await PetService.getPetList({ page: 1, pageSize: 1 })
