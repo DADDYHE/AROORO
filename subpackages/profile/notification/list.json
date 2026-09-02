@@ -1,1 +1,1 @@
-{ "usingComponents": { "zy-skeleton": "../../components/zy-skeleton/index" }, "navigationBarTitleText": "通知", "enablePullDownRefresh": true }
+{ "usingComponents": { "zy-skeleton": "../../../components/zy-skeleton/index" }, "navigationBarTitleText": "通知", "enablePullDownRefresh": true }
