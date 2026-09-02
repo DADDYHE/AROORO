@@ -4,6 +4,7 @@
  * 业务功能：
  *   - getBanners - 拉取首页 banner 列表（带内存缓存，TTL 5 分钟）
  *   - getHostInfo - 拉取寄养家庭简要信息
+ *   - getHomeFeed - 首页聚合 BFF（云资源优化：6 次调用 → 1 次，直查 DB 无 count）
  *
  * 迁移目标：
  *   - 强类型化 2 个 action handler 签名
@@ -93,21 +94,50 @@ export interface HostProfileDoc {
 const cloud = require('wx-server-sdk') as {
   init: (opts: { env: string }) => void
   DYNAMIC_CURRENT_ENV: string
-  database: () => {
-    collection: (name: string) => {
-      where: (q: Record<string, unknown>) => {
-        orderBy: (field: string, direction: 'asc' | 'desc') => {
-          limit: (n: number) => {
-            get: () => Promise<{ data: BannerDoc[] }>
-          }
-        }
-      }
-      doc: (id: string) => {
-        get: () => Promise<{ data: HostProfileDoc | null }>
-      }
-    }
-    serverDate: () => Date
+  getWXContext: () => { OPENID?: string }
+  database: () => UtilityDB
+}
+
+/** 宽松查询链（getHomeFeed 直查各集合用，字段以投影收窄） */
+interface QueryChain {
+  where: (q: Record<string, unknown>) => QueryChain
+  field: (p: Record<string, boolean>) => QueryChain
+  orderBy: (field: string, direction: 'asc' | 'desc') => QueryChain
+  skip: (n: number) => QueryChain
+  limit: (n: number) => QueryChain
+  get: () => Promise<{ data: Record<string, unknown>[] }>
+}
+
+/** aggregate 链（products 缺货沉底排序，与 mallService.getProductList 同口径） */
+interface AggregateChain {
+  match: (q: Record<string, unknown>) => AggregateChain
+  addFields: (f: Record<string, unknown>) => AggregateChain
+  sort: (s: Record<string, number>) => AggregateChain
+  project: (p: Record<string, number>) => AggregateChain
+  skip: (n: number) => AggregateChain
+  limit: (n: number) => AggregateChain
+  end: () => Promise<{ list: Record<string, unknown>[] }>
+}
+
+interface UtilityDB {
+  collection: (name: string) => {
+    where: (q: Record<string, unknown>) => QueryChain
+    aggregate?: () => AggregateChain
+    doc: (id: string) => { get: () => Promise<{ data: HostProfileDoc | null }> }
   }
+  command: {
+    in: (arr: unknown[]) => unknown
+    nin: (arr: unknown[]) => unknown
+    lte: (v: unknown) => unknown
+    gte: (v: unknown) => unknown
+    neq: (v: unknown) => unknown
+    aggregate: {
+      cond: (o: Record<string, unknown>) => unknown
+      gt: (args: unknown[]) => unknown
+      ifNull: (args: unknown[]) => unknown
+    }
+  }
+  serverDate: () => Date
 }
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
@@ -119,7 +149,7 @@ const { createLogger } = require('./common/logger')
 const logger = createLogger('utilityService')
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError } = require('./common/utils')
+const { handleSuccess, handleError, convertCloudUrls } = require('./common/utils')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err } = require('./common/errors')
 // M3: 引入限流（bootstrap + withRateLimit），对齐 mallService/tuanService 模式
@@ -163,7 +193,7 @@ export async function getBanners(): Promise<BannerListResult> {
       .limit(BANNER_FETCH_LIMIT)
       .get()
 
-    const list: BannerItem[] = (res.data || []).map(b => ({
+    const list: BannerItem[] = ((res.data || []) as BannerDoc[]).map(b => ({
       id: b._id,
       imageUrl: b.imageUrl || '',
       title: b.title || '',
@@ -253,12 +283,209 @@ export async function getHostInfo(event: CloudEvent): Promise<unknown> {
 }
 
 // =====================================================================
+// Action 3：getHomeFeed - 首页聚合 BFF（云资源优化）
+// =====================================================================
+// 一次调用返回首页全部板块（banner / 团购 / 活动 / 商城商品，
+// 登录时附宠物 + 可签到活动），替代原先 6 次独立云函数调用
+// （各服务还各含 1 次 count）。查询口径与原各服务实现对齐：
+//   - tuan：tuanService.getTuanDealList（status/时间窗 + minPrice 计算）
+//   - activities：activityService.getActivityList({status:'published'})
+//   - products：mallService.getProductList（缺货沉底 aggregate 排序）
+//   - pets：petService.getPetList（ownerId + isActive 投影）
+//   - 报名：activityService.getRegistrationList（活动字段 + 报名字段合并）
+// 全部直查 DB、带字段投影、无 count。
+
+/** 首页各板块拉取条数（与原 behavior 单独调用时的参数一致） */
+export const HOME_FEED_TUAN_LIMIT = 4
+export const HOME_FEED_ACTIVITY_LIMIT = 10
+export const HOME_FEED_PRODUCT_LIMIT = 6
+export const HOME_FEED_PET_LIMIT = 10
+export const HOME_FEED_REGISTRATION_LIMIT = 20
+
+/** 团购最低价（与 tuanService.computeMinPrice 同口径） */
+function computeTuanMinPrice(products: unknown[]): number {
+  let min = Infinity
+  for (const p of products) {
+    const item = p as {
+      tuanPrice?: unknown, skuType?: unknown,
+      skus?: Array<{ enabled?: unknown, tuanPrice?: unknown, price?: unknown }>
+    }
+    if (item.skuType === 'multi' && item.skus && item.skus.length > 0) {
+      for (const sku of item.skus) {
+        if (sku.enabled !== false) {
+          const price = Number(sku.tuanPrice) || Number(sku.price) || Infinity
+          if (price < min) { min = price }
+        }
+      }
+    } else {
+      const price = Number(item.tuanPrice) || 0
+      if (price > 0 && price < min) { min = price }
+    }
+  }
+  return min === Infinity ? 0 : min
+}
+
+export async function getHomeFeed(event: CloudEvent): Promise<unknown> {
+  const _ = db.command
+  const withUser = event.withUser === true
+  const openid = (cloud.getWXContext() || {}).OPENID || ''
+  const now = new Date()
+
+  // 公共板块并行直查（失败降级为空板块，不阻断整页）
+  const [banners, tuanRes, actRes, prodList] = await Promise.all([
+    getBanners().catch(() => ({ list: [] as BannerItem[] })),
+    db.collection('tuan_deals')
+      .where({ status: _.in(['published', 'active']), startTime: _.lte(now), endTime: _.gte(now) })
+      .field({ _id: true, title: true, coverUrl: true, products: true, endTime: true, totalOrders: true })
+      .orderBy('createdAt', 'desc')
+      .limit(HOME_FEED_TUAN_LIMIT)
+      .get()
+      .catch(() => ({ data: [] as Record<string, unknown>[] })),
+    db.collection('activities')
+      .where({ status: 'published' })
+      .field({
+        _id: true, title: true, coverUrl: true, startTime: true, endTime: true,
+        location: true, price: true, pricePerPerson: true, pricePerPet: true,
+        currentParticipants: true, maxParticipants: true, category: true, createdAt: true,
+      })
+      .orderBy('createdAt', 'desc')
+      .limit(HOME_FEED_ACTIVITY_LIMIT)
+      .get()
+      .catch(() => ({ data: [] as Record<string, unknown>[] })),
+    (async (): Promise<Record<string, unknown>[]> => {
+      // 商品：缺货沉底排序与 mallService.getProductList 同口径（aggregate 现算 _stockFlag）
+      // 注意：必须直接链式调用 .aggregate()，不能先解构出方法引用再调用
+      // （裸调用会丢失 this，CloudBase aggregate 链内部读 this._collection 崩溃）
+      try {
+        const $ = _.aggregate
+        const res = await db.collection('products')
+          .aggregate!()
+          .match({ status: 'on_sale' })
+          .addFields({
+            _stockFlag: $.cond({
+              if: $.gt([$.ifNull(['$totalStock', $.ifNull(['$stock', 1])]), 0]),
+              then: 1,
+              else: 0,
+            }),
+          })
+          .sort({ _stockFlag: -1, isFeatured: -1, createdAt: -1 })
+          .project({
+            _id: 1, name: 1, coverUrl: 1, coverImage: 1, price: 1, originalPrice: 1,
+            soldCount: 1, subTitle: 1, minPrice: 1, isFeatured: 1, createdAt: 1,
+          })
+          .limit(HOME_FEED_PRODUCT_LIMIT)
+          .end()
+        return (res.list || []) as Record<string, unknown>[]
+      } catch (e) {
+        logger.warn('getHomeFeed.products.aggregate', { error: (e as Error)?.message })
+      }
+      // 兜底：aggregate 不可用时退化为普通查询（仅排序口径降级）
+      const res = await db.collection('products')
+        .where({ status: 'on_sale' })
+        .field({
+          _id: true, name: true, coverUrl: true, coverImage: true, price: true,
+          originalPrice: true, soldCount: true, subTitle: true, minPrice: true, createdAt: true,
+        })
+        .orderBy('createdAt', 'desc')
+        .limit(HOME_FEED_PRODUCT_LIMIT)
+        .get()
+        .catch(() => ({ data: [] as Record<string, unknown>[] }))
+      return res.data || []
+    })(),
+  ])
+
+  // 登录态板块（pets + 可签到活动）——原 2 次云函数调用并入本次聚合
+  let myPets: Record<string, unknown>[] | null = null
+  let myActivities: Record<string, unknown>[] | null = null
+  if (withUser && openid) {
+    const petRes = await db.collection('pets')
+      .where({ ownerId: openid, isActive: 1 })
+      .field({ _id: true, name: true, breed: true, birthday: true, avatarUrl: true, gender: true, type: true })
+      .orderBy('createdAt', 'desc')
+      .limit(HOME_FEED_PET_LIMIT)
+      .get()
+      .catch(() => ({ data: [] as Record<string, unknown>[] }))
+    myPets = petRes.data || []
+
+    const regRes = await db.collection('activity_registrations')
+      .where({ ownerId: openid, status: _.in(['pending_payment', 'paid', 'completed']) })
+      .field({ _id: true, activityId: true, signInStatus: true })
+      .orderBy('createdAt', 'desc')
+      .limit(HOME_FEED_REGISTRATION_LIMIT)
+      .get()
+      .catch(() => ({ data: [] as Record<string, unknown>[] }))
+    const registrations = regRes.data || []
+    myActivities = []
+    if (registrations.length > 0) {
+      const activityIds = [...new Set(
+        registrations.map(r => String(r.activityId || '')).filter(Boolean)
+      )]
+      if (activityIds.length > 0) {
+        const actInfoRes = await db.collection('activities')
+          .where({ _id: _.in(activityIds) })
+          .field({ _id: true, title: true, coverUrl: true, location: true, startTime: true, endTime: true })
+          .get()
+          .catch(() => ({ data: [] as Record<string, unknown>[] }))
+        const actMap: Record<string, Record<string, unknown>> = {}
+        for (const a of (actInfoRes.data || [])) {
+          actMap[String(a._id)] = a
+        }
+        // 与 activityService.getRegistrationList 返回结构对齐
+        // （活动字段 + _registrationId/signInStatus 合并），前端 buildMyActivity 同口径消费
+        myActivities = registrations
+          .map((r): Record<string, unknown> | null => {
+            const act = actMap[String(r.activityId || '')]
+            if (!act) { return null }
+            return {
+              ...act,
+              _registrationId: r._id,
+              signInStatus: r.signInStatus || 'unsigned',
+            }
+          })
+          .filter((x): x is Record<string, unknown> => x !== null)
+      }
+    }
+  }
+
+  const tuanDeals = (tuanRes.data || []).map(d => ({
+    _id: d._id,
+    title: d.title || '',
+    coverUrl: d.coverUrl || '',
+    minPrice: computeTuanMinPrice(Array.isArray(d.products) ? d.products : []),
+    totalOrders: d.totalOrders || 0,
+    endTime: d.endTime || '',
+  }))
+  const products = (prodList || []).map(p => ({
+    _id: p._id,
+    name: p.name || '',
+    coverUrl: p.coverUrl || p.coverImage || '',
+    price: p.minPrice || p.price || 0,
+    originalPrice: p.originalPrice || 0,
+    soldCount: p.soldCount || 0,
+    subTitle: p.subTitle || '',
+  }))
+
+  // cloud:// 图片链接批量转 https 临时直链（递归替换各板块，一次调用）
+  const feed = await convertCloudUrls({
+    banners: (banners as BannerListResult).list || [],
+    tuanDeals,
+    activities: actRes.data || [],
+    products,
+    myPets,
+    myActivities,
+  })
+
+  return handleSuccess(feed, '获取成功')
+}
+
+// =====================================================================
 // Handlers 聚合 + Main 入口
 // =====================================================================
 
 const handlers: Record<string, (event: CloudEvent) => Promise<unknown>> = {
   getBanners: () => getBanners(),
   getHostInfo,
+  getHomeFeed,
 }
 
 export async function main(event: CloudEvent): Promise<unknown> {
@@ -292,6 +519,7 @@ _mod.exports = {
   main,
   getBanners,
   getHostInfo,
+  getHomeFeed,
   clearBannersCache,
   BANNERS_CACHE_TTL,
   BANNER_FETCH_LIMIT,
@@ -302,6 +530,7 @@ export default {
   main,
   getBanners,
   getHostInfo,
+  getHomeFeed,
   clearBannersCache,
   BANNERS_CACHE_TTL,
   BANNER_FETCH_LIMIT,

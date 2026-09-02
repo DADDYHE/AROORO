@@ -528,6 +528,16 @@ export async function checkAdminStatus(
   const { openid } = auth
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
+  // 云资源优化：5 分钟内存缓存（与 getIdentity 的 identity_${openid} 同模式）。
+  // 本 action 由小程序每次冷启动后台调用，缓存命中时省 1 次 admins 读；
+  // admins 状态变更由 adminService 写入（跨服务内存缓存无法主动失效），
+  // 最长 5 分钟延迟对"合伙人入口徽标"类展示可接受。
+  const cacheKey = `partner_${openid}`
+  const cached = getCache(cacheKey)
+  if (cached) {
+    return handleSuccess(cached)
+  }
+
   try {
     let adminInfo: AdminRecord | null = null
     try {
@@ -541,13 +551,12 @@ export async function checkAdminStatus(
       })
     }
 
-    if (adminInfo && adminInfo.status === 'active') {
-      // P2 修复：统一口径（roles 含 partner 或 isPartner 布尔）
-      const isPartner = isPartnerFn(adminInfo)
-      return handleSuccess({ isPartner })
-    } else {
-      return handleSuccess({ isPartner: false })
-    }
+    // P2 修复：统一口径（roles 含 partner 或 isPartner 布尔）
+    const result = adminInfo && adminInfo.status === 'active'
+      ? { isPartner: isPartnerFn(adminInfo) }
+      : { isPartner: false }
+    setCache(cacheKey, result, 300)
+    return handleSuccess(result)
   } catch (error) {
     logger.error('checkAdminStatus', error)
     return handleError(error, '检查管理员状态失败', ERROR_CODES.DATA)

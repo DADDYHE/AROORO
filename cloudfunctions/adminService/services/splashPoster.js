@@ -26,10 +26,21 @@ const COLLECTION = 'system_config';
 const DOC_ID = 'splash_poster';
 const TARGET_RATIO = 9 / 16;
 const DEFAULT_DURATION = 2500;
+// 云资源优化：模块级内存缓存（与 utilityService banner 缓存同模式）。
+// 启动海报为低频运营配置，小程序每次冷启动都会调用 getSplashPoster，
+// 缓存命中时省 1 次 system_config 读 + 1 次 getTempFileURL（公读桶直链长期有效，
+// 缓存 5 分钟无过期问题）。updateSplashPoster 同实例写后主动失效，跨实例靠 TTL。
+const SPLASH_CACHE_TTL = 5 * 60 * 1000;
+let _splashCache = null;
+let _splashCacheTime = 0;
 /* ============================================================
  * Handlers
  * ============================================================ */
 exports.getSplashPoster = (0, errors_1.withErrorHandling)(async () => {
+    const now = Date.now();
+    if (_splashCache && now - _splashCacheTime < SPLASH_CACHE_TTL) {
+        return _splashCache;
+    }
     const { db } = (0, utils_1.initCloud)();
     let doc = {};
     try {
@@ -65,7 +76,10 @@ exports.getSplashPoster = (0, errors_1.withErrorHandling)(async () => {
             logger.warn('getSplashPoster.tempUrl', { msg: e?.message });
         }
     }
-    return (0, utils_1.handleSuccess)(data);
+    const success = (0, utils_1.handleSuccess)(data);
+    _splashCache = success;
+    _splashCacheTime = now;
+    return success;
 });
 exports.updateSplashPoster = (0, errors_1.withErrorHandling)(async (event, _ctx, auth) => {
     const { db } = (0, utils_1.initCloud)();
@@ -111,6 +125,9 @@ exports.updateSplashPoster = (0, errors_1.withErrorHandling)(async (event, _ctx,
     const merged = { ...existing, ...data };
     delete merged._id;
     await db.collection(COLLECTION).doc(DOC_ID).set({ data: merged });
+    // 云资源优化：写后失效本实例读缓存（跨实例靠 5 分钟 TTL 过期）
+    _splashCache = null;
+    _splashCacheTime = 0;
     logger.info('updateSplashPoster.saved', { enabled: merged.enabled, width: merged.width, height: merged.height });
     return (0, utils_1.handleSuccess)({ ...merged, _id: DOC_ID }, '保存成功');
 });

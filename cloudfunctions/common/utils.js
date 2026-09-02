@@ -163,25 +163,29 @@ const MAX_PAGE_SIZE = 100;
  * @returns 包含 list/total/page/pageSize/totalPages/hasNext
  */
 async function paginate(db, collectionName, options = {}) {
-    const { page = 1, pageSize = 10, where = {}, orderBy = { field: 'createdAt', direction: 'desc' }, projection = null, } = options;
+    const { page = 1, pageSize = 10, where = {}, orderBy = { field: 'createdAt', direction: 'desc' }, projection = null, withTotal = true, } = options;
     const safePageSize = Math.min(Math.max(1, Number(pageSize) || 10), MAX_PAGE_SIZE);
     const offset = (page - 1) * safePageSize;
-    const countQuery = db.collection(collectionName).where(where);
-    const countResult = await countQuery.count();
-    const total = countResult.total;
+    let total = -1;
+    if (withTotal) {
+        const countQuery = db.collection(collectionName).where(where);
+        const countResult = await countQuery.count();
+        total = countResult.total;
+    }
     let dataQuery = db.collection(collectionName).where(where);
     if (projection) {
         dataQuery = dataQuery.field(projection);
     }
     dataQuery = dataQuery.orderBy(orderBy.field, orderBy.direction);
     const dataResult = await dataQuery.skip(offset).limit(safePageSize).get();
+    const list = (dataResult.data || []);
     return {
-        list: (dataResult.data || []),
+        list,
         total,
         page,
         pageSize: safePageSize,
-        totalPages: Math.ceil(total / safePageSize),
-        hasNext: page * safePageSize < total,
+        totalPages: withTotal ? Math.ceil(total / safePageSize) : -1,
+        hasNext: withTotal ? page * safePageSize < total : list.length === safePageSize,
     };
 }
 exports.paginate = paginate;

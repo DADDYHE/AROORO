@@ -62,6 +62,7 @@ export interface HttpInfo {
         headers: Record<string, string | undefined>;
     };
     _isHttpCall: true;
+    _bodyAccessToken?: string;
     _parseError?: Error;
 }
 export interface JwtDecodedToken {
@@ -107,7 +108,7 @@ export interface HttpParseError {
 export declare function parseHttpEvent(event: CloudEvent, context: CloudContext): HttpInfoOrError | null;
 export declare function parseHttpAuth(httpContext: {
     headers: Record<string, string | undefined>;
-}): JwtDecodedToken | null;
+}, bodyAccessToken?: string): JwtDecodedToken | null;
 export declare function checkHttpPermission(decoded: JwtDecodedToken | null, action: string): boolean;
 /**
  * H1 安全修复：以 DB 实时状态（enrichAuthFromAdmin 结果）为权威判权依据。

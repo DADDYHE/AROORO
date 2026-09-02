@@ -124,14 +124,33 @@ async function performActivityApplyRiskCheck(ctx) {
 // =====================================================================
 // 辅助函数：活动状态自动更新
 // =====================================================================
+// 北京时间串（YYYY-MM-DD HH:mm），与 activities.startTime/endTime 存储格式一致。
+// 定时器扫描与"读时虚拟状态"共用同一口径，保证视图推导与持久化最终一致。
+function getBeijingNowStr() {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const bjTime = new Date(utc + (8 * 3600000));
+    return `${bjTime.getFullYear()}-${String(bjTime.getMonth() + 1).padStart(2, '0')}-${String(bjTime.getDate()).padStart(2, '0')} ${String(bjTime.getHours()).padStart(2, '0')}:${String(bjTime.getMinutes()).padStart(2, '0')}`;
+}
+// 读时虚拟状态：条件与 autoUpdateActivityStatus 的状态迁移完全一致
+// （published --startTime 到--> registration_stopped --endTime 到--> ended）。
+// 定时器降频（5 -> 30 分钟）后，展示与报名门禁不再依赖持久化状态的翻转时机，
+// 消除最长 30 分钟的状态展示延迟；定时器仍负责落库与佣金生成（幂等，不重不漏）。
+function deriveDisplayStatus(activity, nowStr) {
+    const status = activity.status || '';
+    if (status === 'published' && activity.startTime && String(activity.startTime) <= nowStr) {
+        return 'registration_stopped';
+    }
+    if ((status === 'published' || status === 'registration_stopped') && activity.endTime && String(activity.endTime) <= nowStr) {
+        return 'ended';
+    }
+    return status;
+}
 // M4 修复：本函数不再挂在 getActivityList 上同步执行（写放大），
-// 改由 config.json 定时触发器（activityStatusTrigger，每 5 分钟）驱动
+// 改由 config.json 定时触发器（activityStatusTrigger，每 30 分钟）驱动
 async function autoUpdateActivityStatus() {
     try {
-        const now = new Date();
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const bjTime = new Date(utc + (8 * 3600000));
-        const nowStr = `${bjTime.getFullYear()}-${String(bjTime.getMonth() + 1).padStart(2, '0')}-${String(bjTime.getDate()).padStart(2, '0')} ${String(bjTime.getHours()).padStart(2, '0')}:${String(bjTime.getMinutes()).padStart(2, '0')}`;
+        const nowStr = getBeijingNowStr();
         const stoppedRes = await db.collection('activities')
             .where({ status: 'published', startTime: _.lte(nowStr) })
             .update({ data: { status: 'registration_stopped', updatedAt: db.serverDate() } });
@@ -380,12 +399,15 @@ const REGISTRATION_LIST_FIELDS = {
     totalAmount: true, createdAt: true, signInStatus: true,
 };
 async function getActivityList(event, context, auth) {
-    const { page = 1, pageSize = 10, status, category, keyword, registerable } = event;
+    const { page = 1, pageSize = 10, status, category, keyword, registerable, withJoined, skipTotal } = event;
     const safePageSize = Math.min(Math.max(1, Number(pageSize) || 10), 100);
+    const nowStr = getBeijingNowStr();
     logger.info('getActivityList.query', { page, pageSize: safePageSize, status, category, keyword, registerable });
     // 可报名模式：先取"我已报名"的活动 id，用于服务端排除（保证分页正确，避免客户端过滤破坏 hasMore 判定）
+    // 云资源优化：myRegistrations 仅服务于 registerable 排除与 joined 徽章；
+    //   未传 withJoined 的调用（首页等）跳过该查询，每次省 1 次数据库读
     let myRegistrations = [];
-    if (auth.openid) {
+    if (auth.openid && (registerable || withJoined)) {
         const regRes = await db.collection('activity_registrations')
             .where({ ownerId: auth.openid, status: _.in(['pending_payment', 'paid', 'completed']) })
             .field({ activityId: true })
@@ -397,6 +419,9 @@ async function getActivityList(event, context, auth) {
     if (registerable) {
         // 可报名：报名中(published) 且用户尚未报名（按 _id 排除已报名，服务端过滤保证分页准确）
         where.status = 'published';
+        // 读时门禁：开始即截止报名。定时器持久化 registration_stopped 最多延迟 30 分钟，
+        //   此处按 startTime 实时过滤，避免已开始的活动滞留"可报名"列表
+        where.startTime = _.gt(nowStr);
         if (myRegistrations.length > 0) {
             where._id = _.nin(myRegistrations);
         }
@@ -423,6 +448,9 @@ async function getActivityList(event, context, auth) {
         page, pageSize: safePageSize, where,
         projection: ACTIVITY_LIST_FIELDS,
         orderBy: { field: 'createdAt', direction: 'desc' },
+        // 云资源优化：无限滚动列表（ListBehavior 以本页条数判定 hasMore）不消费 total，
+        // 调用方传 skipTotal=true 可省 1 次 count 读；需要 total 的调用方不传即可（默认 count）
+        withTotal: !skipTotal,
     });
     result.list.forEach((activity) => {
         const avatar = activity.organizer && activity.organizer.avatar;
@@ -465,6 +493,8 @@ async function getActivityList(event, context, auth) {
     logger.info('getActivityList.result', { total: result.total, listCount: result.list.length });
     result.list = result.list.map((activity) => ({
         ...activity,
+        // 读时虚拟状态：消除定时器降频后的状态展示延迟（口径见 deriveDisplayStatus）
+        status: deriveDisplayStatus(activity, nowStr),
         joined: myRegistrations.includes(activity._id || ''),
     }));
     return handleSuccess(result, '获取成功');
@@ -498,6 +528,8 @@ async function getActivityDetail(event, context, auth) {
         }
         const result = {
             ...data,
+            // 读时虚拟状态：消除定时器降频后的状态展示延迟（口径见 deriveDisplayStatus）
+            status: deriveDisplayStatus(data, getBeijingNowStr()),
             isRegistered,
             isSigned,
             registrationId: myReg ? (myReg._id || '') : '',
@@ -614,6 +646,11 @@ async function submitRegistration(event, context, auth) {
         // P1-A 修复：仅"已发布"状态可报名——草稿/报名截止/已取消/已结束活动一律拒绝
         if (activity.status !== 'published') {
             throw err('BUSINESS_ERROR', `活动当前状态不可报名：${activity.status || '未知'}`);
+        }
+        // 读时门禁：开始即截止报名。定时器持久化 registration_stopped 最多延迟 30 分钟，
+        //   延迟窗口内 status 仍为 published，此处按 startTime 实时拦截，防止已开始活动被继续报名
+        if (activity.startTime && String(activity.startTime) <= getBeijingNowStr()) {
+            throw err('BUSINESS_ERROR', '活动已开始，报名已截止');
         }
         const pricePerPerson = activity.pricePerPerson || 0;
         const pricePerPet = activity.pricePerPet || 0;
@@ -889,10 +926,7 @@ async function getRegistrationList(event, context, auth) {
         if (myActivityIds.length === 0) {
             return handleSuccess({ list: [], total: 0, page, pageSize: safePageSize }, '获取成功');
         }
-        const now = new Date();
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const bjTime = new Date(utc + (8 * 3600000));
-        const nowStr = `${bjTime.getFullYear()}-${String(bjTime.getMonth() + 1).padStart(2, '0')}-${String(bjTime.getDate()).padStart(2, '0')} ${String(bjTime.getHours()).padStart(2, '0')}:${String(bjTime.getMinutes()).padStart(2, '0')}`;
+        const nowStr = getBeijingNowStr();
         const activeIds = [];
         for (let i = 0; i < myActivityIds.length; i += 100) {
             const actRes = await db.collection('activities')

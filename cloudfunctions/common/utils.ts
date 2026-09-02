@@ -51,6 +51,13 @@ export interface PaginateOptions {
   where?: Record<string, unknown>
   orderBy?: { field: string, direction: 'asc' | 'desc' }
   projection?: Record<string, boolean> | null
+  /**
+   * 云资源优化：是否执行 count 查询（默认 true，保持既有行为）。
+   * 无限滚动列表（ListBehavior 以 list.length >= pageSize 判定 hasMore）
+   * 不消费 total，传 false 可省 1 次 count 读。
+   * false 时返回 total=-1 / totalPages=-1，hasNext 按"本页满"推导。
+   */
+  withTotal?: boolean
 }
 
 /** paginate 返回值 */
@@ -259,27 +266,32 @@ export async function paginate<T = Record<string, unknown>>(
     where = {},
     orderBy = { field: 'createdAt', direction: 'desc' },
     projection = null,
+    withTotal = true,
   } = options
 
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 10), MAX_PAGE_SIZE)
   const offset = (page - 1) * safePageSize
 
-  const countQuery = db.collection(collectionName).where(where)
-  const countResult = await countQuery.count()
-  const total = countResult.total
+  let total = -1
+  if (withTotal) {
+    const countQuery = db.collection(collectionName).where(where)
+    const countResult = await countQuery.count()
+    total = countResult.total
+  }
 
   let dataQuery: any = db.collection(collectionName).where(where)
   if (projection) {dataQuery = dataQuery.field(projection)}
   dataQuery = dataQuery.orderBy(orderBy.field, orderBy.direction)
   const dataResult = await dataQuery.skip(offset).limit(safePageSize).get()
 
+  const list = (dataResult.data || []) as T[]
   return {
-    list: (dataResult.data || []) as T[],
+    list,
     total,
     page,
     pageSize: safePageSize,
-    totalPages: Math.ceil(total / safePageSize),
-    hasNext: page * safePageSize < total,
+    totalPages: withTotal ? Math.ceil(total / safePageSize) : -1,
+    hasNext: withTotal ? page * safePageSize < total : list.length === safePageSize,
   }
 }
 

@@ -76,6 +76,9 @@ export interface HttpInfo {
     headers: Record<string, string | undefined>
   }
   _isHttpCall: true
+  // 兼容网关不转发 X-User-Token 时从 body 读取的用户 JWT（见 parseHttpEvent）。
+  // 2026-08-26 acae31e 引入时漏声明，导致 tsc --noEmit 严格检查失败（运行时产物一直正确）。
+  _bodyAccessToken?: string
   _parseError?: Error
 }
 

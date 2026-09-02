@@ -432,7 +432,7 @@ export async function getProductList(
   _context: CloudContext,
   _auth: AuthLike
 ): Promise<unknown> {
-  const { page = 1, pageSize = 10, category, categoryId, status = 'on_sale', isFeatured, keyword } = event
+  const { page = 1, pageSize = 10, category, categoryId, status = 'on_sale', isFeatured, keyword, skipTotal } = event
   const where: Record<string, unknown> = { status }
   if (categoryId) {
     where.categoryId = categoryId
@@ -457,8 +457,12 @@ export async function getProductList(
   const offset = (safePage - 1) * safePageSize
 
   const coll = db.collection('products')
-  const countResult = await coll.where(where).count()
-  const total = countResult.total
+  // 云资源优化：无限滚动列表（以本页条数判定 hasMore）传 skipTotal=true 省 1 次 count 读
+  let total = -1
+  if (!skipTotal) {
+    const countResult = await coll.where(where).count()
+    total = countResult.total
+  }
 
   // aggregate 的 project 只接受 1/0，从布尔投影映射
   const aggProjection: Record<string, number> = {}
@@ -479,13 +483,15 @@ export async function getProductList(
     .limit(safePageSize)
     .end()
 
+  const list = (aggRes.list || []) as ProductRecord[]
   const result = {
-    list: (aggRes.list || []) as ProductRecord[],
+    list,
     total,
     page: safePage,
     pageSize: safePageSize,
-    totalPages: Math.ceil(total / safePageSize),
-    hasNext: safePage * safePageSize < total,
+    // skipTotal 时与 common paginate 同口径：total=-1，hasNext 按"本页满"推导
+    totalPages: skipTotal ? -1 : Math.ceil(total / safePageSize),
+    hasNext: skipTotal ? list.length === safePageSize : safePage * safePageSize < total,
   }
 
   const cloudUrls: string[] = []
@@ -607,6 +613,31 @@ export async function listCategories(
     logger.error('listCategories', error)
     return handleError(error, '获取分类列表失败', ERROR_CODES.DATA)
   }
+}
+
+// =====================================================================
+// Handler 3.5: getMallCatalog - 商城首屏聚合（云资源优化）
+// =====================================================================
+// 一次返回分类列表 + 各分类商品数统计，替代前端"listCategories + getCategoryStats"
+// 两次串行调用。分类与统计内部并行，前端首屏分类渲染只需 1 次往返。
+// 兼容降级：任一失败不阻断另一项（返回部分数据，前端可回退本地分类）。
+
+export async function getMallCatalog(
+  _event: CloudEvent,
+  _context: CloudContext,
+  _auth: AuthLike
+): Promise<unknown> {
+  const [catRes, statsRes] = await Promise.all([
+    listCategories(_event, _context, _auth).catch(() => null),
+    getCategoryStats(_event, _context, _auth).catch(() => null),
+  ])
+  const categories = (catRes && 'data' in (catRes as object))
+    ? ((catRes as { data?: unknown[] }).data || [])
+    : []
+  const stats = (statsRes && 'data' in (statsRes as object))
+    ? ((statsRes as { data?: Record<string, number> }).data || {})
+    : {}
+  return handleSuccess({ categories, stats }, '获取成功')
 }
 
 // =====================================================================
@@ -1301,6 +1332,21 @@ export async function createMultiOrder(
 // Handler 12: getMyOrders
 // =====================================================================
 
+/**
+ * 云资源优化：我的商城/团购订单列表字段投影。
+ * 覆盖订单统计页（profile/order-stats）与列表卡片消费的扁平快照字段；
+ * buyerInfo/petsInfo/hostInfo 等大对象不读（详情页走 getOrderDetail 全量读）。
+ */
+const MALL_ORDER_LIST_FIELDS: Record<string, boolean> = {
+  _id: true, orderNo: true, outTradeNo: true, transactionId: true,
+  type: true, orderType: true, status: true, paymentStatus: true,
+  productName: true, productImage: true, skuText: true, unitPrice: true, quantity: true,
+  items: true, // 列表"首件 ×N 等 M 件"提示仅取 length
+  totalAmount: true, totalPrice: true, finalAmount: true, originalAmount: true,
+  receiverName: true, receiverPhone: true, receiverAddress: true,
+  createdAt: true, updatedAt: true,
+}
+
 export async function getMyOrders(
   event: CloudEvent,
   _context: CloudContext,
@@ -1309,7 +1355,7 @@ export async function getMyOrders(
   const { openid } = auth
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
-  const { status, page = 1, pageSize = 20 } = event
+  const { status, page = 1, pageSize = 20, skipTotal } = event
   // H5: 修复 where.status 冲突——原逻辑 _.neq('deleted') 会被传入的 status 覆盖，导致泄露已删除订单
   const where: Record<string, unknown> = { ownerId: openid, type: 'mall' }
   if (status && status !== 'all' && status !== 'deleted') {
@@ -1324,6 +1370,10 @@ export async function getMyOrders(
       pageSize,
       where,
       orderBy: { field: 'createdAt', direction: 'desc' },
+      // 云资源优化：字段裁剪（订单列表/统计消费的扁平快照字段，大对象 buyerInfo/petsInfo 等不读）
+      // + skipTotal（无限滚动列表不消费 total 时省 1 次 count 读）
+      projection: MALL_ORDER_LIST_FIELDS,
+      withTotal: !skipTotal,
     })
     return handleSuccess(result)
   } catch (error) {
@@ -1344,7 +1394,7 @@ export async function getGroupBuyOrders(
   const { openid } = auth
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
-  const { status, page = 1, pageSize = 20 } = event
+  const { status, page = 1, pageSize = 20, skipTotal } = event
   // H5: 同 getMyOrders，防止已删除订单泄露
   const where: Record<string, unknown> = { ownerId: openid, type: 'group_buy' }
   if (status && status !== 'all' && status !== 'deleted') {
@@ -1359,6 +1409,9 @@ export async function getGroupBuyOrders(
       pageSize,
       where,
       orderBy: { field: 'createdAt', direction: 'desc' },
+      // 云资源优化：同 getMyOrders，字段裁剪 + skipTotal
+      projection: MALL_ORDER_LIST_FIELDS,
+      withTotal: !skipTotal,
     })
     return handleSuccess(result)
   } catch (error) {
@@ -1770,6 +1823,7 @@ export const handlers: Record<string, MallActionHandler> = {
   getProductDetail,
   getCategoryStats,
   listCategories,
+  getMallCatalog,
   checkCartItems,
   createOrder,
   createMultiOrder,
@@ -1839,6 +1893,7 @@ _mod.exports = {
   getProductDetail,
   getCategoryStats,
   listCategories,
+  getMallCatalog,
   checkCartItems,
   createOrder,
   createMultiOrder,
@@ -1858,6 +1913,7 @@ export default {
   getProductDetail,
   getCategoryStats,
   listCategories,
+  getMallCatalog,
   checkCartItems,
   createOrder,
   createMultiOrder,

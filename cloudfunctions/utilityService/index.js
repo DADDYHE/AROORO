@@ -6,6 +6,7 @@
  * 业务功能：
  *   - getBanners - 拉取首页 banner 列表（带内存缓存，TTL 5 分钟）
  *   - getHostInfo - 拉取寄养家庭简要信息
+ *   - getHomeFeed - 首页聚合 BFF（云资源优化：6 次调用 → 1 次，直查 DB 无 count）
  *
  * 迁移目标：
  *   - 强类型化 2 个 action handler 签名
@@ -16,7 +17,7 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.utilityService.json
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.getHostInfo = exports.clearBannersCache = exports.getBanners = exports.BANNER_FETCH_LIMIT = exports.BANNERS_CACHE_TTL = void 0;
+exports.main = exports.getHomeFeed = exports.HOME_FEED_REGISTRATION_LIMIT = exports.HOME_FEED_PET_LIMIT = exports.HOME_FEED_PRODUCT_LIMIT = exports.HOME_FEED_ACTIVITY_LIMIT = exports.HOME_FEED_TUAN_LIMIT = exports.getHostInfo = exports.clearBannersCache = exports.getBanners = exports.BANNER_FETCH_LIMIT = exports.BANNERS_CACHE_TTL = void 0;
 // =====================================================================
 // 内部模块初始化
 // =====================================================================
@@ -29,7 +30,7 @@ const db = cloud.database();
 const { createLogger } = require('./common/logger');
 const logger = createLogger('utilityService');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { handleSuccess, handleError } = require('./common/utils');
+const { handleSuccess, handleError, convertCloudUrls } = require('./common/utils');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err } = require('./common/errors');
 // M3: 引入限流（bootstrap + withRateLimit），对齐 mallService/tuanService 模式
@@ -154,16 +155,202 @@ async function getHostInfo(event) {
 }
 exports.getHostInfo = getHostInfo;
 // =====================================================================
+// Action 3：getHomeFeed - 首页聚合 BFF（云资源优化）
+// =====================================================================
+// 一次调用返回首页全部板块（banner / 团购 / 活动 / 商城商品，
+// 登录时附宠物 + 可签到活动），替代原先 6 次独立云函数调用
+// （各服务还各含 1 次 count）。查询口径与原各服务实现对齐：
+//   - tuan：tuanService.getTuanDealList（status/时间窗 + minPrice 计算）
+//   - activities：activityService.getActivityList({status:'published'})
+//   - products：mallService.getProductList（缺货沉底 aggregate 排序）
+//   - pets：petService.getPetList（ownerId + isActive 投影）
+//   - 报名：activityService.getRegistrationList（活动字段 + 报名字段合并）
+// 全部直查 DB、带字段投影、无 count。
+/** 首页各板块拉取条数（与原 behavior 单独调用时的参数一致） */
+exports.HOME_FEED_TUAN_LIMIT = 4;
+exports.HOME_FEED_ACTIVITY_LIMIT = 10;
+exports.HOME_FEED_PRODUCT_LIMIT = 6;
+exports.HOME_FEED_PET_LIMIT = 10;
+exports.HOME_FEED_REGISTRATION_LIMIT = 20;
+/** 团购最低价（与 tuanService.computeMinPrice 同口径） */
+function computeTuanMinPrice(products) {
+    let min = Infinity;
+    for (const p of products) {
+        const item = p;
+        if (item.skuType === 'multi' && item.skus && item.skus.length > 0) {
+            for (const sku of item.skus) {
+                if (sku.enabled !== false) {
+                    const price = Number(sku.tuanPrice) || Number(sku.price) || Infinity;
+                    if (price < min) {
+                        min = price;
+                    }
+                }
+            }
+        }
+        else {
+            const price = Number(item.tuanPrice) || 0;
+            if (price > 0 && price < min) {
+                min = price;
+            }
+        }
+    }
+    return min === Infinity ? 0 : min;
+}
+async function getHomeFeed(event) {
+    const _ = db.command;
+    const withUser = event.withUser === true;
+    const openid = (cloud.getWXContext() || {}).OPENID || '';
+    const now = new Date();
+    // 公共板块并行直查（失败降级为空板块，不阻断整页）
+    const [banners, tuanRes, actRes, prodList] = await Promise.all([
+        getBanners().catch(() => ({ list: [] })),
+        db.collection('tuan_deals')
+            .where({ status: _.in(['published', 'active']), startTime: _.lte(now), endTime: _.gte(now) })
+            .field({ _id: true, title: true, coverUrl: true, products: true, endTime: true, totalOrders: true })
+            .orderBy('createdAt', 'desc')
+            .limit(exports.HOME_FEED_TUAN_LIMIT)
+            .get()
+            .catch(() => ({ data: [] })),
+        db.collection('activities')
+            .where({ status: 'published' })
+            .field({
+            _id: true, title: true, coverUrl: true, startTime: true, endTime: true,
+            location: true, price: true, pricePerPerson: true, pricePerPet: true,
+            currentParticipants: true, maxParticipants: true, category: true, createdAt: true,
+        })
+            .orderBy('createdAt', 'desc')
+            .limit(exports.HOME_FEED_ACTIVITY_LIMIT)
+            .get()
+            .catch(() => ({ data: [] })),
+        (async () => {
+            // 商品：缺货沉底排序与 mallService.getProductList 同口径（aggregate 现算 _stockFlag）
+            // 注意：必须直接链式调用 .aggregate()，不能先解构出方法引用再调用
+            // （裸调用会丢失 this，CloudBase aggregate 链内部读 this._collection 崩溃）
+            try {
+                const $ = _.aggregate;
+                const res = await db.collection('products')
+                    .aggregate()
+                    .match({ status: 'on_sale' })
+                    .addFields({
+                    _stockFlag: $.cond({
+                        if: $.gt([$.ifNull(['$totalStock', $.ifNull(['$stock', 1])]), 0]),
+                        then: 1,
+                        else: 0,
+                    }),
+                })
+                    .sort({ _stockFlag: -1, isFeatured: -1, createdAt: -1 })
+                    .project({
+                    _id: 1, name: 1, coverUrl: 1, coverImage: 1, price: 1, originalPrice: 1,
+                    soldCount: 1, subTitle: 1, minPrice: 1, isFeatured: 1, createdAt: 1,
+                })
+                    .limit(exports.HOME_FEED_PRODUCT_LIMIT)
+                    .end();
+                return (res.list || []);
+            }
+            catch (e) {
+                logger.warn('getHomeFeed.products.aggregate', { error: e?.message });
+            }
+            // 兜底：aggregate 不可用时退化为普通查询（仅排序口径降级）
+            const res = await db.collection('products')
+                .where({ status: 'on_sale' })
+                .field({
+                _id: true, name: true, coverUrl: true, coverImage: true, price: true,
+                originalPrice: true, soldCount: true, subTitle: true, minPrice: true, createdAt: true,
+            })
+                .orderBy('createdAt', 'desc')
+                .limit(exports.HOME_FEED_PRODUCT_LIMIT)
+                .get()
+                .catch(() => ({ data: [] }));
+            return res.data || [];
+        })(),
+    ]);
+    // 登录态板块（pets + 可签到活动）——原 2 次云函数调用并入本次聚合
+    let myPets = null;
+    let myActivities = null;
+    if (withUser && openid) {
+        const petRes = await db.collection('pets')
+            .where({ ownerId: openid, isActive: 1 })
+            .field({ _id: true, name: true, breed: true, birthday: true, avatarUrl: true, gender: true, type: true })
+            .orderBy('createdAt', 'desc')
+            .limit(exports.HOME_FEED_PET_LIMIT)
+            .get()
+            .catch(() => ({ data: [] }));
+        myPets = petRes.data || [];
+        const regRes = await db.collection('activity_registrations')
+            .where({ ownerId: openid, status: _.in(['pending_payment', 'paid', 'completed']) })
+            .field({ _id: true, activityId: true, signInStatus: true })
+            .orderBy('createdAt', 'desc')
+            .limit(exports.HOME_FEED_REGISTRATION_LIMIT)
+            .get()
+            .catch(() => ({ data: [] }));
+        const registrations = regRes.data || [];
+        myActivities = [];
+        if (registrations.length > 0) {
+            const activityIds = [...new Set(registrations.map(r => String(r.activityId || '')).filter(Boolean))];
+            if (activityIds.length > 0) {
+                const actInfoRes = await db.collection('activities')
+                    .where({ _id: _.in(activityIds) })
+                    .field({ _id: true, title: true, coverUrl: true, location: true, startTime: true, endTime: true })
+                    .get()
+                    .catch(() => ({ data: [] }));
+                const actMap = {};
+                for (const a of (actInfoRes.data || [])) {
+                    actMap[String(a._id)] = a;
+                }
+                // 与 activityService.getRegistrationList 返回结构对齐
+                // （活动字段 + _registrationId/signInStatus 合并），前端 buildMyActivity 同口径消费
+                myActivities = registrations
+                    .map((r) => {
+                    const act = actMap[String(r.activityId || '')];
+                    if (!act) {
+                        return null;
+                    }
+                    return {
+                        ...act,
+                        _registrationId: r._id,
+                        signInStatus: r.signInStatus || 'unsigned',
+                    };
+                })
+                    .filter((x) => x !== null);
+            }
+        }
+    }
+    const tuanDeals = (tuanRes.data || []).map(d => ({
+        _id: d._id,
+        title: d.title || '',
+        coverUrl: d.coverUrl || '',
+        minPrice: computeTuanMinPrice(Array.isArray(d.products) ? d.products : []),
+        totalOrders: d.totalOrders || 0,
+        endTime: d.endTime || '',
+    }));
+    const products = (prodList || []).map(p => ({
+        _id: p._id,
+        name: p.name || '',
+        coverUrl: p.coverUrl || p.coverImage || '',
+        price: p.minPrice || p.price || 0,
+        originalPrice: p.originalPrice || 0,
+        soldCount: p.soldCount || 0,
+        subTitle: p.subTitle || '',
+    }));
+    // cloud:// 图片链接批量转 https 临时直链（递归替换各板块，一次调用）
+    const feed = await convertCloudUrls({
+        banners: banners.list || [],
+        tuanDeals,
+        activities: actRes.data || [],
+        products,
+        myPets,
+        myActivities,
+    });
+    return handleSuccess(feed, '获取成功');
+}
+exports.getHomeFeed = getHomeFeed;
+// =====================================================================
 // Handlers 聚合 + Main 入口
 // =====================================================================
 const handlers = {
     getBanners: () => getBanners(),
     getHostInfo,
-    // P2 修复：暴露清缓存 action，供管理端 banner 变更后联动清除（避免 5 分钟缓存延迟）
-    clearBannersCache: () => {
-        clearBannersCache();
-        return handleSuccess(null, '缓存已清除');
-    },
+    getHomeFeed,
 };
 async function main(event) {
     try {
@@ -198,6 +385,7 @@ _mod.exports = {
     main,
     getBanners,
     getHostInfo,
+    getHomeFeed,
     clearBannersCache,
     BANNERS_CACHE_TTL: exports.BANNERS_CACHE_TTL,
     BANNER_FETCH_LIMIT: exports.BANNER_FETCH_LIMIT,
@@ -207,6 +395,7 @@ exports.default = {
     main,
     getBanners,
     getHostInfo,
+    getHomeFeed,
     clearBannersCache,
     BANNERS_CACHE_TTL: exports.BANNERS_CACHE_TTL,
     BANNER_FETCH_LIMIT: exports.BANNER_FETCH_LIMIT,

@@ -3,7 +3,7 @@
     {
       "name": "rateLimitCleanupTrigger",
       "type": "timer",
-      "config": "0 */10 * * * * *"
+      "config": "0 */30 * * * * *"
     }
   ],
   "timeout": 20,

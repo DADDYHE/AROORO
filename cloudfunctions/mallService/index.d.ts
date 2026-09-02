@@ -193,6 +193,7 @@ export interface UrlMap {
 export declare function getProductList(event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
 export declare function getCategoryStats(_event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
 export declare function listCategories(_event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
+export declare function getMallCatalog(_event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
 export declare function checkCartItems(event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
 export declare function getProductDetail(event: CloudEvent, _context: CloudContext, _auth: AuthLike): Promise<unknown>;
 export declare function createOrder(event: CloudEvent, _context: CloudContext, auth: AuthLike): Promise<unknown>;
@@ -212,6 +213,7 @@ declare const _default: {
     getProductDetail: typeof getProductDetail;
     getCategoryStats: typeof getCategoryStats;
     listCategories: typeof listCategories;
+    getMallCatalog: typeof getMallCatalog;
     checkCartItems: typeof checkCartItems;
     createOrder: typeof createOrder;
     createMultiOrder: typeof createMultiOrder;

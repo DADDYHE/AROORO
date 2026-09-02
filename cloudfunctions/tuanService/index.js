@@ -330,7 +330,7 @@ async function writeOperationLog(params) {
 // Action 1：拉取团购列表
 // =====================================================================
 async function getTuanDealList(event) {
-    const { page = 1, pageSize = exports.DEFAULT_PAGE_SIZE, status, keyword } = event;
+    const { page = 1, pageSize = exports.DEFAULT_PAGE_SIZE, status, keyword, skipTotal } = event;
     const where = {};
     if (status) {
         where.status = status;
@@ -348,6 +348,8 @@ async function getTuanDealList(event) {
     const result = await paginate(db, 'tuan_deals', {
         page, pageSize, where, projection: exports.TUAN_DEAL_LIST_FIELDS,
         orderBy: { field: 'createdAt', direction: 'desc' },
+        // 云资源优化：无限滚动列表不消费 total，skipTotal=true 省 1 次 count 读
+        withTotal: !skipTotal,
     });
     if (result.list) {
         result.list = result.list.map((deal) => ({

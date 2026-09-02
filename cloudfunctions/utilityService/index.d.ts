@@ -4,6 +4,7 @@
  * 业务功能：
  *   - getBanners - 拉取首页 banner 列表（带内存缓存，TTL 5 分钟）
  *   - getHostInfo - 拉取寄养家庭简要信息
+ *   - getHomeFeed - 首页聚合 BFF（云资源优化：6 次调用 → 1 次，直查 DB 无 count）
  *
  * 迁移目标：
  *   - 强类型化 2 个 action handler 签名
@@ -76,11 +77,19 @@ export declare function getBanners(): Promise<BannerListResult>;
 /** 清除 banner 缓存（供测试 / 数据更新时调用） */
 export declare function clearBannersCache(): void;
 export declare function getHostInfo(event: CloudEvent): Promise<unknown>;
+/** 首页各板块拉取条数（与原 behavior 单独调用时的参数一致） */
+export declare const HOME_FEED_TUAN_LIMIT = 4;
+export declare const HOME_FEED_ACTIVITY_LIMIT = 10;
+export declare const HOME_FEED_PRODUCT_LIMIT = 6;
+export declare const HOME_FEED_PET_LIMIT = 10;
+export declare const HOME_FEED_REGISTRATION_LIMIT = 20;
+export declare function getHomeFeed(event: CloudEvent): Promise<unknown>;
 export declare function main(event: CloudEvent): Promise<unknown>;
 declare const _default: {
     main: typeof main;
     getBanners: typeof getBanners;
     getHostInfo: typeof getHostInfo;
+    getHomeFeed: typeof getHomeFeed;
     clearBannersCache: typeof clearBannersCache;
     BANNERS_CACHE_TTL: number;
     BANNER_FETCH_LIMIT: number;

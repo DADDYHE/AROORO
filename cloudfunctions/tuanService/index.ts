@@ -526,7 +526,7 @@ async function writeOperationLog(params: {
 // =====================================================================
 
 export async function getTuanDealList(event: CloudEvent): Promise<unknown> {
-  const { page = 1, pageSize = DEFAULT_PAGE_SIZE, status, keyword } = event
+  const { page = 1, pageSize = DEFAULT_PAGE_SIZE, status, keyword, skipTotal } = event
   const where: Record<string, unknown> = {}
   if (status) {
     where.status = status
@@ -544,6 +544,8 @@ export async function getTuanDealList(event: CloudEvent): Promise<unknown> {
   const result = await paginate(db, 'tuan_deals', {
     page, pageSize, where, projection: TUAN_DEAL_LIST_FIELDS,
     orderBy: { field: 'createdAt', direction: 'desc' },
+    // 云资源优化：无限滚动列表不消费 total，skipTotal=true 省 1 次 count 读
+    withTotal: !skipTotal,
   })
   if (result.list) {
     result.list = result.list.map((deal: TuanDeal) => ({

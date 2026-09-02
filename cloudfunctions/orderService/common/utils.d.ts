@@ -44,6 +44,13 @@ export interface PaginateOptions {
         direction: 'asc' | 'desc';
     };
     projection?: Record<string, boolean> | null;
+    /**
+     * 云资源优化：是否执行 count 查询（默认 true，保持既有行为）。
+     * 无限滚动列表（ListBehavior 以 list.length >= pageSize 判定 hasMore）
+     * 不消费 total，传 false 可省 1 次 count 读。
+     * false 时返回 total=-1 / totalPages=-1，hasNext 按"本页满"推导。
+     */
+    withTotal?: boolean;
 }
 /** paginate 返回值 */
 export interface PaginatedResult<T = unknown> {

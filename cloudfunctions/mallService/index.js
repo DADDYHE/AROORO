@@ -45,7 +45,7 @@
  *     - { orderNo: 1 }                              - 覆盖佣金记录查询
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.handlers = exports.getWxShippingStatus = exports.deleteOrder = exports.confirmReceive = exports.getOrderDetail = exports.cancelOrder = exports.getGroupBuyOrders = exports.getMyOrders = exports.createMultiOrder = exports.createOrder = exports.getProductDetail = exports.checkCartItems = exports.listCategories = exports.getCategoryStats = exports.getProductList = void 0;
+exports.main = exports.handlers = exports.getWxShippingStatus = exports.deleteOrder = exports.confirmReceive = exports.getOrderDetail = exports.cancelOrder = exports.getGroupBuyOrders = exports.getMyOrders = exports.createMultiOrder = exports.createOrder = exports.getProductDetail = exports.checkCartItems = exports.getMallCatalog = exports.listCategories = exports.getCategoryStats = exports.getProductList = void 0;
 // =====================================================================
 // 内部模块初始化（require CommonJS 模块）
 // =====================================================================
@@ -255,7 +255,7 @@ const PRODUCT_LIST_FIELDS = {
 // Handler 1: getProductList
 // =====================================================================
 async function getProductList(event, _context, _auth) {
-    const { page = 1, pageSize = 10, category, categoryId, status = 'on_sale', isFeatured, keyword } = event;
+    const { page = 1, pageSize = 10, category, categoryId, status = 'on_sale', isFeatured, keyword, skipTotal } = event;
     const where = { status };
     if (categoryId) {
         where.categoryId = categoryId;
@@ -281,8 +281,12 @@ async function getProductList(event, _context, _auth) {
     const safePageSize = Math.min(Math.max(1, Number(pageSize) || 10), 100);
     const offset = (safePage - 1) * safePageSize;
     const coll = db.collection('products');
-    const countResult = await coll.where(where).count();
-    const total = countResult.total;
+    // 云资源优化：无限滚动列表（以本页条数判定 hasMore）传 skipTotal=true 省 1 次 count 读
+    let total = -1;
+    if (!skipTotal) {
+        const countResult = await coll.where(where).count();
+        total = countResult.total;
+    }
     // aggregate 的 project 只接受 1/0，从布尔投影映射
     const aggProjection = {};
     for (const key of Object.keys(PRODUCT_LIST_FIELDS)) {
@@ -302,13 +306,15 @@ async function getProductList(event, _context, _auth) {
         .skip(offset)
         .limit(safePageSize)
         .end();
+    const list = (aggRes.list || []);
     const result = {
-        list: (aggRes.list || []),
+        list,
         total,
         page: safePage,
         pageSize: safePageSize,
-        totalPages: Math.ceil(total / safePageSize),
-        hasNext: safePage * safePageSize < total,
+        // skipTotal 时与 common paginate 同口径：total=-1，hasNext 按"本页满"推导
+        totalPages: skipTotal ? -1 : Math.ceil(total / safePageSize),
+        hasNext: skipTotal ? list.length === safePageSize : safePage * safePageSize < total,
     };
     const cloudUrls = [];
     for (const item of result.list) {
@@ -421,6 +427,26 @@ async function listCategories(_event, _context, _auth) {
     }
 }
 exports.listCategories = listCategories;
+// =====================================================================
+// Handler 3.5: getMallCatalog - 商城首屏聚合（云资源优化）
+// =====================================================================
+// 一次返回分类列表 + 各分类商品数统计，替代前端"listCategories + getCategoryStats"
+// 两次串行调用。分类与统计内部并行，前端首屏分类渲染只需 1 次往返。
+// 兼容降级：任一失败不阻断另一项（返回部分数据，前端可回退本地分类）。
+async function getMallCatalog(_event, _context, _auth) {
+    const [catRes, statsRes] = await Promise.all([
+        listCategories(_event, _context, _auth).catch(() => null),
+        getCategoryStats(_event, _context, _auth).catch(() => null),
+    ]);
+    const categories = (catRes && 'data' in catRes)
+        ? (catRes.data || [])
+        : [];
+    const stats = (statsRes && 'data' in statsRes)
+        ? (statsRes.data || {})
+        : {};
+    return handleSuccess({ categories, stats }, '获取成功');
+}
+exports.getMallCatalog = getMallCatalog;
 // =====================================================================
 // Handler 4: checkCartItems
 // =====================================================================
@@ -1090,12 +1116,26 @@ exports.createMultiOrder = createMultiOrder;
 // =====================================================================
 // Handler 12: getMyOrders
 // =====================================================================
+/**
+ * 云资源优化：我的商城/团购订单列表字段投影。
+ * 覆盖订单统计页（profile/order-stats）与列表卡片消费的扁平快照字段；
+ * buyerInfo/petsInfo/hostInfo 等大对象不读（详情页走 getOrderDetail 全量读）。
+ */
+const MALL_ORDER_LIST_FIELDS = {
+    _id: true, orderNo: true, outTradeNo: true, transactionId: true,
+    type: true, orderType: true, status: true, paymentStatus: true,
+    productName: true, productImage: true, skuText: true, unitPrice: true, quantity: true,
+    items: true, // 列表"首件 ×N 等 M 件"提示仅取 length
+    totalAmount: true, totalPrice: true, finalAmount: true, originalAmount: true,
+    receiverName: true, receiverPhone: true, receiverAddress: true,
+    createdAt: true, updatedAt: true,
+};
 async function getMyOrders(event, _context, auth) {
     const { openid } = auth;
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
     }
-    const { status, page = 1, pageSize = 20 } = event;
+    const { status, page = 1, pageSize = 20, skipTotal } = event;
     // H5: 修复 where.status 冲突——原逻辑 _.neq('deleted') 会被传入的 status 覆盖，导致泄露已删除订单
     const where = { ownerId: openid, type: 'mall' };
     if (status && status !== 'all' && status !== 'deleted') {
@@ -1110,6 +1150,10 @@ async function getMyOrders(event, _context, auth) {
             pageSize,
             where,
             orderBy: { field: 'createdAt', direction: 'desc' },
+            // 云资源优化：字段裁剪（订单列表/统计消费的扁平快照字段，大对象 buyerInfo/petsInfo 等不读）
+            // + skipTotal（无限滚动列表不消费 total 时省 1 次 count 读）
+            projection: MALL_ORDER_LIST_FIELDS,
+            withTotal: !skipTotal,
         });
         return handleSuccess(result);
     }
@@ -1127,7 +1171,7 @@ async function getGroupBuyOrders(event, _context, auth) {
     if (!openid) {
         throw err('AUTH_REQUIRED', '未登录');
     }
-    const { status, page = 1, pageSize = 20 } = event;
+    const { status, page = 1, pageSize = 20, skipTotal } = event;
     // H5: 同 getMyOrders，防止已删除订单泄露
     const where = { ownerId: openid, type: 'group_buy' };
     if (status && status !== 'all' && status !== 'deleted') {
@@ -1142,6 +1186,9 @@ async function getGroupBuyOrders(event, _context, auth) {
             pageSize,
             where,
             orderBy: { field: 'createdAt', direction: 'desc' },
+            // 云资源优化：同 getMyOrders，字段裁剪 + skipTotal
+            projection: MALL_ORDER_LIST_FIELDS,
+            withTotal: !skipTotal,
         });
         return handleSuccess(result);
     }
@@ -1533,6 +1580,7 @@ exports.handlers = {
     getProductDetail,
     getCategoryStats,
     listCategories,
+    getMallCatalog,
     checkCartItems,
     createOrder,
     createMultiOrder,
@@ -1596,6 +1644,7 @@ _mod.exports = {
     getProductDetail,
     getCategoryStats,
     listCategories,
+    getMallCatalog,
     checkCartItems,
     createOrder,
     createMultiOrder,
@@ -1614,6 +1663,7 @@ exports.default = {
     getProductDetail,
     getCategoryStats,
     listCategories,
+    getMallCatalog,
     checkCartItems,
     createOrder,
     createMultiOrder,
