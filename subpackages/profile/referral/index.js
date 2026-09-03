@@ -27,6 +27,12 @@ Page({
   },
 
   onShow() {
+    // 首屏由 onLoad 独占（首 onShow 跳过，避免进页双拉 getReferralStats）；
+    // 后续 onShow（分享/返回）保留刷新语义
+    if (!this._firstShowHandled) {
+      this._firstShowHandled = true
+      return
+    }
     this._loadStats()
   },
 
