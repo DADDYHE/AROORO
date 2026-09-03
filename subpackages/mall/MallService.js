@@ -12,6 +12,7 @@ class MallService {
   static listCategories(options) { return this.call('listCategories', undefined, options) }
   // 商城首屏聚合：一次返回分类 + 统计（替代 listCategories + getCategoryStats 两次串行）
   static getMallCatalog(options) { return this.call('getMallCatalog', undefined, options) }
+  static getMallPage(data, options) { return this.call('getMallPage', data, options) }
   static createOrder(data) { return this.call('createOrder', data) }
 }
 

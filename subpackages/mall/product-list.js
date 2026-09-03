@@ -47,6 +47,38 @@ Page({
       currentCategoryLabel: firstCat ? firstCat.label : '',
     })
     // 两路并行：首屏商品 / 商城目录聚合（一次返回分类+统计，原 listCategories+getCategoryStats 两次串行）
+    this._loadFirstScreen()
+  },
+
+  // 商城首屏聚合 BFF：一次云函数 getMallPage 同时返回分类+统计+首屏商品（云资源优化 2026-09-02）
+  // 替代原“_loadCatalog + _loadProducts”两次独立调用；失败降级回两路，保证可用性
+  async _loadFirstScreen() {
+    try {
+      const result = await MallService.getMallPage({ skipTotal: true }, { useCache: true, cacheTime: 30000 })
+      if (result && result.code === 0 && result.data && result.data.productRes) {
+        const d = result.data
+        // 商品首屏
+        const list = Array.isArray(d.productRes.list) ? d.productRes.list : []
+        this.setData({
+          page: 1,
+          currentProducts: list.map(p => ({ ...p, priceFrom: hasPriceFrom(p) })),
+          hasMore: list.length >= this.data.pageSize,
+        })
+        // 分类 + 统计
+        const cats = (Array.isArray(d.categories) ? d.categories : []).map(cat => ({
+          key: cat.key,
+          label: cat.label,
+          subcats: (cat.subcats || []).map(sub => ({ key: sub.key, label: sub.label })),
+        }))
+        const stats = (d.stats && typeof d.stats === 'object') ? d.stats : {}
+        this._applyCatalog(cats, stats)
+        this.setData({ loading: false })
+        return
+      }
+    } catch (e) {
+      console.error('[product-list] getMallPage 失败，降级两路:', e)
+    }
+    // 降级：沿用原有两路（目录聚合 + 商品首屏）
     this._loadProducts()
     this._loadCatalog()
   },

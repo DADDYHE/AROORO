@@ -355,8 +355,12 @@ const handlers = {
 async function main(event) {
     try {
         const { action } = event;
-        if (!action || !handlers[action]) {
-            throw err('UNKNOWN_ACTION', `未知 action: ${action || '<empty>'}`);
+        // keep-warm 保活定时器以无 action 事件触发，静默返回避免入口抛错（否则产生 -504002/未知 action 噪声）
+        if (!action) {
+            return handleSuccess({ keepwarm: true });
+        }
+        if (!handlers[action]) {
+            throw err('UNKNOWN_ACTION', `未知 action: ${action}`);
         }
         const result = await handlers[action](event);
         if (result && typeof result === 'object' && 'code' in result) {

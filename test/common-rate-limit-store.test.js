@@ -146,9 +146,15 @@ const {
   peekGlobalRateLimit,
   cleanupExpiredRateLimits,
   getGlobalRateLimitStats,
+  resetRateLimitCache,
 } = require(JS)
 
 describe('Sprint 21: rate-limit-store 全局限流存储', () => {
+  // 限流存储含实例内存缓存；同一进程内多次 require 复用同一模块，
+  // 需在用例间清空，避免窗口计数跨用例污染（生产环境实例天然隔离）。
+  beforeEach(() => {
+    resetRateLimitCache()
+  })
   describe('文件存在性', () => {
     test('.ts 源文件存在', () => expect(fs.existsSync(TS)).toBe(true))
     test('.js 编译产物存在', () => expect(fs.existsSync(JS)).toBe(true))

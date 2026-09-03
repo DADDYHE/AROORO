@@ -77,6 +77,7 @@ export interface GlobalRateLimitStore {
  *   t:userId|type|targetId  → 目标维度
  */
 export declare function buildKey(input: GlobalRateLimitInput, scope: 'global' | 'target'): string;
+export declare function resetRateLimitCache(): void;
 /**
  * 原子地消费一次配额（同时更新 global + target 两个 key）
  *

@@ -35,9 +35,63 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getGlobalRateLimitStats = exports.cleanupExpiredRateLimits = exports.peekGlobalRateLimit = exports.consumeGlobalRateLimit = exports.buildKey = void 0;
 const errors_1 = require("./errors");
+// ===== 实例内存快照缓存 =====
+// 性能优化（性能版限流）：
+//   - 限流决策是 best-effort 的 DoS 防御，容忍实例级轻微宽松
+//   - 用实例内存缓存(rate_limits 记录的窗口快照)替代热路径上的 DB 读，
+//     同一实例在同一窗口内的连续调用直接命中内存，DB 读次数从每次 N 次降到
+//     仅(窗口首调 / 窗口滚动)各 1 次；写仍同步落库，保证跨实例计数可累计。
+const _memCache = new Map();
+const MEM_MAX_ENTRIES = 2000;
+/** 命中且窗口未过期的内存快照；过期则删除并返回 null */
+function _memGet(key, now) {
+    const rec = _memCache.get(key);
+    if (!rec) { return null; }
+    if (now >= rec.windowStart + rec.windowMs) {
+        _memCache.delete(key);
+        return null;
+    }
+    return rec;
+}
+/** 写入内存快照并顺手修剪过期条目，避免无界增长 */
+function _memSet(key, count, windowStart, windowMs) {
+    _memCache.set(key, {
+        _id: key,
+        scope: (key.charAt(0) === 'g' ? 'global' : 'target'),
+        userId: '',
+        type: '',
+        count,
+        windowStart,
+        windowMs,
+        expireAt: windowStart + windowMs,
+        updatedAt: Date.now(),
+    });
+    if (_memCache.size > MEM_MAX_ENTRIES) {
+        const now = Date.now();
+        for (const [k, r] of _memCache) {
+            if (now >= r.windowStart + r.windowMs) { _memCache.delete(k); }
+        }
+        if (_memCache.size > MEM_MAX_ENTRIES) {
+            let excess = _memCache.size - MEM_MAX_ENTRIES;
+            for (const k of _memCache.keys()) {
+                if (excess <= 0) { break; }
+                _memCache.delete(k);
+                excess--;
+            }
+        }
+    }
+}
 // ===== 工具函数 =====
-/**
- * 生成复合 _id
+/** 清空实例内存缓存（仅测试/调试用）
+ * CloudBase 生产环境每个函数实例天然隔离，实例生命周期内该缓存随实例回收而释放，
+ * 无需手动调用。测试场景因同一进程内多次 require 复用同一模块，需在用例间 reset，
+ * 避免窗口计数跨用例污染（等价 risk-rate-limit 的 _resetStore）。
+ */
+function resetRateLimitCache() {
+    _memCache.clear();
+}
+exports.resetRateLimitCache = resetRateLimitCache;
+/** 生成复合 _id
  * 格式：scope前缀:userId|type[|targetId]
  *   g:userId|type           → 全局维度
  *   t:userId|type|targetId  → 目标维度
@@ -72,53 +126,59 @@ async function consumeGlobalRateLimit(input, store) {
     const _ = store.command;
     const now = nowMs(input);
     const globalKey = buildKey(input, 'global');
-    // 1. 读取 global key
-    const globalRec = await _readRecord(coll, globalKey);
-    const globalCutoff = globalRec ? globalRec.windowStart + globalRec.windowMs : 0;
-    const globalInWindow = globalRec && now < globalCutoff;
-    const globalNextCount = (globalInWindow ? globalRec.count : 0) + 1;
-    // 2. 提前拦截：global 超限
+    // ---- 1. 读取 global（内存优先，miss/窗口过期才回源 DB，省热路径 DB 读）----
+    let globalRec = _memGet(globalKey, now);
+    let globalInWindow = !!globalRec;
+    if (!globalRec) {
+        globalRec = await _readRecord(coll, globalKey);
+        globalInWindow = !!globalRec && now < globalRec.windowStart + globalRec.windowMs;
+    }
     if (globalInWindow && globalRec.count >= input.limit) {
         return {
             allowed: false,
             remaining: 0,
-            resetAt: globalCutoff,
+            resetAt: globalRec.windowStart + globalRec.windowMs,
             count: globalRec.count,
             key: globalKey,
             scope: 'global',
         };
     }
-    // 3. 读取 target key（如有）
+    // ---- 2. 读取 target（内存优先）----
     let targetRec = null;
     let targetKey = null;
+    let targetInWindow = false;
     if (input.targetId) {
         targetKey = buildKey(input, 'target');
-        targetRec = await _readRecord(coll, targetKey);
-        const targetCutoff = targetRec ? targetRec.windowStart + targetRec.windowMs : 0;
-        const targetInWindow = !!targetRec && now < targetCutoff;
+        targetRec = _memGet(targetKey, now);
+        targetInWindow = !!targetRec;
+        if (!targetRec) {
+            targetRec = await _readRecord(coll, targetKey);
+            targetInWindow = !!targetRec && now < targetRec.windowStart + targetRec.windowMs;
+        }
         if (targetInWindow && targetRec && targetRec.count >= input.limit) {
             return {
                 allowed: false,
                 remaining: 0,
-                resetAt: targetCutoff,
+                resetAt: targetRec.windowStart + targetRec.windowMs,
                 count: targetRec.count,
                 key: targetKey,
                 scope: 'target',
             };
         }
     }
-    // 4. 写入 global
-    let globalAfter;
+    // ---- 3. 写入 global（同步落库，删除写后冗余读）----
+    let gCount;
+    let gWindowStart = globalInWindow ? globalRec.windowStart : now;
+    let gWindowMs = globalInWindow ? globalRec.windowMs : input.windowMs;
     try {
         if (globalInWindow) {
             await coll.doc(globalKey).update({
                 data: { count: _.inc(1), updatedAt: now },
             });
-            const after = await _readRecord(coll, globalKey);
-            globalAfter = after || globalRec;
+            gCount = globalRec.count + 1;
         }
         else {
-            globalAfter = await _writeNewRecord(coll, {
+            await _writeNewRecord(coll, {
                 _id: globalKey,
                 scope: 'global',
                 userId: input.userId,
@@ -130,20 +190,21 @@ async function consumeGlobalRateLimit(input, store) {
                 expireAt: now + input.windowMs,
                 updatedAt: now,
             });
+            gCount = 1;
         }
+        _memSet(globalKey, gCount, gWindowStart, gWindowMs);
     }
     catch (e) {
         throw (0, errors_1.err)('INTERNAL_ERROR', `全局限流写入失败：${_serializeError(e)}`);
     }
-    // 5. 写入 target（如有）
+    // ---- 4. 写入 target（同步落库）----
     if (input.targetId && targetKey) {
-        const targetCutoff = targetRec ? targetRec.windowStart + targetRec.windowMs : 0;
-        const targetInWindow = !!targetRec && now < targetCutoff;
         try {
             if (targetInWindow) {
                 await coll.doc(targetKey).update({
                     data: { count: _.inc(1), updatedAt: now },
                 });
+                _memSet(targetKey, targetRec.count + 1, targetRec.windowStart, targetRec.windowMs);
             }
             else {
                 await _writeNewRecord(coll, {
@@ -158,6 +219,7 @@ async function consumeGlobalRateLimit(input, store) {
                     expireAt: now + input.windowMs,
                     updatedAt: now,
                 });
+                _memSet(targetKey, 1, now, input.windowMs);
             }
         }
         catch (e) {
@@ -165,9 +227,9 @@ async function consumeGlobalRateLimit(input, store) {
             throw (0, errors_1.err)('INTERNAL_ERROR', `目标限流写入失败：${_serializeError(e)}`);
         }
     }
-    // 6. 决策：哪个 key 剩余最少？
-    const finalCount = globalAfter.count;
-    const finalResetAt = globalAfter.windowStart + globalAfter.windowMs;
+    // ---- 5. 决策：以 global 为准（与历史行为一致）----
+    const finalCount = gCount;
+    const finalResetAt = gWindowStart + gWindowMs;
     return {
         allowed: finalCount <= input.limit,
         remaining: Math.max(0, input.limit - finalCount),
@@ -331,4 +393,5 @@ exports.default = {
     cleanupExpiredRateLimits,
     getGlobalRateLimitStats,
     buildKey,
+    resetRateLimitCache,
 };

@@ -45,7 +45,7 @@
  *     - { orderNo: 1 }                              - 覆盖佣金记录查询
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = exports.handlers = exports.getWxShippingStatus = exports.deleteOrder = exports.confirmReceive = exports.getOrderDetail = exports.cancelOrder = exports.getGroupBuyOrders = exports.getMyOrders = exports.createMultiOrder = exports.createOrder = exports.getProductDetail = exports.checkCartItems = exports.getMallCatalog = exports.listCategories = exports.getCategoryStats = exports.getProductList = void 0;
+exports.main = exports.handlers = exports.getWxShippingStatus = exports.deleteOrder = exports.confirmReceive = exports.getOrderDetail = exports.cancelOrder = exports.getGroupBuyOrders = exports.getMyOrders = exports.createMultiOrder = exports.createOrder = exports.getProductDetail = exports.checkCartItems = exports.getMallPage = exports.getMallCatalog = exports.listCategories = exports.getCategoryStats = exports.getProductList = void 0;
 // =====================================================================
 // 内部模块初始化（require CommonJS 模块）
 // =====================================================================
@@ -447,6 +447,30 @@ async function getMallCatalog(_event, _context, _auth) {
     return handleSuccess({ categories, stats }, '获取成功');
 }
 exports.getMallCatalog = getMallCatalog;
+
+// =====================================================================
+// Handler 3.5: getMallPage - 商城首屏聚合 BFF
+// =====================================================================
+// 一次调用返回商城主页全部首屏数据：
+//   - categories + stats（复用 getMallCatalog）
+//   - 首页商品列表首屏（复用 getProductList，固定 page=1 + skipTotal，避免首屏 count 读）
+// 替代前端「getMallCatalog + getProductList」两次独立云函数调用，省 1 次网关往返与冷启动。
+async function getMallPage(event, _context, _auth) {
+    const [catRes, prodRes] = await Promise.all([
+        getMallCatalog(event, _context, _auth).catch(() => null),
+        getProductList(Object.assign({}, event, { page: 1, skipTotal: true }), _context, _auth).catch(() => null),
+    ]);
+    const catData = (catRes && 'data' in catRes)
+        ? (catRes.data || null)
+        : null;
+    const categories = (catData && catData.categories) || [];
+    const stats = (catData && catData.stats) || {};
+    const productRes = (prodRes && 'data' in prodRes)
+        ? (prodRes.data || null)
+        : null;
+    return handleSuccess({ categories, stats, productRes }, '获取成功');
+}
+exports.getMallPage = getMallPage;
 // =====================================================================
 // Handler 4: checkCartItems
 // =====================================================================
@@ -1581,6 +1605,7 @@ exports.handlers = {
     getCategoryStats,
     listCategories,
     getMallCatalog,
+    getMallPage,
     checkCartItems,
     createOrder,
     createMultiOrder,
@@ -1597,7 +1622,11 @@ exports.handlers = {
 // =====================================================================
 async function main(event, context) {
     const { action } = event;
-    if (!action || !exports.handlers[action]) {
+    // keep-warm 保活定时器以无 action 事件触发，静默返回避免入口抛错（否则产生 -504002/无效操作类型噪声）
+    if (!action) {
+        return handleSuccess({ keepwarm: true });
+    }
+    if (!exports.handlers[action]) {
         throw err('INVALID_PARAMS', '无效的操作类型');
     }
     const WRITE_ACTIONS = [
@@ -1645,6 +1674,7 @@ _mod.exports = {
     getCategoryStats,
     listCategories,
     getMallCatalog,
+    getMallPage,
     checkCartItems,
     createOrder,
     createMultiOrder,
@@ -1664,6 +1694,7 @@ exports.default = {
     getCategoryStats,
     listCategories,
     getMallCatalog,
+    getMallPage,
     checkCartItems,
     createOrder,
     createMultiOrder,

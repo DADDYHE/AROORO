@@ -491,8 +491,11 @@ const handlers: Record<string, (event: CloudEvent) => Promise<unknown>> = {
 export async function main(event: CloudEvent): Promise<unknown> {
   try {
     const { action } = event
-    if (!action || !handlers[action]) {
-      throw err('UNKNOWN_ACTION', `未知 action: ${action || '<empty>'}`)
+    if (!action) {
+      return handleSuccess({ keepwarm: true })
+    }
+    if (!handlers[action]) {
+      throw err('UNKNOWN_ACTION', `未知 action: ${action}`)
     }
     const result = await handlers[action](event)
     if (result && typeof result === 'object' && 'code' in result) { return result }
