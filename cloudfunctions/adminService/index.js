@@ -77,6 +77,9 @@ const uploadHandlers = require('./services/upload');
 // P1-2: 注册退款 handler（web-admin 调用 adminRefund/queryRefund）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const refundHandlers = require('./services/refund');
+// 启动首屏海报（小程序 onLaunch 登录前调用 getSplashPoster）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const splashPosterHandlers = require('./services/splashPoster');
 // =====================================================================
 // handlers 汇总
 // =====================================================================
@@ -98,6 +101,7 @@ exports.handlers = {
     ...refundHandlers,
     ...i18nOverrideHandlers,
     ...uploadHandlers,
+    ...splashPosterHandlers,
 };
 // =====================================================================
 // ACTION_PERMISSIONS 权限表
@@ -273,7 +277,7 @@ const ACTION_PERMISSIONS = {
     uploadFile: 'partner',
 };
 const logger = createLogger('adminService');
-const NO_AUTH_REQUIRED = new Set(['webLogin', 'createScanLogin', 'pollScanLogin', 'fetchActiveOverrides']);
+const NO_AUTH_REQUIRED = new Set(['webLogin', 'createScanLogin', 'pollScanLogin', 'fetchActiveOverrides', 'getSplashPoster']);
 // =====================================================================
 // Sprint 50: 限流统一 bootstrap（全局计数 + 配置注入）
 //   admin 端使用非 strict 模式（best-effort）：权限体系已提供强保护，

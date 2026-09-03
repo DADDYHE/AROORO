@@ -175,6 +175,9 @@ const uploadHandlers: Record<string, ActionHandler> = require('./services/upload
 // P1-2: 注册退款 handler（web-admin 调用 adminRefund/queryRefund）
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const refundHandlers: Record<string, ActionHandler> = require('./services/refund')
+// 启动首屏海报（小程序 onLaunch 登录前调用 getSplashPoster）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const splashPosterHandlers: Record<string, ActionHandler> = require('./services/splashPoster')
 
 // =====================================================================
 // handlers 汇总
@@ -198,6 +201,7 @@ export const handlers: Record<string, ActionHandler> = {
   ...refundHandlers,
   ...i18nOverrideHandlers,
   ...uploadHandlers,
+  ...splashPosterHandlers,
 }
 
 // =====================================================================
@@ -390,7 +394,7 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
 
 const logger = createLogger('adminService')
 
-const NO_AUTH_REQUIRED = new Set(['webLogin', 'createScanLogin', 'pollScanLogin', 'fetchActiveOverrides'])
+const NO_AUTH_REQUIRED = new Set(['webLogin', 'createScanLogin', 'pollScanLogin', 'fetchActiveOverrides', 'getSplashPoster'])
 
 // =====================================================================
 // Sprint 50: 限流统一 bootstrap（全局计数 + 配置注入）
