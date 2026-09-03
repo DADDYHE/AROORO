@@ -68,6 +68,12 @@ Page({
   },
 
   onShow() {
+    // 首屏由 onLoad 独占（首 onShow 跳过，避免清空列表导致首屏先空后填）；
+    // 后续 onShow（从领券中心返回）必须刷新，保证新领的券可见
+    if (!this._firstShowHandled) {
+      this._firstShowHandled = true
+      return
+    }
     this.setData({ page: 1, coupons: [], hasMore: true })
     this._loadData()
   },

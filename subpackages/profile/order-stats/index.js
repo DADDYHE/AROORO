@@ -124,11 +124,16 @@ Page({
 
   onShow() {
     this._syncLoginStatus()
-    if (this.data.isLoggedIn) {
-      this._loadOrders()
-    } else {
+    if (!this.data.isLoggedIn) {
       console.warn('[order-stats] 未登录，跳过加载订单')
+      return
     }
+    // 30s 节流：窗口内返回不再全量重拉（订单状态变更另有 orderManager
+    // LIST_UPDATED 事件兜底，onLoad 已订阅）；下拉刷新/操作后刷新不走节流
+    const now = Date.now()
+    if (this._lastLoadedAt && now - this._lastLoadedAt < 30000) { return }
+    this._lastLoadedAt = now
+    this._loadOrders()
   },
 
   onUnload() {
@@ -632,6 +637,8 @@ Page({
         this._calcStats()
         this._applyFilter()
         // 异步从云端再拉一次最新状态，保证强一致
+        // （同步更新节流时间戳，避免紧随其后的一次 onShow 被节流窗口挡住）
+        this._lastLoadedAt = Date.now()
         this._loadOrders().catch(() => {/* 静默降级 */})
       } else {
         this.errorDynamic((res && res.message) || '', 'CANCEL_FAILED')
@@ -642,6 +649,8 @@ Page({
   },
 
   onPullDownRefresh() {
+    // 手动下拉刷新不受 30s 节流限制，始终立即生效
+    this._lastLoadedAt = Date.now()
     this._loadOrders().then(() => wx.stopPullDownRefresh()).catch(() => wx.stopPullDownRefresh())
   },
 })
