@@ -109,22 +109,28 @@ Component({
           return { transform: `rotate(${rotation.value}deg)` }
         }
 
-        // 两个选择器可能只有一个存在，分别 try-catch
-        try {
-          this._cancelCircularStyle = this.applyAnimatedStyle(
-            '.zy-loading__circular',
-            updateStyle
-          )
-        } catch (e) {
-          this._cancelCircularStyle = null
-        }
-        try {
-          this._cancelSpinnerStyle = this.applyAnimatedStyle(
-            '.zy-loading__spinner',
-            updateStyle
-          )
-        } catch (e) {
-          this._cancelSpinnerStyle = null
+        // 2026-09-06 修复：按 type 只绑定实际渲染的节点——wxml 按 type 条件渲染
+        //   （circular 或 spinner 仅其一存在），无条件对两个选择器都 apply 会报
+        //   「applyAnimatedStyle can not find valid element」（try-catch 只兜异常，
+        //   框架对找不到节点是先告警再抛，console 仍报错）
+        if (this.data.type === 'circular') {
+          try {
+            this._cancelCircularStyle = this.applyAnimatedStyle(
+              '.zy-loading__circular',
+              updateStyle
+            )
+          } catch (e) {
+            this._cancelCircularStyle = null
+          }
+        } else if (this.data.type === 'spinner') {
+          try {
+            this._cancelSpinnerStyle = this.applyAnimatedStyle(
+              '.zy-loading__spinner',
+              updateStyle
+            )
+          } catch (e) {
+            this._cancelSpinnerStyle = null
+          }
         }
 
         this._startRotationLoop()
