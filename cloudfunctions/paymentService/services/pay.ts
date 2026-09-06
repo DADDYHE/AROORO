@@ -309,8 +309,11 @@ export const createPayment: WrappedHandler<SuccessResult<CreatePaymentResult>> =
     if (orderType === 'order' && od.payType === 'deposit' && od.status === 'deposit_paid') {
       // 已付定金：本次是尾款
       actualAmount = Math.round(((Number(od.totalPrice) || 0) - (Number(od.paidAmount) || 0)) * 100) / 100
-    } else if (orderType === 'order' && reqPayType === 'deposit' && od.payType !== 'deposit') {
+    } else if (orderType === 'order' && reqPayType === 'deposit' && od.status !== 'deposit_paid') {
       // 用户选择预付定金（全款 × 30%，定金不退）
+      //   修复（2026-09-06）：去掉 od.payType !== 'deposit' 条件——旧流程下单时已写
+      //   payType='deposit' 的待支付单，再次发起定金支付时原条件跳过推算、按全款校验，
+      //   客户端定金金额被拒（PAYMENT_AMOUNT_MISMATCH「支付金额异常」）
       requestPayType = 'deposit'
       actualAmount = Math.round((Number(od.totalPrice) || 0) * 0.3 * 100) / 100
     } else {
