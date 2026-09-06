@@ -161,7 +161,7 @@
             <text class="fee-val">¥{{depositAmount}}</text>
           </view>
           <view class="fee-note" wx:if="{{order.status === 'pending_payment'}}">
-            <text class="fee-note-text">定金支付后不退，剩余尾款 ¥{{remainAmountTip}} 需与家庭线下结算</text>
+            <text class="fee-note-text">定金支付后不退，剩余尾款 ¥{{remainAmountTip}} 可与家庭沟通确定支付时间</text>
           </view>
           <view class="fee-row" wx:if="{{order.payType === 'deposit' && order.paidAmount > 0}}">
             <text class="fee-key">已付定金</text>
