@@ -278,7 +278,17 @@ const cloud = require('wx-server-sdk') as {
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const db = cloud.database()
-const _ = db.command
+// 2026-09-06：补齐 and/lt/gte/neq/or 方法声明（游标分页与预付单回收新增使用）
+const _ = db.command as unknown as {
+  in: (arr: unknown[]) => unknown
+  lte: (v: unknown) => unknown
+  gte: (v: unknown) => unknown
+  lt: (v: unknown) => unknown
+  neq: (v: unknown) => unknown
+  or: (arr: unknown[]) => unknown
+  and: (arr: unknown[]) => unknown
+  inc: (v: number) => unknown
+}
 const logger = createLogger('orderTimeoutService')
 
 // 补偿队列消费者（H4 / M10 修复闭环）所需模块：直接复用 orderService 同款补偿工具，
@@ -847,23 +857,37 @@ function pushError(result: TimeoutResult, err: {
 export async function fetchAllExpired<T = OrderDoc>(
   collection: string,
   where: Record<string, unknown>,
-  fields: Record<string, boolean>
+  fields: Record<string, boolean>,
+  maxBatches: number = MAX_BATCHES,
 ): Promise<T[]> {
   // L2: 克隆 where 对象，防止未来在循环内修改时污染调用方传入的对象
   const queryWhere: Record<string, unknown> = { ...where }
   const allOrders: T[] = []
-  for (let batch = 0; batch < MAX_BATCHES; batch++) {
+  // 2026-09-06 审计修复：skip 分页改为 createdAt 游标分页——累计超时单 >1000 时
+  //   skip 会静默漏扫（已告警兜底），游标分页无上限
+  let lastCreatedAt: Date | null = null
+  for (let batch = 0; batch < maxBatches; batch++) {
+    if (lastCreatedAt) {
+      queryWhere.createdAt = ((db.command as unknown as { and: (arr: unknown[]) => unknown })).and([
+        queryWhere.createdAt,
+        ((db.command as unknown as { lt: (v: Date) => unknown })).lt(lastCreatedAt),
+      ])
+    }
     const res = await db.collection(collection)
       .where(queryWhere)
+      .orderBy('createdAt', 'desc')
       .field(fields)
-      .skip(batch * BATCH_SIZE)
       .limit(BATCH_SIZE)
       .get() as QueryResult<T>
     const data = res.data || []
+    if (data.length > 0) {
+      const tail = (data[data.length - 1] as { createdAt?: Date })?.createdAt
+      lastCreatedAt = tail ? new Date(tail as unknown as string) : null
+    }
     allOrders.push(...data)
     if (data.length < BATCH_SIZE) { break }
     // 已达最大批次数且本批仍满 → 可能还有超时订单超出 1000 单上限被静默截断，告警避免漏处理
-    if (batch === MAX_BATCHES - 1) {
+    if (batch === maxBatches - 1) {
       logger.warn('fetchAllExpired.reached_scan_limit', { collection, scanned: allOrders.length })
       try {
         await recordAlert(
@@ -1486,6 +1510,43 @@ async function processFailedOperations(): Promise<{ scanned: number, success: nu
  *   7. M2: 失败时通过 recordAlert 告警
  *   8. 汇总结果（各类取消数 + 微信关单数 + 错误列表）
  */
+
+/**
+ * 2026-09-06 审计修复（Low）：cancelled 单的微信预付单回收。
+ * 手动取消/惰性取消不关预付单（预付单支付入口随支付页退出实际不可达，风险极低），
+ * 但为消除 2h 预付单有效期内的理论风险，cron 统一回收近 48h 内取消的未支付单。
+ * 关单后查单：若发现 SUCCESS（已取消单被支付成功）→ critical 告警人工退款。
+ */
+async function recycleCancelledPrepayOrders(result: TimeoutResult): Promise<void> {
+  try {
+    const cutoff = new Date(Date.now() - 48 * 3600 * 1000)
+    const cancelled = await fetchAllExpired<OrderDoc>('orders', {
+      status: 'cancelled',
+      paymentStatus: _.in(['unpaid', null]),
+      outTradeNo: _.neq(null),
+      updatedAt: _.gte(cutoff),
+    }, { _id: true, outTradeNo: true }, 20)
+    for (const order of cancelled) {
+      try {
+        const closed = await closeWechatOrder(order.outTradeNo as string)
+        if (closed) {
+          result.closedWechatOrders++
+          continue
+        }
+        const state = await queryWechatOrderState(order.outTradeNo as string)
+        if (state === 'SUCCESS') {
+          await recordAlert('critical', 'orderTimeout.cancelled_order_paid',
+            '已取消订单被支付成功，需人工退款', { orderId: order._id, outTradeNo: order.outTradeNo })
+        }
+      } catch (e) {
+        pushError(result, { orderId: order._id, error: 'recycleClose: ' + (e as Error).message })
+      }
+    }
+  } catch (error) {
+    result.errors.push({ type: 'recycle', error: (error as Error).message })
+  }
+}
+
 // M1: 进程内并发保护标志（参考 couponExpiryCheck 实现）
 let _isRunning = false
 
@@ -1548,7 +1609,7 @@ export async function main(
       cancelGroupBuyOrders(results, groupBuyTimeout),
       cancelActivityOrders(results, activityTimeout),
       completeActivityOrders(results, now),
-    ])
+    , recycleCancelledPrepayOrders(results)])
 
     // H4 / M10 补偿队列闭环：消费 failed_operations 中 pending 记录并重试
     //   独立 try，失败不影响上面的超时取消逻辑；底层补偿函数幂等，安全重试
