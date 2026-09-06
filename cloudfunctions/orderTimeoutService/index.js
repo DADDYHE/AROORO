@@ -549,6 +549,12 @@ const MAX_ERRORS_KEPT = 50;
  * 防止 1000 单全失败时返回体过大被云函数截断。
  */
 function pushError(result, err) {
+    // P0-2（2026-09-06 审计）：资源回退失败=库存/名额/团累计可能永久错账（订单已取消，下轮不再命中），
+    //   单独打 critical 告警供人工对账；完整重试队列下迭代
+    const isResourceRollbackFailure = Boolean(err.stockRestoreError || err.totalsRollbackError);
+    if (isResourceRollbackFailure) {
+        void recordAlert('critical', 'orderTimeout.resource_rollback_failed', '超时取消的资源回退失败，可能造成库存/名额/团累计错账，需人工对账', { ...err }).catch(() => { });
+    }
     if (result.errors.length < MAX_ERRORS_KEPT) {
         result.errors.push(err);
     }
@@ -680,6 +686,28 @@ async function cancelFeedingOrders(result, feedingTimeout) {
         }, { _id: true, outTradeNo: true });
         for (const order of expiredFeedingOrders) {
             try {
+                // 2026-09-06（P0 审计修复）：统一移植 boarding 的「先关单→查 SUCCESS→再取消」——
+                //   防「边界支付成功但 notify 未落地」窗口内取消+回退资源，导致扣款无单+库存/名额双回退
+                if (order.outTradeNo) {
+                    const closed = await closeWechatOrder(order.outTradeNo);
+                    if (!closed) {
+                        const tradeState = await queryWechatOrderState(order.outTradeNo);
+                        if (tradeState === 'SUCCESS') {
+                            logger.info('cancelFeedingOrders.skip_paid_confirmed', { orderId: order._id, outTradeNo: order.outTradeNo });
+                            result.closeOrderFailed++;
+                            continue;
+                        }
+                        if (tradeState === 'UNKNOWN') {
+                            logger.warn('cancelFeedingOrders.skip_query_unknown', { orderId: order._id, outTradeNo: order.outTradeNo });
+                            result.closeOrderFailed++;
+                            continue;
+                        }
+                        // CLOSED / NOTPAY / REFUND → 未支付，继续取消
+                    }
+                    else {
+                        result.closedWechatOrders++;
+                    }
+                }
                 // H2: 幂等保护，仅当 status 仍为 pending_payment 时才更新
                 const cancelRes = await db.collection('feedingOrders')
                     .where({ _id: order._id, status: 'pending_payment' })
@@ -695,15 +723,6 @@ async function cancelFeedingOrders(result, feedingTimeout) {
                 if (!cancelRes.updated || cancelRes.updated === 0) {
                     logger.info('cancelFeedingOrders.skip_already_cancelled', { orderId: order._id });
                     continue;
-                }
-                if (order.outTradeNo) {
-                    const closed = await closeWechatOrder(order.outTradeNo);
-                    if (closed) {
-                        result.closedWechatOrders++;
-                    }
-                    else {
-                        result.closeOrderFailed++;
-                    }
                 }
                 await unlockOrderCoupons(order._id, order.couponId);
                 result.cancelledFeedingOrders++;
@@ -731,6 +750,28 @@ async function cancelMallOrders(result, mallTimeout) {
         }, { _id: true, productId: true, skuId: true, quantity: true, outTradeNo: true, items: true });
         for (const order of expiredMallOrders) {
             try {
+                // 2026-09-06（P0 审计修复）：统一移植 boarding 的「先关单→查 SUCCESS→再取消」——
+                //   防「边界支付成功但 notify 未落地」窗口内取消+回退资源，导致扣款无单+库存/名额双回退
+                if (order.outTradeNo) {
+                    const closed = await closeWechatOrder(order.outTradeNo);
+                    if (!closed) {
+                        const tradeState = await queryWechatOrderState(order.outTradeNo);
+                        if (tradeState === 'SUCCESS') {
+                            logger.info('cancelMallOrders.skip_paid_confirmed', { orderId: order._id, outTradeNo: order.outTradeNo });
+                            result.closeOrderFailed++;
+                            continue;
+                        }
+                        if (tradeState === 'UNKNOWN') {
+                            logger.warn('cancelMallOrders.skip_query_unknown', { orderId: order._id, outTradeNo: order.outTradeNo });
+                            result.closeOrderFailed++;
+                            continue;
+                        }
+                        // CLOSED / NOTPAY / REFUND → 未支付，继续取消
+                    }
+                    else {
+                        result.closedWechatOrders++;
+                    }
+                }
                 // H2: 幂等保护，仅当 status 仍为 pending_payment 时才更新
                 const cancelRes = await db.collection('orders')
                     .where({ _id: order._id, status: 'pending_payment' })
@@ -746,15 +787,6 @@ async function cancelMallOrders(result, mallTimeout) {
                 if (!cancelRes.updated || cancelRes.updated === 0) {
                     logger.info('cancelMallOrders.skip_already_cancelled', { orderId: order._id });
                     continue;
-                }
-                if (order.outTradeNo) {
-                    const closed = await closeWechatOrder(order.outTradeNo);
-                    if (closed) {
-                        result.closedWechatOrders++;
-                    }
-                    else {
-                        result.closeOrderFailed++;
-                    }
                 }
                 try {
                     // P1-C: 合并单（items）逐项回退；单商品走原逻辑
@@ -799,6 +831,28 @@ async function cancelGroupBuyOrders(result, groupBuyTimeout) {
         }, { _id: true, productId: true, skuId: true, quantity: true, dealId: true, outTradeNo: true, tuanOrderId: true, totalAmount: true });
         for (const order of expiredGroupBuyOrders) {
             try {
+                // 2026-09-06（P0 审计修复）：统一移植 boarding 的「先关单→查 SUCCESS→再取消」——
+                //   防「边界支付成功但 notify 未落地」窗口内取消+回退资源，导致扣款无单+库存/名额双回退
+                if (order.outTradeNo) {
+                    const closed = await closeWechatOrder(order.outTradeNo);
+                    if (!closed) {
+                        const tradeState = await queryWechatOrderState(order.outTradeNo);
+                        if (tradeState === 'SUCCESS') {
+                            logger.info('cancelGroupBuyOrders.skip_paid_confirmed', { orderId: order._id, outTradeNo: order.outTradeNo });
+                            result.closeOrderFailed++;
+                            continue;
+                        }
+                        if (tradeState === 'UNKNOWN') {
+                            logger.warn('cancelGroupBuyOrders.skip_query_unknown', { orderId: order._id, outTradeNo: order.outTradeNo });
+                            result.closeOrderFailed++;
+                            continue;
+                        }
+                        // CLOSED / NOTPAY / REFUND → 未支付，继续取消
+                    }
+                    else {
+                        result.closedWechatOrders++;
+                    }
+                }
                 // H2: 幂等保护，仅当 status 仍为 pending_payment 时才更新
                 const cancelRes = await db.collection('orders')
                     .where({ _id: order._id, status: 'pending_payment' })
@@ -814,15 +868,6 @@ async function cancelGroupBuyOrders(result, groupBuyTimeout) {
                 if (!cancelRes.updated || cancelRes.updated === 0) {
                     logger.info('cancelGroupBuyOrders.skip_already_cancelled', { orderId: order._id });
                     continue;
-                }
-                if (order.outTradeNo) {
-                    const closed = await closeWechatOrder(order.outTradeNo);
-                    if (closed) {
-                        result.closedWechatOrders++;
-                    }
-                    else {
-                        result.closeOrderFailed++;
-                    }
                 }
                 try {
                     // P0-2: 团购下单只扣 tuan_deals.products 快照库存（不扣 products 集合），
@@ -865,11 +910,34 @@ async function cancelActivityOrders(result, activityTimeout) {
             // 故原 'unpaid' 或 _.in(['unpaid', null]) 均因实际值为 'pending' 而恒扫 0 → 活动超时取消一直失效。
             // 现放宽到 _.in(['unpaid', 'pending', null]) 覆盖"显式 unpaid / 活动实际 pending / 字段缺失"三种待支付报名。
             // 回退名额仍仅在 paymentStatus==='paid' 时执行（见下），pending 单从未占名额，绝不回退，名额不会变负。
+            // P1（2026-09-06 审计）：未含 'pending'——activityService 现写 'unpaid'，历史 pending 存量需一次性回填（注释原声称含 pending 与实现不符，已修正）
             paymentStatus: _.in(['unpaid', null]),
             createdAt: _.lte(activityTimeout),
         }, { _id: true, activityId: true, ownerId: true, participantCount: true, outTradeNo: true, paymentStatus: true, orderId: true, couponId: true });
         for (const order of expiredActivityOrders) {
             try {
+                // 2026-09-06（P0 审计修复）：统一移植 boarding 的「先关单→查 SUCCESS→再取消」——
+                //   防「边界支付成功但 notify 未落地」窗口内取消+回退资源，导致扣款无单+库存/名额双回退
+                if (order.outTradeNo) {
+                    const closed = await closeWechatOrder(order.outTradeNo);
+                    if (!closed) {
+                        const tradeState = await queryWechatOrderState(order.outTradeNo);
+                        if (tradeState === 'SUCCESS') {
+                            logger.info('cancelActivityOrders.skip_paid_confirmed', { orderId: order._id, outTradeNo: order.outTradeNo });
+                            result.closeOrderFailed++;
+                            continue;
+                        }
+                        if (tradeState === 'UNKNOWN') {
+                            logger.warn('cancelActivityOrders.skip_query_unknown', { orderId: order._id, outTradeNo: order.outTradeNo });
+                            result.closeOrderFailed++;
+                            continue;
+                        }
+                        // CLOSED / NOTPAY / REFUND → 未支付，继续取消
+                    }
+                    else {
+                        result.closedWechatOrders++;
+                    }
+                }
                 // H2: 幂等保护，仅当 status 仍为 pending_payment 时才更新
                 const cancelRes = await db.collection('activity_registrations')
                     .where({ _id: order._id, status: 'pending_payment' })
@@ -885,15 +953,6 @@ async function cancelActivityOrders(result, activityTimeout) {
                 if (!cancelRes.updated || cancelRes.updated === 0) {
                     logger.info('cancelActivityOrders.skip_already_cancelled', { orderId: order._id });
                     continue;
-                }
-                if (order.outTradeNo) {
-                    const closed = await closeWechatOrder(order.outTradeNo);
-                    if (closed) {
-                        result.closedWechatOrders++;
-                    }
-                    else {
-                        result.closeOrderFailed++;
-                    }
                 }
                 // P0-3 修复：付费活动名额仅在支付回调成功时递增（paymentService/notify.ts applyPaidStatus），
                 // 处于 pending_payment 的报名从未占用名额，超时取消时若回退会把 currentParticipants 扣成负数。
