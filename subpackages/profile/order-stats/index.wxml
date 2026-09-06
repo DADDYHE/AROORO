@@ -36,96 +36,90 @@
     </view>
   </view>
 
-  <!-- ═══ 状态筛选：金线目录 tab ═══ -->
-  <view class="status-tabs">
-    <view
-      wx:for="{{statusTabs}}"
-      wx:key="key"
-      class="status-tab {{currentStatus === item.key ? 'active' : ''}}"
-      data-status="{{item.key}}"
-      bindtap="switchStatus"
-      hover-class="status-tab pressed" hover-stay-time="80">
-      <text class="status-tab-text">{{item.label}}</text>
-    </view>
-  </view>
+  <!-- ═══ 分节台账：进行中 / 已完成 / 已关闭 ═══ -->
+  <block wx:if="{{orders.length > 0}}">
+    <view class="order-section" wx:for="{{orderSections}}" wx:key="key" wx:for-item="section">
+      <view class="section-head" wx:if="{{section.list.length > 0}}">
+        <text class="section-name">{{section.label}}</text>
+        <text class="section-count">{{section.list.length}} 单</text>
+        <view class="section-rule"></view>
+      </view>
+      <view
+        wx:for="{{section.list}}"
+        wx:key="_id"
+        class="ledger-row"
+        data-id="{{item._id}}"
+        bindtap="onOrderTap"
+        hover-class="ledger-row pressed" hover-stay-time="80">
 
-  <!-- ═══ 订单台账行 ═══ -->
-  <view class="orders-list" wx:if="{{orders.length > 0}}">
-    <view
-      wx:for="{{orders}}"
-      wx:key="_id"
-      class="ledger-row"
-      data-id="{{item._id}}"
-      bindtap="onOrderTap"
-      hover-class="ledger-row pressed" hover-stay-time="80">
+        <!-- 商品/活动封面（有图时行首） -->
+        <image
+          wx:if="{{item.activityCoverUrl || item.productCoverUrl}}"
+          class="ledger-thumb"
+          src="{{item.productCoverUrl || item.activityCoverUrl}}"
+          mode="aspectFill"
+          binderror="onCloudImageError"
+          data-src="{{item.productCoverUrl || item.activityCoverUrl}}"
+          data-path="orders[{{index}}].productCoverUrl"
+          lazy-load
+        />
 
-      <!-- 商品/活动封面（有图时行首） -->
-      <image
-        wx:if="{{item.activityCoverUrl || item.productCoverUrl}}"
-        class="ledger-thumb"
-        src="{{item.productCoverUrl || item.activityCoverUrl}}"
-        mode="aspectFill"
-        binderror="onCloudImageError"
-        data-src="{{item.productCoverUrl || item.activityCoverUrl}}"
-        data-path="orders[{{index}}].productCoverUrl"
-        lazy-load
-      />
-
-      <view class="ledger-row-main">
-        <view class="ledger-row-top">
-          <text class="ledger-title">{{item.orderTitle || item._id}}</text>
-          <text class="ledger-status">{{item.isEnded ? '已结束' : item.statusText || item.status}}</text>
-        </view>
-
-        <!-- 商城/团购：SKU 与数量 -->
-        <view class="ledger-meta" wx:if="{{item.skuText || item.quantity}}">
-          <text class="ledger-meta-text">{{item.skuText || ''}}{{item.skuText && item.quantity ? ' · ' : ''}}{{item.quantity ? '×' + item.quantity : ''}}{{item.hasMultiItems ? ' 等' + item.itemCount + '件商品' : ''}}</text>
-        </view>
-
-        <!-- 寄养：服务标签 -->
-        <view class="ledger-meta" wx:if="{{item.orderType === 'feeding' && (item.familiarityText || item.multiVisitText)}}">
-          <text class="ledger-meta-text">{{item.familiarityText ? '提前熟悉: ' + item.familiarityText : ''}}{{item.familiarityText && item.multiVisitText ? ' · ' : ''}}{{item.multiVisitText ? '一天多次: ' + item.multiVisitText : ''}}</text>
-        </view>
-
-        <!-- 位置/日期 -->
-        <view class="ledger-meta" wx:if="{{item.activityLocation}}">
-          <image class="ledger-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
-          <text class="ledger-meta-text">{{item.activityLocation}}</text>
-        </view>
-        <view class="ledger-meta" wx:if="{{item.address && item.orderType === 'feeding'}}">
-          <image class="ledger-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
-          <text class="ledger-meta-text">{{item.address}}</text>
-        </view>
-        <view class="ledger-meta" wx:if="{{item.dateRange && item.orderType === 'feeding'}}">
-          <image class="ledger-icon" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
-          <text class="ledger-meta-text">{{item.dateRange}}</text>
-        </view>
-        <view class="ledger-meta" wx:if="{{item.startDate && item.orderType !== 'feeding'}}">
-          <image class="ledger-icon" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
-          <text class="ledger-meta-text">{{item.startDate}}{{item.endDate ? ' 至 ' + item.endDate : ''}}</text>
-        </view>
-        <view class="ledger-meta" wx:if="{{item.receiverName}}">
-          <image class="ledger-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
-          <text class="ledger-meta-text">{{item.receiverName}} {{item.receiverPhone}}</text>
-        </view>
-
-        <!-- 底部：时间 + 编辑式价格 -->
-        <view class="ledger-row-bottom">
-          <text class="ledger-time">{{item.createdAt}}</text>
-          <view class="ledger-price-row">
-            <text class="ledger-price-symbol">¥</text>
-            <text class="ledger-price">{{item.totalPrice || 0}}</text>
-            <text class="ledger-price-unit" wx:if="{{item.quantity && item.orderType !== 'boarding'}}">×{{item.quantity}}</text>
+        <view class="ledger-row-main">
+          <view class="ledger-row-top">
+            <text class="ledger-title">{{item.orderTitle || item._id}}</text>
+            <text class="ledger-status">{{item.isEnded ? '已结束' : item.statusText || item.status}}</text>
           </view>
-        </view>
 
-        <!-- 取消入口（商城待支付/待发货） -->
-        <view class="ledger-cancel" wx:if="{{item.status === 'pending_payment' || item.status === 'pending_shipment'}}">
-          <view class="ledger-cancel-btn" data-id="{{item._id}}" catchtap="onCancelMallOrder" hover-class="pressed" hover-stay-time="80">取消订单</view>
+          <!-- 商城/团购：SKU 与数量 -->
+          <view class="ledger-meta" wx:if="{{item.skuText || item.quantity}}">
+            <text class="ledger-meta-text">{{item.skuText || ''}}{{item.skuText && item.quantity ? ' · ' : ''}}{{item.quantity ? '×' + item.quantity : ''}}{{item.hasMultiItems ? ' 等' + item.itemCount + '件商品' : ''}}</text>
+          </view>
+
+          <!-- 寄养：服务标签 -->
+          <view class="ledger-meta" wx:if="{{item.orderType === 'feeding' && (item.familiarityText || item.multiVisitText)}}">
+            <text class="ledger-meta-text">{{item.familiarityText ? '提前熟悉: ' + item.familiarityText : ''}}{{item.familiarityText && item.multiVisitText ? ' · ' : ''}}{{item.multiVisitText ? '一天多次: ' + item.multiVisitText : ''}}</text>
+          </view>
+
+          <!-- 位置/日期 -->
+          <view class="ledger-meta" wx:if="{{item.activityLocation}}">
+            <image class="ledger-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+            <text class="ledger-meta-text">{{item.activityLocation}}</text>
+          </view>
+          <view class="ledger-meta" wx:if="{{item.address && item.orderType === 'feeding'}}">
+            <image class="ledger-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+            <text class="ledger-meta-text">{{item.address}}</text>
+          </view>
+          <view class="ledger-meta" wx:if="{{item.dateRange && item.orderType === 'feeding'}}">
+            <image class="ledger-icon" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
+            <text class="ledger-meta-text">{{item.dateRange}}</text>
+          </view>
+          <view class="ledger-meta" wx:if="{{item.startDate && item.orderType !== 'feeding'}}">
+            <image class="ledger-icon" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
+            <text class="ledger-meta-text">{{item.startDate}}{{item.endDate ? ' 至 ' + item.endDate : ''}}</text>
+          </view>
+          <view class="ledger-meta" wx:if="{{item.receiverName}}">
+            <image class="ledger-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+            <text class="ledger-meta-text">{{item.receiverName}} {{item.receiverPhone}}</text>
+          </view>
+
+          <!-- 底部：时间 + 编辑式价格 -->
+          <view class="ledger-row-bottom">
+            <text class="ledger-time">{{item.createdAt}}</text>
+            <view class="ledger-price-row">
+              <text class="ledger-price-symbol">¥</text>
+              <text class="ledger-price">{{item.totalPrice || 0}}</text>
+              <text class="ledger-price-unit" wx:if="{{item.quantity && item.orderType !== 'boarding'}}">×{{item.quantity}}</text>
+            </view>
+          </view>
+
+          <!-- 取消入口（商城待支付/待发货） -->
+          <view class="ledger-cancel" wx:if="{{item.status === 'pending_payment' || item.status === 'pending_shipment'}}">
+            <view class="ledger-cancel-btn" data-id="{{item._id}}" catchtap="onCancelMallOrder" hover-class="pressed" hover-stay-time="80">取消订单</view>
+          </view>
         </view>
       </view>
     </view>
-  </view>
+  </block>
 
   <view class="empty-state" wx:if="{{orders.length === 0 && !isLoading}}">
     <view class="empty-ring"></view>

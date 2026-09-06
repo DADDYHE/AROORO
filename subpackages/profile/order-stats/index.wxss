@@ -83,49 +83,31 @@
 /* ================================================================
    状态筛选：金线目录 tab（文字 + 选中金下划线）
    ================================================================ */
-.status-tabs {
+/* 节头：金 eyebrow 式小节标题 */
+.section-head {
   display: flex;
-  gap: 8rpx;
-  padding: 8rpx var(--page-padding, 48rpx) 0;
-  border-bottom: 1rpx solid var(--hairline);
+  align-items: center;
+  gap: 14rpx;
+  padding: 32rpx 0 6rpx;
 }
 
-.status-tab {
-  padding: 18rpx 22rpx;
-  position: relative;
-}
-
-.status-tab-text {
-  font-size: 25rpx;
-  letter-spacing: 0.06em;
-  color: var(--text-tertiary);
-  transition: color 160ms ease;
-}
-
-.status-tab.active .status-tab-text {
-  color: var(--text-primary);
+.section-name {
+  font-size: 20rpx;
   font-weight: 500;
+  letter-spacing: 0.28em;
+  color: var(--text-secondary);
 }
 
-.status-tab.active {
-  /* 选中金下划线（与卷宗头 accent bar 同语言） */
+.section-count {
+  font-size: 20rpx;
+  letter-spacing: 0.08em;
+  color: var(--accent-color);
 }
 
-.status-tab.active::after {
-  content: '';
-  position: absolute;
-  left: 22rpx;
-  right: 22rpx;
-  bottom: 0;
-  height: 2rpx;
-  background: var(--accent-color);
-}
-
-/* ================================================================
-   订单台账行：hairline 分隔，无卡片
-   ================================================================ */
-.orders-list {
-  padding: 8rpx var(--page-padding, 48rpx) 0;
+.section-rule {
+  flex: 1;
+  height: 1rpx;
+  background: var(--hairline);
 }
 
 .ledger-row {

@@ -16,66 +16,6 @@ const TYPE_MAP = {
   mall: { title: __i18nT('BIZ_B4Q6UZ'), label: '商城' },
 }
 
-const MALL_STATUS_TABS = [
-  { key: 'all', label: '全部' },
-  { key: 'pending_payment', label: '待支付' },
-  { key: 'shipped', label: '已发货' },
-  { key: 'completed', label: '已完成' },
-  { key: 'cancelled', label: '已取消' },
-  { key: 'refunded', label: '已退款' },
-]
-
-const GROUP_STATUS_TABS = [
-  { key: 'all', label: '全部' },
-  { key: 'pending_payment', label: '待支付' },
-  { key: 'shipped', label: '已发货' },
-  { key: 'completed', label: '已完成' },
-  { key: 'cancelled', label: '已取消' },
-  { key: 'refunded', label: '已退款' },
-]
-
-const DEFAULT_STATUS_TABS = [
-  { key: 'all', label: '全部' },
-  { key: 'pending_payment', label: '待支付' },
-  { key: 'in_progress', label: '进行中' },
-  { key: 'completed', label: '已完成' },
-  { key: 'cancelled', label: '已取消' },
-]
-
-// 上门服务（feeding）专属 tabs：含 paid/confirmed/rejected/refunded，与状态机对齐
-// 状态链：pending_payment → paid → confirmed → in_progress → completed；终态 rejected/cancelled/refunded
-const FEEDING_STATUS_TABS = [
-  { key: 'all', label: '全部' },
-  { key: 'pending_payment', label: '待支付' },
-  { key: 'paid', label: '已支付' },
-  { key: 'confirmed', label: '已确认' },
-  { key: 'in_progress', label: '进行中' },
-  { key: 'completed', label: '已完成' },
-  { key: 'cancelled_rejected', label: '已取消' },
-  { key: 'refunded', label: '已退款' },
-]
-
-// 寄养（boarding）专属 tabs：状态机为 pending_payment/paid/confirmed/in_progress/completed/cancelled，无 rejected
-const BOARDING_STATUS_TABS = [
-  { key: 'all', label: '全部' },
-  { key: 'pending_payment', label: '待支付' },
-  { key: 'paid', label: '已支付' },
-  { key: 'confirmed', label: '已确认' },
-  { key: 'in_progress', label: '进行中' },
-  { key: 'completed', label: '已完成' },
-  { key: 'cancelled', label: '已取消' },
-]
-
-// V5: 活动订单专用五态 tabs（无 in_progress，含 paid/completed/refunded）
-const ACTIVITY_STATUS_TABS = [
-  { key: 'all', label: '全部' },
-  { key: 'pending_payment', label: '待支付' },
-  { key: 'paid', label: '已支付' },
-  { key: 'completed', label: '已完成' },
-  { key: 'cancelled', label: '已取消' },
-  { key: 'refunded', label: '已退款' },
-]
-
 const pageI18n = require('../../../utils/page-i18n.js')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
@@ -85,15 +25,14 @@ Page({
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     orders: [],
+  orderSections: [],
     orderType: 'boarding',
-    currentStatus: 'all',
-    isLoggedIn: false,
+      isLoggedIn: false,
     isLoading: false,
     total: 0,
     page: 1,
     stats: { count: 0, amount: 0, completedCount: 0, completedAmount: 0 },
-    statusTabs: DEFAULT_STATUS_TABS,
-    iconMapPin: '/images/icons/map-pin-line.svg',
+      iconMapPin: '/images/icons/map-pin-line.svg',
     iconTimeLine: '/images/icons/time-line.svg',
   },
 
@@ -107,13 +46,7 @@ Page({
     const orderType = options.type || 'boarding'
     const typeInfo = TYPE_MAP[orderType] || TYPE_MAP.boarding
     wx.setNavigationBarTitle({ title: typeInfo.title })
-    const statusTabs = orderType === 'activity' ? ACTIVITY_STATUS_TABS
-      : orderType === 'mall' ? MALL_STATUS_TABS
-      : orderType === 'group' ? GROUP_STATUS_TABS
-      : orderType === 'service' ? FEEDING_STATUS_TABS
-      : orderType === 'boarding' ? BOARDING_STATUS_TABS
-      : DEFAULT_STATUS_TABS
-    this.setData({ orderType, statusTabs })
+    this.setData({ orderType })
 
     this._allOrders = []
     this._syncLoginStatus()
@@ -236,14 +169,14 @@ Page({
         isLoading: false,
       })
       this._calcStats()
-      this._applyFilter()
+      this._regroup()
       // 异步增强 wx 发货状态：paid 订单可能已在微信平台后台发货
       this._enrichWxShippingStatus()
         .then(() => {
           // wx 状态回来后重算每个订单的 status（shipped），再渲染
           this._recountOrders()
           this._calcStats()
-          this._applyFilter()
+          this._regroup()
         })
         .catch(() => {/* 静默降级 */})
     } catch (error) {
@@ -251,47 +184,28 @@ Page({
     }
   },
 
-  _applyFilter() {
-    const { currentStatus, orderType } = this.data
-    const filtered = this._allOrders.filter(item => {
-      if (orderType === 'activity') {
-        if (currentStatus === 'pending_payment' && (item.status !== 'pending_payment' || item.isEnded)) {return false}
-        if (currentStatus === 'paid' && item.status !== 'paid') {return false}
-        if (currentStatus === 'completed' && item.status !== 'completed') {return false}
-        if (currentStatus === 'cancelled' && item.status !== 'cancelled' && !(item.status === 'pending_payment' && item.isEnded)) {return false}
-        if (currentStatus === 'refunded' && item.status !== 'refunded') {return false}
-      } else if (orderType === 'mall' || orderType === 'group') {
-        if (currentStatus === 'pending_payment' && item.status !== 'pending_payment') {return false}
-        if (currentStatus === 'shipped' && item.status !== 'shipped') {return false}
-        if (currentStatus === 'completed' && item.status !== 'completed') {return false}
-        if (currentStatus === 'cancelled' && item.status !== 'cancelled') {return false}
-        if (currentStatus === 'refunded' && item.status !== 'refunded') {return false}
-      } else if (orderType === 'service') {
-        // 上门服务：与 FEEDING_STATUS_TABS 一一对应，各 tab 严格匹配单一状态
-        if (currentStatus === 'pending_payment' && item.status !== 'pending_payment') {return false}
-        if (currentStatus === 'paid' && item.status !== 'paid') {return false}
-        if (currentStatus === 'confirmed' && item.status !== 'confirmed') {return false}
-        if (currentStatus === 'in_progress' && item.status !== 'in_progress') {return false}
-        if (currentStatus === 'completed' && item.status !== 'completed') {return false}
-        if (currentStatus === 'cancelled_rejected' && item.status !== 'cancelled' && item.status !== 'rejected') {return false}
-        if (currentStatus === 'refunded' && item.status !== 'refunded') {return false}
-      } else if (orderType === 'boarding') {
-        // 寄养：与 BOARDING_STATUS_TABS 一一对应（状态机为 pending_payment/paid/confirmed/in_progress/completed/cancelled）
-        if (currentStatus === 'pending_payment' && item.status !== 'pending_payment') {return false}
-        if (currentStatus === 'paid' && item.status !== 'paid') {return false}
-        if (currentStatus === 'confirmed' && item.status !== 'confirmed') {return false}
-        if (currentStatus === 'in_progress' && item.status !== 'in_progress') {return false}
-        if (currentStatus === 'completed' && item.status !== 'completed') {return false}
-        if (currentStatus === 'cancelled' && item.status !== 'cancelled') {return false}
-      } else {
-        if (currentStatus === 'pending_payment' && item.status !== 'pending_payment') {return false}
-        if (currentStatus === 'in_progress' && item.status !== 'in_progress' && item.status !== 'confirmed' && item.status !== 'paid') {return false}
-        if (currentStatus === 'completed' && item.status !== 'completed') {return false}
-        if (currentStatus === 'cancelled' && item.status !== 'cancelled') {return false}
-      }
-      return true
-    })
-    this.setData({ orders: filtered })
+  /**
+   * 2026-09-06 分节台账：状态收拢为三节（进行中/已完成/已关闭），替代按业务线的多套筛选 tab。
+   * 仅展示层映射——底层 status 不变；章文案仍显示精确状态（statusText）。
+   */
+  _regroup() {
+    const groupOf = (item) => {
+      if (item.isEnded || item.status === 'completed') {return 'completed'}
+      if (item.status === 'cancelled' || item.status === 'rejected' || item.status === 'refunded') {return 'closed'}
+      // pending_payment / pending / paid / deposit_paid / confirmed / in_progress / pending_shipment
+      return 'processing'
+    }
+    const sections = [
+      { key: 'processing', label: '进行中', list: [] },
+      { key: 'completed', label: '已完成', list: [] },
+      { key: 'closed', label: '已关闭', list: [] },
+    ]
+    for (const item of (this._allOrders || [])) {
+      const g = groupOf(item)
+      const sec = sections.find(s => s.key === g)
+      if (sec) {sec.list.push(item)}
+    }
+    this.setData({ orderSections: sections })
   },
 
   _normalizeOrder(raw) {
@@ -534,7 +448,7 @@ Page({
   /**
    * _recountOrders：wx 状态增强后，重新检查所有订单的 status。
    * 用于 _enrichWxShippingStatus 完成后触发整体重算。
-   * 注意：只修改内存中的 order.status，UI 更新交给后续 _applyFilter。
+   * 注意：只修改内存中的 order.status，UI 更新交给后续 _regroup。
    */
   _recountOrders() {
     if (!this._allOrders) {return}
@@ -573,11 +487,7 @@ Page({
     })
   },
 
-  switchStatus(e) {
-    const status = e.currentTarget.dataset.status
-    this.setData({ currentStatus: status, page: 1 })
-    this._applyFilter()
-  },
+
 
   onOrderTap(e) {
     const orderId = e.currentTarget.dataset.id
@@ -635,7 +545,7 @@ Page({
           }
         }
         this._calcStats()
-        this._applyFilter()
+        this._regroup()
         // 异步从云端再拉一次最新状态，保证强一致
         // （同步更新节流时间戳，避免紧随其后的一次 onShow 被节流窗口挡住）
         this._lastLoadedAt = Date.now()
