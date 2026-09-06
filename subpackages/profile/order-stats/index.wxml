@@ -45,7 +45,7 @@
         <view class="section-rule"></view>
                 <view class="section-chevron-ring"><view class="section-chevron {{section.expanded ? '' : 'section-chevron--collapsed'}}"></view></view>
       </view>
-      <view class="section-body" wx:if="{{section.expanded}}">
+      <view class="section-body" hidden="{{!section.expanded}}">
       <view
         wx:for="{{section.list}}"
         wx:key="_id"
