@@ -1,17 +1,10 @@
 /* 寄养家庭详情页样式
-   设计系统：AROORO Haute-Luxury v2
+   设计系统：AROORO Haute-Luxury v2 ·「暗房画廊 + 纸上卷宗」B+A
    token 来源：styles/variables.wxss → styles/design-tokens.wxss → styles/theme-teal.wxss（app.wxss 按序注入）
-   P1-B 改造：清除外来暖橙、纯白/通用灰硬编码，统一为语义 token */
+   B=全出血画廊（820rpx 顶天 + 双 scrim + 暗房标签 + 画册页码）
+   A=整版纸面流（金环头像上浮、双行 eyebrow 章节、金板 CTA、hairline 分区） */
 
 @import '../../styles/loading-animation.wxss';
-
-/* 加载中状态 */
-
-.loading-dot:nth-child(2) {
-}
-
-.loading-dot:nth-child(3) {
-}
 
 .loading-more {
   text-align: center;
@@ -28,55 +21,34 @@
   letter-spacing: 4rpx;
 }
 
-.nav-left, .nav-right {
-  width: 80rpx;
-  height: 100rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.container {
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--background-color);
+  opacity: 0;
+  animation: zy-fade-in 420ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
-.nav-title {
-  flex: 1;
-  text-align: center;
-  font-size: 36rpx;
-  font-weight: bold;
-  color: var(--text-inverse);
-}
+/* ══════════════ B · 暗房画廊 ══════════════ */
 
-/* 回退按钮 */
-.back-icon {
-  width: 40rpx;
-  height: 40rpx;
-  border: 2rpx solid var(--text-inverse);
-  border-width: 2rpx 0 0 2rpx;
-  transform: rotate(-45deg);
-}
-
-/* 轮播图容器样式 */
 .swiper-container {
   position: relative;
   width: 100%;
   height: auto;
   overflow: hidden;
   margin: 0;
-  padding-top: 0rpx;
+  padding: 0;
 }
 
-/* 照片显示区域 - 顶部背景图效果（B · 沉浸画廊） */
 .media-section-header {
-  background-color: var(--card-color);
+  background-color: var(--background-color);
   border-radius: 0;
-  margin-bottom: 0;
-  margin-top: 0;
-  margin-left: 0;
-  margin-right: 0;
+  margin: 0;
   padding: 0;
-  box-shadow: none;
   overflow: hidden;
 }
 
-/* 顶部压暗渐变：保透明导航白箭头可读（同活动详情语法） */
+/* 顶部压暗渐变：保透明导航白箭头可读（全站语法） */
 .hero-top-scrim {
   position: absolute;
   top: 0;
@@ -88,28 +60,54 @@
   z-index: 2;
 }
 
+/* 底部压暗渐变：画框纵深，托住页码与暗房标签 */
+.hero-bottom-scrim {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 240rpx;
+  background: linear-gradient(0deg, rgba(15, 36, 16, 0.66) 0%, rgba(15, 36, 16, 0) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
 .media-content-header {
   padding: 0;
   margin: 0;
 }
 
-/* 照片显示区域 */
 .photo-content {
   padding: 0;
   margin: 0;
-  position: relative; /* 确保按钮的绝对定位相对于该容器 */
+  position: relative;
 }
 
-/* 主照片区域 */
+/* 收藏浮钮：hairline 圆托压在画廊右上（导航栏下方） */
+.fav-float {
+  position: absolute;
+  right: 24rpx;
+  width: 92rpx;
+  height: 92rpx;
+  border-radius: 50%;
+  background-color: rgba(15, 36, 16, 0.38);
+  border: 1rpx solid rgba(247, 245, 239, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+}
+
+/* 主照片：820rpx 顶天全出血（对齐 product-detail hero 基线） */
 .main-photos {
   width: 100%;
-  height: 450rpx; /* 16:9比例，更符合美团风格 */
+  height: 820rpx;
 }
 
 .photo-wrapper {
   transition: transform 160ms ease, opacity 160ms ease;
   width: 100%;
-  height: 450rpx; /* 16:9比例，更符合美团风格 */
+  height: 820rpx;
   display: flex;
   position: relative;
 }
@@ -120,27 +118,20 @@
   border-radius: 0;
   background-color: var(--divider-color);
   display: block;
-  object-fit: cover; /* 确保图片填满容器 */
 }
 
-/* 视频显示区域 */
-.video-content {
-  padding: 0;
-}
-
-/* 主视频区域 */
+/* 主视频 */
 .main-videos {
   display: flex;
   flex-direction: row;
   gap: 0;
   margin-bottom: 0;
-  /* 容器宽度应该根据视频数量动态计算，但在小程序中我们通过JS计算 */
 }
 
 .video-wrapper {
   transition: transform 160ms ease, opacity 160ms ease;
-  width: 750rpx; /* 全屏宽度 */
-  height: 480rpx; /* 更大的高度 */
+  width: 750rpx;
+  height: 820rpx;
   display: flex;
   position: relative;
   flex-shrink: 0;
@@ -152,48 +143,70 @@
   border-radius: 0;
   background-color: var(--divider-color);
   position: relative;
-  z-index: 1; /* 确保视频在标签下方 */
+  z-index: 1;
   display: block;
 }
 
-/* 媒体类型切换按钮 - 同一个背景 */
+/* 画册页码：cream 细字宽字距（JS 预计算） */
+.gallery-counter {
+  position: absolute;
+  right: 48rpx;
+  bottom: 40rpx;
+  font-size: 22rpx;
+  color: var(--text-on-dark-90);
+  letter-spacing: 0.24em;
+  z-index: 3;
+}
+
+/* 媒体类型切换：暗房标签（深绿半透明底 + 选中金短线） */
 .media-type-buttons {
   position: absolute;
-  bottom: 20rpx;
-  left: 20rpx;
+  bottom: 32rpx;
+  left: 48rpx;
   display: flex;
   gap: 0;
-  background-color: var(--overlay-color);
-  border-radius: 18rpx;
-  padding: 4rpx;
-  /* Skyline 不支持 backdrop-filter（毛玻璃静默失效），用纯色半透明底替代 */
+  background-color: rgba(15, 36, 16, 0.55);
+  border: 1rpx solid rgba(247, 245, 239, 0.16);
+  border-radius: 12rpx;
+  padding: 6rpx;
   z-index: 3;
 }
 
 .media-type-btn {
   transition: transform 160ms ease, opacity 160ms ease;
-  color: var(--text-inverse);
-  font-size: 20rpx;
-  padding: 6rpx 12rpx;
-  border-radius: var(--zy-radius-lg);
+  color: var(--text-on-dark-90);
+  font-size: 22rpx;
+  letter-spacing: 0.10em;
+  padding: 10rpx 20rpx 8rpx;
+  border-radius: 8rpx;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
 }
 
 .media-type-btn.active {
-  background-color: var(--border-inverse-35);
+  color: #F7F5EF;
 }
 
-/* 相册按钮特殊样式 */
+/* 选中金短线：金仅做选中点（<5% 面积纪律） */
+.media-btn-tick {
+  width: 28rpx;
+  height: 3rpx;
+  margin-top: 6rpx;
+  background-color: var(--lux-gold-500);
+  border-radius: 2rpx;
+}
+
+/* 相册按钮 */
 .album-btn {
   transition: transform 160ms ease, opacity 160ms ease;
   position: relative;
-  padding: 6rpx 16rpx;
+  flex-direction: row;
+  padding: 10rpx 20rpx;
 }
 
 .album-separator {
-  width: 2rpx;
+  width: 1rpx;
   height: 24rpx;
   background-color: var(--text-on-dark-50);
   margin-right: 16rpx;
@@ -226,83 +239,91 @@
   box-sizing: border-box;
 }
 
-.album-arrow::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 3rpx;
-  width: 0;
-  height: 0;
-  border-top: 6rpx solid transparent;
-  border-bottom: 6rpx solid transparent;
-  border-left: 9rpx solid var(--overlay-color);
-  transform: translateY(-50%);
-  box-sizing: border-box;
-}
-
-/* 查看更多提示 */
+/* 查看更多：金框暗室（内缩金 hairline 画框 + 大数字） */
 .more-tip {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: var(--overlay-color);
-  border-radius: 0;
+  background-color: rgba(15, 36, 16, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.more-frame {
+  width: 200rpx;
+  height: 200rpx;
+  border: 1rpx solid var(--lux-hairline-gold);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--text-on-dark-90);
-  z-index: 2;
 }
 
 .more-text {
-  font-size: 40rpx;
-  font-weight: bold;
-  margin-bottom: 10rpx;
+  font-size: 52rpx;
+  font-weight: 300;
+  color: #F7F5EF;
+  letter-spacing: 0.06em;
+  margin-bottom: 8rpx;
 }
 
 .more-desc {
-  font-size: 28rpx;
-  opacity: 0.9;
+  font-size: 18rpx;
+  color: var(--lux-gold-500);
+  letter-spacing: 0.28em;
 }
 
-.container {
-  padding: 0;
-  min-height: 100vh;
-  opacity: 0;
-  animation: zy-fade-in 420ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
-}
+/* ══════════════ A · 纸面卷宗 ══════════════ */
 
-/* 寄养家庭基本信息（A · 拆卡为整版分节） */
+/* 身份铭牌：金环头像上浮压住画廊底边 */
 .host-info {
   display: flex;
   background-color: transparent;
   border-radius: 0;
-  padding: var(--zy-space-lg) var(--page-padding);
+  padding: 0 var(--page-padding) 40rpx;
   margin: 0;
   border-bottom: 1rpx solid var(--hairline);
 }
 
 .avatar-container {
-  width: 160rpx;
-  height: 160rpx;
-  margin-right: 30rpx;
+  width: 148rpx;
+  height: 148rpx;
+  margin-right: 32rpx;
+  /* 上浮 24rpx < 媒体标签底缘(画廊底上方 32rpx)，不遮挡标签文字 */
+  margin-top: -24rpx;
+  padding: 10rpx;
+  background-color: var(--background-color);
+  border-radius: 50%;
+  box-sizing: content-box;
 }
 
 .avatar {
-  width: 100%;
-  height: 100%;
+  width: 148rpx;
+  height: 148rpx;
   border-radius: 50%;
-  border: 4rpx solid var(--border-soft);
+  border: 2rpx solid rgba(201, 162, 75, 0.45);
+  background-color: var(--divider-color);
 }
 
 .host-details {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
+  padding-top: 56rpx;
+}
+
+/* 身份 eyebrow：金标英文小字，姓名上方 */
+.host-eyebrow {
+  font-size: 18rpx;
+  font-weight: 400;
+  letter-spacing: 0.30em;
+  color: var(--lux-gold-500);
+  margin-bottom: 10rpx;
 }
 
 .host-header {
@@ -310,31 +331,138 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 15rpx;
+  margin-bottom: 14rpx;
 }
 
 .host-name {
-  font-size: 40rpx;
-  font-weight: bold;
+  font-size: 44rpx;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   color: var(--text-primary);
-  margin-bottom: 15rpx;
+  flex: 1;
+  margin-right: 20rpx;
 }
 
 .host-location {
-  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  letter-spacing: 0.08em;
   color: var(--text-secondary);
 }
 
-/* 价格信息 */
+/* 定位金点：标签点纪律允许 */
+.loc-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background-color: var(--lux-gold-500);
+  margin-right: 12rpx;
+}
+
+/* 价格 · 预订行：编辑式排版 + 金板 CTA */
 .price-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background-color: transparent;
+  border-radius: 0;
+  padding: 44rpx var(--page-padding);
+  margin: 0;
+  border-bottom: 1rpx solid var(--hairline);
+}
+
+/* 价格 + 按钮横排行（收费方式简介独占下一行，避免挤压按钮） */
+.price-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: transparent;
-  border-radius: 0;
-  padding: var(--zy-space-lg) var(--page-padding);
-  margin: 0;
-  border-bottom: 1rpx solid var(--hairline);
+}
+
+.price-block {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 价格区 eyebrow：DAILY RATE 小标 */
+.charge-line {
+  margin-top: 18rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.charge-label {
+  font-size: 21rpx;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--lux-gold-600);
+}
+
+.charge-intro {
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  letter-spacing: 0.04em;
+  line-height: 1.7;
+  color: var(--text-tertiary);
+}
+
+.price-eyebrow {
+  font-size: 18rpx;
+  font-weight: 400;
+  letter-spacing: 0.30em;
+  color: var(--lux-gold-500);
+  margin-bottom: 8rpx;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+}
+
+.price-symbol {
+  font-size: 26rpx;
+  color: var(--text-primary);
+  margin-right: 8rpx;
+}
+
+.price-number {
+  font-size: 68rpx;
+  font-weight: 200;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-right: 10rpx;
+}
+
+.price-unit {
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+}
+
+/* 价格待定：未填价格时的诚实态 */
+.price-number--pending {
+  font-size: 40rpx;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-right: 0;
+}
+
+/* 媒体空态 */
+.gallery-empty {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gallery-empty-t {
+  font-size: 24rpx;
+  letter-spacing: 0.12em;
+  color: rgba(247, 245, 239, 0.55);
 }
 
 .action-buttons {
@@ -343,150 +471,248 @@
   gap: 20rpx;
 }
 
-.price {
+/* 联系家庭：金 hairline 描边 + 金点（次级，紧凑） */
+.contact-btn {
   display: flex;
-  align-items: baseline;
-}
-
-/* 价格强调色：原外来暖橙 → 深森林绿，与 host-list-all .price 对齐 */
-.price-symbol {
-  font-size: 32rpx;
-  color: var(--activity-primary);
-  margin-right: 5rpx;
-}
-
-.price-number {
-  font-size: 60rpx;
-  font-weight: bold;
-  color: var(--activity-primary);
-  margin-right: 5rpx;
-}
-
-.price-unit {
-  font-size: 28rpx;
-  color: var(--text-tertiary);
-}
-
-/* 主按钮：原 background-color 误用 --overlay-color（半透明遮罩）→ 主色渐变 */
-.booking-btn {
+  align-items: center;
+  height: 76rpx;
+  padding: 0 32rpx;
+  border: 1rpx solid var(--lux-gold-500);
   transition: transform 160ms ease, opacity 160ms ease;
-  width: 200rpx;
-  height: 80rpx;
-  background: var(--gradient-primary);
-  color: var(--text-on-primary);
-  font-size: 32rpx;
-  font-weight: bold;
+}
+
+.contact-btn--pressed {
+  transform: scale(0.96);
+  opacity: 0.8;
+}
+
+.contact-btn text {
+  font-size: 26rpx;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  color: var(--text-primary);
+}
+
+.contact-btn-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background-color: var(--lux-gold-500);
+  margin-right: 14rpx;
+}
+
+/* 立即预约：全宽深绿主 CTA（品牌绿 rich 渐变 + cream），独立行 */
+.booking-bar {
+  padding: 36rpx var(--page-padding) 44rpx;
+  border-bottom: 1rpx solid var(--hairline);
+}
+
+/* 预约提示：按钮上方灰字 */
+.booking-bar-hint {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  margin-bottom: 22rpx;
+}
+
+.booking-bar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--zy-radius-lg);
-  box-shadow: var(--shadow-glow-primary-btn);
+  height: 96rpx;
+  background: var(--lux-green-grad-rich);
+  box-shadow: 0 12rpx 32rpx rgba(26, 46, 26, 0.28);
+  transition: transform 160ms ease, opacity 160ms ease;
 }
 
-/* 收藏按钮 */
+.booking-bar-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
 
-/* 标签 */
+.booking-bar-btn text {
+  font-size: 30rpx;
+  font-weight: 500;
+  letter-spacing: 0.30em;
+  text-indent: 0.30em;
+  color: var(--text-on-primary); /* 深绿底反白（text-on-accent 是金底炭墨，勿用） */
+}
+
+/* 暂停接待：整条禁用 */
+.booking-bar.disabled .booking-bar-btn {
+  background: var(--gray-300);
+  box-shadow: none;
+}
+
+.booking-bar.disabled .booking-bar-btn text {
+  color: var(--gray-600);
+}
+
+/* 气质标签：hairline 直角小签 + 金点（奢侈品目录签） */
 .tags-section {
   display: flex;
   flex-wrap: wrap;
   background-color: transparent;
   border-radius: 0;
-  padding: var(--zy-space-lg) var(--page-padding);
+  padding: 40rpx var(--page-padding);
   margin: 0;
   border-bottom: 1rpx solid var(--hairline);
 }
 
 .tag {
-  background-color: var(--divider-color);
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   color: var(--text-secondary);
-  font-size: 26rpx;
-  padding: 15rpx 25rpx;
-  border-radius: 40rpx;
+  font-size: 24rpx;
+  letter-spacing: 0.14em;
+  padding: 12rpx 24rpx;
+  border-radius: 4rpx;
   margin-right: 20rpx;
   margin-bottom: 20rpx;
 }
 
-.tag:last-child {
-  margin-right: 0;
+.tag-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background-color: var(--lux-gold-500);
+  margin-right: 12rpx;
 }
 
-/* 通用 section 样式 */
+/* 卷宗章节头：meta 行（编号 + 金英文小标 + hairline 延伸线）+ 中文大标题行 */
+.chapter {
+  margin-bottom: 40rpx;
+}
+
+.chapter-meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+/* 章节编号：细字重金色，目录感 */
+.chapter-no {
+  font-size: 22rpx;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  color: var(--lux-gold-500);
+  margin-right: 20rpx;
+}
+
+.chapter-eyebrow {
+  font-size: 20rpx;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  color: var(--lux-gold-500);
+}
+
+.chapter-rule {
+  flex: 1;
+  height: 1rpx;
+  margin-left: 28rpx;
+  background-color: rgba(26, 26, 23, 0.10);
+}
+
+.section-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
 .section {
   background-color: transparent;
   border-radius: 0;
-  padding: var(--zy-space-lg) var(--page-padding);
+  padding: 56rpx var(--page-padding);
   margin: 0;
   border-bottom: 1rpx solid var(--hairline);
   opacity: 0;
   animation: zy-fade-in-up 480ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.section-title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: var(--text-primary);
-  margin-bottom: 30rpx;
-  padding-bottom: 20rpx;
-  border-bottom: 2rpx solid var(--divider-color);
-}
-
+/* 正文：段首两字缩进 + 两端对齐 + 宽行距（编辑卷宗排版） */
 .section-content {
   font-size: 30rpx;
   color: var(--text-secondary);
+  line-height: 2.0;
+  letter-spacing: 0.04em;
+  text-align: justify;
+  text-indent: 2em;
+}
+
+/* 服务 / 居住条件：单列目录条目（直角 hairline 方框图标 + hairline 分隔，首条无线） */
+.entry-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.entry-item {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+}
+
+.entry-item + .entry-item {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.08);
+}
+
+.entry-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border: 1rpx solid var(--hairline);
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 26rpx;
+  flex-shrink: 0;
+}
+
+.entry-icon-img {
+  width: 30rpx;
+  height: 30rpx;
+}
+
+.entry-text {
+  flex: 1;
+  font-size: 28rpx;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
   line-height: 1.6;
 }
 
-/* 服务内容 */
-.service-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.service-icon {
-  width: 60rpx;
-  height: 60rpx;
-  background-color: var(--divider-color);
-  border-radius: 50%;
+/* 卷宗落款 */
+.ds-foot {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30rpx;
-  margin-right: 20rpx;
-  color: var(--text-secondary);
+  gap: 18rpx;
+  padding: 64rpx var(--page-padding) 12rpx;
 }
 
-.service-text {
-  font-size: 30rpx;
-  color: var(--text-secondary);
+.ds-foot-line {
+  width: 88rpx;
+  height: 1rpx;
+  background-color: rgba(26, 26, 23, 0.14);
 }
 
-/* 环境设施 */
-.facility-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20rpx;
+.ds-foot-text {
+  font-size: 20rpx;
+  letter-spacing: 0.30em;
+  color: var(--text-tertiary);
 }
 
-.facility-icon {
-  width: 60rpx;
-  height: 60rpx;
-  background-color: var(--divider-color);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 30rpx;
-  margin-right: 20rpx;
-  color: var(--text-secondary);
+.ds-tail {
+  height: 140rpx;
 }
 
-.facility-text {
-  font-size: 30rpx;
-  color: var(--text-secondary);
-}
-
-/* 暂停接单状态样式 */
+/* 暂停接单状态 */
 .price-section.disabled {
   opacity: 0.5;
   pointer-events: none;
@@ -498,11 +724,8 @@
   color: var(--text-tertiary);
 }
 
-/* 禁用态：原 bg 与 color 同为 --text-tertiary 导致文字不可见，改为灰阶分层 */
-.booking-btn.disabled {
-  background: var(--gray-300);
-  color: var(--gray-600);
-  box-shadow: none;
+/* 禁用态：灰阶分层 */
+.booking-bar.disabled {
   pointer-events: none;
 }
 
@@ -512,35 +735,16 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: var(--overlay-color);
-  color: var(--text-on-dark-90);
+  background-color: rgba(15, 36, 16, 0.78);
+  color: #F7F5EF;
   padding: 20rpx 40rpx;
-  border-radius: 10rpx;
-  font-size: 28rpx;
-  font-weight: bold;
-  /* Skyline 不支持 backdrop-filter，用纯色半透明底替代 */
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  letter-spacing: 0.16em;
   z-index: 10;
-}
-
-.icon-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-}
-
-.icon-container svg {
-  width: 36rpx;
-  height: 36rpx;
-  display: block;
-  fill: currentColor;
 }
 
 /* ── 微交互：按压态（hover-class 复用，详见 app.wxss 约定）── */
 .photo-wrapper--pressed { transform: scale(0.97); opacity: 0.92; }
 .video-wrapper--pressed { transform: scale(0.97); opacity: 0.92; }
 .media-type-btn--pressed { transform: scale(0.97); opacity: 0.92; }
-
-
-.booking-btn--pressed { transform: scale(0.97); opacity: 0.92; }

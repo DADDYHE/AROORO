@@ -2,6 +2,7 @@
 <scroll-view
   scroll-y
   enhanced
+  show-scrollbar="{{false}}"
   refresher-enabled="{{true}}"
   refresher-triggered="{{_refresherTriggered}}"
   bindrefresherrefresh="_onRefresherRefresh"
@@ -12,35 +13,29 @@
 >
 <view class="hosts-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-  <!-- 顶部品牌标识栏：杂志式标题区（对齐 service 页 Haute-Luxury 语法） -->
+
+  <!-- 顶部品牌标识栏：杂志式标题区（金 eyebrow + 轻字重标题 + 真实计数） -->
   <view class="gallery-header zy-enter">
     <view class="brand-accent-bar"></view>
+    <text class="brand-eyebrow">AROORO · HOSTING</text>
     <view class="brand-main">
       <text class="brand-text">家庭寄养</text>
     </view>
     <view class="brand-meta">
       <view class="brand-meta-line"></view>
-      <text class="brand-subtitle">安心呼噜，放心托付</text>
+      <text class="brand-subtitle">{{totalCount > 0 ? totalCount + ' 个在住家庭 · 安心呼噜，放心托付' : '安心呼噜，放心托付'}}</text>
     </view>
   </view>
 
-  <!-- 搜索栏 -->
-  <view class="search-header">
+  <!-- 搜索 + 筛选：单一 sticky 纸面条（消除双 sticky 错位） -->
+  <view class="toolbar">
     <view class="search-bar">
       <image class="search-icon" src="/images/icons/search-luxury-line.svg" mode="aspectFit"></image>
       <input class="search-input" placeholder-class="input-placeholder" placeholder="搜索寄养家庭、位置、服务..." value="{{searchKeyword}}" bindinput="handleSearchInput" bindconfirm="handleSearch" confirm-type="search" />
     </view>
-  </view>
-
-  <!-- 筛选栏 -->
-  <view class="filter-bar">
-    <view class="filter-section">
-      <view class="filter-options">
-        <view class="filter-option" bindtap="showFilterModal" hover-class="filter-option--pressed" hover-stay-time="80">
-          <text>筛选</text>
-          <image class="filter-arrow" src="/images/icons/chevron-down-luxury-line.svg" mode="aspectFit"></image>
-        </view>
-      </view>
+    <view class="filter-option" bindtap="showFilterModal" hover-class="filter-option--pressed" hover-stay-time="80">
+      <text>筛选</text>
+      <image class="filter-arrow" src="/images/icons/chevron-down-luxury-line.svg" mode="aspectFit"></image>
     </view>
   </view>
 
@@ -48,54 +43,42 @@
   <zy-skeleton wx:if="{{isLoading && hosts.length === 0}}" type="list" count="{{3}}" />
   <view class="hosts-list">
     <view class="host-card" wx:for="{{hosts}}" wx:key="id" data-id="{{item.id}}" bindtap="selectHost" hover-class="host-card--pressed" hover-stay-time="80">
-      <!-- 封面图片轮播 -->
-      <view class="host-cover-container">
-        <swiper class="host-swiper" autoplay interval="3000" circular indicator-dots indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#ffffff">
-          <swiper-item wx:for="{{item.photos || [item.avatarUrl, item.avatarUrl, item.avatarUrl]}}" wx:for-item="photo" wx:for-index="photoIndex" wx:key="*this">
-            <image lazy-load class="host-cover-image" src="{{photo}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{photo}}" data-path="hosts[{{index}}].photos[{{photoIndex}}]"></image>
-          </swiper-item>
-        </swiper>
+      <!-- 左：封面图（单图 1:1 裁切，徽章/角标/暂停纱叠图） -->
+      <view class="host-photo" style="height:{{item.photoH || 400}}rpx">
+        <image lazy-load class="host-photo-img" src="{{item.photos[0]}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.photos[0]}}" data-path="hosts[{{index}}].photos[0]"></image>
         <view class="host-badge" wx:if="{{item.isRecommended}}">
-          <text class="host-badge-text">推荐</text>
+          <text class="host-badge-text">甄选</text>
+        </view>
+        <view class="cover-count" wx:if="{{item.photos.length > 1}}">
+          <text class="cover-count-t">{{item.photos.length}}图</text>
+        </view>
+        <view class="cover-pause" wx:if="{{!item.isAcceptingOrders}}">
+          <text class="cover-pause-t">已暂停接待</text>
         </view>
       </view>
-      
-      <!-- 寄养家庭信息 -->
+
+      <!-- 右：信息列（名称 / 评分+计费 / 简介 / 位置 / 价格+预约） -->
       <view class="host-info">
-        <view class="host-header">
-          <image lazy-load class="host-avatar" src="{{item.avatarUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="hosts[{{index}}].avatarUrl"></image>
-          <text class="host-name">{{item.name}}</text>
+        <text class="host-name">{{item.name}}</text>
+
+        <view class="host-meta-row">
+          <text class="host-rating" wx:if="{{item.rating > 0}}">★ {{item.rating}}</text>
+          <text class="host-billing" wx:if="{{item.billingLabel}}">计费·{{item.billingLabel}}</text>
+          <text class="host-billing" wx:if="{{!item.rating && !item.billingLabel}}">欢迎咨询</text>
         </view>
-        
-        <text class="host-description">{{item.description}}</text>
-        
-        <view class="host-tags">
-          <text class="host-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
-        </view>
-        
-        <view class="host-features">
-          <view class="feature-item">
-            <image class="feature-icon" src="/images/icons/home-luxury-line.svg" mode="aspectFit"></image>
-            <text class="feature-text">{{item.roomType || '独立房间'}}</text>
-          </view>
-          <view class="feature-item">
-            <image class="feature-icon" src="/images/icons/dog-luxury-line.svg" mode="aspectFit"></image>
-            <text class="feature-text">{{item.petLimit || 3}}只宠物</text>
-          </view>
-          <view class="feature-item">
-            <image class="feature-icon" src="/images/icons/location-luxury-line.svg" mode="aspectFit"></image>
-            <text class="feature-text">{{item.distance || 2.5}}km</text>
-          </view>
-        </view>
-        
+
+        <text class="host-desc">{{item.shortDesc}}</text>
+        <view class="host-loc"><view class="loc-dot"></view><text>{{item.location || '位置待完善'}}</text></view>
+
         <view class="host-bottom">
           <view class="price-info">
-            <text class="price">¥{{item.price}}</text>
+            <text class="price-symbol">¥</text>
+            <text class="price">{{item.price}}</text>
             <text class="price-unit">/{{item.priceUnit || '天'}}</text>
           </view>
-          <button class="book-btn" bindtap="bookHost" data-id="{{item.id}}" hover-class="book-btn--pressed" hover-stay-time="80">
-            <text>立即预约</text>
-          </button>
+          <view class="book-btn {{item.isAcceptingOrders ? '' : 'book-btn--off'}}" data-id="{{item.id}}" catchtap="{{item.isAcceptingOrders ? 'bookHost' : ''}}" hover-class="{{item.isAcceptingOrders ? 'book-btn--pressed' : ''}}" hover-stay-time="80">
+            <text>{{item.isAcceptingOrders ? '预约' : '暂停接待'}}</text>
+          </view>
         </view>
       </view>
     </view>
@@ -135,62 +118,65 @@
 <view class="modal-overlay {{showFilterModal ? 'visible' : ''}}" bindtap="closeFilterModal">
   <view class="modal-content {{showFilterModal ? 'visible' : ''}}" catchtap="">
     <view class="modal-header">
-      <text class="modal-title">筛选条件</text>
+      <view class="modal-head-left">
+        <text class="modal-eyebrow">FILTER</text>
+        <text class="modal-title">筛选条件</text>
+      </view>
       <view class="modal-close-btn" bindtap="closeFilterModal" hover-class="modal-close-btn--pressed" hover-stay-time="80">
         <image class="modal-close" src="/images/icons/close-luxury-line.svg" mode="aspectFit"></image>
       </view>
     </view>
-    
+
     <view class="filter-content">
       <view class="filter-group">
         <text class="filter-group-title">宠物类型</text>
-        <view class="filter-checkboxes">
-          <view class="checkbox-item {{filters.petTypes.dog ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'dog')" hover-class="checkbox-item--pressed" hover-stay-time="80">
-            <view class="checkbox"></view>
+        <view class="filter-chips">
+          <view class="chip {{filters.petTypes.dog ? 'checked' : ''}}" data-category="petTypes" data-key="dog" bindtap="onToggleFilter" hover-class="chip--pressed" hover-stay-time="80">
+            <view class="chip-dot" wx:if="{{filters.petTypes.dog}}"></view>
             <text>{{t.BIZ_K5WG}}</text>
           </view>
-          <view class="checkbox-item {{filters.petTypes.cat ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'cat')" hover-class="checkbox-item--pressed" hover-stay-time="80">
-            <view class="checkbox"></view>
+          <view class="chip {{filters.petTypes.cat ? 'checked' : ''}}" data-category="petTypes" data-key="cat" bindtap="onToggleFilter" hover-class="chip--pressed" hover-stay-time="80">
+            <view class="chip-dot" wx:if="{{filters.petTypes.cat}}"></view>
             <text>{{t.BIZ_K1Y7}}</text>
           </view>
-          <view class="checkbox-item {{filters.petTypes.other ? 'checked' : ''}}" bindtap="toggleFilter('petTypes', 'other')" hover-class="checkbox-item--pressed" hover-stay-time="80">
-            <view class="checkbox"></view>
+          <view class="chip {{filters.petTypes.other ? 'checked' : ''}}" data-category="petTypes" data-key="other" bindtap="onToggleFilter" hover-class="chip--pressed" hover-stay-time="80">
+            <view class="chip-dot" wx:if="{{filters.petTypes.other}}"></view>
             <text>{{t.BIZ_EAE8}}</text>
           </view>
         </view>
       </view>
-      
+
       <view class="filter-group">
         <text class="filter-group-title">服务类型</text>
-        <view class="filter-checkboxes">
-          <view class="checkbox-item {{filters.services.board ? 'checked' : ''}}" bindtap="toggleFilter('services', 'board')" hover-class="checkbox-item--pressed" hover-stay-time="80">
-            <view class="checkbox"></view>
+        <view class="filter-chips">
+          <view class="chip {{filters.services.board ? 'checked' : ''}}" data-category="services" data-key="board" bindtap="onToggleFilter" hover-class="chip--pressed" hover-stay-time="80">
+            <view class="chip-dot" wx:if="{{filters.services.board}}"></view>
             <text>{{t.BIZ_G20N}}</text>
           </view>
-          <view class="checkbox-item {{filters.services.walk ? 'checked' : ''}}" bindtap="toggleFilter('services', 'walk')" hover-class="checkbox-item--pressed" hover-stay-time="80">
-            <view class="checkbox"></view>
+          <view class="chip {{filters.services.walk ? 'checked' : ''}}" data-category="services" data-key="walk" bindtap="onToggleFilter" hover-class="chip--pressed" hover-stay-time="80">
+            <view class="chip-dot" wx:if="{{filters.services.walk}}"></view>
             <text>遛狗</text>
           </view>
-          <view class="checkbox-item {{filters.services.feed ? 'checked' : ''}}" bindtap="toggleFilter('services', 'feed')" hover-class="checkbox-item--pressed" hover-stay-time="80">
-            <view class="checkbox"></view>
+          <view class="chip {{filters.services.feed ? 'checked' : ''}}" data-category="services" data-key="feed" bindtap="onToggleFilter" hover-class="chip--pressed" hover-stay-time="80">
+            <view class="chip-dot" wx:if="{{filters.services.feed}}"></view>
             <text>喂食</text>
           </view>
         </view>
       </view>
-      
+
       <view class="filter-group">
         <text class="filter-group-title">价格范围</text>
         <view class="price-range">
-          <input class="price-input" placeholder-class="input-placeholder" placeholder="最低" value="{{filters.price.min}}" bindinput="handlePriceInput" data-type="min" />
-          <text class="price-separator">-</text>
-          <input class="price-input" placeholder-class="input-placeholder" placeholder="最高" value="{{filters.price.max}}" bindinput="handlePriceInput" data-type="max" />
+          <input class="price-input" placeholder-class="input-placeholder" type="number" placeholder="最低" value="{{filters.price.min}}" bindinput="handlePriceInput" data-type="min" />
+          <view class="price-separator-line"></view>
+          <input class="price-input" placeholder-class="input-placeholder" type="number" placeholder="最高" value="{{filters.price.max}}" bindinput="handlePriceInput" data-type="max" />
         </view>
       </view>
     </view>
-    
+
     <view class="modal-footer">
       <button class="reset-btn" bindtap="resetFilters" hover-class="reset-btn--pressed" hover-stay-time="80">重置</button>
-      <button class="apply-btn" bindtap="applyFilters" hover-class="apply-btn--pressed" hover-stay-time="80">应用</button>
+      <button class="apply-btn" bindtap="applyFilters" hover-class="apply-btn--pressed" hover-stay-time="80">应用筛选</button>
     </view>
   </view>
 </view>

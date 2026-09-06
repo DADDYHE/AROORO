@@ -2,7 +2,7 @@ const __i18n = require('../../utils/i18n.js')
 const __pageI18n = require('../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { HostService } = require('../../services/CloudFunctionService')
-const { extractCityAndDistrict } = require('../../utils/addressUtils')
+const { formatRegion } = require('../../utils/addressUtils')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
@@ -31,6 +31,7 @@ Page({
     hosts: [],
     errorMsg: '',
     showEmptyState: false,
+    totalCount: 0,
   },
 
   onLoad(options) {
@@ -75,7 +76,7 @@ Page({
         const hostData = (result.data && result.data.list) || []
 
         if (hostData.length === 0) {
-          this.setData({ hosts: [], isLoading: false, hasMore: false, showEmptyState: true })
+          this.setData({ hosts: [], isLoading: false, hasMore: false, showEmptyState: true, totalCount: this.data.page === 1 ? 0 : this.data.totalCount })
           if (callback) {callback()}
           return
         }
@@ -88,21 +89,27 @@ Page({
             ? host.photos
             : [host.avatarUrl || '/images/default-avatar.svg']
 
+          // 简介两行截断（Skyline 下 wxml 无 line-clamp 把握，JS 预截断）
+          const rawDesc = host.description || '专业宠物寄养服务，提供24小时贴心照顾'
+          const shortDesc = rawDesc.length > 28 ? `${rawDesc.slice(0, 28)}…` : rawDesc
+
           return {
             id: uniqueId,
             originalId,
             name: host.hostName || host.name || '匿名寄养家庭',
-            description: host.description || '专业宠物寄养服务，提供24小时贴心照顾',
+            description: rawDesc,
+            shortDesc,
             avatarUrl: host.avatarUrl && host.avatarUrl !== '/images/default-avatar.png'
               ? host.avatarUrl : '/images/default-avatar.svg',
             photos,
             price: host.pricePerDay || host.price || 80,
             priceUnit: '天',
-            location: extractCityAndDistrict(host.address),
-            tags: host.tags || ['有经验', '爱干净'],
-            roomType: host.housingType || host.roomType || '独立房间',
-            petLimit: host.maxPets || host.petLimit || 3,
-            distance: host.distance || null,
+            location: formatRegion(host),
+            // 评分（列表投影透出）：无评分不显示金星
+            rating: Number(host.averageRating) || 0,
+            // 收费方式简洁标签（勿与寄养方式 boardingMode 混淆）；缺失不显示
+            billingLabel: host.billingMode === 'hourly24' ? '24小时制'
+              : host.billingMode === 'hotel' ? '酒店式' : '',
             isRecommended: host.isRecommended || false,
             isAcceptingOrders: host.isAcceptingOrders !== false,
           }
@@ -122,7 +129,13 @@ Page({
           page: newPage,
           isLoading: false,
           hasMore,
+          totalCount: result.data.total || updatedHosts.length,
         })
+
+        // 封面高度真实化：实测首图比例 → 卡片高度严丝合缝等于图高（下限 420 装下信息列）
+        if (uniqueHosts.length > 0) {
+          this._computeCoverHeights(uniqueHosts)
+        }
       } else {
         this.setData({ isLoading: false, errorMsg: result?.message || '获取失败' })
         this.errorDynamic(result?.message, 'GET_FAILED')
@@ -137,6 +150,31 @@ Page({
     }
   },
 
+  /**
+   * 封面高度真实化：实测首图宽高比 → photoH = max(420, 264 × h/w)
+   *   - 竖图（3:4/9:16）：卡片高度 = 图高，零裁切
+   *   - 横图/方图：保底 420rpx 装下信息列（aspectFill 居中裁切兜底）
+   * 宽 264 固定；getImageInfo 同 URL 有微信侧缓存，翻页增量开销可控
+   */
+  _computeCoverHeights(newHosts) {
+    newHosts.forEach(h => {
+      const src = h.photos && h.photos[0]
+      if (!src) {return}
+      wx.getImageInfo({
+        src,
+        success: res => {
+          if (!res.width) {return}
+          const photoH = Math.max(400, Math.round(300 * (res.height / res.width)))
+          const idx = this.data.hosts.findIndex(x => x.id === h.id)
+          if (idx > -1 && this.data.hosts[idx].photoH !== photoH) {
+            this.setData({ [`hosts[${idx}].photoH`]: photoH })
+          }
+        },
+        fail: () => { /* 兜底默认 420，不打断列表 */ },
+      })
+    })
+  },
+
   handleSearchInput(e) { this.setData({ searchKeyword: e.detail.value }) },
 
   handleSearch() {
@@ -147,9 +185,12 @@ Page({
   showFilterModal() { this.setData({ showFilterModal: true }) },
   closeFilterModal() { this.setData({ showFilterModal: false }) },
 
-  toggleFilter(category, key) {
+  /** 筛选 chip 切换（原生 wxml 不支持内联传参，走 dataset） */
+  onToggleFilter(e) {
+    const { category, key } = e.currentTarget.dataset
+    if (!category || !key) { return }
     const filters = { ...this.data.filters }
-    filters[category][key] = !filters[category][key]
+    filters[category] = { ...filters[category], [key]: !filters[category][key] }
     this.setData({ filters })
   },
 

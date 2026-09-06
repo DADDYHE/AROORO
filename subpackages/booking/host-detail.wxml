@@ -1,7 +1,8 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent="{{true}}" color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
+  show-scrollbar="{{false}}"
   refresher-enabled="{{true}}"
   refresher-triggered="{{_refresherTriggered}}"
   bindrefresherrefresh="_onRefresherRefresh"
@@ -13,23 +14,27 @@
 <view class="container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <!-- 加载中状态：骨架屏 -->
-  <zy-skeleton wx:if="{{isLoading}}" type="detail" heroHeight="{{450}}" />
+  <zy-skeleton wx:if="{{isLoading}}" type="detail" heroHeight="{{820}}" />
 
   <view wx:else>
-  
-  <!-- 轮播图容器 -->
+
+  <!-- ════════ B · 暗房画廊（顶天全出血轮播） ════════ -->
   <view class="swiper-container">
-    <!-- 照片显示区域 - 顶部背景图效果 -->
     <view class="media-section-header">
       <view class="media-content-header">
         <view class="photo-content">
         <view class="hero-top-scrim"></view>
+        <view class="hero-bottom-scrim"></view>
+        <!-- 收藏：浮于画廊右上（hairline 圆托），导航栏下方；onDark 变体保证心形在深底可见 -->
+        <view class="fav-float" style="top: {{_navbarHeight + 8}}px;">
+          <favorite-btn variant="onDark" is-active="{{isFavorited}}" loading="{{isFavoriteLoading}}" bind:toggle="toggleFavorite"></favorite-btn>
+        </view>
         <!-- 轮播图内容根据当前类型切换 -->
         <swiper
-          class="main-photos {{isAnimating ? 'hidden' : ''}}" 
-          indicator-dots="{{true}}" 
-          autoplay="{{false}}" 
-          interval="5000" 
+          class="main-photos {{isAnimating ? 'hidden' : ''}}"
+          indicator-dots="{{false}}"
+          autoplay="{{false}}"
+          interval="5000"
           duration="300"
           circular="{{false}}"
           bindchange="onSwiperChange"
@@ -40,43 +45,60 @@
           <!-- 环境照片 -->
           <swiper-item wx:if="{{currentMediaType === 'photos'}}" wx:for="{{host.photos || []}}" wx:key="index">
             <view class="photo-wrapper" catchtap="goToPhotosPage" hover-class="photo-wrapper--pressed" hover-stay-time="80">
-              <image lazy-load class="main-photo" src="{{item}}" mode="scaleToFill" binderror="onCloudImageError" data-src="{{item}}" data-path="host.photos[{{index}}]"></image>
+              <image lazy-load class="main-photo" src="{{item}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item}}" data-path="host.photos[{{index}}]"></image>
               <!-- 第4张及之后的照片添加查看更多提示 -->
               <view class="more-tip" wx:if="{{index === 3 && host.photos.length > 4}}" catchtap="viewMorePhotos">
-                <text class="more-text">+{{host.photos.length - 4}}张</text>
-                <text class="more-desc">点击查看更多</text>
+                <view class="more-frame">
+                  <text class="more-text">+{{host.photos.length - 4}}</text>
+                  <text class="more-desc">REST IN ALBUM</text>
+                </view>
               </view>
             </view>
           </swiper-item>
-          
+
           <!-- 日常视频 -->
           <swiper-item wx:if="{{currentMediaType === 'videos'}}" wx:for="{{host.videos || []}}" wx:key="index">
             <view class="video-wrapper" catchtap="goToVideosPage" hover-class="video-wrapper--pressed" hover-stay-time="80">
-              <video 
-                class="main-video" 
-                src="{{item}}" 
-                controls="{{true}}" 
+              <video
+                class="main-video"
+                src="{{item}}"
+                controls="{{true}}"
                 poster="/images/default-photo.png"
                 id="video{{index}}"
               ></video>
               <!-- 第4张及之后的视频添加查看更多提示 -->
               <view class="more-tip" wx:if="{{index === 3 && host.videos.length > 4}}" catchtap="viewMoreVideos">
-                <text class="more-text">+{{host.videos.length - 4}}个</text>
-                <text class="more-desc">点击查看更多</text>
+                <view class="more-frame">
+                  <text class="more-text">+{{host.videos.length - 4}}</text>
+                  <text class="more-desc">REST IN ALBUM</text>
+                </view>
               </view>
             </view>
           </swiper-item>
         </swiper>
-        
-        <!-- 媒体类型切换按钮 - 放在同一个背景中 -->
+
+        <!-- 媒体空态：当前类型无内容时提示（Skyline：全属性访问，无方法调用） -->
+        <view class="gallery-empty" wx:if="{{currentMediaType === 'photos' && !(host.photos.length > 0)}}">
+          <text class="gallery-empty-t">家庭暂未上传照片</text>
+        </view>
+        <view class="gallery-empty" wx:if="{{currentMediaType === 'videos' && !(host.videos.length > 0)}}">
+          <text class="gallery-empty-t">家庭暂未上传视频</text>
+        </view>
+
+        <!-- 画册页码（JS 预计算，Skyline 安全） -->
+        <view class="gallery-counter" wx:if="{{counterText}}">{{counterText}}</view>
+
+        <!-- 媒体类型切换：暗房标签（选中=金短线） -->
         <view class="media-type-buttons">
-          <view class="media-type-btn interaction-btn {{currentMediaType === 'photos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="photos" hover-class="media-type-btn--pressed" hover-stay-time="80">
-            环境照片
+          <view class="media-type-btn {{currentMediaType === 'photos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="photos" hover-class="media-type-btn--pressed" hover-stay-time="80">
+            <text>环境照片</text>
+            <view class="media-btn-tick" wx:if="{{currentMediaType === 'photos'}}"></view>
           </view>
-          <view class="media-type-btn interaction-btn {{currentMediaType === 'videos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="videos" hover-class="media-type-btn--pressed" hover-stay-time="80">
-            日常视频
+          <view class="media-type-btn {{currentMediaType === 'videos' ? 'active' : ''}}" catchtap="switchMediaType" data-type="videos" hover-class="media-type-btn--pressed" hover-stay-time="80">
+            <text>日常视频</text>
+            <view class="media-btn-tick" wx:if="{{currentMediaType === 'videos'}}"></view>
           </view>
-          <view class="media-type-btn interaction-btn album-btn {{currentMediaType === 'album' ? 'active' : ''}}" catchtap="switchMediaType" data-type="album" hover-class="media-type-btn--pressed" hover-stay-time="80">
+          <view class="media-type-btn album-btn" catchtap="switchMediaType" data-type="album" hover-class="media-type-btn--pressed" hover-stay-time="80">
             <view class="album-separator"></view>
             <text class="album-text">相册</text>
             <view class="album-arrow"></view>
@@ -88,70 +110,129 @@
     </view>
   </view>
 
-  <!-- 寄养家庭基本信息 - 往下放 -->
+  <!-- ════════ A · 纸面卷宗 ════════ -->
+
+  <!-- 身份铭牌：头像金环上浮压住画廊底边 -->
   <view class="host-info">
     <view class="avatar-container">
       <image lazy-load class="avatar" src="{{host.avatarUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{host.avatarUrl}}" data-path="host.avatarUrl"></image>
     </view>
     <view class="host-details">
+      <text class="host-eyebrow">HOST FAMILY</text>
       <view class="host-header">
         <view class="host-name">{{host.name}}</view>
-        <!-- 收藏按钮 -->
-        <favorite-btn is-active="{{isFavorited}}" loading="{{isFavoriteLoading}}" bind:toggle="toggleFavorite"></favorite-btn>
       </view>
-      <view class="host-location">{{host.location}}</view>
+      <view class="host-location"><view class="loc-dot"></view><text>{{host.location}}</text></view>
     </view>
   </view>
 
-  <!-- 价格信息 -->
+  <!-- 价格 · 预订行：编辑式排版 + 金板 CTA（两行结构：价格+按钮 / 收费方式简介独占整行） -->
   <view class="price-section {{host.isAcceptingOrders === false ? 'disabled' : ''}}">
-    <view class="price">
-      <text class="price-symbol">¥</text>
-      <text class="price-number">{{host.price}}</text>
-      <text class="price-unit">/天</text>
-    </view>
-    <view class="action-buttons">
-      <view 
-        class="booking-btn interaction-btn {{host.isAcceptingOrders === false ? 'disabled' : ''}}" 
-        catchtap="{{host.isAcceptingOrders === false ? '' : 'contactFamily'}}"
-       hover-class="booking-btn--pressed" hover-stay-time="80">
-        {{host.isAcceptingOrders === false ? '已暂停接待' : '联系家庭'}}
+    <view class="price-row">
+      <view class="price-block">
+        <text class="price-eyebrow">DAILY RATE</text>
+        <!-- 价格：未填展示「价格待定」，不造假 -->
+        <view class="price" wx:if="{{host.price > 0}}">
+          <text class="price-symbol">¥</text>
+          <text class="price-number">{{host.price}}</text>
+          <text class="price-unit">/天</text>
+        </view>
+        <view class="price" wx:else>
+          <text class="price-number price-number--pending">价格待定</text>
+        </view>
       </view>
-
+      <view class="action-buttons">
+        <view
+          class="contact-btn"
+          catchtap="contactFamily"
+         hover-class="contact-btn--pressed" hover-stay-time="80">
+          <view class="contact-btn-dot"></view>
+          <text>联系家庭</text>
+        </view>
+      </view>
+    </view>
+    <!-- 收费方式 + 简介（独占整行，避免挤压按钮） -->
+    <view class="charge-line" wx:if="{{chargeLabel}}">
+      <text class="charge-label">收费方式 · {{chargeLabel}}</text>
+      <text class="charge-intro">{{chargeIntro}}</text>
     </view>
     <!-- 暂停接单标识 -->
     <text wx:if="{{host.isAcceptingOrders === false}}" class="pause-tag">已暂停接待</text>
   </view>
 
-  <!-- 标签 -->
-  <view class="tags-section">
-    <view class="tag" wx:for="{{host.tags}}" wx:key="index">{{item}}</view>
+  <!-- 立即预约：全宽深绿主 CTA 独立行（品牌深绿 + cream） -->
+  <view class="booking-bar {{host.isAcceptingOrders === false ? 'disabled' : ''}}">
+    <text class="booking-bar-hint">预约前，建议先与家庭确认档期与照料细节</text>
+    <view
+      class="booking-bar-btn"
+      catchtap="{{host.isAcceptingOrders === false ? '' : 'goBooking'}}"
+     hover-class="booking-bar-btn--pressed" hover-stay-time="80">
+      <text>{{host.isAcceptingOrders === false ? '已暂停接待' : '立即预约'}}</text>
+    </view>
   </view>
 
-  <!-- 寄养家庭简介 -->
-  <view class="section">
-    <view class="section-title">寄养家庭简介</view>
+  <!-- 气质标签 -->
+  <view class="tags-section" wx:if="{{host.tags.length > 0}}">
+    <view class="tag" wx:for="{{host.tags}}" wx:key="index"><view class="tag-dot"></view><text>{{item}}</text></view>
+  </view>
+
+  <!-- 卷宗章节：简介（内容空则整章隐藏） -->
+  <view class="section" wx:if="{{host.description}}">
+    <view class="chapter">
+      <view class="chapter-meta">
+        <text class="chapter-no">01</text>
+        <text class="chapter-eyebrow">PROFILE</text>
+        <view class="chapter-rule"></view>
+      </view>
+      <text class="section-title">寄养家庭简介</text>
+    </view>
     <view class="section-content">{{host.description}}</view>
   </view>
 
-  <!-- 服务内容 -->
-  <view class="section">
-    <view class="section-title">服务内容</view>
-    <view class="service-item" wx:for="{{services}}" wx:key="index">
-      <view class="service-icon"><image class="service-icon-img" src="{{item.icon}}" mode="aspectFit" lazy-load></image></view>
-      <view class="service-text">{{item.text}}</view>
+  <!-- 卷宗章节：服务（映射真实 serviceTypes，无数据隐藏） -->
+  <view class="section" wx:if="{{services.length > 0}}">
+    <view class="chapter">
+      <view class="chapter-meta">
+        <text class="chapter-no">02</text>
+        <text class="chapter-eyebrow">SERVICES</text>
+        <view class="chapter-rule"></view>
+      </view>
+      <text class="section-title">服务内容</text>
+    </view>
+    <view class="entry-list">
+      <view class="entry-item" wx:for="{{services}}" wx:key="index">
+        <view class="entry-icon"><image class="entry-icon-img" src="{{item.icon}}" mode="aspectFit" lazy-load></image></view>
+        <text class="entry-text">{{item.text}}</text>
+      </view>
     </view>
   </view>
 
-  <!-- 环境设施 -->
-  <view class="section">
-    <view class="section-title">环境设施</view>
-    <view class="facility-item" wx:for="{{facilities}}" wx:key="index">
-      <view class="facility-icon"><image class="facility-icon-img" src="{{item.icon}}" mode="aspectFit" lazy-load></image></view>
-      <view class="facility-text">{{item.text}}</view>
+  <!-- 卷宗章节：居住条件（映射真实档案字段，无数据隐藏） -->
+  <view class="section" wx:if="{{facilities.length > 0}}">
+    <view class="chapter">
+      <view class="chapter-meta">
+        <text class="chapter-no">03</text>
+        <text class="chapter-eyebrow">AMENITIES</text>
+        <view class="chapter-rule"></view>
+      </view>
+      <text class="section-title">居住条件</text>
+    </view>
+    <view class="entry-list">
+      <view class="entry-item" wx:for="{{facilities}}" wx:key="index">
+        <view class="entry-icon"><image class="entry-icon-img" src="{{item.icon}}" mode="aspectFit" lazy-load></image></view>
+        <text class="entry-text">{{item.text}}</text>
+      </view>
     </view>
   </view>
 
+  <!-- 卷宗落款 -->
+  <view class="ds-foot">
+    <view class="ds-foot-line"></view>
+    <text class="ds-foot-text">AROORO · 家庭寄养</text>
+    <view class="ds-foot-line"></view>
+  </view>
+
+  <view class="ds-tail"></view>
 
   </view>  <!-- 结束 isLoading 的 wx:else -->
 </view>

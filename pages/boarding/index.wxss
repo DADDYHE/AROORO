@@ -1,7 +1,7 @@
-/* 寄养家庭页面样式
-   设计系统：AROORO Haute-Luxury v2
+/* 寄养家庭页样式
+   设计系统：AROORO Haute-Luxury v2 ·「画廊目录」全出血封面版
    token 来源：styles/variables.wxss → styles/design-tokens.wxss → styles/theme-teal.wxss（app.wxss 按序注入）
-   P1-B 改造：清除旧 teal / 外来暖橙 / 通用灰阶硬编码，统一为语义 token */
+   卡片：封面铺满整卡（较完整展示家庭照片），信息区叠底部渐晕、背景透明；卡高不增大 */
 
 /* 容器 */
 .hosts-container {
@@ -10,29 +10,38 @@
   overflow-x: hidden;
 }
 
-/* 顶部品牌标识栏：杂志式标题区（对齐 pages/service 页 Haute-Luxury 语法） */
+/* ── 顶部品牌标识栏：杂志式标题区 ── */
 .gallery-header {
-  padding-top: var(--zy-space-xl);
-  padding-bottom: var(--zy-space-2xl);
+  padding: var(--zy-space-xl) var(--page-padding) var(--zy-space-lg);
 }
 
 .brand-accent-bar {
   width: 48rpx;
   height: 2rpx;
-  background: var(--accent-color, #C9A24B);
-  margin-bottom: var(--zy-space-lg);
+  background: var(--accent-color);
+  margin-bottom: 22rpx;
+}
+
+/* 金色宽字距 eyebrow（对齐 host-detail chapter-eyebrow 语法） */
+.brand-eyebrow {
+  display: block;
+  font-size: 20rpx;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  color: var(--accent-color);
+  margin-bottom: 18rpx;
 }
 
 .brand-main {
-  margin-bottom: var(--zy-space-lg);
+  margin-bottom: 20rpx;
 }
 
 .brand-text {
   font-family: var(--font-sans);
   font-size: 72rpx;
   font-weight: 300;
-  color: var(--text-primary, #1A1A17);
-  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
   line-height: 1.1;
 }
 
@@ -54,33 +63,36 @@
   font-size: 24rpx;
   font-weight: 300;
   color: var(--text-tertiary);
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
 }
 
-/* 搜索栏 */
-.search-header {
-  margin-top: 20rpx;
-  padding: 0 24rpx 20rpx;
+/* ── 搜索 + 筛选：单一 sticky 纸面工具条 ── */
+.toolbar {
   position: sticky;
   top: 0;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 16rpx var(--page-padding);
   /* Skyline 不支持 backdrop-filter，用纸面实底兜底（sticky 时遮住下方滚动内容） */
   background-color: var(--background-color);
   border-bottom: 1rpx solid var(--hairline);
 }
 
 .search-bar {
+  flex: 1;
   display: flex;
   align-items: center;
-  background: var(--card-color);
-  border-radius: 24rpx;
+  background: var(--card-cream);
+  border-radius: 12rpx;
   padding: 16rpx 20rpx;
-  border: 1rpx solid var(--border-color);
+  border: 1rpx solid var(--hairline);
 }
 
 .search-bar .search-icon {
-  width: 32rpx;
-  height: 32rpx;
+  width: 30rpx;
+  height: 30rpx;
   margin-right: 12rpx;
 }
 
@@ -98,69 +110,47 @@
   color: var(--text-tertiary);
 }
 
-/* 筛选栏：纸面 + 发丝底边（sticky 用纸面实底兜底） */
-.filter-bar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 16rpx 24rpx;
-  background-color: var(--background-color);
-  border-bottom: 1rpx solid var(--hairline);
-  position: sticky;
-  top: 180rpx;
-  z-index: 90;
-}
-
-.filter-section {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.filter-options {
-  display: flex;
-  gap: 16rpx;
-  align-items: center;
-}
-
 .filter-option {
   transition: transform 160ms ease, opacity 160ms ease;
   display: flex;
   align-items: center;
-  gap: 4rpx;
+  gap: 6rpx;
+  padding: 12rpx 4rpx;
+  flex-shrink: 0;
 }
 
 .filter-option text {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: var(--text-secondary);
   font-weight: 500;
+  letter-spacing: 0.08em;
 }
 
 .filter-arrow {
-  width: 24rpx;
-  height: 24rpx;
+  width: 22rpx;
+  height: 22rpx;
 }
 
-/* 寄养家庭列表 */
+/* ── 寄养家庭列表：全出血目录行（左竖版封面 9:16 + 右信息列，hairline 分隔） ── */
 .hosts-list {
-  padding: 20rpx 24rpx;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  border-top: 1rpx solid var(--hairline);
 }
 
 .host-card {
-  transition: background-color 180ms ease, border-color 180ms ease;
-  background: var(--card-cream);
-  border-radius: 24rpx;
-  overflow: hidden;
-  border: 1rpx solid var(--hairline);
+  transition: transform 180ms ease;
   position: relative;
+  display: flex;
+  gap: 26rpx;
+  border-bottom: 1rpx solid var(--hairline);
+  background-color: var(--card-cream);
   opacity: 0;
   animation: zy-fade-in-up 520ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* 寄养家庭卡首屏依次落位（60ms 步进，与中央 zy-enter--d* 同节奏） */
+/* 首屏依次落位（60ms 步进，与中央 zy-enter--d* 同节奏） */
 .hosts-list > .host-card:nth-child(1) { animation-delay: 160ms; }
 .hosts-list > .host-card:nth-child(2) { animation-delay: 220ms; }
 .hosts-list > .host-card:nth-child(3) { animation-delay: 280ms; }
@@ -169,138 +159,161 @@
 .hosts-list > .host-card:nth-child(6) { animation-delay: 460ms; }
 .hosts-list > .host-card:nth-child(n+7) { animation-delay: 0ms; }
 
-.host-cover-container {
+/* 左：竖版封面（高度由 JS 实测首图比例写入 style，卡片严丝合缝等于图高；
+   下限 420 由 _computeCoverHeights 控制，横图 aspectFill 居中裁切兜底） */
+.host-photo {
   position: relative;
-  height: 240rpx;
+  width: 300rpx;
+  flex-shrink: 0;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
 }
 
-.host-swiper {
+.host-photo-img {
   width: 100%;
   height: 100%;
 }
 
-.host-cover-image {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, var(--primary-mid) 0%, var(--primary-deep) 100%);
-}
-
-/* 轮播指示器样式 */
-.host-swiper .wx-swiper-dots {
-  bottom: 16rpx;
-}
-
-.host-swiper .wx-swiper-dot {
-  width: 8rpx;
-  height: 8rpx;
-  margin: 0 4rpx;
-}
-
-.host-swiper .wx-swiper-dot-active {
-  width: 24rpx;
-  border-radius: 4rpx;
-}
-
+/* 甄选徽章：深绿底 + 金 hairline 内框（图左上） */
 .host-badge {
   position: absolute;
-  top: 16rpx;
-  left: 16rpx;
-  background: linear-gradient(135deg, var(--accent-color), var(--accent-deep));
-  color: var(--text-gold);
-  padding: 6rpx 12rpx;
-  border-radius: 12rpx;
+  top: 14rpx;
+  left: 14rpx;
+  background-color: rgba(15, 36, 16, 0.62);
+  border: 1rpx solid var(--lux-hairline-gold);
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  z-index: 3;
 }
 
 .host-badge-text {
-  font-size: 16rpx;
-  font-weight: 600;
+  font-size: 18rpx;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: #F7F5EF;
 }
 
-.host-info {
-  padding: 20rpx 24rpx;
+/* 多图角标：图右下 */
+.cover-count {
+  position: absolute;
+  right: 14rpx;
+  bottom: 14rpx;
+  background-color: rgba(15, 36, 16, 0.62);
+  border: 1rpx solid var(--lux-hairline-gold);
+  padding: 2rpx 10rpx;
+  border-radius: 4rpx;
+  z-index: 3;
 }
 
-.host-header {
+.cover-count-t {
+  font-size: 18rpx;
+  letter-spacing: 0.08em;
+  color: #F7F5EF;
+}
+
+/* 暂停接待：封面灰纱 + 标识 */
+.cover-pause {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(236, 228, 212, 0.55);
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  margin-bottom: 12rpx;
+  justify-content: center;
+  z-index: 3;
 }
 
-.host-avatar {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  border: 2rpx solid var(--primary-tint);
-  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+.cover-pause-t {
+  font-size: 22rpx;
+  letter-spacing: 0.18em;
+  color: var(--text-primary);
+  background-color: rgba(247, 245, 239, 0.92);
+  padding: 12rpx 24rpx;
+  border-radius: 4rpx;
+}
+
+/* 右：信息列（上下撑满图高，底行锚底，右缘留页边距） */
+.host-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 28rpx var(--page-padding) 28rpx 0;
 }
 
 .host-name {
-  font-size: 28rpx;
+  font-size: 30rpx;
   font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--text-primary);
-  flex: 1;
-}
-
-/* 评分样式已移除 */
-
-.host-description {
-  font-size: 20rpx;
-  color: var(--gray-700);
   line-height: 1.4;
-  margin-bottom: 16rpx;
-  display: block;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.host-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8rpx;
-  margin-bottom: 16rpx;
-}
-
-.host-tag {
-  font-size: 16rpx;
-  color: var(--primary-color);
-  background: var(--primary-tint);
-  padding: 4rpx 12rpx;
-  border-radius: 12rpx;
-  border: 1rpx solid var(--lux-hairline-green);
-}
-
-.host-features {
-  display: flex;
-  gap: 24rpx;
-  margin-bottom: 20rpx;
-  padding-top: 16rpx;
-  border-top: 1rpx solid var(--hairline);
-}
-
-.feature-item {
+/* 评分 + 计费方式行：金星大号，计费做金 hairline 胶囊提设计感 */
+.host-meta-row {
   display: flex;
   align-items: center;
-  gap: 6rpx;
+  gap: 18rpx;
+  margin-top: 14rpx;
 }
 
-.feature-icon {
-  width: 28rpx;
-  height: 28rpx;
+.host-rating {
+  font-size: 30rpx;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--accent-color);
 }
 
-.feature-text {
-  font-size: 18rpx;
+.host-billing {
+  font-size: 20rpx;
+  letter-spacing: 0.08em;
+  color: var(--accent-color);
+  border: 1rpx solid var(--lux-hairline-gold);
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+}
+
+/* 简介：JS 预截断 28 字（Skyline 不支持多行截断属性，截断在 index.js shortDesc 完成） */
+.host-desc {
+  margin-top: 14rpx;
+  font-size: 23rpx;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
   color: var(--text-secondary);
 }
 
+/* 位置：金点 + 区县 */
+.host-loc {
+  margin-top: 12rpx;
+  display: flex;
+  align-items: center;
+  font-size: 22rpx;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.loc-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: var(--accent-color);
+  margin-right: 10rpx;
+  flex-shrink: 0;
+}
+
+/* 底部：hairline 分隔 + 价格 + 预约（锚底） */
 .host-bottom {
+  margin-top: 14rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--hairline);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 16rpx;
-  border-top: 1rpx solid var(--hairline);
 }
 
 .price-info {
@@ -309,11 +322,17 @@
   gap: 4rpx;
 }
 
-/* 价格：品牌深森林绿纯色（Skyline 无 background-clip 渐变底） */
+.price-symbol {
+  font-size: 22rpx;
+  color: var(--text-primary);
+}
+
+/* 轻字重大数字（对齐 host-detail 编辑式价格语法） */
 .price {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: var(--primary-color);
+  font-size: 42rpx;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
 }
 
 .price-unit {
@@ -321,19 +340,26 @@
   color: var(--text-tertiary);
 }
 
+/* CTA：深绿渐变底 + cream 字（品牌主语法，纸面卡上权重足够） */
 .book-btn {
   transition: transform 160ms ease, opacity 160ms ease;
-  padding: 12rpx 24rpx;
-  background: var(--primary-color);
-  color: var(--text-on-primary);
-  border: none;
-  border-radius: var(--zy-radius-lg);
-  font-size: 22rpx;
-  font-weight: 600;
+  padding: 14rpx 30rpx;
+  background: var(--lux-green-grad);
+  color: #F7F5EF;
+  border-radius: 10rpx;
+  font-size: 23rpx;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 140rpx;
+  flex-shrink: 0;
+}
+
+/* 暂停接待：灰纱禁用态 */
+.book-btn--off {
+  background: rgba(26, 26, 23, 0.35);
+  color: rgba(247, 245, 239, 0.75);
 }
 
 /* 加载状态 */
@@ -344,25 +370,6 @@
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-}
-
-.loading-dots {
-  display: flex;
-  gap: 12rpx;
-  align-items: center;
-}
-
-.loading-dot {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  background: var(--primary-mid);
-}
-
-.loading-dot:nth-child(2) {
-}
-
-.loading-dot:nth-child(3) {
 }
 
 .loading-more-text {
@@ -380,6 +387,7 @@
 
 .no-more-text {
   font-size: 18rpx;
+  letter-spacing: 0.2em;
   color: var(--text-tertiary);
 }
 
@@ -411,9 +419,9 @@
   text-align: center;
 }
 
-/* 筛选弹窗 */
+/* ── 筛选弹窗：纸面 chips ── */
 .modal-overlay {
-  transition: transform 160ms ease, opacity 160ms ease;
+  transition: opacity 200ms ease;
   position: fixed;
   top: 0;
   left: 0;
@@ -431,13 +439,13 @@
 }
 
 .modal-content {
-  transition: transform 160ms ease, opacity 160ms ease;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
   position: fixed;
   bottom: -100%;
   left: 0;
   right: 0;
-  background: var(--card-color);
-  border-radius: 32rpx 32rpx 0 0;
+  background: var(--background-color);
+  border-radius: 20rpx 20rpx 0 0;
   box-shadow: var(--shadow-top-lg);
   max-height: 80vh;
   overflow-y: auto;
@@ -452,26 +460,39 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24rpx;
+  padding: 28rpx var(--page-padding) 20rpx;
   border-bottom: 1rpx solid var(--hairline);
   position: sticky;
   top: 0;
-  background: var(--card-color);
+  background: var(--background-color);
   z-index: 10;
 }
 
+.modal-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.modal-eyebrow {
+  font-size: 18rpx;
+  letter-spacing: 0.32em;
+  color: var(--accent-color);
+}
+
 .modal-title {
-  font-size: 28rpx;
+  font-size: 30rpx;
   font-weight: 600;
+  letter-spacing: 0.06em;
   color: var(--text-primary);
 }
 
 .modal-close-btn {
   transition: transform 160ms ease, opacity 160ms ease;
-  width: 40rpx;
-  height: 40rpx;
+  width: 56rpx;
+  height: 56rpx;
   border-radius: 50%;
-  background: var(--surface-tint);
+  border: 1rpx solid var(--hairline);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -483,165 +504,130 @@
 }
 
 .filter-content {
-  padding: 24rpx;
+  padding: 28rpx var(--page-padding);
 }
 
 .filter-group {
-  margin-bottom: 32rpx;
+  margin-bottom: 36rpx;
 }
 
 .filter-group-title {
   font-size: 24rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 16rpx;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  color: var(--text-secondary);
+  margin-bottom: 18rpx;
 }
 
-.filter-checkboxes {
+.filter-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
+  gap: 16rpx;
 }
 
-.checkbox-item {
+/* 筛选 chip：hairline 描边 + 金点选中（对齐 host-detail 标签语法） */
+.chip {
   transition: transform 160ms ease, opacity 160ms ease;
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  padding: 12rpx 20rpx;
-  border-radius: 16rpx;
-  background: var(--surface-tint);
-  border: 1rpx solid var(--hairline);
+  padding: 14rpx 28rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  background: transparent;
 }
 
-.checkbox-item.checked {
+.chip text {
+  font-size: 24rpx;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.chip.checked {
+  border-color: var(--primary-color);
   background: var(--primary-tint);
-  border-color: var(--primary-color);
 }
 
-.checkbox {
-  width: 20rpx;
-  height: 20rpx;
-  border-radius: 4rpx;
-  border: 2rpx solid var(--border-color);
-  position: relative;
-}
-
-.checkbox-item.checked .checkbox {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-}
-
-.checkbox-item.checked .checkbox::after {
-  content: '✓';
-  position: absolute;
-  top: -2rpx;
-  left: 2rpx;
-  font-size: 16rpx;
-  color: var(--text-on-primary);
-  font-weight: 600;
-}
-
-.checkbox-item text {
-  font-size: 20rpx;
-  color: var(--gray-700);
-}
-
-.checkbox-item.checked text {
+.chip.checked text {
   color: var(--primary-color);
   font-weight: 500;
+}
+
+.chip-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: var(--accent-color);
+  margin-right: 10rpx;
 }
 
 .price-range {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 20rpx;
 }
 
 .price-input {
   flex: 1;
-  padding: 12rpx 16rpx;
-  border-radius: 12rpx;
-  border: 1rpx solid var(--border-color);
-  font-size: 20rpx;
+  padding: 16rpx 20rpx;
+  border-radius: 10rpx;
+  border: 1rpx solid var(--hairline);
+  background: var(--card-cream);
+  font-size: 24rpx;
   color: var(--text-primary);
   text-align: center;
 }
 
-.price-separator {
-  font-size: 20rpx;
-  color: var(--text-tertiary);
+.price-separator-line {
+  width: 24rpx;
+  height: 1rpx;
+  background: rgba(26, 26, 23, 0.20);
 }
 
 .modal-footer {
   display: flex;
   gap: 16rpx;
-  padding: 24rpx;
+  padding: 24rpx var(--page-padding) calc(24rpx + env(safe-area-inset-bottom));
   border-top: 1rpx solid var(--hairline);
   position: sticky;
   bottom: 0;
-  background: var(--card-color);
+  background: var(--background-color);
   z-index: 10;
 }
 
 .reset-btn {
   transition: transform 160ms ease, opacity 160ms ease;
   flex: 1;
-  padding: 16rpx;
+  padding: 18rpx;
   background: transparent;
-  color: var(--gray-700);
-  border: 1rpx solid var(--border-color);
-  border-radius: var(--zy-radius-lg);
-  font-size: 22rpx;
+  color: var(--text-secondary);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-radius: 10rpx;
+  font-size: 24rpx;
   font-weight: 500;
+  letter-spacing: 0.10em;
 }
 
 .apply-btn {
   transition: transform 160ms ease, opacity 160ms ease;
   flex: 1;
-  padding: 16rpx;
+  padding: 18rpx;
   background: var(--primary-color);
   color: var(--text-on-primary);
   border: none;
-  border-radius: var(--zy-radius-lg);
-  font-size: 22rpx;
-  font-weight: 600;
-}
-
-/* 响应式设计 */
-@media (max-width: 375px) {
-  .host-card {
-    margin-bottom: 20rpx;
-  }
-  
-  .host-features {
-    flex-direction: column;
-    gap: 8rpx;
-    align-items: flex-start;
-  }
-  
-  .feature-item {
-    font-size: 16rpx;
-  }
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  letter-spacing: 0.14em;
 }
 
 /* ── 微交互：按压态（hover-class 复用，详见 app.wxss 约定）── */
 .filter-option--pressed { transform: scale(0.97); opacity: 0.92; }
-.host-card--pressed {
-  background-color: var(--primary-wash, #F2F5EC);
-  border-color: var(--lux-hairline-green, rgba(31, 58, 31, 0.12));
-  box-shadow: var(--shadow-glow-primary-xs, 0 4rpx 16rpx rgba(31, 58, 31, 0.10));
-}
+.chip--pressed { transform: scale(0.97); opacity: 0.92; }
 .book-btn--pressed { transform: scale(0.97); opacity: 0.92; }
 .modal-close-btn--pressed { transform: scale(0.97); opacity: 0.92; }
-.checkbox-item--pressed { transform: scale(0.97); opacity: 0.92; }
-
-
-
-
-
 .reset-btn--pressed { transform: scale(0.97); opacity: 0.92; }
 .apply-btn--pressed { transform: scale(0.97); opacity: 0.92; }
+.host-card--pressed { transform: scale(0.985); opacity: 0.96; }
 
 /* ── 底部留白（避开自定义 TabBar）──
    TabBar 页专用：--zy-tabbar-height 令牌值 104rpx ≥ 实际平条 80rpx，

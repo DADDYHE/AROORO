@@ -2,7 +2,7 @@ const __i18n = require('../../utils/i18n.js')
 const __pageI18n = require('../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { HostService, FavoriteService } = require('../../services/CloudFunctionService')
-const { extractCityAndDistrict } = require('../../utils/addressUtils')
+const { formatRegion } = require('../../utils/addressUtils')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
@@ -30,22 +30,9 @@ Page({
     isFavorited: false, // 是否已收藏
     isLoading: true, // 是否正在加载寄养家庭详情
     isFavoriteLoading: false, // 是否正在处理收藏操作
-    services: [
-      { icon: '/images/icons/home-luxury-line.svg', text: '提供舒适的寄养环境' },
-      { icon: '/images/icons/bowl-luxury-line.svg', text: '定时喂食和喝水' },
-      { icon: '/images/icons/walk-luxury-line.svg', text: '每日遛弯和陪伴' },
-      { icon: '/images/icons/camera-luxury-line.svg', text: '每日照片和视频反馈' },
-      { icon: '/images/icons/pill-luxury-line.svg', text: '按时喂药服务' },
-      { icon: '/images/icons/bath-luxury-line.svg', text: '洗澡和美容服务' },
-    ],
-    facilities: [
-      { icon: '/images/icons/house-garden-luxury-line.svg', text: '独立房间' },
-      { icon: '/images/icons/run-luxury-line.svg', text: '户外花园' },
-      { icon: '/images/icons/tree-luxury-line.svg', text: '宠物乐园' },
-      { icon: '/images/icons/lock-luxury-line.svg', text: '安全围栏' },
-      { icon: '/images/icons/monitor-luxury-line.svg', text: '监控摄像头' },
-      { icon: '/images/icons/toilet-luxury-line.svg', text: '宠物厕所' },
-    ],
+    // 服务/居住条件由真实档案字段映射（getHostDetail 内构建），无数据则整块隐藏
+    services: [],
+    facilities: [],
   },
 
   /**
@@ -88,16 +75,59 @@ Page({
           openid: hostData.openid,
           name: hostData.hostName || '匿名寄养家庭',
           avatarUrl: hostData.avatarUrl || '',
-          price: hostData.pricePerDay || 80,
-          location: extractCityAndDistrict(hostData.address),
-          tags: hostData.tags || ['有经验', '爱干净', '可上门'],
-          description: hostData.description || '这家寄养家庭非常细心，对宠物照顾得很好。',
+          // 价格：真实值，未填（0）时展示「价格待定」，不造假
+          price: Number(hostData.pricePerDay) || 0,
+          location: formatRegion(hostData),
+          tags: hostData.tags || [],
+          description: hostData.description || '',
           photos: hostData.photos || [],
           videos: hostData.videos || [],
           isAcceptingOrders: hostData.isAcceptingOrders !== undefined ? hostData.isAcceptingOrders : true,
+          // 联系方式：电话直拨 + 微信号复制（编辑表单留存，getHostDetail 公开投影透出）
+          contactPhone: hostData.phone || '',
+          wechatId: hostData.wechatId || '',
           hostName: hostData.hostName || '匿名寄养家庭',
         }
 
+        // 服务内容：映射真实 serviceTypes（档案表单收集），无数据则整块隐藏
+        const SERVICE_META = {
+          board: { icon: '/images/icons/home-luxury-line.svg', text: '家庭寄养' },
+          walk: { icon: '/images/icons/walk-luxury-line.svg', text: '每日遛狗' },
+          feed: { icon: '/images/icons/bowl-luxury-line.svg', text: '上门喂养' },
+        }
+        const services = (Array.isArray(hostData.serviceTypes) ? hostData.serviceTypes : [])
+          .filter(k => SERVICE_META[k])
+          .map(k => SERVICE_META[k])
+
+        // 居住条件：映射真实档案字段，无数据则整块隐藏
+        const BOARDING_MODE_TEXT = { cage: '笼养', freeRange: '散养', flexible: '按需选择' }
+        const facilities = []
+        if (hostData.housingType) {
+          facilities.push({ icon: '/images/icons/home-luxury-line.svg', text: hostData.housingType })
+        }
+        if (hostData.boardingMode && BOARDING_MODE_TEXT[hostData.boardingMode]) {
+          facilities.push({ icon: '/images/icons/paw-luxury-line.svg', text: `寄养方式 · ${BOARDING_MODE_TEXT[hostData.boardingMode]}` })
+        }
+        if (hostData.hasYard === 'yes') {
+          facilities.push({ icon: '/images/icons/tree-luxury-line.svg', text: '户外院子' })
+        }
+        if (Number(hostData.maxPets) > 0) {
+          facilities.push({ icon: '/images/icons/dog-luxury-line.svg', text: `可接 ${Number(hostData.maxPets)} 只` })
+        }
+
+
+        // 收费方式（勿与寄养方式 boardingMode 混淆）：档案缺失时兜底酒店式（与档案/服务端口径一致）
+        const BILLING_META = {
+          hotel: {
+            label: '酒店式',
+            intro: `按过夜计费；${hostData.checkInAfter || '14:00'} 后入住、${hostData.checkOutBefore || '12:00'} 前退房，超时将加收半天或一天费用`,
+          },
+          hourly24: {
+            label: '24小时制',
+            intro: '每满 24 小时按一天计，不足一天按实际小时计费（小时价 = 日单价 ÷ 24）',
+          },
+        }
+        const billingMeta = BILLING_META[hostData.billingMode] || BILLING_META.hotel
 
         const photosSnapPoints = []
         if (host.photos && host.photos.length > 0) {
@@ -108,9 +138,14 @@ Page({
 
         this.setData({
           host,
+          services,
+          facilities,
+          chargeLabel: billingMeta.label,
+          chargeIntro: billingMeta.intro,
           photosSnapPoints,
           isLoading: false,
         })
+        this._updateCounter(this.data.currentMediaType)
       } else {
         this.setData({ isLoading: false })
         this.error('HOST_NOT_FOUND_TEXT')
@@ -120,6 +155,19 @@ Page({
       this.setData({ isLoading: false })
       this.error('GET_FAILED')
     }
+  },
+
+  /** 画册页码（Skyline：wxml 绑定禁方法调用，页码一律 JS 预计算） */
+  _updateCounter(type) {
+    const list = type === 'videos' ? (this.data.host.videos || []) : (this.data.host.photos || [])
+    const total = list.length
+    if (!total) {
+      this.setData({ counterText: '' })
+      return
+    }
+    const current = type === this.data.currentMediaType ? (this.data.currentIndex || 0) : 0
+    const pad = (n) => (n < 10 ? '0' + n : '' + n)
+    this.setData({ counterText: `${pad(current + 1)} / ${pad(total)}` })
   },
 
   /**
@@ -165,6 +213,7 @@ Page({
       currentMediaType: mediaType,
       currentIndex: 0,
     })
+    this._updateCounter(mediaType)
   },
 
   /**
@@ -172,7 +221,7 @@ Page({
    */
   goToPhotosPage() {
     wx.navigateTo({
-      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host._id || ''}&tab=album`,
+      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host.id || ''}&tab=album`,
     })
   },
 
@@ -181,7 +230,7 @@ Page({
    */
   goToVideosPage() {
     wx.navigateTo({
-      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host._id || ''}&tab=video`,
+      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host.id || ''}&tab=video`,
     })
   },
 
@@ -190,7 +239,7 @@ Page({
    */
   openAlbum() {
     wx.navigateTo({
-      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host._id || ''}`,
+      url: `/subpackages/other/album/index?hostId=${this.data.host.id || this.data.host.id || ''}`,
     })
   },
 
@@ -207,6 +256,7 @@ Page({
       isScrolling: true,
       currentIndex: e.detail.current,
     })
+    this._updateCounter(this.data.currentMediaType)
 
     // 设置滑动锁定定时器
     setTimeout(() => {
@@ -220,21 +270,45 @@ Page({
    * 查看更多照片
    */
   viewMorePhotos() {
-    wx.navigateTo({ url: `/subpackages/other/album/index?hostId=${this.data.host._id}` })
+    wx.navigateTo({ url: `/subpackages/other/album/index?hostId=${this.data.host.id}` })
   },
 
   viewMoreVideos() {
-    wx.navigateTo({ url: `/subpackages/other/video-list/index?hostId=${this.data.host._id}` })
+    wx.navigateTo({ url: `/subpackages/other/video-list/index?hostId=${this.data.host.id}` })
   },
 
   playVideo(e) {
     const index = e.currentTarget.dataset.index
-    wx.navigateTo({ url: `/subpackages/other/video-list/index?hostId=${this.data.host._id}&index=${index}` })
+    wx.navigateTo({ url: `/subpackages/other/video-list/index?hostId=${this.data.host.id}&index=${index}` })
   },
 
+  /**
+   * 立即预约：跳预订确认页（选日期/宠物/下单）
+   */
+  goBooking() {
+    const host = this.data.host
+    if (!host || !host.id) {
+      this.error('HOST_INFO_LOAD_FAILED')
+      return
+    }
+    if (host.isAcceptingOrders === false) {
+      wx.showToast({ title: '该家庭已暂停接待', icon: 'none' })
+      return
+    }
+    if (!authService.isLoggedIn()) {
+      this.error('AUTH_REQUIRED')
+      return
+    }
+    wx.navigateTo({ url: `/subpackages/booking/confirm?hostId=${host.id}` })
+  },
+
+  /**
+   * 联系家庭：有电话/微信号时弹 ActionSheet——电话直拨，微信号复制引导添加
+   */
   async contactFamily() {
     const host = this.data.host
-    if (!host || !host.openid) {
+    // 公开投影不透 openid，用 host.id（档案 _id）判存在
+    if (!host || !host.id) {
       this.error('HOST_INFO_LOAD_FAILED')
       return
     }
@@ -244,7 +318,37 @@ Page({
       return
     }
 
-    this.error('CHAT_NOT_OPEN')
+    const items = []
+    const actions = []
+    if (host.contactPhone) {
+      items.push(`拨打电话 ${host.contactPhone}`)
+      actions.push('call')
+    }
+    if (host.wechatId) {
+      items.push(`复制微信号 ${host.wechatId}`)
+      actions.push('copy')
+    }
+
+    if (!items.length) {
+      wx.showToast({ title: '家庭未留联系方式', icon: 'none' })
+      return
+    }
+
+    wx.showActionSheet({
+      itemList: items,
+      success: (res) => {
+        const action = actions[res.tapIndex]
+        if (action === 'call') {
+          wx.makePhoneCall({ phoneNumber: host.contactPhone })
+        } else if (action === 'copy') {
+          wx.setClipboardData({
+            data: host.wechatId,
+            success: () => wx.showToast({ title: '已复制，去微信添加好友', icon: 'none' }),
+          })
+        }
+      },
+      fail: () => {}, // 用户取消，静默
+    })
   },
 
   /**
@@ -366,7 +470,7 @@ Page({
 
   onShareAppMessage() {
     const { host } = this.data
-    const hostId = host?._id || host?.id
+    const hostId = host?.id
     const basePath = hostId ? `/subpackages/booking/host-detail?id=${hostId}` : '/subpackages/booking/host-detail'
     return {
       title: host?.name ? `${host.name} - 寄养家庭` : 'AROORO 寄养家庭',
