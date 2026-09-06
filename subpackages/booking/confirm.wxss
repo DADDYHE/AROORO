@@ -659,6 +659,7 @@
   color: var(--text-tertiary);
   line-height: 1.6;
   width: 100%;
+  text-align: center;
 }
 
 /* ========== 确认按钮：深绿 rich 渐变 + cream（对齐 host-detail 主 CTA） ========== */

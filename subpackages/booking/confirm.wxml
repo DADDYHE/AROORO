@@ -252,7 +252,8 @@
       <text class="price-value">{{ totalPrice }}</text>
     </view>
     <text class="coupon-sub" wx:if="{{couponDiscount > 0}}">已优惠 ¥{{couponDiscount}}</text>
-    <text class="min-amount-tip">提交后家庭可为您调整价格，请在订单详情中选择支付全款或预付定金（全款的 30%，定金不退）</text>
+    <text class="min-amount-tip">请提交后选择支付全款或预付定金。</text>
+    <text class="min-amount-tip">（定金为全款金额的30%，定金不退）</text>
   </view>
   <view class="confirm-btn" bindtap="confirmBooking" loading="{{ loading }}">
     <text wx:if="{{ !loading }}">确认预订</text>
