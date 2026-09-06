@@ -1698,6 +1698,7 @@ const _handlers = {
     handleBoardingOrder: withErrorHandling(handleBoardingOrder),
     submitEvaluation: withErrorHandling(submitEvaluation),
     getHostEvaluations: withErrorHandling(getHostEvaluations),
+    adjustOrderPrice: withErrorHandling(adjustOrderPrice),
 };
 // Runtime shim: 把 module.exports 指向包装后的 handlers
 // (兼容原 CommonJS 模式 `module.exports = { ... }`，

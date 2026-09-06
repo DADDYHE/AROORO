@@ -146,5 +146,6 @@ declare const _handlers: {
     handleBoardingOrder: any;
     submitEvaluation: any;
     getHostEvaluations: any;
+    adjustOrderPrice: any;
 };
 export default _handlers;
