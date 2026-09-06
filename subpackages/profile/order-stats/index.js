@@ -61,11 +61,9 @@ Page({
       console.warn('[order-stats] 未登录，跳过加载订单')
       return
     }
-    // 30s 节流：窗口内返回不再全量重拉（订单状态变更另有 orderManager
-    // LIST_UPDATED 事件兜底，onLoad 已订阅）；下拉刷新/操作后刷新不走节流
-    const now = Date.now()
-    if (this._lastLoadedAt && now - this._lastLoadedAt < 30000) { return }
-    this._lastLoadedAt = now
+    // 2026-09-06：去掉 30s 节流——订单金额可能已被家庭改价，
+    // 每次进入页面都强制拉取最新数据（避免用户看到旧金额）
+    this.setData({ page: 1 })
     this._loadOrders()
   },
 
@@ -77,15 +75,6 @@ Page({
     const app = getApp()
     const isLoggedIn = Boolean(app.globalData && app.globalData.isLoggedIn)
     this.setData({ isLoggedIn })
-  },
-
-  onShow() {
-    // 2026-09-06：订单金额可能已被家庭改价，每次进入页面强制刷新（首次由 onLoad 负责，此后每次 onShow 重拉第一页）
-    if (this._enteredOnce) {
-      this.setData({ page: 1, orders: [], hasMore: true })
-      this._loadOrders()
-    }
-    this._enteredOnce = true
   },
 
   async _loadOrders() {
