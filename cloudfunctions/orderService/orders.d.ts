@@ -86,9 +86,6 @@ export declare function getActivityOrderDetail(event: EventLike, _context: Conte
  * 7. cancelOrder - 取消订单（= updateOrderStatus('cancelled')）
  */
 export declare function cancelOrder(event: EventLike, _context: ContextLike, auth: AuthLike | null): HandlerResult;
-/**
- * 8. getOrderDetail - 订单详情
- */
 export declare function getOrderDetail(event: EventLike, _context: ContextLike, auth: AuthLike | null): HandlerResult;
 /**
  * 8b. adjustOrderPrice - 寄养家庭改价（2026-09-06）

@@ -500,6 +500,13 @@ async function getOrders(event, _context, auth) {
         .limit(Number(pageSize))
         .get();
     const countResult = await db.collection('orders').where(query).count();
+    // 惰性取消：owner 视角列表中的超时待支付单顺带取消（命中的才写，多数单快速跳过）
+    for (const doc of (result.data || [])) {
+        const d = doc;
+        if (await cancelExpiredOrderIfNeeded(d)) {
+            doc.status = 'cancelled';
+        }
+    }
     let list = await enrichOrders((result.data || []));
     // F21: host 视角对 owner PII 脱敏——phone 末4位、剔除 notes、ownerInfo 仅留昵称/头像
     if (isHost) {
@@ -1038,6 +1045,42 @@ exports.cancelOrder = cancelOrder;
 /**
  * 8. getOrderDetail - 订单详情
  */
+/**
+ * 惰性取消（2026-09-06）：读取路径顺带取消超时的待支付订单。
+ * 条件：pending_payment 且 timeoutAt 已过。纯 DB 操作（状态 + bookingKey 释放 + 券解锁），
+ * 微信预付单的关闭由 cron 兜底（预付单支付入口随支付页退出实际不可达，风险极低）。
+ * 条件更新幂等——与 cron / 前端归零触发并发安全。返回 true 表示本次执行了取消。
+ */
+async function cancelExpiredOrderIfNeeded(order) {
+    if (!order || !order._id) {
+        return false;
+    }
+    if (order.status !== 'pending_payment') {
+        return false;
+    }
+    const timeoutAt = Number(order.timeoutAt);
+    if (!Number.isFinite(timeoutAt) || timeoutAt <= 0 || timeoutAt >= Date.now()) {
+        return false;
+    }
+    const cancelRes = await db.collection('orders')
+        .where({ _id: order._id, status: 'pending_payment' })
+        .update({
+        data: {
+            bookingKey: (0, booking_key_1.releasedBookingKey)(order._id),
+            status: 'cancelled',
+            cancelReason: '超时未支付，系统自动取消',
+            cancelledAt: db.serverDate(),
+            updatedAt: db.serverDate(),
+        },
+    });
+    if (!cancelRes.updated || cancelRes.updated === 0) {
+        return false;
+    }
+    if (order.couponId) {
+        await unlockCouponBestEffort(order.couponId, order._id);
+    }
+    return true;
+}
 async function getOrderDetail(event, _context, auth) {
     const openid = auth?.openid;
     if (!openid) {
@@ -1070,6 +1113,12 @@ async function getOrderDetail(event, _context, auth) {
     const isOwner = od.ownerId === openid;
     if (!isHost && !isOwner) {
         throw err('PERMISSION_DENIED', '只能查看自己的订单');
+    }
+    // 惰性取消：超时待支付单在读取时当场取消，一次加载即看到「已取消」（消除割裂窗口）
+    const odPay = order.data;
+    if (await cancelExpiredOrderIfNeeded(odPay)) {
+        ;
+        order.data.status = 'cancelled';
     }
     const [enriched] = await enrichOrders([order.data]);
     return (0, utils_1.handleSuccess)(enriched, '获取成功');
