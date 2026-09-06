@@ -1,167 +1,318 @@
-<view class="edit-page">
-  <!-- 步骤条 -->
-  <view class="step-bar">
-    <block wx:for="{{stepTitles}}" wx:key="index">
-      <view class="step-item">
-        <view class="step-no {{step >= index + 1 ? 'step-no--active' : ''}}">0{{index + 1}}</view>
-        <text class="step-label {{step >= index + 1 ? 'step-label--active' : ''}}">{{item}}</text>
+<!--
+  家庭寄养档案编辑 · DOSSIER
+  版式：B（深绿沉浸标题版）+ A（整版纸面流）
+  ⚠ 全站 navigationStyle: custom，本页必须挂 zy-navbar（transparent 模式不占位，
+    由 .ds-hero-body 内的 spacer 撑出状态栏+导航栏高度）。删除此组件 = 内容顶穿 + 返回键消失。
+-->
+<zy-navbar title="寄养家庭档案" transparent="{{true}}" color="#F7F5EF" />
+
+<scroll-view
+  class="ds-scroll"
+  scroll-y
+  enhanced
+  show-scrollbar="{{false}}"
+  scroll-top="{{_scrollTop}}"
+  style="height: 100vh;"
+>
+  <!-- ============ 深绿沉浸标题版 ============ -->
+  <view class="ds-hero">
+    <view class="ds-hero-glow ds-hero-glow--gold"></view>
+    <view class="ds-hero-glow ds-hero-glow--green"></view>
+    <view class="ds-hero-scrim"></view>
+
+    <view class="ds-hero-body">
+      <view style="height: {{_navbarHeight}}px;"></view>
+      <text class="ds-eyebrow">HOST FAMILY · DOSSIER</text>
+      <text class="ds-hero-title">{{isEdit ? '完善档案' : '建立档案'}}</text>
+      <view class="ds-hero-rule"></view>
+      <text class="ds-hero-sub">{{isRejected ? '资料需修订，请重新提交' : (isEdit ? '更新资料，让家庭主页更完整' : '三步完成，开启家庭寄养')}}</text>
+    </view>
+
+    <!-- 卷宗进度轨 -->
+    <view class="ds-rail">
+      <block wx:for="{{stepTitles}}" wx:key="index">
+        <view class="ds-node">
+          <view class="ds-ring {{step === index + 1 ? 'ds-ring--now' : ''}} {{step > index + 1 ? 'ds-ring--done' : ''}}">
+            <text class="ds-ring-t">{{step > index + 1 ? '✓' : (index + 1)}}</text>
+          </view>
+          <text class="ds-node-t {{step >= index + 1 ? 'ds-node-t--on' : ''}}">{{item}}</text>
+        </view>
+        <view wx:if="{{index < stepTitles.length - 1}}" class="ds-track {{step > index + 1 ? 'ds-track--on' : ''}}"></view>
+      </block>
+    </view>
+  </view>
+
+  <!-- ============ 整版纸面流 ============ -->
+  <view class="ds-paper">
+    <view class="ds-chapter">
+      <text class="ds-chapter-no">{{stepNo}}</text>
+      <text class="ds-chapter-title">{{stepTitle}}</text>
+      <view class="ds-chapter-rule"></view>
+    </view>
+
+    <!-- ---------- Step 1 基本信息 ---------- -->
+    <block wx:if="{{step === 1}}">
+      <!-- 家庭头像：单张上传，用户端列表/详情圆形展示 -->
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>家庭头像</text></view>
+        <view class="ds-avatar-row">
+          <view class="ds-avatar" bindtap="onChooseAvatar" hover-class="ds-avatar--p" hover-stay-time="80">
+            <image wx:if="{{form.avatarUrl}}" class="ds-avatar-img" src="{{form.avatarUrl.temp}}" mode="aspectFill" />
+            <view wx:else class="ds-avatar-ph"><view class="ds-plus"><view class="ds-plus-h"></view><view class="ds-plus-v"></view></view></view>
+          </view>
+          <view class="ds-avatar-meta">
+            <text class="ds-avatar-t">{{form.avatarUrl ? '点击更换头像' : '上传家庭头像'}}</text>
+            <text class="ds-hint">展示给用户，建议清晰正方形照片</text>
+            <text wx:if="{{form.avatarUrl}}" class="ds-avatar-x" bindtap="onRemoveAvatar">移除</text>
+          </view>
+        </view>
       </view>
-      <view wx:if="{{index < stepTitles.length - 1}}" class="step-line {{step > index + 1 ? 'step-line--active' : ''}}"></view>
+
+      <view class="ds-row">
+        <view class="ds-label"><text>家庭名称</text><view class="ds-req"></view></view>
+        <input class="ds-input" placeholder-class="ds-ph" placeholder="如：山间小院·宠物之家" value="{{form.hostName}}" data-field="hostName" bindinput="onInput" />
+      </view>
+
+      <view class="ds-row">
+        <view class="ds-label"><text>真实姓名</text></view>
+        <input class="ds-input" placeholder-class="ds-ph" placeholder="用于平台核验，仅平台可见" value="{{form.realName}}" data-field="realName" bindinput="onInput" />
+      </view>
+
+      <view class="ds-row">
+        <view class="ds-label"><text>联系电话</text><view class="ds-req"></view></view>
+        <input class="ds-input" type="number" maxlength="11" placeholder-class="ds-ph" placeholder="11 位手机号" value="{{form.phone}}" data-field="phone" bindinput="onInput" />
+      </view>
+
+      <!-- 微信号：用户端详情页复制添加（选填） -->
+      <view class="ds-row">
+        <view class="ds-label"><text>微信号</text></view>
+        <input class="ds-input" maxlength="30" placeholder-class="ds-ph" placeholder="用于用户添加联系方式" value="{{form.wechatId}}" data-field="wechatId" bindinput="onInput" />
+      </view>
+
+      <!-- 所在地址：三级区划选择器（用户端仅展示到区县） -->
+      <view class="ds-row">
+        <view class="ds-label"><text>所在地区</text><view class="ds-req"></view></view>
+        <picker mode="region" value="{{regionValue}}" bindchange="onRegionChange">
+          <view class="ds-picker">
+            <text class="ds-picker-t {{form.province ? '' : 'ds-picker-t--ph'}}">{{form.province ? form.province + ' ' + form.city + ' ' + form.district : '请选择省 / 市 / 区'}}</text>
+            <view class="ds-chev"></view>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 详细地址：街道/小区/门牌（隐私，用户端不可见） -->
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>详细地址</text><view class="ds-req"></view></view>
+        <input class="ds-input ds-input--block" placeholder-class="ds-ph" placeholder="街道、小区、门牌号（仅平台可见）" value="{{form.addressDetail}}" data-field="addressDetail" bindinput="onInput" />
+      </view>
+
+      <view class="ds-row">
+        <view class="ds-label"><text>住宅户型</text></view>
+        <picker range="{{housingOptions}}" value="{{housingIndex}}" bindchange="onHousingChange">
+          <view class="ds-picker">
+            <text class="ds-picker-t {{form.housingType ? '' : 'ds-picker-t--ph'}}">{{form.housingType || '请选择'}}</text>
+            <view class="ds-chev"></view>
+          </view>
+        </picker>
+      </view>
+
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>是否有院子</text></view>
+        <view class="ds-chips">
+          <view wx:for="{{yesNoOptions}}" wx:key="key" class="ds-chip {{form.hasYard === item.key ? 'ds-chip--on' : ''}}" hover-class="ds-chip--p" hover-stay-time="80" data-field="hasYard" data-key="{{item.key}}" bindtap="onYesNoChange">{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>家中自有宠物</text></view>
+        <view class="ds-chips">
+          <view wx:for="{{yesNoOptions}}" wx:key="key" class="ds-chip {{form.hasOtherPets === item.key ? 'ds-chip--on' : ''}}" hover-class="ds-chip--p" hover-stay-time="80" data-field="hasOtherPets" data-key="{{item.key}}" bindtap="onYesNoChange">{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>自有宠物情况说明</text></view>
+        <textarea class="ds-area" placeholder-class="ds-ph" placeholder="如：一只 3 岁金毛，性格温顺，已接种疫苗" value="{{form.nativePetInfo}}" data-field="nativePetInfo" bindinput="onInput" maxlength="200" />
+      </view>
     </block>
-  </view>
 
-  <!-- Step 1 基本信息 -->
-  <view wx:if="{{step === 1}}" class="form-section">
-    <view class="section-title">基本信息</view>
-
-    <view class="field-row">
-      <text class="field-label required">家庭名称</text>
-      <input class="field-input" placeholder-class="input-placeholder" placeholder="如：山间小院·宠物之家" value="{{form.hostName}}" data-field="hostName" bindinput="onInput" />
-    </view>
-    <view class="field-row">
-      <text class="field-label">真实姓名</text>
-      <input class="field-input" placeholder-class="input-placeholder" placeholder="用于平台核验，仅平台可见" value="{{form.realName}}" data-field="realName" bindinput="onInput" />
-    </view>
-    <view class="field-row">
-      <text class="field-label required">联系电话</text>
-      <input class="field-input" type="number" maxlength="11" placeholder-class="input-placeholder" placeholder="11 位手机号" value="{{form.phone}}" data-field="phone" bindinput="onInput" />
-    </view>
-    <view class="field-row">
-      <text class="field-label required">所在地址</text>
-      <input class="field-input" placeholder-class="input-placeholder" placeholder="小区/街道，展示时隐去门牌" value="{{form.address}}" data-field="address" bindinput="onInput" />
-    </view>
-    <view class="field-row">
-      <text class="field-label">住宅户型</text>
-      <picker range="{{housingOptions}}" value="{{housingIndex}}" bindchange="onHousingChange">
-        <view class="field-picker {{form.housingType ? '' : 'field-picker--placeholder'}}">{{form.housingType || '请选择户型'}}</view>
-      </picker>
-    </view>
-
-    <view class="field-row">
-      <text class="field-label">是否有院子</text>
-      <view class="choice-group">
-        <view wx:for="{{yesNoOptions}}" wx:key="key" class="choice-chip {{form.hasYard === item.key ? 'choice-chip--on' : ''}}" data-field="hasYard" data-key="{{item.key}}" bindtap="onYesNoChange">{{item.label}}</view>
-      </view>
-    </view>
-    <view class="field-row">
-      <text class="field-label">家中自有宠物</text>
-      <view class="choice-group">
-        <view wx:for="{{yesNoOptions}}" wx:key="key" class="choice-chip {{form.hasOtherPets === item.key ? 'choice-chip--on' : ''}}" data-field="hasOtherPets" data-key="{{item.key}}" bindtap="onYesNoChange">{{item.label}}</view>
-      </view>
-    </view>
-    <view class="field-row field-row--area">
-      <text class="field-label">自有宠物情况说明</text>
-      <textarea class="field-textarea" placeholder-class="input-placeholder" placeholder="如：一只 3 岁金毛，性格温顺，已接种疫苗" value="{{form.nativePetInfo}}" data-field="nativePetInfo" bindinput="onInput" maxlength="200" />
-    </view>
-  </view>
-
-  <!-- Step 2 服务与定价 -->
-  <view wx:if="{{step === 2}}" class="form-section">
-    <view class="section-title">服务与定价</view>
-
-    <view class="field-row field-row--col">
-      <text class="field-label required">可接宠物类型</text>
-      <view class="choice-group">
-        <view wx:for="{{petTypeOptions}}" wx:key="key" class="choice-chip {{form.petTypes.indexOf(item.key) > -1 ? 'choice-chip--on' : ''}}" data-key="{{item.key}}" bindtap="onTogglePetType">{{item.label}}</view>
-      </view>
-    </view>
-
-    <view class="field-row field-row--col">
-      <text class="field-label required">提供服务</text>
-      <view class="choice-group">
-        <view wx:for="{{serviceTypeOptions}}" wx:key="key" class="choice-chip {{form.serviceTypes.indexOf(item.key) > -1 ? 'choice-chip--on' : ''}}" data-key="{{item.key}}" bindtap="onToggleServiceType">{{item.label}}</view>
-      </view>
-    </view>
-
-    <view class="field-row">
-      <text class="field-label required">最大接宠数</text>
-      <input class="field-input" type="number" placeholder-class="input-placeholder" placeholder="同时最多照看几只" value="{{form.maxPets}}" data-field="maxPets" bindinput="onInput" />
-    </view>
-    <view class="field-row">
-      <text class="field-label required">日单价（元/天）</text>
-      <input class="field-input" type="digit" placeholder-class="input-placeholder" placeholder="如：88" value="{{form.pricePerDay}}" data-field="pricePerDay" bindinput="onInput" />
-    </view>
-
-    <view class="field-row field-row--area">
-      <text class="field-label">家庭介绍</text>
-      <textarea class="field-textarea" placeholder-class="input-placeholder" placeholder="介绍您的寄养环境、日常安排、经验特长等" value="{{form.description}}" data-field="description" bindinput="onInput" maxlength="500" />
-    </view>
-  </view>
-
-  <!-- Step 3 资质与相册 -->
-  <view wx:if="{{step === 3}}" class="form-section">
-    <view class="section-title">资质与相册</view>
-
-    <view class="field-row field-row--col">
-      <text class="field-label required">环境相册（{{form.photos.length}}/{{maxPhotos}}）</text>
-      <text class="field-hint">真实环境照片可显著提升用户信任，至少 1 张</text>
-      <view class="upload-grid">
-        <view wx:for="{{form.photos}}" wx:key="temp" class="upload-cell">
-          <image class="upload-img" src="{{item.temp}}" mode="aspectFill" lazy-load />
-          <view class="upload-remove" data-index="{{index}}" catchtap="onRemovePhoto">×</view>
-        </view>
-        <view wx:if="{{form.photos.length < maxPhotos}}" class="upload-add" bindtap="onChoosePhotos">＋</view>
-      </view>
-    </view>
-
-    <view class="field-row field-row--col">
-      <text class="field-label">环境视频（可选）</text>
-      <view class="upload-grid">
-        <view wx:for="{{form.videos}}" wx:key="temp" class="upload-cell">
-          <image class="upload-img" src="{{item.temp}}" mode="aspectFill" lazy-load />
-          <view class="upload-remove" catchtap="onRemoveVideo">×</view>
-        </view>
-        <view wx:if="{{form.videos.length === 0}}" class="upload-add" bindtap="onChooseVideo">＋</view>
-      </view>
-    </view>
-
-    <view class="field-row field-row--col">
-      <text class="field-label">身份证正反面（仅平台审核用）</text>
-      <view class="cert-row">
-        <view class="cert-cell" data-field="idCardFront" bindtap="onChooseCert">
-          <block wx:if="{{form.idCardFront}}">
-            <image class="cert-img" src="{{form.idCardFront.temp}}" mode="aspectFill" lazy-load />
-            <view class="upload-remove" data-field="idCardFront" catchtap="onRemoveCert">×</view>
-          </block>
-          <text wx:else class="cert-text">人像面</text>
-        </view>
-        <view class="cert-cell" data-field="idCardBack" bindtap="onChooseCert">
-          <block wx:if="{{form.idCardBack}}">
-            <image class="cert-img" src="{{form.idCardBack.temp}}" mode="aspectFill" lazy-load />
-            <view class="upload-remove" data-field="idCardBack" catchtap="onRemoveCert">×</view>
-          </block>
-          <text wx:else class="cert-text">国徽面</text>
+    <!-- ---------- Step 2 服务与定价 ---------- -->
+    <block wx:if="{{step === 2}}">
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>可接宠物类型</text><view class="ds-req"></view></view>
+        <view class="ds-chips">
+          <view wx:for="{{petTypeOptions}}" wx:key="key" class="ds-chip {{item.on ? 'ds-chip--on' : ''}}" hover-class="ds-chip--p" hover-stay-time="80" data-key="{{item.key}}" bindtap="onTogglePetType">{{item.label}}</view>
         </view>
       </view>
-    </view>
 
-    <view class="field-row field-row--col">
-      <text class="field-label">宠物疫苗/健康证明（可选）</text>
-      <view class="cert-row">
-        <view class="cert-cell cert-cell--single" data-field="healthCertificate" bindtap="onChooseCert">
-          <block wx:if="{{form.healthCertificate}}">
-            <image class="cert-img" src="{{form.healthCertificate.temp}}" mode="aspectFill" lazy-load />
-            <view class="upload-remove" data-field="healthCertificate" catchtap="onRemoveCert">×</view>
-          </block>
-          <text wx:else class="cert-text">上传证明照片</text>
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>提供服务</text><view class="ds-req"></view></view>
+        <view class="ds-chips">
+          <view wx:for="{{serviceTypeOptions}}" wx:key="key" class="ds-chip {{item.on ? 'ds-chip--on' : ''}}" hover-class="ds-chip--p" hover-stay-time="80" data-key="{{item.key}}" bindtap="onToggleServiceType">{{item.label}}</view>
         </view>
       </view>
-    </view>
 
-    <view class="field-row">
-      <text class="field-label">紧急联系人</text>
-      <input class="field-input" placeholder-class="input-placeholder" placeholder="姓名" value="{{form.emergencyContactName}}" data-field="emergencyContactName" bindinput="onInput" />
-    </view>
-    <view class="field-row">
-      <text class="field-label">紧急联系电话</text>
-      <input class="field-input" type="number" maxlength="11" placeholder-class="input-placeholder" placeholder="11 位手机号" value="{{form.emergencyContactPhone}}" data-field="emergencyContactPhone" bindinput="onInput" />
+      <!-- 寄养方式：单选（笼养/散养/按需选择），用户端详情页居住条件板块展示 -->
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>寄养方式</text><view class="ds-req"></view></view>
+        <view class="ds-chips">
+          <view wx:for="{{boardingModeOptions}}" wx:key="key" class="ds-chip {{form.boardingMode === item.key ? 'ds-chip--on' : ''}}" hover-class="ds-chip--p" hover-stay-time="80" data-field="boardingMode" data-key="{{item.key}}" bindtap="onYesNoChange">{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="ds-row">
+        <view class="ds-label"><text>最大接宠数</text><view class="ds-req"></view></view>
+        <input class="ds-input" type="number" placeholder-class="ds-ph" placeholder="同时最多照看几只" value="{{form.maxPets}}" data-field="maxPets" bindinput="onInput" />
+      </view>
+
+      <view class="ds-row">
+        <view class="ds-label"><text>日单价（元/天）</text><view class="ds-req"></view></view>
+        <input class="ds-input" type="digit" placeholder-class="ds-ph" placeholder="如：88" value="{{form.pricePerDay}}" data-field="pricePerDay" bindinput="onInput" />
+      </view>
+
+      <!-- 计费方式（勿与寄养方式 boardingMode 混淆）：酒店式按夜+超时加收 / 24小时制按小时 -->
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>计费方式</text><view class="ds-req"></view></view>
+        <view class="ds-chips">
+          <view wx:for="{{billingModeOptions}}" wx:key="key" class="ds-chip {{form.billingMode === item.key ? 'ds-chip--on' : ''}}" hover-class="ds-chip--p" hover-stay-time="80" data-field="billingMode" data-key="{{item.key}}" bindtap="onYesNoChange">{{item.label}}</view>
+        </view>
+        <view class="ds-billing-hint" wx:if="{{form.billingMode === 'hotel'}}">
+          <text class="ds-billing-hint-text">按过夜数计费；晚于最晚退房时刻离开，将加收半天或一天费用</text>
+        </view>
+        <view class="ds-billing-hint" wx:elif="{{form.billingMode === 'hourly24'}}">
+          <text class="ds-billing-hint-text">每满 24 小时按一天计，不足一天按实际小时计（小时价 = 日单价 ÷ 24）</text>
+        </view>
+      </view>
+
+      <!-- 酒店式时刻配置：超时判定基准 -->
+      <block wx:if="{{form.billingMode === 'hotel'}}">
+        <view class="ds-row">
+          <view class="ds-label"><text>最早入住</text></view>
+          <picker mode="time" value="{{form.checkInAfter}}" data-field="checkInAfter" bindchange="onTimeChange" class="ds-picker">
+            <view class="ds-picker-value">{{ form.checkInAfter || '默认 14:00' }}</view>
+          </picker>
+        </view>
+        <view class="ds-row">
+          <view class="ds-label"><text>最晚退房</text></view>
+          <picker mode="time" value="{{form.checkOutBefore}}" data-field="checkOutBefore" bindchange="onTimeChange" class="ds-picker">
+            <view class="ds-picker-value">{{ form.checkOutBefore || '默认 12:00' }}</view>
+          </picker>
+        </view>
+      </block>
+
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>家庭介绍</text></view>
+        <textarea class="ds-area ds-area--tall" placeholder-class="ds-ph" placeholder="介绍您的寄养环境、日常安排、经验特长等" value="{{form.description}}" data-field="description" bindinput="onInput" maxlength="500" />
+      </view>
+    </block>
+
+    <!-- ---------- Step 3 资质与相册 ---------- -->
+    <block wx:if="{{step === 3}}">
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>环境相册</text><view class="ds-req"></view></view>
+        <text class="ds-hint">真实环境照片可显著提升用户信任，至少 1 张（{{form.photos.length}}/{{maxPhotos}}）</text>
+        <view class="ds-grid">
+          <view wx:for="{{form.photos}}" wx:key="temp" class="ds-cell">
+            <image class="ds-cell-img" src="{{item.temp}}" mode="aspectFill" lazy-load />
+            <view class="ds-cell-x" data-index="{{index}}" catchtap="onRemovePhoto">
+              <view class="ds-x1"></view>
+              <view class="ds-x2"></view>
+            </view>
+          </view>
+          <view wx:if="{{form.photos.length < maxPhotos}}" class="ds-add" hover-class="ds-add--p" hover-stay-time="80" bindtap="onChoosePhotos">
+            <view class="ds-plus"><view class="ds-plus-h"></view><view class="ds-plus-v"></view></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>环境视频</text></view>
+        <text class="ds-hint">可选，30 秒内的家庭环境短片</text>
+        <view class="ds-grid">
+          <view wx:for="{{form.videos}}" wx:key="temp" class="ds-cell">
+            <image class="ds-cell-img" src="{{item.temp}}" mode="aspectFill" lazy-load />
+            <view class="ds-cell-x" catchtap="onRemoveVideo">
+              <view class="ds-x1"></view>
+              <view class="ds-x2"></view>
+            </view>
+          </view>
+          <view wx:if="{{form.videos.length === 0}}" class="ds-add" hover-class="ds-add--p" hover-stay-time="80" bindtap="onChooseVideo">
+            <view class="ds-plus"><view class="ds-plus-h"></view><view class="ds-plus-v"></view></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>身份证正反面</text></view>
+        <text class="ds-hint">仅平台审核使用，不对外展示</text>
+        <view class="ds-certs">
+          <view class="ds-cert" data-field="idCardFront" hover-class="ds-cert--p" hover-stay-time="80" bindtap="onChooseCert">
+            <image wx:if="{{form.idCardFront}}" class="ds-cert-img" src="{{form.idCardFront.temp}}" mode="aspectFill" lazy-load />
+            <block wx:else>
+              <view class="ds-plus"><view class="ds-plus-h"></view><view class="ds-plus-v"></view></view>
+              <text class="ds-cert-t">人像面</text>
+            </block>
+            <view wx:if="{{form.idCardFront}}" class="ds-cell-x" data-field="idCardFront" catchtap="onRemoveCert">
+              <view class="ds-x1"></view>
+              <view class="ds-x2"></view>
+            </view>
+          </view>
+          <view class="ds-cert" data-field="idCardBack" hover-class="ds-cert--p" hover-stay-time="80" bindtap="onChooseCert">
+            <image wx:if="{{form.idCardBack}}" class="ds-cert-img" src="{{form.idCardBack.temp}}" mode="aspectFill" lazy-load />
+            <block wx:else>
+              <view class="ds-plus"><view class="ds-plus-h"></view><view class="ds-plus-v"></view></view>
+              <text class="ds-cert-t">国徽面</text>
+            </block>
+            <view wx:if="{{form.idCardBack}}" class="ds-cell-x" data-field="idCardBack" catchtap="onRemoveCert">
+              <view class="ds-x1"></view>
+              <view class="ds-x2"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="ds-row ds-row--stack">
+        <view class="ds-label"><text>疫苗 / 健康证明</text></view>
+        <view class="ds-certs">
+          <view class="ds-cert" data-field="healthCertificate" hover-class="ds-cert--p" hover-stay-time="80" bindtap="onChooseCert">
+            <image wx:if="{{form.healthCertificate}}" class="ds-cert-img" src="{{form.healthCertificate.temp}}" mode="aspectFill" lazy-load />
+            <block wx:else>
+              <view class="ds-plus"><view class="ds-plus-h"></view><view class="ds-plus-v"></view></view>
+              <text class="ds-cert-t">上传证明</text>
+            </block>
+            <view wx:if="{{form.healthCertificate}}" class="ds-cell-x" data-field="healthCertificate" catchtap="onRemoveCert">
+              <view class="ds-x1"></view>
+              <view class="ds-x2"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="ds-row">
+        <view class="ds-label"><text>紧急联系人</text></view>
+        <input class="ds-input" placeholder-class="ds-ph" placeholder="姓名" value="{{form.emergencyContactName}}" data-field="emergencyContactName" bindinput="onInput" />
+      </view>
+
+      <view class="ds-row">
+        <view class="ds-label"><text>紧急联系电话</text></view>
+        <input class="ds-input" type="number" maxlength="11" placeholder-class="ds-ph" placeholder="11 位手机号" value="{{form.emergencyContactPhone}}" data-field="emergencyContactPhone" bindinput="onInput" />
+      </view>
+    </block>
+
+    <!-- 收尾 -->
+    <view class="ds-foot">
+      <view class="ds-foot-line"></view>
+      <text class="ds-foot-text">AROORO · 家庭寄养</text>
+      <view class="ds-foot-line"></view>
     </view>
   </view>
 
-  <!-- 底部操作 -->
-  <view class="footer-actions">
-    <button wx:if="{{step > 1}}" class="btn-ghost" bindtap="prevStep">上一步</button>
-    <button wx:if="{{step < 3}}" class="btn-primary" bindtap="nextStep">下一步</button>
-    <button wx:if="{{step === 3}}" class="btn-primary {{submitting ? 'btn-disabled' : ''}}" disabled="{{submitting}}" bindtap="onSubmit">{{submitting ? '提交中...' : (isRejected ? '重新提交审核' : '提交审核')}}</button>
-  </view>
+  <view class="ds-tail"></view>
+</scroll-view>
+
+<!-- ============ 固定底部操作栏 ============ -->
+<view class="ds-bar">
+  <button wx:if="{{step > 1}}" class="ds-btn ds-btn--ghost" hover-class="ds-btn--ghost-p" hover-stay-time="80" bindtap="prevStep">上一步</button>
+  <button wx:if="{{step < 3}}" class="ds-btn ds-btn--solid" hover-class="ds-btn--solid-p" hover-stay-time="80" bindtap="nextStep">下一步</button>
+  <button wx:if="{{step === 3}}" class="ds-btn ds-btn--gold {{submitting ? 'ds-btn--off' : ''}}" disabled="{{submitting}}" hover-class="ds-btn--gold-p" hover-stay-time="80" bindtap="onSubmit">{{submitting ? '提交中' : (isRejected ? '重新提交' : '提交审核')}}</button>
 </view>

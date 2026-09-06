@@ -63,6 +63,9 @@ functions/*/node_modules/
 # Ignored: build-generated *.js runtime copies
 cloudfunctions/*/common/*
 !cloudfunctions/*/common/*.d.ts
+# 例外：orderService 业务模块（真实源码在服务目录，非根 common 副本——2026-09-06 双计费）
+!cloudfunctions/orderService/common/boarding-pricing.ts
+!cloudfunctions/orderService/common/boarding-pricing.js
 
 # Testing
 coverage/

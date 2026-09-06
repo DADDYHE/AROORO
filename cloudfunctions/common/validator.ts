@@ -131,12 +131,19 @@ export const FIELD_WHITELISTS: Record<string, string[]> = {
   ],
   hostBasic: [
     'avatarUrl', 'hostName', 'realName', 'phone', 'idCard', 'address',
+    // 结构化地址：province/city/district 三级（用户端公开到区县）+ addressDetail 街道门牌（隐私）
+    // address 仍存完整串（向后兼容 + 关键词搜索命中），addressPublic 存省市区拼接（用户端展示源）
+    'province', 'city', 'district', 'addressDetail', 'addressPublic',
     'pricePerDay', 'emergencyContactName', 'emergencyContactPhone',
+    // 计费方式（勿与寄养方式 boardingMode 混淆）：hotel 酒店式（按夜+超时加收）/ hourly24 24小时制
+    'billingMode', 'checkInAfter', 'checkOutBefore',
     'housingType', 'hasYard', 'maxPets', 'hasOtherPets',
     'nativePetInfo', 'petTypes', 'idCardFront', 'idCardBack', 'healthCertificate',
   ],
   hostDefault: [
-    'hostName', 'realName', 'phone', 'address', 'housingType',
+    'hostName', 'realName', 'phone', 'address',
+    'province', 'city', 'district', 'addressDetail', 'addressPublic',
+    'housingType',
     'hasYard', 'maxPets', 'petTypes', 'serviceTypes', 'pricePerDay', 'description',
     'isAcceptingOrders', 'avatar',
   ],

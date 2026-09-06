@@ -61,7 +61,7 @@
             <view class="info-row">
               <view class="info-key">状态</view>
               <view class="info-val">
-                <text class="status-tag {{profile.status === 'active' ? 'tag-active' : (profile.status === 'rejected' ? 'tag-rejected' : 'tag-inactive')}}">{{statusText}}</text>
+                <text class="status-tag {{statusTagClass}}">{{statusText}}</text>
               </view>
             </view>
             <view class="info-divider"></view>
@@ -141,6 +141,11 @@
               <button wx:if="{{item.status === 'paid'}}" class="order-btn order-btn--ghost" data-id="{{item._id}}" data-op="reject" catchtap="onOrderAction">拒单</button>
               <button wx:if="{{item.status === 'paid'}}" class="order-btn order-btn--primary" data-id="{{item._id}}" data-op="confirm" catchtap="onOrderAction">接单</button>
               <button wx:if="{{item.status === 'confirmed' || item.status === 'in_progress'}}" class="order-btn order-btn--primary" data-id="{{item._id}}" data-op="complete" catchtap="onOrderAction">完成寄养</button>
+            </view>
+            <!-- 待支付/待补尾款：改价（折扣）+ 分享收款链接（客户点开即付） -->
+            <view wx:if="{{item.status === 'pending_payment' || item.status === 'deposit_paid'}}" class="order-actions">
+              <button class="order-btn order-btn--ghost" data-id="{{item._id}}" data-op="adjust" catchtap="onOrderAction">改价</button>
+              <button class="order-btn order-btn--primary" open-type="share" data-id="{{item._id}}">分享给客户付款</button>
             </view>
           </view>
         </view>

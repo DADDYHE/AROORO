@@ -93,7 +93,6 @@
 .pay-countdown-time {
   font-weight: 600;
   font-size: 34rpx;
-  font-variant-numeric: tabular-nums;
   letter-spacing: 1rpx;
 }
 
@@ -398,3 +397,45 @@
 
 /* ── 微交互：按压态（hover-class 复用，详见 app.wxss 约定）── */
 .host-contact--pressed { transform: scale(0.97); opacity: 0.92; }
+
+/* ========== 付款方式选择（2026-09-06 流程重构） ========== */
+.pay-type-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.pay-type-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+  border: 1rpx solid var(--hairline);
+  border-radius: 12rpx;
+  background-color: var(--card-cream);
+}
+
+.pay-type-name-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.pay-type-name {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pay-type-tip {
+  font-size: 20rpx;
+  letter-spacing: 0.03em;
+  color: var(--lux-gold-600);
+}
+
+.pay-type-amt {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+}

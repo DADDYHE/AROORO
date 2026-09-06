@@ -1,7 +1,7 @@
 @import '../../styles/loading-animation.wxss';
 
 @import '../../styles/components.wxss';
-/* 寄养确认订单 - AROORO 豪华宠物寄养 */
+/* 寄养确认订单 — 纸面卷宗（与 host-detail B+A 同血缘：无白卡、hairline 分区、编号章节） */
 
 /* ========== 页面容器 ========== */
 .page-container {
@@ -11,406 +11,678 @@
   position: relative;
 }
 
-/* ========== 头部区域 ========== */
-.page-header {
-  padding: 60rpx var(--page-padding);
-  background: var(--card-color);
-  position: relative;
+/* ========== 卷宗头部 ========== */
+.ds-head {
+  padding: 56rpx var(--page-padding) 44rpx;
   border-bottom: 1rpx solid var(--hairline);
-  z-index: 1;
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
-.header-content {
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 2;
+.ds-eyebrow {
+  display: block;
+  font-size: 20rpx;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  color: var(--lux-gold-500);
+  margin-bottom: 18rpx;
 }
 
-/* ========== 品牌标识 ========== */
-.brand-logo {
-  font-size: 44rpx;
+.ds-head-title {
+  font-size: 48rpx;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+/* ========== 章节区（01-04）：hairline 分区，无白卡 ========== */
+.ds-section {
+  padding: 48rpx var(--page-padding) 40rpx;
+  border-bottom: 1rpx solid var(--hairline);
+  opacity: 0;
+  animation-name: zy-fade-in-up;
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.ds-section:nth-child(1) { animation-delay: 80ms; }
+.ds-section:nth-child(2) { animation-delay: 140ms; }
+.ds-section:nth-child(3) { animation-delay: 200ms; }
+.ds-section:nth-child(4) { animation-delay: 260ms; }
+
+/* 章节头：meta 行（编号 + 金 eyebrow + hairline 延伸线）+ 中文标题行 */
+.ds-chapter {
+  margin-bottom: 32rpx;
+}
+
+.ds-chapter-meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18rpx;
+}
+
+.ds-chapter-no {
+  font-size: 22rpx;
   font-weight: 300;
   letter-spacing: 0.12em;
-  text-align: left;
-  margin-bottom: 32rpx;
-  color: var(--primary-color);
-  font-family: var(--font-sans);
-  line-height: 1;
+  color: var(--lux-gold-500);
+  margin-right: 20rpx;
 }
 
-/* ========== 页面标题 ========== */
-.page-title {
-  font-size: 36rpx;
-  font-weight: 500;
-  color: var(--text-primary);
-  letter-spacing: 0.04em;
-  line-height: 1.3;
+.ds-chapter-eyebrow {
+  font-size: 20rpx;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  color: var(--lux-gold-500);
 }
 
-/* ========== 页面内容区 ========== */
-.page-content {
+.ds-chapter-rule {
   flex: 1;
-  padding: var(--zy-space-lg) var(--page-padding);
-  position: relative;
-  z-index: 1;
-  padding-bottom: 200rpx;
+  height: 1rpx;
+  margin-left: 28rpx;
+  background-color: rgba(26, 26, 23, 0.10);
 }
 
-/* ========== 信息卡片 ========== */
-.info-card {
-  background: var(--card-color);
-  border: 1rpx solid var(--hairline);
-  border-radius: var(--zy-radius-lg);
-  padding: 0;
-  margin-bottom: var(--zy-space-lg);
-  position: relative;
-  overflow: hidden;
-  animation-name: zy-fade-in-up;
-  animation-duration: 480ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-fill-mode: forwards;
-}
-
-.info-card:nth-child(1) { animation-delay: 80ms; }
-.info-card:nth-child(2) { animation-delay: 140ms; }
-.info-card:nth-child(3) { animation-delay: 200ms; }
-.info-card:nth-child(4) { animation-delay: 260ms; }
-
-/* 香槟金顶部装饰线 - 替代彩虹渐变 */
-.info-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 48rpx;
-  height: 2rpx;
-  background: var(--accent-color);
-  opacity: 0.6;
-}
-
-/* 卡片按压态（仅 transform/opacity） */
-.info-card--pressed {
-  opacity: 0.85;
-  transform: scale(0.995);
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
-}
-
-/* ========== 卡片头部 ========== */
-.card-header {
-  padding: var(--zy-space-lg) var(--zy-space-lg) var(--zy-space-sm2);
-  background: var(--card-color);
-  border-bottom: 1rpx solid var(--hairline);
-}
-
-.card-title {
-  font-size: 30rpx;
+.ds-section-title {
+  display: block;
+  font-size: 38rpx;
   font-weight: 500;
+  letter-spacing: 0.10em;
+  line-height: 1.4;
   color: var(--text-primary);
-  letter-spacing: 0.04em;
-  line-height: 1;
 }
 
-/* ========== 信息项 ========== */
-.info-item {
+/* ========== 起止单行：日期(相对日) - 天数 - 日期 ========== */
+.ds-stay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0 8rpx;
+}
+
+.ds-stay-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  min-width: 180rpx;
+}
+
+.ds-stay-cell--right {
+  align-items: flex-end;
+}
+
+.ds-stay-cell--right .ds-stay-date-row {
+  flex-direction: row-reverse;
+}
+
+.ds-stay-date-row {
+  display: flex;
+  align-items: baseline;
+}
+
+.ds-stay-date {
+  font-size: 32rpx;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+.ds-stay-date--ph {
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+
+.ds-stay-relative {
+  font-size: 21rpx;
+  letter-spacing: 0.08em;
+  color: var(--lux-gold-600);
+  margin-left: 10rpx;
+}
+
+.ds-stay-tag {
+  font-size: 21rpx;
+  letter-spacing: 0.22em;
+  color: var(--text-tertiary);
+}
+
+.ds-stay-mid {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  margin: 0 30rpx;
+}
+
+.ds-stay-line {
+  flex: 1;
+  height: 1rpx;
+  background-color: rgba(26, 26, 23, 0.14);
+}
+
+.ds-stay-days {
+  display: flex;
+  align-items: baseline;
+  padding: 0 22rpx;
+}
+
+.ds-stay-days-num {
+  font-size: 44rpx;
+  font-weight: 200;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.ds-stay-days-num--ph {
+  font-size: 32rpx;
+  color: var(--text-tertiary);
+}
+
+.ds-stay-days-unit {
+  font-size: 22rpx;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-left: 6rpx;
+}
+
+/* ========== 时刻行（必填）：入住 / 离开 picker ========== */
+.ds-time-row {
+  display: flex;
+  align-items: stretch;
+  margin-top: 26rpx;
+  padding: 22rpx 0;
+  border-top: 1rpx solid rgba(26, 26, 23, 0.1);
+}
+
+.ds-time-picker {
+  flex: 1;
+}
+
+.ds-time-cell {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+}
+
+.ds-time-cell--right {
+  justify-content: flex-end;
+}
+
+.ds-time-label {
+  font-size: 21rpx;
+  letter-spacing: 0.22em;
+  color: var(--text-tertiary);
+  margin-right: 16rpx;
+}
+
+.ds-time-value {
+  font-size: 30rpx;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: var(--text-primary);
+}
+
+.ds-time-value--ph {
+  color: var(--lux-gold-600);
+}
+
+.ds-time-rule {
+  width: 1rpx;
+  background-color: rgba(26, 26, 23, 0.1);
+  margin: 0 30rpx;
+}
+
+/* 计费提示：超时加收 / 时长拆分（金色小字，克制不抢主金额） */
+.ds-charge-note {
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid rgba(26, 26, 23, 0.1);
+}
+
+.ds-charge-note-text {
+  font-size: 22rpx;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  color: var(--lux-gold-600);
+}
+
+/* ========== 行条目：键值对 + hairline 分隔 ========== */
+.ds-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--zy-space-lg) var(--zy-space-lg);
-  border-bottom: 1rpx solid var(--divider-color);
+  padding: 28rpx 0;
 }
 
-.info-item:last-child {
-  border-bottom: none;
+.ds-row + .ds-row {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.08);
 }
 
-.info-item .label {
-  font-size: 28rpx;
-  font-weight: 400;
+.ds-row--pressed {
+  opacity: 0.72;
+}
+
+.ds-row-key {
+  font-size: 27rpx;
+  letter-spacing: 0.06em;
   color: var(--text-secondary);
-  letter-spacing: 0.02em;
 }
 
-.info-item .value {
-  font-size: 28rpx;
-  color: var(--text-primary);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-align: right;
+/* 纵排 row（付款方式选择等需要说明文案的场景） */
+.ds-row--stack {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18rpx;
 }
 
-/* ========== 交互项 ========== */
-.interaction-item {
-  position: relative;
-}
-
-/* ========== 带箭头的值 ========== */
-.value-with-arrow {
+/* 付款方式选择 chips：金 hairline 选中（品牌点睛语法） */
+.ds-pay-chips {
   display: flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 8rpx 0;
-  color: var(--text-primary);
-  border-bottom: 1rpx solid var(--hairline);
+  gap: 16rpx;
 }
 
-.value-with-arrow .arrow {
-  font-size: 32rpx;
-  color: var(--text-tertiary);
-  margin-left: 4rpx;
-  font-weight: 300;
-}
-
-.value-weekday {
+.ds-pay-chip {
+  padding: 12rpx 28rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid var(--hairline);
   font-size: 24rpx;
-  color: var(--text-tertiary);
-  margin-left: 4rpx;
-  font-weight: 400;
-}
-
-.value-empty {
-  font-size: 28rpx;
-  color: var(--text-tertiary);
-  font-weight: 400;
-}
-
-/* ========== 空提示 ========== */
-.empty-tip {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 56rpx var(--zy-space-lg);
-  color: var(--text-tertiary);
-  font-size: 26rpx;
-  background-color: var(--primary-wash);
-  border-radius: var(--zy-radius-md);
-  margin: var(--zy-space-sm2) var(--zy-space-lg) var(--zy-space-lg);
   letter-spacing: 0.08em;
-  font-weight: 400;
+  color: var(--text-secondary);
+  transition: all 160ms ease;
 }
 
-/* ========== 宠物项 ========== */
-.pet-item {
+.ds-pay-chip--on {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  background-color: rgba(201, 162, 75, 0.08);
+  font-weight: 500;
+}
+
+/* 定金不退提示：金色警示小字 */
+.ds-deposit-note {
+  width: 100%;
+}
+
+.ds-deposit-note-text {
+  font-size: 22rpx;
+  letter-spacing: 0.04em;
+  line-height: 1.7;
+  color: var(--accent-color);
+}
+
+.ds-row-val {
   display: flex;
   align-items: center;
-  padding: var(--zy-space-lg);
-  border-bottom: 1rpx solid var(--divider-color);
 }
 
-.pet-item:last-child {
-  border-bottom: none;
+.ds-row-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
 }
 
-/* ========== 头像容器 ========== */
-.avatar-container {
+.ds-row-text--ph {
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+
+.ds-row-text--gold {
+  color: var(--lux-gold-600);
+}
+
+.ds-row-sub {
+  font-size: 23rpx;
+  color: var(--text-tertiary);
+  margin-left: 12rpx;
+  letter-spacing: 0.04em;
+}
+
+/* 右向 chevron：纯 border 实现 */
+.ds-chev {
+  width: 14rpx;
+  height: 14rpx;
+  border-top: 2rpx solid rgba(26, 26, 23, 0.32);
+  border-right: 2rpx solid rgba(26, 26, 23, 0.32);
+  transform: rotate(45deg);
+  margin-left: 20rpx;
+  margin-top: -2rpx;
+}
+
+.ds-chev--open {
+  transform: rotate(135deg);
+  margin-top: 8rpx;
+}
+
+/* ========== 宠物条目 ========== */
+.ds-pet {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+}
+
+.ds-pet + .ds-pet {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.08);
+}
+
+.ds-pet-avatar {
   width: 88rpx;
   height: 88rpx;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  border: 1rpx solid var(--hairline);
-  position: relative;
-  margin-right: var(--zy-space-lg);
+  border: 2rpx solid rgba(201, 162, 75, 0.35);
+  margin-right: 26rpx;
 }
 
-.pet-image {
+.ds-pet-img {
   width: 100%;
   height: 100%;
-  display: block;
 }
 
-.pet-info {
+.ds-pet-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8rpx;
 }
 
-.pet-name {
-  font-size: 32rpx;
-  font-weight: 500;
-  color: var(--text-primary);
-  letter-spacing: 0.02em;
-  line-height: 1.3;
-}
-
-.pet-details {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  font-weight: 400;
-  letter-spacing: 0.02em;
-}
-
-/* ========== 服务标签 ========== */
-.pet-service-tags {
-  display: flex;
-  gap: 8rpx;
-  margin-top: 8rpx;
-  flex-wrap: wrap;
-}
-
-.service-tag {
-  font-size: 22rpx;
-  color: var(--boarding-primary);
-  background: var(--boarding-tint);
-  padding: 4rpx 12rpx;
-  border-radius: var(--zy-radius-xs);
-  font-weight: 400;
-  letter-spacing: 0.02em;
-}
-
-.pet-service-dates {
-  font-size: 22rpx;
-  color: var(--text-tertiary);
-  margin-top: 4rpx;
-  line-height: 1.5;
-  font-weight: 400;
-}
-
-/* ========== 价格项 ========== */
-.price-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--zy-space-lg);
-  border-bottom: 1rpx solid var(--divider-color);
-}
-
-.price-item:last-child {
-  border-bottom: none;
-}
-
-/* ========== 价格行布局 ========== */
-.value-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8rpx;
-}
-
-/* ========== 天数提示 ========== */
-.days-hint {
-  font-size: 24rpx;
-  color: var(--text-tertiary);
-  font-weight: 400;
-  letter-spacing: 0.02em;
-}
-
-/* ========== 价格总计区 - 暖陶土色 ========== */
-.price-pet-group {
-  padding-bottom: 12rpx;
-}
-
-.price-sub-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10rpx var(--zy-space-lg) 10rpx 48rpx;
-}
-
-.sub-label {
-  font-size: 26rpx;
-  color: var(--text-tertiary);
-  font-weight: 400;
-}
-
-.sub-value {
-  font-size: 26rpx;
-  color: var(--text-secondary);
-  font-weight: 400;
-}
-
-.price-item.total {
-  background: var(--boarding-accent);
-  border-radius: var(--zy-radius-md);
-  margin: var(--zy-space-sm2) var(--zy-space-lg) var(--zy-space-lg);
-  padding: 36rpx var(--zy-space-lg);
-  border: 1rpx solid rgba(139, 99, 80, 0.12);
-}
-
-.price-item.total .label {
+.ds-pet-name {
   font-size: 30rpx;
   font-weight: 500;
-  color: var(--boarding-primary);
   letter-spacing: 0.04em;
+  color: var(--text-primary);
 }
 
-.price-item.total .value {
-  font-size: 36rpx;
-  font-weight: 500;
-  color: var(--boarding-primary);
-  letter-spacing: 0.02em;
+.ds-pet-meta {
+  font-size: 24rpx;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
 }
 
-/* ========== 底部操作栏 ========== */
-.bottom-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--card-color);
-  border-top: 1rpx solid var(--hairline);
-  padding: var(--zy-space-lg) var(--page-padding);
-  padding-bottom: calc(var(--zy-space-lg) + env(safe-area-inset-bottom));
+.ds-pet-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 4rpx;
+}
+
+/* 服务签：hairline 直角小签（对齐目录签语言） */
+.ds-pet-tag {
+  font-size: 21rpx;
+  letter-spacing: 0.10em;
+  color: var(--text-secondary);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  padding: 4rpx 14rpx;
+  border-radius: 4rpx;
+}
+
+.ds-pet-dates {
+  font-size: 22rpx;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+}
+
+/* ========== 空提示 ========== */
+.ds-empty {
+  display: flex;
+  justify-content: center;
+  padding: 44rpx 0 8rpx;
+  font-size: 25rpx;
+  letter-spacing: 0.10em;
+  color: var(--text-tertiary);
+}
+
+/* ========== 费用明细 ========== */
+.ds-fee {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 100;
-  box-shadow: 0 -2rpx 12rpx rgba(26, 26, 23, 0.04);
+  padding: 22rpx 0;
 }
 
-.price-info {
+.ds-fee + .ds-fee {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.08);
+}
+
+.ds-fee--sub {
+  padding-top: 14rpx;
+  padding-bottom: 14rpx;
+  padding-left: 32rpx;
+}
+
+.ds-fee-key {
+  font-size: 27rpx;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.ds-fee--sub .ds-fee-key {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+}
+
+.ds-fee-val {
+  font-size: 27rpx;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+.ds-fee--sub .ds-fee-val {
+  font-size: 24rpx;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.ds-fee-val--gold {
+  color: var(--lux-gold-600);
+}
+
+/* 总计：编辑式排版——小标签 + 轻字重大数字 */
+.ds-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 30rpx;
+  padding-top: 34rpx;
+  border-top: 1rpx solid rgba(26, 26, 23, 0.22);
+}
+
+.ds-total-key {
+  font-size: 26rpx;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+}
+
+.ds-total-val {
+  display: flex;
+  align-items: baseline;
+}
+
+.ds-total-symbol {
+  font-size: 26rpx;
+  color: var(--text-primary);
+  margin-right: 8rpx;
+}
+
+.ds-total-num {
+  font-size: 56rpx;
+  font-weight: 200;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+/* ========== 优惠券列表 ========== */
+.ds-coupons {
+  margin-top: 6rpx;
+}
+
+.ds-coupon {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+}
+
+.ds-coupon + .ds-coupon {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.08);
+}
+
+.ds-coupon-amt {
+  display: flex;
+  align-items: baseline;
+  color: var(--lux-gold-600);
+  margin-right: 26rpx;
+  font-size: 24rpx;
+  min-width: 110rpx;
+}
+
+.ds-coupon-num {
+  font-size: 44rpx;
+  font-weight: 300;
+  margin-left: 4rpx;
+}
+
+.ds-coupon-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 6rpx;
 }
 
-.price-label {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  font-weight: 400;
+.ds-coupon-name {
+  font-size: 27rpx;
   letter-spacing: 0.04em;
+  color: var(--text-primary);
 }
 
-.price-value {
-  font-size: 40rpx;
-  font-weight: 500;
-  color: var(--boarding-primary);
-  letter-spacing: 0.02em;
-  line-height: 1.2;
+.ds-coupon-rule {
+  font-size: 22rpx;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
 }
 
-.price-value .symbol {
-  font-size: 26rpx;
-  margin-right: 4rpx;
-  font-weight: 400;
+.ds-coupon-remove {
+  margin-top: 20rpx;
+  text-align: center;
+  font-size: 24rpx;
+  letter-spacing: 0.12em;
+  color: var(--lux-gold-600);
 }
 
-/* ========== 确认按钮 - 深林绿渐变 ========== */
-.confirm-btn {
-  min-width: 280rpx;
-  height: 88rpx;
-  line-height: 88rpx;
-  font-size: 30rpx;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  background: var(--gradient-primary);
-  color: var(--text-on-primary);
-  border-radius: var(--zy-radius-lg);
+/* ========== 卷宗落款 ========== */
+.ds-foot {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-glow-primary-btn);
-  position: relative;
-  overflow: hidden;
-  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  gap: 18rpx;
+  padding: 56rpx var(--page-padding) 12rpx;
 }
 
-/* 微妙光泽扫过（仅 transform，无 background-clip） */
+.ds-foot-line {
+  width: 88rpx;
+  height: 1rpx;
+  background-color: rgba(26, 26, 23, 0.14);
+}
+
+.ds-foot-text {
+  font-size: 20rpx;
+  letter-spacing: 0.30em;
+  color: var(--text-tertiary);
+}
+
+/* ========== 页面内容底部预留空间 ========== */
+.content-bottom-space {
+  height: 220rpx;
+}
+
+/* ========== 底部操作栏：纸面 + hairline 顶 ========== */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--background-color);
+  border-top: 1rpx solid var(--hairline);
+  padding: 24rpx var(--page-padding);
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+}
+
+.price-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.price-label {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.14em;
+}
+
+.price-value-row {
+  display: flex;
+  align-items: baseline;
+}
+
+.price-symbol {
+  font-size: 24rpx;
+  color: var(--text-primary);
+  margin-right: 6rpx;
+}
+
+.price-value {
+  font-size: 48rpx;
+  font-weight: 200;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.coupon-sub {
+  font-size: 21rpx;
+  letter-spacing: 0.06em;
+  color: var(--lux-gold-600);
+}
+
+.min-amount-tip {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  width: 100%;
+}
+
+/* ========== 确认按钮：深绿 rich 渐变 + cream（对齐 host-detail 主 CTA） ========== */
+.confirm-btn {
+  min-width: 280rpx;
+  height: 96rpx;
+  padding: 0 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lux-green-grad-rich);
+  box-shadow: 0 12rpx 32rpx rgba(26, 46, 26, 0.28);
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.confirm-btn text {
+  font-size: 30rpx;
+  font-weight: 500;
+  letter-spacing: 0.30em;
+  text-indent: 0.30em;
+  color: var(--text-on-primary);
+}
+
+/* 微妙光泽扫过（仅 transform） */
 .confirm-btn::before {
   content: '';
   position: absolute;
@@ -432,51 +704,4 @@
 .confirm-btn--pressed {
   transform: scale(0.98);
   opacity: 0.9;
-}
-
-/* ========== 页面内容底部预留空间 ========== */
-.content-bottom-space {
-  height: 200rpx;
-}
-
-/* ========== 加载动画 ========== */
-.loading-dot {
-  width: 12rpx;
-  height: 12rpx;
-  border-radius: 50%;
-  background: var(--primary-color);
-  display: inline-block;
-  animation-name: zy-pulse-soft;
-  animation-duration: 1400ms;
-  animation-timing-function: ease-in-out;
-  animation-fill-mode: forwards;
-  animation-iteration-count: infinite;
-}
-
-.loading-dot:nth-child(1) {
-  animation-delay: 0ms;
-}
-
-.loading-dot:nth-child(2) {
-  animation-delay: 200ms;
-}
-
-.loading-dot:nth-child(3) {
-  animation-delay: 400ms;
-}
-
-.loading-more {
-  text-align: center;
-  padding: var(--zy-space-lg) 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12rpx;
-}
-
-.loading-more-text {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  letter-spacing: 0.08em;
-  font-weight: 400;
 }

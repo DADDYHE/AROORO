@@ -12,7 +12,8 @@
     "cloudfunctions/orderService/index.ts",
     "cloudfunctions/orderService/orders.ts",
     "cloudfunctions/orderService/stats.ts",
-    "cloudfunctions/orderService/common/boarding-state-machine.ts"
+    "cloudfunctions/orderService/common/boarding-state-machine.ts",
+    "cloudfunctions/orderService/common/boarding-pricing.ts"
   ],
   "exclude": [
     "node_modules",

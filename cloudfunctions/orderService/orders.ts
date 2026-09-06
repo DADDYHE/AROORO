@@ -44,6 +44,7 @@
 
 import { initCloud, handleSuccess, generateId, paginate, type PaginatedResult } from './common/utils'
 import { createLogger, type ServiceLogger } from './common/logger'
+import { computeBoardingAmount, type ChargeBreakdown } from './common/boarding-pricing'
 import type {
   CloudBaseDB,
   OrderDoc,
@@ -750,22 +751,61 @@ export async function enrichOrders(orders: unknown[]): Promise<EnrichedOrder[]> 
  *   - 调 couponService.lockCoupon 锁定券（防重复使用）
  *   - 订单写入失败时 best-effort 调 unlockCoupon 回滚
  */
+/**
+ * 寄养计费统一入口（createOrder / calculatePrice 共用，双份公式就此消灭）
+ *
+ * - 权威算法在 orderService/common/boarding-pricing（hotel 按夜+超时 / hourly24 按小时）
+ * - 家庭未配置 billingMode 时兜底 'hotel'，checkOutBefore 兜底 '12:00'
+ * - startAt / endAt 必填（2026-09-06 DADDY 决策：时刻必填）
+ */
+function computeBoardingCharge(params: {
+  hostData: Record<string, unknown>
+  startDate: string
+  endDate: string
+  startAt: string
+  endAt: string
+  petCount: number
+}): { total: number; breakdown: ChargeBreakdown } {
+  const { hostData } = params
+  const mode = typeof hostData.billingMode === 'string' && hostData.billingMode ? hostData.billingMode : 'hotel'
+  const checkOutBefore = typeof hostData.checkOutBefore === 'string' && hostData.checkOutBefore
+    ? hostData.checkOutBefore
+    : '12:00'
+
+  return computeBoardingAmount({
+    mode,
+    pricePerDay: Number(hostData.pricePerDay) || 0,
+    startDate: params.startDate,
+    startAt: params.startAt,
+    endDate: params.endDate,
+    endAt: params.endAt,
+    petCount: params.petCount,
+    checkOutBefore,
+  })
+}
+
 export async function createOrder(event: EventLike, _context: ContextLike, auth: AuthLike | null): HandlerResult {
   const openid = auth?.openid
   if (!openid) {throw err('AUTH_REQUIRED', '未登录')}
 
   // P0 修复（H8）：不接受客户端传入的 couponDiscount / originalAmount
   //   服务端会根据 couponId 自行校验并计算 discount
-  const { hostId, petIds, startDate, endDate, note, couponId } = event as {
+  const { hostId, petIds, startDate, endDate, note, couponId, startAt, endAt } = event as {
     hostId?: string,
     petIds?: string[],
     startDate?: string,
     endDate?: string,
     note?: string,
     couponId?: string,
+    startAt?: string,
+    endAt?: string,
   }
   if (!hostId || !petIds || !startDate || !endDate) {
     throw err('INVALID_PARAMS', '缺少必要参数')
+  }
+  // 时刻必填（2026-09-06）：hotel 超时判定 / hourly24 小时计费都依赖精确时刻
+  if (!startAt || !endAt) {
+    throw err('INVALID_PARAMS', '请选择入住与离开时刻')
   }
 
   const ownerId = openid
@@ -808,18 +848,21 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
     throw err('BUSINESS_ERROR', '所选日期已被预订')
   }
 
-  const pricePerDay = (host.data as { pricePerDay?: number }).pricePerDay || 0
-  // P3 修复：日期按本地时区解析（'YYYY-MM-DD' 直接 new Date 为 UTC 午夜，跨时区边界差一天）
-  const start = new Date(String(startDate).replace(/-/g, '/'))
-  const end = new Date(String(endDate).replace(/-/g, '/'))
-  // L4 备注：+1 表示「按天计费且包含首尾两天」（如 7/1~7/3 = 3 天）。
-  //   若后续改为按夜计费（酒店式），需改为 -1 或不加。计费规则以产品确认为准。
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
-  if (days < 1) {
-    throw err('INVALID_PARAMS', '结束日期必须晚于开始日期')
-  }
   const petCount = Array.isArray(petIds) ? petIds.length : 1
-  const calculatedPrice = pricePerDay * days * petCount
+  // 2026-09-06 计费方式治理：hotel（按夜+超时加收）/ hourly24（24h 一天，尾数按小时）
+  //   权威算法统一走 boarding-pricing，duration 仅保留「占用的日历天数」语义（与金额解耦）
+  const pricing = computeBoardingCharge({
+    hostData: host.data as Record<string, unknown>,
+    startDate,
+    endDate,
+    startAt,
+    endAt,
+    petCount,
+  })
+  const calculatedPrice = pricing.total
+  const calendarDays = Math.max(1, Math.round(
+    (Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 86400000,
+  ))
 
   // P0 修复（H8）：服务端校验优惠券并计算折扣
   let couponDiscount = 0
@@ -845,6 +888,9 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
     throw err('INVALID_PARAMS', '优惠后订单金额必须 ≥ 0.1 元')
   }
 
+  // 2026-09-06 流程重构：提交订单页只建单不支付——payType（full/deposit）由用户在订单页
+  //   发起支付时选择，pay.ts 动态推算应付并写入订单；totalPrice 为全款基准（家庭改价可调）
+
   const order: Record<string, unknown> = {
     ownerId,
     hostId,
@@ -855,9 +901,16 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
     petIds,
     startDate,
     endDate,
-    duration: days,
-    pricePerDay,
+    // 入住/离开时刻（2026-09-06 必填）：hotel 超时判定 / hourly24 计费的依据，详情页展示
+    startAt,
+    endAt,
+    // duration：占用的日历天数（与金额解耦）；精确计费拆分见 chargeBreakdown
+    duration: calendarDays,
+    pricePerDay: pricing.breakdown.pricePerDay,
     petCount,
+    // 计费方式快照：家庭后续改档案不影响历史订单金额
+    billingMode: pricing.breakdown.mode,
+    chargeBreakdown: pricing.breakdown,
     basicPrice: calculatedPrice,
     originalAmount: calculatedPrice, // P0 修复（H8）：originalAmount 服务端写入，不再信任客户端
     totalPrice: finalAmount,
@@ -1201,12 +1254,87 @@ export async function getOrderDetail(event: EventLike, _context: ContextLike, au
 }
 
 /**
+ * 8b. adjustOrderPrice - 寄养家庭改价（2026-09-06）
+ *
+ * 场景：家庭给客户折扣，需调整订单全款金额
+ * 权限：仅订单家庭（organizerId）
+ * 状态约束：pending_payment（未付）/ deposit_paid（已付定金）可改；paid 及之后不可
+ * 金额联动：只改 totalPrice 基准——定金（30%）/ 尾款（totalPrice - paidAmount）
+ *   由 paymentService 在用户发起支付时动态推算，无需在此联动 payAmount
+ * 改价留痕：priceAdjustLog（before/after/reason/by/at）
+ */
+export async function adjustOrderPrice(event: EventLike, _context: ContextLike, auth: AuthLike | null): HandlerResult {
+  const openid = auth?.openid
+  if (!openid) {throw err('AUTH_REQUIRED', '未登录')}
+
+  const { orderId, newPrice, reason } = event as { orderId?: string, newPrice?: number, reason?: string }
+  if (!orderId) {throw err('INVALID_PARAMS', '缺少订单ID')}
+  const price = Number(newPrice)
+  if (!Number.isFinite(price) || price <= 0 || price > 1000000) {
+    throw err('INVALID_PARAMS', '请输入正确的订单金额')
+  }
+  const newTotal = Math.round(price * 100) / 100
+
+  const res = await db.collection('orders').doc(orderId).get()
+  const order = res.data as unknown as Record<string, unknown> | null
+  if (!order) {throw err('ORDER_NOT_FOUND', '订单不存在')}
+  if (order.organizerId !== openid) {
+    throw err('PERMISSION_DENIED', '仅寄养家庭可调整订单价格')
+  }
+  const status = String(order.status || '')
+  if (status !== 'pending_payment' && status !== 'deposit_paid') {
+    throw err('BUSINESS_ERROR', '当前状态不可改价')
+  }
+
+  const paidAmount = Number(order.paidAmount) || 0
+  const updateData: Record<string, unknown> = {
+    totalPrice: newTotal,
+    originalAmount: newTotal,
+    updatedAt: db.serverDate(),
+  }
+  // 已付定金场景：改价后尾款至少 0.1 元（低于则新价未覆盖定金，拒绝——差额退款走线下/退款流程）
+  if (status === 'deposit_paid' && newTotal - paidAmount < 0.1) {
+    throw err('BUSINESS_ERROR', '改价后金额需至少保留 0.1 元尾款，差额请走退款')
+  }
+
+  // 改价留痕
+  const adjustLog = Array.isArray(order.priceAdjustLog) ? [...(order.priceAdjustLog as unknown[])] : []
+  adjustLog.push({
+    before: Number(order.totalPrice) || 0,
+    after: newTotal,
+    reason: String(reason || '').slice(0, 200),
+    by: openid,
+    at: new Date(),
+  })
+  updateData.priceAdjustLog = adjustLog
+
+  // 条件更新：防并发（仅原状态命中才写入）
+  const updRes = await db.collection('orders')
+    .where({ _id: orderId, status })
+    .update({ data: updateData })
+  if (!updRes.stats || updRes.stats.updated === 0) {
+    throw err('BUSINESS_ERROR', '订单状态已变更，请刷新后重试')
+  }
+
+  return handleSuccess({
+    totalPrice: newTotal,
+    paidAmount,
+    status,
+  }, '改价成功')
+}
+
+/**
  * 9. calculatePrice - 价格计算（公开）
  */
 export async function calculatePrice(event: EventLike): HandlerResult {
-  const { hostId, startDate, endDate, petIds } = event as { hostId?: string, startDate?: string, endDate?: string, petIds?: string[] }
+  const { hostId, startDate, endDate, petIds, startAt, endAt } = event as {
+    hostId?: string, startDate?: string, endDate?: string, petIds?: string[], startAt?: string, endAt?: string,
+  }
   if (!hostId || !startDate || !endDate) {
     throw err('INVALID_PARAMS', '缺少必要参数')
+  }
+  if (!startAt || !endAt) {
+    throw err('INVALID_PARAMS', '缺少入住/离开时刻')
   }
 
   const host = await db.collection('hostProfiles').doc(hostId).get()
@@ -1214,16 +1342,23 @@ export async function calculatePrice(event: EventLike): HandlerResult {
     throw err('NOT_FOUND', '寄养家庭不存在')
   }
 
-  const pricePerDay = (host.data as { pricePerDay?: number }).pricePerDay || 0
-  const start = new Date(String(startDate).replace(/-/g, '/'))
-  const end = new Date(String(endDate).replace(/-/g, '/'))
-  // L4 备注：+1 表示「按天计费且包含首尾两天」（如 7/1~7/3 = 3 天）。
-  //   若后续改为按夜计费（酒店式），需改为 -1 或不加。计费规则以产品确认为准。
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
   const petCount = Array.isArray(petIds) ? petIds.length : 1
-  const totalPrice = pricePerDay * days * petCount
+  // 与 createOrder 同源（computeBoardingCharge），试算金额 = 下单金额
+  const pricing = computeBoardingCharge({
+    hostData: host.data as Record<string, unknown>,
+    startDate,
+    endDate,
+    startAt,
+    endAt,
+    petCount,
+  })
 
-  return handleSuccess({ pricePerDay, days, totalPrice }, '计算成功')
+  return handleSuccess({
+    pricePerDay: pricing.breakdown.pricePerDay,
+    billingMode: pricing.breakdown.mode,
+    chargeBreakdown: pricing.breakdown,
+    totalPrice: pricing.total,
+  }, '计算成功')
 }
 
 /**

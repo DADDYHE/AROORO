@@ -71,8 +71,8 @@
       <view class="section-title">寄养时间</view>
       <view class="date-row" wx:if="{{order.startDate && order.endDate}}">
         <image class="row-icon" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
-        <text class="date-text">{{order.startDate}} 至 {{order.endDate}}</text>
-        <text class="date-days">共{{order.days}}天</text>
+        <text class="date-text">{{order.startDate}}{{order.startAt ? ' ' + order.startAt : ''}} 至 {{order.endDate}}{{order.endAt ? ' ' + order.endAt : ''}}</text>
+        <text class="date-days">共{{order.daysLabel}}</text>
       </view>
     </view>
 
@@ -106,16 +106,55 @@
         <text class="info-value">{{order.petCount}}只</text>
       </view>
       <view class="info-row">
-        <text class="info-label">寄养天数</text>
-        <text class="info-value">{{order.days}}天</text>
+        <text class="info-label">寄养时长</text>
+        <text class="info-value">{{order.daysLabel}}</text>
       </view>
       <view class="info-row">
         <text class="info-label">基础价格</text>
         <text class="info-value">¥{{order.basicPrice}}</text>
       </view>
+      <view class="info-row" wx:for="{{order.chargeLines}}" wx:key="*this">
+        <text class="info-label">计费明细</text>
+        <text class="info-value">{{item}}</text>
+      </view>
       <view class="info-row" wx:if="{{order.couponDiscount > 0}}">
         <text class="info-label">优惠金额</text>
         <text class="info-value discount">-¥{{order.couponDiscount}}</text>
+      </view>
+      <view class="info-row" wx:if="{{order.payType === 'deposit'}}">
+        <text class="info-label">付款方式</text>
+        <text class="info-value">预付定金 30%（定金不退）</text>
+      </view>
+      <view class="info-row" wx:if="{{order.payType === 'deposit' && order.paidAmount > 0}}">
+        <text class="info-label">已付定金</text>
+        <text class="info-value">¥{{order.paidAmount}}</text>
+      </view>
+      <view class="info-row" wx:if="{{order.payType === 'deposit' && order.status === 'deposit_paid'}}">
+        <text class="info-label">待补尾款</text>
+        <text class="info-value">¥{{order.remainAmount}}</text>
+      </view>
+      <!-- 付款方式选择（2026-09-06 流程重构：支付决策在订单页；仅待支付且未付定金时可选） -->
+      <view class="info-row" wx:if="{{order.status === 'pending_payment' && order.payType !== 'deposit'}}" bindtap="onTogglePayTypePicker" hover-class="pressed" hover-stay-time="80">
+        <text class="info-label">付款方式</text>
+        <view class="info-value-row">
+          <text class="info-value">{{ payType === 'deposit' ? '预付定金 30%（¥' + payAmount + '）' : '支付全款' }}</text>
+          <view class="copy-btn" hover-class="pressed" hover-stay-time="80"><text>切换</text></view>
+        </view>
+      </view>
+      <view class="info-row" wx:if="{{order.status === 'pending_payment' && showPayTypePicker}}">
+        <view class="pay-type-list">
+          <view class="pay-type-item" data-key="full" bindtap="onPayTypeSelect" hover-class="pressed" hover-stay-time="80">
+            <text class="pay-type-name">支付全款</text>
+            <text class="pay-type-amt">¥{{order.totalPrice}}</text>
+          </view>
+          <view class="pay-type-item" data-key="deposit" bindtap="onPayTypeSelect" hover-class="pressed" hover-stay-time="80">
+            <view class="pay-type-name-group">
+              <text class="pay-type-name">预付定金 30%</text>
+              <text class="pay-type-tip">定金不退 · 尾款 ¥{{order.totalPrice - payAmount}} 与家庭线下结算</text>
+            </view>
+            <text class="pay-type-amt">¥{{payAmount}}</text>
+          </view>
+        </view>
       </view>
       <view class="info-row total-row">
         <text class="info-label">订单总额</text>

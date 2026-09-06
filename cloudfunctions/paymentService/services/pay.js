@@ -193,9 +193,28 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
         }
     }
     let actualAmount = 0;
+    // 2026-09-06 流程重构：支付决策在订单页，用户传 payType(full/deposit)，服务端动态推算应付
+    //   - deposit 尾款（status=deposit_paid）：totalPrice - paidAmount
+    //   - 用户选定金：totalPrice × 30%（改价后按新价推算，天然联动）
+    //   - 全款 / 老订单：原字段链
+    let requestPayType = '';
     try {
         const amountField = ORDER_TYPE_AMOUNT_FIELD[orderType] || 'totalPrice';
-        actualAmount = Number(orderData[amountField] || orderData.totalPrice || orderData.totalAmount || orderData.amount || 0);
+        const od = orderData;
+        const ev = event;
+        const reqPayType = String(ev.payType || 'full');
+        if (orderType === 'order' && od.payType === 'deposit' && od.status === 'deposit_paid') {
+            // 已付定金：本次是尾款
+            actualAmount = Math.round(((Number(od.totalPrice) || 0) - (Number(od.paidAmount) || 0)) * 100) / 100;
+        }
+        else if (orderType === 'order' && reqPayType === 'deposit' && od.payType !== 'deposit') {
+            // 用户选择预付定金（全款 × 30%，定金不退）
+            requestPayType = 'deposit';
+            actualAmount = Math.round((Number(od.totalPrice) || 0) * 0.3 * 100) / 100;
+        }
+        else {
+            actualAmount = Number(od[amountField] || od.totalPrice || od.totalAmount || od.amount || 0);
+        }
     }
     catch (e) {
         logger.warn('createPayment: 解析订单金额失败', { msg: e?.message });
@@ -267,13 +286,24 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
     // P0-A 修复：activity 报名单支付中间态为 'pending'（activityService 写入），
     //   且历史单可能字段缺失，故 activity 条件放宽到 in(['unpaid','pending',null])、
     //   写回 'pending'（保持活动口径统一，orderTimeoutService 超时扫描 in(['unpaid','pending',null]) 才能命中）
+    // 2026-09-06 付款双模式：deposit 订单尾款发起时 paymentStatus='partial_paid'，
+    //   需纳入条件更新白名单（仅 deposit_paid 状态的 deposit 单放行，防止其他场景越态）
+    const isDepositTail = orderType === 'order'
+        && orderData.payType === 'deposit'
+        && orderData.status === 'deposit_paid';
     const allowedPaymentStatus = orderType === 'activity'
         ? ['unpaid', 'paying', 'pending', null]
-        : ['unpaid', 'paying'];
+        : (isDepositTail ? ['unpaid', 'paying', 'partial_paid'] : ['unpaid', 'paying']);
     const targetPaymentStatus = orderType === 'activity' ? 'pending' : 'paying';
     const updateRes = await db.collection(orderCollection)
         .where({ _id: orderId, paymentStatus: _.in(allowedPaymentStatus) })
-        .update({ data: { outTradeNo, paymentStatus: targetPaymentStatus, updatedAt: db.serverDate() } });
+        .update({ data: {
+            outTradeNo,
+            paymentStatus: targetPaymentStatus,
+            // 用户支付选择写入订单，notify 据此分支（deposit → deposit_paid 中间态）
+            ...(requestPayType ? { payType: requestPayType } : {}),
+            updatedAt: db.serverDate(),
+        } });
     // H5: 更新未命中（订单已被并发推进为 paid/cancelled 等）
     //   此时微信侧 prepay_id 已生成，必须主动关闭避免泄漏
     if (!updateRes.stats || updateRes.stats.updated === 0) {

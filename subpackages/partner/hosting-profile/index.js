@@ -9,14 +9,34 @@ const i18n = require('../../../utils/i18n.js')
 // 档案状态 → 展示文案
 const STATUS_TEXT = {
   active: '营业中',
+  approved: '营业中',
   pending_review: '审核中',
   rejected: '已驳回',
   disabled: '已下架',
 }
 
+/**
+ * 状态视图（文案 + 标签色）预计算：营业中(active/approved)融合接单开关——
+ * isAcceptingOrders=false 时显示「已暂停接单」灰标，避免「营业中」与开关打架。
+ * Skyline：wxml 只绑预计算字段，不做方法调用。
+ */
+function buildStatusView(profile) {
+  const status = profile.status
+  let text = STATUS_TEXT[status] || status
+  let tagClass = status === 'active' || status === 'approved'
+    ? 'tag-active'
+    : (status === 'rejected' ? 'tag-rejected' : 'tag-inactive')
+  if ((status === 'active' || status === 'approved') && profile.isAcceptingOrders === false) {
+    text = '已暂停接单'
+    tagClass = 'tag-inactive'
+  }
+  return { statusText: text, statusTagClass: tagClass }
+}
+
 // 订单状态 → 展示文案
 const ORDER_STATUS_TEXT = {
   pending_payment: '待买家支付',
+  deposit_paid: '待补尾款',
   paid: '待接单',
   confirmed: '已接单',
   in_progress: '寄养中',
@@ -70,7 +90,7 @@ Page({
         this.setData({
           profile: res.data,
           hasProfile: true,
-          statusText: STATUS_TEXT[res.data.status] || res.data.status,
+          ...buildStatusView(res.data),
           isLoading: false,
         })
         this._loadOrders()
@@ -116,19 +136,21 @@ Page({
     if (this.data.acceptSwitching) { return }
     const value = e.detail.value
     this.setData({ acceptSwitching: true })
+    const nextProfile = { ...this.data.profile, isAcceptingOrders: value }
     try {
       const res = await HostService.updateHostAcceptingOrders(value)
       if (res.code === 0) {
-        this.setData({ 'profile.isAcceptingOrders': value })
+        // 状态文案随开关同步（营业中 ↔ 已暂停接单）
+        this.setData({ 'profile.isAcceptingOrders': value, ...buildStatusView(nextProfile) })
         wx.showToast({ title: value ? '已恢复接单' : '已暂停接单', icon: 'none' })
       } else {
         wx.showToast({ title: res.msg || '操作失败', icon: 'none' })
-        this.setData({ 'profile.isAcceptingOrders': !value })
+        this.setData({ 'profile.isAcceptingOrders': !value, ...buildStatusView({ ...nextProfile, isAcceptingOrders: !value }) })
       }
     } catch (err) {
       console.error('[partner/hosting-profile] toggle error:', err)
       wx.showToast({ title: '操作失败，请重试', icon: 'none' })
-      this.setData({ 'profile.isAcceptingOrders': !value })
+      this.setData({ 'profile.isAcceptingOrders': !value, ...buildStatusView({ ...nextProfile, isAcceptingOrders: !value }) })
     }
     this.setData({ acceptSwitching: false })
   },
@@ -138,6 +160,7 @@ Page({
   onOrderAction(e) {
     const { id, op } = e.currentTarget.dataset
     if (!id || !op) { return }
+    if (op === 'adjust') { this._openAdjustPrice(id); return }
     const tips = {
       confirm: { content: '确认接下这笔寄养订单？', op: 'confirm' },
       reject: { content: '拒绝后订单将自动全额退款给买家，确认拒绝？', op: 'reject' },
@@ -153,6 +176,52 @@ Page({
         if (res.confirm) { this._doOrderAction(id, conf.op) }
       },
     })
+  },
+
+  /** 家庭改价（2026-09-06）：调整全款金额应对折扣，服务端联动定金/尾款 */
+  _openAdjustPrice(orderId) {
+    wx.showModal({
+      title: '调整订单金额',
+      editable: true,
+      placeholderText: '请输入新的全款金额（元）',
+      confirmColor: '#1F3A1F',
+      success: res => {
+        if (!res.confirm) { return }
+        const newPrice = Number(res.content)
+        if (!Number.isFinite(newPrice) || newPrice <= 0) {
+          wx.showToast({ title: '请输入正确的金额', icon: 'none' })
+          return
+        }
+        wx.showLoading({ title: '提交中', mask: true })
+        OrderService.adjustOrderPrice({ orderId, newPrice, reason: '家庭折扣' })
+          .then(resp => {
+            wx.hideLoading()
+            if (resp.code === 0) {
+              const d = resp.data || {}
+              wx.showToast({ title: d.status === 'paid' ? '定金已覆盖全款，订单完成' : '改价成功', icon: 'none' })
+              this.setData({ page: 1, orders: [], hasMore: true })
+              this._loadOrders()
+            } else {
+              wx.showToast({ title: resp.msg || '改价失败', icon: 'none' })
+            }
+          })
+          .catch(() => {
+            wx.hideLoading()
+            wx.showToast({ title: '改价失败，请重试', icon: 'none' })
+          })
+      },
+    })
+  },
+
+  /** 分享订单收款链接（button open-type=share 触发，res.target.dataset.id 带订单号） */
+  onShareAppMessage(res) {
+    const orderId = res && res.target && res.target.dataset && res.target.dataset.id
+    return {
+      title: orderId ? '您的寄养订单待支付，请点击完成付款' : 'AROORO · 家庭寄养',
+      path: orderId
+        ? `/subpackages/profile/order-detail/index?id=${orderId}&from=hostShare`
+        : '/pages/boarding/index',
+    }
   },
 
   async _doOrderAction(orderId, operation) {

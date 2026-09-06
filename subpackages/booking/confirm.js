@@ -2,15 +2,15 @@ const __i18n = require('../../utils/i18n.js')
 const __pageI18n = require('../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { orderManager } = require('../../services/OrderManager')
-const { HostService, OrderService, PetService } = require('../../services/CloudFunctionService')
+const { HostService, PetService } = require('../../services/CloudFunctionService')
 const { authService } = require('../../services/AuthService')
 const { BookingData } = require('../../utils/BookingDataService')
 const { CouponService } = require('../../services/CouponService')
-const PaymentService = require('../../services/PaymentService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const { computeFinalAmount } = require('../../utils/coupon-amount')
 const { isHoliday } = require('../../utils/holidays')
+const { computeBoardingAmount } = require('../../utils/boarding-pricing')
 const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
@@ -24,6 +24,8 @@ Page({
     hostName: '',
     hostPrice: 0,
     selectedDates: { start: '', end: '', days: 0 },
+    // 日期时间戳（响应式）：calculatePriceLocal 计费依据；updateDates / loadOrderInfo 双入口写入
+    selectedDatesTimestamp: null,
     selectedPets: [],
     selectedPetsDetails: [],
     petServices: {},
@@ -45,15 +47,19 @@ Page({
     couponDiscount: 0,
     finalPrice: 0,
     showCouponSelector: false,
+    // ── 计费方式（2026-09-06 双计费算法）──
+    billingMode: 'hotel',
+    checkOutBefore: '12:00',
+    // 时刻必填：默认空，未选齐不计价（下单前校验阻断）
+    startTime: '',
+    endTime: '',
+    // 计费核心产出（hotel: nights/overtimeFee；hourly24: days/remainHours）
+    chargeBreakdown: null,
+    chargeNote: '',
   },
 
-  _batchUpdate(updates, callback) {
-    if (Object.keys(updates).length > 0) {
-      this.setData(updates, callback)
-    } else if (callback) {
-      callback()
-    }
-  },
+  // _batchUpdate 由 couponSelectorBehavior 提供（页面内重复定义会触发
+  //   "[Component] method _batchUpdate from different behaviors is overriding" 警告）
 
   onLoad(options) {
     this._initNavbarHeight()
@@ -141,13 +147,15 @@ Page({
 
       if (selectedDates && selectedDates.start && selectedDates.end) {
         if (typeof selectedDates.start === 'object' && selectedDates.start.text) {
-          updates.selectedDates = selectedDates
+          updates.selectedDates = this._decorateDates(selectedDates)
           const existingTimestamp = BookingData.get('selectedDatesTimestamp')
           if (!existingTimestamp || !existingTimestamp.start || !existingTimestamp.end) {
             this._restoreTimestampFromDisplay(selectedDates)
           }
+          // timestamp 提升为 data 字段（calculatePriceLocal 计费依据，响应式）
+          updates.selectedDatesTimestamp = BookingData.get('selectedDatesTimestamp') || null
         } else {
-          updates.selectedDates = this._formatStringDates(selectedDates)
+          updates.selectedDates = this._decorateDates(this._formatStringDates(selectedDates))
         }
       } else {
         updates.selectedDates = { start: { text: '', weekDay: '' }, end: { text: '', weekDay: '' }, days: 0 }
@@ -259,6 +267,9 @@ Page({
         this._batchUpdate({
           hostName: host.hostName || '寄养家庭',
           hostPrice: price,
+          // 计费方式由家庭档案决定（服务端兜底 hotel/12:00，前端同口径兜底）
+          billingMode: host.billingMode || 'hotel',
+          checkOutBefore: host.checkOutBefore || '12:00',
           priceCalculated: true,
         }, () => this.calculatePrice())
       }
@@ -276,7 +287,7 @@ Page({
   },
 
   calculatePriceLocal() {
-    const { selectedPetsDetails, hostPrice, petServices } = this.data
+    const { selectedPetsDetails, hostPrice, petServices, selectedDatesTimestamp, startTime, endTime } = this.data
     const pricePerDay = hostPrice > 0 ? hostPrice : 0
 
     if (pricePerDay === 0) {
@@ -286,41 +297,113 @@ Page({
 
     if (!selectedPetsDetails || selectedPetsDetails.length === 0) {return}
 
+    // 时刻必填：未选齐时刻（或日期未定）不计价，展示引导文案而非裸 0 元
+    if (!startTime || !endTime || !selectedDatesTimestamp || !selectedDatesTimestamp.start || !selectedDatesTimestamp.end) {
+      this._batchUpdate({
+        basicPrice: 0, totalPrice: 0, finalPrice: 0,
+        serviceBreakdown: [], chargeBreakdown: null,
+        chargeNote: '请先选择入住与离开时刻',
+      })
+      return
+    }
+
+    const petCount = selectedPetsDetails.length
+    const hasServiceDates = selectedPetsDetails.some(pet => {
+      const svc = petServices[pet.id]
+      return svc && svc.serviceDates && svc.serviceDates.length > 0
+    })
+
     let basePrice = 0
     let walkTotal = 0
     const breakdown = []
+    let chargeBreakdown = null
+    let chargeNote = ''
 
-    selectedPetsDetails.forEach(pet => {
-      const svc = petServices[pet.id]
-      let petBase = 0
-      let petWalk = 0
-      let serviceDays = 0
+    if (hasServiceDates) {
+      // 上门服务遗留分支（寄养流程不再产生 petServices，仅历史入口兼容）：48/58 每天 + 遛狗
+      selectedPetsDetails.forEach(pet => {
+        const svc = petServices[pet.id]
+        let petBase = 0
+        let petWalk = 0
+        let serviceDays = 0
 
-      if (svc && svc.serviceDates && svc.serviceDates.length > 0) {
-        serviceDays = svc.serviceDates.length
-        svc.serviceDates.forEach(d => {
-          const dateObj = new Date(d.date)
-          const holiday = isHoliday(dateObj)
-          petBase += holiday ? 58 : 48
+        if (svc && svc.serviceDates && svc.serviceDates.length > 0) {
+          serviceDays = svc.serviceDates.length
+          svc.serviceDates.forEach(d => {
+            const dateObj = new Date(d.date)
+            const holiday = isHoliday(dateObj)
+            petBase += holiday ? 58 : 48
+          })
+          petWalk = svc.walkMinutes || 0
+        } else {
+          serviceDays = this.data.selectedDates.days || 0
+          petBase = pricePerDay * serviceDays
+        }
+
+        basePrice += petBase
+        walkTotal += petWalk
+
+        breakdown.push({
+          name: pet.name || '未知',
+          serviceDays,
+          serviceDaysLabel: `${serviceDays}天`,
+          baseAmount: petBase,
+          walkMinutes: petWalk,
+          walkAmount: petWalk,
+          subtotal: petBase + petWalk,
         })
-        petWalk = svc.walkMinutes || 0
-      } else {
-        serviceDays = this.data.selectedDates.days || 0
-        petBase = pricePerDay * serviceDays
+      })
+    } else {
+      // 寄养主分支：计费核心（hotel 按夜+超时 / hourly24 24h 一天+尾数小时），与云函数同源算法
+      let pricing
+      try {
+        pricing = computeBoardingAmount({
+          mode: this.data.billingMode,
+          pricePerDay,
+          startDate: this._ymdFromTs(selectedDatesTimestamp.start),
+          endDate: this._ymdFromTs(selectedDatesTimestamp.end),
+          startAt: startTime,
+          endAt: endTime,
+          petCount,
+          checkOutBefore: this.data.checkOutBefore,
+        })
+      } catch (e) {
+        // 时刻倒挂等非法组合：清零金额并展示原因（服务端下单同样会拦截）
+        this._batchUpdate({
+          basicPrice: 0, totalPrice: 0, finalPrice: 0,
+          serviceBreakdown: [], chargeBreakdown: null,
+          chargeNote: (e && e.message) || '',
+        })
+        return
       }
 
-      basePrice += petBase
-      walkTotal += petWalk
+      basePrice = pricing.total
+      chargeBreakdown = pricing.breakdown
+      chargeNote = this._buildChargeNote(pricing.breakdown)
 
-      breakdown.push({
-        name: pet.name || '未知',
-        serviceDays,
-        baseAmount: petBase,
-        walkMinutes: petWalk,
-        walkAmount: petWalk,
-        subtotal: petBase + petWalk,
+      // 每宠物分摊展示（末位补差，保证合计 = total）
+      const perPet = Math.round((pricing.total / petCount) * 100) / 100
+      selectedPetsDetails.forEach((pet, idx) => {
+        const amount = idx === petCount - 1
+          ? Math.round((pricing.total - perPet * (petCount - 1)) * 100) / 100
+          : perPet
+        breakdown.push({
+          name: pet.name || '未知',
+          // 明细标签（JS 预计算，Skyline wxml 禁方法调用）：
+          //   hotel 按夜 / hourly24 按天（尾数小时另列于 chargeNote，不混入「天」）
+          serviceDays: pricing.breakdown.mode === 'hotel' ? pricing.breakdown.nights : pricing.breakdown.days,
+          serviceDaysLabel: pricing.breakdown.mode === 'hotel'
+            ? `${pricing.breakdown.nights}晚`
+            : (pricing.breakdown.remainHours > 0
+              ? `${pricing.breakdown.days}天+${pricing.breakdown.remainHours}小时`
+              : `${pricing.breakdown.days}天`),
+          baseAmount: amount,
+          walkMinutes: 0,
+          walkAmount: 0,
+          subtotal: amount,
+        })
       })
-    })
+    }
 
     const totalPrice = basePrice + walkTotal
     const { finalAmount, couponDiscount: finalCouponDiscount, shouldClear } = computeFinalAmount(totalPrice, this.data.couponDiscount)
@@ -332,6 +415,8 @@ Page({
       totalPrice,
       finalPrice,
       serviceBreakdown: breakdown,
+      chargeBreakdown,
+      chargeNote,
     })
     if (shouldClear) {
       // 免费订单不允许用券
@@ -343,24 +428,49 @@ Page({
     } else if (this.data.couponDiscount !== finalCouponDiscount) {
       this._batchUpdate({ couponDiscount: finalCouponDiscount })
     }
-    this._loadAvailableCoupons()
+    this._loadAvailableCoupons(this._couponQueryOpts())
   },
 
-  async _loadAvailableCoupons() {
-    const { hostId, totalPrice } = this.data
-    if (!hostId || !totalPrice) {return}
+  /** 本地时区 timestamp → 'YYYY-MM-DD'（前端铁律：本地北京时间；云函数侧独立换算，两端口径一致） */
+  _ymdFromTs(ts) {
+    const d = new Date(ts)
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${d.getFullYear()}-${m}-${day}`
+  },
 
-    try {
-      const result = await CouponService.getAvailableCoupons({
-        business: 'boarding',
-        items: hostId ? [hostId] : [],
-        amount: totalPrice,
-      })
-      if (result && result.code === 0) {
-        this._batchUpdate({ availableCoupons: result.data || [] })
-      }
-    } catch (e) {
-      console.warn('[confirm] 优惠券列表加载失败:', e)
+  /** 计费提示（纯字符串预计算，Skyline wxml 禁方法调用；金额统一 2 位小数四舍五入显示） */
+  _buildChargeNote(bd) {
+    if (!bd) {return ''}
+    if (bd.mode === 'hotel') {
+      if (!bd.overtimeMinutes) {return ''}
+      const h = Math.floor(bd.overtimeMinutes / 60)
+      const m = bd.overtimeMinutes % 60
+      const dur = m > 0 ? `${h} 小时 ${m} 分` : `${h} 小时`
+      const fee = (bd.overtimeFee * (bd.petCount || 1)).toFixed(2)
+      return `晚于 ${bd.checkOutBefore} 离开，超时 ${dur}，加收 ¥${fee}`
+    }
+    // hourly24
+    const tail = bd.remainHours > 0 ? ` + ${bd.remainHours} 小时` : ''
+    return `共 ${bd.billableHours} 小时 = ${bd.days} 天${tail}，小时价 ¥${bd.pricePerHour.toFixed(2)}`
+  },
+
+  onStartTimeChange(e) {
+    this._batchUpdate({ startTime: (e.detail && e.detail.value) || '' }, () => this.calculatePrice())
+  },
+
+  onEndTimeChange(e) {
+    this._batchUpdate({ endTime: (e.detail && e.detail.value) || '' }, () => this.calculatePrice())
+  },
+
+  // 券查询参数：由 couponSelectorBehavior 的 _loadAvailableCoupons(opts) 消费（与 mall/order-confirm 同约定）。
+  //   缺 hostId 时 amount 传 0 → behavior 内部 `if (!amount) return` 短路，与服务端券作用域一致
+  _couponQueryOpts() {
+    const { hostId, totalPrice } = this.data
+    return {
+      business: 'boarding',
+      items: hostId ? [hostId] : [],
+      amount: hostId ? totalPrice : 0,
     }
   },
 
@@ -378,7 +488,7 @@ Page({
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-      return { text: `${month}月${day}日`, weekDay: weekDays[date.getDay()] }
+      return { text: `${month}月${day}日`, weekDay: weekDays[date.getDay()], relativeTag: this._relativeTag(date) }
     }
 
     const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
@@ -388,7 +498,40 @@ Page({
     BookingData.set('selectedDates', selectedDatesDisplay)
     BookingData.set('selectedDatesTimestamp', selectedDatesTimestamp)
 
-    this._batchUpdate({ selectedDates: selectedDatesDisplay }, () => this.calculatePrice())
+    this._batchUpdate({ selectedDates: selectedDatesDisplay, selectedDatesTimestamp }, () => this.calculatePrice())
+  },
+
+  /** 相对日预计算：0=今天 1=明天 2=后天，其余空串（Skyline 禁 wxml 方法调用） */
+  _relativeTag(date) {
+    if (!date) { return '' }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const d = new Date(date)
+    d.setHours(0, 0, 0, 0)
+    const diff = Math.round((d - today) / 86400000)
+    return diff === 0 ? '今天' : diff === 1 ? '明天' : diff === 2 ? '后天' : ''
+  },
+
+  /** 补齐 relativeTag：优先 timestamp，退化从「x月xx日」文本解析（假定当年） */
+  _decorateDates(dates) {
+    if (!dates || !dates.start) { return dates }
+    const mk = side => {
+      const o = dates[side]
+      if (!o || !o.text) { return { ...o, relativeTag: '' } }
+      let d = null
+      const ts = (BookingData.get('selectedDatesTimestamp') || {})[side]
+      if (ts) {
+        d = new Date(ts)
+      } else {
+        const m = String(o.text).match(/(\d{1,2})月(\d{1,2})日/)
+        if (m) {
+          d = new Date()
+          d.setMonth(Number(m[1]) - 1, Number(m[2]))
+        }
+      }
+      return { ...o, relativeTag: d ? this._relativeTag(d) : '' }
+    }
+    return { ...dates, start: mk('start'), end: mk('end') }
   },
 
   selectPets() {
@@ -432,8 +575,14 @@ Page({
     let lockedCouponId = null
     try {
       // ===== 参数校验 =====
-      if (!this.data.selectedDates || !this.data.selectedDates.days) {
+      // 日期已选即可（同日寄养 days=0 合法：hotel 降级按小时 / hourly24 按小时计）
+      if (!this.data.selectedDates || !this.data.selectedDates.start || !this.data.selectedDates.start.text) {
         this.error('DATE_RANGE_REQUIRED')
+        return
+      }
+      // 时刻必填（2026-09-06）：hotel 超时判定 / hourly24 计费的依据
+      if (!this.data.startTime || !this.data.endTime) {
+        this.error(() => '请选择入住与离开时刻')
         return
       }
       if (!this.data.selectedPets || this.data.selectedPets.length === 0) {
@@ -494,6 +643,8 @@ Page({
         hostId: this.data.hostId,
         startDate: formatDateToYYYYMMDD(startDateObj),
         endDate: formatDateToYYYYMMDD(endDateObj),
+        startAt: this.data.startTime,
+        endAt: this.data.endTime,
         days: this.data.selectedDates.days,
         petIds: this.data.selectedPets,
         petDetails: this.data.selectedPetsDetails,
@@ -513,29 +664,25 @@ Page({
 
       // ===== 创建订单 =====
       const createResult = await orderManager.createOrder(orderData)
-      const finalOrderId = createResult.orderId || createResult._id
+      // createOrder 返回 { code, data, message }，订单号在 data 内（data.orderId / data._id）。
+      //   直接取顶层 createResult.orderId 恒为 undefined → createPayment 报「缺少订单类型或订单号」（前端映射“请求参数不正确”）
+      const orderPayload = (createResult && createResult.data) || {}
+      const finalOrderId =
+        orderPayload.orderId || orderPayload._id || createResult.orderId || createResult._id
 
-      // P1-B 修复：不再在此处 useCoupon（支付前核销）——券保持 locked，
-      //   支付成功由 paymentService 支付回调（notify）统一核销（business='boarding'）；
-      //   支付取消/失败/超时由前端 unlock 或取消/超时路径解锁（unlockOrderCoupons 按 couponId 直解）
-
-      // ===== 发起微信支付（使用折后价） =====
-      const payAmount = this.data.selectedCouponId ? this.data.finalPrice : this.data.totalPrice
-      try {
-        await this.initiateWechatPayment(finalOrderId, payAmount)
-      } catch (payError) {
-        // P1-B 修复：支付失败/取消时释放已锁定的券（lockedCouponId 在本作用域），
-        //   避免券卡 locked；订单保留待支付，可稍后在订单列表重新支付
-        if (lockedCouponId) {
-          CouponService.unlockCoupon(lockedCouponId).catch(e => {
-            console.error('[confirm] 支付失败解锁优惠券失败（超时路径会兜底）:', e)
-          })
-        }
-        this.error('ORDER_CREATED_PAY_LATER')
-        setTimeout(() => {
-          wx.redirectTo({ url: '/subpackages/profile/order-stats/index?type=boarding' })
-        }, 1500)
+      if (!createResult || createResult.code !== 0 || !finalOrderId) {
+        throw new Error((createResult && createResult.message) || '订单创建失败')
       }
+
+      // 2026-09-06 流程重构：提交订单页不再调起支付
+      //   支付决策（全款 / 30% 定金）延后到订单详情页，家庭可在此之前改价
+      //   券保持 locked，支付成功由 notify 核销；不支付由超时取消兜底解锁
+      this.toast(() => '订单已提交，请在订单详情中完成支付')
+      this._batchUpdate({ loading: false })
+      BookingData.reset()
+      setTimeout(() => {
+        wx.redirectTo({ url: `/subpackages/profile/order-detail/index?id=${finalOrderId}` })
+      }, 1200)
     } catch (error) {
       // ===== 异常回滚：解锁优惠券 =====
       if (lockedCouponId) {
@@ -545,79 +692,6 @@ Page({
       }
       this.error(() => `操作失败：${error.message}`)
       this._batchUpdate({ loading: false })
-    }
-  },
-
-  /**
-   * 发起微信支付
-   * 调用云函数获取支付参数 → 调起微信支付 → 成功后更新订单状态并跳转
-   */
-  async initiateWechatPayment(orderId, amount) {
-    try {
-      const petNames = (this.data.selectedPetsDetails || []).map(p => p.name || '').filter(Boolean).join('、')
-      const dateText = this.data.selectedDates
-        ? `${this.data.selectedDates.start?.text || ''}-${this.data.selectedDates.end?.text || ''}`
-        : ''
-      const hostName = this.data.hostName || '寄养家庭'
-      const payDesc = `寄养-${hostName}-${petNames || '宠物'}-${dateText || `${this.data.selectedDates?.days || 0}天`}`
-
-      const result = await PaymentService.pay({
-        type: 'order',
-        orderId,
-        amount: Math.round(amount * 100),
-        description: payDesc.substring(0, 127),
-      })
-
-      this.updateOrderStatus(orderId, 'paid')
-      this.toast('PAYMENT_SUCCESS')
-      BookingData.reset()
-      setTimeout(() => {
-        wx.redirectTo({ url: `/subpackages/profile/order-detail/index?id=${orderId}` })
-      }, 1500)
-    } catch (error) {
-      if (error.isCancel) {
-        this.error('PAYMENT_CANCELLED')
-      } else if (error.isPending) {
-        this.error(() => error.message, { duration: 3000 })
-      } else {
-        // 注意：onGoPay 的 showModal 弹窗也复用同款"重新支付"，但触发场景不同
-        // —— 这里只覆盖"支付失败"分支，并在 success 里调 initiateWechatPayment 重试。
-        this.showModal({
-          titleKey: 'PAYMENT_FAILED',
-          contentKey: 'BIZ_24KPRW',
-          cancelText: '稍后再说',
-          confirmText: '重新支付',
-          success: (confirmed) => {
-            if (!confirmed) {return}
-            this.initiateWechatPayment(orderId, amount)
-          },
-        })
-      }
-      this._batchUpdate({ loading: false })
-    }
-  },
-
-  /**
-   * 更新订单状态（带重试）
-   * 支付成功后调用，失败时最多重试3次（指数退避），确保订单状态最终一致
-   */
-  async updateOrderStatus(orderId, status) {
-    const MAX_RETRIES = 3
-    const BASE_DELAY = 1000
-
-    for (let i = 0; i <= MAX_RETRIES; i++) {
-      try {
-        await OrderService.updateBookingStatus(orderId, status)
-        return
-      } catch (error) {
-        if (i < MAX_RETRIES) {
-          const delay = BASE_DELAY * Math.pow(2, i)
-          console.warn(`[confirm] 订单状态更新失败，${delay}ms后重试(${i + 1}/${MAX_RETRIES}):`, error)
-          await new Promise(resolve => setTimeout(resolve, delay))
-        } else {
-          console.error('[confirm] 订单状态更新最终失败，需人工处理:', orderId, status, error)
-        }
-      }
     }
   },
 

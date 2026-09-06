@@ -20,7 +20,28 @@
 - **test/common-rate-limit-config.test.js**（45 cases）+ **test/common-rate-limit-bootstrap.test.js**（16 cases）+ **test/common-rate-limit-monitor.test.js**（27 cases）
 - **docs/SPRINT_50_DELIVERY.md**：限流可观测性 + 可维护性升级交付文档
 
+### Added（2026-09-06 · 双计费 + 先单后款支付体系）
+
+- **双计费算法**：家庭可选「酒店式」（按夜计费，超时 ≤6h 加收半天 / >6h 加收一天）或「24小时制」（每满 24h 一天，尾数按小时价 = 日价÷24，真实时长向上取整到小时）；`nights=0` 当天寄养自动降级按小时。权威实现 `orderService/common/boarding-pricing.ts` + 前端镜像 `utils/boarding-pricing.js`（**test/boarding-pricing.test.js 40 cases 双端交叉全等**）；档案表单/白名单/详情投影全链路透出 `billingMode/checkInAfter/checkOutBefore`
+- **付款双模式**：用户可在订单详情选择「支付全款」或「预付定金 30%」（定金不退，服务端硬编码比例）；`pay.ts` 按「请求 payType + 订单状态」动态推算应付（不信任客户端金额）
+- **线上补尾款**：定金回调进入 `deposit_paid`（paymentStatus=`partial_paid`）中间态，尾款回调补齐至 `paid`（paidAmount=全款）；订单详情展示已付定金/待补尾款 + 「补尾款」按钮；超时取消扫描不命中 partial_paid（定金单不被误杀）
+- **家庭改价**：新 handler `adjustOrderPrice`（organizerId 权限 + pending_payment/deposit_paid 限定 + 条件更新防并发 + `priceAdjustLog` 留痕）；只改 totalPrice 基准，定金/尾款由支付时动态推算；deposit_paid 改价后尾款需 ≥0.1
+- **订单分享收款**：家庭订单卡「分享给客户付款」（open-type=share）→ 订单详情页直接支付；owner 权限天然闭环，非本人被拒
+- **订单详情付款方式选择**：pending_payment 且未付定金时可切换 全款/定金（定金项带「定金不退·尾款线下结算」提示）
+
+### Changed（2026-09-06 · 先单后款流程重构）
+
+- **subpackages/booking/confirm 提交订单页不再调起支付**：提交成功直接跳订单详情，支付决策延后（家庭可先改价）；底部栏改「订单总额」+ 提交提醒文案；删除付款方式选择/支付调起/金额联动死代码
+- **pages/boarding 列表卡三度迭代定稿「全出血目录行」**：左竖版封面（宽 300，高度 JS 实测首图比例 `wx.getImageInfo` 动态写入，卡=图高零裁切，横图保底 400）+ 右信息列（名称/★评分金/计费金胶囊标签/简介/金点位置/价格+深绿 CTA），hairline 分隔；`billingMode` 进列表投影
+- **subpackages/booking/host-detail** 价格区展示收费方式（金标签 + 简介随档案时刻动态）+ 修复联系按钮被挤（两行结构）
+- **subpackages/profile/order-detail** 计费展示升级：daysLabel（晚/天+小时）+ chargeLines 明细行 + 日期行带时刻
+- **Skyline 兼容清理**：`font-variant-numeric` ×5 处、`-webkit-line-clamp` 三件套 ×1 处（全仓清零，截断统一 JS 预计算）
+- **.gitignore**：`cloudfunctions/*/common/*` 加 `boarding-pricing.ts/.js` 例外（服务目录业务模块源码需入库）
+
 ### Changed
+- **pages/boarding** 重设计「画廊目录」（Haute-Luxury B+A 对齐 host-detail）：金 eyebrow 杂志标题 + 真实家庭计数、搜索+筛选合并单一 sticky 纸面工具条（修复双 sticky top 180rpx 错位露缝）、卡片微圆角 16rpx + 封面 300rpx + 甄选徽章（深绿底金 hairline）、轻字重编辑式价格、hairline 标签；**修复筛选弹窗复选框全部失效**（`bindtap="toggleFilter('x','y')"` 内联传参原生 wxml 不支持 → dataset + onToggleFilter，6 处）；**移除假数据**（`item.distance || 2.5` 硬编码 2.5km → 展示真实区划 location）；**暂停接待可见**（封面灰纱 + 禁用 CTA，此前 isAcceptingOrders 算了没用）；简介 JS 预截断两行（Skyline 无 line-clamp 把握）；封面轮播三重复 fallback 移除
+- **subpackages/booking/host-detail** 奢侈品级重设计「暗房画廊 + 纸上卷宗」（B+A）：画廊 450→820rpx 顶天全出血 + 顶/底双 scrim + 暗房媒体标签（选中金短线）+ 画册页码（JS 预计算 counterText，Skyline 合规）+ more-tip 金框暗室；纸面流=金环头像上浮压画廊底边 + 编辑式价格行 + 金板 CTA（--lux-gold-grad）+ hairline 描边标签（金点）+ 双行 eyebrow 章节（PROFILE/SERVICES/AMENITIES）+ 双栏图标网格 + 卷宗落款；收藏钮移至画廊右上 hairline 圆浮托；预览 deliverables/host-detail-preview.html
+- **subpackages/booking/host-detail.js**：修复 viewMorePhotos/viewMoreVideos/playVideo/onShareAppMessage 误用 `host._id`（对象实际只有 `id` 键）导致相册/视频页拿到空 hostId，6 处统一 `host.id`
 - **cloudfunctions/orderService/index.ts** / **paymentService/index.ts** / **mallService/index.ts** / **activityService/index.ts** / **rateLimitCleanup/index.ts**：使用 `bootstrapRateLimit` 统一注入
 - **cloudfunctions/common/risk-rate-limit.ts**：集成配置中心（`getRateLimitConfig` / `getRateLimitConfigSync`）
 - **tsconfig.common.json**：include 加 `rate-limit-config.ts` / `rate-limit-bootstrap.ts` / `rate-limit-monitor.ts`

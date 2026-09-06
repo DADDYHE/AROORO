@@ -62,8 +62,14 @@ export interface CloudEvent {
   hostName?: string
   realName?: string
   phone?: string
+  wechatId?: string
   idCard?: string
   address?: string
+  province?: string
+  city?: string
+  district?: string
+  addressDetail?: string
+  addressPublic?: string
   housingType?: string
   hasYard?: string
   maxPets?: number
@@ -71,7 +77,12 @@ export interface CloudEvent {
   nativePetInfo?: string
   petTypes?: string
   serviceTypes?: string[]
+  boardingMode?: string
   pricePerDay?: number
+  // 计费方式（勿与寄养方式 boardingMode 混淆）
+  billingMode?: string
+  checkInAfter?: string
+  checkOutBefore?: string
   description?: string
   photos?: string[]
   videos?: string[]
@@ -115,8 +126,14 @@ export interface HostRecord {
   realName?: string
   avatarUrl?: string
   phone?: string
+  wechatId?: string
   idCard?: string
   address?: string
+  province?: string
+  city?: string
+  district?: string
+  addressDetail?: string
+  addressPublic?: string
   housingType?: string
   hasYard?: string
   maxPets?: number
@@ -124,7 +141,12 @@ export interface HostRecord {
   nativePetInfo?: string
   petTypes?: string
   serviceTypes?: string[]
+  boardingMode?: string
   pricePerDay?: number
+  // 计费方式（勿与寄养方式 boardingMode 混淆）
+  billingMode?: string
+  checkInAfter?: string
+  checkOutBefore?: string
   description?: string
   photos?: string[]
   videos?: string[]
@@ -314,7 +336,11 @@ function _resetKey(): void {
 const HOST_LIST_FIELDS: Record<string, boolean> = {
   _id: true, hostName: true, avatarUrl: true, name: true,
   address: true, hasYard: true, housingType: true, maxPets: true,
+  // 结构化地址（用户端展示源，仅到区县）
+  province: true, city: true, district: true, addressPublic: true,
   petTypes: true, pricePerDay: true, averageRating: true,
+  // 计费方式（勿与寄养方式 boardingMode 混淆）：列表卡片简洁标签展示
+  billingMode: true,
   isAcceptingOrders: true, status: true, description: true, createdAt: true, updatedAt: true,
   roomType: true, petLimit: true, tags: true, isRecommended: true, photos: true,
 }
@@ -322,9 +348,16 @@ const HOST_LIST_FIELDS: Record<string, boolean> = {
 const HOST_DETAIL_PUBLIC_FIELDS: Record<string, boolean> = {
   _id: true, hostName: true, avatarUrl: true, name: true,
   address: true, hasYard: true, housingType: true, maxPets: true,
+  // 结构化地址（用户端展示源，仅到区县）
+  province: true, city: true, district: true, addressPublic: true,
   petTypes: true, pricePerDay: true,
+  // 联系方式：电话直拨 + 微信号复制（联系家庭业务必需，公开透出）
+  phone: true, wechatId: true,
   isAcceptingOrders: true, status: true, description: true,
   hasOtherPets: true, nativePetInfo: true, serviceTypes: true,
+  boardingMode: true,
+  // 计费方式（勿与寄养方式 boardingMode 混淆）：下单页按此选择计费算法
+  billingMode: true, checkInAfter: true, checkOutBefore: true,
   photos: true, videos: true, createdAt: true, updatedAt: true,
 }
 
@@ -343,6 +376,44 @@ function escapeRegExp(str: string): string {
 // Handler 1: createHostProfile
 // =====================================================================
 
+/** 'HH:mm' 时刻合法性（00:00 ~ 23:59） */
+function isValidHHmm(value: unknown): boolean {
+  return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
+}
+
+/**
+ * 计费方式字段归一化 + 校验（create / update 共用）
+ *
+ * - billingMode：仅允许 'hotel' | 'hourly24'，缺失默认 'hotel'（老档案兜底）
+ * - checkInAfter：酒店式展示用的最早入住时刻，默认 '14:00'（不参与计费）
+ * - checkOutBefore：酒店式超时退房判定基准，默认 '12:00'
+ * - 传入非法值直接抛错（而非静默兜底），避免家庭配置错值导致计费异常
+ */
+function normalizeBillingFields(fields: {
+  billingMode?: unknown
+  checkInAfter?: unknown
+  checkOutBefore?: unknown
+}): { mode: string; checkInAfter: string; checkOutBefore: string } {
+  const { billingMode, checkInAfter, checkOutBefore } = fields
+
+  const mode: string = typeof billingMode === 'string' && billingMode !== '' ? billingMode : 'hotel'
+  if (mode !== 'hotel' && mode !== 'hourly24') {
+    throw err('INVALID_PARAMS', '计费方式仅支持酒店式或24小时制')
+  }
+
+  const inAfter: string = typeof checkInAfter === 'string' && checkInAfter !== '' ? checkInAfter : '14:00'
+  if (!isValidHHmm(inAfter)) {
+    throw err('INVALID_PARAMS', '入住时刻格式必须为 HH:mm')
+  }
+
+  const outBefore: string = typeof checkOutBefore === 'string' && checkOutBefore !== '' ? checkOutBefore : '12:00'
+  if (!isValidHHmm(outBefore)) {
+    throw err('INVALID_PARAMS', '退房时刻格式必须为 HH:mm')
+  }
+
+  return { mode, checkInAfter: inAfter, checkOutBefore: outBefore }
+}
+
 export async function createHostProfile(
   event: CloudEvent,
   _context: CloudContext,
@@ -352,14 +423,18 @@ export async function createHostProfile(
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
   const {
-    hostName, realName, phone, idCard, address, housingType, hasYard, maxPets,
-    hasOtherPets, nativePetInfo, petTypes, serviceTypes, pricePerDay,
-    description, photos, idCardFront, idCardBack, healthCertificate,
+    hostName, realName, phone, wechatId, idCard, address, housingType, hasYard, maxPets,
+    hasOtherPets, nativePetInfo, petTypes, serviceTypes, boardingMode, pricePerDay,
+    description, avatarUrl, photos, idCardFront, idCardBack, healthCertificate,
     emergencyContactName, emergencyContactPhone,
+    province, city, district, addressDetail, addressPublic,
+    billingMode, checkInAfter, checkOutBefore,
   } = event
 
   if (!hostName) { throw err('INVALID_PARAMS', '请填写寄养家庭名称') }
   if (!phone) { throw err('INVALID_PARAMS', '请填写手机号') }
+
+  const billing = normalizeBillingFields({ billingMode, checkInAfter, checkOutBefore })
 
   const existingProfiles = await db.collection('hostProfiles')
     .where({ phone, status: _.in(['active', 'pending_review']) }).count()
@@ -372,8 +447,16 @@ export async function createHostProfile(
     hostName,
     realName: realName || '',
     phone,
+    // 微信号：用户端「联系家庭」复制添加（选填）
+    wechatId: wechatId || '',
     idCard: idCard || '',
     address: address || '',
+    // 结构化地址：三级区划（公开到区县）+ 详细地址（隐私，仅平台/接单可见）
+    province: province || '',
+    city: city || '',
+    district: district || '',
+    addressDetail: addressDetail || '',
+    addressPublic: addressPublic || '',
     housingType: housingType || '',
     hasYard: hasYard || '',
     maxPets: Number(maxPets) || 0,
@@ -381,8 +464,16 @@ export async function createHostProfile(
     nativePetInfo: nativePetInfo || '',
     petTypes: petTypes || '',
     serviceTypes: serviceTypes || [],
+    // 寄养方式：cage 笼养 / freeRange 散养 / flexible 按需选择（详情页居住条件展示）
+    boardingMode: boardingMode || '',
     pricePerDay: Number(pricePerDay) || 0,
+    // 计费方式（勿与寄养方式 boardingMode 混淆）
+    billingMode: billing.mode,
+    checkInAfter: billing.checkInAfter,
+    checkOutBefore: billing.checkOutBefore,
     description: description || '',
+    // 家庭头像：展示给用户端列表/详情（空则前端兜底默认头像）
+    avatarUrl: avatarUrl || '',
     photos: photos || [],
     idCardFront: idCardFront || '',
     idCardBack: idCardBack || '',
@@ -431,10 +522,18 @@ export async function updateHostProfile(
     const editableFields = [
       ...FIELD_WHITELISTS.hostBasic,
       'serviceTypes', 'description', 'photos', 'videos', 'tags',
+      'wechatId', 'boardingMode',
     ]
     Object.assign(updateData, filterFields(editableFields, event))
     if (event.hostName !== undefined && event.hostName !== null) {
       updateData.name = event.hostName
+    }
+    // 计费方式：仅当明确传入 billingMode 时归一化写入（避免部分提交时静默重置时刻配置）
+    if (event.billingMode !== undefined && event.billingMode !== null) {
+      const billing = normalizeBillingFields(event)
+      updateData.billingMode = billing.mode
+      updateData.checkInAfter = billing.checkInAfter
+      updateData.checkOutBefore = billing.checkOutBefore
     }
   } else if (updateType === 'description') {
     if (description !== undefined && description !== null) { updateData.description = description }

@@ -69,15 +69,6 @@ export declare function getOrders(event: EventLike, _context: ContextLike, auth:
  * 2. enrichOrders - 订单冗余信息补全（pets / host）
  */
 export declare function enrichOrders(orders: unknown[]): Promise<EnrichedOrder[]>;
-/**
- * 3. createOrder - 创建订单
- *
- * P0 修复（H8）：优惠券 couponDiscount/originalAmount 不再信任客户端。
- *   - couponId 存在时服务端查 user_coupons 校验归属/状态/有效期/规则
- *   - 服务端按 coupon.rules 计算 discountAmount
- *   - 调 couponService.lockCoupon 锁定券（防重复使用）
- *   - 订单写入失败时 best-effort 调 unlockCoupon 回滚
- */
 export declare function createOrder(event: EventLike, _context: ContextLike, auth: AuthLike | null): HandlerResult;
 /**
  * 4. updateOrderStatus - 状态机推进
@@ -99,6 +90,17 @@ export declare function cancelOrder(event: EventLike, _context: ContextLike, aut
  * 8. getOrderDetail - 订单详情
  */
 export declare function getOrderDetail(event: EventLike, _context: ContextLike, auth: AuthLike | null): HandlerResult;
+/**
+ * 8b. adjustOrderPrice - 寄养家庭改价（2026-09-06）
+ *
+ * 场景：家庭给客户折扣，需调整订单全款金额
+ * 权限：仅订单家庭（organizerId）
+ * 状态约束：pending_payment（未付）/ deposit_paid（已付定金）可改；paid 及之后不可
+ * 金额联动：只改 totalPrice 基准——定金（30%）/ 尾款（totalPrice - paidAmount）
+ *   由 paymentService 在用户发起支付时动态推算，无需在此联动 payAmount
+ * 改价留痕：priceAdjustLog（before/after/reason/by/at）
+ */
+export declare function adjustOrderPrice(event: EventLike, _context: ContextLike, auth: AuthLike | null): HandlerResult;
 /**
  * 9. calculatePrice - 价格计算（公开）
  */

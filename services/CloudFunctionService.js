@@ -213,6 +213,8 @@ class CloudFunctionService {
             const fallbackMsg = result.result.message || result.result.error || '云函数执行失败'
             // 前端层无法访问 cloudfunctions/common/errors.js 的 err()，保留 error.code 直赋值
             const error = new Error(localizedMsg || fallbackMsg)
+            // localizedMsg 是给用户的通用文案，服务端具体原因（如"缺少订单类型或订单号"）挂 detail 供排查
+            error.detail = result.result.message || (result.result.error && result.result.error.message) || ''
             // eslint-disable-next-line no-restricted-syntax
             error.code = result.result.code
             error.type = result.result.error && result.result.error.type
@@ -297,7 +299,7 @@ class CloudFunctionService {
 
       globalErrorManager.handleError(error, {
         level,
-        context: { functionName: name, action: data.action, code },
+        context: { functionName: name, action: data.action, code, detail: error.detail || '' },
       })
     } catch (e) {
       // 错误管理器本身失败时不阻断主流程（兜底静默）
@@ -386,6 +388,11 @@ class OrderService {
   /** 合伙人寄养订单操作：confirm 接单 / reject 拒单 / complete 完成（状态机+佣金+退款在服务端） */
   async handleBoardingOrder(orderId, operation) {
     return this.cloud.post('orderService', { action: 'handleBoardingOrder', orderId, operation })
+  }
+
+  /** 寄养家庭改价（2026-09-06：调整全款金额，服务端联动定金/尾款） */
+  async adjustOrderPrice(data) {
+    return this.cloud.post('orderService', { action: 'adjustOrderPrice', ...data })
   }
 
   /** 发起微信支付，amount 单位为元（Sprint 32: 迁移到 paymentService/createPayment） */

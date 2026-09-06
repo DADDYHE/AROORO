@@ -1,4 +1,5 @@
 const STATUS_TEXT_MAP = {
+  deposit_paid: '待补尾款',
   pending_payment: '待支付',
   paid: '已支付',
   confirmed: '已确认',
@@ -11,6 +12,7 @@ const STATUS_TEXT_MAP = {
 }
 
 const LOGISTICS_STATUS_TEXT_MAP = {
+  deposit_paid: '待补尾款',
   pending_payment: '待支付',
   paid: '已支付',
   shipped: '已发货',

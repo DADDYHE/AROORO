@@ -26,9 +26,10 @@ class PaymentService {
   }
 
   async pay(params) {
-    const { type, orderId, amount, description } = params
+    const { type, orderId, amount, description, payType } = params
 
-    const result = await this.createPayment({ type, orderId, amount, description })
+    // payType：2026-09-06 付款双模式（full 全款 / deposit 定金 30%），透传给 createPayment 做服务端金额推算
+    const result = await this.createPayment({ type, orderId, amount, description, payType })
     if (!result || result.code !== 0 || !result.data || !result.data.paymentParams) {
       throw new Error(result?.message || '创建支付订单失败')
     }

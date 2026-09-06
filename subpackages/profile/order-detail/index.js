@@ -10,6 +10,7 @@ const { formatDate, formatDateTime } = require('../utils/dateUtils')
 
 const STATUS_DESC_MAP = {
   pending_payment: '请尽快完成付款，超时订单将自动取消',
+  deposit_paid: '定金已支付，请补齐尾款完成预订',
   paid: '订单已支付，等待寄养家庭确认',
   confirmed: '寄养家庭已确认您的订单',
   in_progress: '宠物寄养服务进行中',
@@ -42,6 +43,11 @@ Page({
           { key: 'cancel', text: '取消订单', type: 'secondary' },
           { key: 'pay', text: '去付款', type: 'primary' },
         ]
+      case 'deposit_paid':
+        return [
+          { key: 'share', text: '分享订单', type: 'secondary' },
+          { key: 'pay', text: '补尾款', type: 'primary' },
+        ]
       case 'paid':
       case 'confirmed':
         return [{ key: 'cancel', text: '取消订单', type: 'secondary' }]
@@ -59,6 +65,21 @@ Page({
     if (action === 'cancel') this.onCancelOrder()
     else if (action === 'pay') this.onGoPay()
     else if (action === 'contact') this.onContactHost()
+    else if (action === 'share') this.openShareSheet()
+  },
+
+  /** 分享订单（寄养家庭发给客户 / 客户自存）：onGoShareButton 触发菜单，直接分享走 onShareAppMessage */
+  openShareSheet() {
+    // action-bar 场景无 button 上下文，引导用户点右上角菜单分享（最简可靠路径）
+    this.toast(() => '请点击右上角「···」转发给客户')
+  },
+
+  onShareAppMessage() {
+    const order = this.data.order || {}
+    return {
+      title: `寄养订单待支付 · ${order.hostName || '家庭寄养'} · ¥${order.remainAmount > 0 ? order.remainAmount : order.totalPrice}`,
+      path: `/subpackages/profile/order-detail/index?id=${order._id || ''}&from=hostShare`,
+    }
   },
 
   onLoad(options) {
@@ -80,6 +101,8 @@ Page({
       if (res && res.code === 0 && res.data) {
         const order = this._normalizeOrder(res.data)
         this.setData({ order, actions: this._buildActions(order.status), isLoading: false })
+        // 付款方式默认全款（用户可在本页切换定金 30%）
+        this.setData({ payType: 'full', payAmount: order.totalPrice || 0, showPayTypePicker: false })
         this._loadedOnce = true
         // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
         if (order.status === 'pending_payment') {
@@ -126,6 +149,8 @@ Page({
       petList,
       startDate: this._formatDate(raw.startDate),
       endDate: this._formatDate(raw.endDate),
+      startAt: raw.startAt || '',
+      endAt: raw.endAt || '',
       days: raw.days || raw.duration || 0,
       pricePerDay: raw.pricePerDay || 0,
       petCount: raw.petCount || (raw.petIds ? raw.petIds.length : petList.length),
@@ -133,13 +158,61 @@ Page({
       totalPrice: raw.totalPrice || 0,
       couponDiscount: raw.couponDiscount || 0,
       finalPrice: raw.finalPrice || raw.totalPrice || 0,
+      // 付款双模式（2026-09-06）：payType full/deposit + 已付/待补金额
+      payType: raw.payType || 'full',
+      payAmount: raw.payAmount || 0,
+      paidAmount: raw.paidAmount || 0,
+      remainAmount: Math.max(0, Math.round(((raw.totalPrice || 0) - (raw.paidAmount || 0)) * 100) / 100),
       note: raw.note || '',
+      // 计费方式（2026-09-06 双计费算法）：老订单无 chargeBreakdown → 展示退化为「X 天」
+      ...this._buildChargeDisplay(raw),
       createdAt: this._formatDateTime(raw.createdAt),
       // 保留原始创建时间戳，供支付倒计时计算（与后端 ORDER_TIMEOUT_MINUTES=30 对齐）
       createdAtTs: raw.createdAt ? new Date(raw.createdAt).getTime() : 0,
       timeoutMinutes: 30,
       paidAt: this._formatDateTime(raw.paidAt),
       paymentStatus: raw.paymentStatus || 'unpaid',
+    }
+  },
+
+  /**
+   * 计费展示字段（chargeBreakdown → 展示层）
+   * - hotel：N 晚 + 超时加收行
+   * - hourly24：X 天 + 尾数 Y 小时行
+   * - 老订单（无快照）：daysLabel 退化为「X 天」，chargeLines 为空不渲染
+   */
+  _buildChargeDisplay(raw) {
+    const bd = raw.chargeBreakdown
+    if (!bd || !bd.mode) {
+      return { daysLabel: `${raw.days || raw.duration || 0} 天`, chargeLines: [] }
+    }
+
+    const petCount = Number(bd.petCount) || 1
+    const r2 = n => Math.round((Number(n) || 0) * petCount * 100) / 100
+    const chargeLines = []
+
+    if (bd.mode === 'hotel') {
+      const lines = [`住宿 ${bd.nights} 晚：¥${r2(bd.baseFee)}`]
+      if (bd.overtimeFee > 0) {
+        const h = Math.floor((bd.overtimeMinutes || 0) / 60)
+        const m = (bd.overtimeMinutes || 0) % 60
+        const dur = m > 0 ? `${h} 小时 ${m} 分` : `${h} 小时`
+        lines.push(`超时 ${dur} 加收：¥${r2(bd.overtimeFee)}`)
+      }
+      return {
+        daysLabel: `${bd.nights} 晚`,
+        chargeLines: lines,
+      }
+    }
+
+    // hourly24
+    const lines = [`住宿 ${bd.days} 天：¥${r2(bd.baseFee)}`]
+    if (bd.remainHours > 0) {
+      lines.push(`尾数 ${bd.remainHours} 小时：¥${r2(bd.hourlyFee)}`)
+    }
+    return {
+      daysLabel: bd.remainHours > 0 ? `${bd.days} 天 ${bd.remainHours} 小时` : `${bd.days} 天`,
+      chargeLines: lines,
     }
   },
 
@@ -171,18 +244,38 @@ Page({
     const order = this.data.order
     if (!order || !order._id) {return}
 
-    const desc = order.hostName
-      ? `寄养-${order.hostName}-${order.petNames}-${order.days || 0}天`
-      : `寄养订单-${order.petNames}`
+    // 付款双模式（2026-09-06 流程重构）：支付决策在订单页
+    //   - deposit_paid：固定为尾款（totalPrice - 已付定金）
+    //   - pending_payment：用户本页选择 全款 / 预付定金 30%（data.payType）
+    const isTail = order.status === 'deposit_paid'
+    const payType = isTail ? 'tail' : (this.data.payType || 'full')
+    const payAmount = isTail
+      ? order.remainAmount
+      : (payType === 'deposit'
+        ? Math.round((order.totalPrice || 0) * 0.3 * 100) / 100
+        : order.totalPrice)
+
+    if (!(payAmount > 0)) {
+      this.error(() => '订单金额异常，请联系客服')
+      return
+    }
+
+    const desc = isTail
+      ? `寄养尾款-${order.hostName || ''}-${order.petNames || ''}`
+      : order.hostName
+        ? `寄养-${order.hostName}-${order.petNames}-${order.days || 0}天${payType === 'deposit' ? '-定金' : ''}`
+        : `寄养订单-${order.petNames}`
 
     try {
       await PaymentService.pay({
         type: 'order',
         orderId: order._id,
-        amount: Math.round((order.totalPrice || 0) * 100),
+        payType: isTail ? undefined : payType,
+        amount: Math.round((payAmount || 0) * 100),
         description: desc.substring(0, 127),
       })
-      this.toast('PAYMENT_SUCCESS')
+      this.toast(() => isTail ? '尾款支付成功' : '支付成功')
+      this.setData({ showPayTypePicker: false })
       this._loadOrder({ orderId: order._id })
     } catch (err) {
       if (err.isCancel) {
@@ -193,6 +286,29 @@ Page({
         this.errorDynamic(err.message, 'PAYMENT_FAILED')
       }
     }
+  },
+
+  /** 付款方式选择（订单页内切换：全款 / 预付定金 30%，定金不退） */
+  onTogglePayTypePicker() {
+    this.setData({ showPayTypePicker: !this.data.showPayTypePicker })
+  },
+
+  onPayTypeSelect(e) {
+    const key = e.currentTarget && e.currentTarget.dataset.key
+    if (key !== 'full' && key !== 'deposit') {return}
+    this._batchSetPayType(key)
+  },
+
+  _batchSetPayType(key) {
+    const order = this.data.order || {}
+    const total = Number(order.totalPrice) || 0
+    const deposit = Math.round(total * 0.3 * 100) / 100
+    this.setData({
+      payType: key,
+      payAmount: key === 'deposit' ? deposit : total,
+      remainAmount: key === 'deposit' ? Math.round((total - deposit) * 100) / 100 : 0,
+      showPayTypePicker: false,
+    })
   },
 
   onCancelOrder() {

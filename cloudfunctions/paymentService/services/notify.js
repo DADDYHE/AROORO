@@ -235,7 +235,30 @@ async function applyPaidStatus(orderType, existingOrder, transactionId, paidAmou
     if (typeof paidAmountYuan === 'number' && Number.isFinite(paidAmountYuan) && paidAmountYuan >= 0) {
         updateData.paidAmount = Math.round(paidAmountYuan * 100) / 100;
     }
-    if (orderType === 'order' || orderType === 'mall') {
+    if (orderType === 'order') {
+        // 2026-09-06 付款双模式：deposit 订单两段支付
+        //   首次（pending_payment）= 定金 → status='deposit_paid'，paymentStatus='partial_paid'，paidAmount=定金
+        //   二次（deposit_paid）= 尾款 → status='paid'，paymentStatus='paid'，paidAmount=全款
+        // 字段赋值式天然幂等（同 outTradeNo 重放不产生资金偏差）
+        const o = existingOrder;
+        if (o.payType === 'deposit') {
+            const totalYuan = Number(o.totalPrice) || 0;
+            if (o.status === 'deposit_paid') {
+                updateData.status = 'paid';
+                updateData.paymentStatus = 'paid';
+                updateData.paidAmount = totalYuan;
+            }
+            else {
+                updateData.status = 'deposit_paid';
+                updateData.paymentStatus = 'partial_paid';
+                updateData.paidAmount = Number(o.payAmount) || (typeof paidAmountYuan === 'number' ? paidAmountYuan : 0);
+            }
+        }
+        else {
+            updateData.status = 'paid';
+        }
+    }
+    else if (orderType === 'mall') {
         updateData.status = 'paid';
     }
     else if (orderType === 'tuan') {

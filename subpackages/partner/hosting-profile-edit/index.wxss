@@ -1,307 +1,708 @@
 @import '../common.wxss';
 
 /* ============================================
-   家庭寄养编辑 — 3 步表单（基本信息 / 服务与定价 / 资质与相册）
+   家庭寄养档案编辑 · DOSSIER
+   版式：B 深绿沉浸标题版 + A 整版纸面流
+   --------------------------------------------
+   Skyline 约束备忘（改动前必读）：
+   · 不用 background 简写多值 → 一律 background-image / background-color / -size 分开写
+   · 不用 ::placeholder → 走 placeholder-class
+   · 不用 backdrop-filter / :active → 走 hover-class
+   · 绝对定位子节点在「父级带 animation + overflow:hidden」下不渲染
+     → .ds-cell / .ds-add / .ds-cert 一律不加 animation + overflow:hidden
+   · animation-fill-mode: forwards 会锁死自身 transform
+     → 带入场的元素不能再对自身做 transform 按压，按压一律放子节点
    ============================================ */
 
-.edit-page {
-  min-height: 100vh;
-  padding: 24rpx var(--page-padding) calc(env(safe-area-inset-bottom) + 48rpx);
+.ds-scroll {
+  background-color: var(--background-color);
+}
+
+/* ============ 深绿沉浸标题版 ============ */
+.ds-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 0 var(--page-padding) 52rpx;
+  background-image: var(--lux-green-grad-rich);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* 顶部压深 scrim：保证透明导航栏上的标题/返回键始终可读 */
+.ds-hero-scrim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 280rpx;
+  background-image: linear-gradient(180deg, rgba(15, 36, 16, 0.42) 0%, rgba(15, 36, 16, 0) 100%);
+  pointer-events: none;
+}
+
+.ds-hero-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ds-hero-glow--gold {
+  top: -140rpx;
+  right: -110rpx;
+  width: 380rpx;
+  height: 380rpx;
+  background-image: radial-gradient(circle, rgba(201, 162, 75, 0.22) 0%, rgba(201, 162, 75, 0) 70%);
+}
+
+.ds-hero-glow--green {
+  bottom: -180rpx;
+  left: -150rpx;
+  width: 460rpx;
+  height: 460rpx;
+  background-image: radial-gradient(circle, rgba(61, 107, 61, 0.38) 0%, rgba(61, 107, 61, 0) 70%);
+}
+
+.ds-hero-body {
+  position: relative;
+  z-index: 2;
+  padding-top: 36rpx;
+  opacity: 0;
+  animation-name: zy-fade-in-down-sm;
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.ds-eyebrow {
+  display: block;
+  font-size: 20rpx;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  color: var(--lux-gold-500);
+  margin-bottom: 22rpx;
+}
+
+.ds-hero-title {
+  display: block;
+  font-size: 60rpx;
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: 0.10em;
+  color: var(--text-on-primary);
+}
+
+.ds-hero-rule {
+  width: 48rpx;
+  height: 2rpx;
+  margin: 28rpx 0 20rpx;
+  background-color: var(--lux-gold-500);
+}
+
+.ds-hero-sub {
+  display: block;
+  font-size: 24rpx;
+  letter-spacing: 0.14em;
+  line-height: 1.6;
+  color: rgba(247, 245, 239, 0.78);
+}
+
+/* ============ 卷宗进度轨 ============ */
+.ds-rail {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  margin-top: 52rpx;
+  padding-top: 34rpx;
+  border-top: 1rpx solid rgba(247, 245, 239, 0.14);
+  opacity: 0;
+  animation-name: zy-fade-in-up-sm;
+  animation-duration: 480ms;
+  animation-delay: 120ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.ds-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14rpx;
+  width: 132rpx;
+  flex-shrink: 0;
+}
+
+.ds-ring {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  border: 1rpx solid rgba(247, 245, 239, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-ring-t {
+  font-size: 24rpx;
+  line-height: 1;
+  color: rgba(247, 245, 239, 0.72);
+  font-feature-settings: 'tnum';
+}
+
+/* 当前步：金实心 + 炭墨数字（7.27:1） */
+.ds-ring--now {
+  border-color: var(--lux-gold-500);
+  background-color: var(--lux-gold-500);
+}
+
+.ds-ring--now .ds-ring-t {
+  color: var(--text-on-accent);
+}
+
+/* 已完成：金描边 + 金勾（5.22:1） */
+.ds-ring--done {
+  border-color: rgba(201, 162, 75, 0.62);
+}
+
+.ds-ring--done .ds-ring-t {
+  color: var(--lux-gold-500);
+}
+
+.ds-node-t {
+  font-size: 22rpx;
+  letter-spacing: 0.08em;
+  color: rgba(247, 245, 239, 0.72);
+}
+
+.ds-node-t--on {
+  color: var(--text-on-primary);
+}
+
+.ds-track {
+  flex: 1;
+  height: 1rpx;
+  margin-top: 28rpx;
+  background-color: rgba(247, 245, 239, 0.18);
+}
+
+.ds-track--on {
+  background-color: rgba(201, 162, 75, 0.55);
+}
+
+/* ============ 整版纸面流 ============ */
+.ds-paper {
+  padding: 0 var(--page-padding);
   background-color: var(--background-color);
   font-family: var(--font-stack);
 }
 
-/* ---------- 步骤条 ---------- */
-.step-bar {
-  display: flex;
-  align-items: center;
-  padding: 24rpx 8rpx 32rpx;
+.ds-chapter {
+  padding: 60rpx 0 20rpx;
+  opacity: 0;
+  animation-name: zy-fade-in-up-sm;
+  animation-duration: 480ms;
+  animation-delay: 60ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
 }
 
-.step-item {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-}
-
-.step-no {
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 50%;
-  border: 1rpx solid var(--lux-hairline);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.ds-chapter-no {
+  display: block;
   font-size: 22rpx;
-  color: var(--text-tertiary);
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  color: var(--primary-color);
   font-feature-settings: 'tnum';
 }
 
-.step-no--active {
-  border-color: var(--primary-color);
-  background: var(--primary-color);
-  color: var(--text-on-primary);
-}
-
-.step-label {
-  font-size: 24rpx;
-  color: var(--text-tertiary);
-  letter-spacing: 1rpx;
-}
-
-.step-label--active {
+.ds-chapter-title {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 42rpx;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
   color: var(--text-primary);
 }
 
-.step-line {
-  flex: 1;
+.ds-chapter-rule {
   height: 1rpx;
-  background: var(--lux-hairline);
-  margin: 0 16rpx;
+  margin-top: 30rpx;
+  background-image: var(--lux-gold-line);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 
-.step-line--active {
-  background: var(--primary-color);
-}
-
-/* ---------- 表单分区 ---------- */
-.form-section {
-  background: var(--card-cream);
-  border-radius: var(--zy-radius-lg);
-  padding: 32rpx 36rpx;
-}
-
-.section-title {
-  font-size: 30rpx;
-  font-weight: 500;
-  color: var(--text-primary);
-  letter-spacing: 1rpx;
-  padding-bottom: 20rpx;
-  margin-bottom: 8rpx;
-  border-bottom: 1rpx solid var(--lux-hairline);
-}
-
-.field-row {
+/* ---------- 字段行 ---------- */
+.ds-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24rpx;
-  padding: 20rpx 0;
+  padding: 32rpx 0;
   border-bottom: 1rpx solid var(--lux-hairline);
 }
 
-.field-row:last-child {
-  border-bottom: none;
-}
-
-.field-row--col {
+.ds-row--stack {
   flex-direction: column;
   align-items: stretch;
-  gap: 16rpx;
+  gap: 20rpx;
 }
 
-.field-row--area {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 16rpx;
-}
-
-.field-label {
-  font-size: 26rpx;
-  color: var(--text-secondary);
-  letter-spacing: 1rpx;
+.ds-label {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
   flex-shrink: 0;
+  font-size: 25rpx;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
 }
 
-.field-label.required::before {
-  content: '* ';
-  color: var(--error-color);
+/* 必填金点：非文字元素，按 WCAG 1.4.11 需 ≥3:1 —— 金 #A8894A 压奶油底 3.05:1 ✓ */
+.ds-req {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background-color: var(--lux-gold-600);
 }
 
-.field-hint {
+.ds-hint {
+  display: block;
   font-size: 22rpx;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
   color: var(--text-tertiary);
-  line-height: 1.5;
 }
 
-.field-input {
+.ds-input {
   flex: 1;
   text-align: right;
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: var(--text-primary);
 }
 
-.field-picker {
-  text-align: right;
-  font-size: 26rpx;
-  color: var(--text-primary);
+/* 计费方式说明（金色小字，随选中方式切换） */
+.ds-billing-hint {
+  margin-top: 14rpx;
 }
 
-.field-picker--placeholder {
-  color: var(--text-tertiary);
-}
-
-.field-textarea {
-  width: 100%;
-  height: 160rpx;
-  font-size: 26rpx;
-  color: var(--text-primary);
+.ds-billing-hint-text {
+  font-size: 22rpx;
+  letter-spacing: 0.04em;
   line-height: 1.6;
+  color: var(--lux-gold-600);
 }
 
-.input-placeholder {
+/* 时刻选择（picker mode=time）：值右对齐与 ds-input 同基线 */
+.ds-picker {
+  flex: 1;
+}
+
+.ds-picker-value {
+  text-align: right;
+  font-size: 28rpx;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+}
+
+
+/* 通栏输入（详细地址等长文本场景）：与 .ds-area 同风格 */
+.ds-input--block {
+  width: 100%;
+  text-align: left;
+  padding: 22rpx 24rpx;
+  box-sizing: border-box;
+  background-color: var(--card-cream);
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: 8rpx;
+}
+
+.ds-ph {
   color: var(--text-tertiary);
+}
+
+/* ---------- Picker ---------- */
+.ds-picker {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.ds-picker-t {
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+
+.ds-picker-t--ph {
+  color: var(--text-tertiary);
+}
+
+.ds-chev {
+  width: 14rpx;
+  height: 14rpx;
+  border-right: 2rpx solid var(--text-secondary);
+  border-bottom: 2rpx solid var(--text-secondary);
+  transform: rotate(-45deg);
+}
+
+/* ---------- Textarea ---------- */
+.ds-area {
+  width: 100%;
+  height: 180rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
+  font-size: 27rpx;
+  line-height: 1.7;
+  color: var(--text-primary);
+  background-color: var(--card-cream);
+  border: 1rpx solid var(--lux-hairline);
+  border-radius: 8rpx;
+  font-family: var(--font-stack);
+}
+
+.ds-area--tall {
+  height: 240rpx;
 }
 
 /* ---------- 选项 chip ---------- */
-.choice-group {
+.ds-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
 }
 
-.choice-chip {
-  padding: 12rpx 28rpx;
-  border-radius: var(--zy-radius-sm);
-  border: 1rpx solid var(--lux-hairline);
-  font-size: 24rpx;
+.ds-chip {
+  padding: 16rpx 34rpx;
+  border: 1rpx solid var(--border-color);
+  border-radius: 999rpx;
+  font-size: 25rpx;
+  letter-spacing: 0.06em;
   color: var(--text-secondary);
-  letter-spacing: 1rpx;
+  transition-property: transform, opacity, background-color, border-color, color;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.choice-chip--on {
+.ds-chip--on {
+  background-color: var(--primary-color);
   border-color: var(--primary-color);
-  background: var(--primary-tint-08);
-  color: var(--primary-color);
+  color: var(--text-on-primary);
+}
+
+.ds-chip--p {
+  transform: scale(0.96);
+  opacity: 0.86;
 }
 
 /* ---------- 上传网格 ---------- */
-.upload-grid {
+.ds-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
 }
 
-.upload-cell {
+.ds-cell {
   position: relative;
   width: 200rpx;
   height: 200rpx;
 }
 
-.upload-img {
-  width: 100%;
-  height: 100%;
-  border-radius: var(--zy-radius-sm);
-}
-
-.upload-remove {
-  position: absolute;
-  top: -12rpx;
-  right: -12rpx;
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
-  background: var(--text-primary);
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26rpx;
-  line-height: 1;
-}
-
-.upload-add {
+.ds-cell-img {
   width: 200rpx;
   height: 200rpx;
-  border: 1rpx dashed var(--lux-hairline);
-  border-radius: var(--zy-radius-sm);
+  border-radius: 8rpx;
+}
+
+.ds-cell-x {
+  position: absolute;
+  top: -10rpx;
+  right: -10rpx;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background-color: var(--primary-deep);
+}
+
+.ds-x1,
+.ds-x2 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18rpx;
+  height: 2rpx;
+  margin-left: -9rpx;
+  margin-top: -1rpx;
+  background-color: var(--text-on-primary);
+}
+
+.ds-x1 {
+  transform: rotate(45deg);
+}
+
+.ds-x2 {
+  transform: rotate(-45deg);
+}
+
+/* 十字加号（两条线，非字符，保证跨端一致） */
+.ds-plus {
+  position: relative;
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.ds-plus-h {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 36rpx;
+  height: 1rpx;
+  margin-top: -0.5rpx;
+  background-color: var(--text-tertiary);
+}
+
+.ds-plus-v {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1rpx;
+  height: 36rpx;
+  margin-left: -0.5rpx;
+  background-color: var(--text-tertiary);
+}
+
+.ds-add {
+  width: 200rpx;
+  height: 200rpx;
+  border: 1rpx dashed var(--border-color);
+  border-radius: 8rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48rpx;
-  color: var(--text-tertiary);
+  transition-property: transform, background-color, border-color;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* ---------- 证件 ---------- */
-.cert-row {
+.ds-add--p {
+  transform: scale(0.97);
+  background-color: var(--primary-tint-04);
+  border-color: var(--zy-border-strong);
+}
+
+/* ---------- 家庭头像 ---------- */
+.ds-avatar-row {
+  display: flex;
+  align-items: center;
+}
+
+.ds-avatar {
+  width: 148rpx;
+  height: 148rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1rpx solid var(--hairline);
+  flex-shrink: 0;
+  transition-property: transform, opacity;
+  transition-duration: 180ms;
+}
+
+.ds-avatar--p {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+
+.ds-avatar-img {
+  width: 100%;
+  height: 100%;
+}
+
+.ds-avatar-ph {
+  width: 100%;
+  height: 100%;
+  border: 1rpx dashed var(--border-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-avatar-meta {
+  display: flex;
+  flex-direction: column;
+  margin-left: 26rpx;
+}
+
+.ds-avatar-t {
+  font-size: 28rpx;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.ds-avatar-x {
+  font-size: 24rpx;
+  letter-spacing: 0.08em;
+  color: var(--lux-gold-600);
+  margin-top: 8rpx;
+}
+
+/* ---------- 证件格 ---------- */
+.ds-certs {
   display: flex;
   gap: 16rpx;
 }
 
-.cert-cell {
+.ds-cert {
   position: relative;
-  width: 300rpx;
-  height: 180rpx;
-  border: 1rpx dashed var(--lux-hairline);
-  border-radius: var(--zy-radius-sm);
+  flex: 1;
+  height: 200rpx;
+  border: 1rpx dashed var(--border-color);
+  border-radius: 8rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  transition-property: transform, background-color, border-color;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.ds-cert--p {
+  transform: scale(0.98);
+  background-color: var(--primary-tint-04);
+  border-color: var(--zy-border-strong);
+}
+
+.ds-cert-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8rpx;
+}
+
+.ds-cert-t {
+  font-size: 23rpx;
+  letter-spacing: 0.14em;
+  color: var(--text-tertiary);
+}
+
+/* ---------- 收尾 ---------- */
+.ds-foot {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 68rpx 0 12rpx;
+  opacity: 0;
+  animation-name: zy-fade-in;
+  animation-duration: 560ms;
+  animation-delay: 220ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  animation-fill-mode: forwards;
+}
+
+.ds-foot-line {
+  flex: 1;
+  height: 1rpx;
+  background-color: var(--divider-color);
+}
+
+.ds-foot-text {
+  font-size: 20rpx;
+  letter-spacing: 0.24em;
+  color: var(--text-tertiary);
+}
+
+/* 底部固定操作栏让位 */
+.ds-tail {
+  height: calc(180rpx + env(safe-area-inset-bottom));
+  background-color: var(--background-color);
+}
+
+/* ============ 固定底部操作栏 ============ */
+.ds-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx var(--page-padding);
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background-color: var(--card-color);
+  border-top: 1rpx solid var(--lux-hairline);
+  box-shadow: var(--shadow-float);
+  opacity: 0;
+  animation-name: zy-footer-rise;
+  animation-duration: 480ms;
+  animation-delay: 200ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+.ds-btn {
+  flex: 1;
+  height: 88rpx;
+  margin: 0;
+  border: none;
+  border-radius: 8rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: visible;
-}
-
-.cert-cell--single {
-  width: 300rpx;
-}
-
-.cert-img {
-  width: 100%;
-  height: 100%;
-  border-radius: var(--zy-radius-sm);
-}
-
-.cert-text {
-  font-size: 24rpx;
-  color: var(--text-tertiary);
-  letter-spacing: 2rpx;
-}
-
-/* ---------- 底部操作 ---------- */
-.footer-actions {
-  display: flex;
-  gap: 24rpx;
-  margin-top: 40rpx;
-}
-
-.footer-actions .btn-primary,
-.footer-actions .btn-ghost {
-  flex: 1;
-  margin: 0;
-}
-
-.btn-primary {
-  padding: 24rpx 0;
   font-size: 28rpx;
-  letter-spacing: 4rpx;
-  color: var(--text-on-primary);
-  background: var(--primary-color);
-  border-radius: var(--zy-radius-lg);
-  border: none;
+  font-weight: 400;
+  letter-spacing: 0.18em;
   line-height: 1;
+  transition-property: transform, opacity, background-color;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.btn-primary::after {
+.ds-btn::after {
   border: none;
 }
 
-/* Skyline 不支持属性选择器（整条规则会被丢弃且告警），禁用态必须走 .btn-disabled 类（wxml 绑定 submitting） */
-.btn-primary.btn-disabled {
-  opacity: 0.6;
+.ds-btn--solid {
+  background-image: var(--gradient-primary);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   color: var(--text-on-primary);
-  background: var(--primary-color);
+  box-shadow: var(--shadow-glow-primary-btn);
 }
 
-.btn-ghost {
-  padding: 24rpx 0;
-  font-size: 28rpx;
-  letter-spacing: 4rpx;
+/* 终局 CTA 走金：金面必须配炭墨字（--text-on-accent），白字最低仅 1.45:1 */
+.ds-btn--gold {
+  background-image: var(--lux-gold-grad);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  color: var(--text-on-accent);
+  box-shadow: var(--lux-shadow-gold);
+}
+
+.ds-btn--ghost {
+  background-color: transparent;
   color: var(--primary-color);
-  background: transparent;
-  border: 1rpx solid var(--primary-color);
-  border-radius: var(--zy-radius-lg);
-  line-height: 1;
+  border: 1rpx solid var(--border-color);
 }
 
-.btn-ghost::after {
-  border: none;
+.ds-btn--solid-p {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.ds-btn--gold-p {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.ds-btn--ghost-p {
+  transform: scale(0.98);
+  background-color: var(--primary-tint-04);
+}
+
+.ds-btn--off {
+  opacity: 0.5;
 }
