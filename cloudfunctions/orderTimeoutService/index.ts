@@ -288,6 +288,7 @@ const _ = db.command as unknown as {
   or: (arr: unknown[]) => unknown
   and: (arr: unknown[]) => unknown
   inc: (v: number) => unknown
+  exists: (v: boolean) => unknown
 }
 const logger = createLogger('orderTimeoutService')
 
@@ -863,24 +864,28 @@ export async function fetchAllExpired<T = OrderDoc>(
   // L2: 克隆 where 对象，防止未来在循环内修改时污染调用方传入的对象
   const queryWhere: Record<string, unknown> = { ...where }
   const allOrders: T[] = []
-  // 2026-09-06 审计修复：skip 分页改为 createdAt 游标分页——累计超时单 >1000 时
-  //   skip 会静默漏扫（已告警兜底），游标分页无上限
+  // 2026-09-06 审计修复（回归修正）：游标仅在调用方 where 本就含 createdAt 时启用，
+  //   否则回退 skip 分页——无 createdAt 前缀时第二批会构造 and([undefined, lt]) 非法查询
+  //   （需各调用方自带 createdAt 时间窗：5 个取消分支用 _.lte(threshold)，已满足）
+  const cursorEnabled = Boolean(queryWhere.createdAt)
   let lastCreatedAt: Date | null = null
   for (let batch = 0; batch < maxBatches; batch++) {
-    if (lastCreatedAt) {
+    if (cursorEnabled && lastCreatedAt) {
       queryWhere.createdAt = ((db.command as unknown as { and: (arr: unknown[]) => unknown })).and([
         queryWhere.createdAt,
         ((db.command as unknown as { lt: (v: Date) => unknown })).lt(lastCreatedAt),
       ])
     }
-    const res = await db.collection(collection)
+    let q = db.collection(collection)
       .where(queryWhere)
       .orderBy('createdAt', 'desc')
       .field(fields)
-      .limit(BATCH_SIZE)
-      .get() as QueryResult<T>
+    if (!cursorEnabled) {
+      q = q.skip(batch * BATCH_SIZE) as typeof q
+    }
+    const res = await q.limit(BATCH_SIZE).get() as QueryResult<T>
     const data = res.data || []
-    if (data.length > 0) {
+    if (cursorEnabled && data.length > 0) {
       const tail = (data[data.length - 1] as { createdAt?: Date })?.createdAt
       lastCreatedAt = tail ? new Date(tail as unknown as string) : null
     }
@@ -1328,8 +1333,12 @@ async function completeActivityOrders(result: TimeoutResult, now: Date): Promise
     const nowStr = `${bjNow.getFullYear()}-${String(bjNow.getMonth() + 1).padStart(2, '0')}-${String(bjNow.getDate()).padStart(2, '0')} ${String(bjNow.getHours()).padStart(2, '0')}:${String(bjNow.getMinutes()).padStart(2, '0')}`
 
     // 查询所有已支付（paid）的活动报名单
+    // P1（2026-09-06 审计）：加 createdAt 时间窗（180 天）解决原 #3 全量扫描增长——
+    //   正常活动周期 ≤180 天，超窗的 paid 报名属长期遗留（已有缺失告警兜底）；
+    //   同时使游标分页生效（where 含 createdAt）
     const paidRegs = await fetchAllExpired<ActivityRegistrationDoc>('activity_registrations', {
       status: 'paid',
+      createdAt: _.gte(new Date(Date.now() - 180 * 24 * 3600 * 1000)),
     }, { _id: true, activityId: true, ownerId: true, participantCount: true })
 
     // 按 activityId 批量查询活动 endTime，避免 N+1
@@ -1520,11 +1529,12 @@ async function processFailedOperations(): Promise<{ scanned: number, success: nu
 async function recycleCancelledPrepayOrders(result: TimeoutResult): Promise<void> {
   try {
     const cutoff = new Date(Date.now() - 48 * 3600 * 1000)
+    // 预付单有效期 2h：取消超过 2h 的单关单无意义 → createdAt 窗口收窄（25h）
     const cancelled = await fetchAllExpired<OrderDoc>('orders', {
       status: 'cancelled',
       paymentStatus: _.in(['unpaid', null]),
-      outTradeNo: _.neq(null),
-      updatedAt: _.gte(cutoff),
+      outTradeNo: _.and([_.exists(true), _.neq(null)]),
+      createdAt: _.gte(new Date(Date.now() - 25 * 3600 * 1000)),
     }, { _id: true, outTradeNo: true }, 20)
     for (const order of cancelled) {
       try {
