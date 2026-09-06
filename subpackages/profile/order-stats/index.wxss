@@ -147,7 +147,7 @@
   gap: 20rpx;
   padding: 28rpx 0;
   margin: 0 var(--page-padding, 48rpx);
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(31, 58, 31, 0.14); /* 深绿 hairline（--lux-green-800 @14%） */
   transition: opacity 160ms ease;
 }
 
