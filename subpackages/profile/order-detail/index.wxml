@@ -17,9 +17,9 @@
   <view class="lux-cascade-dot" style="left: 20rpx; background: #C9A24B; animation-delay: 0ms;"></view>
   <view class="lux-cascade-dot" style="left: 36rpx; background: #A8894A; animation-delay: 150ms;"></view>
   <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
-  <view class="lux-cascade-dot" style="left: 68rpx; background: #A8894A; animation-delay: 450ms;"></view>
+  <view class="lux-cascade-dot" style="left: 68rpx; background: #C9A24B; animation-delay: 450ms;"></view>
   <view class="lux-cascade-dot" style="left: 84rpx; background: #C9A24B; animation-delay: 600ms;"></view>
-  <view class="lux-cascade-dot" style="left: 100rpx; background: #A8894A; animation-delay: 750ms;"></view>
+  <view class="lux-cascade-dot" style="left: 100rpx; background: #C9A24B; animation-delay: 750ms;"></view>
   <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
       </view>
@@ -28,6 +28,7 @@
   </view>
 
   <block wx:elif="{{order}}">
+    <!-- 状态横幅（组件保留） -->
     <order-status-banner
       status="{{order.status}}"
       status-text="{{order.statusText}}"
@@ -42,114 +43,171 @@
       </view>
     </view>
 
-    <view class="section host-section">
-      <view class="section-title">{{t.BIZ_BX1ZCE}}</view>
-      <view class="host-row">
-        <image class="host-avatar" wx:if="{{order.hostAvatar}}" src="{{order.hostAvatar}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{order.hostAvatar}}" data-path="order.hostAvatar" lazy-load />
-        <view class="host-avatar-placeholder" wx:else></view>
-        <view class="host-info">
-          <text class="host-name">{{order.hostName || '寄养家庭'}}</text>
-          <view class="host-contact" bindtap="onContactHost" wx:if="{{order.hostPhone}}" hover-class="host-contact--pressed" hover-stay-time="80">
-            <text class="host-phone">{{order.hostPhone}}</text>
-            <view class="call-btn">联系</view>
+    <!-- ═══ 卷宗头：金 eyebrow + 家庭名大字 + 订单号 ═══ -->
+    <view class="dossier-head">
+      <view class="brand-accent-bar"></view>
+      <text class="dossier-eyebrow">BOOKING DOSSIER</text>
+      <text class="dossier-title">{{order.hostName || '寄养家庭'}}</text>
+      <view class="dossier-no-row">
+        <text class="dossier-no-label">NO.</text>
+        <text class="dossier-no">{{order.orderNo}}</text>
+        <view class="copy-btn" bindtap="onCopyOrderNo" hover-class="copy-btn pressed" hover-stay-time="80">复制</view>
+      </view>
+    </view>
+
+    <!-- ═══ 01 · HOST 寄养家庭 ═══ -->
+    <view class="chapter">
+      <view class="chapter-eyebrow-row">
+        <text class="chapter-no">01</text>
+        <text class="chapter-name">HOST</text>
+        <view class="chapter-rule"></view>
+      </view>
+      <view class="chapter-body">
+        <view class="host-row">
+          <view class="host-avatar-ring">
+            <image class="host-avatar" wx:if="{{order.hostAvatar}}" src="{{order.hostAvatar}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{order.hostAvatar}}" data-path="order.hostAvatar" lazy-load />
+            <view class="host-avatar-placeholder" wx:else></view>
+          </view>
+          <view class="host-info">
+            <text class="host-name">{{order.hostName || '寄养家庭'}}</text>
+            <view class="host-contact" bindtap="onContactHost" wx:if="{{order.hostPhone}}" hover-class="host-contact--pressed" hover-stay-time="80">
+              <text class="host-phone">{{order.hostPhone}}</text>
+              <view class="call-btn">联系</view>
+            </view>
           </view>
         </view>
       </view>
     </view>
 
-    <view class="section pet-section">
-      <view class="section-title">寄养宠物</view>
-      <view class="pet-list">
-        <view class="pet-item" wx:for="{{order.petList}}" wx:key="_id">
-          <image class="pet-avatar" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load />
-          <view class="pet-avatar-placeholder" wx:else></view>
-          <view class="pet-info">
-            <text class="pet-name">{{item.name}}</text>
-            <text class="pet-breed" wx:if="{{item.breed}}">{{item.breed}}</text>
+    <!-- ═══ 02 · GUESTS 寄养宠物 ═══ -->
+    <view class="chapter">
+      <view class="chapter-eyebrow-row">
+        <text class="chapter-no">02</text>
+        <text class="chapter-name">GUESTS</text>
+        <view class="chapter-rule"></view>
+        <text class="chapter-side">{{order.petCount}} 只</text>
+      </view>
+      <view class="chapter-body">
+        <view class="pet-list" wx:if="{{order.petList && order.petList.length > 0}}">
+          <view class="pet-item" wx:for="{{order.petList}}" wx:key="_id">
+            <image class="pet-avatar" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load />
+            <view class="pet-avatar-placeholder" wx:else></view>
+            <view class="pet-info">
+              <text class="pet-name">{{item.name}}</text>
+              <text class="pet-breed" wx:if="{{item.breed}}">{{item.breed}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="pet-summary" wx:else>
+          <text class="pet-names">{{order.petNames}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ═══ 03 · SCHEDULE 寄养档期（编辑式大日期） ═══ -->
+    <view class="chapter">
+      <view class="chapter-eyebrow-row">
+        <text class="chapter-no">03</text>
+        <text class="chapter-name">SCHEDULE</text>
+        <view class="chapter-rule"></view>
+        <text class="chapter-side">{{order.daysLabel}}</text>
+      </view>
+      <view class="chapter-body" wx:if="{{order.startDate && order.endDate}}">
+        <view class="schedule-dates">
+          <view class="schedule-date-col">
+            <text class="schedule-date-big">{{order.dateStartShort}}</text>
+            <text class="schedule-time" wx:if="{{order.startAt}}">{{order.startAt}} 入住</text>
+          </view>
+          <view class="schedule-arrow"></view>
+          <view class="schedule-date-col schedule-date-col--end">
+            <text class="schedule-date-big">{{order.dateEndShort}}</text>
+            <text class="schedule-time" wx:if="{{order.endAt}}">{{order.endAt}} 离店</text>
+          </view>
+        </view>
+        <view class="schedule-meta" wx:if="{{order.billingLabel || order.chargeLines && order.chargeLines.length > 0}}">
+          <text class="schedule-meta-text" wx:if="{{order.billingLabel}}">计费 · {{order.billingLabel}}</text>
+          <text class="schedule-meta-text" wx:if="{{order.pricePerDay}}">¥{{order.pricePerDay}}/{{order.billingMode === 'hourly24' ? '天' : '晚'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ═══ 04 · BILLING 费用卷宗 ═══ -->
+    <view class="chapter">
+      <view class="chapter-eyebrow-row">
+        <text class="chapter-no">04</text>
+        <text class="chapter-name">BILLING</text>
+        <view class="chapter-rule"></view>
+      </view>
+      <view class="chapter-body">
+        <view class="fee-rows">
+          <view class="fee-row" wx:if="{{order.basicPrice}}">
+            <text class="fee-key">基础费用</text>
+            <text class="fee-val">¥{{order.basicPrice}}</text>
+          </view>
+          <view class="fee-row" wx:for="{{order.chargeLines}}" wx:key="*this">
+            <text class="fee-key">计费明细</text>
+            <text class="fee-val">{{item}}</text>
+          </view>
+          <view class="fee-row" wx:if="{{order.couponDiscount > 0}}">
+            <text class="fee-key">优惠减免</text>
+            <text class="fee-val fee-val--gold">-¥{{order.couponDiscount}}</text>
+          </view>
+          <view class="fee-row" wx:if="{{order.status === 'pending_payment'}}">
+            <text class="fee-key">定金金额（30%）</text>
+            <text class="fee-val">¥{{depositAmount}}</text>
+          </view>
+          <view class="fee-note" wx:if="{{order.status === 'pending_payment'}}">
+            <text class="fee-note-text">定金支付后不退，剩余尾款 ¥{{remainAmountTip}} 需与家庭线下结算</text>
+          </view>
+          <view class="fee-row" wx:if="{{order.payType === 'deposit' && order.paidAmount > 0}}">
+            <text class="fee-key">已付定金</text>
+            <text class="fee-val">¥{{order.paidAmount}}</text>
+          </view>
+          <view class="fee-row" wx:if="{{order.payType === 'deposit' && order.status === 'deposit_paid'}}">
+            <text class="fee-key">待补尾款</text>
+            <text class="fee-val">¥{{order.remainAmount}}</text>
+          </view>
+          <view class="fee-row" wx:if="{{order.note}}">
+            <text class="fee-key">备注</text>
+            <text class="fee-val">{{order.note}}</text>
+          </view>
+        </view>
+
+        <view class="total-block">
+          <text class="total-key">订单总额</text>
+          <view class="total-val-row">
+            <text class="total-symbol">¥</text>
+            <text class="total-num">{{order.totalPrice}}</text>
           </view>
         </view>
       </view>
-      <view class="pet-summary" wx:if="{{!order.petList || order.petList.length === 0}}">
-        <text class="pet-names">{{order.petNames}}</text>
-      </view>
     </view>
 
-    <view class="section date-section">
-      <view class="section-title">寄养时间</view>
-      <view class="date-row" wx:if="{{order.startDate && order.endDate}}">
-        <image class="row-icon" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
-        <text class="date-text">{{order.startDate}}{{order.startAt ? ' ' + order.startAt : ''}} 至 {{order.endDate}}{{order.endAt ? ' ' + order.endAt : ''}}</text>
-        <text class="date-days">共{{order.daysLabel}}</text>
+    <!-- ═══ 05 · META 订单元信息 ═══ -->
+    <view class="chapter chapter--meta">
+      <view class="chapter-eyebrow-row">
+        <text class="chapter-no">05</text>
+        <text class="chapter-name">META</text>
+        <view class="chapter-rule"></view>
       </view>
-    </view>
-
-    <order-card title="订单信息">
-      <view slot="content">
-      <view class="info-row">
-        <text class="info-label">订单编号</text>
-        <view class="info-value-row">
-          <text class="info-value">{{order.orderNo}}</text>
-          <view class="copy-btn" bindtap="onCopyOrderNo" hover-class="copy-btn pressed" hover-stay-time="80">复制</view>
+      <view class="chapter-body meta-rows">
+        <view class="meta-row">
+          <text class="meta-key">下单时间</text>
+          <text class="meta-val">{{order.createdAt}}</text>
+        </view>
+        <view class="meta-row" wx:if="{{order.paidAt}}">
+          <text class="meta-key">支付时间</text>
+          <text class="meta-val">{{order.paidAt}}</text>
         </view>
       </view>
-      <view class="info-row">
-        <text class="info-label">下单时间</text>
-        <text class="info-value">{{order.createdAt}}</text>
-      </view>
-      <view class="info-row" wx:if="{{order.paidAt}}">
-        <text class="info-label">支付时间</text>
-        <text class="info-value">{{order.paidAt}}</text>
-      </view>
-      <view class="info-row" wx:if="{{order.note}}">
-        <text class="info-label">备注</text>
-        <text class="info-value">{{order.note}}</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">每日价格</text>
-        <text class="info-value">¥{{order.pricePerDay}}</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">宠物数量</text>
-        <text class="info-value">{{order.petCount}}只</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">寄养时长</text>
-        <text class="info-value">{{order.daysLabel}}</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">基础价格</text>
-        <text class="info-value">¥{{order.basicPrice}}</text>
-      </view>
-      <view class="info-row" wx:for="{{order.chargeLines}}" wx:key="*this">
-        <text class="info-label">计费明细</text>
-        <text class="info-value">{{item}}</text>
-      </view>
-      <view class="info-row" wx:if="{{order.couponDiscount > 0}}">
-        <text class="info-label">优惠金额</text>
-        <text class="info-value discount">-¥{{order.couponDiscount}}</text>
-      </view>
-      <view class="info-row" wx:if="{{order.status === 'pending_payment'}}">
-        <text class="info-label">定金金额（30%）</text>
-        <text class="info-value">¥{{depositAmount}}</text>
-      </view>
-      <view class="info-row" wx:if="{{order.status === 'pending_payment'}}">
-        <text class="info-label">　</text>
-        <text class="deposit-tip">定金支付后不退，剩余尾款 ¥{{remainAmountTip}} 需与家庭线下结算</text>
-      </view>
-      <view class="info-row" wx:if="{{order.payType === 'deposit' && order.paidAmount > 0}}">
-        <text class="info-label">已付定金</text>
-        <text class="info-value">¥{{order.paidAmount}}</text>
-      </view>
-      <view class="info-row" wx:if="{{order.payType === 'deposit' && order.status === 'deposit_paid'}}">
-        <text class="info-label">待补尾款</text>
-        <text class="info-value">¥{{order.remainAmount}}</text>
-      </view>
-      <view class="info-row total-row">
-        <text class="info-label">订单总额</text>
-        <text class="total-value">¥{{order.totalPrice}}</text>
-      </view>
-      </view>
-    </order-card>
+    </view>
+
+    <!-- 卷宗落款 -->
+    <view class="dossier-foot">
+      <view class="dossier-foot-line"></view>
+      <text class="dossier-foot-text">AROORO · 家庭寄养</text>
+      <view class="dossier-foot-line"></view>
+    </view>
 
     <root-portal>
       <order-action-bar

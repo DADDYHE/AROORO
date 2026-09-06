@@ -151,6 +151,10 @@ Page({
       petNames: petNames || '宠物',
       petList,
       startDate: this._formatDate(raw.startDate),
+      // 卷宗头展示（2026-09-06）：短日期 MM.DD + 计费方式标签（JS 预计算，Skyline 合规）
+      dateStartShort: this._shortDate(raw.startDate),
+      dateEndShort: this._shortDate(raw.endDate),
+      billingLabel: raw.billingMode === 'hourly24' ? '24小时制' : (raw.billingMode ? '酒店式' : ''),
       endDate: this._formatDate(raw.endDate),
       startAt: raw.startAt || '',
       endAt: raw.endAt || '',
@@ -220,6 +224,15 @@ Page({
   },
 
   _formatDate(dateValue) { return formatDate(dateValue) },
+
+  /** 'YYYY-MM-DD' → 'MM.DD'（卷宗编辑式日期）；解析失败返回原值 */
+  _shortDate(dateValue) {
+    const s = String(dateValue || '')
+    const m = s.match(/\d{4}-\d{2}-\d{2}/)
+    if (!m) {return s}
+    const parts = m[0].split('-')
+    return parts[1] + '.' + parts[2]
+  },
 
   _formatDateTime(dateValue) { return formatDateTime(dateValue) },
 
