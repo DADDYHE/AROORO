@@ -949,6 +949,25 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
     if (couponId) {
       await unlockCouponBestEffort(couponId, (order as { _id: string })._id)
     }
+    // P1 修复（H2）：bookingKey 唯一索引（idx_bookingKey_unique）冲突 = 同家庭同日期已有订单。
+    //   CloudBase 原始 E11000 异常不是 BusinessError，下方 DUPLICATE_KEY 分支不会命中——
+    //   这里直接识别 raw message，并查询已有订单状态给出可执行的引导文案
+    const rawMsg = (e as Error)?.message || ''
+    if (/E11000|duplicate key|bookingKey/i.test(rawMsg)) {
+      let guide = '该家庭在所选日期已有订单，请更换日期或联系家庭'
+      try {
+        const dupRes = await db.collection('orders')
+          .where({ bookingKey: (order as { bookingKey: string }).bookingKey })
+          .field({ status: true } as Record<string, true>)
+          .limit(1)
+          .get()
+        const dupStatus = dupRes.data && (dupRes.data as Array<{ status?: string }>)[0]?.status
+        if (dupStatus === 'pending_payment' || dupStatus === 'deposit_paid') {
+          guide = '您在该家庭同日期已有待支付订单，可在「我的订单」中继续完成支付'
+        }
+      } catch (_q) { /* 引导查询失败不影响主文案 */ }
+      throw err('BUSINESS_ERROR', guide, { hostId, startDate, endDate })
+    }
     // P1 修复（H2）：DUPLICATE_KEY 在已建 bookingKey 唯一索引时表示并发抢订
     //   返回更友好的"该档期已被预订"提示
     if (isBusinessError(e) && (e as { code: string }).code === 'DUPLICATE_KEY') {

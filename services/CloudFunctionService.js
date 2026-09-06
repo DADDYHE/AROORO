@@ -29,6 +29,9 @@ const { applyCloudThumbs: _applyCloudThumbs } = require('../utils/cloudThumb')
 
 function _resolveErrorMessage(result) {
   if (!result) {return null}
+  // 服务端明确给出的业务文案（如「该档期已被预订」「请输入正确的订单金额」）优先展示，
+  // 通用 type 映射（「数据处理失败」等）仅兜底服务端未给 message 的场景
+  if (result.message) {return null}
   const severity = ERROR_CODE_MAP[result.code]
   if (severity && ERROR_TYPE_TO_MESSAGE[severity]) {
     return ERROR_TYPE_TO_MESSAGE[severity]
