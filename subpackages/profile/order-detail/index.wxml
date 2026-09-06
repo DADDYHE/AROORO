@@ -128,9 +128,8 @@
             <text class="schedule-time" wx:if="{{order.endAt}}">{{order.endAt}} 离店</text>
           </view>
         </view>
-        <view class="schedule-meta" wx:if="{{order.billingLabel || order.chargeLines && order.chargeLines.length > 0}}">
-          <text class="schedule-meta-text" wx:if="{{order.billingLabel}}">计费 · {{order.billingLabel}}</text>
-          <text class="schedule-meta-text" wx:if="{{order.pricePerDay}}">¥{{order.pricePerDay}}/{{order.billingMode === 'hourly24' ? '天' : '晚'}}</text>
+        <view class="schedule-meta" wx:if="{{order.billingLabel && order.pricePerDay}}">
+          <text class="schedule-meta-text">计费 {{order.billingLabel}} ¥{{order.pricePerDay}}/{{order.billingMode === 'hourly24' ? '天' : '晚'}}</text>
         </view>
       </view>
     </view>

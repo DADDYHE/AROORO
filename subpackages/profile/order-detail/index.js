@@ -154,7 +154,7 @@ Page({
       // 卷宗头展示（2026-09-06）：短日期 MM.DD + 计费方式标签（JS 预计算，Skyline 合规）
       dateStartShort: this._shortDate(raw.startDate),
       dateEndShort: this._shortDate(raw.endDate),
-      billingLabel: raw.billingMode === 'hourly24' ? '24小时制' : (raw.billingMode ? '酒店式' : ''),
+      billingLabel: raw.billingMode === 'hourly24' ? '24小时制' : (raw.billingMode ? '酒店制' : ''),
       endDate: this._formatDate(raw.endDate),
       startAt: raw.startAt || '',
       endAt: raw.endAt || '',
