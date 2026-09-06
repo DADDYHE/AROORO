@@ -554,21 +554,21 @@ async function cancelBoardingOrders(result, boardingTimeout) {
         //   扫描时 status 已变 cancelled 而漏处理，库存/团名额永久丢失
         const expiredBoardingOrders = await fetchAllExpired('orders', {
             status: 'pending_payment',
-            // 2026-09-06：补 'paying'——拉起支付又放弃的单（paymentStatus=paying）此前永远扫不到，
-            //   会永久挂在待支付（今天联调实测：1 小时前的单仍待支付且可继续付款）
+            // 2026-09-06：'paying' 仅为存量兼容（新流程不再产生 paying，拉起支付不改状态）；
+            //   统一语义：unpaid = 一切未支付（含曾拉起支付又放弃的）
             paymentStatus: _.in(['unpaid', 'paying', null]),
             createdAt: _.lte(boardingTimeout),
             type: _.in(['boarding', null]),
-        }, { _id: true, outTradeNo: true, paymentStatus: true });
+        }, { _id: true, outTradeNo: true });
         for (const order of expiredBoardingOrders) {
             try {
-                // 2026-09-06：paying 单先关微信预付单再取消——close 失败说明用户已支付成功，
-                //   跳过取消等待 notify 回调置 paid，避免「取消后用户支付成功」竞态
-                const isPaying = order.paymentStatus === 'paying';
-                if (isPaying && order.outTradeNo) {
+                // 2026-09-06 统一顺序：先关微信预付单再取消——close 失败说明用户已支付成功，
+                //   跳过取消等待 notify 回调置 paid，避免「取消后用户支付成功」竞态。
+                //   （关单的用途是「终止预付单」，不是推断支付状态——支付事实只认 notify）
+                if (order.outTradeNo) {
                     const closed = await closeWechatOrder(order.outTradeNo);
                     if (!closed) {
-                        logger.info('cancelBoardingOrders.skip_paying_close_failed', { orderId: order._id, outTradeNo: order.outTradeNo });
+                        logger.info('cancelBoardingOrders.skip_close_failed_paid', { orderId: order._id, outTradeNo: order.outTradeNo });
                         result.closeOrderFailed++;
                         continue;
                     }
@@ -591,15 +591,6 @@ async function cancelBoardingOrders(result, boardingTimeout) {
                 if (!cancelRes.updated || cancelRes.updated === 0) {
                     logger.info('cancelBoardingOrders.skip_already_cancelled', { orderId: order._id });
                     continue;
-                }
-                if (order.outTradeNo && !isPaying) {
-                    const closed = await closeWechatOrder(order.outTradeNo);
-                    if (closed) {
-                        result.closedWechatOrders++;
-                    }
-                    else {
-                        result.closeOrderFailed++;
-                    }
                 }
                 await unlockOrderCoupons(order._id, order.couponId);
                 result.cancelledBoardingOrders++;

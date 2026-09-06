@@ -286,8 +286,27 @@ export const createPayment: WrappedHandler<SuccessResult<CreatePaymentResult>> =
 
   // Sprint 25: 旧预付单回收（如果订单有 outTradeNo 且 paymentStatus=paying，先关掉）
   // P0-A: activity 中间态为 'pending'，同样纳入旧单回收
-  const oldPayingStatus = orderType === 'activity' ? 'pending' : 'paying'
-  if (orderData.outTradeNo && orderData.paymentStatus === oldPayingStatus) {
+  // 2026-09-06 语义重构：订单不再有 'paying' 中间态（拉起支付不改变订单状态，
+  //   支付成功与否以 notify 为唯一事实源）——只要订单留有 outTradeNo 即回收旧预付单，
+  //   确保同一订单同一时刻至多一张有效微信预付单，杜绝「多张单先后都被支付」
+  if (orderType === 'activity') {
+    if (orderData.outTradeNo && orderData.paymentStatus === 'pending') {
+      try {
+        await closePaymentInternal({ outTradeNo: orderData.outTradeNo }, context, auth, config)
+        logger.info('createPayment: 关闭旧支付单', { outTradeNo: orderData.outTradeNo })
+      } catch (closeErr) {
+        logger.warn('createPayment: 关闭旧支付单失败', { msg: (closeErr as Error)?.message })
+        try {
+          await recordAlert(
+            'warning',
+            'createPayment.close_old_prepay.failed',
+            '创建新支付单前关闭旧预付单失败，旧单可能泄漏',
+            { orderId: orderId as string, outTradeNo: orderData.outTradeNo, error: (closeErr as Error)?.message },
+          )
+        } catch (_) { /* best-effort */ }
+      }
+    }
+  } else if (orderData.outTradeNo) {
     try {
       await closePaymentInternal({ outTradeNo: orderData.outTradeNo }, context, auth, config)
       logger.info('createPayment: 关闭旧支付单', { outTradeNo: orderData.outTradeNo })
@@ -407,29 +426,31 @@ export const createPayment: WrappedHandler<SuccessResult<CreatePaymentResult>> =
   }
 
   const orderCollection = ORDER_TYPE_COLLECTION[orderType]
-  // H5: 条件更新——仅当 paymentStatus 仍为 unpaid/paying 时才推进到 paying
+  // H5: 条件更新——仅当 paymentStatus 仍为 unpaid 时才写入新 outTradeNo
   //   原 `doc(orderId).update(...)` 无条件写入，并发场景下：
-  //   - 已被并发流程置为 paid 的订单会被覆盖为 paying（资金与状态不一致）
+  //   - 已被并发流程置为 paid 的订单会被覆盖（资金与状态不一致）
   //   - 同一订单两次 createPayment 同时进行，outTradeNo 被后写入覆盖，旧 prepay 单泄漏
-  //   新逻辑：where paymentStatus in ['unpaid','paying'] 条件更新，
   //   更新失败说明订单已被其他流程推进，需回滚微信侧预付单
   // P0-A 修复：activity 报名单支付中间态为 'pending'（activityService 写入），
   //   且历史单可能字段缺失，故 activity 条件放宽到 in(['unpaid','pending',null])、
   //   写回 'pending'（保持活动口径统一，orderTimeoutService 超时扫描 in(['unpaid','pending',null]) 才能命中）
   // 2026-09-06 付款双模式：deposit 订单尾款发起时 paymentStatus='partial_paid'，
   //   需纳入条件更新白名单（仅 deposit_paid 状态的 deposit 单放行，防止其他场景越态）
+  // 2026-09-06 语义重构：**订单不再有 'paying' 中间态**——拉起支付不改变 paymentStatus
+  //   （保持 unpaid），支付成功与否以 notify 为唯一事实源。outTradeNo 仍写入（旧单回收/对账）。
+  //   存量 paying 单由 orderTimeoutService 扫描条件兼容清理。
   const isDepositTail = orderType === 'order'
     && (orderData as unknown as Record<string, unknown>).payType === 'deposit'
     && (orderData as unknown as Record<string, unknown>).status === 'deposit_paid'
   const allowedPaymentStatus = orderType === 'activity'
     ? ['unpaid', 'paying', 'pending', null]
-    : (isDepositTail ? ['unpaid', 'paying', 'partial_paid'] : ['unpaid', 'paying'])
-  const targetPaymentStatus = orderType === 'activity' ? 'pending' : 'paying'
+    : (isDepositTail ? ['unpaid', 'partial_paid'] : ['unpaid'])
   const updateRes = await db.collection(orderCollection)
     .where({ _id: orderId as string, paymentStatus: _.in(allowedPaymentStatus) })
     .update({ data: {
       outTradeNo,
-      paymentStatus: targetPaymentStatus,
+      // activity 保留 'pending' 中间态口径；其余类型不再推进 paymentStatus（保持 unpaid）
+      ...(orderType === 'activity' ? { paymentStatus: 'pending' } : {}),
       // 用户支付选择写入订单，notify 据此分支（deposit → deposit_paid 中间态）
       ...(requestPayType ? { payType: requestPayType } : {}),
       updatedAt: db.serverDate(),
