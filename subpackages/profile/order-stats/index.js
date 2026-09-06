@@ -572,8 +572,6 @@ Page({
         this._calcStats()
         this._regroup()
         // 异步从云端再拉一次最新状态，保证强一致
-        // （同步更新节流时间戳，避免紧随其后的一次 onShow 被节流窗口挡住）
-        this._lastLoadedAt = Date.now()
         this._loadOrders().catch(() => {/* 静默降级 */})
       } else {
         this.errorDynamic((res && res.message) || '', 'CANCEL_FAILED')
@@ -583,9 +581,5 @@ Page({
     }
   },
 
-  onPullDownRefresh() {
-    // 手动下拉刷新不受 30s 节流限制，始终立即生效
-    this._lastLoadedAt = Date.now()
-    this._loadOrders().then(() => wx.stopPullDownRefresh()).catch(() => wx.stopPullDownRefresh())
-  },
+
 })
