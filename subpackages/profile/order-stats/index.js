@@ -216,16 +216,20 @@ Page({
     this.setData({ orderSections: sections, orders: this._allOrders || [] })
   },
 
-  /** 点击节头展开/收起该节 */
+  /** 点击节头：手风琴互斥——目标节展开，其余自动收起（点已展开节则全收起） */
   onToggleSection(e) {
     const key = e.currentTarget && e.currentTarget.dataset.key
     if (!key) {return}
     this._sectionExpanded = this._sectionExpanded || {}
-    this._sectionExpanded[key] = !this._sectionExpanded[key]
-    const idx = (this.data.orderSections || []).findIndex(s => s.key === key)
-    if (idx > -1) {
-      this.setData({ ['orderSections[' + idx + '].expanded']: this._sectionExpanded[key] })
-    }
+    const wasOpen = !!this._sectionExpanded[key]
+    const sections = this.data.orderSections || []
+    const updates = {}
+    sections.forEach((s, i) => {
+      const open = (s.key === key) ? !wasOpen : false
+      this._sectionExpanded[s.key] = open
+      updates['orderSections[' + i + '].expanded'] = open
+    })
+    this.setData(updates)
   },
 
   _normalizeOrder(raw) {

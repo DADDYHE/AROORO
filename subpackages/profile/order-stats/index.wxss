@@ -93,7 +93,6 @@
   background-color: var(--card-cream, #FBF9F4);
   border: 1rpx solid var(--hairline);
   border-radius: 16rpx;
-  transition: background-color 160ms ease, opacity 160ms ease;
 }
 
 .section-head.pressed {
