@@ -1209,7 +1209,6 @@ async function processFailedOperations() {
  */
 async function recycleCancelledPrepayOrders(result) {
     try {
-        const cutoff = new Date(Date.now() - 48 * 3600 * 1000);
         // 预付单有效期 2h：取消超过 2h 的单关单无意义 → createdAt 窗口收窄（25h）
         const cancelled = await fetchAllExpired('orders', {
             status: 'cancelled',
