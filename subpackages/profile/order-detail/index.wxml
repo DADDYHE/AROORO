@@ -35,6 +35,13 @@
       pay-countdown="{{payCountdown}}"
     />
 
+    <!-- 取消订单：顶部入口（待支付/待补尾款时，底部为支付按钮区） -->
+    <view class="top-cancel-row" wx:if="{{order.status === 'pending_payment' || order.status === 'deposit_paid'}}">
+      <view class="top-cancel-btn" bindtap="onCancelOrder" hover-class="pressed" hover-stay-time="80">
+        <text>取消订单</text>
+      </view>
+    </view>
+
     <view class="section host-section">
       <view class="section-title">{{t.BIZ_BX1ZCE}}</view>
       <view class="host-row">
@@ -121,9 +128,13 @@
         <text class="info-label">优惠金额</text>
         <text class="info-value discount">-¥{{order.couponDiscount}}</text>
       </view>
-      <view class="info-row" wx:if="{{order.payType === 'deposit'}}">
-        <text class="info-label">付款方式</text>
-        <text class="info-value">预付定金 30%（定金不退）</text>
+      <view class="info-row" wx:if="{{order.status === 'pending_payment'}}">
+        <text class="info-label">定金金额（30%）</text>
+        <text class="info-value">¥{{depositAmount}}</text>
+      </view>
+      <view class="info-row" wx:if="{{order.status === 'pending_payment'}}">
+        <text class="info-label">　</text>
+        <text class="deposit-tip">定金支付后不退，剩余尾款 ¥{{remainAmountTip}} 需与家庭线下结算</text>
       </view>
       <view class="info-row" wx:if="{{order.payType === 'deposit' && order.paidAmount > 0}}">
         <text class="info-label">已付定金</text>
@@ -132,29 +143,6 @@
       <view class="info-row" wx:if="{{order.payType === 'deposit' && order.status === 'deposit_paid'}}">
         <text class="info-label">待补尾款</text>
         <text class="info-value">¥{{order.remainAmount}}</text>
-      </view>
-      <!-- 付款方式选择（2026-09-06 流程重构：支付决策在订单页；仅待支付且未付定金时可选） -->
-      <view class="info-row" wx:if="{{order.status === 'pending_payment' && order.payType !== 'deposit'}}" bindtap="onTogglePayTypePicker" hover-class="pressed" hover-stay-time="80">
-        <text class="info-label">付款方式</text>
-        <view class="info-value-row">
-          <text class="info-value">{{ payType === 'deposit' ? '预付定金 30%（¥' + payAmount + '）' : '支付全款' }}</text>
-          <view class="copy-btn" hover-class="pressed" hover-stay-time="80"><text>切换</text></view>
-        </view>
-      </view>
-      <view class="info-row" wx:if="{{order.status === 'pending_payment' && showPayTypePicker}}">
-        <view class="pay-type-list">
-          <view class="pay-type-item" data-key="full" bindtap="onPayTypeSelect" hover-class="pressed" hover-stay-time="80">
-            <text class="pay-type-name">支付全款</text>
-            <text class="pay-type-amt">¥{{order.totalPrice}}</text>
-          </view>
-          <view class="pay-type-item" data-key="deposit" bindtap="onPayTypeSelect" hover-class="pressed" hover-stay-time="80">
-            <view class="pay-type-name-group">
-              <text class="pay-type-name">预付定金 30%</text>
-              <text class="pay-type-tip">定金不退 · 尾款 ¥{{order.totalPrice - payAmount}} 与家庭线下结算</text>
-            </view>
-            <text class="pay-type-amt">¥{{payAmount}}</text>
-          </view>
-        </view>
       </view>
       <view class="info-row total-row">
         <text class="info-label">订单总额</text>

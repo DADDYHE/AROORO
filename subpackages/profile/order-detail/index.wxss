@@ -439,3 +439,30 @@
   font-weight: 500;
   color: var(--text-primary);
 }
+
+/* ========== 顶部取消入口 + 定金提示（2026-09-06） ========== */
+.top-cancel-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12rpx var(--page-padding, 48rpx) 0;
+}
+
+.top-cancel-btn {
+  padding: 10rpx 28rpx;
+  border: 1rpx solid var(--border-color, #E2DED3);
+  border-radius: 999rpx;
+  background-color: var(--card-color);
+}
+
+.top-cancel-btn text {
+  font-size: 24rpx;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.deposit-tip {
+  font-size: 20rpx;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}

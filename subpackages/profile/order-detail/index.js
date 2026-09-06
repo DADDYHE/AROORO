@@ -39,13 +39,13 @@ Page({
   _buildActions(status) {
     switch (status) {
       case 'pending_payment':
+        // 2026-09-06：定金/全款并排按钮（取消订单移至顶部状态区）
         return [
-          { key: 'cancel', text: '取消订单', type: 'secondary' },
-          { key: 'pay', text: '去付款', type: 'primary' },
+          { key: 'payDeposit', text: '支付定金', type: 'secondary' },
+          { key: 'payFull', text: '支付全款', type: 'primary' },
         ]
       case 'deposit_paid':
         return [
-          { key: 'share', text: '分享订单', type: 'secondary' },
           { key: 'pay', text: '补尾款', type: 'primary' },
         ]
       case 'paid':
@@ -63,7 +63,9 @@ Page({
   onAction(e) {
     const { action } = e.detail || {}
     if (action === 'cancel') this.onCancelOrder()
-    else if (action === 'pay') this.onGoPay()
+    else if (action === 'payDeposit') this.onGoPay('deposit')
+    else if (action === 'payFull') this.onGoPay('full')
+    else if (action === 'pay') this.onGoPay('tail')
     else if (action === 'contact') this.onContactHost()
     else if (action === 'share') this.openShareSheet()
   },
@@ -101,8 +103,9 @@ Page({
       if (res && res.code === 0 && res.data) {
         const order = this._normalizeOrder(res.data)
         this.setData({ order, actions: this._buildActions(order.status), isLoading: false })
-        // 付款方式默认全款（用户可在本页切换定金 30%）
-        this.setData({ payType: 'full', payAmount: order.totalPrice || 0, showPayTypePicker: false })
+        // 定金 = 全款 30%（四舍五入 2 位，与服务端同口径）
+        const dep = Math.round((order.totalPrice || 0) * 0.3 * 100) / 100
+        this.setData({ depositAmount: dep, remainAmountTip: Math.round(((order.totalPrice || 0) - dep) * 100) / 100 })
         this._loadedOnce = true
         // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
         if (order.status === 'pending_payment') {
@@ -240,20 +243,21 @@ Page({
     wx.makePhoneCall({ phoneNumber: phone })
   },
 
-  async onGoPay() {
+  /**
+   * 发起支付（2026-09-06）：底部按钮直接决定支付类型
+   *   - 'deposit'：预付定金 30%（pending_payment）
+   *   - 'full'：支付全款（pending_payment）
+   *   - 'tail'：补尾款（deposit_paid，应付 = totalPrice - 已付定金）
+   */
+  async onGoPay(payType) {
     const order = this.data.order
     if (!order || !order._id) {return}
 
-    // 付款双模式（2026-09-06 流程重构）：支付决策在订单页
-    //   - deposit_paid：固定为尾款（totalPrice - 已付定金）
-    //   - pending_payment：用户本页选择 全款 / 预付定金 30%（data.payType）
     const isTail = order.status === 'deposit_paid'
-    const payType = isTail ? 'tail' : (this.data.payType || 'full')
+    const pt = isTail ? 'tail' : (payType || 'full')
     const payAmount = isTail
       ? order.remainAmount
-      : (payType === 'deposit'
-        ? Math.round((order.totalPrice || 0) * 0.3 * 100) / 100
-        : order.totalPrice)
+      : (pt === 'deposit' ? this.data.depositAmount : order.totalPrice)
 
     if (!(payAmount > 0)) {
       this.error(() => '订单金额异常，请联系客服')
@@ -263,19 +267,18 @@ Page({
     const desc = isTail
       ? `寄养尾款-${order.hostName || ''}-${order.petNames || ''}`
       : order.hostName
-        ? `寄养-${order.hostName}-${order.petNames}-${order.days || 0}天${payType === 'deposit' ? '-定金' : ''}`
+        ? `寄养-${order.hostName}-${order.petNames}-${order.days || 0}天${pt === 'deposit' ? '-定金' : ''}`
         : `寄养订单-${order.petNames}`
 
     try {
       await PaymentService.pay({
         type: 'order',
         orderId: order._id,
-        payType: isTail ? undefined : payType,
+        payType: isTail ? undefined : pt,
         amount: Math.round((payAmount || 0) * 100),
         description: desc.substring(0, 127),
       })
       this.toast(() => isTail ? '尾款支付成功' : '支付成功')
-      this.setData({ showPayTypePicker: false })
       this._loadOrder({ orderId: order._id })
     } catch (err) {
       if (err.isCancel) {
@@ -286,29 +289,6 @@ Page({
         this.errorDynamic(err.message, 'PAYMENT_FAILED')
       }
     }
-  },
-
-  /** 付款方式选择（订单页内切换：全款 / 预付定金 30%，定金不退） */
-  onTogglePayTypePicker() {
-    this.setData({ showPayTypePicker: !this.data.showPayTypePicker })
-  },
-
-  onPayTypeSelect(e) {
-    const key = e.currentTarget && e.currentTarget.dataset.key
-    if (key !== 'full' && key !== 'deposit') {return}
-    this._batchSetPayType(key)
-  },
-
-  _batchSetPayType(key) {
-    const order = this.data.order || {}
-    const total = Number(order.totalPrice) || 0
-    const deposit = Math.round(total * 0.3 * 100) / 100
-    this.setData({
-      payType: key,
-      payAmount: key === 'deposit' ? deposit : total,
-      remainAmount: key === 'deposit' ? Math.round((total - deposit) * 100) / 100 : 0,
-      showPayTypePicker: false,
-    })
   },
 
   onCancelOrder() {
