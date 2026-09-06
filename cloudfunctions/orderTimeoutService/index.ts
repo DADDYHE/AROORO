@@ -257,7 +257,8 @@ const { handleSuccess, handleError, ERROR_CODES } = require('./common/utils')
 // M2: 集成告警模块，关键失败时通过 recordAlert 通知运维
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { recordAlert } = require('./common/alert')
-const { releasedBookingKey } = require('./common/booking-key')
+const { releasedBookingKey } = require('./common/booking-key');
+const https = require('https')
 // L4: 静态 require 提升到顶部，替代 generateAuthorization 内的动态 require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const crypto = require('crypto') as typeof import('crypto')
@@ -451,37 +452,41 @@ export async function closeWechatOrder(outTradeNo: string): Promise<boolean> {
     WECHAT_PAY_CONFIG.mchId, WECHAT_PAY_CONFIG.serialNo, privateKey
   )
 
-  // M4: 改用 fetch async/await 替代 callback 风格的 https.request
-  //   - 与项目规范一致（async/await，禁用 callback 包装）
-  //   - 错误处理更完整（旧实现未处理 res.on('error')）
-  //   - 代码量减半，可读性提升
+  // 2026-09-06 修复：原用全局 fetch——orderTimeoutService 运行时（Nodejs16.13）无全局 fetch，
+  //   closeWechatOrder 恒抛 'fetch is not defined' → 关单恒失败 → 超时单永远无法取消（skip_close_failed_paid）。
+  //   改用 node:https 原生实现（任何 runtime 可用），保留 3s 请求级超时与单笔失败不阻塞整轮的语义。
   try {
-    const url = `${ENDPOINTS.WECHAT_PAY_API_BASE}${path}`
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': authorization,
-      },
-      body,
-      // F18: 请求级超时。微信接口卡顿时 fetch 会无限挂起，占用整轮函数超时预算并阻塞同轮其余订单关闭。
-      // 设 3000ms 超时后，超时由下方 catch 捕获并按单笔返回 false，不抛、不阻塞整轮。
-      signal: AbortSignal.timeout(3000),
+    const url = new URL(`${ENDPOINTS.WECHAT_PAY_API_BASE}${path}`)
+    const res = await new Promise<{ statusCode: number, body: string }>((resolve, reject) => {
+      const req = https.request({
+        hostname: url.hostname,
+        path: url.pathname + url.search,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': authorization,
+        },
+        timeout: 3000,
+      }, (r: { statusCode?: number, on: (ev: string, cb: (c?: unknown) => void) => void }) => {
+        const chunks: Buffer[] = []
+        r.on('data', (c?: unknown) => { chunks.push(c as Buffer) })
+        r.on('end', () => resolve({ statusCode: r.statusCode || 0, body: Buffer.concat(chunks).toString('utf8') }))
+      })
+      req.on('timeout', () => { req.destroy(new Error('request timeout')) })
+      req.on('error', reject)
+      req.write(body)
+      req.end()
     })
-    if (res.ok) {
+    if (res.statusCode >= 200 && res.statusCode < 300) {
       logger.info('closeWechatOrder.success', { outTradeNo })
       return true
     }
-    const data = await res.text().catch(() => '')
-    logger.warn('closeWechatOrder.fail', { outTradeNo, statusCode: res.status, data })
+    logger.warn('closeWechatOrder.fail', { outTradeNo, statusCode: res.statusCode, data: res.body })
     return false
   } catch (e) {
     const err = e as Error
-    const cause = (err as { cause?: Error }).cause
-    const isAbort = err.name === 'AbortError' || err.name === 'TimeoutError' ||
-      (cause?.name === 'AbortError' || cause?.name === 'TimeoutError')
-    if (isAbort) {
+    if (err.message === 'request timeout') {
       logger.warn('closeWechatOrder.timeout', { outTradeNo, msg: err.message })
     } else {
       logger.warn('closeWechatOrder.exception', { outTradeNo, msg: err.message })
