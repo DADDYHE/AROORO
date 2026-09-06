@@ -357,7 +357,7 @@
    ================================================================ */
 /* 展开节头：深绿渐变底 + cream 文字（全页视觉锚点，「展开 = 激活」） */
 .section-head--expanded {
-  background: var(--lux-green-grad);
+  background: var(--lux-green-grad-rich);
   border-color: transparent;
 }
 
@@ -388,7 +388,8 @@
 
 /* 总消费金额：深绿财务强调 */
 .ledger-num--green {
-  color: var(--primary-deep, #0F2410);
+  /* 原 primary-deep #0F2410 过近炭墨看不出绿——改中深绿（暖石底对比约 7:1，AA ✓） */
+  color: var(--lux-green-700, #2D4A2D);
 }
 
 /* 进行中组缩略图：深绿边框（活跃订单标识） */

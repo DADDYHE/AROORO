@@ -206,12 +206,14 @@ Page({
       const sec = sections.find(s => s.key === g)
       if (sec) {sec.list.push(item)}
     }
-    // 折叠状态跨刷新保留（首次：进行中展开，其余收起）
+    // 折叠状态跨刷新保留；首次进入：按节序（进行中→已完成→已关闭）第一个非空节展开，其余收起
     this._sectionExpanded = this._sectionExpanded || {}
+    if (!this._sectionExpanded._initialized) {
+      this._sectionExpanded._initialized = true
+      const firstNonEmpty = sections.find(s => s.list.length > 0)
+      sections.forEach(s => { this._sectionExpanded[s.key] = firstNonEmpty ? s.key === firstNonEmpty.key : false })
+    }
     sections.forEach(s => {
-      if (!(s.key in this._sectionExpanded)) {
-        this._sectionExpanded[s.key] = s.key === 'processing'
-      }
       s.expanded = !!this._sectionExpanded[s.key]
     })
     this.setData({ orderSections: sections, orders: this._allOrders || [] })
