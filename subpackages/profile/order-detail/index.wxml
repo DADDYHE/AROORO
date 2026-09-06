@@ -28,17 +28,21 @@
   </view>
 
   <block wx:elif="{{order}}">
-    <!-- 状态横幅（组件保留） -->
-    <order-status-banner
-      status="{{order.status}}"
-      status-text="{{order.statusText}}"
-      status-desc="{{order.statusDesc}}"
-      pay-countdown="{{payCountdown}}"
-    />
-
-    <!-- 取消订单：顶部入口（待支付/待补尾款时，底部为支付按钮区） -->
-    <view class="top-cancel-row" wx:if="{{order.status === 'pending_payment' || order.status === 'deposit_paid'}}">
-      <view class="top-cancel-btn" bindtap="onCancelOrder" hover-class="pressed" hover-stay-time="80">
+    <!-- 状态横幅（组件保留）+ 取消订单叠放横幅内右上（与状态文字同行） -->
+    <view class="status-wrap">
+      <order-status-banner
+        status="{{order.status}}"
+        status-text="{{order.statusText}}"
+        status-desc="{{order.statusDesc}}"
+        pay-countdown="{{payCountdown}}"
+      />
+      <view
+        wx:if="{{order.status === 'pending_payment' || order.status === 'deposit_paid'}}"
+        class="top-cancel-btn {{order.status === 'pending_payment' ? 'top-cancel-btn--dark' : 'top-cancel-btn--light'}}"
+        bindtap="onCancelOrder"
+        hover-class="pressed"
+        hover-stay-time="80"
+      >
         <text>取消订单</text>
       </view>
     </view>

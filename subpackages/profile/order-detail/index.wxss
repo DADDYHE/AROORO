@@ -89,25 +89,45 @@
 }
 
 /* ================================================================
-   顶部取消入口（状态横幅下右对齐胶囊）
+   取消订单：叠放状态横幅内右上（与状态文字同行）
+   底色随状态不同：金底（待支付）用炭墨，钢蓝底（待补尾款）用白
    ================================================================ */
-.top-cancel-row {
-  display: flex;
-  justify-content: flex-end;
-  padding: 16rpx var(--page-padding, 48rpx) 0;
+.status-wrap {
+  position: relative;
 }
 
 .top-cancel-btn {
-  padding: 10rpx 28rpx;
-  border: 1rpx solid var(--border-color, #E2DED3);
+  position: absolute;
+  top: 46rpx;
+  right: var(--page-padding, 48rpx);
+  padding: 6rpx 22rpx;
   border-radius: 999rpx;
-  background-color: var(--card-color);
+  z-index: 2;
 }
 
 .top-cancel-btn text {
   font-size: 24rpx;
   letter-spacing: 0.06em;
-  color: var(--text-secondary);
+}
+
+/* 金底：炭墨描边 + 炭墨字（对金底 5.27:1） */
+.top-cancel-btn--dark {
+  border: 1rpx solid rgba(26, 26, 23, 0.4);
+  background: transparent;
+}
+
+.top-cancel-btn--dark text {
+  color: #1A1A17;
+}
+
+/* 钢蓝底：白描边 + 白字（对钢蓝 4.56:1） */
+.top-cancel-btn--light {
+  border: 1rpx solid rgba(247, 245, 239, 0.55);
+  background: transparent;
+}
+
+.top-cancel-btn--light text {
+  color: #F7F5EF;
 }
 
 /* ================================================================
