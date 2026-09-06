@@ -39,7 +39,7 @@
   <!-- ═══ 分节台账：进行中 / 已完成 / 已关闭 ═══ -->
   <block wx:if="{{orders.length > 0}}">
     <view class="order-section" wx:for="{{orderSections}}" wx:key="key" wx:for-item="section">
-      <view class="section-head {{section.expanded ? 'section-head--expanded' : ''}}" wx:if="{{section.list.length > 0}}" bindtap="onToggleSection" data-key="{{section.key}}" hover-class="pressed" hover-stay-time="80">
+      <view class="section-head {{section.expanded ? 'section-head--expanded' : ''}}" wx:if="{{section.list.length > 0}}" bindtap="onToggleSection" data-key="{{section.key}}">
         <text class="section-name">{{section.label}}</text>
         <text class="section-count">{{section.list.length}} 单</text>
         <view class="section-rule"></view>

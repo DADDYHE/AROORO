@@ -95,10 +95,7 @@
   border-radius: 16rpx;
 }
 
-.section-head.pressed {
-  background-color: var(--accent-soft, #F0E6D0);
-  opacity: 0.9;
-}
+
 
 .section-name {
   font-size: 30rpx;
@@ -381,10 +378,7 @@
   border-color: #F7F5EF;
 }
 
-/* 展开态按压：深一档绿（避免金底 pressed 规则闪色） */
-.section-head--expanded.pressed {
-  background: var(--primary-deep, #0F2410);
-}
+
 
 /* 总消费金额：深绿财务强调 */
 .ledger-num--green {
