@@ -112,12 +112,6 @@ Page({
           this._startPayCountdown(Number(order.timeoutAt))
         }
         this._loadedOnce = true
-        // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
-        if (order.status === 'pending_payment') {
-          this._startPayCountdown((order.createdAtTs || 0) + (order.timeoutMinutes || 30) * 60 * 1000)
-        } else {
-          this._stopPayCountdown()
-        }
       } else {
         this.setData({ isLoading: false })
         this.error('ORDER_NOT_FOUND')
