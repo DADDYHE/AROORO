@@ -110,6 +110,14 @@ Page({
         this._stopPayCountdown()
         if (order.status === 'pending_payment' && order.timeoutAt) {
           this._startPayCountdown(Number(order.timeoutAt))
+          // 页面级到期定时器：倒计时归零即主动触发服务端取消（秒级闭环，不等 cron）；
+          //   失败静默——cron 兜底，刷新后以服务端状态为准
+          if (this._expireTimer) { clearTimeout(this._expireTimer) }
+          this._expireTimer = setTimeout(() => {
+            OrderService.cancelOrder({ orderId: order._id, cancelReason: '超时未支付' })
+              .catch(() => {})
+              .then(() => this._loadOrder({ orderId: order._id }))
+          }, Math.max(0, Number(order.timeoutAt) - Date.now()) + 1000)
         }
         this._loadedOnce = true
       } else {
@@ -343,6 +351,7 @@ Page({
   },
 
   onUnload() {
+    if (this._expireTimer) { clearTimeout(this._expireTimer); this._expireTimer = null }
     this._stopPayCountdown()
   },
 
