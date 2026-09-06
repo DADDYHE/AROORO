@@ -495,6 +495,50 @@ export async function closeWechatOrder(outTradeNo: string): Promise<boolean> {
   }
 }
 
+/**
+ * 查询微信支付订单状态（V3 查单接口）。
+ * 返回 trade_state：SUCCESS（已支付）/ CLOSED / NOTPAY / REFUND / UNKNOWN（查询失败）。
+ *
+ * 用途：closeWechatOrder 失败 ≠ 已支付——预付单可能已被此前流程回收（CLOSED），
+ * 再 close 一个已关闭的单会返回失败。此时必须查单区分「真已支付」与「单已关闭」。
+ */
+async function queryWechatOrderState(outTradeNo: string): Promise<string> {
+  const privateKey = normalizePrivateKey(WECHAT_PAY_CONFIG.privateKey)
+  if (!privateKey || !WECHAT_PAY_CONFIG.mchId || !WECHAT_PAY_CONFIG.serialNo) {
+    return 'UNKNOWN'
+  }
+  const path = `/v3/pay/transactions/out-trade-no/${outTradeNo}?mchid=${WECHAT_PAY_CONFIG.mchId}`
+  const authorization = generateAuthorization('GET', path, '', WECHAT_PAY_CONFIG.mchId, WECHAT_PAY_CONFIG.serialNo, privateKey)
+  try {
+    const url = new URL(`${ENDPOINTS.WECHAT_PAY_API_BASE}${path}`)
+    const res = await new Promise<{ statusCode: number, body: string }>((resolve, reject) => {
+      const req = https.request({
+        hostname: url.hostname,
+        path: url.pathname + url.search,
+        method: 'GET',
+        headers: { Accept: 'application/json', Authorization: authorization },
+        timeout: 3000,
+      }, (r: { statusCode?: number, on: (ev: string, cb: (c?: unknown) => void) => void }) => {
+        const chunks: Buffer[] = []
+        r.on('data', (c?: unknown) => { chunks.push(c as Buffer) })
+        r.on('end', () => resolve({ statusCode: r.statusCode || 0, body: Buffer.concat(chunks).toString('utf8') }))
+      })
+      req.on('timeout', () => { req.destroy(new Error('request timeout')) })
+      req.on('error', reject)
+      req.end()
+    })
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      const data = JSON.parse(res.body || '{}') as { trade_state?: string }
+      return String(data.trade_state || 'UNKNOWN')
+    }
+    if (res.statusCode === 404) { return 'NOTPAY' }
+    return 'UNKNOWN'
+  } catch {
+    return 'UNKNOWN'
+  }
+}
+
+
 // =====================================================================
 // 辅助函数 4：恢复商品库存
 // =====================================================================
@@ -854,11 +898,24 @@ async function cancelBoardingOrders(result: TimeoutResult, boardingTimeout: Date
         if (order.outTradeNo) {
           const closed = await closeWechatOrder(order.outTradeNo)
           if (!closed) {
-            logger.info('cancelBoardingOrders.skip_close_failed_paid', { orderId: order._id, outTradeNo: order.outTradeNo })
-            result.closeOrderFailed++
-            continue
+            // 2026-09-06 修复：close 失败 ≠ 已支付——预付单可能已被此前流程回收（CLOSED），
+            // 再 close 一个已关闭的单会返回失败。查单区分：「SUCCESS」才跳过取消（真已支付）；
+            // CLOSED/NOTPAY 继续取消；UNKNOWN（网络）保守跳过本轮，下轮重试。
+            const tradeState = await queryWechatOrderState(order.outTradeNo)
+            if (tradeState === 'SUCCESS') {
+              logger.info('cancelBoardingOrders.skip_paid_confirmed', { orderId: order._id, outTradeNo: order.outTradeNo })
+              result.closeOrderFailed++
+              continue
+            }
+            if (tradeState === 'UNKNOWN') {
+              logger.warn('cancelBoardingOrders.skip_query_unknown', { orderId: order._id, outTradeNo: order.outTradeNo })
+              result.closeOrderFailed++
+              continue
+            }
+            logger.info('cancelBoardingOrders.close_failed_but_unpaid', { orderId: order._id, outTradeNo: order.outTradeNo, tradeState })
+          } else {
+            result.closedWechatOrders++
           }
-          result.closedWechatOrders++
         }
         // H2: 使用 where().update() 加 status 条件实现幂等保护
         //   仅当 status 仍为 pending_payment 时才更新，避免 cron 重叠时重复取消
