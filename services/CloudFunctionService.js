@@ -371,7 +371,9 @@ class OrderService {
 
   /** 查询订单列表 */
   async getOrders(data = {}) {
-    return this.cloud.get('orderService', { action: 'getOrders', ...data })
+    // 2026-09-06：订单列表禁用请求缓存——改价/支付后金额可能已变，
+    //   5 分钟缓存会让用户看到旧价格（get 默认 useCache:true 5 分钟）
+    return this.cloud.post('orderService', { action: 'getOrders', ...data })
   }
 
   /** 查询单个订单详情（支持 orderId 或 outTradeNo） */
