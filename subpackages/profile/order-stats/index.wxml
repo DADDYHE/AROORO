@@ -43,7 +43,7 @@
         <text class="section-name">{{section.label}}</text>
         <text class="section-count">{{section.list.length}} 单</text>
         <view class="section-rule"></view>
-        <view class="section-chevron {{section.expanded ? '' : 'section-chevron--collapsed'}}"></view>
+                <view class="section-chevron-ring"><view class="section-chevron {{section.expanded ? '' : 'section-chevron--collapsed'}}"></view></view>
       </view>
       <view class="section-body" wx:if="{{section.expanded}}">
       <view

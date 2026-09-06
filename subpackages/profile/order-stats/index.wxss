@@ -88,7 +88,17 @@
   display: flex;
   align-items: center;
   gap: 16rpx;
-  padding: 40rpx 0 20rpx;
+  margin: 28rpx 0 20rpx;
+  padding: 26rpx 28rpx;
+  background-color: var(--card-cream, #FBF9F4);
+  border: 1rpx solid var(--hairline);
+  border-radius: 16rpx;
+  transition: background-color 160ms ease, opacity 160ms ease;
+}
+
+.section-head.pressed {
+  background-color: var(--accent-soft, #F0E6D0);
+  opacity: 0.9;
 }
 
 .section-name {
@@ -111,20 +121,29 @@
 }
 
 /* 展开/收起箭头（css chevron，展开朝下、收起朝右） */
+.section-chevron-ring {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 1rpx solid var(--lux-hairline-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .section-chevron {
-  width: 14rpx;
-  height: 14rpx;
+  width: 12rpx;
+  height: 12rpx;
   border-right: 2rpx solid var(--text-tertiary);
   border-bottom: 2rpx solid var(--text-tertiary);
   transform: rotate(45deg);
   transition: transform 200ms ease;
   flex-shrink: 0;
-  margin-top: -6rpx;
 }
 
 .section-chevron--collapsed {
   transform: rotate(-45deg);
-  margin-top: 0;
 }
 
 .ledger-row {
