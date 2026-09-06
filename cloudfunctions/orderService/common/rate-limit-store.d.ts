@@ -71,13 +71,20 @@ export interface GlobalRateLimitStore {
     collectionName?: string;
 }
 /**
+ * 清空实例内存缓存（仅测试/调试用）
+ *
+ * CloudBase 生产环境每个函数实例天然隔离，实例生命周期内该缓存随实例回收而释放，
+ * 无需手动调用。测试场景因同一进程内多次 require 复用同一模块，需在用例间 reset，
+ * 避免窗口计数跨用例污染（等价 risk-rate-limit 的 _resetStore）。
+ */
+export declare function resetRateLimitCache(): void;
+/**
  * 生成复合 _id
  * 格式：scope前缀:userId|type[|targetId]
  *   g:userId|type           → 全局维度
  *   t:userId|type|targetId  → 目标维度
  */
 export declare function buildKey(input: GlobalRateLimitInput, scope: 'global' | 'target'): string;
-export declare function resetRateLimitCache(): void;
 /**
  * 原子地消费一次配额（同时更新 global + target 两个 key）
  *
@@ -120,5 +127,6 @@ declare const _default: {
     cleanupExpiredRateLimits: typeof cleanupExpiredRateLimits;
     getGlobalRateLimitStats: typeof getGlobalRateLimitStats;
     buildKey: typeof buildKey;
+    resetRateLimitCache: typeof resetRateLimitCache;
 };
 export default _default;

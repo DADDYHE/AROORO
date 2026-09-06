@@ -1,5 +1,6 @@
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const { applyCloudThumbs } = require('../../utils/cloudThumb')
+const { formatRegion } = require('../../utils/addressUtils')
 
 const HOT_KEYWORDS = ['猫粮', '狗粮', '寄养', '洗澡', '逗猫棒', '冻干']
 
@@ -187,7 +188,8 @@ Page({
         title = item.hostName || ''
         coverUrl = item.avatarUrl || ''
         priceText = item.pricePerDay != null ? `¥${item.pricePerDay}/天` : ''
-        subtitle = item.address || ''
+        // 用户端展示口径：仅到区县级，不暴露详细地址（原实现直接回显完整 address，属隐私泄露）
+        subtitle = formatRegion(item)
         break
     }
 

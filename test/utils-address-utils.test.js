@@ -45,4 +45,30 @@ describe('utils/addressUtils', () => {
       expect(extractCityAndDistrict('北京路与上海路交叉口')).toBe('北京')
     })
   })
+
+  describe('formatRegion（用户端展示口径：仅到区县级）', () => {
+    const { formatRegion } = require('../utils/addressUtils')
+
+    test('host 为空应返回空字符串', () => {
+      expect(formatRegion(null)).toBe('')
+      expect(formatRegion(undefined)).toBe('')
+      expect(formatRegion({})).toBe('')
+    })
+
+    test('优先使用结构化 addressPublic', () => {
+      expect(formatRegion({
+        addressPublic: '四川省成都市高新区',
+        address: '四川省成都市高新区天府三街99号2栋1单元',
+      })).toBe('四川省成都市高新区')
+    })
+
+    test('存量档案无 addressPublic 时 fallback 到正则提取', () => {
+      expect(formatRegion({ address: '上海市浦东新区张江路100号' })).toBe('上海·浦东新区')
+    })
+
+    test('两个来源都不可用时返回空串，绝不泄露详细地址', () => {
+      // extractCityAndDistrict 对无法识别的地址会原样返回完整串（含门牌号），formatRegion 必须拦住这一层
+      expect(formatRegion({ address: '某某街道123号2栋1单元' })).toBe('')
+    })
+  })
 })

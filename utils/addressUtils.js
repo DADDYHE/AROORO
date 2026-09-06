@@ -87,6 +87,27 @@ function extractCityAndDistrict(address) {
   return address
 }
 
+/**
+ * 寄养家庭地址的展示口径（用户端）：
+ *  1. 优先用结构化 addressPublic（省市区拼接，后端白名单字段，仅到区县）
+ *  2. 存量档案无该字段时，fallback 到正则提取（extractCityAndDistrict）
+ *  3. 都失败则返回空串 —— 宁可少显示，也不能把详细地址/门牌号漏给用户端
+ *
+ * @param {object} host 寄养家庭档案（hostProfiles 文档或其投影）
+ * @returns {string} 「省市区」展示文本，仅到区县级
+ */
+function formatRegion(host) {
+  if (!host) { return '' }
+  if (host.addressPublic) { return host.addressPublic }
+  if (host.address) {
+    const region = extractCityAndDistrict(host.address)
+    // 提取失败时 extractCityAndDistrict 会原样返回完整地址（含门牌号）—— 必须拦下，不能透给用户端
+    return region === host.address ? '' : region
+  }
+  return ''
+}
+
 module.exports = {
   extractCityAndDistrict,
+  formatRegion,
 }

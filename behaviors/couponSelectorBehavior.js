@@ -119,9 +119,13 @@ const couponSelectorBehavior = Behavior({
      * @param {Function} callback - 更新完成后的回调
      */
     _batchUpdate(data, callback) {
-      if (this.setData) {
-        this.setData(data, callback)
+      if (!this.setData) {return}
+      // 空更新直接回调：避免无意义 setData，同时保证 callback 必然触发
+      if (!data || Object.keys(data).length === 0) {
+        if (callback) {callback()}
+        return
       }
+      this.setData(data, callback)
     },
   },
 })

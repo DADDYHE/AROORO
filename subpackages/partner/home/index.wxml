@@ -36,8 +36,9 @@
         </view>
         <view class="brand-meta">
           <view class="brand-meta-line"></view>
-          <text class="brand-subtitle" wx:if="{{isPartner}}">{{permissionLabels.join(' · ')}}</text>
-          <text class="brand-subtitle" wx:else>合作伙伴专属</text>
+          <!-- Skyline：绑定表达式禁方法调用。permissionLabels 无数据源（getMyPermissions 只回 isPartner），
+               死绑定 .join() 在 isPartner 时必炸，改为静态文案；要按权限出标签需后端回传 + JS 预拼字符串 -->
+          <text class="brand-subtitle">合作伙伴专属</text>
         </view>
       </view>
     </view>

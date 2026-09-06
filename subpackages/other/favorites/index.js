@@ -2,7 +2,7 @@ const __i18n = require('../../../utils/i18n.js')
 const __pageI18n = require('../../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { FavoriteService, HostService } = require('../../../services/CloudFunctionService')
-const { extractCityAndDistrict } = require('../../../utils/addressUtils')
+const { formatRegion } = require('../../../utils/addressUtils')
 const { authService } = require('../../../services/AuthService')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
@@ -98,7 +98,7 @@ Page({
               name: host.hostName || '未设置名称',
               avatarUrl: (host.avatarUrl && host.avatarUrl !== '/images/default-avatar.png' && host.avatarUrl !== '/images/default-pet-avatar.png') ? host.avatarUrl : '/images/default-avatar.svg',
               price: host.pricePerDay || 0,
-              location: extractCityAndDistrict(host.address),
+              location: formatRegion(host),
               tags: host.tags || ['有经验', '爱干净', '可上门'],
               isAcceptingOrders: host.isAcceptingOrders !== undefined ? host.isAcceptingOrders : true,
             })).filter(host => host.name && host.name !== '未设置名称')

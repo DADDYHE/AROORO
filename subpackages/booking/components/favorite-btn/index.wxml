@@ -9,7 +9,7 @@
 </view>
   </view>
   <view wx:else>
-    <image class="heart-icon" src="{{ isActive ? '/images/icons/heart-luxury-fill.svg' : '/images/icons/heart-luxury-line.svg' }}" mode="aspectFit"></image>
+    <image class="heart-icon" src="{{ isActive ? '/images/icons/heart-luxury-fill.svg' : (variant === 'onDark' ? '/images/icons/heart-luxury-line-cream.svg' : '/images/icons/heart-luxury-line.svg') }}" mode="aspectFit"></image>
     <text wx:if="{{ !isActive }}" class="plus-icon">+</text>
   </view>
 </view>

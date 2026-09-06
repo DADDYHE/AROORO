@@ -196,6 +196,12 @@ Page({
       return
     }
 
+    // 服务选择弹窗（喂养/遛狗/服务日期）仅上门服务流程需要；寄养流程直接勾选
+    if (this.data.fromPage !== 'service') {
+      this.selectPet(petId)
+      return
+    }
+
     this.setData({
       popupPet: pet,
       showSelectPopup: true,

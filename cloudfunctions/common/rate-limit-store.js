@@ -33,7 +33,7 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.common.json
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getGlobalRateLimitStats = exports.cleanupExpiredRateLimits = exports.peekGlobalRateLimit = exports.consumeGlobalRateLimit = exports.buildKey = void 0;
+exports.getGlobalRateLimitStats = exports.cleanupExpiredRateLimits = exports.peekGlobalRateLimit = exports.consumeGlobalRateLimit = exports.buildKey = exports.resetRateLimitCache = void 0;
 const errors_1 = require("./errors");
 // ===== 实例内存快照缓存 =====
 // 性能优化（性能版限流）：
@@ -41,12 +41,16 @@ const errors_1 = require("./errors");
 //   - 用实例内存缓存(rate_limits 记录的窗口快照)替代热路径上的 DB 读，
 //     同一实例在同一窗口内的连续调用直接命中内存，DB 读次数从每次 N 次降到
 //     仅(窗口首调 / 窗口滚动)各 1 次；写仍同步落库，保证跨实例计数可累计。
+//   - 敏感类型(payment/refund/withdrawal…)的风险闭合由上层 rlStore 异常 fail-closed
+//     保证，本层内存缓存不影响该语义（本层仅删读、不删写）。
 const _memCache = new Map();
 const MEM_MAX_ENTRIES = 2000;
 /** 命中且窗口未过期的内存快照；过期则删除并返回 null */
 function _memGet(key, now) {
     const rec = _memCache.get(key);
-    if (!rec) { return null; }
+    if (!rec) {
+        return null;
+    }
     if (now >= rec.windowStart + rec.windowMs) {
         _memCache.delete(key);
         return null;
@@ -69,12 +73,17 @@ function _memSet(key, count, windowStart, windowMs) {
     if (_memCache.size > MEM_MAX_ENTRIES) {
         const now = Date.now();
         for (const [k, r] of _memCache) {
-            if (now >= r.windowStart + r.windowMs) { _memCache.delete(k); }
+            if (now >= r.windowStart + r.windowMs) {
+                _memCache.delete(k);
+            }
         }
+        // 仍超限则清空最久未使用的一部分（按插入序，Map 迭代序即插入序）
         if (_memCache.size > MEM_MAX_ENTRIES) {
             let excess = _memCache.size - MEM_MAX_ENTRIES;
             for (const k of _memCache.keys()) {
-                if (excess <= 0) { break; }
+                if (excess <= 0) {
+                    break;
+                }
                 _memCache.delete(k);
                 excess--;
             }
@@ -82,7 +91,9 @@ function _memSet(key, count, windowStart, windowMs) {
     }
 }
 // ===== 工具函数 =====
-/** 清空实例内存缓存（仅测试/调试用）
+/**
+ * 清空实例内存缓存（仅测试/调试用）
+ *
  * CloudBase 生产环境每个函数实例天然隔离，实例生命周期内该缓存随实例回收而释放，
  * 无需手动调用。测试场景因同一进程内多次 require 复用同一模块，需在用例间 reset，
  * 避免窗口计数跨用例污染（等价 risk-rate-limit 的 _resetStore）。
@@ -91,7 +102,8 @@ function resetRateLimitCache() {
     _memCache.clear();
 }
 exports.resetRateLimitCache = resetRateLimitCache;
-/** 生成复合 _id
+/**
+ * 生成复合 _id
  * 格式：scope前缀:userId|type[|targetId]
  *   g:userId|type           → 全局维度
  *   t:userId|type|targetId  → 目标维度
