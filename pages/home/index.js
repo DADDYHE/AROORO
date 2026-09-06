@@ -21,6 +21,7 @@ Page({
   data: {
     t: pageI18n.buildTMap('zh-CN'),
     isLoggedIn: false,
+  pendingOrders: [],
     userInfo: null,
     locale: 'zh-CN',
     todayDate: '',
@@ -111,6 +112,10 @@ Page({
   onShow() {
     this._syncTabBar()
     this._refreshUserData()
+    // 待处理板块：每次 onShow 独立轻量拉取（绕 30s 节流）——支付/改价后返回首页必须立即可见最新状态
+    if (this.data.isLoggedIn || (app.globalData && app.globalData.isLoggedIn)) {
+      this._loadPendingOrders()
+    }
     // 性能优化（2026-09-01）：30s 节流——tab 切回时不重复全量云调用
     const now = Date.now()
     if (this._lastInitAt && now - this._lastInitAt < 30000) { return }
@@ -130,6 +135,7 @@ Page({
   // BFF 失败时降级为逐板块单独加载（保持可用性）。
   async _loadHomeFeed(forceRefresh) {
     const { CloudFunctionService } = require('../../services/CloudFunctionService')
+const { orderManager } = require('../../services/OrderManager')
     const isLoggedIn = !!(app.globalData && app.globalData.isLoggedIn)
     try {
       const result = await CloudFunctionService.call('utilityService', {
@@ -161,6 +167,48 @@ Page({
     }
   },
 
+  /**
+   * 待处理订单（2026-09-06）：待支付 + 待补尾款，最多展示 3 笔
+   * 独立于 30s 节流——支付完成/改价后返回首页时状态必须立即可见
+   */
+  async _loadPendingOrders() {
+    try {
+      const res = await orderManager.getOrders('owner', '', 1, 20)
+      const list = (res && res.list) || []
+      const pending = list
+        .filter(o => o.status === 'pending_payment' || o.status === 'deposit_paid')
+        .slice(0, 3)
+        .map(o => {
+          const total = Number(o.totalPrice) || 0
+          const paid = Number(o.paidAmount) || 0
+          const isDepositPaid = o.status === 'deposit_paid'
+          const created = String(o.createdAt || '')
+          return {
+            _id: o._id,
+            orderTitle: o.orderTitle || o.hostName || '订单',
+            createdAt: created ? created.replace('T', ' ').slice(0, 16) : '',
+            statusText: isDepositPaid ? '待补尾款' : '待支付',
+            payAmount: isDepositPaid
+              ? Math.round((total - paid) * 100) / 100
+              : total,
+          }
+        })
+      this.setData({ pendingOrders: pending })
+    } catch (error) {
+      // 静默降级：待处理板块拉取失败不打扰首页
+    }
+  },
+
+  handlePendingOrderTap(e) {
+    const id = e.currentTarget && e.currentTarget.dataset.id
+    if (!id) {return}
+    wx.navigateTo({ url: '/subpackages/profile/order-detail/index?id=' + id })
+  },
+
+  handleViewAllOrders() {
+    wx.navigateTo({ url: '/subpackages/profile/order-stats/index?type=boarding' })
+  },
+
   _initPage(forceRefresh) {
     this._loadHomeFeed(forceRefresh)
   },
@@ -181,6 +229,7 @@ Page({
     if (!isLoggedIn) {
       if (typeof this._applyMyPets === 'function') { this._applyMyPets([]) }
       if (typeof this._applyMyActivities === 'function') { this._applyMyActivities([]) }
+      this.setData({ pendingOrders: [] })
     }
   },
 

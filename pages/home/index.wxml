@@ -159,6 +159,29 @@
     </view>
   </view>
 
+  <!-- ===== Section 4.5: 待处理订单（待支付/待补尾款） ===== -->
+  <view class="section pending-section stagger-item stagger-rise delay-2" wx:if="{{isLoggedIn && pendingOrders.length}}">
+    <view class="section-head">
+      <text class="section-title">待处理</text>
+      <text class="section-link" bindtap="handleViewAllOrders" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
+    </view>
+    <view class="pending-list">
+      <view class="pending-card" wx:for="{{pendingOrders}}" wx:key="_id" data-id="{{item._id}}" bindtap="handlePendingOrderTap" hover-class="pending-card--pressed" hover-stay-time="120">
+        <view class="pending-info">
+          <text class="pending-title">{{item.orderTitle}}</text>
+          <text class="pending-time">{{item.createdAt}}</text>
+        </view>
+        <view class="pending-right">
+          <text class="pending-status">{{item.statusText}}</text>
+          <view class="pending-price-row">
+            <text class="pending-symbol">¥</text>
+            <text class="pending-price">{{item.payAmount}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- ===== Section 5: 商城好物 ===== -->
   <view class="section section-featured stagger-item stagger-rise delay-3" wx:if="{{mallProducts.length}}">
     <view class="section-head">
