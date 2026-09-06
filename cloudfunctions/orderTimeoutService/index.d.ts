@@ -293,7 +293,7 @@ export declare function restoreActivityQuota(activityId: string | undefined, par
 /**
  * 通用分批拉取接口（最大 MAX_BATCHES * BATCH_SIZE = 1000 条）。
  */
-export declare function fetchAllExpired<T = OrderDoc>(collection: string, where: Record<string, unknown>, fields: Record<string, boolean>): Promise<T[]>;
+export declare function fetchAllExpired<T = OrderDoc>(collection: string, where: Record<string, unknown>, fields: Record<string, boolean>, maxBatches?: number): Promise<T[]>;
 export declare function main(event: CloudEvent, _context: CloudContext): Promise<unknown>;
 declare const _default: {
     main: typeof main;

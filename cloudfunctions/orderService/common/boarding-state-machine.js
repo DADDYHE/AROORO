@@ -41,7 +41,8 @@ exports.boardingOrderStateMachine = (0, state_machine_1.createStateMachine)({
     initial: 'pending_payment',
     states: ['pending_payment', 'paid', 'confirmed', 'in_progress', 'completed', 'rejected', 'cancelled', 'refunded', 'deleted'],
     transitions: {
-        pending_payment: ['paid', 'cancelled'],
+        pending_payment: ['paid', 'deposit_paid', 'cancelled'],
+        deposit_paid: ['paid', 'cancelled'],
         paid: ['confirmed', 'rejected', 'cancelled'],
         confirmed: ['in_progress', 'completed', 'cancelled'],
         in_progress: ['completed', 'cancelled'],
@@ -72,7 +73,7 @@ const BOARDING_OPERATION_ALLOWED_FROM = {
     confirm: ['pending_payment', 'paid'],
     reject: ['pending_payment', 'paid'],
     complete: ['confirmed', 'in_progress'],
-    cancel: ['pending_payment', 'paid', 'confirmed', 'in_progress'],
+    cancel: ['pending_payment', 'deposit_paid', 'paid', 'confirmed', 'in_progress'],
 };
 /**
  * 根据操作获取目标状态

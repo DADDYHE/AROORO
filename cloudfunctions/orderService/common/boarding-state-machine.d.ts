@@ -27,7 +27,7 @@ import type { StateMachine } from './types';
 /**
  * 寄养订单状态枚举
  */
-export type BoardingState = 'pending_payment' | 'paid' | 'confirmed' | 'in_progress' | 'completed' | 'rejected' | 'cancelled' | 'refunded' | 'deleted';
+export type BoardingState = 'pending_payment' | 'deposit_paid' | 'paid' | 'confirmed' | 'in_progress' | 'completed' | 'rejected' | 'cancelled' | 'refunded' | 'deleted';
 /** 状态转移表 */
 export type BoardingTransitions = Record<BoardingState, BoardingState[]>;
 /**
