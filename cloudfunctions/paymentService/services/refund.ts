@@ -349,6 +349,8 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
     const transaction = await db.startTransaction()
     try {
       // 1) 更新订单状态
+      //    2026-09-06：终态释放 bookingKey 键位（寄养订单取消后同日期可重新下单）
+      const bookingKeyRaw = (orderDoc as unknown as Record<string, unknown>).bookingKey
       await transaction.collection(orderCollection).doc(orderDoc._id).update({
         data: {
           status: 'refunded',
@@ -356,6 +358,9 @@ export const createRefund: WrappedHandler<CreateRefundResult> = withErrorHandlin
           refundAmount: Number((Number(refundAmount) / 100).toFixed(2)),
           refundedAt: db.serverDate(),
           updatedAt: db.serverDate(),
+          ...(typeof bookingKeyRaw === 'string' && bookingKeyRaw.startsWith('booking_')
+            ? { bookingKey: `released_${orderDoc._id}_${Date.now()}` }
+            : {}),
         },
       })
 

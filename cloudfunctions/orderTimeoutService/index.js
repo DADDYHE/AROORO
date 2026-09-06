@@ -67,6 +67,7 @@ const { handleSuccess, handleError, ERROR_CODES } = require('./common/utils');
 // M2: 集成告警模块，关键失败时通过 recordAlert 通知运维
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { recordAlert } = require('./common/alert');
+const { releasedBookingKey } = require('./common/booking-key');
 // L4: 静态 require 提升到顶部，替代 generateAuthorization 内的动态 require
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const crypto = require('crypto');
@@ -566,6 +567,7 @@ async function cancelBoardingOrders(result, boardingTimeout) {
                     .where({ _id: order._id, status: 'pending_payment' })
                     .update({
                     data: {
+                        bookingKey: releasedBookingKey(order._id),
                         status: 'cancelled',
                         cancelReason: '超时未支付，系统自动取消',
                         cancelledAt: db.serverDate(),
@@ -614,6 +616,7 @@ async function cancelFeedingOrders(result, feedingTimeout) {
                     .where({ _id: order._id, status: 'pending_payment' })
                     .update({
                     data: {
+                        bookingKey: releasedBookingKey(order._id),
                         status: 'cancelled',
                         cancelReason: '超时未支付，系统自动取消',
                         cancelledAt: db.serverDate(),
@@ -664,6 +667,7 @@ async function cancelMallOrders(result, mallTimeout) {
                     .where({ _id: order._id, status: 'pending_payment' })
                     .update({
                     data: {
+                        bookingKey: releasedBookingKey(order._id),
                         status: 'cancelled',
                         cancelReason: '超时未支付，系统自动取消',
                         cancelledAt: db.serverDate(),
@@ -731,6 +735,7 @@ async function cancelGroupBuyOrders(result, groupBuyTimeout) {
                     .where({ _id: order._id, status: 'pending_payment' })
                     .update({
                     data: {
+                        bookingKey: releasedBookingKey(order._id),
                         status: 'cancelled',
                         cancelReason: '超时未支付，系统自动取消',
                         cancelledAt: db.serverDate(),
@@ -801,6 +806,7 @@ async function cancelActivityOrders(result, activityTimeout) {
                     .where({ _id: order._id, status: 'pending_payment' })
                     .update({
                     data: {
+                        bookingKey: releasedBookingKey(order._id),
                         status: 'cancelled',
                         cancelReason: '超时未支付，系统自动取消',
                         cancelledAt: db.serverDate(),

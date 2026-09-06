@@ -272,6 +272,8 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
         const transaction = await db.startTransaction();
         try {
             // 1) 更新订单状态
+            //    2026-09-06：终态释放 bookingKey 键位（寄养订单取消后同日期可重新下单）
+            const bookingKeyRaw = orderDoc.bookingKey;
             await transaction.collection(orderCollection).doc(orderDoc._id).update({
                 data: {
                     status: 'refunded',
@@ -279,6 +281,9 @@ exports.createRefund = (0, errors_1.withErrorHandling)(async (event, _context, a
                     refundAmount: Number((Number(refundAmount) / 100).toFixed(2)),
                     refundedAt: db.serverDate(),
                     updatedAt: db.serverDate(),
+                    ...(typeof bookingKeyRaw === 'string' && bookingKeyRaw.startsWith('booking_')
+                        ? { bookingKey: `released_${orderDoc._id}_${Date.now()}` }
+                        : {}),
                 },
             });
             // 2) 同步业务表状态

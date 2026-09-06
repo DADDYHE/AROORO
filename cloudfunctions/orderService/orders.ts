@@ -45,6 +45,7 @@
 import { initCloud, handleSuccess, generateId, paginate, type PaginatedResult } from './common/utils'
 import { createLogger, type ServiceLogger } from './common/logger'
 import { computeBoardingAmount, type ChargeBreakdown } from './common/boarding-pricing'
+import { buildBookingKey, releasedBookingKey, BOOKING_KEY_ACTIVE_STATUSES, BOOKING_KEY_RELEASED_STATUSES } from './common/booking-key'
 import type {
   CloudBaseDB,
   OrderDoc,
@@ -223,7 +224,7 @@ function getDateRange(range: DateRangePreset | string): { startDate: Date | null
  *   现复用 checkDateAvailability 同款重叠算法：
  *   overlap = orderStart < requestEnd && orderEnd > requestStart
  */
-async function checkDateAvailabilityInternal(hostId: string, startDate: string, endDate: string): Promise<boolean> {
+async function checkDateAvailabilityInternal(hostId: string, startDate: string, endDate: string, ownerId: string): Promise<boolean> {
   try {
     const requestStart = new Date(startDate).getTime()
     const requestEnd = new Date(endDate).getTime()
@@ -231,13 +232,15 @@ async function checkDateAvailabilityInternal(hostId: string, startDate: string, 
     if (isNaN(requestStart) || isNaN(requestEnd) || requestEnd < requestStart) {
       return false
     }
-    // P2-006: 补充 'paid' 状态，避免已支付未确认的订单被重复预订
-    // F10 修复：去掉 .limit(100)。热门 host 订单>100 时截断会导致重叠校验漏判、被超卖。
-    //   该查询按状态过滤（活跃订单数量有界），去掉 limit 后仍能正确校验全部重叠订单。
+    // 2026-09-06 语义调整：只挡「同一用户」的活跃订单日期重叠（含待支付/定金/全款）；
+    //   不同用户同档期互不干扰（家庭可接多只，maxPets 仅展示不限制）。
+    //   实际硬约束由 idx_bookingKey_unique 唯一索引承担（键含 ownerId + 时刻），
+    //   此处仅作前置友好提示（避免用户撞索引拿到生硬报错）
     const existingOrders = await db.collection('orders')
       .where({
         hostId,
-        status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'in_progress', 'paid']),
+        ownerId,
+        status: (db.command as { in: (arr: string[]) => unknown }).in(BOOKING_KEY_ACTIVE_STATUSES),
       })
       .field({ startDate: true, endDate: true })
       .get()
@@ -843,7 +846,7 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
     }
   }
 
-  const isAvailable = await checkDateAvailabilityInternal(hostId, startDate, endDate)
+  const isAvailable = await checkDateAvailabilityInternal(hostId, startDate, endDate, openid)
   if (!isAvailable) {
     throw err('BUSINESS_ERROR', '所选日期已被预订')
   }
@@ -920,11 +923,13 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
     note: note || '',
     status: 'pending_payment',
     paymentStatus: 'unpaid',
-    // P1 修复（H2）：bookingKey 用于数据库唯一索引 idx_bookingKey_unique,防止并发预订超卖
-    //   格式：booking_<hostId>_<startDate>_<endDate>
+    // P1 修复（H2）：bookingKey 用于数据库唯一索引 idx_bookingKey_unique，防止重复下单
+    //   2026-09-06 语义调整：键含 ownerId + 起止时刻
+    //     - 同一用户 同家庭同日期同时刻 重复下单（待支付/已付定金/已付全款）→ 唯一索引挡住
+    //     - 不同用户 即使日期时刻一致 → 键不同，互不干扰（maxPets 仅展示不限制）
+    //     - 取消/拒单/退款后键位释放（releasedBookingKey），同一用户可重新下单
     //   H7:非寄养订单(mall/group_buy/activity/tuan)写 nb_<orderId> 占位,见 mallService/tuanService/activityService
-    //   未建索引时降级为 checkDateAvailabilityInternal 重叠检查（H1 已修复）
-    bookingKey: `booking_${hostId}_${startDate}_${endDate}`,
+    bookingKey: buildBookingKey({ hostId, startDate, endDate, startAt, endAt, ownerId }),
     createdAt: db.serverDate(),
     updatedAt: db.serverDate(),
     ownerInfo,
@@ -1092,8 +1097,13 @@ export async function updateOrderStatus(event: EventLike, _context: ContextLike,
     }
   }
 
+  // 2026-09-06：订单进入终态（cancelled / rejected / refunded）时释放 bookingKey 键位，
+  //   否则同一用户+家庭+时刻的唯一键被永久占用，取消后无法重新下单
+  const isTerminal = ['cancelled', 'rejected', 'refunded'].includes(String(status))
   await db.collection('orders').doc(orderId).update({
-    data: { status, updatedAt: db.serverDate() },
+    data: isTerminal
+      ? { status, updatedAt: db.serverDate(), bookingKey: releasedBookingKey(orderId) }
+      : { status, updatedAt: db.serverDate() },
   })
 
   // P0-4 修复：主动取消未支付订单时解锁被锁定的优惠券，避免用户券资产永久卡在 locked 丢失。
@@ -1384,6 +1394,9 @@ export async function calculatePrice(event: EventLike): HandlerResult {
  * 10. checkDateAvailability - 日期可用性（公开）
  */
 export async function checkDateAvailability(event: EventLike): HandlerResult {
+  // 2026-09-06 语义调整：不同用户同档期互不干扰（maxPets 仅展示不限制），
+  //   此公开接口（无登录态、无 ownerId 维度）恒返回可用；
+  //   同一用户的重复预订由 createOrder 内按 ownerId 的软检查 + idx_bookingKey_unique 唯一索引拦截
   const { hostId, startDate, endDate } = event as { hostId?: string, startDate?: string, endDate?: string }
   if (!startDate || !endDate) {
     return handleSuccess({ available: false }, '缺少日期参数')
@@ -1392,40 +1405,7 @@ export async function checkDateAvailability(event: EventLike): HandlerResult {
     return handleSuccess({ available: false }, '缺少 hostId 参数')
   }
 
-  try {
-    // F10 + P2 修复：分批拉取该 host 的全部活跃订单做重叠校验，
-    //   避免单次 get() 默认上限截断导致热门 host 超卖，同时控制单批大小
-    const existingOrders: Array<{ startDate: string, endDate: string }> = []
-    const BATCH = 100
-    let skipCount = 0
-    for (;;) {
-      const batchRes = await db.collection('orders')
-        .where({
-          hostId,
-          status: (db.command as { in: (arr: string[]) => unknown }).in(['confirmed', 'in_progress']),
-        })
-        .field({ startDate: true, endDate: true })
-        .skip(skipCount)
-        .limit(BATCH)
-        .get()
-      const batch = (batchRes.data || []) as Array<{ startDate: string, endDate: string }>
-      existingOrders.push(...batch)
-      if (batch.length < BATCH || existingOrders.length >= 10000) {break}
-      skipCount += BATCH
-    }
-
-    const requestStart = new Date(String(startDate).replace(/-/g, '/')).getTime()
-    const requestEnd = new Date(String(endDate).replace(/-/g, '/')).getTime()
-    const hasOverlap = existingOrders.some(o => {
-      const orderStart = new Date(String(o.startDate).replace(/-/g, '/')).getTime()
-      const orderEnd = new Date(String(o.endDate).replace(/-/g, '/')).getTime()
-      return orderStart < requestEnd && orderEnd > requestStart
-    })
-
-    return handleSuccess({ available: !hasOverlap }, '查询成功')
-  } catch (error) {
-    return handleSuccess({ available: false }, '查询失败')
-  }
+  return handleSuccess({ available: true }, '该档期可选')
 }
 
 /**
@@ -1654,9 +1634,13 @@ export async function handleBoardingOrder(event: EventLike, _context: ContextLik
     }
   }
 
+  // 2026-09-06：终态（rejected 等）释放 bookingKey 键位，允许客户重新下单
   await db.collection('orders').doc(orderId).update({
     data: {
       status: newStatus,
+      ...(BOOKING_KEY_RELEASED_STATUSES.includes(newStatus)
+        ? { bookingKey: releasedBookingKey(orderId) }
+        : {}),
       pendingReview, // L11 修复：显式写入 false，避免 mongo 不写字段导致前端 'pendingReview' in data 判断出错
       updatedAt: db.serverDate(),
     },
