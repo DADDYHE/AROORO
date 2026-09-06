@@ -79,6 +79,15 @@ Page({
     this.setData({ isLoggedIn })
   },
 
+  onShow() {
+    // 2026-09-06：订单金额可能已被家庭改价，每次进入页面强制刷新（首次由 onLoad 负责，此后每次 onShow 重拉第一页）
+    if (this._enteredOnce) {
+      this.setData({ page: 1, orders: [], hasMore: true })
+      this._loadOrders()
+    }
+    this._enteredOnce = true
+  },
+
   async _loadOrders() {
     // 防重入：onShow 与 LIST_UPDATED 事件并发触发时只发一次请求
     if (this.data.isLoading) {return}
