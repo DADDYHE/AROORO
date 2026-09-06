@@ -269,6 +269,17 @@ export const createPayment: WrappedHandler<SuccessResult<CreatePaymentResult>> =
     throw err('ORDER_STATUS_CHANGED', '订单已取消，无法支付', { orderId, status: orderData.status })
   }
 
+  // 2026-09-06：待支付单超时校验——前端倒计时归零后、cron 取消前的窗口期内禁止支付，
+  //   消除「用户付款与超时取消竞态」（扣款但订单已取消）。旧单无 timeoutAt 字段不校验（兼容）
+  const odTimeout = (orderData as unknown as Record<string, unknown>).timeoutAt
+  if (orderType === 'order' && orderData.status === 'pending_payment' && odTimeout !== undefined && odTimeout !== null) {
+    const timeoutAt = Number(odTimeout)
+    if (Number.isFinite(timeoutAt) && timeoutAt > 0 && timeoutAt < Date.now()) {
+      logger.info('createPayment: 订单支付已超时', { orderId, timeoutAt })
+      throw err('ORDER_STATUS_CHANGED', '订单已超时，请重新下单', { orderId, timeoutAt })
+    }
+  }
+
   // H2: 旧逻辑 `if (amount && orderData.totalPrice && ...)` 在 totalPrice=0/缺失时跳过比对
   //   该校验与下方 actualAmount 比对语义重复，统一在下方 actualAmount 校验中处理
   //   避免 totalPrice 与 amountField 字段不一致时双重判断产生分歧

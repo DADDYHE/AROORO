@@ -106,6 +106,11 @@ Page({
         // 定金 = 全款 30%（四舍五入 2 位，与服务端同口径）
         const dep = Math.round((order.totalPrice || 0) * 0.3 * 100) / 100
         this.setData({ depositAmount: dep, remainAmountTip: Math.round(((order.totalPrice || 0) - dep) * 100) / 100 })
+        // 支付倒计时（timeoutAt 由 createOrder 写入，旧单无此字段不显示）
+        this._stopPayCountdown()
+        if (order.status === 'pending_payment' && order.timeoutAt) {
+          this._startPayCountdown(Number(order.timeoutAt))
+        }
         this._loadedOnce = true
         // 待支付订单启动支付倒计时（与后端 30min 超时取消对齐）
         if (order.status === 'pending_payment') {
@@ -170,6 +175,7 @@ Page({
       payAmount: raw.payAmount || 0,
       paidAmount: raw.paidAmount || 0,
       remainAmount: Math.max(0, Math.round(((raw.totalPrice || 0) - (raw.paidAmount || 0)) * 100) / 100),
+      timeoutAt: raw.timeoutAt || 0,
       note: raw.note || '',
       // 计费方式（2026-09-06 双计费算法）：老订单无 chargeBreakdown → 展示退化为「X 天」
       ...this._buildChargeDisplay(raw),
@@ -254,6 +260,32 @@ Page({
       return
     }
     wx.makePhoneCall({ phoneNumber: phone })
+  },
+
+  /** 支付倒计时：timeoutAt 每秒刷新，归零后刷新订单（可能已被超时取消） */
+  _startPayCountdown(timeoutAt) {
+    this._stopPayCountdown()
+    const tick = () => {
+      const remain = Math.max(0, Math.floor((timeoutAt - Date.now()) / 1000))
+      if (remain <= 0) {
+        this._stopPayCountdown()
+        this.setData({ payCountdown: '支付已超时' })
+        this._loadOrder({ orderId: this.data.order && this.data.order._id })
+        return
+      }
+      const mm = String(Math.floor(remain / 60)).padStart(2, '0')
+      const ss = String(remain % 60).padStart(2, '0')
+      this.setData({ payCountdown: '支付剩余 ' + mm + ':' + ss })
+    }
+    tick()
+    this._cdTimer = setInterval(tick, 1000)
+  },
+
+  _stopPayCountdown() {
+    if (this._cdTimer) {
+      clearInterval(this._cdTimer)
+      this._cdTimer = null
+    }
   },
 
   /**

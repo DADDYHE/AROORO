@@ -932,6 +932,9 @@ export async function createOrder(event: EventLike, _context: ContextLike, auth:
     bookingKey: buildBookingKey({ hostId, startDate, endDate, startAt, endAt, ownerId }),
     createdAt: db.serverDate(),
     updatedAt: db.serverDate(),
+    // 2026-09-06：支付超时截止（与 orderTimeoutService ORDER_TIMEOUT_MINUTES=30 对齐）——
+    //   createPayment 据此拒绝超时窗口内的支付请求（前端倒计时也以此为准）
+    timeoutAt: Date.now() + 30 * 60 * 1000,
     ownerInfo,
     hostInfo,
     petsInfo: petList,
