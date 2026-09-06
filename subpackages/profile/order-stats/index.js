@@ -205,7 +205,7 @@ Page({
       const sec = sections.find(s => s.key === g)
       if (sec) {sec.list.push(item)}
     }
-    this.setData({ orderSections: sections })
+    this.setData({ orderSections: sections, orders: this._allOrders || [] })
   },
 
   _normalizeOrder(raw) {
