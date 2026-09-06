@@ -1,381 +1,348 @@
-/* 订单统计 - AROORO 奢华宠物 */
-/* 令牌由 app.wxss 全局注入到 page，页面不得再 import variables.wxss —
-   页面 wxss 在 app.wxss 之后加载，同为 page 选择器会反向覆盖 theme-teal，
-   把旧橄榄坐标系带回来（详见 #10）。 */
+/* ================================================================
+   订单统计 ·「订单台账」— AROORO Haute-Luxury v2
+   对齐 order-detail「纸上卷宗」语言：暖石纸面 + hairline 台账行
+   + 编辑式汇总数字 + 金线目录 tab + 台账落款。去白卡。
+   token 来源：styles/variables.wxss → theme-teal.wxss（app.wxss 注入）
+   ================================================================ */
 
 .page {
   min-height: 100vh;
-  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  padding-bottom: 40rpx;
 }
 
-/* 统计摘要 */
-.stats-summary {
-  margin: 24rpx var(--page-padding, 48rpx);
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  padding: 40rpx 0;
+/* ================================================================
+   卷宗头：金 accent bar + eyebrow + 编辑式汇总三列
+   ================================================================ */
+.ledger-head {
+  padding: 40rpx var(--page-padding, 48rpx) 28rpx;
+  border-bottom: 1rpx solid var(--hairline);
+}
+
+.brand-accent-bar {
+  width: 48rpx;
+  height: 2rpx;
+  background: var(--accent-color);
+  margin-bottom: 18rpx;
+}
+
+.ledger-eyebrow {
+  display: block;
+  font-size: 20rpx;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  color: var(--accent-color);
+  margin-bottom: 24rpx;
+}
+
+.ledger-summary {
   display: flex;
-  align-items: center;
-  justify-content: space-around;
-  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+  align-items: flex-end;
 }
 
-.summary-item {
+.ledger-stat {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10rpx;
+  gap: 8rpx;
 }
 
-.summary-num {
-  font-size: 44rpx;
-  font-weight: 300;
-  color: var(--text-primary);
-  line-height: 1;
-  letter-spacing: 0.02em;
-}
-
-.summary-label {
-  font-size: 22rpx;
-  color: var(--text-tertiary);
-  letter-spacing: 0.06em;
-}
-
-.summary-divider {
+.ledger-divider {
   width: 1rpx;
   height: 56rpx;
-  background: var(--divider-color, #ECE8DE);
+  background: var(--hairline);
+  margin: 0 28rpx;
+  align-self: flex-end;
+  margin-bottom: 6rpx;
 }
 
-/* 状态筛选标签 */
-.status-tabs {
-  margin: 0 var(--page-padding, 48rpx) 24rpx;
+.ledger-num {
+  font-size: 48rpx;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.ledger-amount-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
+  align-items: baseline;
+  gap: 2rpx;
+}
+
+.ledger-symbol {
+  font-size: 24rpx;
+  color: var(--text-primary);
+}
+
+.ledger-label {
+  font-size: 20rpx;
+  letter-spacing: 0.14em;
+  color: var(--text-tertiary);
+}
+
+/* ================================================================
+   状态筛选：金线目录 tab（文字 + 选中金下划线）
+   ================================================================ */
+.status-tabs {
+  display: flex;
+  gap: 8rpx;
+  padding: 8rpx var(--page-padding, 48rpx) 0;
+  border-bottom: 1rpx solid var(--hairline);
 }
 
 .status-tab {
-  transition: transform 160ms ease, opacity 160ms ease;
-  flex: 0 0 auto;
-  padding: 16rpx 28rpx;
-  text-align: center;
-  background: var(--card-color);
-  border-radius: var(--zy-radius-pill);
-  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
-}
-
-.status-tab.pressed {
-  opacity: 0.7;
-}
-
-.status-tab.active {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-}
-
-.status-tab.active .status-tab-text {
-  color: var(--card-color);
+  padding: 18rpx 22rpx;
+  position: relative;
 }
 
 .status-tab-text {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  font-weight: 400;
-  letter-spacing: 0.04em;
+  font-size: 25rpx;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  transition: color 160ms ease;
 }
 
-/* 订单列表 */
+.status-tab.active .status-tab-text {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.status-tab.active {
+  /* 选中金下划线（与卷宗头 accent bar 同语言） */
+}
+
+.status-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 22rpx;
+  right: 22rpx;
+  bottom: 0;
+  height: 2rpx;
+  background: var(--accent-color);
+}
+
+/* ================================================================
+   订单台账行：hairline 分隔，无卡片
+   ================================================================ */
 .orders-list {
-  margin: 0 var(--page-padding, 48rpx);
+  padding: 8rpx var(--page-padding, 48rpx) 0;
+}
+
+.ledger-row {
+  display: flex;
+  gap: 20rpx;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid var(--hairline);
+  transition: opacity 160ms ease;
+}
+
+.ledger-row.pressed {
+  opacity: 0.75;
+}
+
+/* 行首缩略图（商城商品/活动封面） */
+.ledger-thumb {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 12rpx;
+  flex-shrink: 0;
+  background: var(--card-cream, #FBF9F4);
+  border: 1rpx solid var(--hairline);
+}
+
+.ledger-row-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* 标题 + 状态章 */
+.ledger-row-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 16rpx;
 }
 
-.order-card {
-  transition: transform 160ms ease, opacity 160ms ease;
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  padding: 28rpx;
-  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
-}
-
-.order-card.pressed {
-  opacity: 0.7;
-}
-
-.order-title {
+.ledger-title {
+  flex: 1;
   font-size: 28rpx;
-  font-weight: 400;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--text-primary);
-  margin-bottom: 16rpx;
   line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.order-cover-row {
-  margin-bottom: 16rpx;
-  border-radius: var(--zy-radius-md);
-  overflow: hidden;
-}
-
-.order-cover {
-  width: 100%;
-  height: 240rpx;
-  display: block;
-  background: var(--card-cream, #FBF9F4);
-}
-
-.order-info {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8rpx;
-  gap: 8rpx;
-}
-
-.order-info-icon-img {
-  width: 26rpx;
-  height: 26rpx;
+.ledger-status {
   flex-shrink: 0;
+  font-size: 20rpx;
+  letter-spacing: 0.1em;
+  color: var(--accent-color);
+  border: 1rpx solid var(--lux-hairline-gold);
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
 }
 
-.order-info-text {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-.order-header {
+/* 元信息行 */
+.ledger-meta {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12rpx;
-}
-
-.order-status {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-}
-
-.order-price {
-  font-size: 30rpx;
-  font-weight: 400;
-  color: var(--text-primary);
-}
-
-.order-body {
-  display: flex;
-  flex-direction: column;
   gap: 8rpx;
+  margin-top: 8rpx;
 }
 
-.order-time {
+.ledger-icon {
+  width: 22rpx;
+  height: 22rpx;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.ledger-meta-text {
   font-size: 22rpx;
+  letter-spacing: 0.03em;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 底部：时间 + 编辑式价格 */
+.ledger-row-bottom {
+  margin-top: 16rpx;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.ledger-time {
+  font-size: 20rpx;
+  letter-spacing: 0.04em;
   color: var(--text-tertiary);
 }
 
-/* 喂养标签 */
-.feeding-tags {
+.ledger-price-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8rpx;
-  margin-top: 12rpx;
+  align-items: baseline;
+  gap: 2rpx;
 }
 
-.feeding-tag {
+.ledger-price-symbol {
   font-size: 20rpx;
-  color: var(--activity-primary);
-  background: var(--activity-tint);
-  padding: 4rpx 14rpx;
-  border-radius: var(--zy-radius-sm);
-  font-weight: 400;
-  letter-spacing: 0.02em;
+  color: var(--text-primary);
 }
 
-/* 空状态 */
+.ledger-price {
+  font-size: 34rpx;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.ledger-price-unit {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+}
+
+/* 取消入口 */
+.ledger-cancel {
+  margin-top: 14rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ledger-cancel-btn {
+  font-size: 22rpx;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  border: 1rpx solid var(--border-color, #E2DED3);
+  padding: 8rpx 24rpx;
+  border-radius: 999rpx;
+}
+
+.ledger-cancel-btn.pressed {
+  opacity: 0.7;
+}
+
+/* ================================================================
+   空态：金 hairline 圆环
+   ================================================================ */
 .empty-state {
-  text-align: center;
-  padding: 120rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+  padding: 120rpx 0 80rpx;
+}
+
+.empty-ring {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  border: 1rpx solid var(--lux-hairline-gold);
 }
 
 .empty-text {
-  font-size: 28rpx;
+  font-size: 24rpx;
+  letter-spacing: 0.2em;
   color: var(--text-tertiary);
-  letter-spacing: 0.04em;
 }
 
-/* 加载更多 */
-.loading-more {
-  text-align: center;
-  padding: 32rpx 0;
+/* ================================================================
+   台账落款
+   ================================================================ */
+.ledger-foot {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12rpx;
+  gap: 24rpx;
+  padding: 48rpx var(--page-padding, 48rpx) 24rpx;
+}
+
+.ledger-foot-line {
+  width: 64rpx;
+  height: 1rpx;
+  background: var(--hairline);
+}
+
+.ledger-foot-text {
+  font-size: 20rpx;
+  letter-spacing: 0.3em;
+  color: var(--text-tertiary);
+}
+
+/* ================================================================
+   加载更多（lux-silk 全局样式）+ 入场动画
+   ================================================================ */
+.loading-more {
+  padding: 32rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
 }
 
 .loading-more-text {
-  font-size: 24rpx;
-  color: var(--text-tertiary);
-  letter-spacing: 0.12em;
-}
-
-.loading-dots {
-  display: flex;
-  gap: 12rpx;
-  align-items: center;
-}
-
-.loading-dot {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  background: var(--primary-color);
-  opacity: 0.4;
-}
-
-.loading-dot:nth-child(2) {
-  opacity: 0.7;
-}
-
-.loading-dot:nth-child(3) {
-  opacity: 1;
-}
-
-/* 商城订单卡片 */
-.mall-card {
-  border-left: 3rpx solid var(--mall-primary, #C9A24B);
-}
-
-.mall-product-row {
-  display: flex;
-  gap: 20rpx;
-  margin-bottom: 16rpx;
-}
-
-.mall-product-img {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: var(--zy-radius-md);
-  flex-shrink: 0;
-  background: var(--card-cream, #FBF9F4);
-}
-
-.mall-product-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-width: 0;
-  padding: 4rpx 0;
-}
-
-.mall-product-name {
-  font-size: 28rpx;
-  font-weight: 400;
-  color: var(--text-primary);
-  line-height: 1.4;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.mall-product-sku {
   font-size: 22rpx;
-  color: var(--text-tertiary);
-  line-height: 1.4;
-}
-
-.mall-product-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.mall-product-price {
-  font-size: 28rpx;
-  font-weight: 400;
-  color: var(--text-primary);
-}
-
-.mall-product-qty {
-  font-size: 22rpx;
+  letter-spacing: 0.2em;
   color: var(--text-tertiary);
 }
 
-.mall-receiver {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  margin-bottom: 8rpx;
-}
-
-.mall-status {
-  color: var(--text-primary);
-}
-
-.mall-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 12rpx;
-  padding-top: 12rpx;
-  border-top: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
-}
-
-.mall-cancel-btn {
-  transition: transform 160ms ease, opacity 160ms ease;
-  font-size: 24rpx;
-  color: var(--error-color);
-  padding: 8rpx 24rpx;
-  border: 1rpx solid rgba(184, 92, 60, 0.2);
-  border-radius: var(--zy-radius-lg);
-  background: rgba(184, 92, 60, 0.06);
-}
-
-.mall-cancel-btn.pressed {
-  opacity: 0.7;
-}
-
-/* 团购卡片 */
-.group-card {
-  border-left: 3rpx solid var(--tuan-primary);
-}
-
-.group-status {
-  color: var(--tuan-primary);
-}
-
-.group-price {
-  color: var(--tuan-primary);
-}
-
-/* 入场动画 */
-.stats-summary {
+.ledger-row {
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
+  opacity: 0;
 }
 
-.status-tabs {
-  animation-name: zy-fade-in-up;
-  animation-duration: 480ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-delay: 80ms;
-  animation-fill-mode: forwards;
-}
-
-.orders-list {
-  animation-name: zy-fade-in-up;
-  animation-duration: 480ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-delay: 160ms;
-  animation-fill-mode: forwards;
-}
-
+.ledger-row:nth-child(1) { animation-delay: 80ms; }
+.ledger-row:nth-child(2) { animation-delay: 140ms; }
+.ledger-row:nth-child(3) { animation-delay: 200ms; }
+.ledger-row:nth-child(4) { animation-delay: 260ms; }
+.ledger-row:nth-child(5) { animation-delay: 320ms; }
+.ledger-row:nth-child(n+6) { animation-delay: 0ms; }

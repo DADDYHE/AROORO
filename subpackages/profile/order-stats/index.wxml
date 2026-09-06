@@ -11,23 +11,32 @@
   style="height: calc(100vh - {{_navbarHeight}}px);"
 >
 <view class="page">
-  <view class="stats-summary">
-    <view class="summary-item">
-      <text class="summary-num">{{stats.count}}</text>
-      <text class="summary-label">总订单</text>
-    </view>
-    <view class="summary-divider"></view>
-    <view class="summary-item">
-      <text class="summary-num">{{stats.completedCount}}</text>
-      <text class="summary-label">{{t.BIZ_E7HBQ}}</text>
-    </view>
-    <view class="summary-divider"></view>
-    <view class="summary-item">
-      <text class="summary-num">¥{{stats.amount}}</text>
-      <text class="summary-label">总消费</text>
+  <!-- ═══ 卷宗头：金 eyebrow + 编辑式汇总 ═══ -->
+  <view class="ledger-head">
+    <view class="brand-accent-bar"></view>
+    <text class="ledger-eyebrow">ORDER LEDGER</text>
+    <view class="ledger-summary">
+      <view class="ledger-stat">
+        <text class="ledger-num">{{stats.count}}</text>
+        <text class="ledger-label">总订单</text>
+      </view>
+      <view class="ledger-divider"></view>
+      <view class="ledger-stat">
+        <text class="ledger-num">{{stats.completedCount}}</text>
+        <text class="ledger-label">{{t.BIZ_E7HBQ}}</text>
+      </view>
+      <view class="ledger-divider"></view>
+      <view class="ledger-stat">
+        <view class="ledger-amount-row">
+          <text class="ledger-symbol">¥</text>
+          <text class="ledger-num">{{stats.amount}}</text>
+        </view>
+        <text class="ledger-label">总消费</text>
+      </view>
     </view>
   </view>
 
+  <!-- ═══ 状态筛选：金线目录 tab ═══ -->
   <view class="status-tabs">
     <view
       wx:for="{{statusTabs}}"
@@ -35,77 +44,91 @@
       class="status-tab {{currentStatus === item.key ? 'active' : ''}}"
       data-status="{{item.key}}"
       bindtap="switchStatus"
-     hover-class="status-tab pressed" hover-stay-time="80">
+      hover-class="status-tab pressed" hover-stay-time="80">
       <text class="status-tab-text">{{item.label}}</text>
     </view>
   </view>
 
+  <!-- ═══ 订单台账行 ═══ -->
   <view class="orders-list" wx:if="{{orders.length > 0}}">
     <view
       wx:for="{{orders}}"
       wx:key="_id"
-      class="order-card {{item.orderType === 'mall' ? 'mall-card' : ''}} {{item.orderType === 'group_buy' ? 'group-card' : ''}}"
+      class="ledger-row"
       data-id="{{item._id}}"
       bindtap="onOrderTap"
-     hover-class="order-card pressed" hover-stay-time="80">
-      <view class="order-cover-row" wx:if="{{item.activityCoverUrl}}">
-        <image class="order-cover" src="{{item.activityCoverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.activityCoverUrl}}" data-path="orders[{{index}}].activityCoverUrl" lazy-load />
-      </view>
-      <block wx:if="{{item.orderType === 'mall' || item.orderType === 'group_buy'}}">
-        <view class="mall-product-row">
-          <image class="mall-product-img" wx:if="{{item.productCoverUrl}}" src="{{item.productCoverUrl}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.productCoverUrl}}" data-path="orders[{{index}}].productCoverUrl" lazy-load />
-          <view class="mall-product-info">
-            <text class="mall-product-name">{{item.orderTitle}}</text>
-            <text class="mall-product-sku" wx:if="{{item.skuText}}">{{item.skuText}}</text>
-            <view class="mall-product-bottom">
-              <text class="mall-product-price {{item.orderType === 'group_buy' ? 'group-price' : ''}}">¥{{item.unitPrice}}</text>
-              <text class="mall-product-qty">×{{item.quantity}}</text>
-              <text class="mall-product-qty" wx:if="{{item.hasMultiItems}}">等{{item.itemCount}}件商品</text>
-            </view>
+      hover-class="ledger-row pressed" hover-stay-time="80">
+
+      <!-- 商品/活动封面（有图时行首） -->
+      <image
+        wx:if="{{item.activityCoverUrl || item.productCoverUrl}}"
+        class="ledger-thumb"
+        src="{{item.productCoverUrl || item.activityCoverUrl}}"
+        mode="aspectFill"
+        binderror="onCloudImageError"
+        data-src="{{item.productCoverUrl || item.activityCoverUrl}}"
+        data-path="orders[{{index}}].productCoverUrl"
+        lazy-load
+      />
+
+      <view class="ledger-row-main">
+        <view class="ledger-row-top">
+          <text class="ledger-title">{{item.orderTitle || item._id}}</text>
+          <text class="ledger-status">{{item.isEnded ? '已结束' : item.statusText || item.status}}</text>
+        </view>
+
+        <!-- 商城/团购：SKU 与数量 -->
+        <view class="ledger-meta" wx:if="{{item.skuText || item.quantity}}">
+          <text class="ledger-meta-text">{{item.skuText || ''}}{{item.skuText && item.quantity ? ' · ' : ''}}{{item.quantity ? '×' + item.quantity : ''}}{{item.hasMultiItems ? ' 等' + item.itemCount + '件商品' : ''}}</text>
+        </view>
+
+        <!-- 寄养：服务标签 -->
+        <view class="ledger-meta" wx:if="{{item.orderType === 'feeding' && (item.familiarityText || item.multiVisitText)}}">
+          <text class="ledger-meta-text">{{item.familiarityText ? '提前熟悉: ' + item.familiarityText : ''}}{{item.familiarityText && item.multiVisitText ? ' · ' : ''}}{{item.multiVisitText ? '一天多次: ' + item.multiVisitText : ''}}</text>
+        </view>
+
+        <!-- 位置/日期 -->
+        <view class="ledger-meta" wx:if="{{item.activityLocation}}">
+          <image class="ledger-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+          <text class="ledger-meta-text">{{item.activityLocation}}</text>
+        </view>
+        <view class="ledger-meta" wx:if="{{item.address && item.orderType === 'feeding'}}">
+          <image class="ledger-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+          <text class="ledger-meta-text">{{item.address}}</text>
+        </view>
+        <view class="ledger-meta" wx:if="{{item.dateRange && item.orderType === 'feeding'}}">
+          <image class="ledger-icon" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
+          <text class="ledger-meta-text">{{item.dateRange}}</text>
+        </view>
+        <view class="ledger-meta" wx:if="{{item.startDate && item.orderType !== 'feeding'}}">
+          <image class="ledger-icon" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
+          <text class="ledger-meta-text">{{item.startDate}}{{item.endDate ? ' 至 ' + item.endDate : ''}}</text>
+        </view>
+        <view class="ledger-meta" wx:if="{{item.receiverName}}">
+          <image class="ledger-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+          <text class="ledger-meta-text">{{item.receiverName}} {{item.receiverPhone}}</text>
+        </view>
+
+        <!-- 底部：时间 + 编辑式价格 -->
+        <view class="ledger-row-bottom">
+          <text class="ledger-time">{{item.createdAt}}</text>
+          <view class="ledger-price-row">
+            <text class="ledger-price-symbol">¥</text>
+            <text class="ledger-price">{{item.totalPrice || 0}}</text>
+            <text class="ledger-price-unit" wx:if="{{item.quantity && item.orderType !== 'boarding'}}">×{{item.quantity}}</text>
           </view>
         </view>
-        <view class="mall-receiver" wx:if="{{item.receiverName}}">
-            <image class="order-info-icon-img" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
-            <text class="order-info-text">{{item.receiverName}} {{item.receiverPhone}}</text>
-          </view>
-        <view class="mall-actions" wx:if="{{item.status === 'pending_payment' || item.status === 'pending_shipment'}}">
-          <view class="mall-cancel-btn" data-id="{{item._id}}" catchtap="onCancelMallOrder" hover-class="mall-cancel-btn pressed" hover-stay-time="80">取消订单</view>
+
+        <!-- 取消入口（商城待支付/待发货） -->
+        <view class="ledger-cancel" wx:if="{{item.status === 'pending_payment' || item.status === 'pending_shipment'}}">
+          <view class="ledger-cancel-btn" data-id="{{item._id}}" catchtap="onCancelMallOrder" hover-class="pressed" hover-stay-time="80">取消订单</view>
         </view>
-      </block>
-      <block wx:else>
-        <view class="order-title">{{item.orderTitle || item._id}}</view>
-        <view class="order-info" wx:if="{{item.activityLocation}}">
-          <image class="order-info-icon-img" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
-          <text class="order-info-text">{{item.activityLocation}}</text>
-        </view>
-        <view class="order-info" wx:if="{{item.address && item.orderType === 'feeding'}}">
-          <image class="order-info-icon-img" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
-          <text class="order-info-text">{{item.address}}</text>
-        </view>
-        <view class="order-info" wx:if="{{item.dateRange && item.orderType === 'feeding'}}">
-          <image class="order-info-icon-img" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
-          <text class="order-info-text">{{item.dateRange}}</text>
-        </view>
-        <view class="order-info" wx:if="{{item.startDate && item.orderType !== 'feeding'}}">
-          <image class="order-info-icon-img" src="{{iconTimeLine}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconTimeLine}}" data-path="iconTimeLine" />
-          <text class="order-info-text">{{item.startDate}}{{item.endDate ? ' 至 ' + item.endDate : ''}}</text>
-        </view>
-        <view class="feeding-tags" wx:if="{{item.orderType === 'feeding'}}">
-          <text class="feeding-tag" wx:if="{{item.familiarityText}}">提前熟悉: {{item.familiarityText}}</text>
-          <text class="feeding-tag" wx:if="{{item.multiVisitText}}">一天多次: {{item.multiVisitText}}</text>
-        </view>
-      </block>
-      <view class="order-header">
-        <text class="order-status {{item.orderType === 'mall' ? 'mall-status' : ''}} {{item.orderType === 'group_buy' ? 'group-status' : ''}}">{{item.isEnded ? '已结束' : item.statusText || item.status}}</text>
-        <text class="order-price">¥{{item.totalPrice || 0}}</text>
-      </view>
-      <view class="order-body">
-        <text class="order-time">{{item.createdAt}}</text>
       </view>
     </view>
   </view>
 
   <view class="empty-state" wx:if="{{orders.length === 0 && !isLoading}}">
+    <view class="empty-ring"></view>
     <text class="empty-text">暂无订单</text>
   </view>
 
@@ -118,6 +141,13 @@
   <view class="lux-silk-line" style="background: var(--lux-gold-500, #C9A24B); animation-delay: 400ms;"></view>
 </view>
     <text class="loading-more-text">{{t.BIZ_CSIK0}}</text>
+  </view>
+
+  <!-- 台账落款 -->
+  <view class="ledger-foot" wx:if="{{orders.length > 0}}">
+    <view class="ledger-foot-line"></view>
+    <text class="ledger-foot-text">AROORO · 订单台账</text>
+    <view class="ledger-foot-line"></view>
   </view>
 </view>
 </scroll-view>
