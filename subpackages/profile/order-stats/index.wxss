@@ -351,3 +351,47 @@
 
 /* 入场动画已移除（2026-09-06）：opacity:0 起始动画在折叠显隐/分页 setData 时重放或中断，
    造成节内容闪烁与「消失」——内容稳定性优先于入场动效 */
+
+/* ================================================================
+   品牌色（2026-09-06）：深绿系补位——展开节头锚点 / 总消费金额 / 活跃缩略图
+   ================================================================ */
+/* 展开节头：深绿渐变底 + cream 文字（全页视觉锚点，「展开 = 激活」） */
+.section-head--expanded {
+  background: var(--lux-green-grad);
+  border-color: transparent;
+}
+
+.section-head--expanded .section-name {
+  color: #F7F5EF;
+}
+
+.section-head--expanded .section-count {
+  color: rgba(247, 245, 239, 0.75);
+}
+
+.section-head--expanded .section-rule {
+  background: rgba(247, 245, 239, 0.2);
+}
+
+.section-head--expanded .section-chevron-ring {
+  border-color: rgba(247, 245, 239, 0.4);
+}
+
+.section-head--expanded .section-chevron {
+  border-color: #F7F5EF;
+}
+
+/* 展开态按压：深一档绿（避免金底 pressed 规则闪色） */
+.section-head--expanded.pressed {
+  background: var(--primary-deep, #0F2410);
+}
+
+/* 总消费金额：深绿财务强调 */
+.ledger-num--green {
+  color: var(--primary-deep, #0F2410);
+}
+
+/* 进行中组缩略图：深绿边框（活跃订单标识） */
+.ledger-thumb--active {
+  border-color: var(--lux-green-600, #3D5A3D);
+}

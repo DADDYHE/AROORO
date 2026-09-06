@@ -202,6 +202,7 @@ Page({
     ]
     for (const item of (this._allOrders || [])) {
       const g = groupOf(item)
+      item._group = g
       const sec = sections.find(s => s.key === g)
       if (sec) {sec.list.push(item)}
     }

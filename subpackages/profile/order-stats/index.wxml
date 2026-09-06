@@ -29,7 +29,7 @@
       <view class="ledger-stat">
         <view class="ledger-amount-row">
           <text class="ledger-symbol">¥</text>
-          <text class="ledger-num">{{stats.amount}}</text>
+          <text class="ledger-num ledger-num--green">{{stats.amount}}</text>
         </view>
         <text class="ledger-label">总消费</text>
       </view>
@@ -39,7 +39,7 @@
   <!-- ═══ 分节台账：进行中 / 已完成 / 已关闭 ═══ -->
   <block wx:if="{{orders.length > 0}}">
     <view class="order-section" wx:for="{{orderSections}}" wx:key="key" wx:for-item="section">
-      <view class="section-head" wx:if="{{section.list.length > 0}}" bindtap="onToggleSection" data-key="{{section.key}}" hover-class="pressed" hover-stay-time="80">
+      <view class="section-head {{section.expanded ? 'section-head--expanded' : ''}}" wx:if="{{section.list.length > 0}}" bindtap="onToggleSection" data-key="{{section.key}}" hover-class="pressed" hover-stay-time="80">
         <text class="section-name">{{section.label}}</text>
         <text class="section-count">{{section.list.length}} 单</text>
         <view class="section-rule"></view>
@@ -57,7 +57,7 @@
         <!-- 商品/活动封面（有图时行首） -->
         <image
           wx:if="{{item.activityCoverUrl || item.productCoverUrl}}"
-          class="ledger-thumb"
+          class="ledger-thumb {{item._group === 'processing' ? 'ledger-thumb--active' : ''}}"
           src="{{item.productCoverUrl || item.activityCoverUrl}}"
           mode="aspectFill"
           binderror="onCloudImageError"
