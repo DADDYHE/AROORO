@@ -205,7 +205,27 @@ Page({
       const sec = sections.find(s => s.key === g)
       if (sec) {sec.list.push(item)}
     }
+    // 折叠状态跨刷新保留（首次：进行中展开，其余收起）
+    this._sectionExpanded = this._sectionExpanded || {}
+    sections.forEach(s => {
+      if (!(s.key in this._sectionExpanded)) {
+        this._sectionExpanded[s.key] = s.key === 'processing'
+      }
+      s.expanded = !!this._sectionExpanded[s.key]
+    })
     this.setData({ orderSections: sections, orders: this._allOrders || [] })
+  },
+
+  /** 点击节头展开/收起该节 */
+  onToggleSection(e) {
+    const key = e.currentTarget && e.currentTarget.dataset.key
+    if (!key) {return}
+    this._sectionExpanded = this._sectionExpanded || {}
+    this._sectionExpanded[key] = !this._sectionExpanded[key]
+    const idx = (this.data.orderSections || []).findIndex(s => s.key === key)
+    if (idx > -1) {
+      this.setData({ ['orderSections[' + idx + '].expanded']: this._sectionExpanded[key] })
+    }
   },
 
   _normalizeOrder(raw) {

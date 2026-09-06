@@ -39,11 +39,13 @@
   <!-- ═══ 分节台账：进行中 / 已完成 / 已关闭 ═══ -->
   <block wx:if="{{orders.length > 0}}">
     <view class="order-section" wx:for="{{orderSections}}" wx:key="key" wx:for-item="section">
-      <view class="section-head" wx:if="{{section.list.length > 0}}">
+      <view class="section-head" wx:if="{{section.list.length > 0}}" bindtap="onToggleSection" data-key="{{section.key}}" hover-class="pressed" hover-stay-time="80">
         <text class="section-name">{{section.label}}</text>
         <text class="section-count">{{section.list.length}} 单</text>
         <view class="section-rule"></view>
+        <view class="section-chevron {{section.expanded ? '' : 'section-chevron--collapsed'}}"></view>
       </view>
+      <view class="section-body" wx:if="{{section.expanded}}">
       <view
         wx:for="{{section.list}}"
         wx:key="_id"
@@ -117,6 +119,7 @@
             <view class="ledger-cancel-btn" data-id="{{item._id}}" catchtap="onCancelMallOrder" hover-class="pressed" hover-stay-time="80">取消订单</view>
           </view>
         </view>
+      </view>
       </view>
     </view>
   </block>
