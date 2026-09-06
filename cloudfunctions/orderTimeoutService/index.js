@@ -554,12 +554,26 @@ async function cancelBoardingOrders(result, boardingTimeout) {
         //   扫描时 status 已变 cancelled 而漏处理，库存/团名额永久丢失
         const expiredBoardingOrders = await fetchAllExpired('orders', {
             status: 'pending_payment',
-            paymentStatus: _.in(['unpaid', null]),
+            // 2026-09-06：补 'paying'——拉起支付又放弃的单（paymentStatus=paying）此前永远扫不到，
+            //   会永久挂在待支付（今天联调实测：1 小时前的单仍待支付且可继续付款）
+            paymentStatus: _.in(['unpaid', 'paying', null]),
             createdAt: _.lte(boardingTimeout),
             type: _.in(['boarding', null]),
-        }, { _id: true, outTradeNo: true });
+        }, { _id: true, outTradeNo: true, paymentStatus: true });
         for (const order of expiredBoardingOrders) {
             try {
+                // 2026-09-06：paying 单先关微信预付单再取消——close 失败说明用户已支付成功，
+                //   跳过取消等待 notify 回调置 paid，避免「取消后用户支付成功」竞态
+                const isPaying = order.paymentStatus === 'paying';
+                if (isPaying && order.outTradeNo) {
+                    const closed = await closeWechatOrder(order.outTradeNo);
+                    if (!closed) {
+                        logger.info('cancelBoardingOrders.skip_paying_close_failed', { orderId: order._id, outTradeNo: order.outTradeNo });
+                        result.closeOrderFailed++;
+                        continue;
+                    }
+                    result.closedWechatOrders++;
+                }
                 // H2: 使用 where().update() 加 status 条件实现幂等保护
                 //   仅当 status 仍为 pending_payment 时才更新，避免 cron 重叠时重复取消
                 //   updated=0 表示已被其他实例取消，跳过资源回退
@@ -578,7 +592,7 @@ async function cancelBoardingOrders(result, boardingTimeout) {
                     logger.info('cancelBoardingOrders.skip_already_cancelled', { orderId: order._id });
                     continue;
                 }
-                if (order.outTradeNo) {
+                if (order.outTradeNo && !isPaying) {
                     const closed = await closeWechatOrder(order.outTradeNo);
                     if (closed) {
                         result.closedWechatOrders++;
