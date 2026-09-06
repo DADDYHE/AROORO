@@ -256,32 +256,6 @@ Page({
     wx.makePhoneCall({ phoneNumber: phone })
   },
 
-  /** 支付倒计时：timeoutAt 每秒刷新，归零后刷新订单（可能已被超时取消） */
-  _startPayCountdown(timeoutAt) {
-    this._stopPayCountdown()
-    const tick = () => {
-      const remain = Math.max(0, Math.floor((timeoutAt - Date.now()) / 1000))
-      if (remain <= 0) {
-        this._stopPayCountdown()
-        this.setData({ payCountdown: '支付已超时' })
-        this._loadOrder({ orderId: this.data.order && this.data.order._id })
-        return
-      }
-      const mm = String(Math.floor(remain / 60)).padStart(2, '0')
-      const ss = String(remain % 60).padStart(2, '0')
-      this.setData({ payCountdown: '支付剩余 ' + mm + ':' + ss })
-    }
-    tick()
-    this._cdTimer = setInterval(tick, 1000)
-  },
-
-  _stopPayCountdown() {
-    if (this._cdTimer) {
-      clearInterval(this._cdTimer)
-      this._cdTimer = null
-    }
-  },
-
   /**
    * 发起支付（2026-09-06）：底部按钮直接决定支付类型
    *   - 'deposit'：预付定金 30%（pending_payment）
