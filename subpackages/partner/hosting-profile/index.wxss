@@ -613,3 +613,185 @@ button.inv-act::after { border: none; }
   justify-content: center;
   padding: 20rpx 0 4rpx;
 }
+
+/* ================================================================
+   家庭卷宗（2026-09-07）：编辑式数据 + 状态章 + 元信息——对齐台账语言
+   ================================================================ */
+.brand-eyebrow {
+  display: block;
+  font-size: 19rpx;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  color: var(--accent-color);
+  margin-bottom: 10rpx;
+}
+
+.portfolio-card {
+  padding: 32rpx 36rpx;
+  border: 1rpx solid var(--hairline);
+  border-radius: var(--zy-radius-sm);
+  background: linear-gradient(180deg, var(--card-satin) 0%, var(--sheet-paper) 100%);
+}
+
+.portfolio-card--alert {
+  border-color: var(--wash-error-20, rgba(178, 58, 58, 0.2));
+}
+
+.portfolio-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.portfolio-status-tag {
+  font-size: 22rpx;
+  letter-spacing: 0.12em;
+  padding: 8rpx 22rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid var(--lux-hairline-gold);
+  color: var(--accent-color);
+}
+
+.tag-inactive.portfolio-status-tag,
+.portfolio-status-tag.tag-inactive {
+  color: var(--text-tertiary);
+  border-color: var(--hairline);
+}
+
+.tag-rejected.portfolio-status-tag,
+.portfolio-status-tag.tag-rejected {
+  color: var(--error-color);
+  border-color: var(--wash-error-20, rgba(178, 58, 58, 0.2));
+}
+
+.portfolio-switch {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.portfolio-switch-label {
+  font-size: 22rpx;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.portfolio-divider {
+  height: 1rpx;
+  background: var(--hairline);
+  margin: 26rpx 0;
+}
+
+.portfolio-stats {
+  display: flex;
+  align-items: flex-end;
+}
+
+.portfolio-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.portfolio-stat-divider {
+  width: 1rpx;
+  height: 52rpx;
+  background: var(--hairline);
+  margin: 0 24rpx;
+  align-self: flex-end;
+  margin-bottom: 6rpx;
+}
+
+.portfolio-stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2rpx;
+}
+
+.portfolio-symbol {
+  font-size: 22rpx;
+  color: var(--primary-deep, #0F2410);
+}
+
+.portfolio-num {
+  font-size: 44rpx;
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  color: var(--primary-deep, #0F2410);
+}
+
+.portfolio-num--mode {
+  font-size: 30rpx;
+  font-weight: 400;
+}
+
+.portfolio-unit {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+}
+
+.portfolio-label {
+  font-size: 20rpx;
+  letter-spacing: 0.14em;
+  color: var(--text-tertiary);
+}
+
+.portfolio-meta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 8rpx 0;
+}
+
+.portfolio-meta-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: var(--accent-color);
+  flex-shrink: 0;
+}
+
+.portfolio-meta-text {
+  font-size: 24rpx;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portfolio-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+  margin-bottom: 12rpx;
+}
+
+.portfolio-desc {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.portfolio-btn {
+  margin-top: 20rpx;
+  padding: 16rpx 40rpx;
+  font-size: 24rpx;
+  letter-spacing: 0.1em;
+  border-radius: 999rpx;
+  line-height: 1.2;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+button.portfolio-btn::after { border: none; }
+
+.portfolio-btn--primary {
+  background: var(--lux-green-grad-rich);
+  color: #F7F5EF;
+}
