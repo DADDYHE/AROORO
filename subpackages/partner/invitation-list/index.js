@@ -145,6 +145,10 @@ Page({
 
   onShareAppMessage() {
     const s = this.data.shareSheet
+    const __r = s && s.type === 'invitation'
+      ? { title: '邀请', path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}` }
+      : null
+    console.log('[share] onShareAppMessage shareSheet:', JSON.stringify(s || null), '→ path:', __r && __r.path)
     if (!s || s.type !== 'invitation') { return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' } }
     const inv = s.inv || {}
     return {

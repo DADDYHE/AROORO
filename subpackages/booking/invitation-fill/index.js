@@ -66,6 +66,7 @@ Page({
   },
 
   onLoad(options) {
+    console.log('[invitation-fill] onLoad options:', JSON.stringify(options || {}))
     this._initNavbarHeight()
     // 分享卡片 ?code=xxx；小程序码 scene=c=xxx（URL 编码）
     let code = options.code || ''
@@ -91,6 +92,7 @@ Page({
         const days = Math.max(1, Math.round(
           (Date.parse(`${inv.endDate}T00:00:00Z`) - Date.parse(`${inv.startDate}T00:00:00Z`)) / 86400000,
         ))
+        console.log('[invitation-fill] loaded ok, code=', code)
         this.setData({
           invitation: inv,
           days,
@@ -98,6 +100,7 @@ Page({
           isLoading: false,
         })
       } else {
+        console.error('[invitation-fill] load failed:', res.message)
         this.setData({ isLoading: false, loadError: res.message || '邀请不存在或已失效' })
       }
     } catch (e) {
