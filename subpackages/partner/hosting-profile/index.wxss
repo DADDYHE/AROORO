@@ -818,3 +818,11 @@ button.portfolio-btn::after { border: none; }
   background: var(--primary-tint-08);
   color: var(--primary-color);
 }
+
+.section-note {
+  display: block;
+  font-size: 20rpx;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  padding: 4rpx 0 12rpx;
+}
