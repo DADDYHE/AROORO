@@ -147,7 +147,7 @@
                 <text wx:if="{{item.note}}" class="card-info-item inv-note-line">备注：{{item.note}}</text>
                 <view wx:if="{{item.status === 'active'}}" class="order-actions">
                   <button class="order-btn order-btn--ghost" data-id="{{item._id}}" catchtap="onCancelInvitation">取消</button>
-                  <button class="order-btn order-btn--primary" open-type="share" data-code="{{item.shareCode}}">分享给客户</button>
+                  <button class="order-btn order-btn--primary" open-type="share" catchtap="onShareTap" data-code="{{item.shareCode}}">分享给客户</button>
                 </view>
                 <view wx:elif="{{item.status === 'filled'}}" class="order-actions">
                   <button wx:if="{{item.releasable}}" class="order-btn order-btn--ghost" data-id="{{item._id}}" catchtap="onReleaseInvitation">释放</button>
