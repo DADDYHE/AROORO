@@ -76,11 +76,25 @@
   color: var(--error-color);
 }
 
-/* ---------- 操作行（编辑档案） ---------- */
+/* ---------- 操作行（编辑档案 + 主动开单） ---------- */
 .action-row {
   display: flex;
   justify-content: flex-end;
   margin-top: 20rpx;
+}
+
+.action-row--double {
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.action-row--double .edit-profile-btn,
+.action-row--double .invite-create-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
 }
 
 /* ---------- 待审核/提示区 ---------- */
@@ -414,4 +428,188 @@
 
 .edit-profile-btn::after {
   border: none;
+}
+
+/* ---------- 主动开单按钮（金色主操作） ---------- */
+.invite-create-btn {
+  display: inline-flex;
+  padding: 14rpx 32rpx;
+  border: none;
+  color: var(--text-on-accent);
+  background: var(--lux-gold-grad);
+  border-radius: var(--zy-radius-lg);
+  font-size: 24rpx;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+  box-shadow: var(--lux-shadow-gold);
+}
+
+.invite-create-btn::after {
+  border: none;
+}
+
+/* ---------- 我的开单入口行 ---------- */
+.invite-entrance {
+  position: relative;
+}
+
+.invite-entrance--pressed {
+  opacity: 0.7;
+}
+
+.invite-entrance-arrow {
+  width: 14rpx;
+  height: 14rpx;
+  border-right: 2rpx solid var(--text-tertiary);
+  border-bottom: 2rpx solid var(--text-tertiary);
+  transform: rotate(-45deg);
+  margin-left: 12rpx;
+}
+
+/* ================================================================
+   手风琴双节（2026-09-07）：我的开单 / 寄养订单——对齐 order-stats 台账语言
+   ================================================================ */
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin: 28rpx 0 20rpx;
+  padding: 26rpx 28rpx;
+  background: var(--card-cream, #FBF9F4);
+  border: 1rpx solid var(--hairline);
+  border-radius: 16rpx;
+}
+
+.section-head--expanded {
+  background: var(--lux-green-grad-rich);
+  border-color: transparent;
+}
+
+.section-head--expanded .section-name { color: #F7F5EF; }
+.section-head--expanded .section-count { color: rgba(247, 245, 239, 0.75); }
+.section-head--expanded .section-rule { background: rgba(247, 245, 239, 0.2); }
+.section-head--expanded .section-chevron-ring { border-color: rgba(247, 245, 239, 0.4); }
+.section-head--expanded .section-chevron { border-color: #F7F5EF; }
+
+.section-name {
+  font-size: 30rpx;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+}
+
+.section-count {
+  font-size: 22rpx;
+  letter-spacing: 0.08em;
+  color: var(--accent-color);
+}
+
+.section-rule {
+  flex: 1;
+  height: 1rpx;
+  background: var(--hairline);
+}
+
+.section-chevron-ring {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 1rpx solid var(--lux-hairline-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.section-chevron {
+  width: 12rpx;
+  height: 12rpx;
+  border-right: 2rpx solid var(--text-tertiary);
+  border-bottom: 2rpx solid var(--text-tertiary);
+  transform: rotate(45deg);
+  transition: transform 200ms ease;
+  flex-shrink: 0;
+}
+
+.section-chevron--collapsed { transform: rotate(-45deg); }
+
+.section-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx 0;
+}
+
+.section-empty-text {
+  font-size: 24rpx;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+/* 邀请行卡 */
+.inv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid rgba(31, 58, 31, 0.14);
+}
+
+.inv-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.inv-title {
+  font-size: 27rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.inv-sub {
+  font-size: 21rpx;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.inv-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.inv-price {
+  font-size: 30rpx;
+  font-weight: 300;
+  color: var(--text-primary);
+}
+
+.inv-actions {
+  display: flex;
+  gap: 12rpx;
+}
+
+.inv-act {
+  font-size: 20rpx;
+  line-height: 1;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  background: transparent;
+  border: 1rpx solid var(--border-color, #E2DED3);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+button.inv-act::after { border: none; }
+
+.inv-view-all {
+  display: flex;
+  justify-content: center;
+  padding: 20rpx 0 4rpx;
 }

@@ -110,42 +110,80 @@
           </view>
         </view>
 
-        <!-- 编辑入口 -->
-        <view wx:if="{{profile.status !== 'rejected'}}" class="action-row">
+        <!-- 编辑入口 + 主动开单入口 -->
+        <view wx:if="{{profile.status !== 'rejected'}}" class="action-row action-row--double">
           <button class="edit-profile-btn" bindtap="goEdit">编辑档案</button>
+          <button class="invite-create-btn" bindtap="goInviteCreate">主动开单</button>
         </view>
 
-        <view class="gallery-entrance">
-          <view class="entrance-line"></view>
-          <text class="entrance-label">寄养订单 ({{orderTotal}})</text>
+        <!-- ═══ 节 1：我的开单（手风琴，默认展开） ═══ -->
+        <view class="ledger-section">
+          <view class="section-head {{invitationExpanded ? 'section-head--expanded' : ''}}" bindtap="onToggleSection" data-key="invitations">
+            <text class="section-name">我的开单</text>
+            <text class="section-count">{{myInvitations.length}} 单</text>
+            <view class="section-rule"></view>
+            <view class="section-chevron {{invitationExpanded ? '' : 'section-chevron--collapsed'}}"></view>
+          </view>
+          <view class="section-body" hidden="{{!invitationExpanded}}">
+            <view wx:if="{{myInvitations.length === 0}}" class="section-empty">
+              <text class="section-empty-text">暂无开单邀请，点击上方「主动开单」创建</text>
+            </view>
+            <view wx:for="{{myInvitations}}" wx:key="_id" class="inv-row">
+              <view class="inv-info">
+                <text class="inv-title">{{item.startDate}} 至 {{item.endDate}}</text>
+                <text class="inv-sub">{{item.statusText}}</text>
+              </view>
+              <view class="inv-right">
+                <text class="inv-price">¥{{item.totalPrice}}</text>
+                <view class="inv-actions">
+                  <button wx:if="{{item.status === 'active'}}" class="inv-act" open-type="share" data-code="{{item.shareCode}}">分享</button>
+                  <button wx:if="{{item.status === 'active'}}" class="inv-act" data-id="{{item._id}}" catchtap="onCancelInvitation">取消</button>
+                  <button wx:if="{{item.status === 'filled' && item.orderId}}" class="inv-act" data-orderid="{{item.orderId}}" catchtap="onViewOrder">查看订单</button>
+                </view>
+              </view>
+            </view>
+            <view class="inv-view-all" wx:if="{{myInvitations.length > 0}}" bindtap="goInviteList">
+              <text class="section-link">管理全部开单 ›</text>
+            </view>
+          </view>
         </view>
 
-        <view wx:if="{{orders.length === 0}}" class="gallery-empty">
-          <view class="empty-line"></view>
-          <text class="empty-text">暂无订单</text>
-        </view>
+        <!-- ═══ 节 2：寄养订单（手风琴互斥） ═══ -->
+        <view class="ledger-section">
+          <view class="section-head {{ordersExpanded ? 'section-head--expanded' : ''}}" bindtap="onToggleSection" data-key="orders">
+            <text class="section-name">寄养订单</text>
+            <text class="section-count">{{orderTotal}} 单</text>
+            <view class="section-rule"></view>
+            <view class="section-chevron {{ordersExpanded ? '' : 'section-chevron--collapsed'}}"></view>
+          </view>
+          <view class="section-body" hidden="{{!ordersExpanded}}">
+            <view wx:if="{{orders.length === 0}}" class="section-empty">
+              <text class="section-empty-text">暂无订单</text>
+            </view>
 
-        <view wx:for="{{orders}}" wx:key="_id" class="gallery-card order-card">
-          <view class="card-accent"></view>
-          <view class="card-body">
-            <view class="card-header">
-              <text class="card-title">寄养订单{{item.orderNo ? ' · ' + item.orderNo : ''}}</text>
-              <text class="card-status status-{{item.status}}">{{item.statusText}}</text>
-            </view>
-            <view class="card-info">
-              <text class="card-info-item" wx:if="{{item.ownerName}}">宠物主人：{{item.ownerName}}</text>
-              <text class="card-info-item" wx:if="{{item.startDate || item.endDate}}">寄养日期：{{item.startDate || '-'}} 至 {{item.endDate || '-'}}</text>
-              <text class="card-info-item">金额：¥{{item.totalPrice || item.totalAmount || 0}}</text>
-            </view>
-            <view wx:if="{{item.status === 'paid' || item.status === 'confirmed' || item.status === 'in_progress'}}" class="order-actions">
-              <button wx:if="{{item.status === 'paid'}}" class="order-btn order-btn--ghost" data-id="{{item._id}}" data-op="reject" catchtap="onOrderAction">拒单</button>
-              <button wx:if="{{item.status === 'paid'}}" class="order-btn order-btn--primary" data-id="{{item._id}}" data-op="confirm" catchtap="onOrderAction">接单</button>
-              <button wx:if="{{item.status === 'confirmed' || item.status === 'in_progress'}}" class="order-btn order-btn--primary" data-id="{{item._id}}" data-op="complete" catchtap="onOrderAction">完成寄养</button>
-            </view>
-            <!-- 待支付/待补尾款：改价（折扣）+ 分享收款链接（客户点开即付） -->
-            <view wx:if="{{item.status === 'pending_payment' || item.status === 'deposit_paid'}}" class="order-actions">
-              <button class="order-btn order-btn--ghost" data-id="{{item._id}}" data-op="adjust" catchtap="onOrderAction">改价</button>
-              <button class="order-btn order-btn--primary" open-type="share" data-id="{{item._id}}">分享给客户付款</button>
+            <view wx:for="{{orders}}" wx:key="_id" class="gallery-card order-card">
+              <view class="card-accent"></view>
+              <view class="card-body">
+                <view class="card-header">
+                  <text class="card-title">寄养订单{{item.orderNo ? ' · ' + item.orderNo : ''}}</text>
+                  <text class="card-status status-{{item.status}}">{{item.statusText}}</text>
+                </view>
+                <view class="card-info">
+                  <text class="card-info-item" wx:if="{{item.ownerName}}">宠物主人：{{item.ownerName}}</text>
+                  <text class="card-info-item" wx:if="{{item.startDate || item.endDate}}">寄养日期：{{item.startDate || '-'}} 至 {{item.endDate || '-'}}</text>
+                  <text class="card-info-item">金额：¥{{item.totalPrice || item.totalAmount || 0}}</text>
+                </view>
+                <view wx:if="{{item.status === 'paid' || item.status === 'confirmed' || item.status === 'in_progress'}}" class="order-actions">
+                  <button wx:if="{{item.status === 'paid'}}" class="order-btn order-btn--ghost" data-id="{{item._id}}" data-op="reject" catchtap="onOrderAction">拒单</button>
+                  <button wx:if="{{item.status === 'paid'}}" class="order-btn order-btn--primary" data-id="{{item._id}}" data-op="confirm" catchtap="onOrderAction">接单</button>
+                  <button wx:if="{{item.status === 'confirmed' || item.status === 'in_progress'}}" class="order-btn order-btn--primary" data-id="{{item._id}}" data-op="complete" catchtap="onOrderAction">完成寄养</button>
+                </view>
+                <!-- 待支付/待补尾款：改价（折扣）+ 分享收款链接（客户点开即付） -->
+                <view wx:if="{{item.status === 'pending_payment' || item.status === 'deposit_paid'}}" class="order-actions">
+                  <button class="order-btn order-btn--ghost" data-id="{{item._id}}" data-op="adjust" catchtap="onOrderAction">改价</button>
+                  <button class="order-btn order-btn--primary" open-type="share" data-id="{{item._id}}">分享给客户付款</button>
+                </view>
+              </view>
             </view>
           </view>
         </view>

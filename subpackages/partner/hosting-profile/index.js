@@ -33,6 +33,13 @@ function buildStatusView(profile) {
   return { statusText: text, statusTagClass: tagClass }
 }
 
+// 邀请状态 → 展示文案
+const INVITATION_STATUS_TEXT = {
+  active: '待客户填写',
+  filled: '已成单',
+  cancelled: '已取消',
+}
+
 // 订单状态 → 展示文案
 const ORDER_STATUS_TEXT = {
   pending_payment: '待买家支付',
@@ -59,6 +66,9 @@ Page({
     acceptSwitching: false,
     orders: [],
     orderTotal: 0,
+    myInvitations: [],
+    invitationExpanded: true,
+    ordersExpanded: false,
     page: 1,
     pageSize: 20,
     hasMore: true,
@@ -94,6 +104,7 @@ Page({
           isLoading: false,
         })
         this._loadOrders()
+        this._loadInvitations()
       } else {
         this.setData({ hasProfile: false, isLoading: false })
       }
@@ -130,6 +141,83 @@ Page({
 
   goEdit() {
     wx.navigateTo({ url: '/subpackages/partner/hosting-profile-edit/index?edit=1' })
+  },
+
+  // 主动开单（寄养家庭邀请客户填写信息并支付）
+  goInviteCreate() {
+    wx.navigateTo({ url: '/subpackages/partner/invitation-create/index' })
+  },
+
+  goInviteList() {
+    wx.navigateTo({ url: '/subpackages/partner/invitation-list/index' })
+  },
+
+  /** 我的开单列表（轻量拉取，每次进入刷新——邀请状态/成单结果需即时可见） */
+  async _loadInvitations() {
+    try {
+      const res = await OrderService.getMyInvitations({ page: 1, pageSize: 10 })
+      if (res.code === 0 && res.data) {
+        const list = (res.data.list || []).map(o => ({
+          ...o,
+          statusText: INVITATION_STATUS_TEXT[o.status] || o.status,
+        }))
+        this.setData({ myInvitations: list })
+      }
+    } catch (e) {
+      console.error('[partner/hosting-profile] _loadInvitations error:', e)
+    }
+  },
+
+  /** 手风琴互斥：点击节头展开该节、收起另一节；点已展开的节则收起自己 */
+  onToggleSection(e) {
+    const key = e.currentTarget && e.currentTarget.dataset.key
+    if (!key) { return }
+    const isInv = key === 'invitations'
+    const invOpen = isInv ? !this.data.invitationExpanded : false
+    const ordOpen = isInv ? false : !this.data.ordersExpanded
+    this.setData({ invitationExpanded: invOpen, ordersExpanded: ordOpen })
+  },
+
+  onShareAppMessage(res) {
+    const code = res && res.target && res.target.dataset.code
+    const inv = this.data.myInvitations.find(x => x.shareCode === code)
+    return {
+      title: inv
+        ? `寄养开单邀请 · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`
+        : 'AROORO · 家庭寄养',
+      path: code
+        ? `/subpackages/booking/invitation-fill/index?code=${code}`
+        : '/pages/boarding/index',
+    }
+  },
+
+  onCancelInvitation(e) {
+    const id = e.currentTarget && e.currentTarget.dataset.id
+    if (!id) { return }
+    wx.showModal({
+      title: '取消开单',
+      content: '取消后客户将无法再通过此邀请填写下单，确认取消？',
+      confirmColor: '#1F3A1F',
+      success: res => {
+        if (res.confirm) {
+          OrderService.cancelInvitation(id).then(r => {
+            if (r.code === 0) {
+              wx.showToast({ title: '已取消', icon: 'success' })
+              this._loadInvitations()
+            } else {
+              wx.showToast({ title: r.message || r.msg || '取消失败', icon: 'none' })
+            }
+          }).catch(() => wx.showToast({ title: '取消失败，请重试', icon: 'none' }))
+        }
+      },
+    })
+  },
+
+  onViewOrder(e) {
+    const orderId = e.currentTarget && e.currentTarget.dataset.orderid
+    if (orderId) {
+      wx.navigateTo({ url: '/subpackages/profile/order-detail/index?id=' + orderId })
+    }
   },
 
   async onAcceptToggle(e) {
