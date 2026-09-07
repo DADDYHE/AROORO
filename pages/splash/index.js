@@ -90,8 +90,16 @@ Page({
 
   _exit() {
     if (this._timer) { clearTimeout(this._timer); this._timer = null }
-    // 启动页由 reLaunch 进入（页面栈仅自身），退出时统一 reLaunch 回首页，
-    // 不依赖页面栈层级，避免 navigateBack 在异常栈下失败导致卡死。
+    // 启动页由 reLaunch 进入（页面栈仅自身），退出时统一 reLaunch 退出。
+    // 2026-09-07：冷启动原始落地路径非首页时（如分享卡片直指开单填写页），
+    //   还原到原始路径——否则分享落地页被启动海报冲掉，用户永远进不去。
+    const ret = app && app.__splashReturnRoute
+    if (app) app.__splashReturnRoute = null
+    if (ret && ret.path) {
+      const target = '/' + ret.path + (ret.query ? '?' + ret.query : '')
+      wx.reLaunch({ url: target })
+      return
+    }
     wx.reLaunch({ url: '/pages/home/index' })
   },
 

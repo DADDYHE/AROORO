@@ -41,6 +41,7 @@ Page({
           wx.showModal({ title: '邀请链接', content: '当前小程序版本暂不支持开单邀请，请更新小程序后重试', showCancel: false })
         },
       })
+      return
     }
 
     // 启动首屏海报：独立启动页（非 tab 页 + custom 导航栏，框架级全屏，
@@ -50,6 +51,17 @@ Page({
       // 已同步缓存且明确关闭 -> 跳过；其余（启用 / 首启未知）都进入启动页最终裁决
       if (!(sync && sync.enabled === false)) {
         app.__splashShown = true
+        // 2026-09-07：保留原始落地路径——分享卡片可能直指分包页面（如开单填写页），
+        //   冷启动时微信先初始化首页，splash 的 reLaunch 会冲掉原始路径；
+        //   splash 退出时按此路由还原（wx.getEnterOptionsSync = 微信收到的真实进入参数）
+        try {
+          const entry = wx.getEnterOptionsSync()
+          if (entry && entry.path && entry.path !== 'pages/home/index') {
+            const q = entry.query || {}
+            const qs = Object.keys(q).map(k => k + '=' + encodeURIComponent(q[k])).join('&')
+            app.__splashReturnRoute = { path: entry.path, query: qs }
+          }
+        } catch (e) {}
         // 冷启动首屏页面栈未就绪，navigateTo 会被静默丢弃；
         // reLaunch 重建栈、可靠打开启动页，且销毁首页不渲染其可见帧（根绝闪屏）。
         wx.reLaunch({ url: '/pages/splash/index' })
