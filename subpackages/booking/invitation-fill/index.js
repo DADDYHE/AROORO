@@ -119,6 +119,18 @@ Page({
     }
   },
 
+  /** 二次转发：本页转发始终携带邀请码，收件人可直接进入同一填写页 */
+  onShareAppMessage() {
+    const inv = this.data.invitation
+    const code = this.data.code
+    return {
+      title: inv
+        ? `寄养开单邀请 · ${inv.hostSnapshot && inv.hostSnapshot.hostName || '家庭寄养'} · ${inv.startDate} 至 ${inv.endDate}`
+        : '寄养开单邀请',
+      path: `/subpackages/booking/invitation-fill/index?code=${code}`,
+    }
+  },
+
   goHome() {
     wx.switchTab({ url: '/pages/boarding/index' })
   },
