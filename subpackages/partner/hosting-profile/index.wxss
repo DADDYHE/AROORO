@@ -795,3 +795,26 @@ button.portfolio-btn::after { border: none; }
   background: var(--lux-green-grad-rich);
   color: #F7F5EF;
 }
+
+/* 邀请卡（手风琴节内，对齐 invitation-list 结构） */
+.inv-card { margin-bottom: 16rpx; }
+.inv-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 14rpx;
+}
+.inv-card-title {
+  font-size: 27rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-note-line { color: var(--text-tertiary); }
+.tag-filled {
+  background: var(--primary-tint-08);
+  color: var(--primary-color);
+}

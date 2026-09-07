@@ -39,6 +39,11 @@ const INVITATION_STATUS_TEXT = {
   filled: '已成单',
   cancelled: '已取消',
 }
+const INVITATION_TAG_CLASS = {
+  active: 'tag-active',
+  filled: 'tag-filled',
+  cancelled: 'tag-inactive',
+}
 
 // 订单状态 → 展示文案
 const ORDER_STATUS_TEXT = {
@@ -160,6 +165,13 @@ Page({
         const list = (res.data.list || []).map(o => ({
           ...o,
           statusText: INVITATION_STATUS_TEXT[o.status] || o.status,
+          statusTagClass: INVITATION_TAG_CLASS[o.status] || 'tag-inactive',
+          days: Math.max(1, Math.round(
+            (Date.parse(`${o.endDate}T00:00:00Z`) - Date.parse(`${o.startDate}T00:00:00Z`)) / 86400000,
+          )),
+          dateRangeText: `${o.startDate || '-'} 至 ${o.endDate || '-'}`,
+          timeText: `${o.startAt || '--:--'} - ${o.endAt || '--:--'}`,
+          releasable: o.status === 'filled' && !o.orderId,
         }))
         this.setData({ myInvitations: list })
       }
@@ -208,6 +220,29 @@ Page({
               wx.showToast({ title: r.message || r.msg || '取消失败', icon: 'none' })
             }
           }).catch(() => wx.showToast({ title: '取消失败，请重试', icon: 'none' }))
+        }
+      },
+    })
+  },
+
+  /** 释放失联 filled 邀请（孤儿或订单已取消）——作废后可重新开单 */
+  onReleaseInvitation(e) {
+    const id = e.currentTarget && e.currentTarget.dataset.id
+    if (!id) { return }
+    wx.showModal({
+      title: '释放邀请',
+      content: '此操作将作废该邀请，释放后可重新开单。确认？',
+      confirmColor: '#1F3A1F',
+      success: res => {
+        if (res.confirm) {
+          OrderService.cancelInvitation(id).then(r => {
+            if (r.code === 0) {
+              wx.showToast({ title: '已释放', icon: 'success' })
+              this._loadInvitations()
+            } else {
+              wx.showToast({ title: r.message || r.msg || '释放失败', icon: 'none' })
+            }
+          }).catch(() => wx.showToast({ title: '释放失败，请重试', icon: 'none' }))
         }
       },
     })

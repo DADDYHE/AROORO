@@ -131,17 +131,27 @@
             <view wx:if="{{myInvitations.length === 0}}" class="section-empty">
               <text class="section-empty-text">暂无开单邀请，点击上方「主动开单」创建</text>
             </view>
-            <view wx:for="{{myInvitations}}" wx:key="_id" class="inv-row">
-              <view class="inv-info">
-                <text class="inv-title">{{item.startDate}} 至 {{item.endDate}}</text>
-                <text class="inv-sub">{{item.statusText}}</text>
-              </view>
-              <view class="inv-right">
-                <text class="inv-price">¥{{item.totalPrice}}</text>
-                <view class="inv-actions">
-                  <button wx:if="{{item.status === 'active'}}" class="inv-act" open-type="share" data-code="{{item.shareCode}}">分享</button>
-                  <button wx:if="{{item.status === 'active'}}" class="inv-act" data-id="{{item._id}}" catchtap="onCancelInvitation">取消</button>
-                  <button wx:if="{{item.status === 'filled' && item.orderId}}" class="inv-act" data-orderid="{{item.orderId}}" catchtap="onViewOrder">查看订单</button>
+            <view wx:for="{{myInvitations}}" wx:key="_id" class="gallery-card inv-card">
+              <view class="card-accent"></view>
+              <view class="card-body">
+                <view class="inv-card-head">
+                  <text class="inv-card-title">开单邀请 · {{item.shareCode}}</text>
+                  <text class="status-tag {{item.statusTagClass}}">{{item.statusText}}</text>
+                </view>
+                <view class="card-info">
+                  <text class="card-info-item">寄养日期：{{item.dateRangeText}}</text>
+                  <text class="card-info-item">接还时刻：{{item.timeText}} · {{item.days}} 天</text>
+                  <text class="card-info-item">宠物数量：{{item.petCount}} 只</text>
+                  <text class="card-info-item">总价：¥{{item.totalPrice}}</text>
+                </view>
+                <text wx:if="{{item.note}}" class="card-info-item inv-note-line">备注：{{item.note}}</text>
+                <view wx:if="{{item.status === 'active'}}" class="order-actions">
+                  <button class="order-btn order-btn--ghost" data-id="{{item._id}}" catchtap="onCancelInvitation">取消</button>
+                  <button class="order-btn order-btn--primary" open-type="share" data-code="{{item.shareCode}}">分享给客户</button>
+                </view>
+                <view wx:elif="{{item.status === 'filled'}}" class="order-actions">
+                  <button wx:if="{{item.releasable}}" class="order-btn order-btn--ghost" data-id="{{item._id}}" catchtap="onReleaseInvitation">释放</button>
+                  <button wx:if="{{item.orderId}}" class="order-btn order-btn--primary" data-orderid="{{item.orderId}}" catchtap="onViewOrder">查看关联订单</button>
                 </view>
               </view>
             </view>
