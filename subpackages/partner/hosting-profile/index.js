@@ -215,8 +215,13 @@ Page({
     wx.navigateTo({ url: '/subpackages/partner/invitation-create/index?id=' + id })
   },
 
+  /** 分享按钮点击：阻断冒泡（防误触卡片编辑跳转）+ 记录分享码兜底 */
+  onShareTap(e) {
+    this._shareCode = (e.currentTarget && e.currentTarget.dataset.code) || ''
+  },
+
   onShareAppMessage(res) {
-    const code = res && res.target && res.target.dataset.code
+    const code = (res && res.target && res.target.dataset.code) || this._shareCode || ''
     const inv = this.data.myInvitations.find(x => x.shareCode === code)
     return {
       title: inv

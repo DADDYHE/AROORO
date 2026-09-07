@@ -219,9 +219,7 @@ Page({
           })
       if (res.code === 0) {
         wx.showToast({ title: isEdit ? '保存成功' : '开单成功', icon: 'success' })
-        setTimeout(() => {
-          wx.redirectTo({ url: '/subpackages/partner/invitation-list/index?created=1' })
-        }, 800)
+        setTimeout(() => wx.navigateBack(), 800)
         return
       }
       wx.showToast({ title: res.message || res.msg || '开单失败', icon: 'none' })

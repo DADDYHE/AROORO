@@ -76,7 +76,7 @@
               <view wx:if="{{ item.status === 'active' }}" class="inv-actions">
                 <button class="inv-btn inv-btn--ghost" data-id="{{ item._id }}" bindtap="onCancelTap">取消</button>
                 <button class="inv-btn inv-btn--ghost" data-id="{{ item._id }}" bindtap="onPosterTap">海报</button>
-                <button class="inv-btn inv-btn--primary" open-type="share" data-code="{{ item.shareCode }}">分享给客户</button>
+                <button class="inv-btn inv-btn--primary" open-type="share" catchtap="onShareTap" data-code="{{ item.shareCode }}">分享给客户</button>
               </view>
 
               <!-- filled：查看订单 / 释放（孤儿或订单已取消的可释放） -->
