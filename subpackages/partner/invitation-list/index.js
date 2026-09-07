@@ -149,7 +149,17 @@ Page({
       ? { title: '邀请', path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}` }
       : null
     console.log('[share] onShareAppMessage shareSheet:', JSON.stringify(s || null), '→ path:', __r && __r.path)
-    if (!s || s.type !== 'invitation') { return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' } }
+    if (!s || s.type !== 'invitation') {
+      // 右上角菜单转发兜底：分享最新一条待填写邀请（任何入口转发都带码）
+      const latest = (this.data.list || []).find(x => x.status === 'active')
+      if (latest) {
+        return {
+          title: `寄养开单邀请 · ${latest.startDate} 至 ${latest.endDate} · ¥${latest.totalPrice}`,
+          path: `/subpackages/booking/invitation-fill/index?code=${latest.shareCode}`,
+        }
+      }
+      return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' }
+    }
     const inv = s.inv || {}
     return {
       title: `寄养开单邀请 · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`,
