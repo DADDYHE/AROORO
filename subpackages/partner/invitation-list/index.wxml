@@ -55,7 +55,7 @@
           </view>
 
           <!-- 邀请卡片 -->
-          <view wx:for="{{ list }}" wx:key="_id" class="gallery-card">
+          <view wx:for="{{ list }}" wx:key="_id" class="gallery-card {{ item.status === 'active' ? 'inv-card--editable' : '' }}" data-id="{{ item._id }}" bindtap="onCardTap">
             <view class="card-accent"></view>
             <view class="card-body">
               <view class="inv-card-head">

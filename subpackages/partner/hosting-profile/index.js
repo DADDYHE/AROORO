@@ -202,6 +202,19 @@ Page({
     this.setData(state)
   },
 
+  /** 点击邀请卡：仅 active 可进编辑详情 */
+  onCardTap(e) {
+    const id = e.currentTarget && e.currentTarget.dataset.id
+    if (!id) { return }
+    const inv = (this.data.list || this.data.myInvitations || []).find(x => x._id === id)
+    if (inv && inv.status !== 'active') {
+      wx.showToast({ title: '仅待客户填写的邀请可编辑', icon: 'none' })
+      return
+    }
+    wx.setStorageSync('_inviteEdit', inv || { _id: id })
+    wx.navigateTo({ url: '/subpackages/partner/invitation-create/index?id=' + id })
+  },
+
   onShareAppMessage(res) {
     const code = res && res.target && res.target.dataset.code
     const inv = this.data.myInvitations.find(x => x.shareCode === code)

@@ -451,6 +451,45 @@ class OrderService {
   async getFeedingOrders(data = {}, options = {}) {
     return this.cloud.call('feedingService', { action: 'getFeedingOrders', ...data }, { useCache: false, ...options })
   }
+
+  // ===================================================================
+  // 寄养家庭主动开单（boarding_invitations，2026-09-07）
+  // ===================================================================
+
+  /** 家庭创建开单邀请 */
+  async createInvitation(data) {
+    return this.cloud.post('orderService', { action: 'createInvitation', ...data })
+  }
+
+  /** 家庭的开单邀请列表（status: active/filled/cancelled/all） */
+  async getMyInvitations(data = {}) {
+    return this.cloud.call('orderService', { action: 'getMyInvitations', ...data }, { useCache: false })
+  }
+
+  /** 家庭取消邀请（仅 active 可取消） */
+  async cancelInvitation(invitationId) {
+    return this.cloud.post('orderService', { action: 'cancelInvitation', invitationId })
+  }
+
+  /** 公开读：按分享码查邀请（用户从分享卡片/小程序码进入） */
+  async getInvitationByCode(code) {
+    return this.cloud.call('orderService', { action: 'getInvitationByCode', code }, { useCache: false })
+  }
+
+  /** 家庭编辑开单邀请（仅 active 可编辑） */
+  async updateInvitation(data) {
+    return this.cloud.post('orderService', { action: 'updateInvitation', ...data })
+  }
+
+  /** 用户提交邀请：宠物信息已先行通过 petService 持久化，此处传最终 petIds 生成订单 */
+  async submitInvitation({ code, petIds, note }) {
+    return this.cloud.post('orderService', { action: 'submitInvitation', code, petIds, note: note || '' })
+  }
+
+  /** 家庭获取邀请小程序码（云端缓存 fileID） */
+  async getInviteQrCode(invitationId) {
+    return this.cloud.post('orderService', { action: 'getInviteQrCode', invitationId })
+  }
 }
 
 class FavoriteService {

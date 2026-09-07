@@ -115,6 +115,14 @@ export const SUPPORTED_ACTIONS: readonly string[] = [
   // stats 子服务（2 个）
   'getStats',
   'getIncomeStats',
+  // invitations 子服务（6 个，寄养家庭主动开单）
+  'createInvitation',
+  'getMyInvitations',
+  'cancelInvitation',
+  'getInvitationByCode',
+  'submitInvitation',
+  'updateInvitation',
+  'getInviteQrCode',
 ]
 
 /**
@@ -131,6 +139,8 @@ export const PUBLIC_ACTIONS: ReadonlySet<string> = new Set([
   'calculatePrice',
   'checkDateAvailability',
   'getHostEvaluations',
+  // 寄养开单邀请公开读：用户从分享卡片/小程序码进入填写页（提交时才需登录）
+  'getInvitationByCode',
 ])
 
 // =====================================================================
@@ -177,6 +187,8 @@ function toSafeLogPayload(error: unknown): Record<string, unknown> {
 const orderHandlers: HandlerMap = require('./orders')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const statsHandlers: HandlerMap = require('./stats')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const invitationHandlers: HandlerMap = require('./invitations')
 
 /** 聚合后的 handlers（与原 index.js 字段顺序保持一致） */
 export const handlers: HandlerMap = {
@@ -200,6 +212,14 @@ export const handlers: HandlerMap = {
   // stats 子服务
   getStats: statsHandlers.getStats,
   getIncomeStats: statsHandlers.getIncomeStats,
+  // invitations 子服务（寄养家庭主动开单）
+  createInvitation: invitationHandlers.createInvitation,
+  getMyInvitations: invitationHandlers.getMyInvitations,
+  cancelInvitation: invitationHandlers.cancelInvitation,
+  getInvitationByCode: invitationHandlers.getInvitationByCode,
+  submitInvitation: invitationHandlers.submitInvitation,
+  updateInvitation: invitationHandlers.updateInvitation,
+  getInviteQrCode: invitationHandlers.getInviteQrCode,
 }
 
 // =====================================================================

@@ -73,6 +73,14 @@ exports.SUPPORTED_ACTIONS = [
     // stats 子服务（2 个）
     'getStats',
     'getIncomeStats',
+    // invitations 子服务（6 个，寄养家庭主动开单）
+    'createInvitation',
+    'getMyInvitations',
+    'cancelInvitation',
+    'getInvitationByCode',
+    'submitInvitation',
+    'updateInvitation',
+    'getInviteQrCode',
 ];
 /**
  * 公开访问的 action 白名单（无需登录）
@@ -88,6 +96,8 @@ exports.PUBLIC_ACTIONS = new Set([
     'calculatePrice',
     'checkDateAvailability',
     'getHostEvaluations',
+    // 寄养开单邀请公开读：用户从分享卡片/小程序码进入填写页（提交时才需登录）
+    'getInvitationByCode',
 ]);
 // =====================================================================
 // 模块初始化
@@ -135,6 +145,8 @@ function toSafeLogPayload(error) {
 const orderHandlers = require('./orders');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const statsHandlers = require('./stats');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const invitationHandlers = require('./invitations');
 /** 聚合后的 handlers（与原 index.js 字段顺序保持一致） */
 exports.handlers = {
     // orders 子服务
@@ -157,6 +169,14 @@ exports.handlers = {
     // stats 子服务
     getStats: statsHandlers.getStats,
     getIncomeStats: statsHandlers.getIncomeStats,
+    // invitations 子服务（寄养家庭主动开单）
+    createInvitation: invitationHandlers.createInvitation,
+    getMyInvitations: invitationHandlers.getMyInvitations,
+    cancelInvitation: invitationHandlers.cancelInvitation,
+    getInvitationByCode: invitationHandlers.getInvitationByCode,
+    submitInvitation: invitationHandlers.submitInvitation,
+    updateInvitation: invitationHandlers.updateInvitation,
+    getInviteQrCode: invitationHandlers.getInviteQrCode,
 };
 // =====================================================================
 // Sprint 50: 限流统一 bootstrap（rate_limits + rate_limit_configs 一次注入）

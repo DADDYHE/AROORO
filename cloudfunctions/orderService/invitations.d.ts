@@ -29,6 +29,7 @@
  */
 declare const _handlers: {
     createInvitation: any;
+    updateInvitation: any;
     getMyInvitations: any;
     cancelInvitation: any;
     getInvitationByCode: any;

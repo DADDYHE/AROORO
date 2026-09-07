@@ -131,7 +131,7 @@
             <view wx:if="{{myInvitations.length === 0}}" class="section-empty">
               <text class="section-empty-text">暂无开单邀请，点击上方「主动开单」创建</text>
             </view>
-            <view wx:for="{{myInvitations}}" wx:key="_id" class="gallery-card inv-card">
+            <view wx:for="{{myInvitations}}" wx:key="_id" class="gallery-card inv-card {{ item.status === 'active' ? 'inv-card--editable' : '' }}" data-id="{{ item._id }}" bindtap="onCardTap">
               <view class="card-accent"></view>
               <view class="card-body">
                 <view class="inv-card-head">

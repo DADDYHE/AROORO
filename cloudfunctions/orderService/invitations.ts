@@ -320,6 +320,89 @@ async function getMyInvitations(event: EventLike, _context: ContextLike, auth: A
 }
 
 // =====================================================================
+// Handler 2.5: updateInvitation - 家庭编辑开单邀请（仅 active 可编辑）
+// =====================================================================
+
+async function updateInvitation(event: EventLike, _context: ContextLike, auth: AuthLike | null): HandlerResult {
+  const openid = auth?.openid
+  if (!openid) {throw err('AUTH_REQUIRED', '未登录')}
+
+  await checkPartnerHostingPermission(openid)
+
+  const { invitationId, startDate, endDate, startAt, endAt, petCount, totalPrice, note } = event as {
+    invitationId?: string,
+    startDate?: string,
+    endDate?: string,
+    startAt?: string,
+    endAt?: string,
+    petCount?: number,
+    totalPrice?: number,
+    note?: string,
+  }
+  if (!invitationId) {throw err('INVALID_PARAMS', '缺少邀请 ID')}
+
+  const invRes = await db.collection(COLLECTION).doc(invitationId).get()
+  if (!invRes.data) {throw err('NOT_FOUND', '邀请不存在')}
+  const inv = invRes.data as { hostOpenid?: string, status?: string }
+  if (inv.hostOpenid !== openid) {
+    throw err('PERMISSION_DENIED', '无权操作他人邀请')
+  }
+  // 仅 active 可编辑：filled 已成单（改价走订单改价流程），cancelled 已作废
+  if (inv.status !== 'active') {
+    throw err('STATE_INVALID', '仅待客户填写的邀请可编辑')
+  }
+
+  const safeStartDate = validateDateStr(startDate, '入住日期')
+  const safeEndDate = validateDateStr(endDate, '离店日期')
+  const safeStartAt = validateTimeStr(startAt, '接宠时刻')
+  const safeEndAt = validateTimeStr(endAt, '还宠时刻')
+  if (safeEndDate < safeStartDate) {
+    throw err('INVALID_PARAMS', '离店日期不能早于入住日期')
+  }
+  if (safeEndDate === safeStartDate) {
+    const startTs = Date.parse(`${safeStartDate}T${safeStartAt}:00`)
+    const endTs = Date.parse(`${safeEndDate}T${safeEndAt}:00`)
+    if (endTs <= startTs) {
+      throw err('INVALID_PARAMS', '同日寄养时，还宠时刻需晚于接宠时刻')
+    }
+  }
+
+  const safePetCount = Math.floor(Number(petCount))
+  if (!Number.isFinite(safePetCount) || safePetCount < 1 || safePetCount > MAX_PET_COUNT) {
+    throw err('INVALID_PARAMS', `宠物数量需在 1-${MAX_PET_COUNT} 之间`)
+  }
+
+  const safeTotalPrice = Math.round(Number(totalPrice) * 100) / 100
+  if (!Number.isFinite(safeTotalPrice) || safeTotalPrice < MIN_TOTAL_PRICE || safeTotalPrice > MAX_TOTAL_PRICE) {
+    throw err('INVALID_PARAMS', `总价需在 ${MIN_TOTAL_PRICE}-${MAX_TOTAL_PRICE} 元之间`)
+  }
+
+  const safeNote = note ? validateText(note, 200, '备注') : ''
+
+  // 条件更新（仅 active），并发下用户已提交则拒绝
+  const updateRes = await db.collection(COLLECTION)
+    .where({ _id: invitationId, status: 'active' })
+    .update({
+      data: {
+        startDate: safeStartDate,
+        endDate: safeEndDate,
+        startAt: safeStartAt,
+        endAt: safeEndAt,
+        petCount: safePetCount,
+        totalPrice: safeTotalPrice,
+        note: safeNote,
+        updatedAt: db.serverDate(),
+      },
+    })
+  if (!updateRes || updateRes.stats?.updated === 0) {
+    throw err('STATE_INVALID', '保存失败，该邀请可能刚被客户填写')
+  }
+
+  logger.info('updateInvitation', { invitationId })
+  return handleSuccess(null, '保存成功')
+}
+
+// =====================================================================
 // Handler 3: cancelInvitation - 家庭取消邀请（仅 active 可取消）
 // =====================================================================
 
@@ -672,6 +755,7 @@ async function getInviteQrCode(event: EventLike, _context: ContextLike, auth: Au
 
 const _handlers = {
   createInvitation: withErrorHandling(createInvitation),
+  updateInvitation: withErrorHandling(updateInvitation),
   getMyInvitations: withErrorHandling(getMyInvitations),
   cancelInvitation: withErrorHandling(cancelInvitation),
   getInvitationByCode: withErrorHandling(getInvitationByCode),
