@@ -170,7 +170,6 @@
             <view class="section-chevron {{ordersExpanded ? '' : 'section-chevron--collapsed'}}"></view>
           </view>
           <view class="section-body" hidden="{{!ordersExpanded}}">
-            <text class="section-note">超时未支付的订单将自动取消并释放档期；取消订单请联系客户操作</text>
             <view wx:if="{{orders.length === 0}}" class="section-empty">
               <text class="section-empty-text">暂无订单</text>
             </view>
