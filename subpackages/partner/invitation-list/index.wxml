@@ -1,0 +1,122 @@
+<zy-navbar title="我的开单" />
+<root-portal>
+  <view class="inv-root">
+    <scroll-view
+      scroll-y
+      enhanced
+      refresher-enabled="{{ true }}"
+      refresher-triggered="{{ _refresherTriggered }}"
+      bindrefresherrefresh="_onRefresherRefresh"
+      bindscrolltolower="onLoadMore"
+      lower-threshold="100"
+      style="height: calc(100vh - {{_navbarHeight}}px);"
+    >
+      <view class="gallery-container">
+        <!-- 状态筛选 -->
+        <view class="inv-tabs">
+          <view
+            wx:for="{{ tabs }}"
+            wx:key="key"
+            class="inv-tab {{ activeTab === item.key ? 'inv-tab--on' : '' }}"
+            data-key="{{ item.key }}"
+            bindtap="onTabTap"
+            hover-class="inv-tab--pressed"
+            hover-stay-time="80"
+          >
+            <text class="inv-tab-text">{{ item.label }}</text>
+            <view class="inv-tab-underline" wx:if="{{ activeTab === item.key }}"></view>
+          </view>
+        </view>
+
+        <view wx:if="{{ isLoading }}" class="loading-container">
+          <view class="loading-content">
+            <view class="lux-cascade">
+              <view class="lux-cascade-dot" style="left: 20rpx; background: #C9A24B; animation-delay: 0ms;"></view>
+              <view class="lux-cascade-dot" style="left: 36rpx; background: #A8894A; animation-delay: 150ms;"></view>
+              <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+              <view class="lux-cascade-dot" style="left: 68rpx; background: #A8894A; animation-delay: 450ms;"></view>
+              <view class="lux-cascade-dot" style="left: 84rpx; background: #C9A24B; animation-delay: 600ms;"></view>
+              <view class="lux-cascade-dot" style="left: 100rpx; background: #A8894A; animation-delay: 750ms;"></view>
+              <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
+            </view>
+            <text class="loading-text">正在加载…</text>
+          </view>
+        </view>
+
+        <block wx:else>
+          <!-- 空态 -->
+          <view wx:if="{{ list.length === 0 }}" class="gallery-card">
+            <view class="card-accent"></view>
+            <view class="card-body inv-empty">
+              <text class="inv-empty-title">暂无开单记录</text>
+              <text class="inv-empty-desc">与客户沟通好后，创建开单邀请分享给对方填写宠物信息并支付</text>
+              <button class="inv-empty-btn" bindtap="onCreateTap">立即开单</button>
+            </view>
+          </view>
+
+          <!-- 邀请卡片 -->
+          <view wx:for="{{ list }}" wx:key="_id" class="gallery-card">
+            <view class="card-accent"></view>
+            <view class="card-body">
+              <view class="inv-card-head">
+                <text class="inv-card-title">开单邀请 · {{ item.shareCode }}</text>
+                <text class="status-tag {{ item.statusTagClass }}">{{ item.statusText }}</text>
+              </view>
+
+              <view class="inv-info">
+                <text class="inv-info-item">寄养日期：{{ item.dateRangeText }}</text>
+                <text class="inv-info-item">接还时刻：{{ item.timeText }} · {{ item.days }} 天</text>
+                <text class="inv-info-item">宠物数量：{{ item.petCount }} 只</text>
+                <text class="inv-info-item inv-info-price">总价：¥{{ item.totalPrice }}</text>
+              </view>
+
+              <text wx:if="{{ item.note }}" class="inv-note">备注：{{ item.note }}</text>
+
+              <!-- active：分享 / 海报 / 取消 -->
+              <view wx:if="{{ item.status === 'active' }}" class="inv-actions">
+                <button class="inv-btn inv-btn--ghost" data-id="{{ item._id }}" bindtap="onCancelTap">取消</button>
+                <button class="inv-btn inv-btn--ghost" data-id="{{ item._id }}" bindtap="onPosterTap">海报</button>
+                <button class="inv-btn inv-btn--primary" open-type="share" data-code="{{ item.shareCode }}">分享给客户</button>
+              </view>
+
+              <!-- filled：查看订单 / 释放（孤儿或订单已取消的可释放） -->
+              <view wx:if="{{ item.status === 'filled' }}" class="inv-actions">
+                <button class="inv-btn inv-btn--ghost" data-id="{{ item._id }}" bindtap="onReleaseTap">释放</button>
+                <button wx:if="{{ item.orderId }}" class="inv-btn inv-btn--primary" data-orderid="{{ item.orderId }}" bindtap="onViewOrder">查看关联订单</button>
+              </view>
+            </view>
+          </view>
+
+          <view wx:if="{{ list.length > 0 && !hasMore }}" class="inv-list-end">
+            <view class="inv-list-end-line"></view>
+            <text class="inv-list-end-text">共 {{ total }} 条记录</text>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+
+    <!-- 底部新建按钮（root-portal 保证 Skyline 下不被 scroll-view 裁剪） -->
+    <view class="inv-fab-wrap">
+      <button class="inv-fab" bindtap="onCreateTap">＋ 新建开单</button>
+    </view>
+
+    <!-- 海报弹层 -->
+    <view wx:if="{{ posterVisible }}" class="inv-poster-mask" bindtap="onPosterClose">
+      <view class="inv-poster-panel" catchtap="">
+        <text class="inv-poster-title">开单邀请海报</text>
+        <view class="inv-poster-canvas-wrap">
+          <canvas type="2d" id="posterCanvas" class="inv-poster-canvas"></canvas>
+          <view wx:if="{{ posterLoading }}" class="inv-poster-loading">
+            <text class="inv-poster-loading-text">生成中…</text>
+          </view>
+        </view>
+        <view class="inv-poster-actions">
+          <button class="inv-btn inv-btn--ghost" bindtap="onPosterClose">关闭</button>
+          <button class="inv-btn inv-btn--primary {{ posterLoading || posterSaving ? 'is-disabled' : '' }}" disabled="{{ posterLoading || posterSaving }}" bindtap="onPosterSave">
+            {{ posterSaving ? '保存中…' : '保存到相册' }}
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+</root-portal>
