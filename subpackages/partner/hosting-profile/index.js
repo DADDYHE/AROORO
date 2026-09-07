@@ -74,6 +74,8 @@ Page({
     myInvitations: [],
     invitationExpanded: true,
     ordersExpanded: false,
+    cancelledOrders: [],
+    cancelledExpanded: false,
     page: 1,
     pageSize: 20,
     hasMore: true,
@@ -127,8 +129,13 @@ Page({
           ...o,
           statusText: ORDER_STATUS_TEXT[o.status] || o.status,
         }))
+        // 分页累积后按「有效 / 已取消」分组（2026-09-07：已取消单拆独立节）
+        this._allOrders = this.data.page > 1 ? (this._allOrders || []).concat(list) : list
+        const valid = this._allOrders.filter(o => o.status !== 'cancelled')
+        const cancelled = this._allOrders.filter(o => o.status === 'cancelled')
         this.setData({
-          orders: list,
+          orders: valid,
+          cancelledOrders: cancelled,
           orderTotal: res.data.total || 0,
           hasMore: list.length >= this.data.pageSize,
         })
@@ -184,10 +191,15 @@ Page({
   onToggleSection(e) {
     const key = e.currentTarget && e.currentTarget.dataset.key
     if (!key) { return }
-    const isInv = key === 'invitations'
-    const invOpen = isInv ? !this.data.invitationExpanded : false
-    const ordOpen = isInv ? false : !this.data.ordersExpanded
-    this.setData({ invitationExpanded: invOpen, ordersExpanded: ordOpen })
+    const keys = ['invitations', 'orders', 'cancelled']
+    const state = {}
+    keys.forEach(k => { state[k + (k === 'invitations' ? 'Expanded' : 'Expanded')] = false })
+    // 目标节取反（点已展开的收起自己），其余全收起
+    const cur = key === 'invitations' ? this.data.invitationExpanded : (key === 'orders' ? this.data.ordersExpanded : this.data.cancelledExpanded)
+    const map = { invitations: 'invitationExpanded', orders: 'ordersExpanded', cancelled: 'cancelledExpanded' }
+    keys.forEach(k => { state[map[k]] = false })
+    state[map[key]] = !cur
+    this.setData(state)
   },
 
   onShareAppMessage(res) {

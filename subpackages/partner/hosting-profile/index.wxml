@@ -161,11 +161,11 @@
           </view>
         </view>
 
-        <!-- ═══ 节 2：寄养订单（手风琴互斥） ═══ -->
+        <!-- ═══ 节 2：寄养订单（有效单，手风琴互斥） ═══ -->
         <view class="ledger-section">
           <view class="section-head {{ordersExpanded ? 'section-head--expanded' : ''}}" bindtap="onToggleSection" data-key="orders">
             <text class="section-name">寄养订单</text>
-            <text class="section-count">{{orderTotal}} 单</text>
+            <text class="section-count">{{orders.length}} 单</text>
             <view class="section-rule"></view>
             <view class="section-chevron {{ordersExpanded ? '' : 'section-chevron--collapsed'}}"></view>
           </view>
@@ -174,7 +174,6 @@
             <view wx:if="{{orders.length === 0}}" class="section-empty">
               <text class="section-empty-text">暂无订单</text>
             </view>
-
             <view wx:for="{{orders}}" wx:key="_id" class="gallery-card order-card">
               <view class="card-accent"></view>
               <view class="card-body">
@@ -196,6 +195,35 @@
                 <view wx:if="{{item.status === 'pending_payment' || item.status === 'deposit_paid'}}" class="order-actions">
                   <button class="order-btn order-btn--ghost" data-id="{{item._id}}" data-op="adjust" catchtap="onOrderAction">改价</button>
                   <button class="order-btn order-btn--primary" open-type="share" data-id="{{item._id}}">分享给客户付款</button>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- ═══ 节 3：已取消订单（手风琴互斥） ═══ -->
+        <view class="ledger-section">
+          <view class="section-head {{cancelledExpanded ? 'section-head--expanded' : ''}}" bindtap="onToggleSection" data-key="cancelled">
+            <text class="section-name">已取消订单</text>
+            <text class="section-count">{{cancelledOrders.length}} 单</text>
+            <view class="section-rule"></view>
+            <view class="section-chevron {{cancelledExpanded ? '' : 'section-chevron--collapsed'}}"></view>
+          </view>
+          <view class="section-body" hidden="{{!cancelledExpanded}}">
+            <view wx:if="{{cancelledOrders.length === 0}}" class="section-empty">
+              <text class="section-empty-text">暂无已取消订单</text>
+            </view>
+            <view wx:for="{{cancelledOrders}}" wx:key="_id" class="gallery-card order-card">
+              <view class="card-accent"></view>
+              <view class="card-body">
+                <view class="card-header">
+                  <text class="card-title">寄养订单{{item.orderNo ? ' · ' + item.orderNo : ''}}</text>
+                  <text class="card-status status-{{item.status}}">{{item.statusText}}</text>
+                </view>
+                <view class="card-info">
+                  <text class="card-info-item" wx:if="{{item.ownerName}}">宠物主人：{{item.ownerName}}</text>
+                  <text class="card-info-item" wx:if="{{item.startDate || item.endDate}}">寄养日期：{{item.startDate || '-'}} 至 {{item.endDate || '-'}}</text>
+                  <text class="card-info-item">金额：¥{{item.totalPrice || item.totalAmount || 0}}</text>
                 </view>
               </view>
             </view>
