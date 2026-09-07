@@ -142,6 +142,14 @@ async function createInvitation(event, _context, auth) {
     if (safeEndDate < safeStartDate) {
         throw err('INVALID_PARAMS', '离店日期不能早于入住日期');
     }
+    // 组合时间戳校验：同日寄养要求还宠晚于接宠（否则计价器抛原生 Error 被 5001 兜底，用户看到「服务内部错误」）
+    if (safeEndDate === safeStartDate) {
+        const startTs = Date.parse(`${safeStartDate}T${safeStartAt}:00`);
+        const endTs = Date.parse(`${safeEndDate}T${safeEndAt}:00`);
+        if (endTs <= startTs) {
+            throw err('INVALID_PARAMS', '同日寄养时，还宠时刻需晚于接宠时刻');
+        }
+    }
     const safePetCount = Math.floor(Number(petCount));
     if (!Number.isFinite(safePetCount) || safePetCount < 1 || safePetCount > MAX_PET_COUNT) {
         throw err('INVALID_PARAMS', `宠物数量需在 1-${MAX_PET_COUNT} 之间`);
@@ -163,16 +171,23 @@ async function createInvitation(event, _context, auth) {
         ? hostProfile.billingMode : 'hotel';
     const checkOutBefore = (typeof hostProfile.checkOutBefore === 'string' && hostProfile.checkOutBefore)
         ? hostProfile.checkOutBefore : '12:00';
-    const referencePrice = (0, boarding_pricing_1.computeBoardingAmount)({
-        mode: billingMode,
-        pricePerDay: Number(hostProfile.pricePerDay) || 0,
-        startDate: safeStartDate,
-        startAt: safeStartAt,
-        endDate: safeEndDate,
-        endAt: safeEndAt,
-        petCount: safePetCount,
-        checkOutBefore,
-    }).total;
+    let referencePrice = 0;
+    try {
+        referencePrice = (0, boarding_pricing_1.computeBoardingAmount)({
+            mode: billingMode,
+            pricePerDay: Number(hostProfile.pricePerDay) || 0,
+            startDate: safeStartDate,
+            startAt: safeStartAt,
+            endDate: safeEndDate,
+            endAt: safeEndAt,
+            petCount: safePetCount,
+            checkOutBefore,
+        }).total;
+    }
+    catch (priceErr) {
+        // 计价器校验失败（如跨天时刻组合无效）→ 以业务错误呈现，避免 5001「服务内部错误」
+        throw err('INVALID_PARAMS', priceErr.message || '寄养时间参数无效，请检查日期与时刻');
+    }
     // 家庭展示快照（剔除敏感字段）
     const hostSnapshot = { ...hostProfile };
     SENSITIVE_HOST_FIELDS.forEach(f => { delete hostSnapshot[f]; });
@@ -281,12 +296,41 @@ async function cancelInvitation(event, _context, auth) {
     if (inv.hostOpenid !== openid) {
         throw err('PERMISSION_DENIED', '无权操作他人邀请');
     }
-    if (inv.status !== 'active') {
-        throw err('STATE_INVALID', '仅待填写的邀请可取消');
+    // 修复 #1（2026-09-07）：允许释放「失联卡死态」filled 邀请。
+    //   订单超时取消时邀请作废为 best-effort，失败会让邀请永久卡在 filled
+    //   （既不可再填、也无法释放）。此处允许 active 一律取消；filled 仅当
+    //   其指向的订单已取消或不存在（订单创建失败遗留的孤儿 filled）时释放。
+    if (inv.status === 'filled') {
+        let orderTerminated = false;
+        if (!inv.orderId) {
+            // 无 orderId：订单创建失败回滚后的孤儿，允许释放
+            orderTerminated = true;
+        }
+        else {
+            try {
+                const oRes = await db.collection('orders').doc(inv.orderId).get();
+                if (!oRes.data) {
+                    orderTerminated = true;
+                }
+                else if (oRes.data.status === 'cancelled') {
+                    orderTerminated = true;
+                }
+            }
+            catch (e) {
+                logger.warn('cancelInvitation.order.query_failed', { invitationId, msg: e?.message });
+                // 查询失败：保守拒绝，避免误释放仍有效的订单
+            }
+        }
+        if (!orderTerminated) {
+            throw err('STATE_INVALID', '该邀请对应的订单仍有效，无法取消');
+        }
     }
-    // 条件更新防并发（用户恰好同时提交）
+    else if (inv.status !== 'active') {
+        throw err('STATE_INVALID', '仅待填写或已作废的邀请可取消');
+    }
+    // 条件更新防并发（用户恰好同时提交 / 邀请已结束）
     const updateRes = await db.collection(COLLECTION)
-        .where({ _id: invitationId, status: 'active' })
+        .where({ _id: invitationId, status: db.command.in(['active', 'filled']) })
         .update({ data: { status: 'cancelled', cancelledAt: db.serverDate(), updatedAt: db.serverDate() } });
     if (!updateRes || updateRes.stats?.updated === 0) {
         throw err('STATE_INVALID', '取消失败，邀请可能刚被用户填写');
@@ -308,6 +352,29 @@ async function getInvitationByCode(event) {
         throw err('NOT_FOUND', '邀请不存在或已失效');
     }
     const inv = res.data[0];
+    // 修复 #2：计算过期标记（离店日当天 23:59:59 前仍有效），供前端展示「邀请已过期」
+    const endTs = Date.parse(`${inv.endDate}T23:59:59Z`);
+    const expired = Number.isFinite(endTs) && endTs < Date.now();
+    // 修复 #3：filled 但 orderId 缺失（回填失败）时，按本人最近一笔未支付邀请订单反查补齐，
+    //   避免前端「查看订单」无跳转目标。仅透传 pending_payment 订单，不泄露他人隐私。
+    let resolvedOrderId = inv.orderId || '';
+    if (!resolvedOrderId && inv.status === 'filled' && inv.inviteeOpenId) {
+        try {
+            const backfilled = await db.collection('orders')
+                .where({ ownerId: inv.inviteeOpenId, source: 'invitation', invitationId: inv._id })
+                .orderBy('createdAt', 'desc')
+                .limit(1)
+                .field({ _id: true, status: true })
+                .get();
+            const latest = (backfilled.data || [])[0];
+            if (latest && latest._id && latest.status === 'pending_payment') {
+                resolvedOrderId = latest._id;
+            }
+        }
+        catch (e) {
+            logger.warn('getInvitationByCode.backfill_query_failed', { invitationId: inv._id, msg: e?.message });
+        }
+    }
     // 公开字段白名单（hostSnapshot 已在创建时剔除敏感字段，这里再显式投影）
     const publicInvitation = {
         _id: inv._id,
@@ -323,8 +390,9 @@ async function getInvitationByCode(event) {
         totalPrice: inv.totalPrice,
         note: inv.note,
         status: inv.status,
+        expired,
         // 已成单时前端跳转订单详情用（仅返回 orderId，不返回 invitee 隐私信息）
-        orderId: inv.orderId || '',
+        orderId: resolvedOrderId,
         createdAt: inv.createdAt,
     };
     return (0, utils_1.handleSuccess)({ invitation: publicInvitation }, '获取成功');
@@ -368,6 +436,13 @@ async function submitInvitation(event, _context, auth) {
             throw err('STATE_INVALID', '该邀请已被取消');
         }
         throw err('STATE_INVALID', '邀请状态异常');
+    }
+    // 修复 #2（2026-09-07）：过期邀请不可再成单。离店日当天 23:59:59 仍有效，
+    //   避免用户保存旧分享卡片生成「过去日期」订单并支付。
+    const endDateStr2 = inv.endDate;
+    const endTs2 = Date.parse(`${endDateStr2}T23:59:59Z`);
+    if (Number.isFinite(endTs2) && endTs2 < Date.now()) {
+        throw err('INVITATION_EXPIRED', '该邀请已过期');
     }
     if (petIds.length !== inv.petCount) {
         throw err('INVALID_PARAMS', `本次开单需填写 ${inv.petCount} 只宠物的信息`);
@@ -521,8 +596,9 @@ async function getInviteQrCode(event, _context, auth) {
         scene: `c=${inv.shareCode}`,
         page: 'subpackages/booking/invitation-fill',
         checkPath: false, // 页面可能未发布，跳过校验（开发/体验阶段必需）
-        // 联调/体验阶段改 'trial'——release 生成的码只指向线上正式版
-        envVersion: (process.env.WXACODE_ENV_VERSION || 'trial'),
+        // 环境版本：默认 release（正式版）。联调/体验阶段可用云函数环境变量
+        // WXACODE_ENV_VERSION=trial 临时覆盖，便于在正式版发布前用体验版扫码验证。
+        envVersion: (process.env.WXACODE_ENV_VERSION || 'release'),
         width: 430,
     });
     if (!wxRes || wxRes.errCode !== undefined && wxRes.errCode !== 0 || !wxRes.buffer) {
