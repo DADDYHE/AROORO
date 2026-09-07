@@ -36,6 +36,17 @@ Page({
 
   onLoad(options) {
     this._initNavbarHeight()
+    // 邀请落地接力（2026-09-07）：接收者端版本差异导致分享回退到本页时，
+    //   检测邀请码转发到填写页（体验/开发版可用；正式版上线后自然闭环）
+    if (options && options.code) {
+      wx.navigateTo({
+        url: `/subpackages/booking/invitation-fill/index?code=${options.code}`,
+        fail: () => {
+          wx.showModal({ title: '邀请链接', content: '当前小程序版本暂不支持开单邀请，请更新小程序后重试', showCancel: false })
+        },
+      })
+      return
+    }
     this.getHostList()
   },
 

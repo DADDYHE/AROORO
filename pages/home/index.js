@@ -31,7 +31,18 @@ Page({
     gemTopbarStyle: '', // 空串 = 回落 wxss 兜底渐变（勿给默认值，否则会拼出 size:0 的空背景）
   },
 
-  onLoad() {
+  onLoad(options) {
+    this._initNavbarHeight()
+    // 邀请落地接力（2026-09-07）：分享 path 页面缺失回退到本页时，检测邀请码转发填写页
+    if (options && options.code) {
+      wx.navigateTo({
+        url: `/subpackages/booking/invitation-fill/index?code=${options.code}`,
+        fail: () => {
+          wx.showModal({ title: '邀请链接', content: '当前小程序版本暂不支持开单邀请，请更新小程序后重试', showCancel: false })
+        },
+      })
+    }
+
     // 启动首屏海报：独立启动页（非 tab 页 + custom 导航栏，框架级全屏，
     // 100% 覆盖 navbar 与系统 tabBar）。仅冷启动首屏一次。
     if (app && !app.__splashShown) {
