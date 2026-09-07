@@ -129,21 +129,27 @@ Page({
     wx.navigateTo({ url: '/subpackages/partner/invitation-create/index?id=' + id })
   },
 
-  /** 分享按钮点击：阻断冒泡 + 记录分享码兜底 */
+  /** 分享确认弹层（Skyline 下 open-type=share 事件参数不可靠） */
   onShareTap(e) {
-    this._shareCode = (e.currentTarget && e.currentTarget.dataset.code) || ''
+    const id = e.currentTarget && e.currentTarget.dataset.id
+    const inv = this.data.list.find(x => x._id === id)
+    if (!inv) { return }
+    this.setData({ shareSheet: { type: 'invitation', shareCode: inv.shareCode, inv } })
   },
 
-  onShareAppMessage(res) {
-    const code = (res && res.target && res.target.dataset.code) || this._shareCode || ''
-    const inv = this.data.list.find(x => x.shareCode === code)
+  onShareSheetClose() {
+    this.setData({ shareSheet: null })
+  },
+
+  noopStop() { /* 阻止弹层内容点击冒泡到遮罩 */ },
+
+  onShareAppMessage() {
+    const s = this.data.shareSheet
+    if (!s || s.type !== 'invitation') { return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' } }
+    const inv = s.inv || {}
     return {
-      title: inv
-        ? `寄养开单邀请 · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`
-        : 'AROORO · 家庭寄养',
-      path: code
-        ? `/subpackages/booking/invitation-fill/index?code=${code}`
-        : '/pages/boarding/index',
+      title: `寄养开单邀请 · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`,
+      path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}`,
     }
   },
 

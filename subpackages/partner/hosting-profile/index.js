@@ -215,22 +215,41 @@ Page({
     wx.navigateTo({ url: '/subpackages/partner/invitation-create/index?id=' + id })
   },
 
-  /** 分享按钮点击：阻断冒泡（防误触卡片编辑跳转）+ 记录分享码兜底 */
+  /**
+   * 分享（2026-09-07）：Skyline 下 open-type=share 的 tap/dataset 不可靠——
+   * 改为分享确认弹层：普通按钮先 setData shareSheet，弹层内 open-type=share
+   * 按钮触发 onShareAppMessage 时直接读页面状态，不依赖事件参数。
+   */
   onShareTap(e) {
-    this._shareCode = (e.currentTarget && e.currentTarget.dataset.code) || ''
+    const { type, id, code } = e.currentTarget.dataset
+    if (type === 'order') {
+      const ord = this.data.orders.find(o => o._id === id)
+      this.setData({ shareSheet: { type: 'order', orderId: id, title: ord ? `寄养订单 · ${ord.statusText} · ${ord.startDate || ''}` : '寄养订单' } })
+      return
+    }
+    const inv = this.data.myInvitations.find(x => x.shareCode === code || x._id === id)
+    if (!inv) { return }
+    this.setData({ shareSheet: { type: 'invitation', shareCode: inv.shareCode, inv } })
   },
 
-  onShareAppMessage(res) {
-    const code = (res && res.target && res.target.dataset.code) || this._shareCode || ''
-    const inv = this.data.myInvitations.find(x => x.shareCode === code)
-    return {
-      title: inv
-        ? `寄养开单邀请 · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`
-        : 'AROORO · 家庭寄养',
-      path: code
-        ? `/subpackages/booking/invitation-fill/index?code=${code}`
-        : '/pages/boarding/index',
+  onShareSheetClose() {
+    this.setData({ shareSheet: null })
+  },
+
+  noopStop() { /* 阻止弹层内容点击冒泡到遮罩 */ },
+
+  onShareAppMessage() {
+    const s = this.data.shareSheet
+    if (!s) { return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' } }
+    if (s.type === 'invitation') {
+      const inv = s.inv || {}
+      return {
+        title: `寄养开单邀请 · ${inv.hostSnapshot && inv.hostSnapshot.hostName || '家庭寄养'} · ${inv.startDate} 至 ${inv.endDate}`,
+        path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}`,
+        imageUrl: inv.hostSnapshot && inv.hostSnapshot.avatarUrl ? inv.hostSnapshot.avatarUrl : '',
+      }
     }
+    return { title: s.title || '寄养订单', path: `/subpackages/profile/order-detail/index?id=${s.orderId}` }
   },
 
   onCancelInvitation(e) {
