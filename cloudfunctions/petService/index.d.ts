@@ -74,6 +74,21 @@ export type PetActionHandler = (event: CloudEvent, context: CloudContext, auth: 
 export type PetType = 'cat' | 'dog' | 'exotic';
 export type PetGender = 'male' | 'female' | 'unknown';
 export type IsActive = 0 | 1;
+export interface PetVaccineRecord {
+    name?: string;
+    date?: string;
+}
+export interface PetHealthInfo {
+    medicalHistory?: string;
+    allergies?: string;
+    medications?: string;
+    supplements?: string;
+    vaccines?: PetVaccineRecord[];
+    neutered?: 'yes' | 'no' | 'unknown';
+    dewormed?: string;
+    behaviorNotes?: string;
+    healthUpdatedAt?: Date;
+}
 export interface PetRecord {
     _id?: string;
     name?: string;
@@ -84,6 +99,7 @@ export interface PetRecord {
     weight?: number | null;
     avatarUrl?: string;
     note?: string;
+    healthInfo?: PetHealthInfo;
     ownerId?: string;
     _openid?: string;
     isActive?: IsActive;
@@ -111,6 +127,14 @@ export interface PetDetailResult {
     pet: PetRecord;
 }
 export declare function convertWeight(weight: unknown): number | null;
+/**
+ * 健康信息清洗与校验（updatePet / createPet / 寄养开单 submitInvitation 共用）
+ *   - 未知字段直接丢弃（防注入）
+ *   - 文本字段 trim + 长度上限
+ *   - vaccines 数组逐条清洗并限制条数
+ *   - neutered 仅接受 yes/no/unknown
+ */
+export declare function sanitizeHealthInfo(input: unknown): PetHealthInfo;
 export declare const createPet: PetActionHandler;
 export declare const updatePet: PetActionHandler;
 export declare const deletePet: PetActionHandler;

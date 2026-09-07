@@ -12,6 +12,7 @@
     "cloudfunctions/orderService/index.ts",
     "cloudfunctions/orderService/orders.ts",
     "cloudfunctions/orderService/stats.ts",
+    "cloudfunctions/orderService/invitations.ts",
     "cloudfunctions/orderService/common/boarding-state-machine.ts",
     "cloudfunctions/orderService/common/boarding-pricing.ts"
   ],

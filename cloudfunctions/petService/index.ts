@@ -92,6 +92,25 @@ export type PetType = 'cat' | 'dog' | 'exotic'
 export type PetGender = 'male' | 'female' | 'unknown'
 export type IsActive = 0 | 1
 
+// 疫苗接种记录（结构化多条）
+export interface PetVaccineRecord {
+  name?: string
+  date?: string
+}
+
+// 宠物健康信息（寄养开单填写页 / 宠物档案编辑页共用，全场景同步上线）
+export interface PetHealthInfo {
+  medicalHistory?: string    // 既往病史
+  allergies?: string         // 过敏源
+  medications?: string       // 药品使用
+  supplements?: string       // 保养品/保健品使用
+  vaccines?: PetVaccineRecord[] // 疫苗接种（名称 + 日期）
+  neutered?: 'yes' | 'no' | 'unknown' // 绝育情况
+  dewormed?: string          // 驱虫情况
+  behaviorNotes?: string     // 行为习惯备注（怕生、护食等）
+  healthUpdatedAt?: Date
+}
+
 export interface PetRecord {
   _id?: string
   name?: string
@@ -102,6 +121,7 @@ export interface PetRecord {
   weight?: number | null
   avatarUrl?: string
   note?: string
+  healthInfo?: PetHealthInfo
   ownerId?: string
   _openid?: string
   isActive?: IsActive
@@ -181,6 +201,7 @@ const VALID_GENDERS: PetGender[] = ['male', 'female', 'unknown']
 const PET_DETAIL_FIELDS: Record<string, boolean> = {
   _id: true, name: true, type: true, breed: true, gender: true,
   birthday: true, weight: true, avatarUrl: true, note: true,
+  healthInfo: true,
   isActive: true,
   // L9: createdAt/updatedAt 为 UTC 时间戳，前端展示时需自行转换为 Asia/Shanghai 时区
   createdAt: true, updatedAt: true,
@@ -198,6 +219,9 @@ const MAX_NAME_LEN = 30
 const MAX_BREED_LEN = 50
 const MAX_NOTE_LEN = 500
 const MAX_AVATAR_URL_LEN = 2048
+// 健康信息文本字段长度上限（与 MAX_NOTE_LEN 保持一致）
+const MAX_HEALTH_TEXT_LEN = 500
+const MAX_VACCINE_RECORDS = 10
 // P3 修复：统一到实际存在的小程序资源（/images/default-avatar.svg），
 //   原值 /images/default-pet.png 在仓库中不存在，会导致默认头像加载失败
 const DEFAULT_AVATAR_URL = '/images/default-avatar.svg'
@@ -285,6 +309,57 @@ function validateBirthday(birthday: unknown): string {
 }
 
 /**
+ * 健康信息清洗与校验（updatePet / createPet / 寄养开单 submitInvitation 共用）
+ *   - 未知字段直接丢弃（防注入）
+ *   - 文本字段 trim + 长度上限
+ *   - vaccines 数组逐条清洗并限制条数
+ *   - neutered 仅接受 yes/no/unknown
+ */
+export function sanitizeHealthInfo(input: unknown): PetHealthInfo {
+  if (!input || typeof input !== 'object') {
+    throw err('INVALID_PARAMS', '健康信息格式无效')
+  }
+  const raw = input as Record<string, unknown>
+  const result: PetHealthInfo = {}
+  const textKeys = [
+    'medicalHistory', 'allergies', 'medications',
+    'supplements', 'dewormed', 'behaviorNotes',
+  ] as const
+  for (const key of textKeys) {
+    const v = raw[key]
+    if (v === undefined || v === null || v === '') { continue }
+    result[key] = validateTextField(v, MAX_HEALTH_TEXT_LEN, '健康信息')
+  }
+  // 绝育情况
+  if (raw.neutered !== undefined && raw.neutered !== null && raw.neutered !== '') {
+    if (!['yes', 'no', 'unknown'].includes(String(raw.neutered))) {
+      throw err('INVALID_PARAMS', '绝育情况取值无效')
+    }
+    result.neutered = raw.neutered as PetHealthInfo['neutered']
+  }
+  // 疫苗接种（结构化多条）
+  if (Array.isArray(raw.vaccines)) {
+    if (raw.vaccines.length > MAX_VACCINE_RECORDS) {
+      throw err('INVALID_PARAMS', `疫苗记录最多 ${MAX_VACCINE_RECORDS} 条`)
+    }
+    const vaccines: PetVaccineRecord[] = []
+    for (const item of raw.vaccines) {
+      if (!item || typeof item !== 'object') { continue }
+      const rec = item as Record<string, unknown>
+      const name = rec.name !== undefined && rec.name !== null
+        ? validateTextField(rec.name, MAX_NAME_LEN, '疫苗名称') : ''
+      const date = rec.date !== undefined && rec.date !== null
+        ? validateBirthday(rec.date) : ''
+      if (name || date) {
+        vaccines.push({ name, date })
+      }
+    }
+    if (vaccines.length > 0) { result.vaccines = vaccines }
+  }
+  return result
+}
+
+/**
  * P1/P3 修复：公开/返回用宠物对象脱敏
  *   - 剔除 ownerId / _openid（避免 PII 外泄）
  *   - 仅保留公开字段
@@ -311,7 +386,7 @@ export const createPet = withErrorHandling(async (
   const { openid } = auth
   if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
 
-  const { name, type, gender, breed, birthday, weight, note, avatarUrl } = event
+  const { name, type, gender, breed, birthday, weight, note, avatarUrl, healthInfo } = event
 
   // M4: 日志去除敏感字段具体值，仅记录存在性与校验结果
   logger.debug('createPet 收到参数', {
@@ -323,6 +398,7 @@ export const createPet = withErrorHandling(async (
     hasWeight: Boolean(weight),
     hasNote: Boolean(note),
     hasAvatarUrl: Boolean(avatarUrl),
+    hasHealthInfo: Boolean(healthInfo),
     eventKeys: Object.keys(event || {}),
   })
 
@@ -343,6 +419,8 @@ export const createPet = withErrorHandling(async (
   const safeNote = note ? validateTextField(note, MAX_NOTE_LEN, '备注') : ''
   const safeAvatarUrl = validateAvatarUrl(avatarUrl)
   const safeBirthday = validateBirthday(birthday)
+  // 健康信息（选填，寄养开单填写页快速建档时携带）
+  const safeHealthInfo = healthInfo ? sanitizeHealthInfo(healthInfo) : undefined
 
   const parsedWeight = convertWeight(weight)
 
@@ -368,6 +446,7 @@ export const createPet = withErrorHandling(async (
         weight: parsedWeight,
         note: safeNote,
         avatarUrl: safeAvatarUrl || DEFAULT_AVATAR_URL,
+        ...(safeHealthInfo ? { healthInfo: { ...safeHealthInfo, healthUpdatedAt: db.serverDate() } } : {}),
         ownerId: openid,
         _openid: openid,
         createdAt: db.serverDate(),
@@ -438,6 +517,10 @@ export const updatePet = withErrorHandling(async (
   if (updateData.birthday !== undefined) {
     validateBirthday(updateData.birthday)
   }
+  // 健康信息结构校验（白名单过滤前，防注入未知子字段）
+  if (updateData.healthInfo !== undefined) {
+    sanitizeHealthInfo(updateData.healthInfo)
+  }
 
   const petResult = await db.collection('pets').doc(petId).get()
   if (!petResult.data) {
@@ -466,6 +549,7 @@ export const updatePet = withErrorHandling(async (
     weight?: number | null
     avatarUrl?: string
     note?: string
+    healthInfo?: Record<string, unknown>
   }
   const filteredFields = filterFields(FIELD_WHITELISTS.pet, updateData as Record<string, unknown>) as PetUpdateFields
   const updateFields: PetUpdateFields = {
@@ -489,6 +573,11 @@ export const updatePet = withErrorHandling(async (
   if (updateFields.avatarUrl !== undefined) {
     const url = String(updateFields.avatarUrl).trim()
     updateFields.avatarUrl = url || DEFAULT_AVATAR_URL
+  }
+  // 健康信息：清洗后整体覆盖 + 更新时间戳
+  if (updateFields.healthInfo !== undefined) {
+    const sanitized = sanitizeHealthInfo(updateFields.healthInfo)
+    updateFields.healthInfo = { ...sanitized, healthUpdatedAt: db.serverDate() as unknown as Date }
   }
 
   const updateResult = await db.collection('pets').doc(petId).update({ data: updateFields })

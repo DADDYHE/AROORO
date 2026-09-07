@@ -130,6 +130,11 @@ Page({
     }
   },
 
+  // 修复 #3：filled 且无 orderId（同步中）时，跳寄养订单列表供用户自查
+  goMyOrders() {
+    wx.navigateTo({ url: '/subpackages/profile/order-stats/index?type=boarding' })
+  },
+
   // ---------- 槽位：选择已有宠物 ----------
 
   async onPickExisting(e) {
@@ -272,6 +277,11 @@ Page({
     if (this.data.submitting) { return }
     if (!this.data.isLoggedIn) {
       wx.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    const inv = this.data.invitation
+    if (inv && inv.expired) {
+      wx.showToast({ title: '该邀请已过期', icon: 'none' })
       return
     }
     const invalid = this._validateSlots()

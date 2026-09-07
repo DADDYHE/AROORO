@@ -1,0 +1,144 @@
+<zy-navbar title="主动开单" />
+<scroll-view
+  scroll-y
+  enhanced
+  style="height: calc(100vh - {{_navbarHeight}}px);"
+>
+  <view class="gallery-container">
+    <view wx:if="{{isLoading}}" class="loading-container">
+      <view class="loading-content">
+        <view class="lux-cascade">
+          <view class="lux-cascade-dot" style="left: 20rpx; background: #C9A24B; animation-delay: 0ms;"></view>
+          <view class="lux-cascade-dot" style="left: 36rpx; background: #A8894A; animation-delay: 150ms;"></view>
+          <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+          <view class="lux-cascade-dot" style="left: 68rpx; background: #A8894A; animation-delay: 450ms;"></view>
+          <view class="lux-cascade-dot" style="left: 84rpx; background: #C9A24B; animation-delay: 600ms;"></view>
+          <view class="lux-cascade-dot" style="left: 100rpx; background: #A8894A; animation-delay: 750ms;"></view>
+          <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
+        </view>
+        <text class="loading-text">正在加载…</text>
+      </view>
+    </view>
+
+    <block wx:else>
+      <view class="gallery-header">
+        <view class="brand-block">
+          <view class="brand-accent-bar"></view>
+          <view class="brand-main">
+            <text class="brand-text">主动开单</text>
+          </view>
+          <view class="brand-meta">
+            <view class="brand-meta-line"></view>
+            <text class="brand-subtitle">与客户沟通好后，创建开单邀请分享给对方填写</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="gallery-hall">
+        <!-- 01 寄养安排 -->
+        <view class="gallery-card">
+          <view class="card-accent"></view>
+          <view class="card-body">
+            <text class="section-title">寄养安排</text>
+
+            <view class="date-row">
+              <picker mode="date" value="{{startDate}}" bindchange="onStartDate" class="date-picker">
+                <view class="date-cell">
+                  <text class="date-label">入住日期</text>
+                  <text class="date-value {{startDate ? '' : 'date-value--ph'}}">{{ startDate || '选择' }}</text>
+                </view>
+              </picker>
+              <view class="date-rule"></view>
+              <picker mode="date" value="{{endDate}}" start="{{startDate}}" bindchange="onEndDate" class="date-picker">
+                <view class="date-cell date-cell--right">
+                  <text class="date-label">离店日期</text>
+                  <text class="date-value {{endDate ? '' : 'date-value--ph'}}">{{ endDate || '选择' }}</text>
+                </view>
+              </picker>
+            </view>
+
+            <view class="date-row">
+              <picker mode="time" value="{{startAt}}" bindchange="onStartAt" class="date-picker">
+                <view class="date-cell">
+                  <text class="date-label">接宠时刻</text>
+                  <text class="date-value {{startAt ? '' : 'date-value--ph'}}">{{ startAt || '选择' }}</text>
+                </view>
+              </picker>
+              <view class="date-rule"></view>
+              <picker mode="time" value="{{endAt}}" bindchange="onEndAt" class="date-picker">
+                <view class="date-cell date-cell--right">
+                  <text class="date-label">还宠时刻</text>
+                  <text class="date-value {{endAt ? '' : 'date-value--ph'}}">{{ endAt || '选择' }}</text>
+                </view>
+              </picker>
+            </view>
+
+            <view class="info-divider"></view>
+
+            <view class="stepper-row">
+              <text class="stepper-label">寄养宠物数量</text>
+              <view class="stepper">
+                <view class="stepper-btn {{petCount <= 1 ? 'stepper-btn--disabled' : ''}}" bindtap="onPetCountMinus">
+                  <text class="stepper-symbol">−</text>
+                </view>
+                <text class="stepper-num">{{ petCount }}</text>
+                <view class="stepper-btn {{petCount >= 10 ? 'stepper-btn--disabled' : ''}}" bindtap="onPetCountPlus">
+                  <text class="stepper-symbol">＋</text>
+                </view>
+              </view>
+            </view>
+            <text class="stepper-hint">客户将按此数量填写对应宠物的信息</text>
+          </view>
+        </view>
+
+        <!-- 02 订单定价 -->
+        <view class="gallery-card">
+          <view class="card-accent"></view>
+          <view class="card-body">
+            <text class="section-title">订单总价</text>
+
+            <view class="price-input-row">
+              <text class="price-currency">¥</text>
+              <input
+                class="price-input"
+                type="digit"
+                value="{{ totalPrice }}"
+                placeholder="输入与客户商定的总价"
+                placeholder-class="price-ph"
+                bindinput="onTotalPrice"
+              />
+            </view>
+
+            <view class="ref-price-row" wx:if="{{ referencePrice > 0 }}">
+              <view class="info-divider"></view>
+              <view class="info-row">
+                <view class="info-key">系统参考价</view>
+                <view class="info-val ref-price">¥{{ referencePrice }}</view>
+              </view>
+              <text class="ref-hint">{{ priceHint }}</text>
+            </view>
+
+            <view class="info-divider"></view>
+            <text class="section-subtitle">给客户的备注（选填）</text>
+            <textarea
+              class="note-textarea"
+              value="{{ note }}"
+              maxlength="200"
+              placeholder="如费用包含、接宠地点、注意事项等"
+              placeholder-class="price-ph"
+              bindinput="onNote"
+            />
+          </view>
+        </view>
+
+        <!-- 提交 -->
+        <view class="action-row">
+          <button class="submit-btn {{ submitting ? 'submit-btn--disabled' : '' }}" disabled="{{ submitting }}" bindtap="onSubmit">
+            {{ submitting ? '提交中…' : '创建开单邀请' }}
+          </button>
+          <text class="submit-hint">创建后可转发给客户或生成小程序码海报</text>
+        </view>
+      </view>
+    </block>
+  </view>
+</scroll-view>

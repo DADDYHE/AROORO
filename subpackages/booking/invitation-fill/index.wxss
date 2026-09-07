@@ -1,0 +1,650 @@
+/* ================================================================
+   booking/invitation-fill · 寄养开单邀请填写页
+   设计语言与 booking/confirm（ds 系列）一致：
+   奶油底 + 白卡片 + 深林绿主色 + 香槟金点缀
+   Skyline 兼容：无 clip-path / cursor / -webkit-*；transition 仅 transform/opacity
+   ================================================================ */
+
+.fill-root {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: var(--background-color);
+}
+
+.fill-container {
+  min-height: 100vh;
+  padding: 24rpx var(--page-padding) calc(env(safe-area-inset-bottom) + 48rpx);
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+}
+
+/* ---------- 加载 / 状态 ---------- */
+.fill-loading {
+  padding: 200rpx 0;
+  display: flex;
+  justify-content: center;
+}
+
+.fill-loading-text {
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 2rpx;
+}
+
+.fill-state-card {
+  background: var(--card-color);
+  border-radius: var(--lux-radius-card);
+  border: 1rpx solid var(--lux-hairline);
+  padding: 64rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+  box-shadow: var(--lux-shadow-card);
+}
+
+.fill-state-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 2rpx;
+}
+
+.fill-state-desc {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ---------- 章节 ---------- */
+.fill-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.fill-chapter {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.fill-chapter-no {
+  font-size: 24rpx;
+  color: var(--lux-gold-600);
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+.fill-chapter-eyebrow {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+  letter-spacing: var(--lux-ls-label, 0.24em);
+}
+
+.fill-chapter-rule {
+  flex: 1;
+  height: 1rpx;
+  background: var(--lux-hairline);
+}
+
+.fill-section-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 2rpx;
+}
+
+.fill-section-sub {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  margin-top: -8rpx;
+}
+
+/* ---------- 邀请卡片 ---------- */
+.fill-inv-card {
+  background: var(--card-color);
+  border-radius: var(--lux-radius-card);
+  border: 1rpx solid var(--lux-hairline);
+  padding: 32rpx;
+  box-shadow: var(--lux-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.fill-inv-head {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.fill-inv-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--lux-hairline-gold);
+  background: var(--gray-50);
+}
+
+.fill-inv-host {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.fill-inv-host-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 1rpx;
+}
+
+.fill-inv-host-addr {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+}
+
+.fill-inv-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.fill-inv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14rpx 0;
+}
+
+.fill-inv-key {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 1rpx;
+}
+
+.fill-inv-val {
+  font-size: 26rpx;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.fill-inv-val--price {
+  color: var(--lux-gold-600);
+  font-weight: 600;
+  font-size: 30rpx;
+}
+
+.fill-inv-note {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--divider-color);
+}
+
+/* 过期横幅（邀请已过期） */
+.fill-inv-expired {
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 16rpx;
+  background: var(--wash-error-08);
+  border: 1rpx solid var(--error-color);
+}
+.fill-inv-expired-text {
+  font-size: 24rpx;
+  color: var(--error-color);
+  line-height: 1.6;
+}
+
+/* ---------- 槽位 ---------- */
+.fill-slot {
+  background: var(--card-color);
+  border-radius: var(--lux-radius-card);
+  border: 1rpx solid var(--lux-hairline);
+  padding: 28rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  box-shadow: var(--lux-shadow-card);
+}
+
+.fill-slot-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fill-slot-no {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--zy-primary-700);
+  letter-spacing: 2rpx;
+}
+
+.fill-slot-reset-text {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 1rpx;
+}
+
+.fill-slot-empty {
+  display: flex;
+  gap: 16rpx;
+}
+
+/* ---------- 按钮 ---------- */
+.fill-btn {
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: var(--lux-radius-pill);
+  font-size: 26rpx;
+  letter-spacing: 2rpx;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.fill-btn--half {
+  flex: 1;
+  width: auto;
+}
+
+.fill-btn--primary {
+  background: var(--lux-green-grad);
+  color: var(--text-on-primary);
+  border: none;
+  box-shadow: var(--lux-shadow-green);
+}
+
+.fill-btn--ghost {
+  background: var(--card-color);
+  color: var(--zy-primary-700);
+  border: 1rpx solid var(--zy-primary-500);
+}
+
+/* ---------- 宠物卡片（已选） ---------- */
+.fill-pet-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 20rpx 24rpx;
+  background: var(--gray-50);
+  border-radius: var(--zy-radius-sm);
+  border: 1rpx solid var(--border-soft);
+}
+
+.fill-pet-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: var(--gray-100);
+  flex-shrink: 0;
+}
+
+.fill-pet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  flex: 1;
+}
+
+.fill-pet-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fill-pet-meta {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+}
+
+/* ---------- 新建宠物表单 ---------- */
+.fill-newpet {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.fill-newpet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.fill-newpet-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  letter-spacing: 1rpx;
+  width: 160rpx;
+  flex-shrink: 0;
+}
+
+.fill-newpet-input {
+  flex: 1;
+  height: 76rpx;
+  padding: 0 24rpx;
+  background: var(--gray-50);
+  border-radius: var(--zy-radius-sm);
+  border: 1rpx solid var(--border-soft);
+  font-size: 26rpx;
+  color: var(--text-primary);
+}
+
+.fill-newpet-picker {
+  flex: 1;
+  height: 76rpx;
+  background: var(--gray-50);
+  border-radius: var(--zy-radius-sm);
+  border: 1rpx solid var(--border-soft);
+}
+
+.fill-newpet-picker-val {
+  height: 76rpx;
+  line-height: 76rpx;
+  padding: 0 24rpx;
+  font-size: 26rpx;
+  color: var(--text-primary);
+}
+
+.fill-newpet-picker-val--ph {
+  color: var(--gray-400);
+}
+
+.fill-ph {
+  color: var(--gray-400);
+}
+
+/* ---------- 备注 ---------- */
+.fill-note-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.fill-note-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  letter-spacing: 1rpx;
+}
+
+.fill-note-textarea {
+  width: auto;
+  min-height: 140rpx;
+  padding: 20rpx 24rpx;
+  background: var(--card-color);
+  border-radius: var(--zy-radius-sm);
+  border: 1rpx solid var(--border-soft);
+  font-size: 26rpx;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* ---------- 费用 ---------- */
+.fill-price-card {
+  background: var(--card-color);
+  border-radius: var(--lux-radius-card);
+  border: 1rpx solid var(--lux-hairline);
+  padding: 32rpx;
+  box-shadow: var(--lux-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.fill-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fill-price-key {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  letter-spacing: 1rpx;
+}
+
+.fill-price-val {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--lux-gold-600);
+  letter-spacing: 1rpx;
+}
+
+.fill-price-divider {
+  height: 1rpx;
+  background: var(--divider-color);
+}
+
+.fill-price-hint {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+}
+
+.fill-submit-btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: var(--lux-radius-pill);
+  background: var(--lux-green-grad);
+  color: var(--text-on-primary);
+  font-size: 30rpx;
+  letter-spacing: 4rpx;
+  font-weight: 500;
+  box-shadow: var(--lux-shadow-green);
+  margin: 8rpx 0 0;
+}
+
+.fill-submit-btn[disabled] {
+  opacity: 0.6;
+  color: var(--text-on-primary);
+  background: var(--lux-green-grad);
+}
+
+.fill-submit-hint {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  text-align: center;
+  letter-spacing: 1rpx;
+}
+
+/* ---------- 登录遮罩 ---------- */
+.fill-login-mask {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 90;
+  padding: 48rpx;
+}
+
+.fill-login-card {
+  width: 100%;
+  background: var(--card-color);
+  border-radius: var(--lux-radius-card);
+  padding: 48rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  box-shadow: var(--lux-shadow-elevated);
+}
+
+.fill-login-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: 2rpx;
+}
+
+.fill-login-desc {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ---------- 选择宠物弹层 ---------- */
+.fill-picker-mask {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-color);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+}
+
+.fill-picker-panel {
+  width: 100%;
+  max-height: 70vh;
+  background: var(--card-color);
+  border-radius: var(--lux-radius-card) var(--lux-radius-card) 0 0;
+  padding: 40rpx 32rpx calc(env(safe-area-inset-bottom) + 32rpx);
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.fill-picker-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: 2rpx;
+}
+
+.fill-picker-loading {
+  padding: 60rpx 0;
+  display: flex;
+  justify-content: center;
+}
+
+.fill-picker-scroll {
+  max-height: 50vh;
+}
+
+.fill-picker-empty {
+  padding: 60rpx 0;
+  display: flex;
+  justify-content: center;
+}
+
+.fill-picker-empty-text {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+}
+
+.fill-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: var(--zy-radius-sm);
+  border: 1rpx solid var(--border-soft);
+  margin-bottom: 16rpx;
+}
+
+.fill-picker-item--pressed {
+  opacity: 0.7;
+}
+
+.fill-picker-check {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--border-color);
+  flex-shrink: 0;
+}
+
+/* ---------- 支付弹层 ---------- */
+.fill-paysheet {
+  width: 100%;
+  background: var(--card-color);
+  border-radius: var(--lux-radius-card) var(--lux-radius-card) 0 0;
+  padding: 40rpx 32rpx calc(env(safe-area-inset-bottom) + 32rpx);
+  display: flex;
+  flex-direction: column;
+  gap: 28rpx;
+}
+
+.fill-paysheet-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: 2rpx;
+}
+
+.fill-paysheet-amount {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8rpx 8rpx 0;
+}
+
+.fill-paysheet-amount-label {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 1rpx;
+}
+
+.fill-paysheet-amount-val {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fill-paysheet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.fill-pay-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  background: var(--gray-50);
+  border-radius: var(--zy-radius-sm);
+  border: 1rpx solid var(--border-soft);
+}
+
+.fill-pay-option--pressed {
+  opacity: 0.7;
+}
+
+.fill-pay-option-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.fill-pay-option-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fill-pay-option-desc {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+}
+
+.fill-pay-option-arrow {
+  width: 14rpx;
+  height: 14rpx;
+  border-right: 2rpx solid var(--text-tertiary);
+  border-bottom: 2rpx solid var(--text-tertiary);
+  transform: rotate(-45deg);
+}

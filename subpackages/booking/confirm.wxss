@@ -420,6 +420,12 @@
   border-radius: 4rpx;
 }
 
+/* 健康签：金调 hairline，区别于服务签 */
+.ds-pet-tag--health {
+  color: var(--lux-gold-600);
+  border-color: var(--lux-hairline-gold);
+}
+
 .ds-pet-dates {
   font-size: 22rpx;
   line-height: 1.5;

@@ -21,6 +21,8 @@ Page({
       note: '',
       avatarUrl: '',
     },
+    // 健康信息（既往病史/过敏源/用药/保养品/疫苗/绝育/驱虫/行为习惯）
+    healthInfo: null,
     petTypes: [
       { name: '猫咪', value: 'cat' },
       { name: '狗狗', value: 'dog' },
@@ -87,6 +89,7 @@ Page({
         this.setData({
           pet: petData,
           editingData,
+          healthInfo: currentPet.healthInfo || null,
           isLoading: false,
         })
       }
@@ -117,6 +120,11 @@ Page({
 
   onNoteInput(e) {
     this.setData({ 'editingData.note': e.detail.value ? String(e.detail.value) : '' })
+  },
+
+  /** 健康信息表单变更（health-form 组件回调） */
+  onHealthChange(e) {
+    this.setData({ healthInfo: e.detail.healthInfo })
   },
 
   selectPetType() {
@@ -189,6 +197,8 @@ Page({
         weight: this.data.editingData.weight || '',
         note: this.data.editingData.note || '',
         avatarUrl: this.data.editingData.avatarUrl || '',
+        // 健康信息：用户触碰过健康表单才随保存提交（未展开则保持档案原值）
+        ...(this.data.healthInfo ? { healthInfo: this.data.healthInfo } : {}),
       }
 
       const result = await petService.updatePet(

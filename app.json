@@ -82,7 +82,8 @@
       "pages": [
         "pet-select",
         "confirm",
-        "host-detail"
+        "host-detail",
+        "invitation-fill/index"
       ]
     },
     {
@@ -178,7 +179,9 @@
         "application/index",
         "referral/index",
         "withdrawal/index",
-        "i18n-override/index"
+        "i18n-override/index",
+        "invitation-create/index",
+        "invitation-list/index"
       ]
     },
     {

@@ -245,10 +245,27 @@ Page({
           }
         })
       )
-      this._batchUpdate({ selectedPetsDetails: petsDetails.filter(d => d !== null) })
+      this._batchUpdate({ selectedPetsDetails: petsDetails.filter(d => d !== null).map(d => this._decoratePetHealth(d)) })
     } catch (error) {
       this._batchUpdate({ selectedPetsDetails: [] })
     }
+  },
+
+  /**
+   * 宠物健康信息摘要标签（Skyline：WXML 不做方法调用，JS 预计算）
+   * 展示逻辑：有健康信息时显示标签提示家庭关注，无则不渲染
+   */
+  _decoratePetHealth(pet) {
+    const h = pet && pet.healthInfo
+    if (!h) { return { ...pet, healthTags: [] } }
+    const tags = []
+    if (h.allergies) { tags.push('有过敏源') }
+    if (h.medications) { tags.push('有用药') }
+    if (h.medicalHistory) { tags.push('有病史') }
+    if (h.vaccines && h.vaccines.length > 0) { tags.push(`疫苗 ${h.vaccines.length} 针`) }
+    if (h.neutered === 'yes') { tags.push('已绝育') }
+    if (h.behaviorNotes) { tags.push('行为备注') }
+    return { ...pet, healthTags: tags }
   },
 
   async loadHostInfo() {

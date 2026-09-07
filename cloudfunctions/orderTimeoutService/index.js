@@ -633,7 +633,7 @@ async function cancelBoardingOrders(result, boardingTimeout) {
             paymentStatus: _.in(['unpaid', 'paying', null]),
             createdAt: _.lte(boardingTimeout),
             type: _.in(['boarding', null]),
-        }, { _id: true, outTradeNo: true });
+        }, { _id: true, outTradeNo: true, source: true, invitationId: true });
         for (const order of expiredBoardingOrders) {
             try {
                 // 2026-09-06 统一顺序：先关微信预付单再取消——close 失败说明用户已支付成功，
@@ -681,6 +681,42 @@ async function cancelBoardingOrders(result, boardingTimeout) {
                     continue;
                 }
                 await unlockOrderCoupons(order._id, order.couponId);
+                // 寄养开单邀请联动：订单超时取消 → 关联邀请同步作废（不复活，与邀请仅手动取消的语义不冲突）
+                const invOrder = order;
+                if (invOrder.source === 'invitation' && invOrder.invitationId) {
+                    try {
+                        await db.collection('boarding_invitations')
+                            .where({ _id: invOrder.invitationId, status: 'filled' })
+                            .update({
+                            data: {
+                                status: 'cancelled',
+                                cancelledAt: db.serverDate(),
+                                updatedAt: db.serverDate(),
+                            },
+                        });
+                    }
+                    catch (invErr) {
+                        // 修复 #1：邀请作废失败（best-effort）会使其永久卡在 filled。标记 cancelFailedAt
+                        //   供家庭端展示「释放」入口（cancelInvitation 已允许释放孤儿/已取消订单的 filled）。
+                        //   下一轮 cron 若邀请仍 filled 且关联订单已取消，orderTimeoutService 再尝试作废。
+                        logger.warn('cancelBoardingOrders.invitation_cancel_failed', {
+                            orderId: order._id,
+                            invitationId: invOrder.invitationId,
+                            msg: invErr.message,
+                        });
+                        try {
+                            await db.collection('boarding_invitations')
+                                .where({ _id: invOrder.invitationId, status: 'filled' })
+                                .update({ data: { cancelFailedAt: db.serverDate(), updatedAt: db.serverDate() } });
+                        }
+                        catch (markErr) {
+                            logger.warn('cancelBoardingOrders.invitation_mark_failed', {
+                                invitationId: invOrder.invitationId,
+                                msg: markErr.message,
+                            });
+                        }
+                    }
+                }
                 result.cancelledBoardingOrders++;
             }
             catch (error) {

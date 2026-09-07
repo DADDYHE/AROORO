@@ -1,0 +1,225 @@
+@import '../common.wxss';
+
+/* ================================================================
+   partner/invitation-create · 主动开单表单样式
+   ================================================================ */
+
+/* ---------- 区块标题 ---------- */
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 2rpx;
+  margin-bottom: 24rpx;
+}
+
+.section-subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  letter-spacing: 1rpx;
+  margin: 20rpx 0 12rpx;
+}
+
+/* ---------- 日期/时刻双列行 ---------- */
+.date-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.date-picker {
+  flex: 1;
+}
+
+.date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  align-items: center;
+  padding: 20rpx 12rpx;
+  background: var(--gray-50);
+  border-radius: var(--zy-radius-sm);
+  border: 1rpx solid var(--border-soft);
+}
+
+.date-cell--right {
+  /* 右列 */
+}
+
+.date-label {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 1rpx;
+}
+
+.date-value {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  font-weight: 500;
+  letter-spacing: 0.5rpx;
+}
+
+.date-value--ph {
+  color: var(--gray-400);
+  font-weight: 400;
+}
+
+.date-rule {
+  width: 24rpx;
+  height: 1rpx;
+  background: var(--border-color);
+  margin: 0 12rpx;
+}
+
+/* ---------- 宠物数量步进器 ---------- */
+.stepper-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0;
+}
+
+.stepper-label {
+  font-size: 26rpx;
+  color: var(--text-primary);
+  letter-spacing: 1rpx;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.stepper-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: var(--primary-tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper-btn--disabled {
+  opacity: 0.35;
+}
+
+.stepper-symbol {
+  font-size: 34rpx;
+  color: var(--zy-primary-700);
+  font-weight: 600;
+}
+
+.stepper-num {
+  min-width: 80rpx;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--lux-font-number, 'DIN Alternate', sans-serif);
+}
+
+.stepper-hint {
+  display: block;
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  margin-top: 8rpx;
+}
+
+/* ---------- 价格输入 ---------- */
+.price-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx 28rpx;
+  background: var(--lux-card-gold-tint);
+  border-radius: var(--zy-radius-sm);
+  border: 1rpx solid var(--lux-hairline-gold);
+}
+
+.price-currency {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--lux-gold-600);
+}
+
+.price-input {
+  flex: 1;
+  font-size: 44rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 1rpx;
+}
+
+.price-ph {
+  color: var(--gray-400);
+  font-size: 28rpx;
+  font-weight: 400;
+}
+
+.ref-price-row {
+  margin-top: 20rpx;
+}
+
+.ref-price {
+  color: var(--lux-gold-600);
+  font-weight: 600;
+}
+
+.ref-hint {
+  display: block;
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  margin-top: 12rpx;
+  line-height: 1.5;
+}
+
+/* ---------- 备注 ---------- */
+.note-textarea {
+  width: auto;
+  min-height: 140rpx;
+  padding: 20rpx 24rpx;
+  background: var(--gray-50);
+  border-radius: var(--zy-radius-sm);
+  border: 1rpx solid var(--border-soft);
+  font-size: 26rpx;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* ---------- 提交 ---------- */
+.action-row {
+  padding: 40rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: var(--lux-radius-pill);
+  background: var(--lux-green-grad);
+  color: var(--text-on-primary);
+  font-size: 30rpx;
+  letter-spacing: 4rpx;
+  font-weight: 500;
+  box-shadow: var(--lux-shadow-green);
+}
+
+.submit-btn--disabled {
+  opacity: 0.6;
+  color: var(--text-on-primary);
+  background: var(--lux-green-grad);
+}
+
+.submit-hint {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 1rpx;
+}

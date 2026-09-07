@@ -140,6 +140,9 @@
           <text class="ds-pet-tag" wx:if="{{petServices[item.id].walkMinutes > 0}}">遛狗{{petServices[item.id].walkMinutes}}分钟</text>
         </view>
         <text class="ds-pet-dates" wx:if="{{petServices[item.id].serviceDatesText}}">{{petServices[item.id].serviceDatesText}}</text>
+        <view class="ds-pet-tags" wx:if="{{item.healthTags && item.healthTags.length > 0}}">
+          <text class="ds-pet-tag ds-pet-tag--health" wx:for="{{ item.healthTags }}" wx:for-item="tag" wx:key="*this">{{ tag }}</text>
+        </view>
       </view>
     </view>
 

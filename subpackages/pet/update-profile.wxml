@@ -155,6 +155,21 @@
       </view>
     </view>
 
+    <view class="gallery-entrance">
+      <view class="entrance-line"></view>
+      <text class="entrance-label">健康信息</text>
+    </view>
+
+    <!-- 健康信息（既往病史/过敏源/用药/保养品/疫苗/绝育/驱虫/行为习惯，选填） -->
+    <view class="gallery-collection">
+      <view class="gallery-card">
+        <view class="card-accent"></view>
+        <view class="card-body">
+          <health-form id="healthForm" value="{{ healthInfo }}" collapsed="{{ true }}" bindchange="onHealthChange" />
+        </view>
+      </view>
+    </view>
+
     <view class="gallery-footer">
       <view bindtap="savePetInfo" class="footer-action {{saving ? 'action-disabled' : 'action-active'}}">
         <text>保存修改</text>

@@ -63,6 +63,8 @@ async function approveApplication(event, context, auth) {
       const updateData = {
         isPartner: true,
         status: 'active',
+        // 合伙人申请含寄养家庭：审核通过即授予 hosting 开单权限（幂等追加，不覆盖已有权限/roles）
+        permissions: db.command.addToSet('hosting'),
         updatedAt: db.serverDate(),
       }
       await transaction.collection('admins').doc(application.openid).update({ data: updateData })
@@ -80,6 +82,8 @@ async function approveApplication(event, context, auth) {
           avatarUrl: userInfo.avatarUrl || application.avatarUrl || '',
           isPartner: true,
           status: 'active',
+          // 合伙人申请含寄养家庭：审核通过即授予 hosting 开单权限
+          permissions: ['hosting'],
           createdAt: db.serverDate(),
           updatedAt: db.serverDate(),
         },

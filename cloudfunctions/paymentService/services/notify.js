@@ -247,15 +247,27 @@ async function applyPaidStatus(orderType, existingOrder, transactionId, paidAmou
                 updateData.status = 'paid';
                 updateData.paymentStatus = 'paid';
                 updateData.paidAmount = totalYuan;
+                // 寄养开单邀请（source='invitation'）：尾款付清后自动确认，跳过家庭接单环节
+                if (o.source === 'invitation') {
+                    updateData.status = 'confirmed';
+                    updateData.autoConfirmed = true;
+                }
             }
             else {
                 updateData.status = 'deposit_paid';
                 updateData.paymentStatus = 'partial_paid';
                 updateData.paidAmount = Number(o.payAmount) || (typeof paidAmountYuan === 'number' ? paidAmountYuan : 0);
+                // 邀请订单定金支付即视为锁定（deposit_paid），无需自动确认标记；
+                // 家庭端不可拒单（本来是家庭主动开的单），补尾款后回调再自动 confirmed
             }
         }
         else {
             updateData.status = 'paid';
+            // 寄养开单邀请：全款支付后自动确认，跳过家庭接单环节
+            if (o.source === 'invitation') {
+                updateData.status = 'confirmed';
+                updateData.autoConfirmed = true;
+            }
         }
     }
     else if (orderType === 'mall') {

@@ -1,6 +1,7 @@
 {
   "usingComponents": {
-    "zy-action-sheet": "./components/zy-action-sheet/index"
+    "zy-action-sheet": "./components/zy-action-sheet/index",
+    "health-form": "/components/health-form/index"
   },
   "navigationBarTitleText": "更新宠物档案"
 }

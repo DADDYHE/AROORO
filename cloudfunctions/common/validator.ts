@@ -128,6 +128,8 @@ export const FIELD_WHITELISTS: Record<string, string[]> = {
   user: ['nickName', 'avatarUrl', 'gender', 'phone', 'birthday', 'email', 'address', 'ownerName', 'city', 'province', 'country', 'language', 'bio'],
   pet: [
     'name', 'type', 'breed', 'gender', 'birthday', 'weight', 'avatarUrl', 'note',
+    // 健康信息（寄养开单填写页 / 宠物档案编辑页共用，结构由 petService 校验）
+    'healthInfo',
   ],
   hostBasic: [
     'avatarUrl', 'hostName', 'realName', 'phone', 'idCard', 'address',

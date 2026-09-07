@@ -244,6 +244,10 @@ exports.createPayment = (0, errors_1.withErrorHandling)(async (event, context, a
         }
         else {
             actualAmount = Number(od[amountField] || od.totalPrice || od.totalAmount || od.amount || 0);
+            // 修复（2026-09-07）：全款也写回 payType='full'，覆盖此前已残留的 'deposit'。
+            //   否则「先发起定金（含取消/失败）→ 改全款」时 payType 残留 'deposit'，
+            //   notify 回调误判为定金 → status='deposit_paid' 且 paidAmount=全款，尾款=0 无法补款、订单永不确认
+            requestPayType = reqPayType;
         }
     }
     catch (e) {

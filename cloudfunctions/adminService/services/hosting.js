@@ -290,6 +290,39 @@ async function createHostProfile(event, context, auth) {
   return handleSuccess({ id: auth.openid }, '寄养家庭创建成功，等待管理员审核')
 }
 
+/**
+ * 幂等授予 hosting 权限（寄养家庭主动开单依赖 admins.permissions 含 'hosting'）。
+ * 以 openid 作为 admins 集合主键 upsert：已存在则 addToSet 追加权限（不覆盖 roles/其他权限），
+ * 不存在则新建一条 active 账号。与 orders.ts 的 checkPartnerHostingPermission 对齐。
+ */
+async function grantHostingPermission(openid) {
+  if (!openid) {return}
+  try {
+    const existing = await db.collection('admins').doc(openid).get()
+    if (existing && existing.data) {
+      await db.collection('admins').doc(openid).update({
+        data: {
+          status: 'active',
+          permissions: _.addToSet('hosting'),
+          updatedAt: db.serverDate(),
+        },
+      })
+    } else {
+      await db.collection('admins').doc(openid).set({
+        data: {
+          status: 'active',
+          permissions: ['hosting'],
+          createdAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+        },
+      })
+    }
+  } catch (e) {
+    // 授权失败仅记日志（best-effort），不影响审核主流程；可后续手动补权限
+    logger.warn('grantHostingPermission', { openid, proc: 'reviewHost', msg: e?.message })
+  }
+}
+
 async function getPendingHostReviews(event, context, auth) {
   const { page = 1, pageSize = 20 } = event
   const safePageSize = Math.min(Math.max(1, Number(pageSize) || 20), 100)
@@ -311,6 +344,8 @@ async function reviewHost(event, context, auth) {
     await db.collection('hostProfiles').doc(hostId).update({
       data: { status: 'active', isAcceptingOrders: true, updatedAt: db.serverDate() },
     })
+    // hostId 即入驻者 openid（createHostProfile 以 doc(auth.openid) 写入）；审核通过后自动授予 hosting 开单权限
+    await grantHostingPermission(hostId)
   } else if (operation === 'reject') {
     await db.collection('hostProfiles').doc(hostId).update({
       data: { status: 'rejected', rejectReason: reason || '', updatedAt: db.serverDate() },
