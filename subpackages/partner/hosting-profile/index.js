@@ -239,32 +239,15 @@ Page({
   noopStop() { /* 阻止弹层内容点击冒泡到遮罩 */ },
 
   onShareAppMessage() {
+    // ⚠️ DEBUG 版（定位分享标题问题，修复后恢复原逻辑）
     const s = this.data.shareSheet
-    const __r = s && s.type === 'invitation'
-      ? { title: '邀请', path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}` }
-      : null
-    console.log('[share] onShareAppMessage shareSheet:', JSON.stringify(s || null), '→ path:', __r && __r.path)
-    if (!s) {
-      // 右上角菜单转发兜底（shareSheet 仅弹层路径设置）：分享最新一条待填写邀请，
-      //   确保任何入口转发都带码（boarding fallback 会把接收者带回错误页面）
-      const latest = (this.data.myInvitations || []).find(x => x.status === 'active')
-      if (latest) {
-        return {
-          title: `寄养开单邀请 · ${latest.startDate} 至 ${latest.endDate} · ¥${latest.totalPrice}`,
-          path: `/subpackages/booking/invitation-fill/index?code=${latest.shareCode}`,
-        }
-      }
-      return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' }
+    const latest = (this.data.myInvitations || []).find(x => x.status === 'active') || (this.data.myInvitations || [])[0]
+    const dbg = 'DBG:' + (s ? 'S.' + s.type : 'S.NULL') + (latest ? '+L.' + latest.status : '+L.none')
+    console.log('[share-DEBUG] onShareAppMessage 被调用:', dbg, '| shareSheet:', JSON.stringify(s || null), '| latest:', latest && latest.shareCode)
+    return {
+      title: dbg,
+      path: '/subpackages/booking/invitation-fill/index?code=' + ((s && s.shareCode) || (latest && latest.shareCode) || 'nocode'),
     }
-    if (s.type === 'invitation') {
-      const inv = s.inv || {}
-      return {
-        title: `寄养开单邀请 · ${inv.hostSnapshot && inv.hostSnapshot.hostName || '家庭寄养'} · ${inv.startDate} 至 ${inv.endDate}`,
-        path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}`,
-        imageUrl: inv.hostSnapshot && inv.hostSnapshot.avatarUrl ? inv.hostSnapshot.avatarUrl : '',
-      }
-    }
-    return { title: s.title || '寄养订单', path: `/subpackages/profile/order-detail/index?id=${s.orderId}` }
   },
 
   onCancelInvitation(e) {
