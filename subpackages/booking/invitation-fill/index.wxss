@@ -442,7 +442,7 @@
   margin: 8rpx 0 0;
 }
 
-.fill-submit-btn[disabled] {
+.fill-submit-btn.is-disabled {
   opacity: 0.6;
   color: var(--text-on-primary);
   background: var(--lux-green-grad);
@@ -458,7 +458,10 @@
 /* ---------- 登录遮罩 ---------- */
 .fill-login-mask {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: var(--overlay-color);
   display: flex;
   align-items: center;
@@ -496,7 +499,10 @@
 /* ---------- 选择宠物弹层 ---------- */
 .fill-picker-mask {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: var(--overlay-color);
   display: flex;
   align-items: flex-end;

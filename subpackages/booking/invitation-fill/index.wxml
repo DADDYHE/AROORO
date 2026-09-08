@@ -182,7 +182,7 @@
               <text class="fill-price-hint">提交后可选择支付定金（30%）或全款；支付成功后寄养家庭将自动确认订单</text>
             </view>
 
-            <button class="fill-submit-btn" disabled="{{ submitting || invitation.expired }}" bindtap="onSubmit">
+            <button class="fill-submit-btn {{ submitting || invitation.expired ? 'is-disabled' : '' }}" disabled="{{ submitting || invitation.expired }}" bindtap="onSubmit">
               {{ submitting ? '提交中…' : (invitation.expired ? '邀请已过期' : '提交并支付') }}
             </button>
             <text class="fill-submit-hint">30 分钟内未支付订单将自动取消</text>
