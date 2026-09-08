@@ -217,9 +217,8 @@ Page({
   },
 
   /**
-   * 分享（2026-09-07）：Skyline 下 open-type=share 的 tap/dataset 不可靠——
-   * 改为分享确认弹层：普通按钮先 setData shareSheet，弹层内 open-type=share
-   * 按钮触发 onShareAppMessage 时直接读页面状态，不依赖事件参数。
+   * 分享（open-type=share 直发）：点击「分享给客户」先记录选中上下文，
+   * 紧随其后微信触发 onShareAppMessage 读取 shareSheet 决定转发 path。
    */
   onShareTap(e) {
     const { type, id, code } = e.currentTarget.dataset
@@ -233,15 +232,10 @@ Page({
     this.setData({ shareSheet: { type: 'invitation', shareCode: inv.shareCode, inv } })
   },
 
-  onShareSheetClose() {
-    this.setData({ shareSheet: null })
-  },
-
-  noopStop() { /* 阻止弹层内容点击冒泡到遮罩 */ },
+  noopStop() { /* 保留：兼容历史回调 */ },
 
   onShareAppMessage() {
-    // Skyline 下 open-type=share 按钮不可靠（真机实证），转发走右上角菜单：
-    // 弹层引导用户点右上角，此处返回当前上下文的邀请/订单卡片；无上下文时兜底最新 active 邀请
+    // 直发分享：返回当前选中的邀请/订单卡片；无上下文时兜底最新 active 邀请
     const s = this.data.shareSheet
     if (s && s.type === 'invitation') {
       const inv = s.inv || {}
@@ -402,16 +396,7 @@ Page({
     })
   },
 
-  /** 分享订单收款链接（button open-type=share 触发，res.target.dataset.id 带订单号） */
-  onShareAppMessage(res) {
-    const orderId = res && res.target && res.target.dataset && res.target.dataset.id
-    return {
-      title: orderId ? '您的寄养订单待支付，请点击完成付款' : 'AROORO · 家庭寄养',
-      path: orderId
-        ? `/subpackages/profile/order-detail/index?id=${orderId}&from=hostShare`
-        : '/pages/boarding/index',
-    }
-  },
+  
 
   async _doOrderAction(orderId, operation) {
     wx.showLoading({ title: __i18nT('BIZ_DLJHN'), mask: true })

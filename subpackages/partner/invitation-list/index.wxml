@@ -76,7 +76,7 @@
               <view wx:if="{{ item.status === 'active' }}" class="inv-actions">
                 <button class="inv-btn inv-btn--ghost" data-id="{{ item._id }}" bindtap="onCancelTap">取消</button>
                 <button class="inv-btn inv-btn--ghost" data-id="{{ item._id }}" bindtap="onPosterTap">海报</button>
-                <button class="inv-btn inv-btn--primary" data-id="{{ item._id }}" catchtap="onShareTap">分享给客户</button>
+                <button class="inv-btn inv-btn--primary" open-type="share" data-id="{{ item._id }}" catchtap="onShareTap">分享给客户</button>
               </view>
 
               <!-- filled：查看订单 / 释放（孤儿或订单已取消的可释放） -->
@@ -95,15 +95,7 @@
       </view>
     </scroll-view>
 
-<!-- 分享确认弹层 -->
-<view class="share-sheet-mask" wx:if="{{shareSheet}}" bindtap="onShareSheetClose">
-  <view class="share-sheet" catchtap="noopStop">
-    <text class="share-sheet-title">分享给客户</text>
-    <text class="share-sheet-desc" wx:if="{{shareSheet.inv}}">{{shareSheet.inv.startDate}} 至 {{shareSheet.inv.endDate}} · ¥{{shareSheet.inv.totalPrice}}</text>
-    <view class="share-guide"><text class="share-guide-text">请点击屏幕右上角「···」按钮，选择「转发给朋友」发送给客户</text></view>
-    <view class="share-sheet-cancel" bindtap="onShareSheetClose">取消</view>
-  </view>
-</view>
+
 
     <!-- 底部新建按钮（root-portal 保证 Skyline 下不被 scroll-view 裁剪） -->
     <view class="inv-fab-wrap">

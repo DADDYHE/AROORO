@@ -144,27 +144,23 @@ Page({
   noopStop() { /* 阻止弹层内容点击冒泡到遮罩 */ },
 
   onShareAppMessage() {
+    // 直发分享：返回当前选中邀请；无上下文时兜底最新 active 邀请
     const s = this.data.shareSheet
-    const __r = s && s.type === 'invitation'
-      ? { title: '邀请', path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}` }
-      : null
-    console.log('[share] onShareAppMessage shareSheet:', JSON.stringify(s || null), '→ path:', __r && __r.path)
-    if (!s || s.type !== 'invitation') {
-      // 右上角菜单转发兜底：分享最新一条待填写邀请（任何入口转发都带码）
+    const rc = (s && s.type === 'invitation') ? s : null
+    const pick = rc || (() => {
       const latest = (this.data.list || []).find(x => x.status === 'active')
-      if (latest) {
-        return {
-          title: `寄养开单邀请 · ${latest.startDate} 至 ${latest.endDate} · ¥${latest.totalPrice}`,
-          path: `/subpackages/booking/invitation-fill/index?code=${latest.shareCode}`,
-        }
+      return latest ? { shareCode: latest.shareCode, inv: latest } : null
+    })()
+    const inv = pick ? (pick.inv || {}) : {}
+    if (pick && pick.shareCode) {
+      return {
+        title: inv.hostSnapshot && inv.hostSnapshot.hostName
+          ? `寄养开单邀请 · ${inv.hostSnapshot.hostName} · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`
+          : `寄养开单邀请 · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`,
+        path: `/subpackages/booking/invitation-fill/index?code=${pick.shareCode}`,
       }
-      return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' }
     }
-    const inv = s.inv || {}
-    return {
-      title: `寄养开单邀请 · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`,
-      path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}`,
-    }
+    return { title: 'AROORO · 家庭寄养', path: '/subpackages/partner/invitation-create/index' }
   },
 
   // ---------- 取消 ----------

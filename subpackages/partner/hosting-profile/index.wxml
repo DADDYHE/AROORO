@@ -193,7 +193,7 @@
                 <!-- 待支付/待补尾款：改价（折扣）+ 分享收款链接（客户点开即付） -->
                 <view wx:if="{{item.status === 'pending_payment' || item.status === 'deposit_paid'}}" class="order-actions">
                   <button class="order-btn order-btn--ghost" data-id="{{item._id}}" data-op="adjust" catchtap="onOrderAction">改价</button>
-                  <button class="order-btn order-btn--primary" data-type="order" data-id="{{item._id}}" catchtap="onShareTap">分享给客户付款</button>
+                  <button class="order-btn order-btn--primary" open-type="share" data-type="order" data-id="{{item._id}}" catchtap="onShareTap">分享给客户付款</button>
                 </view>
               </view>
             </view>
@@ -234,12 +234,4 @@
 </view>
 </scroll-view>
 
-<!-- 分享确认弹层（Skyline 下 open-type=share 事件参数不可靠，用弹层状态驱动 onShareAppMessage） -->
-<view class="share-sheet-mask" wx:if="{{shareSheet}}" bindtap="onShareSheetClose">
-  <view class="share-sheet" catchtap="noopStop">
-    <text class="share-sheet-title">分享给客户</text>
-    <text class="share-sheet-desc" wx:if="{{shareSheet.type === 'invitation'}}">{{shareSheet.inv.startDate}} 至 {{shareSheet.inv.endDate}} · ¥{{shareSheet.inv.totalPrice}}</text>
-    <view class="share-guide"><text class="share-guide-text">请点击屏幕右上角「···」按钮，选择「转发给朋友」发送给客户</text></view>
-    <view class="share-sheet-cancel" bindtap="onShareSheetClose">取消</view>
-  </view>
-</view>
+

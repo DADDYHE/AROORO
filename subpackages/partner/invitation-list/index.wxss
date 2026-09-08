@@ -278,58 +278,6 @@
   gap: 16rpx;
 }
 
-/* 分享确认弹层（2026-09-07） */
-.share-sheet-mask {
-  position: fixed;
-  top: 0; right: 0; bottom: 0; left: 0;
-  background: var(--overlay-color);
-  z-index: 999;
-  display: flex;
-  align-items: flex-end;
-}
-.share-sheet {
-  width: 100%;
-  background: var(--sheet-paper, #F7F5EF);
-  border-radius: 24rpx 24rpx 0 0;
-  padding: 36rpx 36rpx calc(36rpx + env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-.share-sheet-title {
-  font-size: 30rpx;
-  font-weight: 500;
-  color: var(--text-primary);
-  letter-spacing: 0.04em;
-}
-.share-sheet-desc {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-}
-.share-sheet-btn {
-  background: var(--lux-green-grad-rich);
-  color: #F7F5EF;
-  font-size: 28rpx;
-  letter-spacing: 0.08em;
-  border-radius: 999rpx;
-  line-height: 2.4;
-  margin: 0;
-}
-button.share-sheet-btn::after { border: none; }
-.share-sheet-cancel {
-  text-align: center;
-  font-size: 26rpx;
-  color: var(--text-tertiary);
-  padding: 8rpx 0;
-}
 
-.share-guide {
-  padding: 20rpx 24rpx;
-  background: var(--primary-tint, #E8ECE2);
-  border-radius: 12rpx;
-}
-.share-guide-text {
-  font-size: 24rpx;
-  line-height: 1.6;
-  color: var(--primary-color, #1F3A1F);
-}
+
+
