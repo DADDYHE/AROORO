@@ -100,7 +100,7 @@
   <view class="share-sheet" catchtap="noopStop">
     <text class="share-sheet-title">分享给客户</text>
     <text class="share-sheet-desc" wx:if="{{shareSheet.inv}}">{{shareSheet.inv.startDate}} 至 {{shareSheet.inv.endDate}} · ¥{{shareSheet.inv.totalPrice}}</text>
-    <button class="share-sheet-btn" open-type="share">转发给客户（微信会话）</button>
+    <view class="share-guide"><text class="share-guide-text">请点击屏幕右上角「···」按钮，选择「转发给朋友」发送给客户</text></view>
     <view class="share-sheet-cancel" bindtap="onShareSheetClose">取消</view>
   </view>
 </view>

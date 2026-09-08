@@ -83,17 +83,11 @@ Page({
   },
 
   onLoad() {
-    console.log('[hosting-profile] BUILD-MARK: 2026-09-08-1536-DEBUG-ONSHARE')
     this._initNavbarHeight()
     this._loadData()
   },
 
   onShow() {
-    // DEBUG：转发面板关闭回小程序时，toast 显示 onShareAppMessage 的实际执行数据
-    if (app.__shareCalled) {
-      wx.showToast({ title: app.__shareCalled, icon: 'none', duration: 6000 })
-      app.__shareCalled = null
-    }
     // 从编辑页返回时刷新档案 + 订单（onLoad 后首次 onShow 由 _loaded 跳过）
     if (!this._loaded) {
       this._loaded = true
@@ -246,15 +240,33 @@ Page({
   noopStop() { /* 阻止弹层内容点击冒泡到遮罩 */ },
 
   onShareAppMessage() {
-    // ⚠️ DEBUG 版（定位分享标题问题，修复后恢复原逻辑）
+    // Skyline 下 open-type=share 按钮不可靠（真机实证），转发走右上角菜单：
+    // 弹层引导用户点右上角，此处返回当前上下文的邀请/订单卡片；无上下文时兜底最新 active 邀请
     const s = this.data.shareSheet
-    const latest = (this.data.myInvitations || []).find(x => x.status === 'active') || (this.data.myInvitations || [])[0]
-    const dbg = 'DBG:' + (s ? 'S.' + s.type : 'S.NULL') + (latest ? '+L.' + latest.status : '+L.none')
-    console.log('[share-DEBUG] onShareAppMessage 被调用:', dbg, '| shareSheet:', JSON.stringify(s || null), '| latest:', latest && latest.shareCode)
-    return {
-      title: dbg,
-      path: '/subpackages/booking/invitation-fill/index?code=' + ((s && s.shareCode) || (latest && latest.shareCode) || 'nocode'),
+    if (s && s.type === 'invitation') {
+      const inv = s.inv || {}
+      return {
+        title: `寄养开单邀请 · ${inv.hostSnapshot && inv.hostSnapshot.hostName || '家庭寄养'} · ${inv.startDate} 至 ${inv.endDate}`,
+        path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}`,
+        imageUrl: inv.hostSnapshot && inv.hostSnapshot.avatarUrl ? inv.hostSnapshot.avatarUrl : '',
+      }
     }
+    if (s && s.type === 'order') {
+      const ord = this.data.orders.find(o => o._id === s.orderId)
+      return {
+        title: ord ? `寄养订单 · ${ord.statusText} · ${ord.startDate || ''}` : '寄养订单',
+        path: `/subpackages/profile/order-detail/index?id=${s.orderId}`,
+      }
+    }
+    // 无弹层上下文（右上角直达转发）：兜底最新一条待填写邀请
+    const latest = (this.data.myInvitations || []).find(x => x.status === 'active')
+    if (latest) {
+      return {
+        title: `寄养开单邀请 · ${latest.startDate} 至 ${latest.endDate} · ¥${latest.totalPrice}`,
+        path: `/subpackages/booking/invitation-fill/index?code=${latest.shareCode}`,
+      }
+    }
+    return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' }
   },
 
   onCancelInvitation(e) {
