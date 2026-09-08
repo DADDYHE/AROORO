@@ -82,6 +82,7 @@ Page({
   },
 
   onLoad() {
+    console.log('[hosting-profile] BUILD-MARK: 2026-09-08-1536-DEBUG-ONSHARE')
     this._initNavbarHeight()
     this._loadData()
   },
