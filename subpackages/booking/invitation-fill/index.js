@@ -147,6 +147,24 @@ Page({
   },
 
   onShow() {
+    // 从 create-step1 建档返回：回填槽位为已建档案（existing 模式，健康信息待确认）
+    try {
+      const created = wx.getStorageSync('_petCreated')
+      if (created && created.pet) {
+        wx.removeStorageSync('_petCreated')
+        const idx = Number(this._pendingSlotIdx)
+        if (Number.isInteger(idx) && this.data.slots[idx]) {
+          const pet = { ...created.pet, _id: created.id || created.pet._id }
+          this.setData({
+            [`slots[${idx}].mode`]: 'existing',
+            [`slots[${idx}].pet`]: pet,
+            [`slots[${idx}].healthInfo`]: (pet.healthInfo && Object.keys(pet.healthInfo).length > 0) ? pet.healthInfo : null,
+            [`slots[${idx}].healthTouched`]: false,
+          })
+        }
+        this._pendingSlotIdx = null
+      }
+    } catch (e) {}
     // 登录返回后刷新登录态
     const logged = authService.isLoggedIn()
     if (logged !== this.data.isLoggedIn) {

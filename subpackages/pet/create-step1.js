@@ -40,8 +40,12 @@ Page({
     isLoggedIn: false,
   },
 
-  onLoad() {
+  onLoad(options) {
     this._initNavbarHeight()
+    // 邀请开单来源（2026-09-08）：fill 页跳入建档，提交成功后返回原页并回填槽位
+    if (options && options.from === 'invitation') {
+      this._fromInvitation = true
+    }
     const isLoggedIn = authService.isLoggedIn()
     const now = new Date()
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
@@ -159,6 +163,14 @@ Page({
           await petStore.fetchPetList(true)
         } catch (e) {
           console.warn('[APP] 刷新宠物列表缓存失败:', e)
+        }
+
+        // 邀请开单来源：写回新档案快照并返回原页（fill 页 onShow 回填槽位）
+        if (this._fromInvitation) {
+          const pet = result.pet || { _id: result.id, ...submitData }
+          wx.setStorageSync('_petCreated', { id: result.id || pet._id, pet: { ...pet, _id: pet._id || result.id } })
+          setTimeout(() => wx.navigateBack(), 1200)
+          return
         }
 
         setTimeout(() => {
