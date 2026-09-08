@@ -1,5 +1,4 @@
 <zy-navbar title="我的开单" />
-<root-portal>
   <view class="inv-root">
     <scroll-view
       scroll-y
@@ -114,7 +113,7 @@
       </view>
     </scroll-view>
 
-    <!-- 底部新建按钮（root-portal 保证 Skyline 下不被 scroll-view 裁剪） -->
+    <!-- 底部新建按钮 -->
     <view class="inv-fab-wrap">
       <button class="inv-fab" bindtap="onCreateTap">＋ 新建开单</button>
     </view>
@@ -138,4 +137,3 @@
       </view>
     </view>
   </view>
-</root-portal>

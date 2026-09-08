@@ -1,5 +1,4 @@
 <zy-navbar title="寄养开单邀请" />
-<root-portal>
   <view class="fill-root">
     <scroll-view
       scroll-y
@@ -251,4 +250,3 @@
       </view>
     </view>
   </view>
-</root-portal>
