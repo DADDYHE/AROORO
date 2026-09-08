@@ -705,3 +705,24 @@
   letter-spacing: 0.04em;
   color: var(--text-tertiary, #736D5F);
 }
+
+/* ---------- 新建宠物表单行（对齐 create-step1 品牌表单语言） ---------- */
+.fill-newpet .fill-newpet-row {
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+}
+.fill-newpet .fill-newpet-label {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: var(--text-secondary, #5A564C);
+  letter-spacing: 0.04em;
+}
+.fill-newpet .fill-newpet-input {
+  font-size: 26rpx;
+  color: var(--text-primary, #1A1A17);
+  background: transparent;
+}
+.fill-newpet .fill-newpet-picker-val {
+  font-size: 26rpx;
+  color: var(--text-primary, #1A1A17);
+}
