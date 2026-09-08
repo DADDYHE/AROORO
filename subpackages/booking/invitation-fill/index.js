@@ -249,17 +249,12 @@ Page({
 
   // ---------- 槽位：新建宠物 ----------
 
+  /** 新建宠物：跳转完整创建页建档，提交成功后返回本页并回填槽位 */
   onCreateNew(e) {
     const idx = e.currentTarget.dataset.index
-    this.setData({
-      [`slots[${idx}].mode`]: 'new',
-      [`slots[${idx}].newPet`]: {
-        name: '', type: 'cat', typeLabel: '猫咪', gender: 'male', genderLabel: '公',
-        breed: '', birthday: '', weight: '',
-      },
-      [`slots[${idx}].healthInfo`]: null,
-      [`slots[${idx}].healthTouched`]: false,
-    })
+    this._pendingSlotIdx = Number(idx)
+    wx.setStorageSync('_petCreateFrom', 'invitation-fill')
+    wx.navigateTo({ url: '/subpackages/pet/create-step1?from=invitation' })
   },
 
   /** 新建槽位头像上传（复用宠物档案的上传工具，云目录区分） */
