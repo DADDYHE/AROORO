@@ -88,6 +88,11 @@ Page({
   },
 
   onShow() {
+    // DEBUG：转发面板关闭回小程序时，toast 显示 onShareAppMessage 的实际执行数据
+    if (app.__shareCalled) {
+      wx.showToast({ title: app.__shareCalled, icon: 'none', duration: 6000 })
+      app.__shareCalled = null
+    }
     // 从编辑页返回时刷新档案 + 订单（onLoad 后首次 onShow 由 _loaded 跳过）
     if (!this._loaded) {
       this._loaded = true
