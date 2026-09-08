@@ -14,7 +14,8 @@
     "navigationBarBackgroundColor": "#fff",
     "navigationBarTitleText": "AROORO",
     "navigationBarTextStyle": "black",
-    "navigationStyle": "custom"
+    "navigationStyle": "custom",
+    "glassEaselWebview": true
   },
   "tabBar": {
     "custom": true,
@@ -228,6 +229,5 @@
         "feeding"
       ]
     }
-  },
-  "glassEaselWebview": true
+  }
 }
