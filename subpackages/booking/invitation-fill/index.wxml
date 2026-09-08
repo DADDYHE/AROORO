@@ -156,11 +156,6 @@
               />
             </view>
 
-            <!-- 订单备注 -->
-            <view class="fill-note-block">
-              <text class="fill-note-label">给寄养家庭的备注（选填）</text>
-              <textarea class="fill-note-textarea" value="{{ note }}" maxlength="500" placeholder="如喂食习惯、用品准备、接送安排等" placeholder-class="fill-ph" bindinput="onNote" />
-            </view>
           </view>
 
           <!-- 03 费用与提交 -->

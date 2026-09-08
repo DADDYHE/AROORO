@@ -60,7 +60,7 @@ Component({
       { value: 'unknown', label: '不确定' },
     ],
     neuteredLabel: '不确定',
-    vaccines: [],
+    vaccinated: 'no',
     expanded: false,
   },
 
@@ -74,7 +74,7 @@ Component({
         dewormed: v.dewormed || '',
         behaviorNotes: v.behaviorNotes || '',
         neutered: v.neutered || EMPTY_NEUTERED,
-        vaccines: Array.isArray(v.vaccines) ? v.vaccines.map(x => ({ name: x.name || '', date: x.date || '' })) : [],
+        vaccinated: v.vaccinated === 'yes' ? 'yes' : (Array.isArray(v.vaccines) && v.vaccines.length > 0 ? 'yes' : 'no'),
       }
       const opt = this.data.neuteredOptions.find(o => o.value === d.neutered)
       d.neuteredLabel = opt ? opt.label : '不确定'
@@ -83,7 +83,7 @@ Component({
     },
 
     _emit() {
-      const { medicalHistory, allergies, medications, supplements, dewormed, behaviorNotes, neutered, vaccines } = this.data
+      const { medicalHistory, allergies, medications, supplements, dewormed, behaviorNotes, neutered, vaccinated } = this.data
       this.triggerEvent('change', {
         healthInfo: {
           medicalHistory: { has: medicalHistory.has, detail: medicalHistory.detail },
@@ -93,7 +93,7 @@ Component({
           dewormed,
           behaviorNotes,
           neutered,
-          vaccines: vaccines.filter(v => (v.name && v.name.trim()) || v.date),
+          vaccinated,
         },
       })
     },
@@ -134,30 +134,10 @@ Component({
       this._emit()
     },
 
-    onVaccineName(e) {
-      const idx = e.currentTarget.dataset.index
-      this.setData({ [`vaccines[${idx}].name`]: e.detail.value })
-      this._emit()
-    },
-
-    onVaccineDate(e) {
-      const idx = e.currentTarget.dataset.index
-      this.setData({ [`vaccines[${idx}].date`]: e.detail.value })
-      this._emit()
-    },
-
-    onAddVaccine() {
-      if (this.data.vaccines.length >= 10) {
-        wx.showToast({ title: '疫苗记录最多 10 条', icon: 'none' })
-        return
-      }
-      this.setData({ vaccines: [...this.data.vaccines, { name: '', date: '' }] })
-    },
-
-    onRemoveVaccine(e) {
-      const idx = e.currentTarget.dataset.index
-      const vaccines = this.data.vaccines.filter((_, i) => i !== idx)
-      this.setData({ vaccines })
+    /** 疫苗情况：已接种/未接种 */
+    onVacToggle(e) {
+      const val = e.currentTarget.dataset.val
+      this.setData({ vaccinated: val === 'yes' ? 'yes' : 'no' })
       this._emit()
     },
   },

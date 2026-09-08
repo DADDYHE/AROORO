@@ -1,12 +1,14 @@
 <!-- ================================================================
      components/health-form · 宠物健康信息表单
-     折叠头（点击展开）+ 7 类字段：病史/过敏/用药/保养品/疫苗/绝育/驱虫/行为
+     字段顺序（2026-09-08 DADDY 定）：既往病史 / 药品使用 / 保健品使用 /
+     绝育情况 / 疫苗情况（已接种/未接种）/ 过敏源 / 行为习惯备注
+     三字段（病史/药品/保健品）为是/否+详情结构
      ================================================================ -->
 <view class="hf">
   <view class="hf-head" bindtap="onToggle" hover-class="hf-head--pressed" hover-stay-time="80">
     <view class="hf-head-left">
       <text class="hf-head-title">健康信息</text>
-      <text class="hf-head-sub">既往病史 · 过敏源 · 用药 · 疫苗等</text>
+      <text class="hf-head-sub">病史 · 用药 · 保健品 · 疫苗等</text>
     </view>
     <view class="hf-head-right">
       <text class="hf-head-toggle">{{ expanded ? '收起' : '展开' }}</text>
@@ -28,23 +30,10 @@
         class="hf-textarea"
         value="{{ medicalHistory.detail }}"
         maxlength="500"
-        placeholder="请填写病史详情（如曾患猫瘟、细小、皮肤病等）"
+        placeholder="请填写病史详情以及注意事项"
         placeholder-class="hf-ph"
         bindinput="onYesDetailInput"
         data-field="medicalHistory"
-      />
-    </view>
-
-    <view class="hf-field">
-      <text class="hf-label">过敏源</text>
-      <textarea
-        class="hf-textarea"
-        value="{{ allergies }}"
-        maxlength="500"
-        placeholder="如对特定食物、药物、花粉过敏，无过敏可填「无」"
-        placeholder-class="hf-ph"
-        bindinput="onFieldInput"
-        data-field="allergies"
       />
     </view>
 
@@ -89,35 +78,6 @@
     </view>
 
     <view class="hf-field">
-      <view class="hf-label-row">
-        <text class="hf-label">疫苗接种</text>
-        <view class="hf-vaccine-add" bindtap="onAddVaccine" hover-class="hf-vaccine-add--pressed" hover-stay-time="80">
-          <text class="hf-vaccine-add-text">+ 添加记录</text>
-        </view>
-      </view>
-      <view wx:if="{{ vaccines.length === 0 }}" class="hf-vaccine-empty">
-        <text class="hf-vaccine-empty-text">暂无记录，可点击右上角添加（如狂犬疫苗、猫三联）</text>
-      </view>
-      <view wx:for="{{ vaccines }}" wx:key="index" class="hf-vaccine-row">
-        <input
-          class="hf-vaccine-name"
-          value="{{ item.name }}"
-          maxlength="30"
-          placeholder="疫苗名称"
-          placeholder-class="hf-ph"
-          bindinput="onVaccineName"
-          data-index="{{ index }}"
-        />
-        <picker mode="date" value="{{ item.date }}" bindchange="onVaccineDate" data-index="{{ index }}" class="hf-vaccine-picker">
-          <view class="hf-vaccine-date {{ item.date ? '' : 'hf-vaccine-date--ph' }}">{{ item.date || '接种日期' }}</view>
-        </picker>
-        <view class="hf-vaccine-del" bindtap="onRemoveVaccine" data-index="{{ index }}">
-          <text class="hf-vaccine-del-text">删除</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="hf-field">
       <text class="hf-label">绝育情况</text>
       <picker mode="selector" range="{{ neuteredOptions }}" range-key="label" bindchange="onNeuteredChange" class="hf-picker">
         <view class="hf-picker-value">{{ neuteredLabel }}</view>
@@ -125,15 +85,25 @@
     </view>
 
     <view class="hf-field">
-      <text class="hf-label">驱虫情况</text>
+      <view class="hf-label-row">
+        <text class="hf-label">疫苗情况</text>
+        <view class="hf-yesno">
+          <view class="hf-yn {{ vaccinated === 'yes' ? 'hf-yn--on' : '' }}" data-val="yes" bindtap="onVacToggle"><text class="hf-yn-text">已接种</text></view>
+          <view class="hf-yn {{ vaccinated === 'no' ? 'hf-yn--on' : '' }}" data-val="no" bindtap="onVacToggle"><text class="hf-yn-text">未接种</text></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="hf-field">
+      <text class="hf-label">过敏源</text>
       <textarea
         class="hf-textarea"
-        value="{{ dewormed }}"
+        value="{{ allergies }}"
         maxlength="500"
-        placeholder="如「2026-08 体内+体外驱虫」；未驱虫可填「无」"
+        placeholder="如对特定食物、药物、花粉过敏，无过敏可填「无」"
         placeholder-class="hf-ph"
         bindinput="onFieldInput"
-        data-field="dewormed"
+        data-field="allergies"
       />
     </view>
 
