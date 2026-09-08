@@ -14,8 +14,7 @@
     "navigationBarBackgroundColor": "#fff",
     "navigationBarTitleText": "AROORO",
     "navigationBarTextStyle": "black",
-    "navigationStyle": "custom",
-    "glassEaselWebview": true
+    "navigationStyle": "custom"
   },
   "tabBar": {
     "custom": true,
@@ -49,6 +48,7 @@
   "style": "v2",
   "renderer": "skyline",
   "componentFramework": "glass-easel",
+  "glassEaselWebview": true,
   "rendererOptions": {
     "skyline": {
       "defaultDisplayBlock": true,

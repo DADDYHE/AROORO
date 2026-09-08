@@ -98,7 +98,7 @@ Page({
   },
 
   onLoad(options) {
-    console.log('[invitation-fill] onLoad options:', JSON.stringify(options || {}))
+    console.log('[invitation-fill] BUILD-MARK: 2026-09-08-2140-JUMPER-VERSION | options:', JSON.stringify(options || {}))
     this._initNavbarHeight()
     // 分享卡片 ?code=xxx；小程序码 scene=c=xxx（URL 编码）
     let code = options.code || ''
