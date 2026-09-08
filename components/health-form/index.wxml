@@ -78,13 +78,6 @@
     </view>
 
     <view class="hf-field">
-      <text class="hf-label">绝育情况</text>
-      <picker mode="selector" range="{{ neuteredOptions }}" range-key="label" bindchange="onNeuteredChange" class="hf-picker">
-        <view class="hf-picker-value">{{ neuteredLabel }}</view>
-      </picker>
-    </view>
-
-    <view class="hf-field">
       <view class="hf-label-row">
         <text class="hf-label">疫苗情况</text>
         <view class="hf-yesno">
@@ -92,6 +85,13 @@
           <view class="hf-yn {{ vaccinated === 'no' ? 'hf-yn--on' : '' }}" data-val="no" bindtap="onVacToggle"><text class="hf-yn-text">未接种</text></view>
         </view>
       </view>
+    </view>
+
+    <view class="hf-field">
+      <text class="hf-label">绝育情况</text>
+      <picker mode="selector" range="{{ neuteredOptions }}" range-key="label" bindchange="onNeuteredChange" class="hf-picker">
+        <view class="hf-picker-value">{{ neuteredLabel }}</view>
+      </picker>
     </view>
 
     <view class="hf-field">

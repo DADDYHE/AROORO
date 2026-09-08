@@ -150,7 +150,6 @@
               <health-form
                 wx:if="{{ item.mode !== 'empty' }}"
                 value="{{ item.healthInfo }}"
-                collapsed="{{ true }}"
                 bindchange="onHealthChange"
                 data-index="{{ index }}"
               />

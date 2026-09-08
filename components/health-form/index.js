@@ -61,7 +61,7 @@ Component({
     ],
     neuteredLabel: '不确定',
     vaccinated: 'no',
-    expanded: false,
+    expanded: true,
   },
 
   methods: {
@@ -78,7 +78,7 @@ Component({
       }
       const opt = this.data.neuteredOptions.find(o => o.value === d.neutered)
       d.neuteredLabel = opt ? opt.label : '不确定'
-      d.expanded = !this.data.collapsed
+      // 不重置 expanded：value 回流（onHealthChange）时保持当前展开/收起状态
       return d
     },
 
