@@ -93,7 +93,7 @@
               <view class="fill-slot-head">
                 <text class="fill-slot-no">宠物 {{ index + 1 }}</text>
                 <view class="fill-slot-reset" wx:if="{{ item.mode !== 'empty' }}" bindtap="onSlotReset" data-index="{{ index }}">
-                  <text class="fill-slot-reset-text">重置</text>
+                  <text class="fill-slot-reset-text">清除</text>
                 </view>
               </view>
 
