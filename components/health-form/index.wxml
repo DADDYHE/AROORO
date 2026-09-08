@@ -16,14 +16,21 @@
 
   <view wx:if="{{ expanded }}" class="hf-body">
     <view class="hf-field">
-      <text class="hf-label">既往病史</text>
+      <view class="hf-label-row">
+        <text class="hf-label">既往病史</text>
+        <view class="hf-yesno">
+          <view class="hf-yn {{ medicalHistory.has === 'yes' ? 'hf-yn--on' : '' }}" data-field="medicalHistory" data-val="yes" bindtap="onHasToggle"><text class="hf-yn-text">是</text></view>
+          <view class="hf-yn {{ medicalHistory.has === 'no' ? 'hf-yn--on' : '' }}" data-field="medicalHistory" data-val="no" bindtap="onHasToggle"><text class="hf-yn-text">否</text></view>
+        </view>
+      </view>
       <textarea
+        wx:if="{{ medicalHistory.has === 'yes' }}"
         class="hf-textarea"
-        value="{{ medicalHistory }}"
+        value="{{ medicalHistory.detail }}"
         maxlength="500"
-        placeholder="如曾患猫瘟、细小、皮肤病等，无病史可填「无」"
+        placeholder="请填写病史详情（如曾患猫瘟、细小、皮肤病等）"
         placeholder-class="hf-ph"
-        bindinput="onFieldInput"
+        bindinput="onYesDetailInput"
         data-field="medicalHistory"
       />
     </view>
@@ -42,27 +49,41 @@
     </view>
 
     <view class="hf-field">
-      <text class="hf-label">正在使用的药品</text>
+      <view class="hf-label-row">
+        <text class="hf-label">药品使用</text>
+        <view class="hf-yesno">
+          <view class="hf-yn {{ medications.has === 'yes' ? 'hf-yn--on' : '' }}" data-field="medications" data-val="yes" bindtap="onHasToggle"><text class="hf-yn-text">是</text></view>
+          <view class="hf-yn {{ medications.has === 'no' ? 'hf-yn--on' : '' }}" data-field="medications" data-val="no" bindtap="onHasToggle"><text class="hf-yn-text">否</text></view>
+        </view>
+      </view>
       <textarea
+        wx:if="{{ medications.has === 'yes' }}"
         class="hf-textarea"
-        value="{{ medications }}"
+        value="{{ medications.detail }}"
         maxlength="500"
-        placeholder="药品名称、剂量、频率；无用药可填「无」"
+        placeholder="请填写用药详情（药品名称、剂量、频率）"
         placeholder-class="hf-ph"
-        bindinput="onFieldInput"
+        bindinput="onYesDetailInput"
         data-field="medications"
       />
     </view>
 
     <view class="hf-field">
-      <text class="hf-label">保养品 / 保健品使用</text>
+      <view class="hf-label-row">
+        <text class="hf-label">保健品使用</text>
+        <view class="hf-yesno">
+          <view class="hf-yn {{ supplements.has === 'yes' ? 'hf-yn--on' : '' }}" data-field="supplements" data-val="yes" bindtap="onHasToggle"><text class="hf-yn-text">是</text></view>
+          <view class="hf-yn {{ supplements.has === 'no' ? 'hf-yn--on' : '' }}" data-field="supplements" data-val="no" bindtap="onHasToggle"><text class="hf-yn-text">否</text></view>
+        </view>
+      </view>
       <textarea
+        wx:if="{{ supplements.has === 'yes' }}"
         class="hf-textarea"
-        value="{{ supplements }}"
+        value="{{ supplements.detail }}"
         maxlength="500"
-        placeholder="如卵磷脂、鱼油、益生菌等，无使用可填「无」"
+        placeholder="请填写保健品使用详情（如卵磷脂、鱼油、益生菌）"
         placeholder-class="hf-ph"
-        bindinput="onFieldInput"
+        bindinput="onYesDetailInput"
         data-field="supplements"
       />
     </view>

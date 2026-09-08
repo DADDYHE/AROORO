@@ -258,10 +258,13 @@ Page({
   _decoratePetHealth(pet) {
     const h = pet && pet.healthInfo
     if (!h) { return { ...pet, healthTags: [] } }
+    // 三字段兼容：旧字符串（非「无」即有）/ 新对象 { has, detail }
+    const hasYes = (v) => (typeof v === 'string' ? (v.trim() && v.trim() !== '无') : (v && v.has === 'yes'))
     const tags = []
     if (h.allergies) { tags.push('有过敏源') }
-    if (h.medications) { tags.push('有用药') }
-    if (h.medicalHistory) { tags.push('有病史') }
+    if (hasYes(h.medications)) { tags.push('有用药') }
+    if (hasYes(h.medicalHistory)) { tags.push('有病史') }
+    if (hasYes(h.supplements)) { tags.push('有保健品') }
     if (h.vaccines && h.vaccines.length > 0) { tags.push(`疫苗 ${h.vaccines.length} 针`) }
     if (h.neutered === 'yes') { tags.push('已绝育') }
     if (h.behaviorNotes) { tags.push('行为备注') }

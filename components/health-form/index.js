@@ -4,18 +4,28 @@
 // 使用场景：
 //   1. 寄养开单邀请填写页（subpackages/booking/invitation-fill）
 //   2. 宠物档案编辑页（subpackages/pet/update-profile）
-//   3. 后续普通下单流程如需展示可复用
 // 字段（与 petService.PetHealthInfo 对齐，均选填）：
-//   medicalHistory 既往病史 / allergies 过敏源 / medications 药品使用
-//   supplements 保养品使用 / vaccines 疫苗接种（多条）
+//   medicalHistory 既往病史 / medications 药品使用 / supplements 保健品使用
+//     —— 2026-09-08 结构升级：{ has: 'yes'|'no', detail: string }
+//       （是/否二选一，选「是」需填详情；向后兼容旧字符串数据）
+//   allergies 过敏源 / vaccines 疫苗接种（多条）
 //   neutered 绝育情况 / dewormed 驱虫情况 / behaviorNotes 行为习惯备注
 // 接口：
-//   properties.value  —— PetHealthInfo 对象（外部初始化）
+//   properties.value  —— PetHealthInfo 对象（外部初始化，兼容旧字符串）
 //   事件 change       —— 任一字段变更时冒泡 { healthInfo }
-// Skyline 兼容：picker/textarea 原生组件，无 clip-path/cursor
 // ================================================================
 
 const EMPTY_NEUTERED = 'unknown'
+
+/** 三字段旧字符串 → { has, detail } 兼容转换（旧数据填了内容视为「是」） */
+function toYesNo(val) {
+  if (val && typeof val === 'object') {
+    return { has: val.has === 'yes' ? 'yes' : 'no', detail: String(val.detail || '') }
+  }
+  const str = String(val || '').trim()
+  if (!str || str === '无') { return { has: 'no', detail: '' } }
+  return { has: 'yes', detail: str }
+}
 
 Component({
   options: {
@@ -23,7 +33,6 @@ Component({
   },
 
   properties: {
-    // 外部传入的已有健康信息（宠物档案回显）
     value: {
       type: Object,
       value: null,
@@ -34,15 +43,14 @@ Component({
         }
       },
     },
-    // 是否折叠展示（默认展开）
     collapsed: { type: Boolean, value: false },
   },
 
   data: {
-    medicalHistory: '',
+    medicalHistory: { has: 'no', detail: '' },
     allergies: '',
-    medications: '',
-    supplements: '',
+    medications: { has: 'no', detail: '' },
+    supplements: { has: 'no', detail: '' },
     dewormed: '',
     behaviorNotes: '',
     neutered: EMPTY_NEUTERED,
@@ -52,17 +60,17 @@ Component({
       { value: 'unknown', label: '不确定' },
     ],
     neuteredLabel: '不确定',
-    vaccines: [], // [{ name, date }]
+    vaccines: [],
     expanded: false,
   },
 
   methods: {
     _normalize(v) {
       const d = {
-        medicalHistory: v.medicalHistory || '',
+        medicalHistory: toYesNo(v.medicalHistory),
         allergies: v.allergies || '',
-        medications: v.medications || '',
-        supplements: v.supplements || '',
+        medications: toYesNo(v.medications),
+        supplements: toYesNo(v.supplements),
         dewormed: v.dewormed || '',
         behaviorNotes: v.behaviorNotes || '',
         neutered: v.neutered || EMPTY_NEUTERED,
@@ -78,7 +86,12 @@ Component({
       const { medicalHistory, allergies, medications, supplements, dewormed, behaviorNotes, neutered, vaccines } = this.data
       this.triggerEvent('change', {
         healthInfo: {
-          medicalHistory, allergies, medications, supplements, dewormed, behaviorNotes,
+          medicalHistory: { has: medicalHistory.has, detail: medicalHistory.detail },
+          allergies,
+          medications: { has: medications.has, detail: medications.detail },
+          supplements: { has: supplements.has, detail: supplements.detail },
+          dewormed,
+          behaviorNotes,
           neutered,
           vaccines: vaccines.filter(v => (v.name && v.name.trim()) || v.date),
         },
@@ -92,6 +105,24 @@ Component({
     onFieldInput(e) {
       const { field } = e.currentTarget.dataset
       this.setData({ [field]: e.detail.value })
+      this._emit()
+    },
+
+    /** 三字段是/否切换：选「否」清空详情 */
+    onHasToggle(e) {
+      const { field, val } = e.currentTarget.dataset
+      if (!field) { return }
+      this.setData({ [`${field}.has`]: val === 'yes' ? 'yes' : 'no' })
+      if (val !== 'yes') {
+        this.setData({ [`${field}.detail`]: '' })
+      }
+      this._emit()
+    },
+
+    /** 三字段「是」状态的详情输入 */
+    onYesDetailInput(e) {
+      const { field } = e.currentTarget.dataset
+      this.setData({ [`${field}.detail`]: e.detail.value })
       this._emit()
     },
 

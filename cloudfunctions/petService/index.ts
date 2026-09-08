@@ -99,11 +99,17 @@ export interface PetVaccineRecord {
 }
 
 // 宠物健康信息（寄养开单填写页 / 宠物档案编辑页共用，全场景同步上线）
+// 三字段结构（2026-09-08）：{ has: 'yes'|'no', detail } —— 兼容旧字符串数据
+export interface PetYesNoDetail {
+  has?: 'yes' | 'no'
+  detail?: string
+}
+
 export interface PetHealthInfo {
-  medicalHistory?: string    // 既往病史
+  medicalHistory?: string | PetYesNoDetail    // 既往病史（新结构 { has, detail }，兼容旧字符串）
   allergies?: string         // 过敏源
-  medications?: string       // 药品使用
-  supplements?: string       // 保养品/保健品使用
+  medications?: string | PetYesNoDetail       // 药品使用（同上）
+  supplements?: string | PetYesNoDetail       // 保健品使用（同上）
   vaccines?: PetVaccineRecord[] // 疫苗接种（名称 + 日期）
   neutered?: 'yes' | 'no' | 'unknown' // 绝育情况
   dewormed?: string          // 驱虫情况

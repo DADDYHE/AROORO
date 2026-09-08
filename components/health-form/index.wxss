@@ -199,3 +199,31 @@
   color: var(--brand-red);
   letter-spacing: 1rpx;
 }
+
+/* 是/否切换（2026-09-08 三字段升级） */
+.hf-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hf-yesno {
+  display: flex;
+  gap: 12rpx;
+}
+.hf-yn {
+  padding: 6rpx 26rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid var(--hairline, rgba(26,26,23,0.12));
+  background: transparent;
+}
+.hf-yn--on {
+  background: var(--primary-color, #1F3A1F);
+  border-color: var(--primary-color, #1F3A1F);
+}
+.hf-yn-text {
+  font-size: 22rpx;
+  color: var(--text-secondary, #5A564C);
+}
+.hf-yn--on .hf-yn-text {
+  color: var(--text-on-primary, #F7F5EF);
+}

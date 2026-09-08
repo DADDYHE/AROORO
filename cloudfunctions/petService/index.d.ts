@@ -78,11 +78,15 @@ export interface PetVaccineRecord {
     name?: string;
     date?: string;
 }
+export interface PetYesNoDetail {
+    has?: 'yes' | 'no';
+    detail?: string;
+}
 export interface PetHealthInfo {
-    medicalHistory?: string;
+    medicalHistory?: string | PetYesNoDetail;
     allergies?: string;
-    medications?: string;
-    supplements?: string;
+    medications?: string | PetYesNoDetail;
+    supplements?: string | PetYesNoDetail;
     vaccines?: PetVaccineRecord[];
     neutered?: 'yes' | 'no' | 'unknown';
     dewormed?: string;
