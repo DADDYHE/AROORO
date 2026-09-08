@@ -25,9 +25,21 @@ const STATUS_TAG_CLASS = {
 const TABS = [
   { key: 'all', label: '全部' },
   { key: 'active', label: '待填写' },
-  { key: 'filled', label: '已成单' },
+  { key: 'deposit_pending', label: '待付尾款' },
+  { key: 'completed', label: '已完成' },
   { key: 'cancelled', label: '已取消' },
 ]
+// 组合筛选 tab：filled 邀请按关联订单状态细分（服务端 orderStatusFilter 过滤）
+const COMBO_TABS = { deposit_pending: 'deposit_paid', completed: 'completed' }
+// 关联订单状态 → 展示
+const ORDER_STATUS_VIEW = {
+  pending_payment: '待客户支付',
+  deposit_paid: '待补尾款',
+  paid: '待接单',
+  confirmed: '已接单',
+  in_progress: '寄养中',
+  completed: '已完成',
+}
 
 Page({
   behaviors: [ListBehavior],
@@ -77,16 +89,26 @@ Page({
         pageSize: this.data.pageSize,
       })
       if (res.code === 0 && res.data) {
-        const list = (res.data.list || []).map(inv => ({
+        const list = (res.data.list || []).map(inv => {
+          // 有关联订单状态时（filled 项），按订单维度展示「待补尾款/已完成」等
+          const os = inv.orderStatus
+          const statusText = os
+            ? (ORDER_STATUS_VIEW[os] || os)
+            : (STATUS_TEXT[inv.status] || inv.status)
+          const statusTagClass = os
+            ? (os === 'completed' ? 'tag-active' : 'tag-filled')
+            : (STATUS_TAG_CLASS[inv.status] || 'tag-inactive')
+          return {
           ...inv,
-          statusText: STATUS_TEXT[inv.status] || inv.status,
-          statusTagClass: STATUS_TAG_CLASS[inv.status] || 'tag-inactive',
+          statusText,
+          statusTagClass,
           days: this._calcDays(inv.startDate, inv.endDate),
           dateRangeText: `${inv.startDate || '-'} 至 ${inv.endDate || '-'}`,
           timeText: `${inv.startAt || '--:--'} - ${inv.endAt || '--:--'}`,
           // 修复 #1：filled 且无 orderId → 订单创建失败遗留的孤儿邀请，可释放
           releasable: inv.status === 'filled' && !inv.orderId,
-        }))
+          }
+        })
         this.setData({
           list: this.data.page > 1 ? this.data.list.concat(list) : list,
           total: res.data.total || 0,

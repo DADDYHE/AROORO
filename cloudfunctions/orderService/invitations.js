@@ -254,11 +254,53 @@ async function getMyInvitations(event, _context, auth) {
     const pageNum = Math.max(1, Math.floor(Number(page) || 1));
     const pageSizeNum = Math.min(50, Math.max(1, Math.floor(Number(pageSize) || 20)));
     const where = { hostId: hostProfile._id };
+    // 组合筛选（2026-09-08）：filled 邀请按关联订单状态细分——待付尾款（deposit_paid）/已完成（completed）
+    let orderStatusFilter = null;
     if (status && status !== 'all') {
-        if (!INVITATION_STATUSES.has(status)) {
+        if (status === 'deposit_pending') {
+            where.status = 'filled';
+            orderStatusFilter = 'deposit_paid';
+        }
+        else if (status === 'completed') {
+            where.status = 'filled';
+            orderStatusFilter = 'completed';
+        }
+        else if (INVITATION_STATUSES.has(status)) {
+            where.status = status;
+        }
+        else {
             throw err('INVALID_PARAMS', `无效的状态筛选：${status}`);
         }
-        where.status = status;
+    }
+    // 组合筛选：全量 filled 池 → 批量查关联订单状态 → 过滤 → 内存分页（filled 量级小）
+    if (orderStatusFilter) {
+        const filledRes = await db.collection(COLLECTION)
+            .where(where)
+            .orderBy('createdAt', 'desc')
+            .limit(200)
+            .get();
+        const filledList = (filledRes.data || []);
+        const orderIds = filledList.map(x => x.orderId).filter(Boolean);
+        const orderMap = {};
+        if (orderIds.length) {
+            const ordRes = await db.collection('orders')
+                .where({ _id: db.command.in(orderIds) })
+                .field({ _id: true, status: true })
+                .get();
+            (ordRes.data || []).forEach(o => { orderMap[o._id] = o.status || ''; });
+        }
+        const filtered = filledList
+            .filter(x => x.orderId && orderMap[x.orderId] === orderStatusFilter)
+            .map(x => ({ ...x, orderStatus: orderMap[x.orderId] }));
+        const total = filtered.length;
+        const pageList = filtered.slice((pageNum - 1) * pageSizeNum, pageNum * pageSizeNum);
+        return (0, utils_1.handleSuccess)({
+            list: pageList,
+            total,
+            page: pageNum,
+            pageSize: pageSizeNum,
+            totalPages: Math.ceil(total / pageSizeNum),
+        }, '获取成功');
     }
     const countResult = await db.collection(COLLECTION).where(where).count();
     const result = await db.collection(COLLECTION)
@@ -267,8 +309,20 @@ async function getMyInvitations(event, _context, auth) {
         .skip((pageNum - 1) * pageSizeNum)
         .limit(pageSizeNum)
         .get();
+    // 附关联订单状态（filled 项）：前端据此展示「待补尾款/已完成」等订单维度状态
+    let list = (result.data || []);
+    const orderIds = list.map(x => x.orderId).filter(Boolean);
+    if (orderIds.length) {
+        const ordRes = await db.collection('orders')
+            .where({ _id: db.command.in(orderIds) })
+            .field({ _id: true, status: true })
+            .get();
+        const orderMap = {};
+        (ordRes.data || []).forEach(o => { orderMap[o._id] = o.status || ''; });
+        list = list.map(x => x.orderId ? ({ ...x, orderStatus: orderMap[x.orderId] }) : x);
+    }
     return (0, utils_1.handleSuccess)({
-        list: result.data || [],
+        list,
         total: countResult.total,
         page: pageNum,
         pageSize: pageSizeNum,
