@@ -16,7 +16,6 @@ const { OrderService, PetService } = require('../../../services/CloudFunctionSer
 const PaymentService = require('../../../services/PaymentService')
 const { authService } = require('../../../services/AuthService')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
-const { chooseAndUploadAvatar } = require('./utils/avatarUpload')
 
 const PET_TYPE_OPTIONS = [
   { value: 'cat', label: '猫咪' },
@@ -40,6 +39,38 @@ function buildSlots(petCount) {
     healthInfo: null,   // 当前槽位健康信息
     healthTouched: false,
   }))
+}
+
+
+/** 头像选择上传（内联版，源自 pet/utils/avatarUpload；规避新文件依赖索引问题） */
+function chooseSlotAvatar({ onSuccess, onError }) {
+  wx.showActionSheet({
+    itemList: ['从相册选择', '拍照'],
+    success: res => {
+      const sourceType = res.tapIndex === 0 ? ['album'] : ['camera']
+      wx.chooseMedia({
+        count: 1,
+        mediaType: ['image'],
+        sourceType,
+        success: mediaRes => {
+          wx.showLoading({ title: '上传中', mask: true })
+          wx.cloud.uploadFile({
+            cloudPath: `pet-avatarUrls/${Date.now()}-${Math.random().toString(36).slice(2, 11)}.jpg`,
+            filePath: mediaRes.tempFiles[0].tempFilePath,
+          }).then(up => {
+            wx.hideLoading()
+            if (onSuccess) onSuccess(up.fileID)
+          }).catch(err => {
+            wx.hideLoading()
+            console.error('[invitation-fill] 头像上传失败:', err)
+            if (onError) onError(err)
+          })
+        },
+        fail: () => {},
+      })
+    },
+    fail: () => {},
+  })
 }
 
 Page({
@@ -216,7 +247,7 @@ Page({
   /** 新建槽位头像上传（复用宠物档案的上传工具，云目录区分） */
   onSlotAvatar(e) {
     const idx = e.currentTarget.dataset.index
-    chooseAndUploadAvatar({
+    chooseSlotAvatar({
       cloudPrefix: 'pet-avatarUrls',
       onSuccess: fileID => this.setData({ ['slots[' + idx + '].newPet.avatarUrl']: fileID }),
       onError: () => wx.showToast({ title: '头像上传失败', icon: 'none' }),
