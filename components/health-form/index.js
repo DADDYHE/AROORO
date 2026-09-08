@@ -76,7 +76,7 @@ Component({
         neutered: v.neutered || EMPTY_NEUTERED,
         vaccines: Array.isArray(v.vaccines) ? v.vaccines.map(x => ({ name: x.name || '', date: x.date || '' })) : [],
       }
-      const opt = d.neuteredOptions.find(o => o.value === d.neutered)
+      const opt = this.data.neuteredOptions.find(o => o.value === d.neutered)
       d.neuteredLabel = opt ? opt.label : '不确定'
       d.expanded = !this.data.collapsed
       return d
