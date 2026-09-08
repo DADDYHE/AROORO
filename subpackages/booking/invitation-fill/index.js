@@ -16,6 +16,7 @@ const { OrderService, PetService } = require('../../../services/CloudFunctionSer
 const PaymentService = require('../../../services/PaymentService')
 const { authService } = require('../../../services/AuthService')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
+const { chooseAndUploadAvatar } = require('./utils/avatarUpload')
 
 const PET_TYPE_OPTIONS = [
   { value: 'cat', label: '猫咪' },
@@ -212,6 +213,16 @@ Page({
     })
   },
 
+  /** 新建槽位头像上传（复用宠物档案的上传工具，云目录区分） */
+  onSlotAvatar(e) {
+    const idx = e.currentTarget.dataset.index
+    chooseAndUploadAvatar({
+      cloudPrefix: 'pet-avatarUrls',
+      onSuccess: fileID => this.setData({ ['slots[' + idx + '].newPet.avatarUrl']: fileID }),
+      onError: () => wx.showToast({ title: '头像上传失败', icon: 'none' }),
+    })
+  },
+
   onSlotReset(e) {
     const idx = e.currentTarget.dataset.index
     this.setData({
@@ -325,6 +336,7 @@ Page({
             breed: String(np.breed).trim(),
             birthday: np.birthday || '',
             weight: np.weight || '',
+            avatarUrl: np.avatarUrl || '',
             note: '',
             healthInfo: slot.healthInfo || undefined,
           })

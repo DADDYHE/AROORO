@@ -114,6 +114,16 @@
 
               <!-- 新建宠物表单 -->
               <view wx:elif="{{ item.mode === 'new' }}" class="fill-newpet">
+                <view class="fill-avatar-row" bindtap="onSlotAvatar" data-index="{{ index }}" hover-class="fill-avatar-row--pressed" hover-stay-time="80">
+                  <view class="fill-avatar-frame">
+                    <image wx:if="{{ item.newPet.avatarUrl }}" class="fill-avatar-img" src="{{ item.newPet.avatarUrl }}" mode="aspectFill" />
+                    <view wx:else class="fill-avatar-ph">
+                      <view class="fill-avatar-cross-h"></view>
+                      <view class="fill-avatar-cross-v"></view>
+                    </view>
+                  </view>
+                  <text class="fill-avatar-label">{{ item.newPet.avatarUrl ? '点击更换头像' : '上传宠物头像' }}</text>
+                </view>
                 <view class="fill-newpet-row">
                   <text class="fill-newpet-label">昵称 *</text>
                   <input class="fill-newpet-input" value="{{ item.newPet.name }}" maxlength="30" placeholder="宠物昵称" placeholder-class="fill-ph" bindinput="onNewPetInput" data-index="{{ index }}" data-field="name" />
