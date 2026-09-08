@@ -536,7 +536,8 @@
 }
 
 .fill-picker-scroll {
-  max-height: 50vh;
+  /* Skyline：flex 容器内 scroll-view + max-height 会高度坍塌为 0（列表不渲染），必须显式 height */
+  height: 50vh;
 }
 
 .fill-picker-empty {
