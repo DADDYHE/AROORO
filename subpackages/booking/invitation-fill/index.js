@@ -157,12 +157,16 @@ Page({
     this.setData({ petPickerVisible: true, petPickerIndex: idx, myPetsLoading: true })
     try {
       const res = await PetService.getPetList({ page: 1, pageSize: 50 })
+      console.log('[invitation-fill] getPetList:', JSON.stringify(res && { code: res.code, total: res.data && res.data.total, listLen: res.data && (res.data.list || []).length }))
       if (res.code === 0 && res.data) {
         this.setData({ myPets: res.data.list || [], myPetsLoading: false })
       } else {
+        wx.showToast({ title: res.message || '宠物列表加载失败', icon: 'none' })
         this.setData({ myPets: [], myPetsLoading: false })
       }
     } catch (e) {
+      console.error('[invitation-fill] getPetList 异常:', e && e.message)
+      wx.showToast({ title: (e && e.message) || '宠物列表加载失败', icon: 'none' })
       this.setData({ myPets: [], myPetsLoading: false })
     }
   },

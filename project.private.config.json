@@ -1,7 +1,19 @@
 {
   "libVersion": "3.16.2",
   "projectname": "AROORO宠物服务",
-  "condition": {},
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "subpackages/partner/invitation-list/index",
+          "pathName": "subpackages/booking/invitation-fill/index",
+          "query": "code=fp92ab2f",
+          "scene": null,
+          "launchMode": "default"
+        }
+      ]
+    }
+  },
   "setting": {
     "urlCheck": true,
     "coverView": true,
