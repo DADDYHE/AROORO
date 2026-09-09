@@ -94,6 +94,9 @@ yarn-error.log*
 *.temp
 .cache/
 
+# Automated preview artifacts (miniprogram-automator screenshots / preview QRs)
+.preview-shots/
+
 # Icon split artifacts (DADDY's chongtuantuan-logo.svg aurora-core backup; unused by build)
 images/icons/chongtuantuan-logo.svg.aurora
 
