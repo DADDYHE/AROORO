@@ -16,7 +16,7 @@
   padding: 64rpx var(--page-padding) var(--zy-space-lg);
   background: var(--card-color);
   text-align: center;
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -85,7 +85,7 @@
 /* ===== 支付头部（备用） ===== */
 .payment-header {
   padding: var(--zy-space-lg);
-  background: var(--card-color);
+  background: transparent;
 }
 
 .payment-title {
@@ -99,10 +99,10 @@
 /* ===== 订单卡片 ===== */
 .order-card {
   margin: var(--zy-space-lg) var(--page-padding);
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  background: transparent;
+  border-radius: 0;
   overflow: hidden;
-  border: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -113,7 +113,7 @@
 .activity-info {
   display: flex;
   padding: var(--zy-space-lg);
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .activity-cover {
@@ -208,16 +208,16 @@
 }
 
 .detail-value.discount {
-  color: #1F3A1F;
+  color: var(--primary-color);
 }
 
 /* ===== 价格卡片 ===== */
 .price-card {
   margin: var(--zy-space-lg) var(--page-padding);
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
+  background: transparent;
+  border-radius: 0;
   padding: var(--zy-space-lg);
-  border: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -233,7 +233,7 @@
 }
 
 .price-row.total {
-  border-top: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   padding-top: 20rpx;
   margin-top: 8rpx;
 }
@@ -254,7 +254,7 @@
 }
 
 .price-value.discount {
-  color: #1F3A1F;
+  color: var(--primary-color);
 }
 
 .price-value.final {
@@ -273,8 +273,8 @@
   right: 0;
   padding: var(--zy-space-lg) var(--page-padding);
   padding-bottom: calc(var(--zy-space-lg) + env(safe-area-inset-bottom));
-  background: var(--card-color);
-  border-top: 1rpx solid var(--hairline);
+  background: var(--background-color, #F7F5EF);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   text-align: center;
   z-index: 10;
 }
@@ -295,7 +295,7 @@
   padding: 20rpx var(--page-padding);
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   background: var(--card-color);
-  border-top: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   z-index: 10;
 }
 
@@ -328,4 +328,11 @@
   color: var(--text-on-primary);
   letter-spacing: 0.12em;
   font-family: var(--font-serif);
+}
+
+/* 紧凑 hero 变体 */
+.lux-hero--compact {
+  min-height: 0;
+  padding-bottom: 32rpx;
+  gap: 6rpx;
 }

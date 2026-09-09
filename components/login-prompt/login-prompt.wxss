@@ -57,7 +57,7 @@
 /* 顶部发丝金/绿装饰条（克制，替代原大渐变） */
 .card-top-bar {
   height: 4rpx;
-  background: var(--gradient-primary, linear-gradient(90deg, #1F3A1F 0%, #C9A24B 100%));
+  background: var(--gradient-primary);
 }
 
 .card-content {
@@ -124,7 +124,7 @@
   width: 100%;
   margin-top: 36rpx;
   padding: 24rpx 0;
-  background: var(--primary-color, #1F3A1F);
+  background: var(--primary-color);
   border-radius: var(--zy-radius-lg);
   text-align: center;
   transition-property: transform, opacity;

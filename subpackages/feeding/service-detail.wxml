@@ -13,17 +13,11 @@
 <view class="page">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 
-  <view class="gallery-header">
-    <view class="brand-block">
-      <view class="brand-accent-bar"></view>
-      <view class="brand-main">
-        <text class="brand-text">服务详情</text>
-      </view>
-      <view class="brand-meta">
-        <view class="brand-meta-line"></view>
-        <text class="brand-subtitle">上门喂养 · 专属守护</text>
-      </view>
-    </view>
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">SERVICE</text>
+    <text class="lux-hero-title">服务详情</text>
+    <text class="lux-hero-sub">上门喂养 · 专属守护</text>
+    <view class="lux-hero-sealline"></view>
   </view>
 
   <view class="tab-bar">

@@ -1,4 +1,5 @@
-<zy-navbar title="{{t.BIZ_CV3AU4}}" />
+<zy-navbar title="" transparent color="#F7F5EF" />
+<view class="pet-root">
 <scroll-view
   scroll-y
   enhanced
@@ -8,91 +9,82 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-<view class="gallery-container">
-  <view wx:if="{{isLoading}}" class="loading-container">
-    <view class="loading-content">
-      <view class="lux-cascade">
-  <view class="lux-cascade-dot" style="left: 20rpx; background: #C9A24B; animation-delay: 0ms;"></view>
-  <view class="lux-cascade-dot" style="left: 36rpx; background: #A8894A; animation-delay: 150ms;"></view>
-  <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
-  <view class="lux-cascade-dot" style="left: 68rpx; background: #A8894A; animation-delay: 450ms;"></view>
-  <view class="lux-cascade-dot" style="left: 84rpx; background: #C9A24B; animation-delay: 600ms;"></view>
-  <view class="lux-cascade-dot" style="left: 100rpx; background: #A8894A; animation-delay: 750ms;"></view>
-  <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
 
-      </view>
-      <text class="loading-text">{{t.BIZ_CSIK0}}</text>
-    </view>
+  <!-- B · 深绿沉浸标题版（顶天，无图 hero） -->
+  <view class="pet-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="pet-hero-eyebrow">PET ARCHIVE</text>
+    <text class="pet-hero-title">{{t.BIZ_CV3AU4}}</text>
+    <text wx:if="{{!isLoading}}" class="pet-hero-sub">{{petProfiles.length > 0 ? petProfiles.length + ' 个档案' : '尚未添加'}}</text>
+    <view class="pet-hero-sealline"></view>
   </view>
 
-  <block wx:else>
-    <view class="gallery-header">
-      <view class="brand-block">
-        <view class="brand-accent-bar"></view>
-        <view class="brand-main">
-          <text class="brand-text">{{t.BIZ_CV3AU4}}</text>
+  <view class="pet-container">
+    <!-- 加载中 -->
+    <view wx:if="{{isLoading}}" class="loading-container">
+      <view class="loading-content">
+        <view class="lux-cascade">
+          <view class="lux-cascade-dot" style="left: 20rpx; background: #C9A24B; animation-delay: 0ms;"></view>
+          <view class="lux-cascade-dot" style="left: 36rpx; background: #A8894A; animation-delay: 150ms;"></view>
+          <view class="lux-cascade-dot" style="left: 52rpx; background: #C9A24B; animation-delay: 300ms;"></view>
+          <view class="lux-cascade-dot" style="left: 68rpx; background: #A8894A; animation-delay: 450ms;"></view>
+          <view class="lux-cascade-dot" style="left: 84rpx; background: #C9A24B; animation-delay: 600ms;"></view>
+          <view class="lux-cascade-dot" style="left: 100rpx; background: #A8894A; animation-delay: 750ms;"></view>
+          <view class="lux-cascade-dot" style="left: 48rpx; background: #C9A24B; animation-delay: 900ms;"></view>
         </view>
-        <view class="brand-meta">
-          <view class="brand-meta-line"></view>
-          <text class="brand-subtitle">{{petProfiles.length > 0 ? petProfiles.length + ' 个档案' : '尚未添加'}}</text>
-        </view>
+        <text class="loading-text">{{t.BIZ_CSIK0}}</text>
       </view>
     </view>
 
-    <view class="gallery-hall">
+    <block wx:else>
+      <!-- 01 · ARCHIVE 档案列表（纸面流） -->
       <block wx:if="{{petProfiles.length > 0}}">
-        <view class="gallery-entrance">
-          <view class="entrance-line"></view>
-          <text class="entrance-label">档案列表</text>
-          <view wx:if="{{!isManaging}}" class="entrance-action" bindtap="toggleManageMode">管理</view>
-          <view wx:else class="entrance-actions">
-            <text class="entrance-action entrance-action--cancel" bindtap="toggleManageMode">取消</text>
-            <text class="entrance-action entrance-action--delete {{!hasSelectedPets ? 'entrance-action--disabled' : ''}}" bindtap="deleteSelectedPets">删除</text>
+        <view class="pet-section">
+          <view class="pet-chapter">
+            <text class="pet-chapter-no">01</text>
+            <text class="pet-chapter-eyebrow">ARCHIVE</text>
+            <view class="pet-chapter-rule"></view>
+            <view wx:if="{{!isManaging}}" class="entrance-action" hover-class="entrance-action--pressed" hover-stay-time="80" bindtap="toggleManageMode">管理</view>
+            <view wx:else class="entrance-actions">
+              <text class="entrance-action entrance-action--cancel" bindtap="toggleManageMode">取消</text>
+              <text class="entrance-action entrance-action--delete {{!hasSelectedPets ? 'entrance-action--disabled' : ''}}" bindtap="deleteSelectedPets">删除</text>
+            </view>
           </view>
-        </view>
 
-        <view class="gallery-collection">
-          <view class="gallery-card">
-            <view class="card-accent"></view>
-            <view class="card-body">
-              <view class="pet-item {{isManaging ? 'pet-item--manage' : ''}}" wx:for="{{petProfiles}}" wx:key="id" bindtap="{{isManaging ? 'selectPet' : 'viewPetDetail'}}" data-id="{{item.id}}" data-index="{{index}}">
-                <view class="pet-portrait">
-                  <image lazy-load class="pet-portrait-image" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="petProfiles[{{index}}].avatarUrl" />
-                </view>
-                <view class="pet-info">
-                  <text class="pet-name">{{item.name}}</text>
-                  <view class="pet-meta">
-                    <text class="pet-meta-tag">{{item.breed || (item.type === 'dog' ? '狗狗' : (item.type === 'cat' ? '猫咪' : '异宠'))}}</text>
-                    <text class="pet-meta-tag" wx:if="{{item.genderDisplay}}">{{item.genderDisplay}}</text>
-                    <text class="pet-meta-tag pet-meta-tag--light" wx:if="{{item.birthday}}">{{item.birthday}}</text>
-                  </view>
-                </view>
-                <view wx:if="{{isManaging}}" class="pet-selector">
-                  <view class="selector-circle {{item.checked ? 'selector-circle--active' : ''}}">
-                    <view wx:if="{{item.checked}}" class="selector-check"></view>
-                  </view>
-                </view>
-                <view wx:if="{{!isManaging}}" class="pet-arrow">
-                  <view class="arrow-line"></view>
-                </view>
-                <view wx:if="{{index < petProfiles.length - 1}}" class="pet-item-divider"></view>
+          <view class="pet-collection">
+            <view class="pet-item {{isManaging ? 'pet-item--manage' : ''}}" wx:for="{{petProfiles}}" wx:key="id" hover-class="pet-item--pressed" hover-stay-time="80" bindtap="{{isManaging ? 'selectPet' : 'viewPetDetail'}}" data-id="{{item.id}}" data-index="{{index}}">
+              <view class="pet-portrait">
+                <image lazy-load class="pet-portrait-image" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="petProfiles[{{index}}].avatarUrl" />
               </view>
+              <view class="pet-info">
+                <text class="pet-name">{{item.name}}</text>
+                <view class="pet-meta">
+                  <text class="pet-meta-tag">{{item.breed || (item.type === 'dog' ? '狗狗' : (item.type === 'cat' ? '猫咪' : '异宠'))}}</text>
+                  <text class="pet-meta-tag" wx:if="{{item.genderDisplay}}">{{item.genderDisplay}}</text>
+                  <text class="pet-meta-tag pet-meta-tag--light" wx:if="{{item.birthday}}">{{item.birthday}}</text>
+                </view>
+              </view>
+              <view wx:if="{{isManaging}}" class="pet-selector">
+                <view class="selector-circle {{item.checked ? 'selector-circle--active' : ''}}">
+                  <view wx:if="{{item.checked}}" class="selector-check"></view>
+                </view>
+              </view>
+              <view wx:if="{{!isManaging}}" class="pet-arrow">
+                <view class="arrow-line"></view>
+              </view>
+              <view wx:if="{{index < petProfiles.length - 1}}" class="pet-item-divider"></view>
             </view>
           </view>
         </view>
       </block>
 
+      <!-- 空态：取景框 -->
       <view wx:else class="gallery-empty">
         <view class="empty-frame">
           <view class="empty-crosshair-h"></view>
           <view class="empty-crosshair-v"></view>
-          <view class="empty-corner empty-tl"></view>
-          <view class="empty-corner empty-tr"></view>
-          <view class="empty-corner empty-bl"></view>
-          <view class="empty-corner empty-br"></view>
         </view>
         <view class="empty-label">
           <view class="label-line"></view>
@@ -101,12 +93,13 @@
         <text class="empty-hint">点击下方按钮添加您的第一个宠物吧</text>
       </view>
 
+      <!-- CTA -->
       <view class="gallery-footer" wx:if="{{!isManaging}}">
-        <view bindtap="createNewPet" class="footer-action action-active">
+        <view bindtap="createNewPet" hover-class="action-active--pressed" class="footer-action action-active">
           创建新的宠物档案
         </view>
       </view>
-    </view>
-  </block>
-</view>
+    </block>
+  </view>
 </scroll-view>
+</view>

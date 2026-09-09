@@ -1,4 +1,4 @@
-<zy-navbar title="活动详情" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,7 +8,7 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="gallery-container">
   <view wx:if="{{isLoading}}" class="loading-container">
@@ -30,9 +30,17 @@
   <block wx:elif="{{activity}}">
     <view class="scroll-container">
       <view class="page-content">
+        <!-- B2 · 图片画廊 hero（破格出血）；无图时降级 B1 深绿标题版 -->
         <view class="hero-section" wx:if="{{activity.coverUrl}}">
           <image class="hero-cover" src="{{activity.coverUrl}}" mode="aspectFill" lazy-load />
-          <view class="hero-overlay"></view>
+          <view class="hero-top-scrim"></view>
+          <view class="hero-bottom-scrim"></view>
+        </view>
+        <view class="lux-hero" wx:else style="padding-top: calc({{_navbarHeight}}px + 24rpx); margin: 0 calc(-1 * var(--page-padding));">
+          <text class="lux-hero-eyebrow">ACTIVITY</text>
+          <text class="lux-hero-title">{{activity.title}}</text>
+          <text class="lux-hero-sub">{{categoryText || '活动详情'}}</text>
+          <view class="lux-hero-sealline"></view>
         </view>
 
         <view class="gallery-hall">
@@ -94,7 +102,7 @@
                   <text class="participant-count">{{regSummaryText}}</text>
                 </view>
                 <view class="participant-bar" wx:if="{{activity.maxParticipants}}">
-                  <view class="participant-fill" style="width: {{participantPct}}%; background: {{participantPct >= 100 ? '#C9A24B' : '#4F5E35'}}"></view>
+                  <view class="participant-fill" style="width: {{participantPct}}%; background: {{participantPct >= 100 ? '#C9A24B' : '#1F3A1F'}}"></view>
                 </view>
               </view>
             </view>

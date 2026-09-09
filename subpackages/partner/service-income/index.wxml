@@ -1,4 +1,4 @@
-<zy-navbar title="服务收入" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,9 +8,17 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="service-income-page">
+  <!-- B · 深绿沉浸标题版（顶天，恒渲染保 navbar 可读） -->
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">SERVICE INCOME</text>
+    <text class="lux-hero-title">服务收入</text>
+    <text class="lux-hero-sub">累计 · 本月 · 今日同览</text>
+    <view class="lux-hero-sealline"></view>
+  </view>
+
   <!-- 加载状态 -->
   <view wx:if="{{isLoading && !overview}}" class="loading-container">
     <view class="loading-content">

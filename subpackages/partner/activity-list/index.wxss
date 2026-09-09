@@ -37,7 +37,7 @@
   color: var(--text-secondary);
   background: var(--lux-card-bg);
   position: relative;
-  border: 1rpx solid var(--lux-hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   flex: 1;
   font-weight: 400;
   letter-spacing: 0.03em;
@@ -79,7 +79,7 @@
   padding: 0 20rpx;
   background: var(--lux-card-bg);
   border-radius: var(--lux-radius-card);
-  border: 1rpx solid var(--lux-hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   gap: 12rpx;
   box-shadow: var(--lux-shadow-card);
 }
@@ -289,7 +289,7 @@
   align-items: center;
   justify-content: space-between;
   padding-top: 16rpx;
-  border-top: 1rpx solid var(--lux-hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .card-participants {

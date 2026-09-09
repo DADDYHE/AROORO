@@ -7,15 +7,18 @@
 
 /* ===== 页面容器 ===== */
 .page-container {
+  height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.page-divider {
-  height: 1rpx;
-  background-color: var(--hairline);
+/* 双栏购物页紧凑 hero：压缩纵向空间给商品网格 */
+.lux-hero--compact {
+  min-height: 0;
+  padding-bottom: 32rpx;
   flex-shrink: 0;
+  gap: 6rpx;
 }
 
 /* ===== 主体双栏布局 ===== */
@@ -28,14 +31,14 @@
 /* ===== 左侧分类栏（编辑式：奶油底 + 金色竖线高亮） ===== */
 .category-sidebar {
   width: 200rpx;
-  background-color: var(--card-cream);
+  background-color: transparent;
   flex-shrink: 0;
   height: 100%;
-  border-right: 1rpx solid var(--hairline);
+  border-right: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .cat-group {
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .cat-item {
@@ -118,9 +121,9 @@
 .category-header {
   padding: 40rpx var(--page-padding) 32rpx;
   text-align: center;
-  background-color: var(--card-color);
+  background-color: transparent;
   margin-bottom: 0;
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -160,7 +163,7 @@
 
 .content-divider {
   height: 1rpx;
-  background-color: var(--hairline);
+  background-color: rgba(26, 26, 23, 0.14);
 }
 
 /* ===== 商品网格（编辑式：紧凑两栏 + 交错入场） ===== */
@@ -186,7 +189,7 @@
   background-color: var(--card-color);
   border-radius: var(--lux-radius-card);
   margin-bottom: 0;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   overflow: visible;
   transition: transform var(--dur-fast) var(--ease-refined),
               border-color var(--dur-fast) var(--ease-refined);
@@ -286,7 +289,7 @@
   align-items: center;
   gap: 12rpx;
   padding: 16rpx 48rpx;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   border-radius: var(--zy-radius-lg);
   background-color: var(--card-color);
   transition: transform var(--dur-fast) var(--ease-refined),

@@ -1,5 +1,5 @@
 <!--pages/favorites/index.wxml-->
-<zy-navbar title="我的收藏" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -9,20 +9,15 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="page-container">
-  <!-- 头部区域 -->
-  <view class="page-header">
-    <view class="header-content">
-      <!-- 品牌标识 -->
-      <view class="brand-logo">Arooro</view>
-      <!-- 页面标题 -->
-      <view class="page-title">
-        <span class="title-text">我的收藏</span>
-        <span class="count">({{favoriteFamilies.length}})</span>
-      </view>
-    </view>
+  <!-- B · 深绿沉浸标题版（顶天，原 page-header 品牌块升级） -->
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">FAVORITES</text>
+    <text class="lux-hero-title">我的收藏</text>
+    <text class="lux-hero-sub">{{favoriteFamilies.length}} 项收藏</text>
+    <view class="lux-hero-sealline"></view>
   </view>
 
   <!-- 主要内容 -->

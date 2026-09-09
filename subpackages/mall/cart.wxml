@@ -1,4 +1,4 @@
-<zy-navbar title="购物车" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,8 +8,15 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
+<!-- B · 深绿沉浸标题版（顶天） -->
+<view class="lux-hero lux-hero--compact" style="padding-top: calc({{_navbarHeight}}px + 16rpx);">
+  <text class="lux-hero-eyebrow">SHOPPING BAG</text>
+  <text class="lux-hero-title">购物车</text>
+  <text wx:if="{{cartItems.length > 0}}" class="lux-hero-sub">{{cartItems.length}} 件商品</text>
+  <view class="lux-hero-sealline"></view>
+</view>
 <view class="page-container">
   <view class="cart-list" wx:if="{{cartItems.length > 0}}">
     <view class="cart-item {{item._invalid ? 'invalid' : ''}}" wx:for="{{cartItems}}" wx:key="cartItemId">

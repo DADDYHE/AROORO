@@ -12,10 +12,10 @@
   padding-bottom: 180rpx;
 }
 
-/* ---------- Hero 封面 ---------- */
+/* ---------- Hero 封面（B2 图片画廊，顶天 + 双 scrim 全站语法） ---------- */
 .hero-section {
   position: relative;
-  height: 360rpx;
+  height: 450rpx;
   overflow: hidden;
   margin: 0 calc(var(--page-padding) * -1);
 }
@@ -25,13 +25,26 @@
   height: 100%;
 }
 
-.hero-overlay {
+.hero-top-scrim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 280rpx;
+  background: linear-gradient(180deg, rgba(15, 36, 16, 0.62) 0%, rgba(15, 36, 16, 0) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hero-bottom-scrim {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 160rpx;
-  background: linear-gradient(180deg, transparent 0%, var(--scrim-overlay) 100%);
+  height: 240rpx;
+  background: linear-gradient(0deg, rgba(15, 36, 16, 0.66) 0%, rgba(15, 36, 16, 0) 100%);
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* ---------- 卡片色条 ---------- */
@@ -210,7 +223,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16rpx 0;
-  border-bottom: 1rpx solid var(--lux-hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .contact-row:last-child {
@@ -278,7 +291,7 @@
   padding: 20rpx 32rpx;
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   background: var(--lux-card-bg);
-  border-top: 1rpx solid var(--lux-hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   z-index: 50;
 }
 
@@ -326,11 +339,11 @@
 
 .action-btn-export {
   background: transparent;
-  border: 1rpx solid var(--zy-accent-gold, #C9A24B);
+  border: 1rpx solid var(--lux-gold-500);
 }
 
 .action-btn-export .action-btn-text {
-  color: var(--zy-accent-gold, #C9A24B);
+  color: var(--lux-gold-500);
 }
 
 /* ---------- 报名名单弹层 ---------- */
@@ -354,7 +367,7 @@
   display: flex;
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom);
-  border-top: 1rpx solid var(--lux-hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   box-shadow: var(--lux-shadow-elevated);
 }
 
@@ -398,7 +411,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20rpx 32rpx;
-  border-bottom: 1rpx solid var(--lux-hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .reg-item:last-child {
@@ -490,7 +503,7 @@
   background: var(--lux-card-bg);
   border-radius: var(--zy-radius-2xl) var(--zy-radius-2xl) 0 0;
   padding: 32rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
-  border-top: 1rpx solid var(--lux-hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   box-shadow: var(--lux-shadow-elevated);
 }
 

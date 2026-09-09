@@ -15,7 +15,7 @@
 //   事件 change       —— 任一字段变更时冒泡 { healthInfo }
 // ================================================================
 
-const EMPTY_NEUTERED = 'unknown'
+// 绝育情况默认空（不默认选择），选项见 data.neuteredOptions
 
 /** 三字段旧字符串 → { has, detail } 兼容转换（旧数据填了内容视为「是」） */
 function toYesNo(val) {
@@ -29,7 +29,11 @@ function toYesNo(val) {
 
 Component({
   options: {
-    styleIsolation: 'isolated',
+    // 2026-09-09：isolated → apply-shared。
+    // 让宿主页面 wxss 能命中 .hf-* 内部结构，做「纸面行式」重排（invitation-fill）。
+    // 两个宿主页（booking/invitation-fill、pet/update-profile）均无裸元素选择器、
+    // 且 update-profile 未定义任何 .hf-* 规则，故不会反向污染。
+    styleIsolation: 'apply-shared',
   },
 
   properties: {
@@ -53,13 +57,13 @@ Component({
     supplements: { has: 'no', detail: '' },
     dewormed: '',
     behaviorNotes: '',
-    neutered: EMPTY_NEUTERED,
+    neutered: '',
     neuteredOptions: [
       { value: 'yes', label: '已绝育' },
       { value: 'no', label: '未绝育' },
       { value: 'unknown', label: '不确定' },
     ],
-    neuteredLabel: '不确定',
+    neuteredLabel: '',
     vaccinated: 'no',
     expanded: true,
   },
@@ -73,11 +77,11 @@ Component({
         supplements: toYesNo(v.supplements),
         dewormed: v.dewormed || '',
         behaviorNotes: v.behaviorNotes || '',
-        neutered: v.neutered || EMPTY_NEUTERED,
+        neutered: v.neutered || '',
         vaccinated: v.vaccinated === 'yes' ? 'yes' : (Array.isArray(v.vaccines) && v.vaccines.length > 0 ? 'yes' : 'no'),
       }
       const opt = this.data.neuteredOptions.find(o => o.value === d.neutered)
-      d.neuteredLabel = opt ? opt.label : '不确定'
+      d.neuteredLabel = opt ? opt.label : ''
       // 不重置 expanded：value 回流（onHealthChange）时保持当前展开/收起状态
       return d
     },

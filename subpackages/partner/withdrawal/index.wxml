@@ -1,4 +1,4 @@
-<zy-navbar title="提现" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,16 +8,14 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="page-container">
-  <view class="page-header">
-    <view class="brand-block">
-      <view class="brand-accent-bar"></view>
-      <view class="brand-main">
-        <text class="brand-text">提现记录</text>
-      </view>
-    </view>
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">WITHDRAW</text>
+    <text class="lux-hero-title">提现记录</text>
+    <text class="lux-hero-sub">资金流水</text>
+    <view class="lux-hero-sealline"></view>
   </view>
 
   <view wx:if="{{isLoading && list.length === 0}}" class="loading-container">

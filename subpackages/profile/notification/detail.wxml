@@ -1,4 +1,4 @@
-<zy-navbar title="通知详情" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,14 +8,16 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
-<view class="page-container" wx:if="{{notification}}">
-  <view class="detail-card">
-    <text class="notification-title">{{notification.title}}</text>
-    <text class="notification-date">{{notification.createdAt}}</text>
+<view class="page-container">
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">NOTICE</text>
+    <text class="lux-hero-title">{{notification.title}}</text>
+    <text class="lux-hero-sub">{{notification.createdAt}}</text>
+    <view class="lux-hero-sealline"></view>
   </view>
-  <view class="detail-card">
+  <view class="detail-body" wx:if="{{notification}}">
     <text class="notification-body">{{notification.body}}</text>
   </view>
 </view>

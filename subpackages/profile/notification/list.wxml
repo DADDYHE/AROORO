@@ -1,4 +1,4 @@
-<zy-navbar title="消息通知" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,9 +8,17 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="page-container">
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">NOTIFICATIONS</text>
+    <text class="lux-hero-title">消息通知</text>
+    <text class="lux-hero-sub" wx:if="{{unreadCount > 0}}">{{unreadCount}} 条未读</text>
+    <text class="lux-hero-sub" wx:else>全部已读</text>
+    <view class="lux-hero-sealline"></view>
+  </view>
+
   <view class="header-bar" wx:if="{{unreadCount > 0}}">
     <text class="unread-text">{{unreadCount}}条未读</text>
     <view class="mark-read-btn" bindtap="onMarkAllRead" hover-class="mark-read-btn pressed" hover-stay-time="80"><text>全部已读</text></view>

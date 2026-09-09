@@ -7,7 +7,7 @@
 .hf {
   background: var(--card-color);
   border-radius: var(--lux-radius-inner);
-  border: 1rpx solid var(--lux-hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   overflow: hidden;
 }
 
@@ -113,15 +113,39 @@
 
 /* ---------- 选择器 ---------- */
 .hf-picker {
+  display: block;
   background: var(--gray-50);
   border-radius: var(--zy-radius-sm);
   border: 1rpx solid var(--border-soft);
+  overflow: hidden;
+}
+
+.hf-picker-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .hf-picker-value {
+  flex: 1;
   padding: 20rpx 24rpx;
   font-size: 26rpx;
   color: var(--text-primary);
+}
+
+.hf-picker-value--placeholder {
+  color: var(--text-tertiary);
+}
+
+.hf-picker-arrow {
+  width: 12rpx;
+  height: 12rpx;
+  margin: 0 24rpx 0 8rpx;
+  border-top: 2rpx solid var(--text-tertiary);
+  border-right: 2rpx solid var(--text-tertiary);
+  border-radius: 2rpx;
+  transform: rotate(45deg);
+  flex-shrink: 0;
 }
 
 /* ---------- 疫苗记录 ---------- */
@@ -217,8 +241,8 @@
   background: transparent;
 }
 .hf-yn--on {
-  background: var(--primary-color, #1F3A1F);
-  border-color: var(--primary-color, #1F3A1F);
+  background: var(--primary-color);
+  border-color: var(--primary-color);
 }
 .hf-yn-text {
   font-size: 22rpx;

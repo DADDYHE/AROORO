@@ -1,4 +1,4 @@
-<zy-navbar title="{{t.BIZ_HYWFKI}}" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,8 +8,15 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
+<!-- B · 深绿沉浸标题版（顶天，loading 常驻） -->
+<view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+  <text class="lux-hero-eyebrow">MALL ORDER</text>
+  <text class="lux-hero-title">{{t.BIZ_HYWFKI}}</text>
+  <text class="lux-hero-sub" wx:if="{{order}}">NO. {{order.orderNo}}</text>
+  <view class="lux-hero-sealline"></view>
+</view>
 <view class="page">
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
@@ -35,7 +42,15 @@
       pay-countdown="{{payCountdown}}"
     />
 
-    <view class="section product-section" bindtap="onGoProductDetail">
+    <!-- ═══ 01 · PRODUCT 商品 ═══ -->
+    <view class="chapter" bindtap="onGoProductDetail">
+      <view class="chapter-eyebrow-row">
+        <text class="chapter-no">01</text>
+        <text class="chapter-name">PRODUCT</text>
+        <view class="chapter-rule"></view>
+        <text class="chapter-side">{{order.itemCount || order.quantity}}件</text>
+      </view>
+      <view class="chapter-body">
       <view class="product-row">
         <image class="product-img" wx:if="{{order.productImage}}" src="{{order.productImage}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{order.productImage}}" data-path="order.productImage" lazy-load />
         <view class="product-img-placeholder" wx:else></view>
@@ -65,34 +80,60 @@
           </view>
         </view>
       </block>
+      </view>
     </view>
 
-    <view class="section receiver-section" wx:if="{{order.receiverName}}">
-      <view class="section-title">收货信息</view>
-      <view class="receiver-row">
-        <image class="row-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
-        <view class="receiver-detail">
-          <view class="receiver-top">
-            <text class="receiver-name">{{order.receiverName}}</text>
-            <text class="receiver-phone">{{order.receiverPhone}}</text>
+    <!-- ═══ 02 · RECEIVER 收货信息 ═══ -->
+    <view class="chapter" wx:if="{{order.receiverName}}">
+      <view class="chapter-eyebrow-row">
+        <text class="chapter-no">02</text>
+        <text class="chapter-name">RECEIVER</text>
+        <view class="chapter-rule"></view>
+      </view>
+      <view class="chapter-body">
+        <view class="receiver-row">
+          <image class="row-icon" src="{{iconMapPin}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconMapPin}}" data-path="iconMapPin" />
+          <view class="receiver-detail">
+            <view class="receiver-top">
+              <text class="receiver-name">{{order.receiverName}}</text>
+              <text class="receiver-phone">{{order.receiverPhone}}</text>
+            </view>
+            <text class="receiver-address">{{order.receiverAddress}}</text>
           </view>
-          <text class="receiver-address">{{order.receiverAddress}}</text>
         </view>
       </view>
     </view>
 
-    <view class="section logistics-section" wx:if="{{order.status === 'shipped' || order.status === 'completed'}}">
-      <view class="section-title">物流信息</view>
-      <logistics-card
-        express-company="{{order.expressCompany}}"
-        express-no="{{order.expressNo}}"
-        shipped-at="{{order.shippedAt}}"
-        waybill-token="{{order.waybillToken}}"
-      />
+    <!-- ═══ 03 · LOGISTICS 物流信息（纸面行） ═══ -->
+    <view class="chapter" wx:if="{{order.status === 'shipped' || order.status === 'completed'}}">
+      <view class="chapter-eyebrow-row">
+        <text class="chapter-no">03</text>
+        <text class="chapter-name">LOGISTICS</text>
+        <view class="chapter-rule"></view>
+      </view>
+      <view class="chapter-body">
+        <view class="info-row">
+          <text class="info-label">快递单号</text>
+          <view class="info-value-row">
+            <text class="info-value">{{order.expressNo || '暂无'}}</text>
+            <view class="copy-btn" wx:if="{{order.expressNo}}" bindtap="onCopyExpressNo" hover-class="copy-btn pressed" hover-stay-time="80">复制</view>
+          </view>
+        </view>
+        <view class="info-row" wx:if="{{order.shippedAt}}">
+          <text class="info-label">发货时间</text>
+          <text class="info-value">{{order.shippedAt}}</text>
+        </view>
+      </view>
     </view>
 
-    <order-card title="订单信息">
-      <view slot="content">
+    <!-- ═══ 04 · ORDER 订单信息（A-票据） ═══ -->
+    <view class="chapter">
+      <view class="chapter-eyebrow-row">
+        <text class="chapter-no">04</text>
+        <text class="chapter-name">ORDER</text>
+        <view class="chapter-rule"></view>
+      </view>
+      <view class="chapter-body">
         <view class="info-row">
           <text class="info-label">订单编号</text>
           <view class="info-value-row">
@@ -117,7 +158,14 @@
           <text class="total-value">¥{{order.totalAmount}}</text>
         </view>
       </view>
-    </order-card>
+    </view>
+
+    <!-- 票据落款 -->
+    <view class="dossier-foot">
+      <view class="dossier-foot-line"></view>
+      <text class="dossier-foot-text">AROORO · 宠物商城</text>
+      <view class="dossier-foot-line"></view>
+    </view>
 
     <root-portal>
       <order-action-bar

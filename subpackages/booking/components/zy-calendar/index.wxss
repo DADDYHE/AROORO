@@ -13,7 +13,7 @@
   max-height: 960rpx;
   background: var(--card-color, #FFFFFF);
   /* 主题色（由 color 属性注入，默认深森林绿） */
-  --zy-calendar-color: var(--primary-color, #1F3A1F);
+  --zy-calendar-color: var(--primary-color);
   box-sizing: border-box;
 }
 
@@ -206,9 +206,9 @@
 }
 
 .zy-calendar__day--day.zy-calendar__day--today:not(.zy-calendar__day--selected):not(.zy-calendar__day--start):not(.zy-calendar__day--end):not(.zy-calendar__day--middle) .zy-calendar__day-text {
-  color: var(--primary-color, #1F3A1F);
+  color: var(--primary-color);
   font-weight: 500;
-  box-shadow: inset 0 0 0 2rpx var(--accent-color, #C9A24B);
+  box-shadow: inset 0 0 0 2rpx var(--accent-color);
 }
 
 /* 禁用日期 */
@@ -228,7 +228,7 @@
 
 /* ---------- 选中态（single/multiple）：深森林绿圆形 + 白字 ---------- */
 .zy-calendar__day--selected .zy-calendar__day-text {
-  background: var(--zy-calendar-color, #1F3A1F);
+  background: var(--zy-calendar-color);
   color: var(--text-on-primary, #F7F5EF);
   font-weight: 500;
 }
@@ -250,7 +250,7 @@
 .zy-calendar__day--start .zy-calendar__day-text,
 .zy-calendar__day--end .zy-calendar__day-text,
 .zy-calendar__day--start-end .zy-calendar__day-text {
-  background: var(--zy-calendar-color, #1F3A1F);
+  background: var(--zy-calendar-color);
   color: var(--text-on-primary, #F7F5EF);
   font-weight: 500;
 }
@@ -274,7 +274,7 @@
   top: 16rpx;
   bottom: 16rpx;
   width: 50%;
-  background: var(--zy-calendar-color, #1F3A1F);
+  background: var(--zy-calendar-color);
   opacity: 0.08;
   z-index: 0;
 }
@@ -304,17 +304,17 @@
   left: 0;
   right: 0;
   bottom: 16rpx;
-  background: var(--zy-calendar-color, #1F3A1F);
+  background: var(--zy-calendar-color);
   opacity: 0.08;
   z-index: 0;
 }
 
 .zy-calendar__day--middle .zy-calendar__day-text {
-  color: var(--zy-calendar-color, #1F3A1F);
+  color: var(--zy-calendar-color);
 }
 
 .zy-calendar__day--middle .zy-calendar__day-top {
-  color: #1F3A1F;
+  color: var(--zy-calendar-color);
 }
 
 /* ---------- 底部确认栏 ---------- */
@@ -340,7 +340,7 @@
 
 .zy-calendar__confirm-btn {
   padding: 20rpx 48rpx;
-  background: var(--zy-calendar-color, #1F3A1F);
+  background: var(--zy-calendar-color);
   color: var(--text-on-primary, #F7F5EF);
   font-size: 28rpx;
   font-weight: 500;

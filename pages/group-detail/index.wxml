@@ -10,18 +10,25 @@
   lower-threshold="100"
   style="height: 100vh;"
 >
+<!-- B · 深绿沉浸标题版（顶天，loading 常驻） -->
+<view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+  <text class="lux-hero-eyebrow">GROUP BUY</text>
+  <text class="lux-hero-title">{{deal ? deal.title : '宠团团'}}</text>
+  <text class="lux-hero-sub" wx:if="{{deal}}">{{totalSkuCount}} 款商品 · 宠团团精选</text>
+  <view class="lux-hero-sealline"></view>
+</view>
+
 <zy-skeleton wx:if="{{loading}}" type="detail" heroHeight="{{0}}" />
 <view class="tuan-detail" wx:if="{{!loading && deal}}">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-  <view class="detail-title-area">
-    <view class="title-accent-bar"></view>
-    <text class="detail-title">{{deal.title}}</text>
-  </view>
 
+  <!-- ═══ 01 · PRODUCTS 团购商品 ═══ -->
   <view class="detail-section">
-    <view class="section-title">
-      <view class="label-accent"></view>
-      <text>团购商品 ({{totalSkuCount}}款)</text>
+    <view class="lux-chapter">
+      <text class="lux-chapter-no">01</text>
+      <text class="lux-chapter-eyebrow">PRODUCTS</text>
+      <view class="lux-chapter-rule"></view>
+      <text class="chapter-side">{{totalSkuCount}}款</text>
     </view>
   </view>
 
@@ -44,7 +51,13 @@
     </view>
   </view>
 
+  <!-- ═══ 02 · NOTES 团购详情 ═══ -->
   <view class="detail-desc-area" wx:if="{{deal.description}}">
+    <view class="lux-chapter">
+      <text class="lux-chapter-no">02</text>
+      <text class="lux-chapter-eyebrow">NOTES</text>
+      <view class="lux-chapter-rule"></view>
+    </view>
     <text class="detail-desc">{{deal.description}}</text>
   </view>
 

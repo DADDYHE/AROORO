@@ -5,6 +5,7 @@
 @import './styles/motion.wxss';
 @import './styles/loading-animation.wxss';
 @import './styles/components.wxss';
+@import './styles/lux-page.wxss';
 
 /* ================================================================
    app.wxss · AROORO 全局样式（Haute-Luxury v2）
@@ -18,8 +19,8 @@
    ================================================================ */
 
 page {
-  background-color: #ECE4D4;
-  background-image: var(--zy-paper-noise), linear-gradient(180deg, #FBF9F4 0%, #F7F5EF 8%, #ECE4D4 100%);
+  background-color: var(--zy-paper-fallback);
+  background-image: var(--zy-paper-noise), linear-gradient(180deg, #FBF9F4 0%, #F7F5EF 8%, var(--zy-paper-fallback) 100%);
   background-repeat: repeat, no-repeat;
   background-size: auto, 100% 100%;
   font-family: var(--font-regular);
@@ -238,7 +239,7 @@ h3 { font-size: var(--zy-fs-h3); font-weight: 500; }
   letter-spacing: var(--letter-spacing-wide);
 }
 
-.status-pending { background-color: var(--accent-wash); color: #1F3A1F; }
+.status-pending { background-color: var(--accent-wash); color: var(--primary-color); }
 .status-active { background-color: rgba(92, 122, 138, 0.08); color: var(--status-active); }
 .status-completed { background-color: rgba(61, 122, 69, 0.08); color: var(--status-completed); }
 .status-cancelled { background-color: rgba(158, 152, 137, 0.10); color: var(--status-cancelled); }
@@ -295,7 +296,7 @@ h3 { font-size: var(--zy-fs-h3); font-weight: 500; }
 .kicker {
   font-size: var(--zy-fs-xs-lg);
   letter-spacing: var(--letter-spacing-wide);
-  color: #1F3A1F;
+  color: var(--primary-color);
   font-weight: 500;
   display: block;
   margin-bottom: var(--zy-space-sm);
@@ -372,10 +373,10 @@ page {
   --text-tertiary: #736D5F;            /* 三级文字 米灰 — AA：6 种卡底最低 4.51:1（原 #9E9889 仅 2.52，全场景不达标）*/
   --text-on-primary: #F7F5EF;          /* 主色上的反白文字 */
   --text-on-accent: #1A1A17;           /* 金族面上的文字 — 炭墨。补齐"缺的一格"：
-                                          P0-2 收敛后金族两档（-500 #C9A24B / -600 #A8894A），
+                                          P0-2 收敛后金族两档（-500 / -600，即 --lux-gold-500 / -600），
                                           L=0.676 / 0.570，全部 > 白字上限 0.1833，
                                           任何反白都不达标（纯白最低 1.45、奶油最低 1.33）。
-                                          炭墨在 #C9A24B/#A8894A 上为 7.27 / 5.27，最低 5.27 ✓。
+                                          炭墨在两档金上为 7.27 / 5.27，最低 5.27 ✓。
                                           ⚠ 必须是固定字面量，不可写成 var(--ink-black)：
                                           金面不随主题变，而 --ink-black 在 .theme-dark 翻成
                                           #F0EDE4，会把金按钮打到 1.33:1。 */
@@ -475,7 +476,7 @@ page {
 
   /* ===== 业务线 tint 扩展档（partner 分包裸 rgba 吸附 0.04/0.08/0.12 三档） =====
      基础档 --*-tint 固定 0.08；0.04/0.12 两档仅按需补充（吸邻近档，平局向下）。
-     0.20 档无人使用，未建。--primary-tint-* 为品牌主绿 #1F3A1F 的洗底。 */
+     0.20 档无人使用，未建。--primary-tint-* 为品牌主绿（--primary-color）的洗底。 */
   --mall-tint-04: rgba(201, 162, 75, 0.04);
   --mall-tint-12: rgba(201, 162, 75, 0.12);
   --primary-tint-04: rgba(31, 58, 31, 0.04);
@@ -489,7 +490,8 @@ page {
      ⚠ alpha 洗底的实际对比度取决于其后的卡片色（白/奶油/warm 各不同），
        无法脱离上下文单独判定达标，改语义色时须连同洗底一起复核。 */
   --wash-success-08: rgba(61, 122, 69, 0.08);
-  --wash-error-08: rgba(184, 92, 60, 0.08);
+  --wash-error-08: rgba(164, 82, 54, 0.08);   /* 基色=--error-color(#A45236) 20%档见下 */
+  --wash-error-20: rgba(164, 82, 54, 0.20);   /* 错误描边/弱化边框档（hosting-profile 标签边框等） */
   --wash-neutral-10: rgba(158, 152, 137, 0.10);
 
   /* ===== 券/渐变 ===== */

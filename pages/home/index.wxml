@@ -38,7 +38,7 @@
 <!-- 自定义下拉刷新指示器 -->
 <view slot="refresher" class="refresh-indicator">
   <view class="refresh-spinner">
-    <zy-loading wx:if="{{_refresherTriggered}}" type="tourbillon" size="40" color="#4F5E35" />
+    <zy-loading wx:if="{{_refresherTriggered}}" type="tourbillon" size="40" color="#1F3A1F" />
     <view wx:else class="refresh-arrow {{_refreshPulling ? 'refresh-arrow-pulling' : ''}}"></view>
   </view>
   <text class="refresh-text">{{_refresherTriggered ? '刷新中...' : '下拉刷新'}}</text>

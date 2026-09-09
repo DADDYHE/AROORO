@@ -5,7 +5,7 @@
 
 /* ========== 页面容器 ========== */
 .page-container {
-  min-height: 100vh;
+  /* hero 已顶天沉浸，容器无需 100vh（否则底部多出 hero 高度的空白） */
   display: flex;
   flex-direction: column;
   position: relative;
@@ -14,7 +14,7 @@
 /* ========== 卷宗头部 ========== */
 .ds-head {
   padding: 56rpx var(--page-padding) 44rpx;
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -41,7 +41,7 @@
 /* ========== 章节区（01-04）：hairline 分区，无白卡 ========== */
 .ds-section {
   padding: 48rpx var(--page-padding) 40rpx;
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
   opacity: 0;
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
@@ -139,7 +139,7 @@
 .ds-stay-relative {
   font-size: 21rpx;
   letter-spacing: 0.08em;
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
   margin-left: 10rpx;
 }
 
@@ -226,7 +226,7 @@
 }
 
 .ds-time-value--ph {
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
 }
 
 .ds-time-rule {
@@ -246,7 +246,7 @@
   font-size: 22rpx;
   letter-spacing: 0.06em;
   line-height: 1.6;
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
 }
 
 /* ========== 行条目：键值对 + hairline 分隔 ========== */
@@ -287,7 +287,7 @@
 .ds-pay-chip {
   padding: 12rpx 28rpx;
   border-radius: 999rpx;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   font-size: 24rpx;
   letter-spacing: 0.08em;
   color: var(--text-secondary);
@@ -331,7 +331,7 @@
 }
 
 .ds-row-text--gold {
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
 }
 
 .ds-row-sub {
@@ -422,7 +422,7 @@
 
 /* 健康签：金调 hairline，区别于服务签 */
 .ds-pet-tag--health {
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
   border-color: var(--lux-hairline-gold);
 }
 
@@ -486,7 +486,7 @@
 }
 
 .ds-fee-val--gold {
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
 }
 
 /* 总计：编辑式排版——小标签 + 轻字重大数字 */
@@ -542,7 +542,7 @@
 .ds-coupon-amt {
   display: flex;
   align-items: baseline;
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
   margin-right: 26rpx;
   font-size: 24rpx;
   min-width: 110rpx;
@@ -578,7 +578,7 @@
   text-align: center;
   font-size: 24rpx;
   letter-spacing: 0.12em;
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
 }
 
 /* ========== 卷宗落款 ========== */
@@ -614,7 +614,7 @@
   left: 0;
   right: 0;
   background: var(--background-color);
-  border-top: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   padding: 24rpx var(--page-padding);
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   display: flex;
@@ -657,7 +657,7 @@
 .coupon-sub {
   font-size: 21rpx;
   letter-spacing: 0.06em;
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
 }
 
 .min-amount-tip {

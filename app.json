@@ -14,12 +14,13 @@
     "navigationBarBackgroundColor": "#fff",
     "navigationBarTitleText": "AROORO",
     "navigationBarTextStyle": "black",
-    "navigationStyle": "custom"
+    "navigationStyle": "custom",
+    "glassEaselWebview": true
   },
   "tabBar": {
     "custom": true,
     "color": "#666666",
-    "selectedColor": "#4F5E35",
+    "selectedColor": "#1F3A1F",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
@@ -48,7 +49,6 @@
   "style": "v2",
   "renderer": "skyline",
   "componentFramework": "glass-easel",
-  "glassEaselWebview": true,
   "rendererOptions": {
     "skyline": {
       "defaultDisplayBlock": true,

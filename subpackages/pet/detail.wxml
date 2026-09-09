@@ -11,6 +11,13 @@
   style="height: 100vh;"
 >
 <view class="gallery-container">
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">PET</text>
+    <text class="lux-hero-title">{{pet.name || '宠物档案'}}</text>
+    <text class="lux-hero-sub">档案详情</text>
+    <view class="lux-hero-sealline"></view>
+  </view>
+
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
       <view class="lux-cascade">
@@ -28,19 +35,6 @@
   </view>
 
   <block wx:else>
-    <view class="gallery-header">
-      <view class="brand-block">
-        <view class="brand-accent-bar"></view>
-        <view class="brand-main">
-          <text class="brand-text">{{pet.name || '未命名'}}</text>
-        </view>
-        <view class="brand-meta">
-          <view class="brand-meta-line"></view>
-          <text class="brand-subtitle">{{pet.breed || (pet.type === 'dog' ? '狗狗' : (pet.type === 'cat' ? '猫咪' : '异宠'))}}</text>
-        </view>
-      </view>
-    </view>
-
     <view class="gallery-hall">
       <view class="gallery-portrait" bindtap="chooseAvatar">
         <view class="portrait-frame">

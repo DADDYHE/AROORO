@@ -1,4 +1,4 @@
-<zy-navbar title="订单统计" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,13 +8,13 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="page">
-  <!-- ═══ 卷宗头：金 eyebrow + 编辑式汇总 ═══ -->
-  <view class="ledger-head">
-    <view class="brand-accent-bar"></view>
-    <text class="ledger-eyebrow">ORDER LEDGER</text>
+  <!-- ═══ B · 深绿沉浸标题版（破格出血，卷宗头升级） ═══ -->
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx); margin: 0 calc(-1 * var(--page-padding));">
+    <text class="lux-hero-eyebrow">ORDER LEDGER</text>
+    <text class="lux-hero-title">订单统计</text>
     <view class="ledger-summary">
       <view class="ledger-stat">
         <text class="ledger-num">{{stats.count}}</text>
@@ -34,6 +34,7 @@
         <text class="ledger-label">总消费</text>
       </view>
     </view>
+    <view class="lux-hero-sealline"></view>
   </view>
 
   <!-- ═══ 分节台账：进行中 / 已完成 / 已关闭 ═══ -->

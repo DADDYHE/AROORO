@@ -1,10 +1,23 @@
-<zy-navbar title="寄养开单邀请" />
+<zy-navbar title="" transparent color="#F7F5EF" />
   <view class="fill-root">
     <scroll-view
       scroll-y
       enhanced
-      style="height: calc(100vh - {{_navbarHeight}}px);"
+      style="height: 100vh;"
     >
+      <!-- B · 深绿沉浸信函板（顶天，家庭头像作火漆印） -->
+      <view wx:if="{{ !isLoading && !loadError && invitation }}" class="fill-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+        <view class="fill-hero-text">
+          <text class="fill-hero-eyebrow">INVITATION</text>
+          <text class="fill-hero-title">寄养邀请</text>
+          <text class="fill-hero-sub">{{ invitation.hostSnapshot.hostName || '寄养家庭' }} 邀您入住</text>
+        </view>
+        <view class="fill-hero-seal">
+          <image class="fill-hero-seal-img" src="{{ invitation.hostSnapshot.avatarUrl || '/images/default-avatar.svg' }}" mode="aspectFill" />
+        </view>
+        <view class="fill-hero-sealline"></view>
+      </view>
+
       <view class="fill-container">
         <!-- 加载中 -->
         <view wx:if="{{ isLoading }}" class="fill-loading">
@@ -20,18 +33,9 @@
 
         <!-- 邀请已结束（filled / cancelled） -->
         <block wx:elif="{{ invitation.status !== 'active' }}">
-          <view class="fill-inv-card">
-            <view class="fill-inv-head">
-              <image class="fill-inv-avatar" src="{{ invitation.hostSnapshot.avatarUrl || '/images/default-avatar.svg' }}" mode="aspectFill" />
-              <view class="fill-inv-host">
-                <text class="fill-inv-host-name">{{ invitation.hostSnapshot.hostName || '寄养家庭' }}</text>
-                <text class="fill-inv-host-addr" wx:if="{{ invitation.hostSnapshot.addressPublic }}">{{ invitation.hostSnapshot.addressPublic }}</text>
-              </view>
-            </view>
-            <view class="fill-inv-rows">
-              <view class="fill-inv-row"><text class="fill-inv-key">寄养日期</text><text class="fill-inv-val">{{ invitation.startDate }} 至 {{ invitation.endDate }}</text></view>
-              <view class="fill-inv-row"><text class="fill-inv-key">订单总价</text><text class="fill-inv-val fill-inv-val--price">¥{{ invitation.totalPrice }}</text></view>
-            </view>
+          <view class="fill-inv-rows">
+            <view class="fill-inv-row"><text class="fill-inv-key">寄养日期</text><text class="fill-inv-val">{{ invitation.startDate }} 至 {{ invitation.endDate }}</text></view>
+            <view class="fill-inv-row"><text class="fill-inv-key">订单总价</text><text class="fill-inv-val fill-inv-val--price">¥{{ invitation.totalPrice }}</text></view>
           </view>
           <view class="fill-state-card">
             <text class="fill-state-title">{{ invitation.status === 'filled' ? '该邀请已被填写' : '该邀请已被取消' }}</text>
@@ -46,31 +50,51 @@
 
         <!-- 正常填写流程 -->
         <block wx:else>
-          <!-- 01 家庭与寄养安排 -->
+          <!-- 01 行程与寄养安排 -->
           <view class="fill-section">
             <view class="fill-chapter">
               <text class="fill-chapter-no">01</text>
-              <text class="fill-chapter-eyebrow">INVITATION</text>
+              <text class="fill-chapter-eyebrow">THE STAY</text>
               <view class="fill-chapter-rule"></view>
             </view>
-            <text class="fill-section-title">寄养邀请</text>
+            <text class="fill-section-title">行程安排</text>
 
-            <view class="fill-inv-card">
-              <view class="fill-inv-head">
-                <image class="fill-inv-avatar" src="{{ invitation.hostSnapshot.avatarUrl || '/images/default-avatar.svg' }}" mode="aspectFill" />
-                <view class="fill-inv-host">
-                  <text class="fill-inv-host-name">{{ invitation.hostSnapshot.hostName || '寄养家庭' }}</text>
-                  <text class="fill-inv-host-addr" wx:if="{{ invitation.hostSnapshot.addressPublic }}">{{ invitation.hostSnapshot.addressPublic }}</text>
+            <!-- 票据双联：入住 / 退房 -->
+            <view class="fill-stay">
+              <view class="fill-stay-cols">
+                <view class="fill-stay-col">
+                  <text class="fill-stay-cap">入住 CHECK-IN</text>
+                  <text class="fill-stay-date">{{ invitation.startDate }}</text>
+                  <text class="fill-stay-time">{{ invitation.startAt }}</text>
+                </view>
+                <view class="fill-stay-vrule"></view>
+                <view class="fill-stay-col">
+                  <text class="fill-stay-cap">退房 CHECK-OUT</text>
+                  <text class="fill-stay-date">{{ invitation.endDate }}</text>
+                  <text class="fill-stay-time">{{ invitation.endAt }}</text>
                 </view>
               </view>
-              <view class="fill-inv-rows">
-                <view class="fill-inv-row"><text class="fill-inv-key">寄养日期</text><text class="fill-inv-val">{{ invitation.startDate }} 至 {{ invitation.endDate }}（{{ days }} 天）</text></view>
-                <view class="fill-inv-row"><text class="fill-inv-key">接宠时刻</text><text class="fill-inv-val">{{ invitation.startAt }}</text></view>
-                <view class="fill-inv-row"><text class="fill-inv-key">还宠时刻</text><text class="fill-inv-val">{{ invitation.endAt }}</text></view>
-                <view class="fill-inv-row"><text class="fill-inv-key">宠物数量</text><text class="fill-inv-val">{{ invitation.petCount }} 只</text></view>
-                <view class="fill-inv-row"><text class="fill-inv-key">订单总价</text><text class="fill-inv-val fill-inv-val--price">¥{{ invitation.totalPrice }}</text></view>
+              <view class="fill-stay-meta">
+                <view class="fill-stay-meta-item">
+                  <text class="fill-stay-cap">寄养时长</text>
+                  <text class="fill-stay-meta-val">{{ days }} 晚</text>
+                </view>
+                <view class="fill-stay-vrule fill-stay-vrule--short"></view>
+                <view class="fill-stay-meta-item">
+                  <text class="fill-stay-cap">宾客</text>
+                  <text class="fill-stay-meta-val">{{ invitation.petCount }} 位</text>
+                </view>
               </view>
-              <text wx:if="{{ invitation.note }}" class="fill-inv-note">家庭备注：{{ invitation.note }}</text>
+              <!-- 第三联：地点 LOCATION（收编进票据，与入住/退房同构）
+                   家庭名常驻 —— 即使未公开地址，滚到 02/03 仍知是谁家 -->
+              <view class="fill-stay-loc">
+                <text class="fill-stay-cap">地点 LOCATION</text>
+                <text class="fill-stay-loc-host">{{ invitation.hostSnapshot.hostName || '寄养家庭' }}</text>
+                <text wx:if="{{ invitation.hostSnapshot.addressPublic }}" class="fill-stay-loc-addr">{{ invitation.hostSnapshot.addressPublic }}</text>
+              </view>
+            </view>
+            <view wx:if="{{ invitation.note }}" class="fill-quote">
+              <text class="fill-quote-text">{{ invitation.note }}</text>
             </view>
 
             <!-- 过期横幅 -->
@@ -91,78 +115,126 @@
 
             <view wx:for="{{ slots }}" wx:key="key" class="fill-slot">
               <view class="fill-slot-head">
-                <text class="fill-slot-no">宠物 {{ index + 1 }}</text>
+                <text class="fill-slot-no">席位 {{ index + 1 }}</text>
                 <view class="fill-slot-reset" wx:if="{{ item.mode !== 'empty' }}" bindtap="onSlotReset" data-index="{{ index }}">
                   <text class="fill-slot-reset-text">清除</text>
                 </view>
               </view>
 
-              <!-- 空槽位：选择方式 -->
-              <view wx:if="{{ item.mode === 'empty' }}" class="fill-slot-empty">
-                <button class="fill-btn fill-btn--ghost fill-btn--half" bindtap="onPickExisting" data-index="{{ index }}">选择已有宠物</button>
-                <button class="fill-btn fill-btn--primary fill-btn--half" bindtap="onCreateNew" data-index="{{ index }}">新建宠物档案</button>
+              <!-- 空席位：金虚线席位卡 -->
+              <view wx:if="{{ item.mode === 'empty' }}" class="fill-seat">
+                <text class="fill-seat-cap">待确认</text>
+                <view class="fill-seat-actions">
+                  <view class="fill-chip" bindtap="onPickExisting" data-index="{{ index }}" hover-class="fill-chip--pressed" hover-stay-time="80">
+                    <text class="fill-chip-text">选择已有宠物</text>
+                  </view>
+                  <view class="fill-chip fill-chip--strong" bindtap="onCreateNew" data-index="{{ index }}" hover-class="fill-chip--pressed" hover-stay-time="80">
+                    <text class="fill-chip-text fill-chip-text--strong">新建宠物档案</text>
+                  </view>
+                </view>
               </view>
 
               <!-- 已选已有宠物 -->
-              <view wx:elif="{{ item.mode === 'existing' }}" class="fill-pet-card">
-                <image class="fill-pet-avatar" src="{{ item.pet.avatarUrl || '/images/default-avatar.svg' }}" mode="aspectFill" />
-                <view class="fill-pet-info">
-                  <text class="fill-pet-name">{{ item.pet.name }}</text>
-                  <text class="fill-pet-meta">{{ item.pet.breed || '' }}{{ item.pet.birthday ? ' · ' + item.pet.birthday : '' }}</text>
+              <view wx:elif="{{ item.mode === 'existing' }}" class="fill-guest">
+                <image class="fill-guest-avatar" src="{{ item.pet.avatarUrl || '/images/default-avatar.svg' }}" mode="aspectFill" />
+                <view class="fill-guest-info">
+                  <text class="fill-guest-name">{{ item.pet.name }}</text>
+                  <text class="fill-guest-meta">{{ item.pet.breed || '' }}{{ item.pet.birthday ? ' · ' + item.pet.birthday : '' }}</text>
                 </view>
+                <text class="fill-guest-swap" hover-class="fill-guest-swap--pressed" hover-stay-time="80" bindtap="onSlotReset" data-index="{{ index }}">更换</text>
               </view>
 
-              <!-- 新建宠物表单 -->
+              <!-- 新建宠物：就地画廊式建档表单（贴近 create-step1 视觉） -->
               <view wx:elif="{{ item.mode === 'new' }}" class="fill-newpet">
-                <view class="fill-avatar-row" bindtap="onSlotAvatar" data-index="{{ index }}" hover-class="fill-avatar-row--pressed" hover-stay-time="80">
-                  <view class="fill-avatar-frame">
-                    <image wx:if="{{ item.newPet.avatarUrl }}" class="fill-avatar-img" src="{{ item.newPet.avatarUrl }}" mode="aspectFill" />
-                    <view wx:else class="fill-avatar-ph">
-                      <view class="fill-avatar-cross-h"></view>
-                      <view class="fill-avatar-cross-v"></view>
+                <view class="gallery-portrait" bindtap="onSlotAvatar" data-index="{{ index }}" hover-class="fill-ava--pressed" hover-stay-time="80">
+                  <view class="portrait-frame">
+                    <image wx:if="{{ item.newPet.avatarUrl }}" class="portrait-image" src="{{ item.newPet.avatarUrl }}" mode="aspectFill" />
+                    <view wx:else class="portrait-canvas">
+                      <view class="canvas-crosshair-h"></view>
+                      <view class="canvas-crosshair-v"></view>
+                      <view class="canvas-corner canvas-tl"></view>
+                      <view class="canvas-corner canvas-tr"></view>
+                      <view class="canvas-corner canvas-bl"></view>
+                      <view class="canvas-corner canvas-br"></view>
                     </view>
                   </view>
-                  <text class="fill-avatar-label">{{ item.newPet.avatarUrl ? '点击更换头像' : '上传宠物头像' }}</text>
+                  <view class="portrait-label">
+                    <view class="label-line"></view>
+                    <text class="label-text">{{ item.newPet.avatarUrl ? '点击更换头像' : '点击上传宠物头像' }}</text>
+                  </view>
                 </view>
-                <view class="fill-newpet-row">
-                  <text class="fill-newpet-label">昵称 *</text>
-                  <input class="fill-newpet-input" value="{{ item.newPet.name }}" maxlength="30" placeholder="宠物昵称" placeholder-class="fill-ph" bindinput="onNewPetInput" data-index="{{ index }}" data-field="name" />
+
+                <view class="gallery-entrance">
+                  <view class="entrance-line"></view>
+                  <text class="entrance-label">基本信息</text>
                 </view>
-                <view class="fill-newpet-row">
-                  <text class="fill-newpet-label">类型</text>
-                  <picker mode="selector" range="{{ ['猫咪', '狗狗', '异宠'] }}" bindchange="onNewPetType" data-index="{{ index }}" class="fill-newpet-picker">
-                    <view class="fill-newpet-picker-val">{{ item.newPet.typeLabel }}</view>
-                  </picker>
-                </view>
-                <view class="fill-newpet-row">
-                  <text class="fill-newpet-label">性别</text>
-                  <picker mode="selector" range="{{ ['公', '母', '未知'] }}" bindchange="onNewPetGender" data-index="{{ index }}" class="fill-newpet-picker">
-                    <view class="fill-newpet-picker-val">{{ item.newPet.genderLabel }}</view>
-                  </picker>
-                </view>
-                <view class="fill-newpet-row">
-                  <text class="fill-newpet-label">品种 *</text>
-                  <input class="fill-newpet-input" value="{{ item.newPet.breed }}" maxlength="50" placeholder="如英短 / 柯基" placeholder-class="fill-ph" bindinput="onNewPetInput" data-index="{{ index }}" data-field="breed" />
-                </view>
-                <view class="fill-newpet-row">
-                  <text class="fill-newpet-label">生日</text>
-                  <picker mode="date" value="{{ item.newPet.birthday }}" bindchange="onNewPetBirthday" data-index="{{ index }}" class="fill-newpet-picker">
-                    <view class="fill-newpet-picker-val {{ item.newPet.birthday ? '' : 'fill-newpet-picker-val--ph' }}">{{ item.newPet.birthday || '选择日期' }}</view>
-                  </picker>
-                </view>
-                <view class="fill-newpet-row">
-                  <text class="fill-newpet-label">体重(kg)</text>
-                  <input class="fill-newpet-input" type="digit" value="{{ item.newPet.weight }}" placeholder="选填" placeholder-class="fill-ph" bindinput="onNewPetInput" data-index="{{ index }}" data-field="weight" />
+
+                <view class="gallery-collection">
+                  <view class="gallery-card">
+                    <view class="card-accent"></view>
+                    <view class="card-body">
+                      <view class="form-group">
+                        <view class="form-row">
+                          <view class="field-label"><text>宠物昵称</text><text class="label-required">（必填）</text></view>
+                          <input class="form-input" value="{{ item.newPet.name }}" maxlength="30" placeholder="请输入宠物昵称" placeholder-class="form-placeholder" bindinput="onNewPetInput" data-index="{{ index }}" data-field="name" />
+                        </view>
+                        <view class="field-divider"></view>
+                        <view class="form-row form-row--select" bindtap="selectSlotType" data-index="{{ index }}">
+                          <view class="field-label"><text>宠物类型</text><text class="label-required">（必填）</text></view>
+                          <view class="form-value {{ item.newPet.type ? '' : 'form-value--ph' }}"><text class="form-value-text">{{ item.newPet.type === 'dog' ? '狗狗' : (item.newPet.type === 'cat' ? '猫咪' : (item.newPet.type === 'exotic' ? '异宠' : '请选择宠物类型')) }}</text></view>
+                          <view class="field-arrow"><view class="arrow-line"></view></view>
+                        </view>
+                        <view class="field-divider"></view>
+                        <view class="form-row">
+                          <view class="field-label"><text>品种</text><text class="label-required">（必填）</text></view>
+                          <input class="form-input" value="{{ item.newPet.breed }}" maxlength="50" placeholder="请输入品种" placeholder-class="form-placeholder" bindinput="onNewPetInput" data-index="{{ index }}" data-field="breed" />
+                        </view>
+                        <view class="field-divider"></view>
+                        <view class="form-row form-row--select" bindtap="selectSlotGender" data-index="{{ index }}">
+                          <view class="field-label"><text>性别</text><text class="label-required">（必填）</text></view>
+                          <view class="form-value {{ item.newPet.gender ? '' : 'form-value--ph' }}"><text class="form-value-text">{{ item.newPet.gender === 'male' ? '弟弟' : (item.newPet.gender === 'female' ? '妹妹' : (item.newPet.gender === 'unknown' ? '不确定' : '请选择性别')) }}</text></view>
+                          <view class="field-arrow"><view class="arrow-line"></view></view>
+                        </view>
+                        <view class="field-divider"></view>
+                        <picker mode="date" value="{{ item.newPet.birthday }}" start="2000-01-01" end="{{ todayStr }}" bindchange="onNewPetBirthday" data-index="{{ index }}">
+                          <view class="form-row form-row--select">
+                            <view class="field-label"><text>出生日期</text></view>
+                            <view class="form-value"><text class="form-value-text {{ item.newPet.birthday ? '' : 'form-value--ph' }}">{{ item.newPet.birthday || '请选择出生日期' }}</text></view>
+                            <view class="field-arrow"><view class="arrow-line"></view></view>
+                          </view>
+                        </picker>
+                        <view class="field-divider"></view>
+                        <view class="form-row">
+                          <view class="field-label"><text>体重</text></view>
+                          <input class="form-input" type="digit" value="{{ item.newPet.weight }}" placeholder="请输入体重（kg）" placeholder-class="form-placeholder" bindinput="onNewPetInput" data-index="{{ index }}" data-field="weight" />
+                        </view>
+                        <view class="field-divider"></view>
+                        <view class="form-row form-row--textarea">
+                          <view class="field-label"><text>备注</text></view>
+                          <textarea class="form-textarea" value="{{ item.newPet.note }}" placeholder="性格傲娇还是可爱？还有生活习惯和饮食习惯描述一下吧" placeholder-class="form-placeholder" auto-height maxlength="-1" bindinput="onNewPetNote" data-index="{{ index }}" />
+                        </view>
+                      </view>
+                    </view>
+                  </view>
                 </view>
               </view>
 
-              <!-- 健康信息（所有模式，除空槽位） -->
-              <health-form
-                wx:if="{{ item.mode !== 'empty' }}"
-                value="{{ item.healthInfo }}"
-                bindchange="onHealthChange"
-                data-index="{{ index }}"
-              />
+              <!-- 健康信息（所有模式，除空槽位）
+                   ⚠ health-form 是 styleIsolation:isolated，页面 wxss 穿透不进去；
+                   故用 CSS 变量继承（.fill-health 重定义 --card-color / --lux-radius-inner）
+                   把它从白卡改成纸面分区，不动组件源文件（update-profile 共用） -->
+              <view wx:if="{{ item.mode !== 'empty' }}" class="fill-health">
+                <health-form
+                  value="{{ item.healthInfo }}"
+                  bindchange="onHealthChange"
+                  data-index="{{ index }}"
+                />
+              </view>
+
+              <!-- 新建宠物：保存建档 → 档案直接显示在本槽位，并进入"选择已有宠物"列表 -->
+              <button wx:if="{{ item.mode === 'new' }}" class="fill-newpet-submit {{ submitting ? 'is-disabled' : '' }}" disabled="{{ submitting }}" bindtap="onSaveNewPet" data-index="{{ index }}">
+                {{ submitting ? '保存中…' : '保存宠物档案' }}
+              </button>
             </view>
 
           </view>
@@ -181,7 +253,6 @@
                 <text class="fill-price-key">订单总价</text>
                 <text class="fill-price-val">¥{{ invitation.totalPrice }}</text>
               </view>
-              <view class="fill-price-divider"></view>
               <text class="fill-price-hint">提交后可选择支付定金（30%）或全款；支付成功后寄养家庭将自动确认订单</text>
             </view>
 
@@ -253,4 +324,8 @@
         <button class="fill-btn fill-btn--ghost" bindtap="onPaySheetClose">稍后支付（30 分钟内有效）</button>
       </view>
     </view>
+
+    <!-- 新建宠物：类型 / 性别 action-sheet（与 create-step1 一致） -->
+    <zy-action-sheet show="{{ showTypeSheet }}" actions="{{ petTypes }}" cancel-text="取消" bind:select="onSelectSlotType" bind:close="onCloseTypeSheet" />
+    <zy-action-sheet show="{{ showGenderSheet }}" actions="{{ petGenders }}" cancel-text="取消" bind:select="onSelectSlotGender" bind:close="onCloseGenderSheet" />
   </view>

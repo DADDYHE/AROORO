@@ -209,6 +209,15 @@ Page({
     })
   },
 
+  onCopyExpressNo() {
+    const expressNo = this.data.order?.expressNo
+    if (!expressNo) {return}
+    wx.setClipboardData({
+      data: expressNo,
+      success: () => this.toast('COPIED'),
+    })
+  },
+
   onCancelOrder() {
     const orderId = this.data.order?._id
     if (!orderId) {return}

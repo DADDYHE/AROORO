@@ -1,37 +1,13 @@
-/* 通知详情 - AROORO 奢华宠物 */
+/* 通知详情 - AROORO 奢华宠物 · B1 hero + A 纸面流 */
 
 .page-container {
-  min-height: 100vh;
-  padding: 24rpx var(--page-padding, 48rpx);
+  padding: 0 var(--page-padding, 48rpx);
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 
-.detail-card {
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  padding: 40rpx 32rpx;
-  margin-bottom: 16rpx;
-  border: 1rpx solid var(--hairline);
-}
-
-.notification-title {
-  font-size: 32rpx;
-  font-weight: 400;
-  color: var(--text-primary);
-  display: block;
-  margin-bottom: 12rpx;
-  letter-spacing: 0.02em;
-  line-height: 1.4;
-}
-
-.notification-date {
-  font-size: 22rpx;
-  color: var(--text-tertiary);
-  display: block;
-  letter-spacing: 0.02em;
-  padding-bottom: 24rpx;
-  margin-bottom: 24rpx;
-  border-bottom: 1rpx solid var(--hairline);
+/* 正文：纸面段落，不用白卡 */
+.detail-body {
+  padding: 32rpx 0;
 }
 
 .notification-body {
@@ -42,10 +18,9 @@
 }
 
 /* 入场动画 */
-.detail-card {
+.detail-body {
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
-

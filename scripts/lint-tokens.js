@@ -173,6 +173,8 @@ const SCAN_EXT = new Set(['.js', '.wxml', '.wxss', '.json', '.svg', '.css', '.vu
 const EXCLUDE_DIRS = new Set([
   'node_modules', 'miniprogram_npm', '.git',
   'docs', 'docs-archive', 'scripts',
+  'deliverables', // 设计交付稿（aurora-tokens.css 等）：hex 就是内容本体（派生验算/色相论证），
+                  // 不是应改 var() 的业务样式；无运行时 import，排除不掩盖任何泄漏
   'dist', // .gitignore 的构建产物：扫描它只会得到打包后的噪音
 ]);
 // 相对路径级忽略：目录名不足以表达意图时用这个（比按名忽略更精确，也更好读）

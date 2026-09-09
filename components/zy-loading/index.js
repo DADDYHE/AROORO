@@ -50,7 +50,7 @@ Component({
     // 尺寸（rpx）
     size: { type: null, value: 48 },
     // 颜色
-    color: { type: String, value: '#4F5E35' },
+    color: { type: String, value: '#1F3A1F' },
     // 颜色（灰色，背景圆环）
     trackColor: { type: String, value: 'rgba(0, 0, 0, 0.08)' },
     // 线条粗细（rpx）

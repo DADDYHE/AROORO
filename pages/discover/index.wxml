@@ -1,4 +1,4 @@
-<zy-navbar title="{{t.BIZ_DUE3K}}" showBack="{{false}}" />
+<zy-navbar title="" showBack="{{false}}" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,21 +8,16 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="tuan-page">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-  <view class="tuan-header">
-    <view class="brand-accent-bar"></view>
-    <view class="brand-block">
-      <view class="brand-main">
-        <text class="tuan-title">{{t.BIZ_DUE3K}}</text>
-      </view>
-      <view class="brand-meta">
-        <view class="brand-meta-line"></view>
-        <text class="tuan-subtitle">超值宠物好物，限时团购</text>
-      </view>
-    </view>
+  <!-- B · 深绿沉浸标题版（顶天） -->
+  <view class="lux-hero zy-enter" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">GROUP BUY</text>
+    <text class="lux-hero-title">{{t.BIZ_DUE3K}}</text>
+    <text class="lux-hero-sub">超值宠物好物，限时团购</text>
+    <view class="lux-hero-sealline"></view>
   </view>
 
   <view class="tuan-list">

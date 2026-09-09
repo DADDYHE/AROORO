@@ -1,4 +1,4 @@
-<zy-navbar title="推荐管理" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,9 +8,16 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="gallery-container">
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">REFERRAL</text>
+    <text class="lux-hero-title">{{t.BIZ_D4AWTZ}}</text>
+    <text class="lux-hero-sub">共 {{total}} 人</text>
+    <view class="lux-hero-sealline"></view>
+  </view>
+
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
       <view class="lux-cascade">
@@ -28,19 +35,6 @@
   </view>
 
   <block wx:else>
-    <view class="gallery-header">
-      <view class="brand-block">
-        <view class="brand-accent-bar"></view>
-        <view class="brand-main">
-          <text class="brand-text">{{t.BIZ_D4AWTZ}}</text>
-        </view>
-        <view class="brand-meta">
-          <view class="brand-meta-line"></view>
-          <text class="brand-subtitle">共 {{total}} 人</text>
-        </view>
-      </view>
-    </view>
-
     <view class="gallery-hall">
       <view wx:if="{{stats}}" class="gallery-card stats-card">
         <view class="card-accent stats-accent"></view>

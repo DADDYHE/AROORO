@@ -119,7 +119,7 @@
   font-size: 32rpx;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: var(--lux-font-number, 'DIN Alternate', sans-serif);
+  font-family: var(--font-sans);
 }
 
 .stepper-hint {
@@ -143,7 +143,7 @@
 .price-currency {
   font-size: 40rpx;
   font-weight: 600;
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
 }
 
 .price-input {
@@ -165,7 +165,7 @@
 }
 
 .ref-price {
-  color: var(--lux-gold-600);
+  color: var(--lux-gold-ink);
   font-weight: 600;
 }
 

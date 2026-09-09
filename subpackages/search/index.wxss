@@ -149,7 +149,7 @@
 
 /* 热门搜索 - 金色 tint */
 .tag-hot {
-  color: #1F3A1F;
+  color: var(--primary-color);
   background: var(--accent-wash);
   border-color: rgba(201,162,75,0.2);
 }

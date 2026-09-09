@@ -1,4 +1,4 @@
-<zy-navbar title="家庭寄养" showBack="{{false}}" />
+<zy-navbar title="" showBack="{{false}}" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -9,22 +9,17 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="hosts-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 
-  <!-- 顶部品牌标识栏：杂志式标题区（金 eyebrow + 轻字重标题 + 真实计数） -->
-  <view class="gallery-header zy-enter">
-    <view class="brand-accent-bar"></view>
-    <text class="brand-eyebrow">AROORO · HOSTING</text>
-    <view class="brand-main">
-      <text class="brand-text">家庭寄养</text>
-    </view>
-    <view class="brand-meta">
-      <view class="brand-meta-line"></view>
-      <text class="brand-subtitle">{{totalCount > 0 ? totalCount + ' 个在住家庭 · 安心呼噜，放心托付' : '安心呼噜，放心托付'}}</text>
-    </view>
+  <!-- B · 深绿沉浸标题版（顶天）：杂志式品牌栏升级 -->
+  <view class="lux-hero zy-enter" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">AROORO · HOSTING</text>
+    <text class="lux-hero-title">家庭寄养</text>
+    <text class="lux-hero-sub">{{totalCount > 0 ? totalCount + ' 个在住家庭 · 安心呼噜，放心托付' : '安心呼噜，放心托付'}}</text>
+    <view class="lux-hero-sealline"></view>
   </view>
 
   <!-- 搜索 + 筛选：单一 sticky 纸面条（消除双 sticky 错位） -->

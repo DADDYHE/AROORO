@@ -1,24 +1,129 @@
 /* ================================================================
-   pet/list.wxss · AROORO 宠物列表页 — Haute-Luxury Editorial
-   主色：深林绿家族 --primary-color
-   Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky
+   pet/list.wxss · AROORO 宠物列表页 — B+A 混搭（2026-09-09）
+     B = 深绿沉浸标题版 hero（顶天，无图）
+     A = 整版纸面流（拆白卡，行印在全局纸底，14% 墨行线分区）
+   语法对齐 booking/invitation-fill；⚠ 不动 common.wxss（子包共享，
+   create-step1 / update-profile 仍用旧画廊版式），本页全量页级覆盖。
+   Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky；
+                 transition 仅 transform/opacity
+   ⚠ 纸面行线一律 rgba(26,26,23,0.14)；纸面金字一律 --lux-gold-ink。
    ================================================================ */
 @import './common.wxss';
 
-/* ===== 入口操作栏（管理/取消/删除） ===== */
+.pet-root {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+/* ================================================================
+   B · 深绿沉浸标题版
+   ================================================================ */
+.pet-hero {
+  position: relative;
+  width: 100%;
+  /* min-height 跟随内容，状态栏高的机型不裁切标题 */
+  min-height: 320rpx;
+  padding: 0 var(--page-padding) 56rpx;
+  box-sizing: border-box;
+  background: var(--lux-green-grad-rich);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10rpx;
+  overflow: hidden;
+}
+
+.pet-hero-eyebrow {
+  font-size: 20rpx;
+  color: var(--lux-gold-500);
+  letter-spacing: var(--lux-ls-label, 0.24em);
+  font-weight: 400;
+}
+
+.pet-hero-title {
+  font-size: 44rpx;
+  color: var(--text-on-primary);
+  letter-spacing: var(--lux-ls-heading, 0.08em);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.pet-hero-sub {
+  font-size: 24rpx;
+  color: var(--text-on-primary);
+  opacity: 0.72;
+  letter-spacing: var(--lux-ls-caption, 0.04em);
+  line-height: 1.4;
+}
+
+/* 封口金线：深绿与纸面的分界 */
+.pet-hero-sealline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1rpx;
+  background: var(--lux-gold-line);
+}
+
+/* ================================================================
+   A · 纸面流容器
+   ================================================================ */
+.pet-container {
+  min-height: 60vh;
+  padding: 48rpx var(--page-padding) calc(48rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 40rpx;
+  box-sizing: border-box;
+}
+
+.pet-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+/* 章节行：01 + eyebrow + rule + 管理操作 */
+.pet-chapter {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.pet-chapter-no {
+  font-size: 24rpx;
+  color: var(--lux-gold-ink);
+  font-weight: 500;
+  letter-spacing: var(--lux-ls-display, 0.16em);
+}
+
+.pet-chapter-eyebrow {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+  letter-spacing: var(--lux-ls-label, 0.24em);
+  font-weight: 400;
+}
+
+.pet-chapter-rule {
+  flex: 1;
+  height: 1rpx;
+  background: rgba(26, 26, 23, 0.14);
+}
+
+/* ===== 入口操作（管理/取消/删除）——纸面化 ===== */
 .entrance-action {
-  font-family: var(--font-sans);
   font-size: 24rpx;
   color: var(--text-secondary);
   letter-spacing: 0.04em;
   padding: 8rpx 24rpx;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.18);
   border-radius: var(--zy-radius-lg);
-  background: var(--card-color);
+  background: transparent;
   font-weight: 400;
   transition: transform 240ms cubic-bezier(0.25,0.1,0.25,1),
-              opacity 240ms cubic-bezier(0.25,0.1,0.25,1),
-              border-color 240ms cubic-bezier(0.25,0.1,0.25,1);
+              opacity 240ms cubic-bezier(0.25,0.1,0.25,1);
 }
 
 .entrance-action--pressed {
@@ -27,12 +132,11 @@
 
 .entrance-action--cancel {
   color: var(--text-secondary);
-  border-color: var(--hairline);
 }
 
 .entrance-action--delete {
   color: var(--error-color);
-  border-color: rgba(184, 92, 60, 0.25);
+  border-color: rgba(184, 92, 60, 0.35);
 }
 
 .entrance-action--disabled {
@@ -44,30 +148,35 @@
   gap: var(--zy-space-sm);
 }
 
-/* ===== 宠物卡片条目 ===== */
+/* ===== 宠物行：拆白卡，直接印在纸面 ===== */
+.pet-collection {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
+}
+
 .pet-item {
   display: flex;
   align-items: center;
-  padding: var(--zy-space-lg) var(--zy-space-lg);
+  padding: 28rpx var(--zy-space-sm2);
   position: relative;
   transition: transform 240ms cubic-bezier(0.25,0.1,0.25,1),
               background-color 240ms cubic-bezier(0.25,0.1,0.25,1);
 }
 
 .pet-item--pressed {
-  background-color: var(--primary-wash);
+  background-color: rgba(26, 26, 23, 0.04);
 }
 
 .pet-item-divider {
   position: absolute;
   bottom: 0;
-  left: var(--zy-space-lg);
-  right: var(--zy-space-lg);
+  left: var(--zy-space-sm2);
+  right: var(--zy-space-sm2);
   height: 1rpx;
-  background: var(--hairline);
+  background: rgba(26, 26, 23, 0.14);
 }
 
-/* ===== 宠物头像（圆形 + 1rpx 发丝边框） ===== */
+/* 头像：圆形 + 金环发丝边 */
 .pet-portrait {
   width: 100rpx;
   height: 100rpx;
@@ -76,7 +185,7 @@
   background: var(--card-cream);
   flex-shrink: 0;
   margin-right: var(--zy-space-lg);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid var(--lux-hairline-gold);
 }
 
 .pet-portrait-image {
@@ -85,14 +194,12 @@
   display: block;
 }
 
-/* ===== 宠物信息 ===== */
 .pet-info {
   flex: 1;
   min-width: 0;
 }
 
 .pet-name {
-  font-family: var(--font-sans);
   font-size: 30rpx;
   font-weight: 500;
   color: var(--text-primary);
@@ -112,11 +219,10 @@
 }
 
 .pet-meta-tag {
-  font-family: var(--font-sans);
   font-size: 22rpx;
   color: var(--text-secondary);
   letter-spacing: 0.02em;
-  background: var(--primary-wash);
+  background: rgba(26, 26, 23, 0.045);
   padding: 4rpx 14rpx;
   border-radius: var(--zy-radius-sm);
   font-weight: 400;
@@ -128,7 +234,7 @@
   padding: 4rpx 0;
 }
 
-/* ===== 右侧箭头 ===== */
+/* 右侧箭头（common.wxss 的 arrow-line 直接用） */
 .pet-arrow {
   display: flex;
   align-items: center;
@@ -139,7 +245,7 @@
   margin-left: var(--zy-space-sm);
 }
 
-/* ===== 管理模式选择圈 ===== */
+/* 管理模式选择圈 */
 .pet-selector {
   display: flex;
   align-items: center;
@@ -154,8 +260,8 @@
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  border: 1rpx solid var(--border-color);
-  background: var(--card-color);
+  border: 1rpx solid rgba(26, 26, 23, 0.28);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -177,13 +283,13 @@
   margin-top: -3rpx;
 }
 
-/* ===== 空状态（无宠物） ===== */
+/* ===== 空态：取景框（色适配纸面） ===== */
 .gallery-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 120rpx var(--zy-space-lg) 80rpx;
+  padding: 96rpx var(--zy-space-lg) 40rpx;
   animation-name: zy-fade-in;
   animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
@@ -194,9 +300,9 @@
   width: 200rpx;
   height: 200rpx;
   position: relative;
-  background: var(--card-cream);
+  background: rgba(26, 26, 23, 0.03);
   border-radius: 50%;
-  border: 1rpx dashed var(--border-color);
+  border: 1rpx dashed rgba(26, 26, 23, 0.28);
   margin-bottom: var(--zy-space-lg);
   display: flex;
   align-items: center;
@@ -210,7 +316,7 @@
   transform: translate(-50%, -50%);
   width: 64rpx;
   height: 1rpx;
-  background: var(--border-color);
+  background: rgba(26, 26, 23, 0.28);
 }
 
 .empty-crosshair-v {
@@ -220,15 +326,7 @@
   transform: translate(-50%, -50%);
   width: 1rpx;
   height: 64rpx;
-  background: var(--border-color);
-}
-
-.empty-corner {
-  display: none;
-}
-
-.empty-tl, .empty-tr, .empty-bl, .empty-br {
-  display: none;
+  background: rgba(26, 26, 23, 0.28);
 }
 
 .empty-label {
@@ -239,7 +337,6 @@
 }
 
 .empty-hint {
-  font-family: var(--font-sans);
   font-size: 24rpx;
   color: var(--text-tertiary);
   letter-spacing: 0.06em;

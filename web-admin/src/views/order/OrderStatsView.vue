@@ -132,9 +132,9 @@ async function loadTrendData() {
       type: 'line',
       smooth: true,
       data: data.map(d => d.count || 0),
-      areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(78,205,196,0.4)' }, { offset: 1, color: 'rgba(78,205,196,0.05)' }]) },
-      lineStyle: { color: '#4ECDC4', width: 2 },
-      itemStyle: { color: '#4ECDC4' }
+      areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(61,107,61,0.4)' }, { offset: 1, color: 'rgba(61,107,61,0.05)' }]) },
+      lineStyle: { color: '#3D6B3D', width: 2 },
+      itemStyle: { color: '#3D6B3D' }
     }]
   })
 }
@@ -161,7 +161,7 @@ async function loadTypeChart() {
       data: data.map((item, i) => ({
         value: item.count || 0,
         name: ORDER_TYPE_LABELS[item.type] || item.type,
-        itemStyle: { color: ['#4ECDC4', '#FF6B6B', '#45B7D1', '#96CEB4', '#FFEAA7'][i % 5] }
+        itemStyle: { color: ['#3D6B3D', '#C9A24B', '#8B6350', '#5C7A8A', '#A68370'][i % 5] }
       }))
     }]
   })

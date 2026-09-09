@@ -1,23 +1,17 @@
-<zy-navbar title="{{t.BIZ_AR8ZM4}}" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
   bindscroll="_onScroll"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="gallery-container">
   <view class="form-scroll">
-    <view class="gallery-header">
-      <view class="brand-block">
-        <view class="brand-accent-bar"></view>
-        <view class="brand-main">
-          <text class="brand-text">{{pageTitle}}</text>
-        </view>
-        <view class="brand-meta">
-          <view class="brand-meta-line"></view>
-          <text class="brand-subtitle">{{pageSubtitle}}</text>
-        </view>
-      </view>
+    <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+      <text class="lux-hero-eyebrow">CREATE</text>
+      <text class="lux-hero-title">{{pageTitle}}</text>
+      <text class="lux-hero-sub">{{pageSubtitle}}</text>
+      <view class="lux-hero-sealline"></view>
     </view>
 
     <view class="gallery-hall">

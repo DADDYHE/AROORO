@@ -28,7 +28,7 @@ function goHome() {
 
 .not-found h1 {
   font-size: 72px;
-  color: #4ECDC4;
+  color: #1F3A1F;
   margin-bottom: 16px;
 }
 

@@ -4,7 +4,6 @@
 /* ===== 容器 ===== */
 .container {
   padding: 20rpx var(--page-padding);
-  min-height: 100vh;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 

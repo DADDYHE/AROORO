@@ -1,5 +1,7 @@
 /* ================================================================
-   商城订单详情 · AROORO 深森林绿 × 香槟金 × 奶油白 高奢风格
+   商城订单详情 · A+B 奢侈品级版式（2026-09-09 全站升级）
+   B1 深绿标题版 hero（全局 .lux-* 类）+ A 纸面流：
+   章节行 01/02 + 票据信息行 + 14% 墨行线 + 卷宗落款。零白卡。
    Skyline 兼容：无 :active / transition 仅 transform & opacity / 单行截断
    ================================================================ */
 @import '../../../styles/loading-animation.wxss';
@@ -56,8 +58,7 @@
   --banner-ink: var(--text-primary);
 }
 
-/* 原为 var(--status-active) → var(--info-color)，二者真值同为 #5C7A8A，渐变实际塌成纯色。
-   原兜底 #4A6572 恰好记录了作者本意（= --status-active-deep），据此改用正确令牌。白字 4.56:1。 */
+/* 白字 4.56:1 */
 .status-banner.status-shipped {
   background: linear-gradient(135deg, var(--status-active) 0%, var(--status-active-deep) 100%);
 }
@@ -67,8 +68,7 @@
   background: linear-gradient(135deg, var(--status-completed) 0%, var(--primary-color) 100%);
 }
 
-/* 原为 var(--status-cancelled) → var(--gray-600)；--status-cancelled 加深为 #7A7568 后
-   与 --gray-600 同值，渐变会塌成纯色，故改用配套的 --status-cancelled-deep。白字 4.59:1。 */
+/* 白字 4.59:1 */
 .status-banner.status-cancelled {
   background: linear-gradient(135deg, var(--status-cancelled) 0%, var(--status-cancelled-deep) 100%);
 }
@@ -80,7 +80,6 @@
   letter-spacing: 0.06em;
 }
 
-/* 24rpx≈12px 属正文档位，门槛 4.5:1；原 0.8 白在金/灰底上仅 2.04~3.58:1 */
 .status-desc {
   font-size: 24rpx;
   color: var(--banner-ink);
@@ -88,32 +87,60 @@
   letter-spacing: 0.02em;
 }
 
-/* 通用区块 */
-.section {
-  transition: transform 160ms ease, opacity 160ms ease;
-  margin: 16rpx var(--page-padding, 48rpx);
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  padding: 32rpx;
-  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+/* ================================================================
+   章节：双行 eyebrow（01 PRODUCT …）+ 14% 墨行线分区，无卡片
+   ================================================================ */
+.chapter {
+  padding: 36rpx var(--page-padding) 8rpx;
 }
 
-.section-title {
-  font-size: 26rpx;
+.chapter-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 26rpx;
+}
+
+.chapter-no {
+  font-size: 20rpx;
+  letter-spacing: 0.12em;
+  color: var(--lux-gold-ink);
+}
+
+.chapter-name {
+  font-size: 20rpx;
   font-weight: 500;
-  color: var(--text-primary);
-  margin-bottom: 20rpx;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.28em;
+  color: var(--text-secondary);
 }
 
-.product-section {
-  transition: transform 160ms ease, opacity 160ms ease;
+.chapter-rule {
+  flex: 1;
+  height: 1rpx;
+  background: rgba(26, 26, 23, 0.14);
 }
 
+.chapter-side {
+  font-size: 20rpx;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.chapter-body {
+  padding-bottom: 28rpx;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
+}
+
+/* ── 01 PRODUCT 商品行 ── */
 .product-row {
   display: flex;
   gap: 20rpx;
   align-items: center;
+  padding: 12rpx 0;
+}
+
+.product-row + .product-row {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .product-img {
@@ -189,7 +216,7 @@
   margin-left: 8rpx;
 }
 
-/* 收货地址 */
+/* ── 02 RECEIVER 收货信息 ── */
 .receiver-row {
   display: flex;
   gap: 12rpx;
@@ -233,13 +260,13 @@
   line-height: 1.5;
 }
 
-/* 信息行 */
+/* ── 03 LOGISTICS / 04 ORDER 信息行（票据语法） ── */
 .info-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .info-row:last-child {
@@ -249,6 +276,7 @@
 .info-label {
   font-size: 26rpx;
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
 }
 
 .info-value {
@@ -265,12 +293,11 @@
 
 .copy-btn {
   transition: transform 160ms ease, opacity 160ms ease;
-  font-size: 22rpx;
-  color: var(--text-primary);
-  padding: 4rpx 16rpx;
-  border: 1rpx solid var(--mall-tint);
-  border-radius: var(--zy-radius-lg);
-  background: var(--mall-tint, rgba(201,162,75,0.08));
+  font-size: 20rpx;
+  color: var(--lux-gold-ink);
+  padding: 2rpx 14rpx;
+  border: 1rpx solid var(--lux-hairline-gold);
+  border-radius: 999rpx;
 }
 
 .copy-btn.pressed {
@@ -280,72 +307,38 @@
 .total-row {
   margin-top: 8rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   border-bottom: none;
 }
 
 .total-value {
-  font-size: 32rpx;
-  font-weight: 400;
+  font-size: 36rpx;
+  font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.01em;
 }
 
-/* 底部操作栏 */
-.bottom-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+/* ================================================================
+   票据落款
+   ================================================================ */
+.dossier-foot {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 16rpx;
-  padding: 20rpx var(--page-padding, 48rpx);
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: var(--card-color);
-  border-top: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+  justify-content: center;
+  gap: 24rpx;
+  padding: 48rpx var(--page-padding) 24rpx;
 }
 
-.btn-primary {
-  padding: 20rpx 48rpx;
-  background: var(--mall-gradient, linear-gradient(135deg, #C9A24B 0%, #A8894A 100%));
-  color: var(--text-on-accent);  /* 原 var(--card-color) */
-  font-size: 28rpx;
-  font-weight: 400;
-  border-radius: var(--zy-radius-lg);
-  letter-spacing: 0.06em;
-  text-align: center;
-  box-shadow: var(--shadow-glow-mall);
+.dossier-foot-line {
+  width: 64rpx;
+  height: 1rpx;
+  background: rgba(26, 26, 23, 0.14);
 }
 
-.btn-primary.pressed {
-  opacity: 0.85;
-  transform: scale(0.98);
-}
-
-.btn-secondary {
-  padding: 20rpx 48rpx;
-  background: var(--card-color);
-  color: var(--text-secondary);
-  font-size: 28rpx;
-  font-weight: 400;
-  border-radius: var(--zy-radius-lg);
-  border: 1rpx solid var(--border-color, #E2DED3);
-  letter-spacing: 0.06em;
-  text-align: center;
-}
-
-.btn-secondary.pressed {
-  opacity: 0.7;
-}
-
-.btn-secondary.danger {
-  color: var(--error-color);
-  border-color: rgba(184, 92, 60, 0.2);
-}
-
-.logistics-section {
-  margin-top: 16rpx;
+.dossier-foot-text {
+  font-size: 20rpx;
+  letter-spacing: 0.3em;
+  color: var(--text-tertiary);
 }
 
 /* 入场动画 */
@@ -356,15 +349,14 @@
   animation-fill-mode: forwards;
 }
 
-.section {
-  transition: transform 160ms ease, opacity 160ms ease;
+.chapter {
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
-.section:nth-child(2) { animation-delay: 140ms; }
-.section:nth-child(3) { animation-delay: 200ms; }
-.section:nth-child(4) { animation-delay: 260ms; }
-
+.chapter:nth-of-type(1) { animation-delay: 100ms; }
+.chapter:nth-of-type(2) { animation-delay: 160ms; }
+.chapter:nth-of-type(3) { animation-delay: 220ms; }
+.chapter:nth-of-type(4) { animation-delay: 280ms; }

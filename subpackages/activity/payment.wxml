@@ -1,4 +1,4 @@
-<zy-navbar title="支付" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,9 +8,15 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="payment-page">
+  <!-- B · 深绿沉浸标题版（顶天） -->
+  <view class="lux-hero lux-hero--compact" style="padding-top: calc({{_navbarHeight}}px + 16rpx);">
+    <text class="lux-hero-eyebrow">PAYMENT</text>
+    <text class="lux-hero-title">支付</text>
+    <view class="lux-hero-sealline"></view>
+  </view>
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
       <view class="lux-cascade">

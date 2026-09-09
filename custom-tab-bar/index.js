@@ -6,7 +6,7 @@ Component({
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     selected: 0,
     color: '#666666',
-    selectedColor: '#4F5E35',
+    selectedColor: '#1F3A1F',
     list: [
       {
         pagePath: '/pages/home/index',

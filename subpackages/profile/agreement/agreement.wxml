@@ -1,4 +1,4 @@
-<zy-navbar title="用户协议" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,12 +8,14 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="page-container">
-  <view class="page-header">
-    <view class="page-back" bindtap="goBack"><image class="page-back-icon" src="/images/icons/arrow-left-luxury-line.svg" mode="aspectFit"></image><text class="page-back-text">返回</text></view>
-    <text class="page-title">用户协议</text>
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">LEGAL</text>
+    <text class="lux-hero-title">用户协议</text>
+    <text class="lux-hero-sub">更新日期：2026年5月11日</text>
+    <view class="lux-hero-sealline"></view>
   </view>
   <view class="page-content">
     <view class="section">

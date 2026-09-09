@@ -167,7 +167,7 @@
 }
 
 .tab-bar-item.active .tab-bar-icon {
-  color: #C9A24B; /* 选中图标金（金 SVG 已硬编码金；此处兜底 currentColor 情形） */
+  color: var(--accent-color); /* 选中图标金（金 SVG 已硬编码金；此处兜底 currentColor 情形） */
   opacity: 1;
   transform: scale(0.78); /* 仅作用于图标自身；worklet 按压 scale 作用于 icon-wrap(wrap 层)，无 transform 冲突 */
 }
@@ -187,7 +187,7 @@
 }
 
 .tab-bar-item.active .tab-bar-text {
-  color: #C9A24B; /* 缎面暖石金 · 选中信号 */
+  color: var(--accent-color); /* 缎面暖石金 · 选中信号 */
   font-weight: 600;
   letter-spacing: 0.08em; /* 编辑级字距 */
 }
@@ -309,7 +309,7 @@
 }
 
 .tab-bar-item-center.active .center-button-text {
-  color: #C9A24B; /* 选中金（与普通钮选中态一致） */
+  color: var(--accent-color); /* 选中金（与普通钮选中态一致） */
   letter-spacing: 0.12em;
 }
 

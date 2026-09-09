@@ -1,4 +1,4 @@
-<zy-navbar title="我的" showBack="{{false}}" />
+<zy-navbar title="" showBack="{{false}}" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,21 +8,15 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="page">
-  <!-- 顶部画廊区 -->
-  <view class="gallery-header">
-    <view class="brand-block">
-      <view class="brand-accent-bar"></view>
-      <view class="brand-main">
-        <text class="brand-text">AROORO</text>
-      </view>
-      <view class="brand-meta">
-        <view class="brand-meta-line"></view>
-        <text class="brand-subtitle">安心呼噜，放心托付</text>
-      </view>
-    </view>
+  <!-- B · 深绿沉浸标题版（顶天） -->
+  <view class="lux-hero zy-enter" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">MEMBER</text>
+    <text class="lux-hero-title">AROORO</text>
+    <text class="lux-hero-sub">安心呼噜，放心托付</text>
+    <view class="lux-hero-sealline"></view>
   </view>
 
   <!-- 个人信息 -->

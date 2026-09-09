@@ -1,4 +1,4 @@
-<zy-navbar title="{{t.BIZ_HYWFKI}}" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,8 +8,15 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
+<!-- B · 深绿沉浸标题版（顶天，loading 常驻） -->
+<view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+  <text class="lux-hero-eyebrow">BOOKING DOSSIER</text>
+  <text class="lux-hero-title">{{t.BIZ_HYWFKI}}</text>
+  <text class="lux-hero-sub" wx:if="{{order}}">NO. {{order.orderNo}}</text>
+  <view class="lux-hero-sealline"></view>
+</view>
 <view class="page">
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
@@ -44,18 +51,6 @@
         hover-stay-time="80"
       >
         <text>取消订单</text>
-      </view>
-    </view>
-
-    <!-- ═══ 卷宗头：金 eyebrow + 家庭名大字 + 订单号 ═══ -->
-    <view class="dossier-head">
-      <view class="brand-accent-bar"></view>
-      <text class="dossier-eyebrow">BOOKING DOSSIER</text>
-      <text class="dossier-title">{{order.hostName || '寄养家庭'}}</text>
-      <view class="dossier-no-row">
-        <text class="dossier-no-label">NO.</text>
-        <text class="dossier-no">{{order.orderNo}}</text>
-        <view class="copy-btn" bindtap="onCopyOrderNo" hover-class="copy-btn pressed" hover-stay-time="80">复制</view>
       </view>
     </view>
 
@@ -194,6 +189,13 @@
         <view class="chapter-rule"></view>
       </view>
       <view class="chapter-body meta-rows">
+        <view class="meta-row">
+          <text class="meta-key">订单编号</text>
+          <view class="meta-val-row">
+            <text class="meta-val">{{order.orderNo}}</text>
+            <view class="copy-btn" bindtap="onCopyOrderNo" hover-class="copy-btn pressed" hover-stay-time="80">复制</view>
+          </view>
+        </view>
         <view class="meta-row">
           <text class="meta-key">下单时间</text>
           <text class="meta-val">{{order.createdAt}}</text>

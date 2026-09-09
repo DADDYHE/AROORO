@@ -1,7 +1,7 @@
 /* ================================================================
    mall/product-detail.wxss · AROORO 商城商品详情 — Haute-Luxury Editorial
    混搭方案（2026-08-27 拍板）：B 深绿沉浸画廊（压图信息板）+ A 整版纸面流
-   色彩纪律：金 #C9A24B 仅做"点"（眉题线/页码/指示条/chip 选中点/页脚线，<5%）
+   色彩纪律：金（--lux-gold-500）仅做"点"（眉题线/页码/指示条/chip 选中点/页脚线，<5%）
              CTA 深绿实色无发光（--primary-color），去 --gradient-secondary / --shadow-glow-mall
    Skyline 兼容：无 :active / text-transform / backdrop-filter / sticky / line-clamp
    ================================================================ */
@@ -64,7 +64,7 @@
   font-weight: 400;
   letter-spacing: 0.12em;
   background: var(--card-cream);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   font-family: var(--font-sans);
 }
 
@@ -94,7 +94,7 @@
   height: 76rpx;
   border-radius: 50%;
   background: var(--card-cream);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   transition: transform var(--dur-fast) var(--ease-refined);
 }
 
@@ -204,7 +204,7 @@
 
 .info-divider {
   height: 1rpx;
-  background: var(--hairline);
+  background: rgba(26, 26, 23, 0.14);
   margin: 32rpx 0 28rpx;
 }
 
@@ -320,7 +320,7 @@
   padding: 20rpx var(--page-padding);
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   background: var(--card-satin);
-  border-top: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   display: flex;
   align-items: center;
   gap: 24rpx;
@@ -475,7 +475,7 @@
   padding-top: 0;
   transform: translateY(100vh);
   transition: transform var(--dur-slow) var(--ease-silk);
-  border-top: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   pointer-events: none;
 }
 
@@ -496,7 +496,7 @@
   justify-content: center;
   background: var(--card-color);
   border-radius: 50%;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   transition: transform var(--dur-fast) var(--ease-refined);
 }
 
@@ -611,7 +611,7 @@
   padding: 14rpx 32rpx;
   border-radius: var(--zy-radius-xs);
   background: var(--card-color);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   box-sizing: border-box;
   transition: transform var(--dur-fast) var(--ease-refined),
               background-color var(--dur-fast) var(--ease-refined),
@@ -652,7 +652,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 24rpx 0;
-  border-top: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .sku-quantity-section .sku-spec-label {
@@ -676,7 +676,7 @@
   font-size: 28rpx;
   color: var(--text-primary);
   font-weight: 400;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   transition: transform var(--dur-fast) var(--ease-refined),
               background-color var(--dur-fast) var(--ease-refined);
 }
@@ -704,7 +704,7 @@
   padding: 20rpx var(--page-padding);
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   flex-shrink: 0;
-  border-top: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   background: var(--card-cream);
 }
 

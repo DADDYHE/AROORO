@@ -179,7 +179,7 @@ function renderTrendChart(data) {
     xAxis: { type: 'category', data: data.map(d => d.date?.split('-').slice(1).join('/') || ''), axisLine: { lineStyle: { color: '#E0E0E0' } }, axisLabel: { color: '#666' } },
     yAxis: { type: 'value', axisLine: { show: false }, splitLine: { lineStyle: { color: '#F0F0F0' } }, axisLabel: { color: '#666' } },
     series: [
-      { name: '发放数', type: 'bar', data: data.map(d => d.granted || 0), itemStyle: { color: '#4ECDC4' }, barWidth: '40%' },
+      { name: '发放数', type: 'bar', data: data.map(d => d.granted || 0), itemStyle: { color: '#3D6B3D' }, barWidth: '40%' },
       { name: '使用数', type: 'bar', data: data.map(d => d.used || 0), itemStyle: { color: '#FF6B6B' }, barWidth: '40%' },
     ],
   })
@@ -217,7 +217,7 @@ function renderTemplateChart(data) {
       name: '发放量',
       type: 'bar',
       data: top8.map(d => d.grantCount || 0).reverse(),
-      itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{ offset: 0, color: '#83C5BE' }, { offset: 1, color: '#4ECDC4' }]), borderRadius: [0, 4, 4, 0] },
+      itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{ offset: 0, color: '#6B8A6B' }, { offset: 1, color: '#3D6B3D' }]), borderRadius: [0, 4, 4, 0] },
     }],
   })
 }

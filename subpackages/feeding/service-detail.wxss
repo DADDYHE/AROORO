@@ -9,92 +9,11 @@
 
 /* ===== 页面容器 ===== */
 .page {
-  min-height: 100vh;
   padding-bottom: calc(80rpx + env(safe-area-inset-bottom));
 }
 
-/* ===== 顶部品牌头部（B · 深绿沉浸标题版） ===== */
-.gallery-header {
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-  background: var(--lux-green-grad);
-  padding-bottom: 8rpx;
-}
-
-.brand-block {
-  padding: 220rpx var(--page-padding) 88rpx;
-  position: relative;
-}
-
-.brand-block::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 320rpx;
-  height: 320rpx;
-  background: radial-gradient(circle, rgba(201, 162, 75, 0.16) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.brand-accent-bar {
-  position: absolute;
-  top: 0;
-  left: var(--page-padding);
-  width: 48rpx;
-  height: 6rpx;
-  background: var(--lux-gold-500);
-  border-radius: 0 0 4rpx 4rpx;
-}
-
-.brand-main {
-  position: relative;
-  margin-bottom: 24rpx;
-}
-
-.brand-text {
-  font-size: 56rpx;
-  font-weight: 300;
-  color: #F7F5EF;
-  letter-spacing: 0.12em;
-  display: block;
-  line-height: 1;
-  font-family: var(--font-serif);
-}
-
-.brand-meta {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-}
-
-.brand-meta-line {
-  width: 40rpx;
-  height: 2rpx;
-  background: rgba(247, 245, 239, 0.35);
-  position: relative;
-}
-
-.brand-meta-line::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -4rpx;
-  transform: translateY(-50%);
-  width: 6rpx;
-  height: 6rpx;
-  border-radius: 50%;
-  background: var(--lux-gold-500);
-}
-
-.brand-subtitle {
-  font-size: 22rpx;
-  color: rgba(247, 245, 239, 0.72);
-  letter-spacing: 0.08em;
-  font-weight: 400;
-  font-family: var(--font-sans);
-}
+/* ---------- 顶部品牌区域 ----------
+   gallery-header/brand-* 旧深绿沉浸版已由全局 .lux-hero（styles/lux-page.wxss）替代（2026-09-09 A+B 升级）。 */
 
 /* ===== 主 Tab 栏 ===== */
 .tab-bar {
@@ -102,7 +21,7 @@
   background: transparent;
   padding: 0 var(--page-padding);
   position: relative;
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .tab-item {
@@ -168,11 +87,11 @@
 /* ===== 子 Tab（服务类型切换） ===== */
 .service-tabs {
   display: flex;
-  background: var(--card-color);
+  background: transparent;
   margin: 0 var(--page-padding) var(--zy-space-lg);
   border-radius: var(--zy-radius-sm);
   padding: 6rpx;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .service-tab {
@@ -210,7 +129,7 @@
   border-radius: 0;
   padding: var(--zy-space-lg) var(--page-padding) var(--zy-space-xl);
   margin: 0;
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
   position: relative;
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
@@ -265,7 +184,7 @@
   align-items: center;
   justify-content: center;
   background: var(--feeding-tint);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 /* 所有图标统一为鼠尾草绿单色系 */
@@ -610,7 +529,7 @@
   padding: 24rpx;
   background: var(--card-cream);
   border-radius: var(--zy-radius-sm);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .dog-size-info {
@@ -663,13 +582,13 @@
   background: var(--card-cream);
   border-radius: var(--zy-radius-sm);
   overflow: hidden;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .table-header {
   display: flex;
   background: var(--feeding-tint);
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .table-header .table-cell {
@@ -720,7 +639,7 @@
 .table-cell.price {
   font-size: 32rpx;
   font-weight: 500;
-  color: #1F3A1F;
+  color: var(--primary-color);
   font-family: var(--font-serif);
   letter-spacing: 0.02em;
 }
@@ -770,7 +689,7 @@
 .extra-price {
   font-size: 28rpx;
   font-weight: 500;
-  color: #1F3A1F;
+  color: var(--primary-color);
   white-space: nowrap;
   font-family: var(--font-serif);
   letter-spacing: 0.02em;
@@ -826,7 +745,7 @@
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  background: var(--card-color);
+  background: transparent;
   border: 2rpx solid var(--feeding-primary);
   color: var(--feeding-primary);
   font-size: 22rpx;
@@ -846,7 +765,7 @@
   background: var(--card-cream);
   border-radius: var(--zy-radius-sm);
   padding: 24rpx;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .flow-header {
@@ -911,7 +830,7 @@
 
 /* ===== 预约指引 · 画廊展陈风格 ===== */
 .highlight-orange {
-  color: #1F3A1F;
+  color: var(--primary-color);
   font-weight: 500;
   font-family: var(--font-serif);
 }
@@ -929,7 +848,7 @@
   position: relative;
   display: flex;
   align-items: flex-start;
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .gallery-entrance-rail {
@@ -1084,7 +1003,7 @@
   background: var(--card-cream);
   border-radius: var(--zy-radius-xs);
   overflow: hidden;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   margin-top: 16rpx;
 }
 
@@ -1095,7 +1014,7 @@
 
 .gallery-table-subheader {
   display: flex;
-  background: var(--card-color);
+  background: transparent;
 }
 
 .gallery-table-cell {
@@ -1199,7 +1118,7 @@
   margin-bottom: 32rpx;
   background: var(--card-cream);
   border-radius: var(--zy-radius-sm);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .gallery-hexagon {
@@ -1216,7 +1135,7 @@
 .gallery-hexagon-inner {
   width: 90rpx;
   height: 90rpx;
-  background: var(--card-color);
+  background: transparent;
   border-radius: var(--zy-radius-sm);
 }
 
@@ -1231,7 +1150,7 @@
 .gallery-guarantee-badge {
   width: calc(33.333% - 8rpx);
   background: transparent;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   border-radius: var(--zy-radius-xs);
   padding: 16rpx 8rpx;
   text-align: center;
@@ -1296,7 +1215,7 @@
   background: transparent;
   border-radius: 0;
   overflow: hidden;
-  border-bottom: 1rpx solid var(--hairline);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .faq-q {

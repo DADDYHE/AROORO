@@ -144,7 +144,7 @@
   height: 100rpx;
   top: 10rpx;
   left: 10rpx;
-  border: 2rpx solid var(--lux-gold-600, #A8894A);
+  border: 2rpx solid var(--lux-gold-600);
   border-radius: 50%;
   animation: lux-ring-spin var(--lux-dur-ring-spin, 2400ms) linear infinite;
 }
@@ -166,7 +166,7 @@
   height: 48rpx;
   top: 36rpx;
   left: 36rpx;
-  border: 2rpx solid var(--lux-gold-500, #C9A24B);
+  border: 2rpx solid var(--lux-gold-500);
   border-radius: 50%;
   animation: lux-ring-spin-inner var(--lux-dur-ring-inner, 1800ms) linear infinite;
 }
@@ -208,7 +208,7 @@
   width: 10rpx;
   height: 10rpx;
   border-radius: 50%;
-  background: var(--lux-gold-grad, linear-gradient(135deg, #C9A24B 0%, #A8894A 100%));
+  background: var(--lux-gold-grad);
   animation: lux-dot-pulse var(--lux-dur-dot-pulse, 2000ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;
 }
 
@@ -289,7 +289,7 @@
   left: 30rpx;
   width: 60rpx;
   height: 60rpx;
-  border: 1rpx solid var(--lux-gold-500, #C9A24B);
+  border: 1rpx solid var(--lux-gold-500);
   border-radius: 50%;
   box-sizing: border-box;
   animation: lux-ring-expand var(--lux-dur-breath, 2400ms) var(--lux-ease-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) infinite;

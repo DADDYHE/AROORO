@@ -1,7 +1,12 @@
-<zy-navbar title="商品列表" />
-<view class="page-container" style="height: calc(100vh - {{_navbarHeight}}px);">
+<zy-navbar title="" transparent color="#F7F5EF" />
+<view class="page-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-  <view class="page-divider"></view>
+  <!-- B · 深绿沉浸标题版（双栏购物页紧凑 hero） -->
+  <view class="lux-hero lux-hero--compact" style="padding-top: calc({{_navbarHeight}}px + 16rpx);">
+    <text class="lux-hero-eyebrow">MALL</text>
+    <text class="lux-hero-title">商品列表</text>
+    <view class="lux-hero-sealline"></view>
+  </view>
   <view class="main-body">
     <scroll-view class="category-sidebar" scroll-y="true" show-scrollbar="false">
       <block wx:for="{{categories}}" wx:key="key">

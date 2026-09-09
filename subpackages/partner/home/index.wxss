@@ -151,7 +151,7 @@
   background: var(--lux-card-bg);
   border-radius: var(--lux-radius-card);
   padding: 32rpx 28rpx;
-  border: 1rpx solid var(--lux-hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   box-shadow: var(--lux-shadow-card);
   display: flex;
   flex-direction: column;
@@ -223,7 +223,7 @@
 
 .module-icon-application {
   background: var(--lux-card-cream);
-  border: 1rpx solid var(--lux-hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .module-title {

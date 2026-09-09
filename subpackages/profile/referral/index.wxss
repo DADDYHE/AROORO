@@ -1,19 +1,16 @@
 /* 邀请/推荐 - AROORO 奢华宠物 */
 
 .page-container {
-  min-height: 100vh;
   padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
 }
 
-/* 统计卡片 */
+/* 统计卡片 — 拆白卡，纸面行线分区 */
 .stats-card {
   display: flex;
   align-items: center;
-  margin: 24rpx var(--page-padding, 48rpx);
-  padding: 40rpx 32rpx;
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+  margin: 32rpx var(--page-padding, 48rpx);
+  padding: 40rpx 0;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .stat-item {
@@ -52,13 +49,10 @@
   letter-spacing: 0.04em;
 }
 
-/* 分享卡片 */
+/* 分享卡片 — 拆白卡，纸面行线分区（内部行已自带行线） */
 .share-card {
   margin: 0 var(--page-padding, 48rpx) 24rpx;
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
   overflow: hidden;
-  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
 }
 
 .share-row-btn {
@@ -140,7 +134,7 @@
   margin: 0 var(--page-padding, 48rpx) 12rpx;
   background: var(--card-color);
   border-radius: var(--zy-radius-lg);
-  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .user-avatar {
@@ -150,7 +144,7 @@
   margin-right: 16rpx;
   flex-shrink: 0;
   background: var(--card-cream, #FBF9F4);
-  border: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .user-info {
@@ -220,7 +214,7 @@
   width: 8rpx;
   height: 8rpx;
   border-radius: 50%;
-  background: var(--accent-color, #C9A24B);
+  background: var(--accent-color);
   opacity: 0.4;
 }
 
@@ -284,7 +278,7 @@
   padding: 16rpx var(--page-padding, 48rpx);
   padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
   background: var(--card-color);
-  border-top: 1rpx solid var(--hairline, rgba(26,26,23,0.08));
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   z-index: 100;
 }
 

@@ -106,7 +106,7 @@ Component({
     // 是否圆角
     round: { type: Boolean, value: true },
     // 主题色（选中态背景）
-    color: { type: String, value: '#4F5E35' },
+    color: { type: String, value: '#1F3A1F' },
     // 是否显示今日标记（背景大字）
     showMark: { type: Boolean, value: true },
   },

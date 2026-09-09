@@ -17,15 +17,16 @@ const PaymentService = require('../../../services/PaymentService')
 const { authService } = require('../../../services/AuthService')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
-const PET_TYPE_OPTIONS = [
-  { value: 'cat', label: '猫咪' },
-  { value: 'dog', label: '狗狗' },
-  { value: 'exotic', label: '异宠' },
+// 类型 / 性别选项（与 pet/create-step1 一致：名称文案、取值映射完全相同）
+const PET_TYPES = [
+  { name: '狗狗', value: 'dog' },
+  { name: '猫咪', value: 'cat' },
+  { name: '异宠', value: 'exotic' },
 ]
-const GENDER_OPTIONS = [
-  { value: 'male', label: '公' },
-  { value: 'female', label: '母' },
-  { value: 'unknown', label: '未知' },
+const PET_GENDERS = [
+  { name: '弟弟', value: 'male' },
+  { name: '妹妹', value: 'female' },
+  { name: '不确定', value: 'unknown' },
 ]
 
 /** 生成空槽位（宠物数量个） */
@@ -35,7 +36,7 @@ function buildSlots(petCount) {
     // mode: 'empty' | 'existing' | 'new'
     mode: 'empty',
     pet: null,          // 已有档案（existing）
-    newPet: null,       // 新建宠物草稿（new）{ name,type,typeLabel,gender,genderLabel,breed,birthday,weight }
+    newPet: null,       // 新建宠物草稿（new）{ name,type,gender,breed,birthday,weight,avatarUrl,note }
     healthInfo: null,   // 当前槽位健康信息
     healthTouched: false,
   }))
@@ -84,6 +85,14 @@ Page({
     days: 0,
     isLoggedIn: false,
     slots: [],
+    // 新建宠物：类型 / 性别 action-sheet（与 create-step1 一致）
+    petTypes: PET_TYPES,
+    petGenders: PET_GENDERS,
+    showTypeSheet: false,
+    showGenderSheet: false,
+    pickerSlotIdx: -1,
+    // 日期选择上限（今天，与 create-step1 一致）
+    todayStr: '',
     // 选择已有宠物弹层
     petPickerVisible: false,
     petPickerIndex: -1,
@@ -112,6 +121,8 @@ Page({
       return
     }
     this.setData({ code, isLoggedIn: authService.isLoggedIn() })
+    const now = new Date()
+    this.setData({ todayStr: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}` })
     this._loadInvitation(code)
   },
 
@@ -249,12 +260,22 @@ Page({
 
   // ---------- 槽位：新建宠物 ----------
 
-  /** 新建宠物：跳转完整创建页建档，提交成功后返回本页并回填槽位 */
+  /**
+   * 新建宠物：就地展开建档表单（不跳转 create-step1）。
+   * 邀请开单需要"健康信息"，故在此页直接建档并填健康区，
+   * 提交时随 petService 持久化，避免切页后健康信息脱节。
+   */
   onCreateNew(e) {
     const idx = e.currentTarget.dataset.index
-    this._pendingSlotIdx = Number(idx)
-    wx.setStorageSync('_petCreateFrom', 'invitation-fill')
-    wx.navigateTo({ url: '/subpackages/pet/create-step1?from=invitation' })
+    this.setData({
+      [`slots[${idx}].mode`]: 'new',
+      [`slots[${idx}].newPet`]: {
+        name: '', type: '', gender: '', breed: '', birthday: '', weight: '', avatarUrl: '', note: '',
+      },
+      [`slots[${idx}].pet`]: null,
+      [`slots[${idx}].healthInfo`]: null,
+      [`slots[${idx}].healthTouched`]: false,
+    })
   },
 
   /** 新建槽位头像上传（复用宠物档案的上传工具，云目录区分） */
@@ -283,26 +304,51 @@ Page({
     this.setData({ [`slots[${index}].newPet.${field}`]: e.detail.value })
   },
 
-  onNewPetType(e) {
-    const idx = Number(e.detail.value) || 0
-    const opt = PET_TYPE_OPTIONS[idx]
-    if (!opt) { return }
+  onNewPetNote(e) {
     const { index } = e.currentTarget.dataset
-    this.setData({
-      [`slots[${index}].newPet.type`]: opt.value,
-      [`slots[${index}].newPet.typeLabel`]: opt.label,
-    })
+    this.setData({ [`slots[${index}].newPet.note`]: e.detail.value })
   },
 
-  onNewPetGender(e) {
-    const idx = Number(e.detail.value) || 0
-    const opt = GENDER_OPTIONS[idx]
-    if (!opt) { return }
+  // ---------- 新建宠物：类型 / 性别（action-sheet，与 create-step1 一致） ----------
+
+  selectSlotType(e) {
     const { index } = e.currentTarget.dataset
-    this.setData({
-      [`slots[${index}].newPet.gender`]: opt.value,
-      [`slots[${index}].newPet.genderLabel`]: opt.label,
-    })
+    this.setData({ pickerSlotIdx: index, showTypeSheet: true })
+  },
+
+  selectSlotGender(e) {
+    const { index } = e.currentTarget.dataset
+    this.setData({ pickerSlotIdx: index, showGenderSheet: true })
+  },
+
+  onSelectSlotType(e) {
+    const selected = this.data.petTypes.find(item => item.name === e.detail.name)
+    const idx = this.data.pickerSlotIdx
+    if (selected && idx >= 0) {
+      this.setData({
+        [`slots[${idx}].newPet.type`]: selected.value,
+        showTypeSheet: false,
+      })
+    }
+  },
+
+  onCloseTypeSheet() {
+    this.setData({ showTypeSheet: false })
+  },
+
+  onSelectSlotGender(e) {
+    const selected = this.data.petGenders.find(item => item.name === e.detail.name)
+    const idx = this.data.pickerSlotIdx
+    if (selected && idx >= 0) {
+      this.setData({
+        [`slots[${idx}].newPet.gender`]: selected.value,
+        showGenderSheet: false,
+      })
+    }
+  },
+
+  onCloseGenderSheet() {
+    this.setData({ showGenderSheet: false })
   },
 
   onNewPetBirthday(e) {
@@ -338,13 +384,76 @@ Page({
       if (s.mode === 'new') {
         const np = s.newPet || {}
         if (!np.name || !String(np.name).trim()) { return `请填写第 ${i + 1} 只宠物的昵称` }
+        if (!np.type) { return `请选择第 ${i + 1} 只宠物的类型` }
         if (!np.breed || !String(np.breed).trim()) { return `请填写第 ${i + 1} 只宠物的品种` }
+        if (!np.gender) { return `请选择第 ${i + 1} 只宠物的性别` }
       }
       if (!s.healthTouched) {
         return `请确认第 ${i + 1} 只宠物的健康信息（如无特殊情况可选择「无」填写）`
       }
     }
     return ''
+  },
+
+  // ---------- 新建宠物：立即建档落库，使档案可被"选择已有宠物"复用 ----------
+
+  async onSaveNewPet(e) {
+    const idx = e.currentTarget.dataset.index
+    const slot = this.data.slots[idx]
+    if (!slot || slot.mode !== 'new' || !slot.newPet || this.data.submitting) { return }
+    const np = slot.newPet
+    if (!np.name || !String(np.name).trim()) { wx.showToast({ title: '请填写宠物昵称', icon: 'none' }); return }
+    if (!np.type) { wx.showToast({ title: '请选择宠物类型', icon: 'none' }); return }
+    if (!np.breed || !String(np.breed).trim()) { wx.showToast({ title: '请填写品种', icon: 'none' }); return }
+    if (!np.gender) { wx.showToast({ title: '请选择性别', icon: 'none' }); return }
+
+    this.setData({ submitting: true })
+    try {
+      const createRes = await PetService.createPet({
+        name: String(np.name).trim(),
+        type: np.type,
+        gender: np.gender,
+        breed: String(np.breed).trim(),
+        birthday: np.birthday || '',
+        weight: np.weight || '',
+        avatarUrl: np.avatarUrl || '',
+        note: np.note || '',
+        healthInfo: slot.healthInfo || undefined,
+      })
+      if (createRes.code !== 0 || !createRes.data) {
+        throw new Error(createRes.message || '宠物档案创建失败')
+      }
+      const pid = createRes.data.id || (createRes.data.pet && createRes.data.pet._id)
+      const created = Object.assign({}, createRes.data.pet && typeof createRes.data.pet === 'object' ? createRes.data.pet : {})
+      created._id = pid
+      created.name = created.name || np.name
+      created.breed = created.breed || np.breed
+      created.birthday = created.birthday || np.birthday
+      created.avatarUrl = created.avatarUrl || np.avatarUrl
+
+      // 该槽位切换为"已有档案"态，展示刚创建的档案；health-form 保持在下方
+      this.setData({
+        [`slots[${idx}].mode`]: 'existing',
+        [`slots[${idx}].pet`]: created,
+        [`slots[${idx}].newPet`]: null,
+        submitting: false,
+      })
+      wx.showToast({ title: '宠物档案已创建', icon: 'success' })
+      // 刷新"选择已有宠物"列表，使新档案可被其他槽位复用
+      this._refreshMyPets()
+    } catch (err) {
+      this.setData({ submitting: false })
+      wx.showToast({ title: (err && err.message) || '创建失败，请重试', icon: 'none' })
+    }
+  },
+
+  async _refreshMyPets() {
+    try {
+      const res = await PetService.getPetList({ page: 1, pageSize: 50 })
+      if (res.code === 0 && res.data) {
+        this.setData({ myPets: res.data.list || [] })
+      }
+    } catch (e) { /* 刷新失败不阻断主流程 */ }
   },
 
   async onSubmit() {
@@ -381,7 +490,7 @@ Page({
             birthday: np.birthday || '',
             weight: np.weight || '',
             avatarUrl: np.avatarUrl || '',
-            note: '',
+            note: np.note || '',
             healthInfo: slot.healthInfo || undefined,
           })
           if (createRes.code !== 0 || !createRes.data) {

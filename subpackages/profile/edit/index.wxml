@@ -1,4 +1,4 @@
-<zy-navbar title="编辑资料" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,9 +8,15 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="page-container">
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">PROFILE</text>
+    <text class="lux-hero-title">编辑资料</text>
+    <text class="lux-hero-sub">完善你的宠物主人档案</text>
+    <view class="lux-hero-sealline"></view>
+  </view>
   <view class="page-content">
     <!-- 个人信息编辑 -->
     <view class="card">

@@ -237,7 +237,7 @@ page {
 .home-login-btn {
   display: flex; align-items: center; justify-content: center;
   width: 100%; padding: 32rpx;
-  background: linear-gradient(118deg, #1F3A1F 0%, #2D4F2D 48%, #3A5A42 100%);
+  background: linear-gradient(118deg, var(--primary-color) 0%, #2D4F2D 48%, #3A5A42 100%);
   color: var(--text-on-primary);
   font-size: 26rpx; font-weight: 500; letter-spacing: 0;
   border-radius: var(--zy-radius-lg); border: none;
@@ -717,7 +717,7 @@ page {
   align-items: center;
   gap: 8rpx;
   font-size: 20rpx;
-  color: var(--text-on-glass); /* 原硬编码 #1F3A1F 暗态仅 2.76:1，改主文字色 */
+  color: var(--text-on-glass); /* 原硬编码主绿（--primary-color）暗态仅 2.76:1，改主文字色 */
   font-weight: 500;
 }
 
@@ -892,13 +892,13 @@ page {
   justify-content: center;
   padding: 16rpx 24rpx;
   border-radius: var(--zy-radius-pill);
-  border: 1rpx solid var(--lux-gold-500, #C9A24B);
+  border: 1rpx solid var(--lux-gold-500);
 }
 
 .my-act-signed-text {
   font-size: 22rpx;
   font-weight: 600;
-  color: var(--lux-gold-500, #C9A24B);
+  color: var(--lux-gold-500);
   letter-spacing: 0.04em;
 }
 
@@ -1195,7 +1195,7 @@ page {
    设计依据：deliverables/aurora-accent/DESIGN-aurora-accent.md
    Skyline 安全：全部真实 view / 无负 z-index / 无 backdrop-filter /
                  无 mask-image / 无 text-shadow；仅 transform·opacity 动画。
-   全套渐变派生自品牌深绿四色（#0F2410/#1F3A1F/#5A7C63），零新色相。
+   全套渐变派生自品牌深绿四色（#0F2410 / --primary-color / #5A7C63），零新色相。
    极光衰减排：光源在页面顶部，越往下滚动接到的光越弱（falloff 分级）。
    ================================================================ */
 .home-container {

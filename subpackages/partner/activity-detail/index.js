@@ -5,7 +5,7 @@ const { AdminService } = require('../../../services/CloudFunctionService')
 
 const STATUS_MAP = {
   draft: { text: '待发布', color: '#9A9489' },
-  published: { text: '报名中', color: '#4F5E35' },
+  published: { text: '报名中', color: '#1F3A1F' },
   registration_stopped: { text: '报名截止', color: '#C9A24B' },
   ended: { text: '已结束', color: '#9A9489' },
   cancelled: { text: '已取消', color: '#A85B4A' },

@@ -90,7 +90,12 @@
     <view class="hf-field">
       <text class="hf-label">绝育情况</text>
       <picker mode="selector" range="{{ neuteredOptions }}" range-key="label" bindchange="onNeuteredChange" class="hf-picker">
-        <view class="hf-picker-value">{{ neuteredLabel }}</view>
+        <view class="hf-picker-inner">
+          <view class="hf-picker-value {{ neuteredLabel ? '' : 'hf-picker-value--placeholder' }}">
+            {{ neuteredLabel || '请选择' }}
+          </view>
+          <view class="hf-picker-arrow"></view>
+        </view>
       </picker>
     </view>
 

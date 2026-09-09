@@ -1,4 +1,4 @@
-<zy-navbar title="{{t.BIZ_BX46V0}}" />
+<zy-navbar title="" transparent color="#F7F5EF" />
 <scroll-view
   scroll-y
   enhanced
@@ -8,9 +8,17 @@
   bindscrolltolower="_onScrollToLower"
   bindscroll="_onScroll"
   lower-threshold="100"
-  style="height: calc(100vh - {{_navbarHeight}}px);"
+  style="height: 100vh;"
 >
 <view class="gallery-container">
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">HOST PORTFOLIO</text>
+    <text class="lux-hero-title">{{t.BIZ_BX46V0}}</text>
+    <text class="lux-hero-sub" wx:if="{{hasProfile}}">{{profile.hostName}}</text>
+    <text class="lux-hero-sub" wx:else>寄养家庭管理</text>
+    <view class="lux-hero-sealline"></view>
+  </view>
+
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
       <view class="lux-cascade">
@@ -28,21 +36,6 @@
   </view>
 
   <block wx:else>
-    <view class="gallery-header">
-      <view class="brand-block">
-        <view class="brand-accent-bar"></view>
-        <view class="brand-main">
-          <text class="brand-eyebrow">HOST PORTFOLIO</text>
-          <text class="brand-text">{{t.BIZ_BX46V0}}</text>
-        </view>
-        <view class="brand-meta">
-          <view class="brand-meta-line"></view>
-          <text class="brand-subtitle" wx:if="{{hasProfile}}">{{profile.hostName}}</text>
-          <text class="brand-subtitle" wx:else>寄养家庭管理</text>
-        </view>
-      </view>
-    </view>
-
     <view class="gallery-hall">
       <!-- 无档案：引导创建 -->
       <view wx:if="{{!hasProfile}}" class="portfolio-card">

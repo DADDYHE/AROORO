@@ -11,86 +11,13 @@ page {
 
 /* ===== 页面容器 ===== */
 .gallery-container {
-  min-height: 100vh;
   position: relative;
   overflow-x: hidden;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 
-/* ===== 顶部品牌栏 ===== */
-.gallery-header {
-  position: relative;
-  background: var(--card-color);
-  border-bottom: 1rpx solid var(--hairline);
-  overflow: hidden;
-}
-
-.brand-block {
-  padding: calc(var(--zy-space-xl) + env(safe-area-inset-top)) var(--page-padding) var(--zy-space-lg);
-  position: relative;
-  animation-name: zy-fade-in;
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
-  animation-fill-mode: forwards;
-}
-
-.brand-accent-bar {
-  position: absolute;
-  top: 0;
-  left: var(--page-padding);
-  width: 48rpx;
-  height: 6rpx;
-  background: var(--gradient-primary);
-  border-radius: 0 0 4rpx 4rpx;
-}
-
-.brand-main {
-  position: relative;
-  margin-bottom: 20rpx;
-}
-
-.brand-text {
-  font-family: var(--font-sans);
-  font-size: 48rpx;
-  font-weight: 300;
-  color: var(--text-primary);
-  letter-spacing: 0.10em;
-  display: block;
-  line-height: 1.1;
-}
-
-.brand-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--zy-space-sm2);
-}
-
-.brand-meta-line {
-  width: 40rpx;
-  height: 2rpx;
-  background: var(--border-color);
-  position: relative;
-}
-
-.brand-meta-line::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -4rpx;
-  transform: translateY(-50%);
-  width: 6rpx;
-  height: 6rpx;
-  border-radius: 50%;
-  background: var(--primary-color);
-}
-
-.brand-subtitle {
-  font-family: var(--font-sans);
-  font-size: 22rpx;
-  color: var(--text-tertiary);
-  letter-spacing: 0.12em;
-  font-weight: 400;
-}
+/* ---------- 顶部品牌栏 ----------
+   gallery-header/brand-* 系已由全局 .lux-hero（styles/lux-page.wxss）替代（2026-09-09 A+B 升级）。 */
 
 /* ===== 内容区 ===== */
 .gallery-hall {
@@ -467,72 +394,6 @@ page {
   flex-direction: column;
   align-items: center;
   gap: var(--zy-space-lg);
-}
-
-.loading-brand-mark {
-  position: relative;
-  width: 64rpx;
-  height: 64rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.brand-ring {
-  position: absolute;
-  width: 64rpx;
-  height: 64rpx;
-  border: 2rpx solid var(--primary-tint);
-  border-top-color: var(--primary-color);
-  border-radius: 50%;
-  animation-name: zy-spin;
-  animation-duration: 1400ms;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-  animation-iteration-count: infinite;
-}
-
-.brand-ring--delay {
-  width: 44rpx;
-  height: 44rpx;
-  border-color: transparent;
-  border-top-color: var(--primary-soft);
-  animation-direction: reverse;
-  animation-duration: 1800ms;
-}
-
-.brand-dot {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  background: var(--primary-color);
-}
-
-.loading-dots {
-  display: flex;
-  gap: 12rpx;
-  align-items: center;
-}
-
-.loading-dot {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  background: var(--primary-color);
-  opacity: 0.25;
-  animation-name: zy-dot-pulse;
-  animation-duration: 2400ms;
-  animation-timing-function: ease-in-out;
-  animation-fill-mode: forwards;
-  animation-iteration-count: infinite;
-}
-
-.loading-dot:nth-child(2) {
-  animation-delay: 400ms;
-}
-
-.loading-dot:nth-child(3) {
-  animation-delay: 800ms;
 }
 
 .loading-text {
