@@ -269,16 +269,16 @@
 }
 
 /* 独立金晕层：只有光在呼吸（珠宝静置托盘上，按钮体不再缩放） */
-/* 同上：圆形光晕停用，改由 SVG 顶部高光表达釉面反光 */
+/* 呼吸光晕（恢复）：裸 logo 下圆形柔光不构成"容器"，仅作选中/常亮的呼吸反馈。
+   注意 border-radius 必须显式 50%：容器已改 border-radius:0，inherit 会得到方形光晕 */
 .center-button::after {
-  display: none;
   content: '';
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  border-radius: inherit;
+  border-radius: 50%;
   box-shadow: 0 0 28rpx rgba(247, 245, 239, 0.35);
   opacity: 0.72;
   animation: halo-breath 1.6s ease-in-out infinite;
