@@ -245,27 +245,25 @@
    几何：四边外扩 4rpx（直径 88→96），2rpx 深绿环占外缘 4→6rpx，
         与炭墨镶边(0→1rpx)之间留 3rpx 净金间隙，外环总直径 100。
    Skyline 铁律：环用 box-shadow spread 通道画，不用 border；四边显式写，不用 inset 简写。 */
-/* 马蹄形下停用圆形外环：::before 是圆环，会与马蹄轮廓冲突（保留规则仅防引用失效） */
+/* 选中淡奶油圆盘：与其余 tab 的 .tab-bar-icon-wrap::after 同款同动画（gem-in 弹入），
+   让中间按钮的选中反馈回到同一套语言（此前是 scale(1.06) 放大，方向与其它 tab 相反） */
 .center-button::before {
-  display: none;
   content: '';
   position: absolute;
-  top: -4rpx;
-  right: -4rpx;
-  bottom: -4rpx;
-  left: -4rpx;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: 50%;
-  background: none;
-  box-shadow: 0 0 0 2rpx rgba(255, 255, 255, 0.9); /* 深绿底上深绿环不可见 → 改白环作选中信号（金钮上白环醒目） */
+  background: rgba(247, 245, 239, 0.16);
+  z-index: 0;
   opacity: 0;
+  transform: scale(0.8);
   pointer-events: none;
-  transition: opacity 150ms cubic-bezier(0.19, 1, 0.22, 1); /* 仅淡入，不缩放不呼吸（呼吸交给 ::after 金晕） */
 }
 
-.tab-bar-item-center.active /* 马蹄形下停用圆形外环：::before 是圆环，会与马蹄轮廓冲突（保留规则仅防引用失效） */
-.center-button::before {
-  display: none;
-  opacity: 1;
+.tab-bar-item-center.active .center-button::before {
+  animation: gem-in 150ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* 独立金晕层：只有光在呼吸（珠宝静置托盘上，按钮体不再缩放） */
@@ -310,7 +308,7 @@
 
 
 .tab-bar-item-center.active .center-button-icon {
-  transform: translateY(-2rpx) scale(1.06);
+  transform: translateY(3rpx) scale(0.82); /* 选中落入淡奶油圆盘（与其余 tab 的 scale(0.78) 同方向）；3rpx 为 ∩ 开口朝下的光学补偿 */
 }
 
 
@@ -344,4 +342,9 @@
   left: 5rpx;
   border-radius: 50%;
   border: 0.5rpx solid rgba(31, 58, 31, 0.18);
+}
+
+/* 选中晕：中间按钮与其余 tab 的 .tab-bar-icon-wrap 选中晕同款 */
+.tab-bar-item-center.active .center-button {
+  box-shadow: 0 0 16rpx rgba(247, 245, 239, 0.42);
 }
