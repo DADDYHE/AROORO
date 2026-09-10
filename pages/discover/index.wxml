@@ -79,7 +79,7 @@
   <!-- 优惠券弹窗（root-portal：Skyline 下保证 fixed 相对 viewport） -->
   <root-portal wx:if="{{popupCoupon}}">
     <view class="coupon-popup-mask" bindtap="onClosePopupCoupon">
-      <view class="coupon-popup" catchtap="">
+      <view class="coupon-popup" catchtap="stopBubble">
         <view class="popup-close" bindtap="onClosePopupCoupon" hover-class="popup-close--pressed" hover-stay-time="120"><image class="popup-close-icon" src="/images/icons/close-luxury-line.svg" mode="aspectFit" /></view>
         <view class="popup-header">
           <text class="popup-title">专属优惠</text>

@@ -137,7 +137,7 @@
   <!-- 编辑器弹层 -->
   <root-portal>
   <view wx:if="{{editorVisible}}" class="modal-mask" bindtap="onCloseEditor">
-    <view class="modal" catchtap="">
+    <view class="modal" catchtap="stopBubble">
       <view class="modal-title">{{editorMode === 'create' ? '新建 i18n 覆盖' : '编辑 i18n 覆盖'}}</view>
 
       <view class="form-row">
@@ -219,7 +219,7 @@
   <!-- 预览弹层 -->
   <root-portal>
   <view wx:if="{{previewVisible}}" class="modal-mask" bindtap="onClosePreview">
-    <view class="modal" catchtap="">
+    <view class="modal" catchtap="stopBubble">
       <view class="modal-title">{{previewData.key}}</view>
       <view wx:for="{{supportedLocales}}" wx:key="*this" wx:for-item="loc" class="preview-row">
         <view class="preview-locale">{{loc}}</view>
@@ -239,7 +239,7 @@
   <!-- Sprint 53: 缺失翻译弹层 -->
   <root-portal>
   <view wx:if="{{missingPanelVisible}}" class="modal-mask" bindtap="onCloseMissing">
-    <view class="modal modal-large" catchtap="">
+    <view class="modal modal-large" catchtap="stopBubble">
       <view class="modal-title">缺失翻译概览</view>
       <view class="missing-summary">
         <text>总 key: {{missingStats.totalKeys}}</text>

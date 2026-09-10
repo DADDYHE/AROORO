@@ -76,7 +76,8 @@ function chooseSlotAvatar({ onSuccess, onError }) {
 }
 
 Page({
-  behaviors: [ListBehavior, authGateBehavior],
+
+  stopBubble() {}, /* glass-easel 下 catchtap 需绑真实方法才阻断冒泡 */  behaviors: [ListBehavior, authGateBehavior],
 
   data: {
     isLoading: true,

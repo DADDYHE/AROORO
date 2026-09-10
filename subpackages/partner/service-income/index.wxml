@@ -218,7 +218,7 @@
 </view>
 <root-portal>
   <view wx:if="{{showWithdrawModal}}" class="modal-mask" bindtap="onWithdrawCancel">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="stopBubble">
       <view class="modal-title">申请提现</view>
       <view class="modal-balance">可提现余额：¥{{withdrawBalanceText}}</view>
       <view class="modal-payout">
@@ -261,7 +261,7 @@
 <!-- 收款账号管理（v5.1） -->
 <root-portal>
   <view wx:if="{{payeeModalVisible}}" class="modal-mask" bindtap="closePayeeManage">
-    <view class="modal-content payee-modal" catchtap="">
+    <view class="modal-content payee-modal" catchtap="stopBubble">
       <view class="modal-title">收款账号</view>
       <view class="payee-section">
         <text class="payee-label">微信（微信号/手机号）</text>

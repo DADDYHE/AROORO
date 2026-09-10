@@ -12,7 +12,8 @@ const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
-  ...pageI18n.mixin(),
+
+  stopBubble() {}, /* glass-easel 下 catchtap 需绑真实方法才阻断冒泡 */  ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, tabBarSyncBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),

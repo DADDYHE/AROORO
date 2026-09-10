@@ -278,7 +278,7 @@
 
     <!-- 选择已有宠物弹层 -->
     <view wx:if="{{ petPickerVisible }}" class="fill-picker-mask" bindtap="onPetPickerClose">
-      <view class="fill-picker-panel" catchtap="">
+      <view class="fill-picker-panel" catchtap="stopBubble">
         <text class="fill-picker-title">选择宠物</text>
         <view wx:if="{{ myPetsLoading }}" class="fill-picker-loading">
           <text class="fill-loading-text">加载中…</text>

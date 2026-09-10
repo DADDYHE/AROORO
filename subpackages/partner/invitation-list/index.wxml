@@ -120,7 +120,7 @@
 
     <!-- 海报弹层 -->
     <view wx:if="{{ posterVisible }}" class="inv-poster-mask" bindtap="onPosterClose">
-      <view class="inv-poster-panel" catchtap="">
+      <view class="inv-poster-panel" catchtap="stopBubble">
         <text class="inv-poster-title">开单邀请海报</text>
         <view class="inv-poster-canvas-wrap">
           <canvas type="2d" id="posterCanvas" class="inv-poster-canvas"></canvas>

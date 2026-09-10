@@ -111,7 +111,7 @@
 <!-- 筛选弹窗 -->
 <root-portal>
 <view class="modal-overlay {{showFilterModal ? 'visible' : ''}}" bindtap="closeFilterModal">
-  <view class="modal-content {{showFilterModal ? 'visible' : ''}}" catchtap="">
+  <view class="modal-content {{showFilterModal ? 'visible' : ''}}" catchtap="stopBubble">
     <view class="modal-header">
       <view class="modal-head-left">
         <text class="modal-eyebrow">FILTER</text>

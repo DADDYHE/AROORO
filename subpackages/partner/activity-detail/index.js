@@ -26,7 +26,8 @@ const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 const authGateBehavior = require('../../../behaviors/authGateBehavior')
 Page({
-  ...pageI18n.mixin(),
+
+  stopBubble() {}, /* glass-easel 下 catchtap 需绑真实方法才阻断冒泡 */  ...pageI18n.mixin(),
   behaviors: [ListBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),

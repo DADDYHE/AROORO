@@ -15,7 +15,8 @@ const pageI18n = require('../../utils/page-i18n.js')
 const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 
 Page({
-  ...pageI18n.mixin(),
+
+  stopBubble() {}, /* glass-easel 下 catchtap 需绑真实方法才阻断冒泡 */  ...pageI18n.mixin(),
   behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, authGateBehavior],
   data: {
     isLoggedIn: false,

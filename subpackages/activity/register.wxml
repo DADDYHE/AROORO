@@ -118,7 +118,7 @@
     <!-- 宠物档案选择弹窗 -->
     <root-portal>
     <view class="pet-picker-mask" wx:if="{{showPetPicker}}" bindtap="onHidePetPicker">
-      <view class="pet-picker-panel" catchtap="">
+      <view class="pet-picker-panel" catchtap="stopBubble">
         <view class="pet-picker-header">
           <text class="pet-picker-title">选择宠物档案</text>
           <text class="pet-picker-close" bindtap="onHidePetPicker">×</text>

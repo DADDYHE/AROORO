@@ -15,7 +15,8 @@ const { requireLogin } = require('../../utils/require-login')
 
 const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
-  ...pageI18n.mixin(),
+
+  stopBubble() {}, /* glass-easel 下 catchtap 需绑真实方法才阻断冒泡 */  ...pageI18n.mixin(),
   behaviors: [ListBehavior, cloudImageBehavior, couponSelectorBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),

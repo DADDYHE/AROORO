@@ -241,7 +241,7 @@
   <!-- 入驻弹窗（root-portal：Skyline 下保证 fixed 相对 viewport） -->
   <root-portal wx:if="{{showHostModal}}">
     <view class="modal-mask" bindtap="onCloseHostModal">
-      <view class="modal-content" catchtap="">
+      <view class="modal-content" catchtap="stopBubble">
         <view class="modal-header">
           <text class="modal-title">入驻平台请联系客服</text>
         </view>

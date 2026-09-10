@@ -18,7 +18,8 @@ const ACCENT_COLORS = {
 }
 
 Page({
-  ...pageI18n.mixin(),
+
+  stopBubble() {}, /* glass-easel 下 catchtap 需绑真实方法才阻断冒泡 */  ...pageI18n.mixin(),
   behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, authGateBehavior],
 
   data: {

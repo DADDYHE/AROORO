@@ -191,7 +191,7 @@
 
 <root-portal>
   <view class="picker-mask" wx:if="{{showCategoryPicker}}" bindtap="onCloseCategoryPicker">
-    <view class="picker-sheet" catchtap="">
+    <view class="picker-sheet" catchtap="stopBubble">
       <view class="picker-sheet-header">
         <text class="picker-sheet-title">选择分类</text>
       </view>

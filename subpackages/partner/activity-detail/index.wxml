@@ -150,7 +150,7 @@
 
   <root-portal>
   <view class="reg-list-mask" wx:if="{{showRegList}}" bindtap="onCloseRegList">
-    <view class="reg-list-sheet" catchtap="">
+    <view class="reg-list-sheet" catchtap="stopBubble">
       <view class="reg-list-header">
         <text class="reg-list-title">报名名单（{{regSummary.totalGroups}}组）</text>
         <view class="reg-list-close" bindtap="onCloseRegList">
@@ -185,7 +185,7 @@
 
   <root-portal>
   <view class="export-mask" wx:if="{{showExportSheet}}" bindtap="onCloseExportSheet">
-    <view class="export-sheet" catchtap="">
+    <view class="export-sheet" catchtap="stopBubble">
       <view class="export-sheet-header">
         <text class="export-sheet-title">导出报名表</text>
         <view class="export-sheet-close" bindtap="onCloseExportSheet">
