@@ -40,10 +40,15 @@
   background: rgba(26, 26, 23, 0.14);
 }
 
-/* 卡片样式 — 拆白卡，form-item 行线直接在纸面上 */
+/* 卡片样式 — 覆写 app.wxss 全局 .card（白底/圆角/hairline 边）：
+   本页为纸面流，容器透明、无圆角无边，行线直接印在纸面上 */
 .card {
   padding: 0;
   margin-bottom: 24rpx;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
 }
 
 /* 表单项样式 */
