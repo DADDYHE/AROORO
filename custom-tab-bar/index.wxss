@@ -267,8 +267,8 @@
 }
 
 /* 独立金晕层：只有光在呼吸（珠宝静置托盘上，按钮体不再缩放） */
-/* 呼吸光晕（恢复）：裸 logo 下圆形柔光不构成"容器"，仅作选中/常亮的呼吸反馈。
-   注意 border-radius 必须显式 50%：容器已改 border-radius:0，inherit 会得到方形光晕 */
+/* 呼吸光晕：仅选中态显示（未选中时常亮晕会被读成"圆形外圈"）。
+   border-radius 必须显式 50%：容器 border-radius:0，inherit 会得到方形光晕 */
 .center-button::after {
   content: '';
   position: absolute;
@@ -278,9 +278,13 @@
   left: 0;
   border-radius: 50%;
   box-shadow: 0 0 28rpx rgba(247, 245, 239, 0.35);
-  opacity: 0.72;
-  animation: halo-breath 1.6s ease-in-out infinite;
+  opacity: 0;
   pointer-events: none;
+  transition: opacity 320ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.tab-bar-item-center.active .center-button::after {
+  animation: halo-breath 1.6s ease-in-out infinite;
 }
 
 @keyframes halo-breath {
