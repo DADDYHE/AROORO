@@ -98,6 +98,14 @@
   position: relative;
 }
 
+/* 圆内品牌 logo：深绿墨版马蹄标，浅绿圆底上对比 ≈ 8:1 */
+.icon-circle-logo {
+  width: 64rpx;
+  height: 64rpx;
+  position: relative;
+  z-index: 1;
+}
+
 /* 克制的光晕（纯色极淡圈，非大发光） */
 .icon-gradient {
   width: 140rpx;

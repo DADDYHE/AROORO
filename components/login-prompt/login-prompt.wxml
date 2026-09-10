@@ -6,6 +6,7 @@
         <view class="card-icon login-reveal">
           <view class="icon-circle">
             <view class="icon-gradient"></view>
+            <image class="icon-circle-logo" src="/images/icons/chongtuantuan-logo-ink.svg" mode="aspectFit" aria-label="宠团团" />
           </view>
         </view>
         <view class="card-text login-reveal">
