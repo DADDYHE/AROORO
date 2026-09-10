@@ -1,6 +1,6 @@
 <root-portal wx:if="{{visible}}">
   <view class="login-overlay" bindtap="onClose">
-    <view class="login-card" catchtap="">
+    <view class="login-card" catchtap="stopBubble">
       <view class="card-banner"></view>
       <view class="card-icon login-reveal">
         <view class="icon-circle">

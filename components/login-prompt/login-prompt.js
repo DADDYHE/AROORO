@@ -29,6 +29,10 @@ Component({
       authService.startLogin()
     },
 
+    /** 阻断卡内点击冒泡到 overlay（overlay bindtap=onClose 会关弹层）：
+        catchtap="" 空串在 glass-easel/Skyline 下不阻止冒泡，必须绑真实方法 */
+    stopBubble() {},
+
     onClose() {
       // 立即通知父组件移除（无退场动画）：Skyline 下 root-portal 内的
       // 退场动画与节点销毁存在渲染竞争，表现为消失时闪烁 —— 两次时序修复无效，
