@@ -110,7 +110,15 @@ const authGateBehavior = Behavior({
       if (authService.isLoggedIn()) { return }
       const route = this.route || ''
       if (this._isAuthOpenPage(route)) { return }
+      // 导航锁：startLogin 的登录页跳转进行中时，绝不发起第二个导航（返回/switchTab），
+      // 否则两个导航竞争会把用户甩到首页（分享冷启动 + 分包未预热时必现）
+      const app2 = getApp()
+      if (app2 && app2.globalData && app2.globalData.__navLock) {
+        console.warn('[authGate] 关闭返回被导航锁拦截（登录页跳转进行中）:', route)
+        return
+      }
       const pages = getCurrentPages()
+      console.warn('[authGate] 关闭触发返回:', route, '| 栈深:', pages.length)
       if (pages.length > 1) {
         wx.navigateBack()
       } else {

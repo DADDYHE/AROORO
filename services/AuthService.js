@@ -350,8 +350,21 @@ class AuthService {
       }
     }
 
+    // 导航锁：登录页跳转期间独占导航。authGate 关闭逻辑（受限页返回/栈底
+    // switchTab 首页）若与此竞争，会吞掉本次跳转并把用户甩到首页（分享冷启动
+    // + 分包未预热时必现）。complete 释放，2.5s 兜底超时防泄漏。
+    const app2 = getApp()
+    if (app2 && app2.globalData) {
+      app2.globalData.__navLock = true
+      setTimeout(() => { if (app2.globalData) app2.globalData.__navLock = false }, 2500)
+      console.warn('[AuthService] startLogin: navigateTo login (navLock on)')
+    }
     wx.navigateTo({
       url: '/subpackages/profile/login/index',
+      complete: () => {
+        const a = getApp()
+        if (a && a.globalData) a.globalData.__navLock = false
+      },
     })
   }
 
