@@ -17,6 +17,7 @@
   --primary-tint: #E8ECE2;
   --accent-wash: #F8F3E6;
   --shadow-md: 0 2rpx 12rpx rgba(26, 26, 23, 0.04);
+  --accent-line: rgba(201, 162, 75, 0.65); /* 品牌金细线（信函分隔）—— 定义行合法 */
   --text-on-primary: #F7F5EF;
   --text-primary: #1A1A17;
   --text-secondary: #5A564C;
@@ -156,7 +157,7 @@
 .divider-line {
   flex: 1;
   height: 1rpx;
-  background: rgba(26, 26, 23, 0.14);
+  background: var(--accent-line);
 }
 
 .divider-diamond {
