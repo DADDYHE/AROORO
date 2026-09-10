@@ -45,7 +45,6 @@
             range-key="text"
             value="{{ genderIndex }}"
             bindchange="onGenderChange"
-            bindcancel="hideGenderPicker"
           >
             <view class="picker-trigger">
               <text class="picker-value">{{ userInfo.gender === 'male' ? '男' : userInfo.gender === 'female' ? '女' : userInfo.gender === 'secret' ? '保密' : '未设置' }}</text>
@@ -80,7 +79,6 @@
             start="1900-01-01"
             end="2026-12-31"
             bindchange="onBirthdayChange"
-            bindcancel="hideBirthdayPicker"
           >
             <view class="picker-trigger">
               <text class="picker-value">{{ userInfo.birthday || '未设置' }}</text>

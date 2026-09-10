@@ -86,8 +86,6 @@
             loop="{{true}}"
             autoplay="{{currentVideoIndex === index}}"
             bindplay="onVideoPlay"
-            bindpause="onVideoPause"
-            bindended="onVideoEnded"
             bindtimeupdate="onVideoTimeUpdate"
             data-index="{{index}}"
           ></video>

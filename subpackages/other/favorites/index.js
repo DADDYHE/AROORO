@@ -360,4 +360,6 @@ Page({
       wx.stopPullDownRefresh()
     })
   },
+  /** 阻止触摸滚动穿透（catchtouchmove 需绑定真实方法才生效） */
+  noopTouchMove() {},
 })

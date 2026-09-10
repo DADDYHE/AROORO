@@ -90,7 +90,7 @@
               </view>
             </view>
             <view class="host-actions" wx:if="{{host.isAcceptingOrders !== false}}">
-              <view class="book-button" hover-class="book-button--pressed" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="true">
+              <view class="book-button" hover-class="book-button--pressed" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="noopTouchMove">
                 预约
               </view>
             </view>
@@ -139,7 +139,7 @@
               </view>
             </view>
             <view class="host-actions" wx:if="{{host.isAcceptingOrders !== false}}">
-              <view class="book-button" hover-class="book-button--pressed" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="true">
+              <view class="book-button" hover-class="book-button--pressed" catchtap="bookHost" data-id="{{host.id}}" data-is-book-button="true" catchtouchmove="noopTouchMove">
                 预约
               </view>
             </view>
@@ -157,7 +157,7 @@
     <!-- 显示全部寄养家庭按钮 -->
     <view wx:if="{{!isLoading && favoriteFamilies.length > 0 && !showAllHosts}}" class="show-all-container">
       <view class="show-all-button" hover-class="show-all-button--pressed" bindtap="showAllHosts">
-        <span class="button-text">查看全部寄养家庭</span>
+        <text class="button-text">查看全部寄养家庭</text>
         <image class="button-arrow" src="/images/icons/chevron-right-luxury-line.svg" mode="aspectFit"></image>
       </view>
     </view>

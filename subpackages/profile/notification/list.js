@@ -1,5 +1,5 @@
 const { NotificationService } = require('../services/NotificationService')
-const { ListBehavior } = require('../../behaviors/listBehavior')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 const pageI18n = require('../../../utils/page-i18n.js')
 

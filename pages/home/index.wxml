@@ -1,7 +1,7 @@
 <zy-navbar title="AROORO" showBack="{{false}}" bg="{{gemNavbarBg}}" color="#FFFFFF" />
 
 <!-- ===== Section 1: 顶部栏 ===== -->
-<header class="topbar topbar-stagger" wx:if="{{isLoggedIn}}" style="{{gemTopbarStyle}}">
+<view class="topbar topbar-stagger" wx:if="{{isLoggedIn}}" style="{{gemTopbarStyle}}">
   <view class="topbar-left" catchtap="handleLogin" hover-class="topbar-left--pressed" hover-stay-time="120">
     <image wx:if="{{isLoggedIn && userInfo.avatarUrl}}" class="topbar-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill" hover-class="topbar-avatar--pressed" hover-stay-time="120" lazy-load />
     <view wx:else class="topbar-avatar topbar-avatar-ph" hover-class="topbar-avatar--pressed" hover-stay-time="120">
@@ -16,7 +16,7 @@
     <view class="topbar-search-icon"></view>
     <text class="topbar-search-text">搜索</text>
   </view>
-</header>
+</view>
 
 <!-- ===== 内容滚动区（banner 已移入此滚动容器，与内容一起上滑） ===== -->
 <scroll-view

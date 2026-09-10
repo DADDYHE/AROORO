@@ -2,7 +2,7 @@ const __i18n = require('../../../utils/i18n.js')
 const __pageI18n = require('../../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const CloudFunctionService = require('../../../services/CloudFunctionService')
-const { ListBehavior } = require('../../behaviors/listBehavior')
+const { ListBehavior } = require('../../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
 const { buildSharePath } = require('../../../utils/share')
 
