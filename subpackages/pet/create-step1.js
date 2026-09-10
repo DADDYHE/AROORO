@@ -1,4 +1,5 @@
 const __i18n = require('../../utils/i18n.js')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { authService } = require('../../services/AuthService')
 const { petService } = require('./index')
@@ -160,7 +161,6 @@ Page({
 
         try {
           const { petStore } = require('./store/petStore')
-const authGateBehavior = require('../../behaviors/authGateBehavior')
           await petStore.fetchPetList(true)
         } catch (e) {
           console.warn('[APP] 刷新宠物列表缓存失败:', e)

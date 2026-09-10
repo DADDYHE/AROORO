@@ -7,6 +7,7 @@
 // ================================================================
 
 const { OrderService } = require('../../../services/CloudFunctionService')
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 const PET_TYPE_TEXT = {
@@ -98,7 +99,6 @@ Page({
   async _loadProfile() {
     try {
       const { HostService } = require('../../../services/CloudFunctionService')
-const authGateBehavior = require('../../../behaviors/authGateBehavior')
       const res = await HostService.getMyProfile()
       if (res.code === 0 && res.data) {
         this.setData({

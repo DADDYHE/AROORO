@@ -1,4 +1,5 @@
 const __i18n = require('../../utils/i18n.js')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { requireLogin } = require('../../utils/require-login')
 const __pageI18n = require('../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
@@ -253,7 +254,6 @@ Page({
   onMakeCall() {
     this.setData({ showHostModal: false })
     const appConfig = require('../../config')
-const authGateBehavior = require('../../behaviors/authGateBehavior')
     const phone = appConfig.customerServicePhone
     if (phone) {
       wx.makePhoneCall({ phoneNumber: phone })

@@ -1,4 +1,5 @@
 const __i18n = require('../../utils/i18n.js')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const __pageI18n = require('../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const PetCardGenerator = require('./utils/generatePetCard')
@@ -271,7 +272,6 @@ Page({
       })
 
       const { BookingData } = require('../../utils/BookingDataService')
-const authGateBehavior = require('../../behaviors/authGateBehavior')
       BookingData.set('selectedPets', selectedPets)
       app.globalData.showSelectSuccess = true
 
