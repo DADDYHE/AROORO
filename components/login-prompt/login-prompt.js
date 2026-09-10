@@ -19,9 +19,12 @@ Component({
 
   methods: {
     onLogin() {
-      /* close 带 reason='login'：父级（authGate）只关弹层、不做返回/跳首页，
-         由 startLogin 的登录页跳转接管（startLogin 已记录 loginReturnTo 供登录后回跳） */
-      this.triggerEvent('close', { reason: 'login' })
+      /* 刻意【不】触发 close：close 会同步进入 authGate 的关闭逻辑（未登录 →
+         受限页 navigateBack / 栈底 switchTab 首页），与 startLogin 的登录页跳转
+         形成导航竞争（分享进入+分包未预热时必现吞跳转）。
+         正确时序：只 startLogin —— 登录页覆盖本页（弹层随页面不可见）；
+         登录成功 navigateBack 回来时 authGate 检测已登录自动收起弹层；
+         用户未登录直接返回则弹层保留，可重试。 */
       const { authService } = require('../../services/AuthService')
       authService.startLogin()
     },
