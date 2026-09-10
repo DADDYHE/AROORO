@@ -297,8 +297,8 @@
 }
 
 .center-button-icon {
-  width: 72rpx;
-  height: 72rpx;
+  width: 84rpx;
+  height: 84rpx;
   align-self: center; /* 单子元素：与 100rpx 热区同心（裸字标，无任何环/底） */
   position: relative;
   z-index: 2;
