@@ -97,10 +97,16 @@ const authGateBehavior = Behavior({
     },
 
     /** 关闭弹层：开放页停留；受限页未登录 → 自动返回（栈底切回首页 tab） */
-    onLoginPromptClose() {
+    onLoginPromptClose(e) {
+      const reason = e && e.detail && e.detail.reason
       const { authService } = require('../services/AuthService')
       this.setData({ showLoginPrompt: false })
       this._authGateShown = false
+      /* 用户点「立即登录」：只关弹层、绝不返回/跳首页 —— 登录页跳转由
+         startLogin 接管（其内部已记录 loginReturnTo，登录成功后回跳本页）。
+         此前的竞态：close 先于 startLogin 同步执行 → 此处未登录 → 栈底单页
+         被 switchTab 回首页，吞掉了随后的登录页跳转 */
+      if (reason === 'login') { return }
       if (authService.isLoggedIn()) { return }
       const route = this.route || ''
       if (this._isAuthOpenPage(route)) { return }

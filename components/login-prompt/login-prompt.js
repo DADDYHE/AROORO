@@ -19,7 +19,9 @@ Component({
 
   methods: {
     onLogin() {
-      this.triggerEvent('close')
+      /* close 带 reason='login'：父级（authGate）只关弹层、不做返回/跳首页，
+         由 startLogin 的登录页跳转接管（startLogin 已记录 loginReturnTo 供登录后回跳） */
+      this.triggerEvent('close', { reason: 'login' })
       const { authService } = require('../../services/AuthService')
       authService.startLogin()
     },
