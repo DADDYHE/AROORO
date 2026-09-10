@@ -833,3 +833,23 @@ button.portfolio-btn::after { border: none; }
   color: var(--text-tertiary);
   padding: 4rpx 0 12rpx;
 }
+
+/* ================================================================
+   旧语言收敛（2026-09-10）：去左侧 accent 色条 + 节头金墨化
+   （保留白卡：卡片量少，白卡可接受；accent 色条为旧版语言已全站淘汰）
+   ================================================================ */
+.card-accent {
+  display: none;
+}
+
+.gallery-entrance .entrance-line {
+  height: 2rpx;
+  background: var(--lux-gold-ink);
+}
+
+.gallery-entrance .entrance-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.2em;
+  font-weight: 400;
+}
