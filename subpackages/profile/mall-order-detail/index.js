@@ -23,9 +23,10 @@ const STATUS_DESC_MAP = {
 const pageI18n = require('../../../utils/page-i18n.js')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: true,

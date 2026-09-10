@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "我的开单",
-  "usingComponents": {},
-  "renderer": "webview"
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "renderer": "webview",
+  "navigationBarTextStyle": "white"
 }

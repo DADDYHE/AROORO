@@ -4,7 +4,7 @@ const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { petStore, petService } = require('./index.js')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const { buildSharePath } = require('../../utils/share')
 
@@ -13,7 +13,7 @@ const { requireLogin } = require('../../utils/require-login')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     petProfiles: [],

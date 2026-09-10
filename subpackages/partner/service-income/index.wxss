@@ -58,9 +58,10 @@
   background: var(--lux-gold-line-solid);
 }
 
+/* ---------- 展品标签/数字：深绿底金字（--lux-gold-500 6.75:1） ---------- */
 .exhibit-label {
   font-size: 20rpx;
-  color: var(--text-on-dark-50);
+  color: rgba(247, 245, 239, 0.72);
   letter-spacing: 0.24em;
   margin-bottom: 20rpx;
   font-weight: 400;
@@ -110,7 +111,7 @@
 
 .meta-label {
   font-size: 20rpx;
-  color: var(--text-on-dark-50);
+  color: rgba(247, 245, 239, 0.72);
   letter-spacing: 0.18em;
   font-weight: 400;
 }
@@ -118,7 +119,7 @@
 .meta-value {
   font-size: 28rpx;
   font-weight: 300;
-  color: var(--accent-color);
+  color: var(--lux-gold-500);
   font-feature-settings: 'tnum';
 }
 
@@ -129,50 +130,28 @@
 }
 
 /* ============================================
-   分类展区 — 三种收入类型卡片
+   分类展区 — 台账行线列表（去白卡/色条/阴影）
    ============================================ */
 .category-gallery {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
-  margin-bottom: 32rpx;
+  margin-bottom: 8rpx;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .category-frame {
-  background: var(--lux-card-bg);
-  border-radius: var(--lux-radius-card);
-  padding: 28rpx 32rpx;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-  box-shadow: var(--lux-shadow-card);
+  padding: 30rpx 4rpx;
   position: relative;
-  overflow: hidden;
 }
 
-.frame-accent {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3rpx;
-}
-
-.activity-frame .frame-accent {
-  background: var(--gradient-primary);
-}
-
-.boarding-frame .frame-accent {
-  background: linear-gradient(135deg, var(--boarding-primary, #8B6350), var(--boarding-secondary, #A68370));
-}
-
-.feeding-frame .frame-accent {
-  background: linear-gradient(135deg, var(--feeding-primary, #4A6B4A), var(--feeding-secondary, #6B8A6B));
+.category-frame + .category-frame {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .frame-content {
   display: flex;
   align-items: center;
   gap: 24rpx;
-  padding-left: 8rpx;
 }
 
 .frame-icon {
@@ -223,15 +202,15 @@
 }
 
 .frame-title {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: var(--text-secondary);
   letter-spacing: 0.08em;
   font-weight: 400;
 }
 
 .frame-amount {
-  font-size: 36rpx;
-  font-weight: 300;
+  font-size: 34rpx;
+  font-weight: 400;
   color: var(--text-primary);
   font-feature-settings: 'tnum';
   letter-spacing: 0.01em;
@@ -248,14 +227,10 @@
 }
 
 /* ============================================
-   明细展区 — 收入记录时间线
+   明细展区 — 拆卡纸面分节 + 时间线
    ============================================ */
 .timeline-exhibit {
-  background: var(--lux-card-bg);
-  border-radius: var(--lux-radius-card);
-  padding: 32rpx;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-  box-shadow: var(--lux-shadow-card);
+  padding: 40rpx 4rpx 0;
 }
 
 .exhibit-header {
@@ -263,38 +238,48 @@
 }
 
 .exhibit-title {
-  font-size: 26rpx;
+  font-size: 30rpx;
   font-weight: 500;
   color: var(--text-primary);
   letter-spacing: 0.10em;
 }
 
-/* ---------- 筛选导航 ---------- */
+/* ---------- 筛选导航（文字 tab + 金墨短线） ---------- */
 .filter-nav {
   display: flex;
-  gap: 12rpx;
-  margin-bottom: 24rpx;
-  padding-bottom: 20rpx;
+  gap: 40rpx;
+  margin-bottom: 8rpx;
+  padding-bottom: 0;
   border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .nav-pill {
-  padding: 10rpx 28rpx;
-  border-radius: var(--lux-radius-pill);
-  font-size: 22rpx;
-  color: var(--text-secondary);
-  background: var(--lux-card-cream);
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-  letter-spacing: 0.04em;
+  position: relative;
+  padding: 8rpx 0 20rpx;
+  font-size: 25rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
   font-weight: 400;
 }
 
 .nav-pill.active {
-  background: var(--gradient-primary);
-  color: var(--text-on-primary);
+  color: var(--text-primary);
   font-weight: 500;
-  border-color: transparent;
-  box-shadow: var(--lux-shadow-green);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.nav-pill.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1rpx;
+  left: 50%;
+  margin-left: -18rpx;
+  width: 36rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: var(--lux-gold-ink);
 }
 
 /* ---------- 时间线列表 ---------- */
@@ -426,8 +411,8 @@
 
 .content-amount {
   font-size: 28rpx;
-  font-weight: 300;
-  color: var(--success-color);
+  font-weight: 500;
+  color: var(--lux-gold-ink, #7A5F2A);
   font-feature-settings: 'tnum';
   letter-spacing: 0.01em;
   flex-shrink: 0;
@@ -453,8 +438,8 @@
   font-size: 18rpx;
   color: var(--text-secondary);
   padding: 4rpx 14rpx;
-  background: var(--lux-card-cream);
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  background: transparent;
+  border: 1rpx solid rgba(26, 26, 23, 0.28);
   border-radius: var(--zy-radius-sm);
   letter-spacing: 0.04em;
   font-weight: 400;
@@ -483,14 +468,12 @@
   opacity: 0.5;
 }
 
-/* ==================== 服务收入钱包（P2 修复：可提现 + 提现入口） ==================== */
+/* ==================== 服务收入钱包（行线式：label 左 + 金额 + 金墨描边提现按钮） ==================== */
 .service-wallet-card {
-  margin: 28rpx 0 8rpx;
-  padding: 28rpx 32rpx;
-  background: var(--lux-card-bg, #FFFFFF);
-  border: 1rpx solid var(--lux-hairline, rgba(26,26,23,0.06));
-  border-radius: var(--zy-radius-xl, 24rpx);
-  box-shadow: var(--lux-shadow-elevated, 0 8rpx 32rpx rgba(29, 30, 44, 0.08));
+  margin: 8rpx 0 40rpx;
+  padding: 30rpx 4rpx;
+  background: transparent;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .service-wallet-row {
@@ -508,6 +491,7 @@
 .service-wallet-label {
   font-size: 24rpx;
   color: var(--text-tertiary, #9A9489);
+  letter-spacing: 0.08em;
 }
 
 .service-wallet-value {
@@ -520,12 +504,13 @@
 .service-wallet-btn {
   padding: 0 44rpx;
   height: 72rpx;
-  line-height: 72rpx;
+  line-height: 68rpx;
   font-size: 26rpx;
   font-weight: 500;
   letter-spacing: 0.08em;
-  color: var(--text-on-primary, #FFFFFF);
-  background: var(--gradient-primary, linear-gradient(135deg, #2F6B4F, #4B8B6A));
+  color: var(--lux-gold-ink, #7A5F2A);
+  background: transparent;
+  border: 1rpx solid var(--lux-gold-ink, #7A5F2A);
   border-radius: var(--lux-radius-pill, 999rpx);
 }
 
@@ -720,4 +705,64 @@
 .payee-input {
   margin-bottom: 12rpx;
   border-radius: 12rpx;
+}
+
+/* ================================================================
+   非合伙人引导卡（403 态 · 2026-09-10）
+   ================================================================ */
+.pp-noperm {
+  margin: 60rpx var(--page-padding);
+  padding: 56rpx 40rpx;
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-radius: var(--lux-radius-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.pp-noperm-eyebrow {
+  font-size: 20rpx;
+  color: var(--lux-gold-ink);
+  letter-spacing: 0.24em;
+}
+
+.pp-noperm-title {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.08em;
+}
+
+.pp-noperm-desc {
+  font-size: 23rpx;
+  color: var(--text-tertiary);
+  line-height: 1.7;
+  text-align: center;
+  margin-bottom: 12rpx;
+}
+
+.pp-noperm-btn {
+  min-width: 340rpx;
+  height: 84rpx;
+  padding: 0 56rpx;
+  border-radius: var(--lux-radius-pill, 999rpx);
+  background: var(--lux-green-grad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--lux-shadow-green);
+  transition: transform 240ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 240ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.pp-noperm-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.pp-noperm-btn-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-on-primary);
+  letter-spacing: 0.12em;
 }

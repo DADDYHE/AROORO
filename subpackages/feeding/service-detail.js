@@ -3,11 +3,11 @@ const __pageI18n = require('../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
-  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
 
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),

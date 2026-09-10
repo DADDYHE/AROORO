@@ -13,7 +13,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
   goBack() {
     wx.navigateBack()
   },
@@ -271,6 +271,7 @@ Page({
       })
 
       const { BookingData } = require('../../utils/BookingDataService')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
       BookingData.set('selectedPets', selectedPets)
       app.globalData.showSelectSuccess = true
 

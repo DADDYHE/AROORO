@@ -1,4 +1,5 @@
-<zy-navbar title="登录" transparent="{{true}}" />
+<zy-navbar title="登录" transparent="{{true}}" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced

@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "活动地点",
   "navigationBarBackgroundColor": "#ffffff",
-  "navigationBarTextStyle": "black"
+  "navigationBarTextStyle": "black",
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  }
 }

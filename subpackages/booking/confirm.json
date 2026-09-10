@@ -2,7 +2,9 @@
   "navigationBarTitleText": "确认订单",
   "usingComponents": {
     "zy-calendar": "./components/zy-calendar/index",
-    "zy-loading": "../../components/zy-loading/index"
+    "zy-loading": "../../components/zy-loading/index",
+    "login-prompt": "/components/login-prompt/login-prompt"
   },
-  "pageOrientation": "portrait"
+  "pageOrientation": "portrait",
+  "navigationBarTextStyle": "white"
 }

@@ -1,4 +1,4 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
 <scroll-view
   scroll-y
   enhanced

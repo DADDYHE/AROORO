@@ -41,9 +41,10 @@ function formatEndTime(dateStr, status) {
 const pageI18n = require('../../utils/page-i18n.js')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     coupons: [],

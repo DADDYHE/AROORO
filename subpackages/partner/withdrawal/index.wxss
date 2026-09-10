@@ -357,3 +357,63 @@
 /* ── 微交互：按压态（hover-class 复用，详见 app.wxss 约定）── */
 .record-confirm-btn--pressed { transform: scale(0.97); opacity: 0.92; }
 
+
+/* ================================================================
+   非合伙人引导卡（403 态 · 2026-09-10）
+   ================================================================ */
+.pp-noperm {
+  margin: 60rpx var(--page-padding);
+  padding: 56rpx 40rpx;
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-radius: var(--lux-radius-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.pp-noperm-eyebrow {
+  font-size: 20rpx;
+  color: var(--lux-gold-ink);
+  letter-spacing: 0.24em;
+}
+
+.pp-noperm-title {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.08em;
+}
+
+.pp-noperm-desc {
+  font-size: 23rpx;
+  color: var(--text-tertiary);
+  line-height: 1.7;
+  text-align: center;
+  margin-bottom: 12rpx;
+}
+
+.pp-noperm-btn {
+  min-width: 340rpx;
+  height: 84rpx;
+  padding: 0 56rpx;
+  border-radius: var(--lux-radius-pill, 999rpx);
+  background: var(--lux-green-grad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--lux-shadow-green);
+  transition: transform 240ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 240ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.pp-noperm-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.pp-noperm-btn-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-on-primary);
+  letter-spacing: 0.12em;
+}

@@ -1,190 +1,195 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
   bindscroll="_onScroll"
   style="height: 100vh;"
 >
-<view class="gallery-container">
-  <view class="form-scroll">
-    <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
-      <text class="lux-hero-eyebrow">CREATE</text>
-      <text class="lux-hero-title">{{pageTitle}}</text>
-      <text class="lux-hero-sub">{{pageSubtitle}}</text>
-      <view class="lux-hero-sealline"></view>
+<view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+  <text class="lux-hero-eyebrow">CREATE</text>
+  <text class="lux-hero-title">{{pageTitle}}</text>
+  <text class="lux-hero-sub">{{pageSubtitle}}</text>
+  <view class="lux-hero-sealline"></view>
+</view>
+
+<view class="ac-body">
+  <!-- ═══ 01 · 基本信息 ═══ -->
+  <view class="ac-section">
+    <view class="ac-chapter">
+      <text class="ac-chapter-no">01</text>
+      <text class="ac-chapter-title">基本信息</text>
+      <view class="ac-chapter-rule"></view>
     </view>
 
-    <view class="gallery-hall">
-      <view class="gallery-card">
-        <view class="card-accent"></view>
-        <view class="card-body">
-          <view class="form-section-title">基本信息</view>
+    <view class="ac-field">
+      <text class="ac-label">活动标题<text class="ac-req">*</text></text>
+      <input class="ac-input" placeholder="请输入活动标题" placeholder-class="ac-ph" value="{{formData.title}}" bindinput="onInputTitle" maxlength="50" />
+    </view>
 
-          <view class="form-field">
-            <text class="form-label">活动标题 <text class="required">*</text></text>
-            <input class="form-input" placeholder="请输入活动标题" value="{{formData.title}}" bindinput="onInputTitle" maxlength="50" />
-          </view>
-
-          <view class="form-field">
-            <text class="form-label">活动分类</text>
-            <view class="form-picker" bindtap="onShowCategoryPicker">
-              <text class="form-picker-text">{{categoryText}}</text>
-              <text class="form-picker-arrow">›</text>
-            </view>
-          </view>
-
-          <view class="form-field">
-            <text class="form-label">活动描述</text>
-            <textarea class="form-textarea" placeholder="请描述活动详情" value="{{formData.description}}" bindinput="onInputDescription" maxlength="1000" />
-          </view>
-
-          <view class="form-field">
-            <text class="form-label">封面图片</text>
-            <view class="image-upload-area" bindtap="onChooseCover">
-              <image wx:if="{{formData.coverUrl}}" class="cover-preview" src="{{formData.coverUrl}}" mode="aspectFill" lazy-load />
-              <view wx:else class="upload-placeholder">
-                <text class="upload-icon">+</text>
-                <text class="upload-text">上传封面</text>
-              </view>
-            </view>
-          </view>
-
-          <view class="form-field">
-            <text class="form-label">活动图片 (最多15张)</text>
-            <view class="image-grid">
-              <view wx:for="{{formData.images}}" wx:key="*this" class="image-grid-item">
-                <image class="grid-image" src="{{item}}" mode="aspectFill" lazy-load />
-                <view class="image-remove" catchtap="onRemoveImage" data-index="{{index}}">×</view>
-              </view>
-              <view wx:if="{{formData.images.length < 15}}" class="image-grid-item image-add" bindtap="onChooseImages">
-                <text class="upload-icon-small">+</text>
-              </view>
-            </view>
-          </view>
-        </view>
+    <view class="ac-field">
+      <text class="ac-label">活动分类</text>
+      <view class="ac-picker" bindtap="onShowCategoryPicker">
+        <text class="ac-picker-text">{{categoryText}}</text>
+        <text class="ac-arrow">›</text>
       </view>
+    </view>
 
-      <view class="gallery-card">
-        <view class="card-accent"></view>
-        <view class="card-body">
-          <view class="form-section-title">时间地点</view>
+    <view class="ac-field ac-field--stack">
+      <text class="ac-label">活动描述</text>
+      <textarea class="ac-textarea" placeholder="请描述活动详情" placeholder-class="ac-ph" value="{{formData.description}}" bindinput="onInputDescription" maxlength="1000" />
+    </view>
 
-          <view class="form-row">
-            <view class="form-field form-field-half">
-              <text class="form-label">开始日期 <text class="required">*</text></text>
-              <picker mode="date" start="{{today}}" value="{{formData.startDate}}" bindchange="onStartDateChange">
-                <view class="form-picker">
-                  <text class="form-picker-text {{formData.startDate ? '' : 'placeholder'}}">{{formData.startDate || '选择日期'}}</text>
-                  <text class="form-picker-arrow">›</text>
-                </view>
-              </picker>
-            </view>
-            <view class="form-field form-field-half">
-              <text class="form-label">开始时间 <text class="required">*</text></text>
-              <picker mode="time" value="{{formData.startTime}}" bindchange="onStartTimeChange">
-                <view class="form-picker">
-                  <text class="form-picker-text {{formData.startTime ? '' : 'placeholder'}}">{{formData.startTime || '选择时间'}}</text>
-                  <text class="form-picker-arrow">›</text>
-                </view>
-              </picker>
-            </view>
-          </view>
-
-          <view class="form-row">
-            <view class="form-field form-field-half">
-              <text class="form-label">结束日期</text>
-              <picker mode="date" start="{{formData.startDate || today}}" value="{{formData.endDate}}" bindchange="onEndDateChange">
-                <view class="form-picker">
-                  <text class="form-picker-text {{formData.endDate ? '' : 'placeholder'}}">{{formData.endDate || '选择日期'}}</text>
-                  <text class="form-picker-arrow">›</text>
-                </view>
-              </picker>
-            </view>
-            <view class="form-field form-field-half">
-              <text class="form-label">结束时间</text>
-              <picker mode="time" value="{{formData.endTime}}" bindchange="onEndTimeChange">
-                <view class="form-picker">
-                  <text class="form-picker-text {{formData.endTime ? '' : 'placeholder'}}">{{formData.endTime || '选择时间'}}</text>
-                  <text class="form-picker-arrow">›</text>
-                </view>
-              </picker>
-            </view>
-          </view>
-
-          <view class="form-field">
-            <text class="form-label">活动地点 <text class="required">*</text></text>
-            <view class="location-picker" bindtap="onChooseLocation">
-              <text class="location-picker-text {{formData.locationName ? '' : 'placeholder'}}">{{formData.locationName || '点击选择活动地点'}}</text>
-              <view class="location-picker-right">
-                <view wx:if="{{formData.locationName}}" class="location-clear" catchtap="onClearLocation">
-                  <text class="clear-icon">×</text>
-                </view>
-                <text class="form-picker-arrow">›</text>
-              </view>
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <view class="gallery-card">
-        <view class="card-accent"></view>
-        <view class="card-body">
-          <view class="form-section-title">费用与名额</view>
-
-          <view class="form-row">
-            <view class="form-field form-field-half">
-              <text class="form-label">每人价格</text>
-              <input class="form-input" placeholder="0" type="digit" value="{{formData.pricePerPerson}}" bindinput="onInputPricePerPerson" />
-            </view>
-            <view class="form-field form-field-half">
-              <text class="form-label">每宠价格</text>
-              <input class="form-input" placeholder="0" type="digit" value="{{formData.pricePerPet}}" bindinput="onInputPricePerPet" />
-            </view>
-          </view>
-
-          <view class="form-field">
-            <text class="form-label">最大人数</text>
-            <input class="form-input" placeholder="0 表示不限" type="number" value="{{formData.maxParticipants}}" bindinput="onInputMaxParticipants" />
-          </view>
-        </view>
-      </view>
-
-      <view class="gallery-card">
-        <view class="card-accent"></view>
-        <view class="card-body">
-          <view class="form-section-title">创建者信息</view>
-
-          <view class="form-field">
-            <text class="form-label">联系人</text>
-            <input class="form-input" placeholder="请输入联系人姓名" value="{{formData.contactName}}" bindinput="onInputContactName" />
-          </view>
-
-          <view class="form-field">
-            <text class="form-label">联系电话 <text class="required">*</text></text>
-            <input class="form-input" placeholder="请输入联系电话" type="number" maxlength="11" value="{{formData.contactPhone}}" bindinput="onInputContactPhone" />
-          </view>
-
-          <view class="form-field">
-            <text class="form-label">微信号</text>
-            <input class="form-input" placeholder="请输入微信号" value="{{formData.wechatId}}" bindinput="onInputWechatId" />
-          </view>
+    <view class="ac-field ac-field--stack">
+      <text class="ac-label">封面图片</text>
+      <view class="cover-upload" bindtap="onChooseCover">
+        <image wx:if="{{formData.coverUrl}}" class="cover-preview" src="{{formData.coverUrl}}" mode="aspectFill" lazy-load />
+        <view wx:else class="cover-placeholder">
+          <text class="cover-plus">+</text>
+          <text class="cover-hint">上传封面</text>
         </view>
       </view>
     </view>
 
-    <root-portal>
-    <view class="action-bar">
-      <view class="action-btn action-btn-draft" bindtap="onSubmit">
-        <text class="action-btn-text">保存草稿</text>
-      </view>
-      <view class="action-btn action-btn-publish" bindtap="onSubmitAndPublish">
-        <text class="action-btn-text">立即发布</text>
+    <view class="ac-field ac-field--stack">
+      <text class="ac-label">活动图片 (最多15张)</text>
+      <view class="image-grid">
+        <view wx:for="{{formData.images}}" wx:key="*this" class="image-grid-item">
+          <image class="grid-image" src="{{item}}" mode="aspectFill" lazy-load />
+          <view class="image-remove" catchtap="onRemoveImage" data-index="{{index}}">×</view>
+        </view>
+        <view wx:if="{{formData.images.length < 15}}" class="image-grid-item image-add" bindtap="onChooseImages">
+          <text class="upload-icon-small">+</text>
+        </view>
       </view>
     </view>
-    </root-portal>
   </view>
 
+  <!-- ═══ 02 · 时间地点 ═══ -->
+  <view class="ac-section">
+    <view class="ac-chapter">
+      <text class="ac-chapter-no">02</text>
+      <text class="ac-chapter-title">时间地点</text>
+      <view class="ac-chapter-rule"></view>
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">开始日期<text class="ac-req">*</text></text>
+      <picker mode="date" start="{{today}}" value="{{formData.startDate}}" bindchange="onStartDateChange">
+        <view class="ac-picker">
+          <text class="ac-picker-text {{formData.startDate ? '' : 'ac-ph'}}">{{formData.startDate || '选择日期'}}</text>
+          <text class="ac-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">开始时间<text class="ac-req">*</text></text>
+      <picker mode="time" value="{{formData.startTime}}" bindchange="onStartTimeChange">
+        <view class="ac-picker">
+          <text class="ac-picker-text {{formData.startTime ? '' : 'ac-ph'}}">{{formData.startTime || '选择时间'}}</text>
+          <text class="ac-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">结束日期</text>
+      <picker mode="date" start="{{formData.startDate || today}}" value="{{formData.endDate}}" bindchange="onEndDateChange">
+        <view class="ac-picker">
+          <text class="ac-picker-text {{formData.endDate ? '' : 'ac-ph'}}">{{formData.endDate || '选择日期'}}</text>
+          <text class="ac-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">结束时间</text>
+      <picker mode="time" value="{{formData.endTime}}" bindchange="onEndTimeChange">
+        <view class="ac-picker">
+          <text class="ac-picker-text {{formData.endTime ? '' : 'ac-ph'}}">{{formData.endTime || '选择时间'}}</text>
+          <text class="ac-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">活动地点<text class="ac-req">*</text></text>
+      <view class="ac-picker" bindtap="onChooseLocation">
+        <text class="ac-picker-text {{formData.locationName ? '' : 'ac-ph'}}">{{formData.locationName || '点击选择活动地点'}}</text>
+        <view class="ac-picker-right">
+          <view wx:if="{{formData.locationName}}" class="loc-clear" catchtap="onClearLocation">
+            <text class="loc-clear-icon">×</text>
+          </view>
+          <text class="ac-arrow">›</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ═══ 03 · 费用与名额 ═══ -->
+  <view class="ac-section">
+    <view class="ac-chapter">
+      <text class="ac-chapter-no">03</text>
+      <text class="ac-chapter-title">费用与名额</text>
+      <view class="ac-chapter-rule"></view>
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">每人价格</text>
+      <input class="ac-input ac-input-num" placeholder="0" placeholder-class="ac-ph" type="digit" value="{{formData.pricePerPerson}}" bindinput="onInputPricePerPerson" />
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">每宠价格</text>
+      <input class="ac-input ac-input-num" placeholder="0" placeholder-class="ac-ph" type="digit" value="{{formData.pricePerPet}}" bindinput="onInputPricePerPet" />
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">最大人数</text>
+      <input class="ac-input ac-input-num" placeholder="0 表示不限" placeholder-class="ac-ph" type="number" value="{{formData.maxParticipants}}" bindinput="onInputMaxParticipants" />
+    </view>
+  </view>
+
+  <!-- ═══ 04 · 创建者信息 ═══ -->
+  <view class="ac-section ac-section--last">
+    <view class="ac-chapter">
+      <text class="ac-chapter-no">04</text>
+      <text class="ac-chapter-title">创建者信息</text>
+      <view class="ac-chapter-rule"></view>
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">联系人</text>
+      <input class="ac-input" placeholder="请输入联系人姓名" placeholder-class="ac-ph" value="{{formData.contactName}}" bindinput="onInputContactName" />
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">联系电话<text class="ac-req">*</text></text>
+      <input class="ac-input ac-input-num" placeholder="请输入联系电话" placeholder-class="ac-ph" type="number" maxlength="11" value="{{formData.contactPhone}}" bindinput="onInputContactPhone" />
+    </view>
+
+    <view class="ac-field">
+      <text class="ac-label">微信号</text>
+      <input class="ac-input ac-input-num" placeholder="请输入微信号" placeholder-class="ac-ph" value="{{formData.wechatId}}" bindinput="onInputWechatId" />
+    </view>
+  </view>
+
+  <view class="ac-tail"></view>
+
   <root-portal>
+  <view class="action-bar">
+    <view class="action-btn action-btn-draft" bindtap="onSubmit">
+      <text class="action-btn-text">保存草稿</text>
+    </view>
+    <view class="action-btn action-btn-publish" bindtap="onSubmitAndPublish">
+      <text class="action-btn-text">立即发布</text>
+    </view>
+  </view>
+  </root-portal>
+</view>
+
+<root-portal>
   <view class="picker-mask" wx:if="{{showCategoryPicker}}" bindtap="onCloseCategoryPicker">
     <view class="picker-sheet" catchtap="">
       <view class="picker-sheet-header">
@@ -204,6 +209,5 @@
       </view>
     </view>
   </view>
-  </root-portal>
-</view>
+</root-portal>
 </scroll-view>

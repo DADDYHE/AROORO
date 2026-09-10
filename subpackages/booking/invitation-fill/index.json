@@ -2,6 +2,8 @@
   "navigationBarTitleText": "寄养开单邀请",
   "usingComponents": {
     "health-form": "/components/health-form/index",
-    "zy-action-sheet": "/subpackages/booking/components/zy-action-sheet/index"
-  }
+    "zy-action-sheet": "/subpackages/booking/components/zy-action-sheet/index",
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "navigationBarTextStyle": "white"
 }

@@ -1,4 +1,5 @@
 const __i18n = require('../../utils/i18n.js')
+const { requireLogin } = require('../../utils/require-login')
 const __pageI18n = require('../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 // 个人中心页面 - 极简画廊风格
@@ -14,8 +15,9 @@ const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, authGateBehavior],
   data: {
+    isLoggedIn: false,
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     userInfo: {
       nickName: 'AROORO用户',
@@ -66,8 +68,9 @@ Page({
       const avatarUrl = globalUserInfo.avatarUrl || ''
 
       this.setData({
-        userInfo: {
-          nickName: globalUserInfo.nickName || 'AROORO用户',
+      isLoggedIn: true,
+      userInfo: {
+        nickName: globalUserInfo.nickName || 'AROORO用户',
           avatarUrl,
           openid: globalUserInfo._id || '',
           isHost: Boolean(globalUserInfo.isHost),
@@ -85,6 +88,7 @@ Page({
     }
 
     this.setData({
+      isLoggedIn: false,
       userInfo: {
         nickName: 'AROORO用户',
         avatarUrl: '',
@@ -187,47 +191,58 @@ Page({
     }
   },
 
-  onMyPets() {
+  async onMyPets() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/pet/list' })
   },
 
-  onMyActivities() {
+  async onMyActivities() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/activity/my-registered' })
   },
 
-  onMyFavorites() {
+  async onMyFavorites() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/other/favorites/index' })
   },
 
-  onMyCoupons() {
+  async onMyCoupons() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/coupon/my-coupons' })
   },
 
-  onActivityOrders() {
+  async onActivityOrders() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/profile/order-stats/index?type=activity' })
   },
 
-  onServiceOrders() {
+  async onServiceOrders() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/profile/order-stats/index?type=service' })
   },
 
-  onGroupOrders() {
+  async onGroupOrders() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/profile/order-stats/index?type=group' })
   },
 
-  onHostingOrders() {
+  async onHostingOrders() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/profile/order-stats/index?type=boarding' })
   },
 
-  onMallOrders() {
+  async onMallOrders() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/profile/order-stats/index?type=mall' })
   },
 
-  onPartnerTap() {
+  async onPartnerTap() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/partner/home/index' })
   },
 
-  onHostApply() {
+  async onHostApply() {
+    if (!(await requireLogin())) { return }
     this.setData({ showHostModal: true })
   },
 
@@ -238,6 +253,7 @@ Page({
   onMakeCall() {
     this.setData({ showHostModal: false })
     const appConfig = require('../../config')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
     const phone = appConfig.customerServicePhone
     if (phone) {
       wx.makePhoneCall({ phoneNumber: phone })
@@ -246,15 +262,18 @@ Page({
     }
   },
 
-  onPersonalInfo() {
+  async onPersonalInfo() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/profile/edit/index' })
   },
 
-  onPrivacySettings() {
+  async onPrivacySettings() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/profile/privacy/privacy' })
   },
 
-  onNotificationSettings() {
+  async onNotificationSettings() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/profile/notification/list' })
   },
 
@@ -264,6 +283,11 @@ Page({
 
   onAboutUs() {
     wx.navigateTo({ url: '/subpackages/profile/about/about' })
+  },
+
+  /** 未登录引导卡：立即登录 */
+  onGuestLogin() {
+    authService.startLogin()
   },
 
   onLogout() {

@@ -4,7 +4,8 @@
   ⚠ 全站 navigationStyle: custom，本页必须挂 zy-navbar（transparent 模式不占位，
     由 .ds-hero-body 内的 spacer 撑出状态栏+导航栏高度）。删除此组件 = 内容顶穿 + 返回键消失。
 -->
-<zy-navbar title="寄养家庭档案" transparent="{{true}}" color="#F7F5EF" />
+<zy-navbar title="寄养家庭档案" transparent="{{true}}" color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 
 <scroll-view
   class="ds-scroll"
@@ -12,6 +13,7 @@
   enhanced
   show-scrollbar="{{false}}"
   scroll-top="{{_scrollTop}}"
+  bindscroll="_onScroll"
   style="height: 100vh;"
 >
   <!-- ============ 深绿沉浸标题版 ============ -->

@@ -1,4 +1,5 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
@@ -10,13 +11,14 @@
   lower-threshold="100"
   style="height: 100vh;"
 >
+<view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+  <text class="lux-hero-eyebrow">PARTNER</text>
+  <text class="lux-hero-title">管理中心</text>
+  <text class="lux-hero-sub">合作伙伴专属</text>
+  <view class="lux-hero-sealline"></view>
+</view>
+
 <view class="gallery-container">
-  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
-    <text class="lux-hero-eyebrow">PARTNER</text>
-    <text class="lux-hero-title">管理中心</text>
-    <text class="lux-hero-sub">合作伙伴专属</text>
-    <view class="lux-hero-sealline"></view>
-  </view>
 
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
@@ -36,8 +38,7 @@
 
   <block wx:else>
     <view class="gallery-hall">
-      <view wx:if="{{hasPendingApplication && !isPartner}}" class="gallery-card pending-card">
-        <view class="card-accent"></view>
+      <view wx:if="{{hasPendingApplication && !isPartner}}" class="notice-card">
         <view class="card-body">
           <text class="pending-title">申请审核中</text>
           <text class="pending-desc">您的合作伙伴申请正在审核中，请耐心等待</text>
@@ -47,8 +48,7 @@
         </view>
       </view>
 
-      <view wx:if="{{!isPartner && !hasPendingApplication}}" class="gallery-card apply-card">
-        <view class="card-accent"></view>
+      <view wx:if="{{!isPartner && !hasPendingApplication}}" class="notice-card">
         <view class="card-body">
           <text class="pending-title">成为合作伙伴</text>
           <text class="pending-desc">带货赚取收益，共建宠物生态</text>
@@ -58,8 +58,7 @@
         </view>
       </view>
 
-      <view wx:if="{{incomeSummary && isPartner}}" class="gallery-card income-card">
-        <view class="card-accent income-accent"></view>
+      <view wx:if="{{incomeSummary && isPartner}}" class="income-card">
         <view class="card-body">
           <view class="income-row">
             <view class="income-stat">

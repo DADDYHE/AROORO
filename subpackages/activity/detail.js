@@ -6,7 +6,7 @@ const { ListBehavior } = require('../../behaviors/listBehavior')
 const { parseDate } = require('../../utils/dateUtils')
 const { getLocation } = require('../../utils/geolocation')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { buildSharePath, buildShareQuery } = require('../../utils/share')
 const { requireLogin } = require('../../utils/require-login')
 
@@ -30,7 +30,7 @@ const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     activity: null,

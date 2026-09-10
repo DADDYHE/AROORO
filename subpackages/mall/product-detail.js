@@ -5,7 +5,7 @@ const { MallService } = require('./MallService')
 const { CartService } = require('./CartService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { buildSharePath } = require('../../utils/share')
 const skuHelper = require('../../utils/skuHelper')
 const { requireLogin } = require('../../utils/require-login')
@@ -15,7 +15,7 @@ const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     product: null,
@@ -307,7 +307,8 @@ Page({
     }
   },
 
-  onOpenCart() {
+  async onOpenCart() {
+    if (!(await requireLogin())) { return }
     wx.navigateTo({ url: '/subpackages/mall/cart' })
   },
 

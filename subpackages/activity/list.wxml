@@ -1,4 +1,4 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
 <scroll-view
   scroll-y
   enhanced
@@ -30,6 +30,7 @@
       bindtap="onCategoryTap"
     >
       <text class="category-tab-text">{{item.label}}</text>
+      <view wx:if="{{currentCategory === item.key}}" class="category-tab-indicator"></view>
     </view>
   </view>
 
@@ -42,7 +43,6 @@
       data-id="{{item._id}}"
       bindtap="onActivityTap"
     >
-      <view class="activity-card-background"></view>
       <view class="activity-card-content">
         <view class="activity-cover-wrapper">
           <image lazy-load class="activity-cover" src="{{item.coverUrl || '/images/default-activity.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.coverUrl}}" data-path="activities[{{index}}].coverUrl" />
@@ -97,7 +97,6 @@
             </view>
           </view>
         </view>
-        <view class="activity-accent"></view>
       </view>
     </view>
   </view>

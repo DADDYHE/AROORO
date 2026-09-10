@@ -1,6 +1,8 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="fill-root">
     <scroll-view
+  bindscroll="_onScroll"
       scroll-y
       enhanced
       style="height: 100vh;"

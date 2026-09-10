@@ -1,4 +1,5 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
@@ -10,13 +11,14 @@
   lower-threshold="100"
   style="height: 100vh;"
 >
+<view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+  <text class="lux-hero-eyebrow">FEEDING</text>
+  <text class="lux-hero-title">{{t.BIZ_AGSVKI}}</text>
+  <text class="lux-hero-sub">平台统一接单</text>
+  <view class="lux-hero-sealline"></view>
+</view>
+
 <view class="gallery-container">
-  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
-    <text class="lux-hero-eyebrow">FEEDING</text>
-    <text class="lux-hero-title">{{t.BIZ_AGSVKI}}</text>
-    <text class="lux-hero-sub">平台统一接单</text>
-    <view class="lux-hero-sealline"></view>
-  </view>
 
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">

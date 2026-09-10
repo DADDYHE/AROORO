@@ -2,5 +2,7 @@
   "navigationStyle": "custom",
   "navigationBarTitleText": "",
   "disableScroll": true,
-  "usingComponents": {}
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  }
 }

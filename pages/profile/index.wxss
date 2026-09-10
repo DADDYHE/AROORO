@@ -1352,3 +1352,66 @@ button.contact-customer-btn::after {
 .modal-close-icon::after {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
+
+/* ================================================================
+   Guest 登录引导卡（未登录态 · 2026-09-10）
+   纸面 + 金墨 eyebrow + 深绿渐变 CTA（与全站登录引导语言一致）
+   ================================================================ */
+.guest-login-card {
+  margin: var(--zy-space-lg, 32rpx) var(--page-padding) 0;
+  padding: 44rpx 40rpx;
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-radius: var(--lux-radius-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.guest-card-eyebrow {
+  font-size: 20rpx;
+  color: var(--lux-gold-ink);
+  letter-spacing: 0.24em;
+  font-weight: 400;
+}
+
+.guest-card-title {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.08em;
+}
+
+.guest-card-desc {
+  font-size: 23rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 12rpx;
+}
+
+.guest-card-btn {
+  min-width: 320rpx;
+  height: 84rpx;
+  padding: 0 56rpx;
+  border-radius: var(--lux-radius-pill, 999rpx);
+  background: var(--lux-green-grad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--lux-shadow-green);
+  transition: transform 240ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 240ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.guest-card-btn--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.guest-card-btn-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-on-primary);
+  letter-spacing: 0.14em;
+}

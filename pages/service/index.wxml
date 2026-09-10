@@ -1,4 +1,4 @@
-<zy-navbar title="" showBack="{{false}}" transparent color="#F7F5EF" />
+<zy-navbar title="" showBack="{{false}}" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
 <scroll-view
   scroll-y
   enhanced
@@ -10,16 +10,16 @@
   lower-threshold="100"
   style="height: 100vh;"
 >
-<view class="page">
-  <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-  <!-- B · 深绿沉浸标题版（顶天） -->
-  <view class="lux-hero zy-enter" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
-    <text class="lux-hero-eyebrow">SERVICES</text>
-    <text class="lux-hero-title">宠物服务</text>
-    <text class="lux-hero-sub">上门洗护·喂养·寄养</text>
-    <view class="lux-hero-sealline"></view>
-  </view>
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
+<!-- B · 深绿沉浸标题版（scroll-view 直接子元素，全宽顶天，勿放进带 padding 的容器） -->
+<view class="lux-hero zy-enter" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+  <text class="lux-hero-eyebrow">SERVICES</text>
+  <text class="lux-hero-title">宠物服务</text>
+  <text class="lux-hero-sub">上门洗护·喂养·寄养</text>
+  <view class="lux-hero-sealline"></view>
+</view>
 
+<view class="page">
   <view class="selector-card zy-enter zy-enter--d1">
     <view class="selector-row location-row">
       <view class="city-selector-inline" bindtap="handleCityTap" hover-class="city-selector-inline--pressed" hover-stay-time="120">

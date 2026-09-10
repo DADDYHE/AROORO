@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "编辑个人信息",
   "navigationBarBackgroundColor": "#ffffff",
-  "navigationBarTextStyle": "black"
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  }
 }

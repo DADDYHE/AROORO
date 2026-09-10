@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "用户协议",
   "navigationBarBackgroundColor": "#ffffff",
-  "navigationBarTextStyle": "black"
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  }
 }

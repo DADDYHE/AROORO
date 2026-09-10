@@ -1,4 +1,5 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
@@ -10,6 +11,19 @@
   lower-threshold="100"
   style="height: 100vh;"
 >
+<!-- ═══ B2 · 图片画廊 hero（scroll-view 直接子元素，满幅顶天，恒渲染）；无图降级 B1 ═══ -->
+<view class="hero-section" wx:if="{{activity.coverUrl}}">
+  <image class="hero-cover" src="{{activity.coverUrl}}" mode="aspectFill" lazy-load />
+  <view class="hero-top-scrim"></view>
+  <view class="hero-bottom-scrim"></view>
+</view>
+<view class="lux-hero" wx:else style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+  <text class="lux-hero-eyebrow">ACTIVITY</text>
+  <text class="lux-hero-title">{{activity.title || '活动详情'}}</text>
+  <text class="lux-hero-sub">{{categoryText || '活动详情'}}</text>
+  <view class="lux-hero-sealline"></view>
+</view>
+
 <view class="gallery-container">
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
@@ -28,128 +42,95 @@
   </view>
 
   <block wx:elif="{{activity}}">
-    <view class="scroll-container">
-      <view class="page-content">
-        <!-- B2 · 图片画廊 hero（破格出血）；无图时降级 B1 深绿标题版 -->
-        <view class="hero-section" wx:if="{{activity.coverUrl}}">
-          <image class="hero-cover" src="{{activity.coverUrl}}" mode="aspectFill" lazy-load />
-          <view class="hero-top-scrim"></view>
-          <view class="hero-bottom-scrim"></view>
+    <view class="ad-body">
+      <!-- ═══ 节 1 · 活动（状态标签 + 大标题 + 描述） ═══ -->
+      <view class="ad-section">
+        <view class="status-row">
+          <view class="status-badge" style="background: {{statusColor}}20; color: {{statusColor}}">
+            <text>{{statusText}}</text>
+          </view>
+          <view class="category-badge" wx:if="{{categoryText}}">
+            <text>{{categoryText}}</text>
+          </view>
         </view>
-        <view class="lux-hero" wx:else style="padding-top: calc({{_navbarHeight}}px + 24rpx); margin: 0 calc(-1 * var(--page-padding));">
-          <text class="lux-hero-eyebrow">ACTIVITY</text>
-          <text class="lux-hero-title">{{activity.title}}</text>
-          <text class="lux-hero-sub">{{categoryText || '活动详情'}}</text>
-          <view class="lux-hero-sealline"></view>
+        <text class="activity-title">{{activity.title}}</text>
+        <text class="activity-desc" wx:if="{{activity.description}}">{{activity.description}}</text>
+      </view>
+
+      <!-- ═══ 节 2 · 档案信息（台账行线） ═══ -->
+      <view class="ad-section">
+        <view class="ad-field">
+          <text class="ad-field-label">活动日期</text>
+          <text class="ad-field-value">{{dateDisplay}}</text>
         </view>
-
-        <view class="gallery-hall">
-          <view class="gallery-card">
-            <view class="card-accent" style="background: {{statusColor}}"></view>
-            <view class="card-body">
-              <view class="status-row">
-                <view class="status-badge" style="background: {{statusColor}}20; color: {{statusColor}}">
-                  <text>{{statusText}}</text>
-                </view>
-                <view class="category-badge" wx:if="{{categoryText}}">
-                  <text>{{categoryText}}</text>
-                </view>
-              </view>
-              <text class="activity-title">{{activity.title}}</text>
-              <text class="activity-desc" wx:if="{{activity.description}}">{{activity.description}}</text>
-            </view>
-          </view>
-
-          <view class="gallery-card">
-            <view class="card-accent"></view>
-            <view class="card-body">
-              <view class="info-grid">
-                <view class="info-cell">
-                  <text class="info-label">活动日期</text>
-                  <text class="info-value">{{dateDisplay}}</text>
-                </view>
-                <view class="info-cell">
-                  <text class="info-label">活动时间</text>
-                  <text class="info-value">{{timeDisplay || '待定'}}</text>
-                </view>
-              </view>
-              <view class="info-grid">
-                <view class="info-cell">
-                  <text class="info-label">活动地点</text>
-                  <text class="info-value">{{activity.location || '待定'}}</text>
-                </view>
-                <view class="info-cell">
-                  <text class="info-label">活动费用</text>
-                  <text class="info-value price-value">{{priceDisplayText}}</text>
-                </view>
-              </view>
-            </view>
-          </view>
-
-          <view class="gallery-card">
-            <view class="card-accent"></view>
-            <view class="card-body">
-              <view class="section-title-row">
-                <text class="section-title">报名情况</text>
-                <view class="view-reg-btn" bindtap="onViewRegistrations">
-                  <text class="view-reg-text">查看名单</text>
-                  <text class="view-reg-arrow">›</text>
-                </view>
-              </view>
-              <view class="participant-section">
-                <view class="participant-row">
-                  <text class="participant-label">已报名</text>
-                  <text class="participant-count">{{regSummaryText}}</text>
-                </view>
-                <view class="participant-bar" wx:if="{{activity.maxParticipants}}">
-                  <view class="participant-fill" style="width: {{participantPct}}%; background: {{participantPct >= 100 ? '#C9A24B' : '#1F3A1F'}}"></view>
-                </view>
-              </view>
-            </view>
-          </view>
-
-          <view class="gallery-card" wx:if="{{activity.contactName || activity.contactPhone || activity.wechatId}}">
-            <view class="card-accent"></view>
-            <view class="card-body">
-              <text class="section-title">创建者信息</text>
-              <view class="contact-info">
-                <view class="contact-row" wx:if="{{activity.contactName}}">
-                  <text class="contact-label">联系人</text>
-                  <text class="contact-value">{{activity.contactName}}</text>
-                </view>
-                <view class="contact-row" wx:if="{{activity.contactPhone}}">
-                  <text class="contact-label">联系电话</text>
-                  <text class="contact-value">{{activity.contactPhone}}</text>
-                </view>
-                <view class="contact-row" wx:if="{{activity.wechatId}}">
-                  <text class="contact-label">微信号</text>
-                  <text class="contact-value">{{activity.wechatId}}</text>
-                </view>
-              </view>
-            </view>
-          </view>
-
-          <view class="gallery-card" wx:if="{{activity.images && activity.images.length > 0}}">
-            <view class="card-accent"></view>
-            <view class="card-body">
-              <text class="section-title">活动图片 ({{activity.images.length}}张)</text>
-              <view class="image-grid">
-                <view
-                  wx:for="{{activity.images}}"
-                  wx:key="*this"
-                  class="image-grid-item"
-                  bindtap="onPreviewImage"
-                  data-src="{{item}}"
-                >
-                  <image class="grid-image" src="{{item}}" mode="aspectFill" lazy-load />
-                </view>
-              </view>
-            </view>
-          </view>
-
-          <view class="bottom-spacer"></view>
+        <view class="ad-field">
+          <text class="ad-field-label">活动时间</text>
+          <text class="ad-field-value">{{timeDisplay || '待定'}}</text>
+        </view>
+        <view class="ad-field">
+          <text class="ad-field-label">活动地点</text>
+          <text class="ad-field-value">{{activity.location || '待定'}}</text>
+        </view>
+        <view class="ad-field">
+          <text class="ad-field-label">活动费用</text>
+          <text class="ad-field-value ad-price">{{priceDisplayText}}</text>
         </view>
       </view>
+
+      <!-- ═══ 节 3 · 报名情况 ═══ -->
+      <view class="ad-section">
+        <view class="section-title-row">
+          <text class="section-title">报名情况</text>
+          <view class="view-reg-btn" bindtap="onViewRegistrations">
+            <text class="view-reg-text">查看名单</text>
+            <text class="view-reg-arrow">›</text>
+          </view>
+        </view>
+        <view class="participant-row">
+          <text class="participant-label">已报名</text>
+          <text class="participant-count">{{regSummaryText}}</text>
+        </view>
+        <view class="participant-bar" wx:if="{{activity.maxParticipants}}">
+          <view class="participant-fill" style="width: {{participantPct}}%; background: {{participantPct >= 100 ? '#C9A24B' : '#1F3A1F'}}"></view>
+        </view>
+      </view>
+
+      <!-- ═══ 节 4 · 创建者信息 ═══ -->
+      <view class="ad-section" wx:if="{{activity.contactName || activity.contactPhone || activity.wechatId}}">
+        <text class="section-title">创建者信息</text>
+        <view class="contact-info">
+          <view class="contact-row" wx:if="{{activity.contactName}}">
+            <text class="contact-label">联系人</text>
+            <text class="contact-value">{{activity.contactName}}</text>
+          </view>
+          <view class="contact-row" wx:if="{{activity.contactPhone}}">
+            <text class="contact-label">联系电话</text>
+            <text class="contact-value">{{activity.contactPhone}}</text>
+          </view>
+          <view class="contact-row" wx:if="{{activity.wechatId}}">
+            <text class="contact-label">微信号</text>
+            <text class="contact-value">{{activity.wechatId}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- ═══ 节 5 · 活动图片 ═══ -->
+      <view class="ad-section" wx:if="{{activity.images && activity.images.length > 0}}">
+        <text class="section-title">活动图片 ({{activity.images.length}}张)</text>
+        <view class="image-grid">
+          <view
+            wx:for="{{activity.images}}"
+            wx:key="*this"
+            class="image-grid-item"
+            bindtap="onPreviewImage"
+            data-src="{{item}}"
+          >
+            <image class="grid-image" src="{{item}}" mode="aspectFill" lazy-load />
+          </view>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
     </view>
 
     <root-portal>

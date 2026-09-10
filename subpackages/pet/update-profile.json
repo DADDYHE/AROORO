@@ -1,7 +1,9 @@
 {
   "usingComponents": {
     "zy-action-sheet": "./components/zy-action-sheet/index",
-    "health-form": "/components/health-form/index"
+    "health-form": "/components/health-form/index",
+    "login-prompt": "/components/login-prompt/login-prompt"
   },
-  "navigationBarTitleText": "更新宠物档案"
+  "navigationBarTitleText": "更新宠物档案",
+  "navigationBarTextStyle": "white"
 }

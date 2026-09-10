@@ -10,6 +10,7 @@ const countdownBehavior = require('../../behaviors/countdownBehavior')
 const { formatTime } = require('../../utils/dateUtils')
 const pageI18n = require('../../utils/page-i18n.js')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const STATUS_CONFIG = {
   pending_payment: { title: __i18nT('BIZ_EDO6J'), subtitle: __i18nT('BIZ_1RJIW0I'), icon: '/images/icons/wallet-luxury-line.svg' },
   paid: { title: '已支付', subtitle: '等待服务人员确认', icon: '/images/icons/check-circle-luxury-line.svg' },
@@ -34,7 +35,7 @@ const PAYMENT_DISPLAY_MAP = {
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior, authGateBehavior],
 
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),

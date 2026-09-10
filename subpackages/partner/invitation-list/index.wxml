@@ -1,7 +1,9 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <view class="inv-root">
     <scroll-view
       scroll-y
+      bindscroll="_onScroll"
       refresher-enabled="{{ true }}"
       refresher-triggered="{{ _refresherTriggered }}"
       bindrefresherrefresh="_onRefresherRefresh"
@@ -9,20 +11,20 @@
       lower-threshold="100"
       style="height: 100vh;"
     >
-      <view class="ledger-container">
-        <!-- ═══ B · 深绿沉浸标题版（卷宗头升级） ═══ -->
-        <view class="lux-hero" style="margin: 0 calc(-1 * var(--page-padding)); padding-top: calc({{_navbarHeight}}px + 24rpx);">
-          <text class="lux-hero-eyebrow">INVITATION LEDGER</text>
-          <text class="lux-hero-title">我的开单</text>
-          <text class="lux-hero-sub">与客户沟通好后开单，客户填写信息并完成支付</text>
-          <view class="ledger-summary">
-            <text class="ledger-sum-label">累计开单</text>
-            <text class="ledger-sum-num">{{ total }}</text>
-            <text class="ledger-sum-unit">笔</text>
-          </view>
-          <view class="lux-hero-sealline"></view>
+      <!-- ═══ B · 深绿沉浸标题版（scroll-view 直接子元素，勿放进带 padding 的容器） ═══ -->
+      <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+        <text class="lux-hero-eyebrow">INVITATION LEDGER</text>
+        <text class="lux-hero-title">我的开单</text>
+        <text class="lux-hero-sub">与客户沟通好后开单，客户填写信息并完成支付</text>
+        <view class="ledger-summary">
+          <text class="ledger-sum-label">累计开单</text>
+          <text class="ledger-sum-num">{{ total }}</text>
+          <text class="ledger-sum-unit">笔</text>
         </view>
+        <view class="lux-hero-sealline"></view>
+      </view>
 
+      <view class="ledger-container">
         <!-- ═══ 状态筛选 ═══ -->
         <view class="ledger-tabs">
           <view

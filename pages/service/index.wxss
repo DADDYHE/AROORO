@@ -9,12 +9,7 @@
    Skyline 兼容：仅 transform/opacity 动画，无 :active/backdrop-filter
    ================================================================ */
 
-page {
-  height: 100vh;
-}
-
 .page {
-  min-height: 100vh;
   padding: 0 var(--page-padding, 48rpx);
   padding-bottom: calc(var(--zy-space-4xl) + env(safe-area-inset-bottom, 0px));
 }

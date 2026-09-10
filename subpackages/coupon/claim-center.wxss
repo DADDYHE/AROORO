@@ -3,8 +3,15 @@
 
 /* ===== 容器 ===== */
 .container {
-  padding: 20rpx var(--page-padding);
-  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  padding: 0 0 calc(48rpx + env(safe-area-inset-bottom));
+}
+
+/* 覆写 app.wxss 全局 .list 白卡：本页 list 是透明容器（礼券卡自带形态） */
+.list {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 24rpx var(--page-padding) 0;
 }
 
 /* ===== 优惠券卡片（豪华礼券） ===== */
@@ -203,6 +210,22 @@
   font-size: 26rpx;
   letter-spacing: 0.06em;
   font-weight: 300;
+}
+
+.load-more {
+  padding: 32rpx 0;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 24rpx;
+  letter-spacing: 0.06em;
+}
+
+.bottom-tip {
+  padding: 40rpx var(--page-padding) 0;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 20rpx;
+  letter-spacing: 0.04em;
 }
 
 .load-more {

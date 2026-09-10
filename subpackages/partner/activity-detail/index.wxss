@@ -5,19 +5,15 @@
 @import '../common.wxss';
 
 /* ============================================
-   详情管理页 — Hero + 信息卡 + 报名名单 + 操作栏
+   详情管理页 — B2 图片画廊 hero + A 整版纸面台账 + 操作栏
+   （2026-09-10 A 板升级：拆白卡为纸面分节 + 14% 墨行线）
    ============================================ */
-
-.page-content {
-  padding-bottom: 180rpx;
-}
 
 /* ---------- Hero 封面（B2 图片画廊，顶天 + 双 scrim 全站语法） ---------- */
 .hero-section {
   position: relative;
   height: 450rpx;
   overflow: hidden;
-  margin: 0 calc(var(--page-padding) * -1);
 }
 
 .hero-cover {
@@ -47,27 +43,26 @@
   z-index: 2;
 }
 
-/* ---------- 卡片色条 ---------- */
-.card-accent {
-  width: 3rpx;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-  background: var(--primary-color);
+/* ---------- A · 纸面台账主体 ---------- */
+.ad-body {
+  padding-bottom: 180rpx;
 }
 
-.card-body {
-  position: relative;
-  padding: 28rpx 32rpx;
+.ad-section {
+  padding: 44rpx var(--page-padding) 40rpx;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
-/* ---------- 状态行 ---------- */
+.ad-section:last-child {
+  border-bottom: none;
+}
+
+/* 状态行 */
 .status-row {
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
 }
 
 .status-badge {
@@ -82,64 +77,66 @@
   font-size: 20rpx;
   padding: 6rpx 16rpx;
   border-radius: var(--zy-radius-sm);
-  background: var(--divider-color);
+  background: rgba(26, 26, 23, 0.06);
   color: var(--text-secondary);
   font-weight: 400;
   letter-spacing: 0.04em;
 }
 
-/* ---------- 活动标题/描述 ---------- */
+/* 活动标题/描述（杂志大标题档） */
 .activity-title {
-  font-size: 34rpx;
+  font-size: 44rpx;
   font-weight: 500;
   color: var(--text-primary);
   display: block;
-  margin-bottom: 12rpx;
-  line-height: 1.4;
-  letter-spacing: 0.02em;
+  margin-bottom: 16rpx;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
 }
 
 .activity-desc {
   font-size: 26rpx;
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: 1.8;
   display: block;
   font-weight: 400;
 }
 
-/* ---------- 信息网格 ---------- */
-.info-grid {
+/* 台账字段行：label 左 value 右，14% 墨行线分区 */
+.ad-field {
   display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 24rpx;
-  margin-bottom: 20rpx;
+  padding: 22rpx 0;
 }
 
-.info-grid:last-child {
-  margin-bottom: 0;
+.ad-field + .ad-field {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
-.info-cell {
-  flex: 1;
-}
-
-.info-label {
-  font-size: 22rpx;
+.ad-field-label {
+  flex-shrink: 0;
+  font-size: 24rpx;
   color: var(--text-tertiary);
-  display: block;
-  margin-bottom: 8rpx;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   font-weight: 400;
 }
 
-.info-value {
-  font-size: 26rpx;
+.ad-field-value {
+  font-size: 28rpx;
   color: var(--text-primary);
-  display: block;
   font-weight: 400;
+  text-align: right;
+  max-width: 420rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.price-value {
-  color: var(--primary-color);
+.ad-price {
+  color: var(--lux-gold-ink);
+  font-weight: 500;
   font-feature-settings: 'tnum';
 }
 
@@ -148,14 +145,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
 }
 
 .section-title {
-  font-size: 28rpx;
+  font-size: 30rpx;
   font-weight: 500;
   color: var(--text-primary);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.section-title-row .section-title {
+  margin-bottom: 0;
 }
 
 .view-reg-btn {
@@ -166,25 +169,21 @@
 
 .view-reg-text {
   font-size: 24rpx;
-  color: var(--primary-color);
-  font-weight: 400;
+  color: var(--lux-gold-ink);
+  font-weight: 500;
 }
 
 .view-reg-arrow {
   font-size: 26rpx;
-  color: var(--primary-color);
+  color: var(--lux-gold-ink);
 }
 
 /* ---------- 参与者统计 ---------- */
-.participant-section {
-  margin-top: 8rpx;
-}
-
 .participant-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12rpx;
+  margin-bottom: 16rpx;
 }
 
 .participant-label {
@@ -194,15 +193,15 @@
 }
 
 .participant-count {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: var(--text-primary);
-  font-weight: 400;
+  font-weight: 500;
   font-feature-settings: 'tnum';
 }
 
 .participant-bar {
   height: 6rpx;
-  background: var(--divider-color);
+  background: rgba(26, 26, 23, 0.08);
   border-radius: 3rpx;
   overflow: hidden;
 }
@@ -215,29 +214,35 @@
 
 /* ---------- 联系信息 ---------- */
 .contact-info {
-  margin-top: 8rpx;
+  margin-top: 4rpx;
 }
 
 .contact-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16rpx 0;
+  padding: 20rpx 0;
   border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
+}
+
+.contact-row:first-child {
+  padding-top: 8rpx;
 }
 
 .contact-row:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 
 .contact-label {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
+  letter-spacing: 0.08em;
   font-weight: 400;
 }
 
 .contact-value {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: var(--text-primary);
   font-weight: 400;
   max-width: 400rpx;
@@ -252,7 +257,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
-  margin-top: 16rpx;
 }
 
 .image-grid > .image-grid-item {

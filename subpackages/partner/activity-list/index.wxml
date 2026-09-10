@@ -1,4 +1,5 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
@@ -10,13 +11,14 @@
   lower-threshold="100"
   style="height: 100vh;"
 >
+<view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+  <text class="lux-hero-eyebrow">ACTIVITIES</text>
+  <text class="lux-hero-title">{{t.BIZ_E4OKK2}}</text>
+  <text class="lux-hero-sub">共 {{total}} 个活动</text>
+  <view class="lux-hero-sealline"></view>
+</view>
+
 <view class="gallery-container">
-  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
-    <text class="lux-hero-eyebrow">ACTIVITIES</text>
-    <text class="lux-hero-title">{{t.BIZ_E4OKK2}}</text>
-    <text class="lux-hero-sub">共 {{total}} 个活动</text>
-    <view class="lux-hero-sealline"></view>
-  </view>
 
   <view wx:if="{{isLoading}}" class="loading-container">
     <view class="loading-content">
@@ -50,29 +52,24 @@
       </view>
 
       <view class="search-bar {{searchFocused ? 'search-focused' : ''}}">
-        <view class="search-input-wrap">
-          <view class="search-icon-wrap">
-            <view class="search-icon-circle"></view>
-            <view class="search-icon-stem"></view>
-          </view>
-          <input
-            class="search-input"
-            placeholder="搜索活动名称"
-            placeholder-class="search-placeholder"
-            value="{{searchKeyword}}"
-            bindinput="onSearchInput"
-            bindconfirm="onSearchConfirm"
-            bindfocus="onSearchFocus"
-            bindblur="onSearchBlur"
-            confirm-type="search"
-          />
-          <view wx:if="{{searchKeyword}}" class="search-clear" catchtap="onSearchClear">
-            <view class="clear-circle">
-              <text class="clear-x">×</text>
-            </view>
-          </view>
-          <view class="search-btn" catchtap="onSearchConfirm">
-            <text class="search-btn-text">搜索</text>
+        <view class="search-icon-wrap">
+          <view class="search-icon-circle"></view>
+          <view class="search-icon-stem"></view>
+        </view>
+        <input
+          class="search-input"
+          placeholder="搜索活动名称"
+          placeholder-class="search-placeholder"
+          value="{{searchKeyword}}"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+          bindfocus="onSearchFocus"
+          bindblur="onSearchBlur"
+          confirm-type="search"
+        />
+        <view wx:if="{{searchKeyword}}" class="search-clear" catchtap="onSearchClear">
+          <view class="clear-circle">
+            <text class="clear-x">×</text>
           </view>
         </view>
       </view>
@@ -92,31 +89,28 @@
       </view>
 
       <view wx:for="{{activities}}" wx:key="_id" class="gallery-card" bindtap="onActivityTap" data-id="{{item._id}}">
-        <view class="card-accent card-accent-{{item.status}}"></view>
-        <view class="card-body">
-          <view class="card-header">
-            <text class="card-title">{{item.title}}</text>
-            <text class="card-status status-{{item.status}}">{{item.statusText}}</text>
+        <view class="card-header">
+          <text class="card-title">{{item.title}}</text>
+          <text class="card-status status-{{item.status}}">{{item.statusText}}</text>
+        </view>
+        <view class="card-info">
+          <view class="card-info-item" wx:if="{{item.startTime}}">
+            <view class="info-dot"></view>
+            <text>{{item.startTime}}</text>
           </view>
-          <view class="card-info">
-            <view class="card-info-item" wx:if="{{item.startTime}}">
-              <view class="info-dot"></view>
-              <text>{{item.startTime}}</text>
-            </view>
-            <view class="card-info-item" wx:if="{{item.location}}">
-              <view class="info-dot info-dot-location"></view>
-              <text>{{item.location}}</text>
-            </view>
+          <view class="card-info-item" wx:if="{{item.location}}">
+            <view class="info-dot info-dot-location"></view>
+            <text>{{item.location}}</text>
           </view>
-          <view class="card-footer">
-            <view class="card-participants">
-              <text class="card-stat">已报名：{{item.currentParticipants || 0}}/{{item.maxParticipants ? item.maxParticipants : '♾️'}}人，{{item.currentPets || 0}}/♾️宠</text>
-            </view>
-            <view class="card-prices">
-              <text class="card-price" wx:if="{{item.pricePerPerson}}">¥{{item.pricePerPerson}}/人</text>
-              <text class="card-price card-price-pet" wx:if="{{item.pricePerPet}}">¥{{item.pricePerPet}}/宠</text>
-              <text class="card-price card-free" wx:if="{{!item.pricePerPerson && !item.pricePerPet}}">{{t.BIZ_ELQK}}</text>
-            </view>
+        </view>
+        <view class="card-footer">
+          <view class="card-participants">
+            <text class="card-stat">已报名：{{item.currentParticipants || 0}}/{{item.maxParticipants ? item.maxParticipants : '♾️'}}人，{{item.currentPets || 0}}/♾️宠</text>
+          </view>
+          <view class="card-prices">
+            <text class="card-price" wx:if="{{item.pricePerPerson}}">¥{{item.pricePerPerson}}/人</text>
+            <text class="card-price card-price-pet" wx:if="{{item.pricePerPet}}">¥{{item.pricePerPet}}/宠</text>
+            <text class="card-price card-free" wx:if="{{!item.pricePerPerson && !item.pricePerPet}}">{{t.BIZ_ELQK}}</text>
           </view>
         </view>
       </view>

@@ -1,1 +1,7 @@
-{ "usingComponents": {}, "navigationBarTitleText": "通知详情" }
+{
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "navigationBarTitleText": "通知详情",
+  "navigationBarTextStyle": "white"
+}

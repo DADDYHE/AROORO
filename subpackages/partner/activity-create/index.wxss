@@ -1,139 +1,173 @@
 /* ================================================================
-   AROORO 合伙人创建活动 · 深森林绿 × 香槟金 × 奶油白 高奢风格
-   Skyline 兼容：无 :active / transition 仅 transform & opacity / 单行截断
+   AROORO 合伙人创建活动 · B hero + A 编辑式台账表单（2026-09-10 升级）
+   范式：章节号 + 行线字段 + 无底无框输入（对齐 hosting-profile-edit）
+   Skyline 兼容：无 :active / transition 仅 transform & opacity / 兄弟选择器行线
    ================================================================ */
 @import '../common.wxss';
 
-/* ============================================
-   表单页 — 封面上传 + 表单字段 + 日期选择 + 发布按钮
-   ============================================ */
-
-.form-scroll {
-  padding-bottom: 180rpx;
+/* ---------- 章节分节 ---------- */
+.ac-section {
+  padding: 48rpx var(--page-padding) 44rpx;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
-/* ---------- 卡片色条 ---------- */
-.card-accent {
-  width: 3rpx;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-  background: var(--primary-color);
+.ac-section--last {
+  border-bottom: none;
 }
 
-.card-body {
-  position: relative;
-  padding: 32rpx 36rpx;
+/* 章节头：金墨编号 + 标题 + 渐隐细线 */
+.ac-chapter {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
 }
 
-/* ---------- 表单分区标题 ---------- */
-.form-section-title {
-  font-size: 26rpx;
+.ac-chapter-no {
+  font-size: 22rpx;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: var(--lux-gold-ink);
+  font-feature-settings: 'tnum';
+}
+
+.ac-chapter-title {
+  font-size: 32rpx;
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 24rpx;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
 }
 
-/* ---------- 表单字段 ---------- */
-.form-field {
-  margin-bottom: 28rpx;
-}
-
-.form-field-half {
+.ac-chapter-rule {
   flex: 1;
+  height: 1rpx;
+  background: rgba(26, 26, 23, 0.14);
 }
 
-.form-label {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  display: block;
-  margin-bottom: 12rpx;
-  letter-spacing: 0.06em;
-  font-weight: 400;
-}
-
-.required {
-  color: var(--error-color);
-  margin-left: 4rpx;
-}
-
-.form-input {
-  width: 100%;
-  height: 76rpx;
-  padding: 0 24rpx;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-  border-radius: var(--lux-radius-inner);
-  font-size: 28rpx;
-  color: var(--text-primary);
-  box-sizing: border-box;
-  background: var(--lux-card-bg);
-  font-family: inherit;
-}
-
-.form-textarea {
-  width: 100%;
-  height: 200rpx;
-  padding: 20rpx 24rpx;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-  border-radius: var(--lux-radius-inner);
-  font-size: 28rpx;
-  color: var(--text-primary);
-  box-sizing: border-box;
-  background: var(--lux-card-bg);
-  font-family: inherit;
-  line-height: 1.6;
-}
-
-/* ---------- 选择器 ---------- */
-.form-picker {
+/* ---------- 编辑式字段行：label 左 value 右，行线分区 ---------- */
+.ac-field {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 76rpx;
-  padding: 0 24rpx;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-  border-radius: var(--lux-radius-inner);
-  background: var(--lux-card-bg);
+  gap: 24rpx;
+  padding: 24rpx 0;
 }
 
-.form-picker-text {
+.ac-field + .ac-field {
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
+}
+
+/* 通栏字段（textarea/封面/图集）：label 上、控件下，行线仍由相邻 field 提供 */
+.ac-field--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16rpx;
+}
+
+.ac-label {
+  flex-shrink: 0;
+  font-size: 25rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  font-weight: 400;
+}
+
+.ac-req {
+  color: var(--error-color);
+  margin-left: 6rpx;
+}
+
+/* 无底无框输入（右对齐），placeholder 灰 */
+.ac-input {
+  flex: 1;
+  min-width: 0;
+  height: 56rpx;
+  text-align: right;
   font-size: 28rpx;
   color: var(--text-primary);
+  background: transparent;
+  font-family: inherit;
+}
+
+.ac-input-num {
+  font-feature-settings: 'tnum';
+}
+
+.ac-ph {
+  color: var(--text-tertiary);
+}
+
+/* 通栏 textarea：无底无框 */
+.ac-textarea {
+  width: 100%;
+  height: 180rpx;
+  font-size: 27rpx;
+  line-height: 1.7;
+  color: var(--text-primary);
+  background: transparent;
+  font-family: inherit;
+}
+
+/* ---------- 行内 picker ---------- */
+.ac-picker {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12rpx;
+  min-height: 56rpx;
   flex: 1;
+  min-width: 0;
+}
+
+.ac-picker-text {
+  font-size: 28rpx;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.form-picker-text.placeholder {
-  color: var(--text-tertiary);
-}
-
-.form-picker-arrow {
-  font-size: 28rpx;
+.ac-arrow {
+  font-size: 30rpx;
   color: var(--text-tertiary);
   flex-shrink: 0;
-  margin-left: 12rpx;
+  line-height: 1;
 }
 
-.form-row {
+.ac-picker-right {
   display: flex;
-  gap: 20rpx;
+  align-items: center;
+  gap: 14rpx;
+  flex-shrink: 0;
 }
 
-/* ---------- 封面上传 ---------- */
-.image-upload-area {
+.loc-clear {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: rgba(26, 26, 23, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loc-clear-icon {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+/* ---------- 封面上传（虚线框 + 透明底） ---------- */
+.cover-upload {
   width: 100%;
   height: 320rpx;
-  border: 1rpx dashed var(--border-color);
-  border-radius: var(--lux-radius-card);
+  border: 1rpx dashed rgba(26, 26, 23, 0.28);
+  border-radius: var(--lux-radius-inner);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--lux-card-cream);
+  background: transparent;
 }
 
 .cover-preview {
@@ -141,7 +175,7 @@
   height: 100%;
 }
 
-.upload-placeholder {
+.cover-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -149,17 +183,17 @@
   gap: 12rpx;
 }
 
-.upload-icon {
-  font-size: 48rpx;
+.cover-plus {
+  font-size: 52rpx;
   color: var(--text-tertiary);
   font-weight: 300;
   line-height: 1;
 }
 
-.upload-text {
+.cover-hint {
   font-size: 22rpx;
   color: var(--text-tertiary);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
 }
 
 /* ---------- 详情图片网格 ---------- */
@@ -196,7 +230,7 @@
   width: 36rpx;
   height: 36rpx;
   background: var(--overlay-color);
-  color: var(--lux-card-bg);
+  color: #F7F5EF;
   font-size: 20rpx;
   display: flex;
   align-items: center;
@@ -205,73 +239,25 @@
 }
 
 .image-add {
-  border: 1rpx dashed var(--border-color);
-  background: var(--lux-card-cream);
+  border: 1rpx dashed rgba(26, 26, 23, 0.28);
+  background: transparent;
 }
 
-.image-add .upload-icon-small {
+.upload-icon-small {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-}
-
-.upload-icon-small {
   font-size: 36rpx;
   color: var(--text-tertiary);
   font-weight: 300;
 }
 
-/* ---------- 位置选择 ---------- */
-.location-picker {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 76rpx;
-  padding: 16rpx 24rpx;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-  border-radius: var(--lux-radius-inner);
-  background: var(--lux-card-bg);
+/* ---------- 底部让位 + 操作栏 ---------- */
+.ac-tail {
+  height: 180rpx;
 }
 
-.location-picker-text {
-  font-size: 26rpx;
-  color: var(--text-primary);
-  flex: 1;
-  margin-right: 16rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.location-picker-text.placeholder {
-  color: var(--text-tertiary);
-}
-
-.location-picker-right {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  flex-shrink: 0;
-}
-
-.location-clear {
-  width: 32rpx;
-  height: 32rpx;
-  border-radius: 50%;
-  background: var(--divider-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.clear-icon {
-  font-size: 20rpx;
-  color: var(--text-secondary);
-  line-height: 1;
-}
-
-/* ---------- 底部操作栏 ---------- */
 .action-bar {
   position: fixed;
   bottom: 0;
@@ -302,11 +288,12 @@
 }
 
 .action-btn-draft {
-  background: var(--divider-color);
+  background: transparent;
+  border: 1rpx solid var(--border-color);
 }
 
 .action-btn-draft .action-btn-text {
-  color: var(--text-primary);
+  color: var(--text-secondary);
   font-size: 28rpx;
   font-weight: 400;
   letter-spacing: 0.06em;

@@ -1393,3 +1393,89 @@ page {
   letter-spacing: 0.02em;
   color: var(--text-primary);
 }
+
+/* ================================================================
+   Section 4.8: 寄养开单入口（深绿展品卡 · 仅已开通家庭寄养用户可见）
+   ================================================================ */
+.host-invite-card {
+  position: relative;
+  overflow: hidden;
+  padding: 36rpx 36rpx 32rpx;
+  background-image: var(--lux-green-grad-rich);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border-radius: var(--lux-radius-card);
+  border: 1rpx solid var(--lux-hairline-green);
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  transition: transform 240ms cubic-bezier(0.25, 0.1, 0.25, 1),
+              opacity 240ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.host-invite-card--pressed {
+  transform: scale(0.99);
+  opacity: 0.92;
+}
+
+/* 右上角金色光晕 */
+.host-invite-glow {
+  position: absolute;
+  top: -60rpx;
+  right: -60rpx;
+  width: 240rpx;
+  height: 240rpx;
+  background-image: radial-gradient(circle, rgba(201, 162, 75, 0.20) 0%, rgba(201, 162, 75, 0) 70%);
+  pointer-events: none;
+}
+
+.host-invite-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  position: relative;
+}
+
+.host-invite-eyebrow {
+  font-size: 20rpx;
+  color: var(--lux-gold-500);
+  letter-spacing: 0.24em;
+  font-weight: 400;
+}
+
+.host-invite-title {
+  font-size: 36rpx;
+  color: var(--text-on-primary);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+}
+
+.host-invite-desc {
+  font-size: 22rpx;
+  color: rgba(247, 245, 239, 0.72);
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+
+.host-invite-arrow {
+  font-size: 40rpx;
+  color: var(--lux-gold-500);
+  line-height: 1;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* 封口金线 */
+.host-invite-sealline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1rpx;
+  background-image: var(--lux-gold-line);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}

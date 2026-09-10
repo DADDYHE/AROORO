@@ -65,10 +65,10 @@
 }
 
 .cat-item.active {
-  background-color: var(--card-color);
+  background-color: transparent;
   color: var(--text-primary);
   font-weight: 500;
-  border-left-color: var(--mall-primary);
+  border-left-color: var(--lux-gold-ink);
 }
 
 .cat-arrow {
@@ -140,7 +140,7 @@
 .label-accent {
   width: 32rpx;
   height: 2rpx;
-  background: var(--accent-color);
+  background: var(--lux-gold-ink);
   flex-shrink: 0;
 }
 
@@ -289,9 +289,9 @@
   align-items: center;
   gap: 12rpx;
   padding: 16rpx 48rpx;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  border: 1rpx solid rgba(26, 26, 23, 0.28);
   border-radius: var(--zy-radius-lg);
-  background-color: var(--card-color);
+  background-color: transparent;
   transition: transform var(--dur-fast) var(--ease-refined),
               background-color var(--dur-fast) var(--ease-refined);
 }

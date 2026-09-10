@@ -1,16 +1,19 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
+  bindscroll="_onScroll"
   scroll-y
   enhanced
   style="height: 100vh;"
 >
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
+    <text class="lux-hero-eyebrow">INVITATION</text>
+    <text class="lux-hero-title">主动开单</text>
+    <text class="lux-hero-sub">与客户沟通好后，创建开单邀请分享给对方填写</text>
+    <view class="lux-hero-sealline"></view>
+  </view>
+
   <view class="gallery-container">
-    <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
-      <text class="lux-hero-eyebrow">INVITATION</text>
-      <text class="lux-hero-title">主动开单</text>
-      <text class="lux-hero-sub">与客户沟通好后，创建开单邀请分享给对方填写</text>
-      <view class="lux-hero-sealline"></view>
-    </view>
 
     <view wx:if="{{isLoading}}" class="loading-container">
       <view class="loading-content">
@@ -28,92 +31,92 @@
     </view>
 
     <block wx:else>
-      <view class="gallery-hall">
-        <!-- 01 寄养安排 -->
-        <view class="gallery-card">
-          <view class="card-accent"></view>
-          <view class="card-body">
-            <text class="section-title">寄养安排</text>
+      <view class="ac-body">
+        <!-- ═══ 01 · 寄养安排 ═══ -->
+        <view class="ac-section">
+          <view class="ac-chapter">
+            <text class="ac-chapter-no">01</text>
+            <text class="ac-chapter-title">寄养安排</text>
+            <view class="ac-chapter-rule"></view>
+          </view>
 
-            <view class="date-row">
-              <picker mode="date" value="{{startDate}}" bindchange="onStartDate" class="date-picker">
-                <view class="date-cell">
-                  <text class="date-label">入住日期</text>
-                  <text class="date-value {{startDate ? '' : 'date-value--ph'}}">{{ startDate || '选择' }}</text>
-                </view>
-              </picker>
-              <view class="date-rule"></view>
-              <picker mode="date" value="{{endDate}}" start="{{startDate}}" bindchange="onEndDate" class="date-picker">
-                <view class="date-cell date-cell--right">
-                  <text class="date-label">离店日期</text>
-                  <text class="date-value {{endDate ? '' : 'date-value--ph'}}">{{ endDate || '选择' }}</text>
-                </view>
-              </picker>
-            </view>
+          <view class="date-row">
+            <picker mode="date" value="{{startDate}}" bindchange="onStartDate" class="date-picker">
+              <view class="date-cell">
+                <text class="date-label">入住日期</text>
+                <text class="date-value {{startDate ? '' : 'date-value--ph'}}">{{ startDate || '选择' }}</text>
+              </view>
+            </picker>
+            <view class="date-rule"></view>
+            <picker mode="date" value="{{endDate}}" start="{{startDate}}" bindchange="onEndDate" class="date-picker">
+              <view class="date-cell date-cell--right">
+                <text class="date-label">离店日期</text>
+                <text class="date-value {{endDate ? '' : 'date-value--ph'}}">{{ endDate || '选择' }}</text>
+              </view>
+            </picker>
+          </view>
 
-            <view class="date-row">
-              <picker mode="time" value="{{startAt}}" bindchange="onStartAt" class="date-picker">
-                <view class="date-cell">
-                  <text class="date-label">接宠时刻</text>
-                  <text class="date-value {{startAt ? '' : 'date-value--ph'}}">{{ startAt || '选择' }}</text>
-                </view>
-              </picker>
-              <view class="date-rule"></view>
-              <picker mode="time" value="{{endAt}}" bindchange="onEndAt" class="date-picker">
-                <view class="date-cell date-cell--right">
-                  <text class="date-label">还宠时刻</text>
-                  <text class="date-value {{endAt ? '' : 'date-value--ph'}}">{{ endAt || '选择' }}</text>
-                </view>
-              </picker>
-            </view>
+          <view class="date-row">
+            <picker mode="time" value="{{startAt}}" bindchange="onStartAt" class="date-picker">
+              <view class="date-cell">
+                <text class="date-label">接宠时刻</text>
+                <text class="date-value {{startAt ? '' : 'date-value--ph'}}">{{ startAt || '选择' }}</text>
+              </view>
+            </picker>
+            <view class="date-rule"></view>
+            <picker mode="time" value="{{endAt}}" bindchange="onEndAt" class="date-picker">
+              <view class="date-cell date-cell--right">
+                <text class="date-label">还宠时刻</text>
+                <text class="date-value {{endAt ? '' : 'date-value--ph'}}">{{ endAt || '选择' }}</text>
+              </view>
+            </picker>
+          </view>
 
-            <view class="info-divider"></view>
-
-            <view class="stepper-row">
-              <text class="stepper-label">寄养宠物数量</text>
-              <view class="stepper">
-                <view class="stepper-btn {{petCount <= 1 ? 'stepper-btn--disabled' : ''}}" bindtap="onPetCountMinus">
-                  <text class="stepper-symbol">−</text>
-                </view>
-                <text class="stepper-num">{{ petCount }}</text>
-                <view class="stepper-btn {{petCount >= 10 ? 'stepper-btn--disabled' : ''}}" bindtap="onPetCountPlus">
-                  <text class="stepper-symbol">＋</text>
-                </view>
+          <view class="ac-field">
+            <text class="stepper-label">寄养宠物数量</text>
+            <view class="stepper">
+              <view class="stepper-btn {{petCount <= 1 ? 'stepper-btn--disabled' : ''}}" bindtap="onPetCountMinus">
+                <text class="stepper-symbol">−</text>
+              </view>
+              <text class="stepper-num">{{ petCount }}</text>
+              <view class="stepper-btn {{petCount >= 10 ? 'stepper-btn--disabled' : ''}}" bindtap="onPetCountPlus">
+                <text class="stepper-symbol">＋</text>
               </view>
             </view>
-            <text class="stepper-hint">客户将按此数量填写对应宠物的信息</text>
           </view>
+          <text class="stepper-hint">客户将按此数量填写对应宠物的信息</text>
         </view>
 
-        <!-- 02 订单定价 -->
-        <view class="gallery-card">
-          <view class="card-accent"></view>
-          <view class="card-body">
-            <text class="section-title">订单总价</text>
+        <!-- ═══ 02 · 订单总价 ═══ -->
+        <view class="ac-section">
+          <view class="ac-chapter">
+            <text class="ac-chapter-no">02</text>
+            <text class="ac-chapter-title">订单总价</text>
+            <view class="ac-chapter-rule"></view>
+          </view>
 
-            <view class="price-input-row">
-              <text class="price-currency">¥</text>
-              <input
-                class="price-input"
-                type="digit"
-                value="{{ totalPrice }}"
-                placeholder="输入与客户商定的总价"
-                placeholder-class="price-ph"
-                bindinput="onTotalPrice"
-              />
+          <view class="price-row">
+            <text class="price-currency">¥</text>
+            <input
+              class="price-input"
+              type="digit"
+              value="{{ totalPrice }}"
+              placeholder="输入商定总价"
+              placeholder-class="price-ph"
+              bindinput="onTotalPrice"
+            />
+          </view>
+
+          <view wx:if="{{ referencePrice > 0 }}" class="ref-block">
+            <view class="ac-field">
+              <text class="ac-field-label">系统参考价</text>
+              <text class="ac-field-value ref-price">¥{{ referencePrice }}</text>
             </view>
+            <text class="ref-hint">{{ priceHint }}</text>
+          </view>
 
-            <view class="ref-price-row" wx:if="{{ referencePrice > 0 }}">
-              <view class="info-divider"></view>
-              <view class="info-row">
-                <view class="info-key">系统参考价</view>
-                <view class="info-val ref-price">¥{{ referencePrice }}</view>
-              </view>
-              <text class="ref-hint">{{ priceHint }}</text>
-            </view>
-
-            <view class="info-divider"></view>
-            <text class="section-subtitle">给客户的备注（选填）</text>
+          <view class="ac-field ac-field--stack">
+            <text class="ac-field-label">给客户的备注（选填）</text>
             <textarea
               class="note-textarea"
               value="{{ note }}"
@@ -136,3 +139,42 @@
     </block>
   </view>
 </scroll-view>
+
+<!-- 创建成功分享弹层（open-type=share 承载，一次点击即转发） -->
+<root-portal>
+  <view wx:if="{{showShareSheet}}" class="share-mask" bindtap="onCloseShareSheet">
+    <view class="share-sheet" catchtap="noop">
+      <view class="share-sheet-header">
+        <view class="share-done-line"></view>
+        <text class="share-sheet-title">开单邀请已创建</text>
+        <text class="share-sheet-sub">转发给客户，对方填写信息并支付即可成单</text>
+      </view>
+
+      <view class="share-summary" wx:if="{{shareSheet}}">
+        <view class="share-summary-row">
+          <text class="share-summary-label">寄养日期</text>
+          <text class="share-summary-value">{{shareSheet.dateRangeText}}</text>
+        </view>
+        <view class="share-summary-row">
+          <text class="share-summary-label">接还时刻</text>
+          <text class="share-summary-value">{{shareSheet.timeText}} · {{shareSheet.days}} 天</text>
+        </view>
+        <view class="share-summary-row">
+          <text class="share-summary-label">宠物数量</text>
+          <text class="share-summary-value">{{shareSheet.petCount}} 只</text>
+        </view>
+        <view class="share-summary-row">
+          <text class="share-summary-label">订单总价</text>
+          <text class="share-summary-value share-summary-price">¥{{shareSheet.totalPrice}}</text>
+        </view>
+      </view>
+
+      <button class="share-btn-primary" open-type="share" hover-class="share-btn-primary--pressed" hover-stay-time="120">
+        转发给客户
+      </button>
+      <view class="share-btn-ghost" bindtap="onCloseShareSheet" hover-class="share-btn-ghost--pressed" hover-stay-time="120">
+        <text>稍后再说</text>
+      </view>
+    </view>
+  </view>
+</root-portal>

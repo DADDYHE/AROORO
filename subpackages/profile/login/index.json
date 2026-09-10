@@ -1,5 +1,7 @@
 {
-  "usingComponents": {},
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
   "navigationBarTitleText": "",
   "navigationBarBackgroundColor": "#F5F5F7",
   "navigationBarTextStyle": "black",

@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "一键报名",
-  "usingComponents": {}
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "navigationBarTextStyle": "white"
 }

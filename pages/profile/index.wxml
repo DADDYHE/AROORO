@@ -1,4 +1,5 @@
-<zy-navbar title="" showBack="{{false}}" transparent color="#F7F5EF" />
+<zy-navbar title="" showBack="{{false}}" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
@@ -19,8 +20,18 @@
     <view class="lux-hero-sealline"></view>
   </view>
 
+  <!-- 未登录引导卡（guest 态：替代个人信息 + 数据统计 + 订单区） -->
+  <view class="guest-login-card zy-enter" wx:if="{{!isLoggedIn}}">
+    <text class="guest-card-eyebrow">MEMBER ACCESS</text>
+    <text class="guest-card-title">登录 AROORO</text>
+    <text class="guest-card-desc">登录后管理宠物档案、订单、优惠券与收藏</text>
+    <view class="guest-card-btn" bindtap="onGuestLogin" hover-class="guest-card-btn--pressed" hover-stay-time="120">
+      <text class="guest-card-btn-text">立即登录</text>
+    </view>
+  </view>
+
   <!-- 个人信息 -->
-<view class="order-exhibit-section">
+<view class="order-exhibit-section" wx:if="{{isLoggedIn}}">
   <view class="exhibit-list">
     <view class="exhibit-row">
       <view class="exhibit-profile-cell">
@@ -34,7 +45,7 @@
 </view>
 
   <!-- 数据统计 -->
-<view class="order-exhibit-section">
+<view class="order-exhibit-section" wx:if="{{isLoggedIn}}">
   <view class="exhibit-stats">
     <view class="exhibit-stat" bindtap="onMyPets">
       <text class="exhibit-stat-num">{{stats.petCount}}</text>
@@ -52,7 +63,7 @@
 </view>
 
   <!-- 我的订单 - 艺术展陈风格 -->
-<view class="order-exhibit-section">
+<view class="order-exhibit-section" wx:if="{{isLoggedIn}}">
   <view class="exhibit-header">
     <view class="exhibit-number">01</view>
     <view class="exhibit-title-block">
@@ -209,8 +220,8 @@
   </view>
 </view>
 
-  <!-- 退出登录 -->
-<view class="order-exhibit-section">
+  <!-- 退出登录（未登录时隐藏；guest 卡提供登录入口） -->
+<view class="order-exhibit-section" wx:if="{{isLoggedIn}}">
   <view class="exhibit-list">
     <view class="exhibit-row">
       <view class="exhibit-profile-cell">

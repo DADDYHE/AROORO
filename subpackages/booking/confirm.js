@@ -15,9 +15,10 @@ const couponSelectorBehavior = require('../../behaviors/couponSelectorBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, couponSelectorBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, couponSelectorBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     hostId: '',

@@ -1,11 +1,11 @@
 const __i18n = require('../../../utils/i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 // 视频列表页面逻辑
-const shareEntryBehavior = require('../../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
 Page({
-  behaviors: [ListBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
 
   /**
    * 页面的初始数据

@@ -1,4 +1,5 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
@@ -11,8 +12,8 @@
   style="height: 100vh;"
 >
 <view class="page">
-  <!-- ═══ B · 深绿沉浸标题版（破格出血，卷宗头升级） ═══ -->
-  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx); margin: 0 calc(-1 * var(--page-padding));">
+  <!-- ═══ B · 深绿沉浸标题版（卷宗头升级；.page 无左右 padding，hero 天然满幅） ═══ -->
+  <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
     <text class="lux-hero-eyebrow">ORDER LEDGER</text>
     <text class="lux-hero-title">订单统计</text>
     <view class="ledger-summary">

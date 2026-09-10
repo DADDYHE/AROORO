@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "佣金统计",
-  "usingComponents": {}
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "navigationBarTextStyle": "white"
 }

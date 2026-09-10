@@ -1,11 +1,13 @@
 const app = getApp()
 const { prefetchHomeData } = require('../../utils/homePrefetch')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 // 启动首屏海报 · 独立全屏页
 // 由首页 onLoad 在冷启动首屏一次 navigateTo 进入；本页非 tab 页、navigationStyle:custom
 // => 框架级 100% 全屏，覆盖 navbar 与系统 tabBar（用户级 root-portal 无法覆盖系统级 tabBar）。
 // 数据：app.globalData.__splashSync（同步缓存，首帧即展示销闪屏）+ app.getSplashPosterAsync()（异步刷新）。
 Page({
+  behaviors: [authGateBehavior],
   data: {
     visible: false,
     imageUrl: '',

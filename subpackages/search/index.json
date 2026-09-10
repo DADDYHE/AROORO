@@ -1,5 +1,7 @@
 {
   "navigationBarTitleText": "搜索",
   "renderer": "webview",
-  "usingComponents": {}
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  }
 }

@@ -15,3 +15,62 @@
 .form-row--pressed {
   background-color: var(--primary-wash);
 }
+
+/* ===== A 板拆卡（2026-09-10，对齐 create-step1）：白卡 → 纸面分节，行线升 14% 墨 ===== */
+.gallery-collection {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.card-accent {
+  display: none;
+}
+
+.field-divider {
+  background: rgba(26, 26, 23, 0.14);
+}
+
+/* 必填星号：金墨 */
+.label-required {
+  color: var(--lux-gold-ink);
+  font-size: 24rpx;
+  margin-left: 6rpx;
+}
+
+/* ===== 头像取景框艺术化 ===== */
+.portrait-frame {
+  background: transparent;
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
+}
+
+.portrait-canvas {
+  background: rgba(26, 26, 23, 0.03);
+}
+
+.canvas-crosshair-h,
+.canvas-crosshair-v {
+  background: rgba(26, 26, 23, 0.2);
+}
+
+.canvas-corner {
+  border-color: var(--lux-gold-ink);
+  opacity: 0.9;
+}
+
+.label-line {
+  background: var(--lux-gold-ink);
+}
+
+/* ===== 节头（金墨短线 + 字距） ===== */
+.entrance-line {
+  background: var(--lux-gold-ink);
+  height: 2rpx;
+}
+
+.entrance-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.2em;
+}

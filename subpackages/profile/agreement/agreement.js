@@ -1,7 +1,8 @@
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   onLoad() {
     this._initNavbarHeight()
   },

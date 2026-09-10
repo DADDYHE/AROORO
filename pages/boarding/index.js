@@ -5,7 +5,7 @@ const { HostService } = require('../../services/CloudFunctionService')
 const { formatRegion } = require('../../utils/addressUtils')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
@@ -13,7 +13,7 @@ const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, tabBarSyncBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, tabBarSyncBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: true,

@@ -11,7 +11,7 @@ const { requireLogin } = require('../../utils/require-login')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
   data: {
     formData: {
       avatarUrl: '',
@@ -160,6 +160,7 @@ Page({
 
         try {
           const { petStore } = require('./store/petStore')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
           await petStore.fetchPetList(true)
         } catch (e) {
           console.warn('[APP] 刷新宠物列表缓存失败:', e)

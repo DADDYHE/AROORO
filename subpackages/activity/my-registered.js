@@ -8,8 +8,9 @@ const { transformActivityItem } = require('./utils/activityHelpers')
 const { parseDate } = require('../../utils/dateUtils')
 const { getLocation } = require('../../utils/geolocation')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
-  behaviors: [ListBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
 
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),

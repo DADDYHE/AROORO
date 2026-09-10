@@ -3,7 +3,7 @@ const __pageI18n = require('../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { TuanService } = require('../../services/TuanService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
@@ -14,7 +14,7 @@ const { requireLogin } = require('../../utils/require-login')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
 
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),

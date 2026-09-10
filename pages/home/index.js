@@ -5,19 +5,20 @@ const app = getApp()
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const homeBannerBehavior = require('../../behaviors/homeBannerBehavior')
 const homePetBehavior = require('../../behaviors/homePetBehavior')
 const homeActivityBehavior = require('../../behaviors/homeActivityBehavior')
 const homeTuanBehavior = require('../../behaviors/homeTuanBehavior')
 const homeMallBehavior = require('../../behaviors/homeMallBehavior')
 const homeMyActivitiesBehavior = require('../../behaviors/homeMyActivitiesBehavior')
+const homeHostInviteBehavior = require('../../behaviors/homeHostInviteBehavior')
 const { buildSharePath } = require('../../utils/share')
 const pageI18n = require('../../utils/page-i18n.js')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, shareEntryBehavior, homeBannerBehavior, homePetBehavior, homeActivityBehavior, homeTuanBehavior, homeMallBehavior, homeMyActivitiesBehavior],
+  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, authGateBehavior, homeBannerBehavior, homePetBehavior, homeActivityBehavior, homeTuanBehavior, homeMallBehavior, homeMyActivitiesBehavior, homeHostInviteBehavior],
   data: {
     t: pageI18n.buildTMap('zh-CN'),
     isLoggedIn: false,
@@ -138,6 +139,10 @@ Page({
     // 待处理板块：每次 onShow 独立轻量拉取（绕 30s 节流）——支付/改价后返回首页必须立即可见最新状态
     if (this.data.isLoggedIn || (app.globalData && app.globalData.isLoggedIn)) {
       this._loadPendingOrders()
+      // 寄养开单入口：登录态下按寄养档案存在与否决定板块可见（30s 缓存，实时性靠下拉刷新）
+      this._loadHostInvite()
+    } else {
+      this._clearHostInvite()
     }
     // 性能优化（2026-09-01）：30s 节流——tab 切回时不重复全量云调用
     const now = Date.now()
@@ -234,6 +239,8 @@ const { orderManager } = require('../../services/OrderManager')
 
   _initPage(forceRefresh) {
     this._loadHomeFeed(forceRefresh)
+    // 寄养开单入口：与 feed 并行刷新（缓存 30s 兜底，forceRefresh 穿透）
+    this._loadHostInvite(forceRefresh)
   },
 
   _refreshUserData() {
@@ -252,6 +259,7 @@ const { orderManager } = require('../../services/OrderManager')
     if (!isLoggedIn) {
       if (typeof this._applyMyPets === 'function') { this._applyMyPets([]) }
       if (typeof this._applyMyActivities === 'function') { this._applyMyActivities([]) }
+      if (typeof this._clearHostInvite === 'function') { this._clearHostInvite() }
       this.setData({ pendingOrders: [] })
     }
   },

@@ -14,40 +14,35 @@
 }
 
 /* ===== 顶部品牌栏 ===== */
-/* ===== 分类标签栏 ===== */
+/* ===== 分类标签栏（文字 tab + 金墨短线） ===== */
 .category-tabs {
   display: flex;
-  padding: var(--zy-space-sm2) var(--page-padding) var(--zy-space-sm2);
-  gap: 12rpx;
-  flex-wrap: wrap;
-  justify-content: flex-start;
+  padding: 0 var(--page-padding);
+  gap: 40rpx;
   position: relative;
   z-index: 10;
   border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .category-tab {
-  padding: 12rpx 28rpx;
-  border-radius: var(--zy-radius-pill);
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  background-color: transparent;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
   position: relative;
-  overflow: hidden;
+  padding: 20rpx 0 22rpx;
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+  background-color: transparent;
+  border: none;
+  overflow: visible;
   z-index: 1;
   flex: 0 1 auto;
   min-width: auto;
   box-sizing: border-box;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   font-family: var(--font-sans);
   font-weight: 400;
-  letter-spacing: 0.04em;
-  transition: transform 280ms cubic-bezier(0.25,0.1,0.25,1),
-              background-color 280ms cubic-bezier(0.25,0.1,0.25,1),
-              border-color 280ms cubic-bezier(0.25,0.1,0.25,1);
+  letter-spacing: 0.06em;
+  transition: color 280ms cubic-bezier(0.25,0.1,0.25,1);
 }
 
 .category-tab--pressed {
@@ -55,16 +50,27 @@
 }
 
 .category-tab.active {
-  background: var(--activity-primary);
-  color: var(--text-on-primary);
+  color: var(--text-primary);
   font-weight: 500;
-  border-color: var(--activity-primary);
+  background: transparent;
+  border: none;
 }
 
 .category-tab.active .category-tab-text {
-  color: var(--text-on-primary);
+  color: var(--text-primary);
   font-weight: 500;
   letter-spacing: 0.06em;
+}
+
+.category-tab-indicator {
+  position: absolute;
+  bottom: -1rpx;
+  left: 50%;
+  margin-left: -18rpx;
+  width: 36rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: var(--lux-gold-ink);
 }
 
 .category-tab-text {
@@ -74,23 +80,22 @@
   align-items: center;
 }
 
-/* ===== 活动列表 ===== */
+/* ===== 活动列表（纸面行卡：行线分隔） ===== */
 .activity-list {
-  padding: var(--zy-space-lg) var(--page-padding);
+  padding: 0 var(--page-padding) var(--zy-space-lg);
   display: flex;
   flex-direction: column;
-  gap: var(--zy-space-lg);
 }
 
 /* ===== 活动卡片 ===== */
 .activity-card {
   position: relative;
-  border-radius: var(--zy-radius-lg);
+  border-radius: 0;
   overflow: hidden;
   background-color: transparent;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-  transition: transform 280ms cubic-bezier(0.25,0.1,0.25,1),
-              border-color 280ms cubic-bezier(0.25,0.1,0.25,1);
+  border: none;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
+  transition: opacity 280ms cubic-bezier(0.25,0.1,0.25,1);
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -105,21 +110,10 @@
 .activity-card:nth-child(n+6)  { animation-delay: 480ms; }
 
 .activity-card--pressed {
-  transform: scale(0.985);
-  border-color: rgba(45, 79, 45, 0.15);
+  opacity: 0.8;
 }
 
-.activity-card-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--activity-tint);
-  opacity: 0.5;
-  z-index: 1;
-  pointer-events: none;
-}
+/* （activity-card-background / activity-accent 底纹与装饰线已随行线化移除） */
 
 .activity-card-content {
   position: relative;
@@ -376,16 +370,7 @@
   letter-spacing: 0.08em;
 }
 
-/* ===== 卡片底部装饰线 ===== */
-.activity-accent {
-  position: absolute;
-  bottom: 0;
-  left: var(--zy-space-lg);
-  right: var(--zy-space-lg);
-  height: 2rpx;
-  background: var(--activity-primary);
-  opacity: 0.3;
-}
+/* （卡片底部装饰线已随行线化移除，分隔由 .activity-card 的 14% 墨 border-bottom 提供） */
 
 /* ===== 空状态（居中、奶油底、宽字距标签） ===== */
 .empty-state {

@@ -4,7 +4,7 @@
     "zy-skeleton": "/components/zy-skeleton/index"
   },
   "navigationBarTitleText": "家庭寄养",
-  "navigationBarTextStyle": "black",
+  "navigationBarTextStyle": "white",
   "navigationBarBackgroundColor": "#F7F5EF",
   "backgroundColor": "#F7F5EF",
   "enablePullDownRefresh": false

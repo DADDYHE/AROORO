@@ -10,6 +10,7 @@
 const { OrderService } = require('../../../services/CloudFunctionService')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 const STATUS_TEXT = {
   active: '待填写',
   filled: '已成单',
@@ -42,7 +43,7 @@ const ORDER_STATUS_VIEW = {
 }
 
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
 
   data: {
     isLoading: true,

@@ -1,6 +1,8 @@
 {
   "usingComponents": {
-    "zy-icon": "../components/zy-icon/index"
+    "zy-icon": "../components/zy-icon/index",
+    "login-prompt": "/components/login-prompt/login-prompt"
   },
-  "navigationBarTitleText": "我的收藏"
+  "navigationBarTitleText": "我的收藏",
+  "navigationBarTextStyle": "white"
 }

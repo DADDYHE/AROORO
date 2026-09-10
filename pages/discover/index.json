@@ -5,6 +5,6 @@
   },
   "navigationBarTitleText": "宠团团",
   "enablePullDownRefresh": true,
-  "backgroundTextStyle": "light"
-
+  "backgroundTextStyle": "light",
+  "navigationBarTextStyle": "white"
 }

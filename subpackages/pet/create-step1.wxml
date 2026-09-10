@@ -1,4 +1,5 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
@@ -49,7 +50,7 @@
           <view class="form-group">
             <!-- 宠物昵称 -->
             <view class="form-row">
-              <view class="field-label"><text>宠物昵称</text><text class="label-required">（必填）</text></view>
+              <view class="field-label"><text>宠物昵称</text><text class="label-required">*</text></view>
               <input
                 class="form-input"
                 value="{{formData.name}}"
@@ -63,7 +64,7 @@
 
             <!-- 宠物类型（点击弹出 action-sheet） -->
             <view class="form-row form-row--select" bindtap="selectPetType">
-              <view class="field-label"><text>宠物类型</text><text class="label-required">（必填）</text></view>
+              <view class="field-label"><text>宠物类型</text><text class="label-required">*</text></view>
               <view class="form-value {{formData.type ? '' : 'form-placeholder'}}">
                 <text class="form-value-text">{{formData.type === 'dog' ? '狗狗' : (formData.type === 'cat' ? '猫咪' : (formData.type === 'exotic' ? '异宠' : '请选择宠物类型'))}}</text>
               </view>
@@ -76,7 +77,7 @@
 
             <!-- 品种 -->
             <view class="form-row">
-              <view class="field-label"><text>品种</text><text class="label-required">（必填）</text></view>
+              <view class="field-label"><text>品种</text><text class="label-required">*</text></view>
               <input
                 class="form-input"
                 value="{{formData.breed}}"
@@ -90,7 +91,7 @@
 
             <!-- 性别（点击弹出 action-sheet） -->
             <view class="form-row form-row--select" bindtap="selectGender">
-              <view class="field-label"><text>性别</text><text class="label-required">（必填）</text></view>
+              <view class="field-label"><text>性别</text><text class="label-required">*</text></view>
               <view class="form-value {{formData.gender ? '' : 'form-placeholder'}}">
                 <text class="form-value-text">{{formData.gender === 'male' ? '弟弟' : (formData.gender === 'female' ? '妹妹' : (formData.gender === 'unknown' ? '不确定' : '请选择性别'))}}</text>
               </view>

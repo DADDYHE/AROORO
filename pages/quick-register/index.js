@@ -10,9 +10,10 @@ const { ActivityService } = require('../../services/CloudFunctionService')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, tabBarSyncBehavior, cloudImageBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     activities: [],

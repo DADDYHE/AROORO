@@ -1,3 +1,4 @@
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <!-- 启动首屏海报 · 独立全屏页（非 tab 页 + custom 导航栏 => 框架级全屏，100% 覆盖 navbar 与系统 tabBar） -->
 <view
   wx:if="{{visible}}"

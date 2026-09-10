@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "管理中心",
-  "usingComponents": {}
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "navigationBarTextStyle": "white"
 }

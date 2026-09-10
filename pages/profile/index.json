@@ -1,7 +1,9 @@
 {
   "navigationBarTitleText": "我的",
-  "navigationBarTextStyle": "black",
+  "navigationBarTextStyle": "white",
   "navigationBarBackgroundColor": "#FFFFFF",
   "backgroundColor": "#F5F5F7",
-  "usingComponents": {}
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  }
 }

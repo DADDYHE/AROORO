@@ -4,5 +4,6 @@
     "favorite-btn": "./components/favorite-btn/index",
     "login-prompt": "../../components/login-prompt/login-prompt",
     "zy-skeleton": "../../components/zy-skeleton/index"
-  }
+  },
+  "navigationBarTextStyle": "white"
 }

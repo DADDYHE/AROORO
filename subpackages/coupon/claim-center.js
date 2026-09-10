@@ -8,9 +8,10 @@ const pageI18n = require('../../utils/page-i18n.js')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const { requireLogin } = require('../../utils/require-login')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     templates: [],

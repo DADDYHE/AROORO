@@ -1,7 +1,7 @@
 const __i18n = require('../../utils/i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const tabBarSyncBehavior = require('../../behaviors/tabBarSync')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const { reverseGeocode } = require('../../utils/reverseGeocoding')
 
@@ -10,7 +10,7 @@ const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, tabBarSyncBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, tabBarSyncBehavior, authGateBehavior],
 
   data: {
     city: '',

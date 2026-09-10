@@ -5,9 +5,10 @@ const pageI18n = require('../../utils/page-i18n.js')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const { thumbUrl } = require('../../utils/cloudThumb')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
     cartItems: [],
     isAllChecked: false,

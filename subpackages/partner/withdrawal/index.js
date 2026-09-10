@@ -6,6 +6,7 @@ const { AdminService } = require('../../../services/CloudFunctionService')
 const { formatTime } = require('../../../utils/dateUtils')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 const STATUS_MAP = {
   pending: { text: '待审核', color: '#C9A24B' },
   approved: { text: '', color: '#6B7D5A' }, // 文案按 mode 区分：manual→待人工打款 / 其他→待转账
@@ -16,8 +17,9 @@ const STATUS_MAP = {
 }
 
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
+    noPermission: false,
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     list: [],
     total: 0,
@@ -36,6 +38,7 @@ Page({
     this.setData({ isLoading: true })
     try {
       const res = await AdminService.getMyWithdrawals({ page: this.data.page, pageSize: this.data.pageSize })
+      if (this._isPartnerDenied(res)) { this._showPartnerDenied(); return }
       if (res.code === 0 && res.data) {
         const list = (res.data.list || []).map(item => ({
           ...item,
@@ -161,4 +164,19 @@ Page({
   },
 
   _formatTime(date) { return formatTime(date) },
+  /** 非合伙人守卫：partnerService 权限拒绝（403）时展示申请引导，替代空白页 */
+  _isPartnerDenied(res) {
+    if (!res) { return false }
+    if (res.code === 403) { return true }
+    const msg = String(res.message || res.msg || '')
+    return /权限不足|无权限|不是合作伙伴/.test(msg)
+  },
+
+  _showPartnerDenied() {
+    this.setData({ noPermission: true, isLoading: false, isLoadingMore: false })
+  },
+
+  onGoPartnerApply() {
+    wx.navigateTo({ url: '/subpackages/partner/home/index' })
+  },
 })

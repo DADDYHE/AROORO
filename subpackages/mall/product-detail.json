@@ -1,1 +1,8 @@
-{ "usingComponents": { "login-prompt": "../../components/login-prompt/login-prompt", "zy-skeleton": "../../components/zy-skeleton/index" }, "navigationBarTitleText": "商品详情" }
+{
+  "usingComponents": {
+    "login-prompt": "../../components/login-prompt/login-prompt",
+    "zy-skeleton": "../../components/zy-skeleton/index"
+  },
+  "navigationBarTitleText": "商品详情",
+  "navigationBarTextStyle": "white"
+}

@@ -1,8 +1,9 @@
 const app = getApp()
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
     // 从 globalData 读取版本号（由 utils/appStartupOptimizer.js 启动时写入），
     // 兜底保留 '1.0.0' 防止 globalData 未初始化导致显示空白

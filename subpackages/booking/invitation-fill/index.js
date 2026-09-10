@@ -17,6 +17,7 @@ const PaymentService = require('../../../services/PaymentService')
 const { authService } = require('../../../services/AuthService')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 // 类型 / 性别选项（与 pet/create-step1 一致：名称文案、取值映射完全相同）
 const PET_TYPES = [
   { name: '狗狗', value: 'dog' },
@@ -75,7 +76,7 @@ function chooseSlotAvatar({ onSuccess, onError }) {
 }
 
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
 
   data: {
     isLoading: true,

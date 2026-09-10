@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "我的宠物",
   "enablePullDownRefresh": true,
-  "usingComponents": { "login-prompt": "../../components/login-prompt/login-prompt" }
+  "usingComponents": {
+    "login-prompt": "../../components/login-prompt/login-prompt"
+  },
+  "navigationBarTextStyle": "white"
 }

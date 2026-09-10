@@ -1,7 +1,9 @@
 {
   "navigationBarTitleText": "家庭寄养编辑",
-  "navigationBarTextStyle": "black",
+  "navigationBarTextStyle": "white",
   "navigationBarBackgroundColor": "#F7F5EF",
   "backgroundColor": "#F7F5EF",
-  "usingComponents": {}
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  }
 }

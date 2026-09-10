@@ -6,9 +6,10 @@ const { chooseAndUploadAvatar } = require('./utils/avatarUpload')
 
 const pageI18n = require('../../utils/page-i18n.js')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
   data: {
     pet: {},
     editingData: {

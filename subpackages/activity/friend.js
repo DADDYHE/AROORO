@@ -5,9 +5,10 @@ const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const pageI18n = require('../../utils/page-i18n.js')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
 
   /**
    * 页面的初始数据

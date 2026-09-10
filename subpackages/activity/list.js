@@ -4,13 +4,13 @@ const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { ActivityService } = require('./services/ActivityService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { buildSharePath } = require('../../utils/share')
 const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 const { transformActivityItem, sortActivities, toDate, formatDateTime } = require('./utils/activityHelpers')
 
 Page({
-  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
 
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),

@@ -6,8 +6,9 @@ const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
 const { buildSharePath } = require('../../../utils/share')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 Page({
-  behaviors: [ListBehavior, cloudImageBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
 
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),

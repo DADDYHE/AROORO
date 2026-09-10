@@ -2,6 +2,7 @@ const __i18n = require('../../../utils/i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { HostService } = require('../../../services/CloudFunctionService')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 // ⚠ Skyline 约束：wxml 绑定表达式禁止 .indexOf() 等方法调用（会编译成 WXS 调用，
 //   跨作用域取 form.petTypes 求值为 null → "Array.prototype.indexOf called on null or undefined"）。
 //   多选选中态一律 JS 预计算 on 字段，wxml 只做 item.on 属性访问。
@@ -36,6 +37,7 @@ const STEP_NO = ['01', '02', '03']
 const MAX_PHOTOS = 9
 
 Page({
+  behaviors: [authGateBehavior],
   data: {
     step: 1,
     stepNo: STEP_NO[0],
@@ -47,6 +49,7 @@ Page({
     // zy-navbar transparent 模式不占位，由 hero 内 spacer 撑高；scroll-view 内滚动失效，改走 scroll-top
     _navbarHeight: 64,
     _scrollTop: 0,
+    _navbarSolid: false,
     petTypeOptions: PET_TYPE_OPTIONS,
     serviceTypeOptions: SERVICE_TYPE_OPTIONS,
     boardingModeOptions: BOARDING_MODE_OPTIONS,
@@ -76,6 +79,15 @@ Page({
     if (options && options.edit === '1') {
       this.setData({ isEdit: true })
       this._loadProfile()
+    }
+  },
+
+  /** 滚动过 hero 后导航栏切实底（配 zy-navbar solid 属性，深字可读） */
+  _onScroll(e) {
+    const solid = e.detail.scrollTop > 60
+    if (solid !== this._navbarSolidState) {
+      this._navbarSolidState = solid
+      this.setData({ _navbarSolid: solid })
     }
   },
 

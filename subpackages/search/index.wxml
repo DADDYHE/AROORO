@@ -1,4 +1,5 @@
 <zy-navbar title="搜索" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 
 <!-- 搜索栏：移至 scroll-view 外，避免 Skyline 下被裁剪 -->
 <view class="search-header">

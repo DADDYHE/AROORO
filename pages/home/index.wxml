@@ -182,6 +182,24 @@
     </view>
   </view>
 
+  <!-- ===== Section 4.8: 寄养开单（仅已开通家庭寄养的用户可见，与合作伙伴身份无关） ===== -->
+  <view class="section host-invite-section stagger-item stagger-rise delay-3" wx:if="{{isLoggedIn && hasHostInvite}}">
+    <view class="section-head">
+      <text class="section-title">寄养开单</text>
+      <text class="section-link" bindtap="handleHostInviteManage" hover-class="section-link--pressed" hover-stay-time="120">管理开单 ›</text>
+    </view>
+    <view class="host-invite-card" bindtap="handleHostInviteTap" hover-class="host-invite-card--pressed" hover-stay-time="120">
+      <view class="host-invite-glow"></view>
+      <view class="host-invite-body">
+        <text class="host-invite-eyebrow">HOSTING INVITATION</text>
+        <text class="host-invite-title">主动开单</text>
+        <text class="host-invite-desc">与客户沟通好后创建邀请，对方填写信息即可下单</text>
+      </view>
+      <text class="host-invite-arrow">›</text>
+      <view class="host-invite-sealline"></view>
+    </view>
+  </view>
+
   <!-- ===== Section 5: 商城好物 ===== -->
   <view class="section section-featured stagger-item stagger-rise delay-3" wx:if="{{mallProducts.length}}">
     <view class="section-head">

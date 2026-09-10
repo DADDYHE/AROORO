@@ -3,5 +3,6 @@
     "login-prompt": "../../components/login-prompt/login-prompt"
   },
   "navigationBarTitleText": "宠物活动",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "navigationBarTextStyle": "white"
 }

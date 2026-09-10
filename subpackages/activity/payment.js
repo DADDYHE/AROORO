@@ -11,9 +11,10 @@ const countdownBehavior = require('../../behaviors/countdownBehavior')
 const pageI18n = require('../../utils/page-i18n.js')
 const { requireLogin } = require('../../utils/require-login')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, countdownBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     mode: 'new',

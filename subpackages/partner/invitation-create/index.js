@@ -16,7 +16,7 @@ const PET_TYPE_TEXT = {
 }
 
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
 
   data: {
     isLoading: true,
@@ -35,6 +35,9 @@ Page({
     days: 0,
     referencePrice: 0, // 系统参考价（元）
     priceHint: '',
+    // 创建成功分享弹层
+    showShareSheet: false,
+    shareSheet: null,
   },
 
   onLoad(options) {
@@ -95,6 +98,7 @@ Page({
   async _loadProfile() {
     try {
       const { HostService } = require('../../../services/CloudFunctionService')
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
       const res = await HostService.getMyProfile()
       if (res.code === 0 && res.data) {
         this.setData({
@@ -218,8 +222,38 @@ Page({
             note: note || '',
           })
       if (res.code === 0) {
-        wx.showToast({ title: isEdit ? '保存成功' : '开单成功', icon: 'success' })
-        setTimeout(() => wx.navigateBack(), 800)
+        if (isEdit) {
+          wx.showToast({ title: '保存成功', icon: 'success' })
+          setTimeout(() => wx.navigateBack(), 800)
+          return
+        }
+        // 新建：直接弹分享弹层（承载 open-type=share 按钮，微信转发面板只能由用户点击 share 按钮唤起）
+        const d = (res.data) || {}
+        const inv = d.invitation || d
+        const shareCode = inv.shareCode || inv.code || ''
+        if (!shareCode) {
+          // 兜底：无 shareCode 无法生成填写链接，退回原提示流
+          wx.showToast({ title: '开单成功', icon: 'success' })
+          setTimeout(() => wx.navigateBack(), 800)
+          return
+        }
+        const days = Math.max(1, Math.round(
+          (Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 86400000,
+        ))
+        this.setData({
+          submitting: false,
+          showShareSheet: true,
+          shareSheet: {
+            shareCode,
+            startDate,
+            endDate,
+            petCount,
+            totalPrice: price,
+            dateRangeText: `${startDate} 至 ${endDate}`,
+            days,
+            timeText: `${startAt} - ${endAt}`,
+          },
+        })
         return
       }
       wx.showToast({ title: res.message || res.msg || '开单失败', icon: 'none' })
@@ -228,4 +262,43 @@ Page({
     }
     this.setData({ submitting: false })
   },
+
+  // ---------- 创建成功分享弹层 ----------
+
+  /** 关闭分享弹层并跳转家庭档案页（开单列表/订单台账）
+   *  入口分流：上一页已是 hosting-profile → 直接返回；否则（如首页直达）redirectTo 替换本页，
+   *  使「返回」落到 hosting-profile，再返回才回入口页（首页）。 */
+  onCloseShareSheet() {
+    this.setData({ showShareSheet: false })
+    setTimeout(() => {
+      const pages = getCurrentPages()
+      const prev = pages[pages.length - 2]
+      if (prev && prev.route === 'subpackages/partner/hosting-profile/index') {
+        wx.navigateBack()
+        return
+      }
+      wx.redirectTo({
+        url: '/subpackages/partner/hosting-profile/index',
+        fail: () => wx.navigateBack(),
+      })
+    }, 200)
+  },
+
+  /** 转发面板内容：读取本次创建的邀请（open-type=share 按钮只能由用户点击唤起）
+   *  用户点了「转发给客户」→ 本回调在面板唤起时同步触发 → 收起弹层并返回（延时让微信面板先稳定展开） */
+  onShareAppMessage() {
+    const s = this.data.shareSheet
+    if (this.data.showShareSheet) {
+      setTimeout(() => this.onCloseShareSheet(), 600)
+    }
+    if (s && s.shareCode) {
+      return {
+        title: `寄养开单邀请 · ${s.startDate} 至 ${s.endDate} · ¥${s.totalPrice}`,
+        path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}`,
+      }
+    }
+    return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' }
+  },
+
+  noop() { /* 弹层遮罩占位 */ },
 })

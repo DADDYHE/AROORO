@@ -6,10 +6,12 @@ const { AdminService } = require('../../../services/CloudFunctionService')
 const pageI18n = require('../../../utils/page-i18n.js')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
+    noPermission: false,
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: true,
     overview: null,
@@ -70,6 +72,7 @@ Page({
 
   async _loadBundle(opts) {
     const res = await AdminService.getPartnerIncomeBundle({ pageSize: this.data.pageSize }, opts)
+    if (this._isPartnerDenied(res)) { this._showPartnerDenied(); return null }
     if (!res || res.code !== 0 || !res.data) { return null }
     return res.data
   },
@@ -406,5 +409,20 @@ Page({
 
   onWithdrawRecordsTap() {
     wx.navigateTo({ url: '/subpackages/partner/withdrawal/index' })
+  },
+  /** 非合伙人守卫：partnerService 权限拒绝（403）时展示申请引导，替代空白页 */
+  _isPartnerDenied(res) {
+    if (!res) { return false }
+    if (res.code === 403) { return true }
+    const msg = String(res.message || res.msg || '')
+    return /权限不足|无权限|不是合作伙伴/.test(msg)
+  },
+
+  _showPartnerDenied() {
+    this.setData({ noPermission: true, isLoading: false, isLoadingMore: false })
+  },
+
+  onGoPartnerApply() {
+    wx.navigateTo({ url: '/subpackages/partner/home/index' })
   },
 })

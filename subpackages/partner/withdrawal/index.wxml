@@ -1,4 +1,5 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
@@ -73,5 +74,16 @@
       <text class="loading-more-text">没有更多了</text>
     </view>
   </view>
+  <block wx:elif="{{noPermission}}">
+    <view class="pp-noperm">
+      <text class="pp-noperm-eyebrow">PARTNER ONLY</text>
+      <text class="pp-noperm-title">合伙人专属功能</text>
+      <text class="pp-noperm-desc">该页面面向已开通的合作伙伴。申请通过后，即可管理活动、订单与收益。</text>
+      <view class="pp-noperm-btn" bindtap="onGoPartnerApply" hover-class="pp-noperm-btn--pressed" hover-stay-time="120">
+        <text class="pp-noperm-btn-text">前往管理中心</text>
+      </view>
+    </view>
+  </block>
+
 </view>
 </scroll-view>

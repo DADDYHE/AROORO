@@ -1,4 +1,5 @@
 <zy-navbar title="" transparent color="#F7F5EF" />
+<!-- ⚠ 双栏购物页：hero 固定在双栏之外不随内容滚动，导航栏恒在深绿上，无需 solid 实底切换 -->
 <view class="page-container">
   <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
   <!-- B · 深绿沉浸标题版（双栏购物页紧凑 hero） -->
@@ -31,7 +32,6 @@
       refresher-triggered="{{_refresherTriggered}}"
       bindrefresherrefresh="_onRefresherRefresh"
       bindscrolltolower="_onScrollToLower"
-      bindscroll="_onScroll"
       lower-threshold="100"
     >
       <view class="category-header">

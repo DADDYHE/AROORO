@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "宠物详情",
-  "usingComponents": {}
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "navigationBarTextStyle": "white"
 }

@@ -4,8 +4,9 @@ const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { AdminService } = require('../../../services/CloudFunctionService')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     isLoading: true,

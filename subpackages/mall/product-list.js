@@ -3,7 +3,7 @@ const { CartService } = require('./CartService')
 const mallCategories = require('./mallCategories')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { buildSharePath } = require('../../utils/share')
 
 // 「起」价标记规则：多规格（skuType=multi 且 skus 多于一个）或多价格（minPrice≠maxPrice）才显示；单规格或单价格一律不显示
@@ -15,7 +15,7 @@ function hasPriceFrom(p) {
 }
 
 Page({
-  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
   data: {
     currentCategory: '',
     currentCategoryLabel: '',

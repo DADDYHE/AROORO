@@ -1,7 +1,8 @@
 const { ListBehavior } = require('../../behaviors/listBehavior')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
     latitude: 0,
     longitude: 0,

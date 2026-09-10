@@ -7,6 +7,7 @@ const { ListBehavior } = require('../../../behaviors/listBehavior')
 const pageI18n = require('../../../utils/page-i18n.js')
 const i18n = require('../../../utils/i18n.js')
 
+const authGateBehavior = require('../../../behaviors/authGateBehavior')
 // 档案状态 → 展示文案
 const STATUS_TEXT = {
   active: '营业中',
@@ -60,7 +61,7 @@ const ORDER_STATUS_TEXT = {
 }
 
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
     // 注入 i18n t-map，使 WXML 可绑定 {{ t.BIZ_XXX }}（根治 BIZ_BX46V0 死 key）
@@ -76,6 +77,8 @@ Page({
     invitationExpanded: true,
     ordersExpanded: false,
     cancelledOrders: [],
+    cancelledInvitations: [],
+    cancelledTotal: 0,
     cancelledExpanded: false,
     page: 1,
     pageSize: 20,
@@ -140,6 +143,7 @@ Page({
           orderTotal: res.data.total || 0,
           hasMore: list.length >= this.data.pageSize,
         })
+        this._syncCancelledTotal()
       }
     } catch (e) {
       console.error('[partner/hosting-profile] _loadOrders error:', e)
@@ -165,12 +169,14 @@ Page({
     wx.navigateTo({ url: '/subpackages/partner/invitation-list/index' })
   },
 
-  /** 我的开单列表（轻量拉取，每次进入刷新——邀请状态/成单结果需即时可见） */
+  /** 我的开单列表（轻量拉取，每次进入刷新——邀请状态/成单结果需即时可见）
+   *  2026-09-10：cancelled 开单移入节3「已取消订单」，不再滞留「我的开单」 */
   async _loadInvitations() {
     try {
       const res = await OrderService.getMyInvitations({ page: 1, pageSize: 10 })
       if (res.code === 0 && res.data) {
-        const list = (res.data.list || []).map(o => ({
+        const all = res.data.list || []
+        const decorate = o => ({
           ...o,
           statusText: INVITATION_STATUS_TEXT[o.status] || o.status,
           statusTagClass: INVITATION_TAG_CLASS[o.status] || 'tag-inactive',
@@ -180,12 +186,30 @@ Page({
           dateRangeText: `${o.startDate || '-'} 至 ${o.endDate || '-'}`,
           timeText: `${o.startAt || '--:--'} - ${o.endAt || '--:--'}`,
           releasable: o.status === 'filled' && !o.orderId,
+        })
+        const myInvitations = all.filter(o => o.status !== 'cancelled').map(decorate)
+        // 取消的开单映射为节3 订单卡字段（复用渲染模板）
+        const cancelledInvitations = all.filter(o => o.status === 'cancelled').map(o => ({
+          ...o,
+          isInvitation: true,
+          status: 'cancelled',
+          statusText: INVITATION_STATUS_TEXT.cancelled,
+          startDate: o.startDate,
+          endDate: o.endDate,
         }))
-        this.setData({ myInvitations: list })
+        this.setData({ myInvitations, cancelledInvitations })
+        this._syncCancelledTotal()
       }
     } catch (e) {
       console.error('[partner/hosting-profile] _loadInvitations error:', e)
     }
+  },
+
+  /** 节3 计数 = 已取消订单 + 已取消开单 */
+  _syncCancelledTotal() {
+    this.setData({
+      cancelledTotal: this.data.cancelledOrders.length + this.data.cancelledInvitations.length,
+    })
   },
 
   /** 手风琴互斥：点击节头展开该节、收起另一节；点已展开的节则收起自己 */

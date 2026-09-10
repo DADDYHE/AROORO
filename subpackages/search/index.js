@@ -2,13 +2,14 @@ const { ListBehavior } = require('../../behaviors/listBehavior')
 const { applyCloudThumbs } = require('../../utils/cloudThumb')
 const { formatRegion } = require('../../utils/addressUtils')
 
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const HOT_KEYWORDS = ['猫粮', '狗粮', '寄养', '洗澡', '逗猫棒', '冻干']
 
 const HISTORY_KEY = 'search_history'
 const MAX_HISTORY = 10
 
 Page({
-  behaviors: [ListBehavior],
+  behaviors: [ListBehavior, authGateBehavior],
   data: {
     keyword: '',
     hotKeywords: HOT_KEYWORDS,

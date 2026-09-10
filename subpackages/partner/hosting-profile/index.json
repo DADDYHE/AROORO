@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "家庭寄养",
-  "usingComponents": {},
-  "renderer": "webview"
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "renderer": "webview",
+  "navigationBarTextStyle": "white"
 }

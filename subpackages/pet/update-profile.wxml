@@ -1,4 +1,5 @@
-<zy-navbar title="" transparent color="#F7F5EF" />
+<zy-navbar title="" transparent color="#F7F5EF" solid="{{_navbarSolid}}" />
+<login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
 <scroll-view
   scroll-y
   enhanced
@@ -49,7 +50,7 @@
           <view class="form-group">
             <!-- 宠物昵称 -->
             <view class="form-row">
-              <view class="field-label"><text>宠物昵称</text><text class="label-required">（必填）</text></view>
+              <view class="field-label"><text>宠物昵称</text><text class="label-required">*</text></view>
               <input
                 class="form-input"
                 value="{{editingData.name}}"
@@ -63,7 +64,7 @@
 
             <!-- 宠物类型 -->
             <view class="form-row form-row--select" bindtap="selectPetType">
-              <view class="field-label"><text>宠物类型</text><text class="label-required">（必填）</text></view>
+              <view class="field-label"><text>宠物类型</text><text class="label-required">*</text></view>
               <view class="form-value {{editingData.type ? '' : 'form-placeholder'}}">
                 <text class="form-value-text">{{editingData.type === 'dog' ? '狗狗' : (editingData.type === 'cat' ? '猫咪' : (editingData.type === 'exotic' ? '异宠' : '请选择宠物类型'))}}</text>
               </view>
@@ -76,7 +77,7 @@
 
             <!-- 性别 -->
             <view class="form-row form-row--select" bindtap="selectGender">
-              <view class="field-label"><text>性别</text><text class="label-required">（必填）</text></view>
+              <view class="field-label"><text>性别</text><text class="label-required">*</text></view>
               <view class="form-value {{editingData.gender ? '' : 'form-placeholder'}}">
                 <text class="form-value-text">{{editingData.gender === 'male' ? '弟弟' : (editingData.gender === 'female' ? '妹妹' : (editingData.gender === 'unknown' ? '不确定' : '请选择性别'))}}</text>
               </view>

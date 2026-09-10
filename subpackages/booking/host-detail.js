@@ -2,17 +2,18 @@ const __i18n = require('../../utils/i18n.js')
 const __pageI18n = require('../../utils/page-i18n.js')
 const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 const { HostService, FavoriteService } = require('../../services/CloudFunctionService')
+const { requireLogin } = require('../../utils/require-login')
 const { formatRegion } = require('../../utils/addressUtils')
 const { authService } = require('../../services/AuthService')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
-const shareEntryBehavior = require('../../behaviors/shareEntryBehavior')
+const authGateBehavior = require('../../behaviors/authGateBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const pageI18n = require('../../utils/page-i18n.js')
 const { buildSharePath } = require('../../utils/share')
 
 Page({
   ...pageI18n.mixin(),
-  behaviors: [ListBehavior, cloudImageBehavior, shareEntryBehavior],
+  behaviors: [ListBehavior, cloudImageBehavior, authGateBehavior],
   /**
    * 页面的初始数据
    */
@@ -285,7 +286,8 @@ Page({
   /**
    * 立即预约：跳预订确认页（选日期/宠物/下单）
    */
-  goBooking() {
+  async goBooking() {
+    if (!(await requireLogin())) { return }
     const host = this.data.host
     if (!host || !host.id) {
       this.error('HOST_INFO_LOAD_FAILED')
@@ -306,6 +308,7 @@ Page({
    * 联系家庭：有电话/微信号时弹 ActionSheet——电话直拨，微信号复制引导添加
    */
   async contactFamily() {
+    if (!(await requireLogin())) { return }
     const host = this.data.host
     // 公开投影不透 openid，用 host.id（档案 _id）判存在
     if (!host || !host.id) {

@@ -1,16 +1,89 @@
 @import '../common.wxss';
 
 /* ================================================================
-   partner/invitation-create · 主动开单表单样式
+   partner/invitation-create · 主动开单（A 编辑式台账表单 · 2026-09-10）
+   章节号 + 金墨 rule + 14% 墨行线；输入无底无框（禁 --gray-50/--border-soft 纸面隐形底）
    ================================================================ */
 
-/* ---------- 区块标题 ---------- */
+/* ---------- 章节分节 ---------- */
+.ac-body {
+  padding-bottom: 40rpx;
+}
+
+.ac-section {
+  padding: 44rpx var(--page-padding) 40rpx;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
+}
+
+.ac-section:last-child {
+  border-bottom: none;
+}
+
+.ac-chapter {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.ac-chapter-no {
+  font-size: 22rpx;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: var(--lux-gold-ink);
+  font-feature-settings: 'tnum';
+}
+
+.ac-chapter-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.1em;
+}
+
+.ac-chapter-rule {
+  flex: 1;
+  height: 1rpx;
+  background: rgba(26, 26, 23, 0.14);
+}
+
+/* ---------- 编辑式字段行 ---------- */
+.ac-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 24rpx 0;
+}
+
+.ac-field--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16rpx;
+}
+
+.ac-field-label {
+  flex-shrink: 0;
+  font-size: 25rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  font-weight: 400;
+}
+
+.ac-field-value {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  text-align: right;
+  font-feature-settings: 'tnum';
+}
+
+/* ---------- 区块标题（兼容旧类名） ---------- */
 .section-title {
   display: block;
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
-  letter-spacing: 2rpx;
+  letter-spacing: 0.1em;
   margin-bottom: 24rpx;
 }
 
@@ -18,11 +91,11 @@
   display: block;
   font-size: 24rpx;
   color: var(--text-secondary);
-  letter-spacing: 1rpx;
+  letter-spacing: 0.06em;
   margin: 20rpx 0 12rpx;
 }
 
-/* ---------- 日期/时刻双列行 ---------- */
+/* ---------- 日期/时刻双列行（透明底 + 14% 墨描边，取代纸面隐形灰底） ---------- */
 .date-row {
   display: flex;
   align-items: center;
@@ -36,12 +109,12 @@
 .date-cell {
   display: flex;
   flex-direction: column;
-  gap: 6rpx;
+  gap: 8rpx;
   align-items: center;
-  padding: 20rpx 12rpx;
-  background: var(--gray-50);
+  padding: 22rpx 12rpx;
+  background: transparent;
   border-radius: var(--zy-radius-sm);
-  border: 1rpx solid var(--border-soft);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .date-cell--right {
@@ -51,29 +124,30 @@
 .date-label {
   font-size: 22rpx;
   color: var(--text-tertiary);
-  letter-spacing: 1rpx;
+  letter-spacing: 0.08em;
 }
 
 .date-value {
   font-size: 28rpx;
   color: var(--text-primary);
   font-weight: 500;
-  letter-spacing: 0.5rpx;
+  letter-spacing: 0.02em;
+  font-feature-settings: 'tnum';
 }
 
 .date-value--ph {
-  color: var(--gray-400);
+  color: var(--text-tertiary);
   font-weight: 400;
 }
 
 .date-rule {
   width: 24rpx;
   height: 1rpx;
-  background: var(--border-color);
+  background: rgba(26, 26, 23, 0.14);
   margin: 0 12rpx;
 }
 
-/* ---------- 宠物数量步进器 ---------- */
+/* ---------- 宠物数量步进器（描边圆钮 + 深字） ---------- */
 .stepper-row {
   display: flex;
   align-items: center;
@@ -82,44 +156,47 @@
 }
 
 .stepper-label {
-  font-size: 26rpx;
-  color: var(--text-primary);
-  letter-spacing: 1rpx;
+  font-size: 25rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
 }
 
 .stepper {
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  gap: 12rpx;
 }
 
 .stepper-btn {
   width: 64rpx;
   height: 64rpx;
   border-radius: 50%;
-  background: var(--primary-tint);
+  background: transparent;
+  border: 1rpx solid rgba(26, 26, 23, 0.28);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .stepper-btn--disabled {
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
 .stepper-symbol {
-  font-size: 34rpx;
-  color: var(--zy-primary-700);
-  font-weight: 600;
+  font-size: 32rpx;
+  color: var(--text-primary);
+  font-weight: 400;
+  line-height: 1;
 }
 
 .stepper-num {
-  min-width: 80rpx;
+  min-width: 72rpx;
   text-align: center;
   font-size: 32rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
   font-family: var(--font-sans);
+  font-feature-settings: 'tnum';
 }
 
 .stepper-hint {
@@ -127,72 +204,81 @@
   font-size: 22rpx;
   color: var(--text-tertiary);
   margin-top: 8rpx;
+  letter-spacing: 0.02em;
 }
 
-/* ---------- 价格输入 ---------- */
-.price-input-row {
+/* ---------- 价格输入（行线式：金墨 ¥ + 大号数字，14% 墨底线） ---------- */
+.price-row {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  padding: 24rpx 28rpx;
-  background: var(--lux-card-gold-tint);
-  border-radius: var(--zy-radius-sm);
-  border: 1rpx solid var(--lux-hairline-gold);
+  gap: 14rpx;
+  padding: 8rpx 0 20rpx;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .price-currency {
   font-size: 40rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--lux-gold-ink);
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .price-input {
   flex: 1;
+  min-width: 0;
+  height: 72rpx;
+  line-height: 72rpx;
   font-size: 44rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
-  letter-spacing: 1rpx;
+  letter-spacing: 0.02em;
+  font-feature-settings: 'tnum';
+  background: transparent;
 }
 
 .price-ph {
-  color: var(--gray-400);
-  font-size: 28rpx;
+  color: var(--text-tertiary);
+  font-size: 26rpx;
   font-weight: 400;
+  line-height: 72rpx;
 }
 
-.ref-price-row {
-  margin-top: 20rpx;
+.ref-block {
+  margin-top: 4rpx;
 }
 
 .ref-price {
   color: var(--lux-gold-ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .ref-hint {
   display: block;
   font-size: 22rpx;
   color: var(--text-tertiary);
-  margin-top: 12rpx;
+  margin: 4rpx 0 8rpx;
   line-height: 1.5;
+  letter-spacing: 0.02em;
 }
 
-/* ---------- 备注 ---------- */
+/* ---------- 备注（透明底 + 14% 墨描边框，与日期格同一描边语言） ---------- */
 .note-textarea {
-  width: auto;
-  min-height: 140rpx;
+  width: 100%;
+  min-height: 160rpx;
   padding: 20rpx 24rpx;
-  background: var(--gray-50);
+  background: transparent;
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   border-radius: var(--zy-radius-sm);
-  border: 1rpx solid var(--border-soft);
-  font-size: 26rpx;
+  box-sizing: border-box;
+  font-size: 27rpx;
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 /* ---------- 提交 ---------- */
 .action-row {
-  padding: 40rpx 0;
+  padding: 40rpx var(--page-padding);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -221,5 +307,129 @@
 .submit-hint {
   font-size: 22rpx;
   color: var(--text-tertiary);
-  letter-spacing: 1rpx;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 旧类名兜底（info-divider/info-row/ref-price-row 已弃用但保留空定义避免误命中） ---------- */
+
+/* ---------- 创建成功分享弹层 ---------- */
+.share-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-color);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.share-sheet {
+  width: 100%;
+  background: var(--lux-card-bg);
+  border-radius: var(--zy-radius-2xl) var(--zy-radius-2xl) 0 0;
+  padding: 40rpx 36rpx calc(32rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
+  box-shadow: var(--lux-shadow-elevated);
+}
+
+.share-sheet-header {
+  position: relative;
+  text-align: center;
+  padding-top: 12rpx;
+  margin-bottom: 32rpx;
+}
+
+/* 顶部金墨短线（完成标识） */
+.share-done-line {
+  width: 56rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: var(--lux-gold-ink);
+  margin: 0 auto 20rpx;
+}
+
+.share-sheet-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.1em;
+  margin-bottom: 10rpx;
+}
+
+.share-sheet-sub {
+  display: block;
+  font-size: 23rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+
+.share-summary {
+  padding: 8rpx 0 24rpx;
+  margin-bottom: 28rpx;
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
+}
+
+.share-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 14rpx 0;
+}
+
+.share-summary-label {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  letter-spacing: 0.08em;
+}
+
+.share-summary-value {
+  font-size: 26rpx;
+  color: var(--text-primary);
+  text-align: right;
+  font-feature-settings: 'tnum';
+}
+
+.share-summary-price {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--lux-gold-ink);
+}
+
+.share-btn-primary {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: var(--lux-radius-pill);
+  background: var(--lux-green-grad);
+  color: var(--text-on-primary);
+  font-size: 30rpx;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  box-shadow: var(--lux-shadow-green);
+  padding: 0;
+}
+
+.share-btn-primary::after {
+  border: none;
+}
+
+.share-btn-primary--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.share-btn-ghost {
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
 }

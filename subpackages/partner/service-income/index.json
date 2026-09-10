@@ -1,8 +1,11 @@
 {
   "navigationBarTitleText": "收入管理",
   "navigationBarBackgroundColor": "#F5F5F7",
-  "navigationBarTextStyle": "black",
+  "navigationBarTextStyle": "white",
   "backgroundColor": "#F5F5F7",
   "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark"
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  }
 }
