@@ -1021,10 +1021,11 @@ page {
   flex-shrink: 0;
   margin-right: 20rpx;
   box-sizing: border-box;
+  /* 头像圆框需在纸面可见：--hairline（8% 墨）≈隐形，用 14% 墨 */
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   transition-property: transform;
   transition-duration: 280ms;
   transition-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
-  border: 1rpx solid var(--hairline);
 }
 
 .pet-card--pressed .pet-avatar {

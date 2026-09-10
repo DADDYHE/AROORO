@@ -120,7 +120,7 @@
   height: 140rpx;
   border-radius: 50%;
   overflow: hidden;
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   position: relative;
   z-index: 2;
   background: var(--card-cream, #FBF9F4);
@@ -211,7 +211,7 @@
   left: 0;
   right: 0;
   height: 1rpx;
-  background: var(--hairline);
+  background: rgba(26, 26, 23, 0.14);
 }
 
 /* 操作按钮 */

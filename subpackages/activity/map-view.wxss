@@ -27,9 +27,9 @@
   background: var(--card-color);
   border-radius: var(--zy-radius-lg) var(--zy-radius-lg) 0 0;
   padding: var(--zy-space-lg) var(--page-padding) calc(var(--zy-space-lg) + env(safe-area-inset-bottom));
-  border-top: 1rpx solid var(--hairline);
-  border-left: 1rpx solid var(--hairline);
-  border-right: 1rpx solid var(--hairline);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-left: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-right: 1rpx solid rgba(26, 26, 23, 0.14);
   animation-name: zy-footer-rise;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -104,7 +104,7 @@
   height: 72rpx;
   border-radius: 50%;
   background: var(--card-color);
-  border: 1rpx solid var(--hairline);
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
