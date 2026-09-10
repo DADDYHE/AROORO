@@ -17,6 +17,7 @@
     </view>
     <view class="tab-bar-item tab-bar-item-center {{selected === 2 ? 'active' : ''}}" data-path="/pages/discover/index" data-index="{{2}}" catchtap="switchTab" bindtouchstart="onTabTouchStart" bindtouchend="onTabTouchEnd" bindtouchcancel="onTabTouchEnd">
       <view class="center-button tab-scale-2">
+        <view class="center-button-seal-ring"></view>
         <image class="center-button-icon" src="/images/icons/chongtuantuan-logo-ink.svg" mode="aspectFit" />
         <text class="center-button-text">{{t.BIZ_DUE3K}}</text>
       </view>

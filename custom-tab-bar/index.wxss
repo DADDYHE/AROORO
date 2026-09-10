@@ -234,9 +234,12 @@
   position: relative; /* 绿线外环 ::before / 金晕 ::after 的定位锚点 */
   overflow: visible;
   /* 炭墨镶边(珠宝镶嵌底座，替代旧 6rpx 深绿环) + 金晕 + 中性投影；静态，禁动画化 */
+  /* 压印质感（deboss）：上缘内暗 + 下缘内亮，模拟蜡封被压出的立体感 */
   box-shadow: 0 0 0 1rpx rgba(26, 26, 23, 0.16),
               0 0 28rpx rgba(247, 245, 239, 0.35),
-              0 10rpx 24rpx rgba(26, 26, 23, 0.16);
+              0 10rpx 24rpx rgba(26, 26, 23, 0.16),
+              inset 0 2rpx 4rpx rgba(26, 26, 23, 0.12),
+              inset 0 -1rpx 0 rgba(247, 245, 239, 0.9);
   margin-top: -4rpx; /* 88rpx 钮在 80rpx 可见区垂直居中：钮心 = 40rpx(−4+44)，与胶囊可见区中心重合（上下各凸出 4rpx） */
   transition: transform 180ms cubic-bezier(0.25, 0.1, 0.25, 1),
               opacity 320ms cubic-bezier(0.19, 1, 0.22, 1);
@@ -323,3 +326,31 @@
   letter-spacing: 0.12em;
 }
 
+
+/* ================================================================
+   火漆印双圈（方案 A 升级 · 2026-09-10）
+   独立节点而非伪元素：.center-button 的 ::before(绿线外环) 与 ::after(光晕) 已占用。
+   双圈是徽章/印章语汇（单圈像 UI 控件），绝对定位不占流、不挤压中心 logo。
+   ================================================================ */
+.center-button-seal-ring {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  bottom: 8rpx;
+  left: 8rpx;
+  border-radius: 50%;
+  border: 1.5rpx solid rgba(31, 58, 31, 0.38);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.center-button-seal-ring::after {
+  content: '';
+  position: absolute;
+  top: 5rpx;
+  right: 5rpx;
+  bottom: 5rpx;
+  left: 5rpx;
+  border-radius: 50%;
+  border: 0.5rpx solid rgba(31, 58, 31, 0.18);
+}
