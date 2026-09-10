@@ -141,18 +141,6 @@
 }
 
 /* 克制的光晕（纯色极淡圈，非大发光） */
-.icon-gradient {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 50%;
-  background: var(--accent-wash, #F8F3E6);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: -1;
-}
-
 .card-text {
   display: flex;
   flex-direction: column;

@@ -4,7 +4,6 @@
       <view class="card-banner"></view>
       <view class="card-icon login-reveal">
         <view class="icon-circle">
-          <view class="icon-gradient"></view>
           <image class="icon-circle-logo" src="/images/icons/chongtuantuan-logo-cream.svg" mode="aspectFit" aria-label="AROORO" />
         </view>
       </view>
