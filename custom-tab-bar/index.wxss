@@ -299,6 +299,7 @@
   width: 54rpx;
   height: 54rpx;
   align-self: center; /* 单子元素：与双圈同心（双圈 inset 8rpx，中心重合） */
+  transform: translateY(3rpx); /* 光学居中：logo 马蹄开口朝下(∩)，墨集中拱顶、重心偏上 → 下移补偿 */
   position: relative;
   z-index: 2;
   margin-bottom: 0;
@@ -309,7 +310,7 @@
 
 
 .tab-bar-item-center.active .center-button-icon {
-  transform: translateY(-2rpx) scale(1.06);
+  transform: translateY(3rpx) scale(1.06); /* 沿用基础光学补偿，避免被覆盖后弹回几何位 */
 }
 
 
