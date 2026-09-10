@@ -229,7 +229,7 @@
   justify-content: center;
   width: 100rpx;
   height: 100rpx;
-  border-radius: 0; /* 马蹄非圆：任何圆角/圆形阴影都会在轮廓外露出圆边 */
+  border-radius: 50%; /* 容器透明：圆角无视觉副作用，但让选中 box-shadow 呈圆形柔光（方形会出框） */
   background: transparent; /* 裸字标方案：容器仅作 100rpx 点击热区，无任何视觉装饰 */
   position: relative; /* 绿线外环 ::before / 金晕 ::after 的定位锚点 */
   overflow: visible;
