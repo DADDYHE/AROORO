@@ -15,7 +15,6 @@ Component({
 
   data: {
     t: __pageI18n.buildTMap(__i18n.getLocale()),
-    _leaving: false,
   },
 
   methods: {

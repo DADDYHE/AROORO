@@ -39,13 +39,6 @@
   animation-fill-mode: forwards;
 }
 
-.login-overlay.leaving {
-  animation-name: login-overlay-out;
-  animation-duration: 320ms;
-  animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-  animation-fill-mode: forwards;
-}
-
 .login-card {
   width: 600rpx;
   background: var(--card-color, #FFFFFF);
@@ -61,13 +54,6 @@
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
   animation-delay: 80ms;
-}
-
-.login-card.leaving {
-  animation-name: login-card-out;
-  animation-duration: 320ms;
-  animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-  animation-fill-mode: forwards;
 }
 
 /* 品牌信函 · 深绿极光带：与 navbar/topbar/tabBar 共用同源 118° 渐变（三端呼应） */
