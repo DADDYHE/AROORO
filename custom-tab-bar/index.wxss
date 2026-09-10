@@ -227,20 +227,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 50%;
-  background: var(--tb-center-bg);
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 0; /* 马蹄非圆：任何圆角/圆形阴影都会在轮廓外露出圆边 */
+  background: transparent; /* 形状由 .center-button-plate 马蹄 SVG 提供 */
   position: relative; /* 绿线外环 ::before / 金晕 ::after 的定位锚点 */
   overflow: visible;
-  /* 炭墨镶边(珠宝镶嵌底座，替代旧 6rpx 深绿环) + 金晕 + 中性投影；静态，禁动画化 */
-  /* 压印质感（deboss）：上缘内暗 + 下缘内亮，模拟蜡封被压出的立体感 */
-  box-shadow: 0 0 0 1rpx rgba(26, 26, 23, 0.16),
-              0 0 28rpx rgba(247, 245, 239, 0.35),
-              0 10rpx 24rpx rgba(26, 26, 23, 0.16),
-              inset 0 2rpx 4rpx rgba(26, 26, 23, 0.12),
-              inset 0 -1rpx 0 rgba(247, 245, 239, 0.9);
-  margin-top: -4rpx; /* 88rpx 钮在 80rpx 可见区垂直居中：钮心 = 40rpx(−4+44)，与胶囊可见区中心重合（上下各凸出 4rpx） */
+  /* 马蹄形禁用 CSS 阴影：box-shadow 跟随盒模型(圆)，会沿马蹄轮廓外露出圆影。
+     立体感全部交给 SVG：外描边(26@1024) + 内圈机刻线(10) + 顶部釉面高光(14)。
+     与深绿极光带之间靠 cream/深绿 11.5:1 的明度差立形，无需投影。 */
+  box-shadow: none;
+  margin-top: -10rpx; /* 100rpx 钮在 80rpx 可见区垂直居中：上下各凸出 10rpx，钮心与可见区中心重合 */
   transition: transform 180ms cubic-bezier(0.25, 0.1, 0.25, 1),
               opacity 320ms cubic-bezier(0.19, 1, 0.22, 1);
 }
@@ -250,7 +247,9 @@
    几何：四边外扩 4rpx（直径 88→96），2rpx 深绿环占外缘 4→6rpx，
         与炭墨镶边(0→1rpx)之间留 3rpx 净金间隙，外环总直径 100。
    Skyline 铁律：环用 box-shadow spread 通道画，不用 border；四边显式写，不用 inset 简写。 */
+/* 马蹄形下停用圆形外环：::before 是圆环，会与马蹄轮廓冲突（保留规则仅防引用失效） */
 .center-button::before {
+  display: none;
   content: '';
   position: absolute;
   top: -4rpx;
@@ -265,12 +264,16 @@
   transition: opacity 150ms cubic-bezier(0.19, 1, 0.22, 1); /* 仅淡入，不缩放不呼吸（呼吸交给 ::after 金晕） */
 }
 
-.tab-bar-item-center.active .center-button::before {
+.tab-bar-item-center.active /* 马蹄形下停用圆形外环：::before 是圆环，会与马蹄轮廓冲突（保留规则仅防引用失效） */
+.center-button::before {
+  display: none;
   opacity: 1;
 }
 
 /* 独立金晕层：只有光在呼吸（珠宝静置托盘上，按钮体不再缩放） */
+/* 同上：圆形光晕停用，改由 SVG 顶部高光表达釉面反光 */
 .center-button::after {
+  display: none;
   content: '';
   position: absolute;
   top: 0;
@@ -296,8 +299,8 @@
 }
 
 .center-button-icon {
-  width: 54rpx;
-  height: 54rpx;
+  width: 44rpx;
+  height: 44rpx;
   align-self: center; /* 单子元素：与双圈同心（双圈 inset 8rpx，中心重合） */
   position: relative;
   z-index: 2;
@@ -319,7 +322,22 @@
    独立节点而非伪元素：.center-button 的 ::before(绿线外环) 与 ::after(光晕) 已占用。
    双圈是徽章/印章语汇（单圈像 UI 控件），绝对定位不占流、不挤压中心 logo。
    ================================================================ */
+/* 马蹄底板：绝对定位铺满，不占流；中心内容与内圆同心（内圆与外圆同心 → 无需偏移） */
+.center-button-plate {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100rpx;
+  height: 100rpx;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 原双圈节点已被马蹄 SVG 取代（外描边 + 内圈 + 高光），保留规则以防回退 */
 .center-button-seal-ring {
+  display: none;
   position: absolute;
   top: 8rpx;
   right: 8rpx;
