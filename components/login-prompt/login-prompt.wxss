@@ -6,6 +6,22 @@
    ================================================================ */
 
 .login-overlay {
+
+  /* ---- root-portal 本地令牌（登录弹层卡（缺值 → 首次弹出卡底/文字失效））----
+     组件子树被 portal 搬出宿主节点，page 变量继承不保证；以下值与 app.wxss 保持一致 */
+  --primary-color: #1F3A1F;
+  --card-color: #FFFFFF;
+  --hairline: rgba(26, 26, 23, 0.08);
+  --overlay-color: rgba(26, 26, 23, 0.5);
+  --gradient-primary: linear-gradient(180deg, #2D4F2D 0%, #0F2410 100%);
+  --primary-tint: #E8ECE2;
+  --accent-wash: #F8F3E6;
+  --shadow-md: 0 2rpx 12rpx rgba(26, 26, 23, 0.04);
+  --text-on-primary: #F7F5EF;
+  --text-primary: #1A1A17;
+  --text-secondary: #5A564C;
+  --text-tertiary: #736D5F;
+  --zy-radius-lg: 24rpx;
   position: fixed;
   top: 0;
   left: 0;

@@ -6,6 +6,12 @@
    ================================================================ */
 
 .zy-popup-root {
+
+  /* ---- root-portal 本地令牌（弹层容器（缺值 → 首次弹出边线/文字失效））----
+     组件子树被 portal 搬出宿主节点，page 变量继承不保证；以下值与 app.wxss 保持一致 */
+  --card-cream: #FBF9F4;
+  --hairline: rgba(26, 26, 23, 0.08);
+  --text-secondary: #5A564C;
   position: fixed;
   top: 0;
   left: 0;
