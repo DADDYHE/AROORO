@@ -74,7 +74,7 @@
       <text class="loading-more-text">没有更多了</text>
     </view>
   </view>
-  <block wx:elif="{{noPermission}}">
+  <block wx:if="{{noPermission}}">
     <view class="pp-noperm">
       <text class="pp-noperm-eyebrow">PARTNER ONLY</text>
       <text class="pp-noperm-title">合伙人专属功能</text>
