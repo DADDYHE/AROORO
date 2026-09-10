@@ -298,7 +298,7 @@
   width: 100rpx;
   height: 100rpx;
   align-self: center; /* 单子元素：与 100rpx 热区同心（裸字标，无任何环/底） */
-  transform: translateY(3rpx); /* 光学居中：马蹄 ∩ 开口朝下，墨集中拱顶、视觉重心偏上 → 下移补偿 */
+  transform: translateY(-2rpx); /* 光学微调：实测 +3rpx 下移过头，上移 5rpx → 净 -2rpx（目视校准值） */
   position: relative;
   z-index: 2;
   margin-bottom: 0;
@@ -309,7 +309,7 @@
 
 
 .tab-bar-item-center.active .center-button-icon {
-  transform: translateY(3rpx) scale(0.82); /* 选中落入淡奶油圆盘：0.82 与其余 tab 同方向；translateY(3rpx) 光学补偿必须在此重复（active 整条覆盖基础 transform） */
+  transform: translateY(-2rpx) scale(0.82); /* 选中落入淡奶油圆盘；translateY(-2rpx) 光学补偿必须在此重复（active 整条覆盖基础 transform） */
 }
 
 
