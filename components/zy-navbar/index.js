@@ -33,6 +33,8 @@ Component({
     // 用字面量而非 var(--text-primary)：组件在 <root-portal> 内且未自引令牌文件，变量继承不保证
     color: { type: String, value: '#1A1A17' },
     transparent: { type: Boolean, value: false },
+    // 滚动过 hero 后自动切实底（纸色 92% + 深色字/箭头），由页面滚动逻辑置位
+    solid: { type: Boolean, value: false },
   },
 
   data: {

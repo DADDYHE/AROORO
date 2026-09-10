@@ -8,6 +8,7 @@ const ListBehavior = Behavior({
     // scroll-view 兼容字段（Skyline 模式下页面级滚动 API 失效，改用 scroll-view 事件）
     _refresherTriggered: false,
     _navbarHeight: 64, // 导航栏总高度（状态栏 + 标题栏），用于 scroll-view 高度计算
+    _navbarSolid: false, // 滚动过 hero 后导航栏切实底（配 zy-navbar solid 属性）
   },
 
   methods: {
@@ -96,11 +97,44 @@ const ListBehavior = Behavior({
         .finally(() => { this._loadingMore = false })
     },
 
-    // scroll-view 滚动 → 路由到 onPageScroll
+    // scroll-view 滚动 → 路由到 onPageScroll + 导航栏实底切换（transparent navbar 滚过 hero 后深字可读）
     _onScroll(e) {
       const { scrollTop } = e.detail
+      // 导航栏实底切换：阈值 = hero 底边 - navbar 高（hero 无法再覆盖导航栏时立即切实底，无不可见空窗）。
+      // 阈值惰性自动测量（首次滚动时 hero 必已渲染）；页面可显式设 this._navbarSolidAt（数字）跳过测量。
+      if (typeof this._navbarSolidAt !== 'number') {
+        this._measureNavbarSolidAt()
+      }
+      const solid = scrollTop > (this._navbarSolidAt || 60)
+      if (solid !== this._navbarSolidState) {
+        this._navbarSolidState = solid
+        this.setData({ _navbarSolid: solid })
+      }
       if (typeof this.onPageScroll === 'function') {
         this.onPageScroll({ scrollTop })
+      }
+    },
+
+    /** 测量页面首个 hero（常见类名兜底枚举）的底边，导出实底切换阈值 */
+    _measureNavbarSolidAt() {
+      if (this._measuringSolidAt) { return }
+      this._measuringSolidAt = true
+      try {
+        const q = this.createSelectorQuery()
+        ;['.lux-hero', '.ds-hero', '.hero-section', '.pet-hero', '.fill-hero'].forEach(sel => {
+          q.selectAll(sel).boundingClientRect()
+        })
+        q.exec(groups => {
+          this._measuringSolidAt = false
+          const navPx = this.data._navbarHeight || 64
+          const heroes = (groups || []).flat().filter(r => r && r.height > 0)
+          const hero = heroes.sort((a, b) => a.top - b.top)[0]
+          this._navbarSolidAt = hero
+            ? Math.max(60, Math.round(hero.top + hero.height - navPx))
+            : 60
+        })
+      } catch (e) {
+        this._navbarSolidAt = 60
       }
     },
 
