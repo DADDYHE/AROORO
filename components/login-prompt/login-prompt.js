@@ -20,26 +20,16 @@ Component({
 
   methods: {
     onLogin() {
-      this._startLeave(() => {
-        const { authService } = require('../../services/AuthService')
-        this.triggerEvent('close')
-        authService.startLogin()
-      })
+      this.triggerEvent('close')
+      const { authService } = require('../../services/AuthService')
+      authService.startLogin()
     },
 
     onClose() {
-      this._startLeave(() => {
-        this.triggerEvent('close')
-      })
-    },
-
-    // 优雅退场：播放离场动画后通知父组件移除。
-    // _leaving 保持 true 直到节点被 wx:if 销毁 —— 若中途重置，
-    // 退场 class 被移除会让弹层闪回完整显示态一帧再消失（表现为闪烁）。
-    _startLeave(callback) {
-      if (this.data._leaving) return
-      this.setData({ _leaving: true })
-      setTimeout(callback, 320)
+      // 立即通知父组件移除（无退场动画）：Skyline 下 root-portal 内的
+      // 退场动画与节点销毁存在渲染竞争，表现为消失时闪烁 —— 两次时序修复无效，
+      // 故退场改为即时消失（入场编排保留）。_leaving 相关逻辑不再使用。
+      this.triggerEvent('close')
     },
   },
 })
