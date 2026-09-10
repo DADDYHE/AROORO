@@ -1070,6 +1070,11 @@ export const handlers: Record<string, CouponActionHandler> = {
   unlockCoupon,
 }
 
+// 登录门禁（2026-09-10）：写操作要求 users 档案存在。
+// 小程序调用天然带 openid（未登录也有），必须查 users 档案才能区分「未注册/未登录」，
+// 防绕过前端直调云函数刷券。users 文档 _id = openid。
+const LOGIN_REQUIRED_ACTIONS = new Set(['claimCoupon'])
+
 // P0-6: 敏感 action 限流配置（type 对应 rate_limit_configs 集合的 _id）
 //   - claimCoupon: 防库存耗尽攻击
 //   - getAvailableCoupons / getClaimableTemplates: 防刷量
@@ -1100,6 +1105,13 @@ export async function main(
     const auth = await verifyAuth(event, context) as AuthLike
 
     logger.info(`[${action}]`, { ownerId: auth.openid })
+
+    // 登录门禁：写操作要求 users 档案存在（openid 恒存在，需查档案区分未登录）
+    if (LOGIN_REQUIRED_ACTIONS.has(action)) {
+      if (!auth.openid) { throw err('AUTH_REQUIRED', '请先登录') }
+      const userDoc = await db.collection('users').doc(auth.openid).get().catch(() => null)
+      if (!userDoc || !userDoc.data) { throw err('AUTH_REQUIRED', '请先登录') }
+    }
 
     // P0-6: 敏感 action 走限流（best-effort，限流失败不阻断业务）
     const rateLimitType = RATE_LIMITED_ACTIONS[action]

@@ -1491,6 +1491,15 @@ export async function main(
   try {
     const auth = await verifyAuth(event, { requireLogin })
     logger.info(action, { openid: maskOpenid(auth.openid) })
+
+    // 登录门禁（2026-09-10）：写操作要求 users 档案存在。
+    // verifyAuth 的 requireLogin 只查 openid（小程序调用恒有值，形同虚设）——必须查 users 档案
+    // 才能区分「未注册/未登录」，防绕过前端直调云函数刷报名占位。users 文档 _id = openid。
+    if ((WRITE_ACTIONS as readonly string[]).includes(action)) {
+      const userDoc = await db.collection('users').doc(auth.openid).get().catch(() => null)
+      if (!userDoc || !userDoc.data) { throw err('AUTH_REQUIRED', '请先登录') }
+    }
+
     return await handlers[action](event, context, auth)
   } catch (error) {
     logger.error(action, error)
