@@ -1,16 +1,21 @@
 <root-portal wx:if="{{visible}}">
   <view class="login-overlay {{_leaving ? 'leaving' : ''}}" bindtap="onClose">
     <view class="login-card {{_leaving ? 'leaving' : ''}}" catchtap="">
-      <view class="card-top-bar"></view>
-      <view class="card-content">
-        <view class="card-icon login-reveal">
-          <view class="icon-circle">
-            <view class="icon-gradient"></view>
-            <image class="icon-circle-logo" src="/images/icons/chongtuantuan-logo-ink.svg" mode="aspectFit" aria-label="宠团团" />
-          </view>
+      <view class="card-banner"></view>
+      <view class="card-icon login-reveal">
+        <view class="icon-circle">
+          <view class="icon-gradient"></view>
+          <image class="icon-circle-logo" src="/images/icons/chongtuantuan-logo-cream.svg" mode="aspectFit" aria-label="AROORO" />
         </view>
+      </view>
+      <view class="card-content">
         <view class="card-text login-reveal">
           <text class="card-title">欢迎来到 AROORO</text>
+          <view class="card-divider">
+            <view class="divider-line"></view>
+            <view class="divider-diamond"></view>
+            <view class="divider-line"></view>
+          </view>
           <text class="card-subtitle">登录后即可体验完整功能，享受专属优惠</text>
         </view>
         <view class="card-btn login-reveal" bindtap="onLogin" hover-class="card-btn--pressed" hover-stay-time="120">
