@@ -298,6 +298,7 @@
 .center-button-icon {
   width: 54rpx;
   height: 54rpx;
+  align-self: center; /* 单子元素：与双圈同心（双圈 inset 8rpx，中心重合） */
   position: relative;
   z-index: 2;
   margin-bottom: 0;
@@ -306,25 +307,11 @@
   transition-timing-function: cubic-bezier(0.34, 1.15, 0.64, 1);
 }
 
-.center-button-text {
-  font-size: 18rpx;
-  font-weight: 600;
-  color: #1F3A1F; /* 奶油底上深绿墨（白字在奶油底仅 1.06:1 不可见，必须深绿；11.5:1） */
-  line-height: 1;
-  position: relative;
-  z-index: 2;
-  letter-spacing: 0.08em;
-  margin-top: 4rpx;
-}
 
 .tab-bar-item-center.active .center-button-icon {
   transform: translateY(-2rpx) scale(1.06);
 }
 
-.tab-bar-item-center.active .center-button-text {
-  color: #1F3A1F; /* 中间按钮文字深绿（奶油底上 11.5:1，与 logo 同色） */
-  letter-spacing: 0.12em;
-}
 
 
 /* ================================================================
