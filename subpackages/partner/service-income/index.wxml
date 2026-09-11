@@ -37,7 +37,8 @@
       </view>
     </view>
 
-    <view wx:else class="gallery-hall">
+    <view wx:else class="gallery-container">
+      <view class="gallery-hall">
       <!-- 主展品：累计收入（与 income 页 overview-card 同构） -->
       <view class="gallery-card income-overview-card">
         <view class="card-body">
@@ -148,6 +149,7 @@
         <view class="end-dot"></view>
       </view>
       </block>
+      </view>
     </view>
   </view>
 
