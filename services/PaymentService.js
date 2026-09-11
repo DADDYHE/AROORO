@@ -26,6 +26,17 @@ class PaymentService {
   }
 
   async pay(params) {
+    /* 支付 loading：拉起支付全程遮罩反馈（变体 A：金环 + 「支付中，请稍等...」），
+       收银台交互完成（success/cancel/error）后关闭——遮罩同时挡住重复点击（防双支付单） */
+    this._notifyPayLoading(true)
+    try {
+      return await this._payInner(params)
+    } finally {
+      this._notifyPayLoading(false)
+    }
+  }
+
+  async _payInner(params) {
     const { type, orderId, amount, description, payType } = params
 
     // payType：2026-09-06 付款双模式（full 全款 / deposit 定金 30%），透传给 createPayment 做服务端金额推算
@@ -72,6 +83,17 @@ class PaymentService {
     const err = new Error('支付结果确认中，请稍后在订单中查看')
     err.isPending = true
     throw err
+  }
+}
+
+// 支付 loading 通知：pay-loading 组件注册监听，页面挂 <pay-loading /> 即全自动显隐
+let _payLoadingListener = null
+PaymentService.prototype.setPayLoadingListener = function (fn) {
+  _payLoadingListener = fn || null
+}
+PaymentService.prototype._notifyPayLoading = function (visible) {
+  if (typeof _payLoadingListener === 'function') {
+    try { _payLoadingListener(visible) } catch (e) { /* 组件销毁竞态，静默 */ }
   }
 }
 

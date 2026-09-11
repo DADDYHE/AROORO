@@ -3,7 +3,8 @@
     "order-status-banner": "/components/order/order-status-banner/index",
     "order-card": "/components/order/order-card/index",
     "order-action-bar": "/components/order/order-action-bar/index",
-    "login-prompt": "/components/login-prompt/login-prompt"
+    "login-prompt": "/components/login-prompt/login-prompt",
+    "pay-loading": "/components/pay-loading/index"
   },
   "navigationBarTitleText": "订单状态",
   "enablePullDownRefresh": true,

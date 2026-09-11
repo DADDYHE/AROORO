@@ -3,7 +3,8 @@
   "usingComponents": {
     "health-form": "/components/health-form/index",
     "zy-action-sheet": "/subpackages/booking/components/zy-action-sheet/index",
-    "login-prompt": "/components/login-prompt/login-prompt"
+    "login-prompt": "/components/login-prompt/login-prompt",
+    "pay-loading": "/components/pay-loading/index"
   },
   "navigationBarTextStyle": "white"
 }

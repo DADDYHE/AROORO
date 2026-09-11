@@ -1,6 +1,7 @@
 {
   "usingComponents": {
-    "login-prompt": "/components/login-prompt/login-prompt"
+    "login-prompt": "/components/login-prompt/login-prompt",
+    "pay-loading": "/components/pay-loading/index"
   },
   "navigationBarTitleText": "确认订单",
   "navigationBarTextStyle": "white"
