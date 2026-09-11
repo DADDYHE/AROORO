@@ -67,6 +67,18 @@
               <text class="overview-stat-label">{{t.BIZ_J171}}</text>
             </view>
           </view>
+          <view class="overview-row overview-row-bottom">
+            <view class="overview-stat">
+              <text class="overview-stat-value">¥{{hostingText}}</text>
+              <text class="overview-stat-label">{{t.BIZ_G20N}}</text>
+              <text class="overview-stat-sub">（佣金）</text>
+            </view>
+            <view class="overview-stat">
+              <text class="overview-stat-value">¥{{feedingText}}</text>
+              <text class="overview-stat-label">{{t.BIZ_HZCK}}</text>
+              <text class="overview-stat-sub">（佣金）</text>
+            </view>
+          </view>
         </view>
       </view>
 

@@ -145,16 +145,19 @@ Page({
     let walletBalanceText = ''
     let walletTotalWithdrawnText = ''
     if (overview) {
+      /* 佣金口径统一（2026-09-11）：所有分项均取 commissions 按 orderType 的分组佣金，
+         寄养（boarding）/上门（feeding）订单同样产生佣金——此前误绑服务收入总额 */
       const ct = overview.commission?.total || 0
-      const at = overview.activity?.total || 0
-      const ht = overview.boarding?.total || 0
-      const ft = overview.feeding?.total || 0
-      totalIncomeText = (ct + at + ht + ft).toFixed(2)
+      const byType = overview.commission?.byOrderType || {}
+      const typeTotal = t => Number((byType[t] && byType[t].total) || 0)
+      const tuanMall = typeTotal('tuan') + typeTotal('mall')
+      totalIncomeText = ct.toFixed(2)
       commissionText = ct.toFixed(2)
-      activityText = at.toFixed(2)
-      hostingText = ht.toFixed(2)
-      feedingText = ft.toFixed(2)
+      activityText = typeTotal('activity').toFixed(2)
+      hostingText = typeTotal('boarding').toFixed(2)
+      feedingText = typeTotal('feeding').toFixed(2)
       walletCardTotalIncome = totalIncomeText
+      void tuanMall
     }
     if (wallet) {
       walletBalanceText = (Number(wallet.balance) || 0).toFixed(2)
