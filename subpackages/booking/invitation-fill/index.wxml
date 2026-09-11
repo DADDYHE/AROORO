@@ -299,31 +299,41 @@
       </view>
     </view>
 
-    <!-- 支付方式弹层 -->
-    <view wx:if="{{ paySheetVisible }}" class="fill-picker-mask">
-      <view class="fill-paysheet">
-        <text class="fill-paysheet-title">选择支付方式</text>
-        <view class="fill-paysheet-amount">
-          <text class="fill-paysheet-amount-label">订单金额</text>
-          <text class="fill-paysheet-amount-val">¥{{ paySheetOrder.totalPrice }}</text>
+    <!-- 支付方式弹层（奢侈品信笺风：金线菱形饰 + 衬线标题 + 行式选项；点遮罩/文字链接=稍后支付） -->
+    <view wx:if="{{ paySheetVisible }}" class="fill-picker-mask" bindtap="onPaySheetClose">
+      <view class="paysheet" catchtap="stopBubble">
+        <view class="paysheet-ornament">
+          <view class="ornament-line"></view>
+          <view class="ornament-diamond"></view>
+          <view class="ornament-line"></view>
         </view>
-        <view class="fill-paysheet-options">
-          <view class="fill-pay-option" bindtap="onPay" data-type="deposit" hover-class="fill-pay-option--pressed" hover-stay-time="80">
-            <view class="fill-pay-option-left">
-              <text class="fill-pay-option-title">支付定金</text>
-              <text class="fill-pay-option-desc">¥{{ depositAmount }}（总价 30%）</text>
-            </view>
-            <view class="fill-pay-option-arrow"></view>
+        <text class="paysheet-eyebrow">SELECT PAYMENT</text>
+        <text class="paysheet-title">选择支付方式</text>
+        <view class="paysheet-amount">
+          <text class="paysheet-amount-label">订单金额</text>
+          <text class="paysheet-amount-value">¥{{ paySheetOrder.totalPrice }}</text>
+        </view>
+        <view class="paysheet-option" bindtap="onPay" data-type="deposit" hover-class="paysheet-option--pressed" hover-stay-time="80">
+          <view class="option-info">
+            <text class="option-title">支付定金</text>
+            <text class="option-sub">总价 30% · 定金不退</text>
           </view>
-          <view class="fill-pay-option" bindtap="onPay" data-type="full" hover-class="fill-pay-option--pressed" hover-stay-time="80">
-            <view class="fill-pay-option-left">
-              <text class="fill-pay-option-title">支付全款</text>
-              <text class="fill-pay-option-desc">¥{{ paySheetOrder.totalPrice }}</text>
-            </view>
-            <view class="fill-pay-option-arrow"></view>
+          <view class="option-right">
+            <text class="option-amount">¥{{ depositAmount }}</text>
+            <view class="option-arrow"></view>
           </view>
         </view>
-        <button class="fill-btn fill-btn--ghost" bindtap="onPaySheetClose">稍后支付（30 分钟内有效）</button>
+        <view class="paysheet-option" bindtap="onPay" data-type="full" hover-class="paysheet-option--pressed" hover-stay-time="80">
+          <view class="option-info">
+            <text class="option-title">支付全款</text>
+            <text class="option-sub">一次付清 · 家庭自动确认</text>
+          </view>
+          <view class="option-right">
+            <text class="option-amount">¥{{ paySheetOrder.totalPrice }}</text>
+            <view class="option-arrow"></view>
+          </view>
+        </view>
+        <text class="paysheet-later" bindtap="onPaySheetClose">稍后支付 · 30 分钟内有效</text>
       </view>
     </view>
 
