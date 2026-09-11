@@ -97,13 +97,16 @@ Page({
     }
   },
 
-  async _loadOrder({ orderId, outTradeNo }) {
-    this.setData({ isLoading: true })
+  async _loadOrder({ orderId, outTradeNo, silent }) {
+    if (!silent) { this.setData({ isLoading: true }) }
     try {
       const res = await OrderService.getOrderDetail({ orderId, outTradeNo })
       if (res && res.code === 0 && res.data) {
         const order = this._normalizeOrder(res.data)
         this.setData({ order, actions: this._buildActions(order.status), isLoading: false })
+        /* 支付回调异步（可能晚于跳转数秒）：待支付态有限轮询（5×2s），
+           状态推进（deposit_paid/paid）即停 —— 按钮/金额自动切到补尾款，防重复付全款 */
+        if (order.status === 'pending_payment') { this._startStatusPolling(orderId) }
         // 定金 = 全款 30%（四舍五入 2 位，与服务端同口径）
         const dep = Math.round((order.totalPrice || 0) * 0.3 * 100) / 100
         this.setData({ depositAmount: dep, remainAmountTip: Math.round(((order.totalPrice || 0) - dep) * 100) / 100 })
@@ -271,9 +274,30 @@ Page({
    *   - 'full'：支付全款（pending_payment）
    *   - 'tail'：补尾款（deposit_paid，应付 = totalPrice - 已付定金）
    */
+  /* 待支付态有限轮询：支付回调异步，最多 5 次 × 2s，状态推进即停 */
+  _startStatusPolling(orderId) {
+    if (this._pollTimer) { clearTimeout(this._pollTimer); this._pollTimer = null }
+    let n = 0
+    const tick = async () => {
+      n++
+      const cur = this.data.order
+      if (!cur || cur._id !== orderId || cur.status !== 'pending_payment') { return }
+      await this._loadOrder({ orderId, silent: true })
+      const st = this.data.order && this.data.order.status
+      if (st && st !== 'pending_payment') { return }
+      if (n >= 5) { return }
+      this._pollTimer = setTimeout(tick, 2000)
+    }
+    this._pollTimer = setTimeout(tick, 2000)
+  },
+
   async onGoPay(payType) {
+    const prev = this.data.order
+    if (!prev || !prev._id) {return}
+    /* 支付回调异步，页面快照可能陈旧（定金已付但 status 仍是 pending_payment）：
+       发起支付前先静默重拉服务端状态，金额/分支以最新数据计算 —— 防重复付全款 */
+    await this._loadOrder({ orderId: prev._id, silent: true })
     const order = this.data.order
-    if (!order || !order._id) {return}
 
     const isTail = order.status === 'deposit_paid'
     const pt = isTail ? 'tail' : (payType || 'full')
@@ -352,6 +376,7 @@ Page({
   },
 
   onUnload() {
+    if (this._pollTimer) { clearTimeout(this._pollTimer); this._pollTimer = null }
     if (this._expireTimer) { clearTimeout(this._expireTimer); this._expireTimer = null }
     this._stopPayCountdown()
   },
