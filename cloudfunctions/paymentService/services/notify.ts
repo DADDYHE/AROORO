@@ -257,7 +257,10 @@ function verifySignature(
   } catch (e) {
     throw err('PAYMENT_NOTIFY_INVALID', '平台证书格式无效')
   }
-  const verify = crypto.createVerify('SHA256withRSA')
+  // P0 修复（2026-09-11）：'SHA256withRSA' 非 Node.js crypto 合法摘要算法名，
+  //   createVerify 会抛 "Invalid digest"，导致所有回调在签名验证阶段 500。
+  //   改用 'RSA-SHA256'（微信支付官方 Node 示例算法名）。
+  const verify = crypto.createVerify('RSA-SHA256')
   verify.update(message)
   verify.end()
   let isValid = false
@@ -741,14 +744,26 @@ export async function paymentNotify(
         // P1 修复：实付金额一致性校验——微信回调金额必须与订单应付款一致。
         //   不一致时：不推进订单状态 + 持久化告警 + ACK（微信已扣款，重试无用，
         //   避免重复回调轰炸；订单保持 pending 由人工对账退款）。
+        // P0-2 修复（2026-09-11）：定金/尾款两段支付的应付金额 ≠ totalPrice。
+        //   推算逻辑必须与 pay.ts createPayment 保持唯一一致（避免再次分叉）：
+        //   - deposit 单未付定金 → 本次应付 = totalPrice × 30%
+        //   - deposit 单已付定金（deposit_paid）→ 本次应付 = totalPrice - paidAmount（尾款）
+        //   - 其余 → 订单全额
         const paidFen = typeof amountObj.total === 'number' ? amountObj.total : null
         if (paidFen !== null && Number.isFinite(paidFen)) {
           const amountField = ORDER_TYPE_AMOUNT_FIELD[orderType] || 'totalPrice'
           const expectedYuan = Number(existingOrder[amountField] || existingOrder.totalPrice || existingOrder.totalAmount || 0)
-          if (Number.isFinite(expectedYuan) && expectedYuan > 0 && Math.round(expectedYuan * 100) !== Math.round(paidFen)) {
+          let expectedFen = Number.isFinite(expectedYuan) && expectedYuan > 0 ? Math.round(expectedYuan * 100) : -1
+          const od = existingOrder as unknown as Record<string, unknown>
+          if (orderType === 'order' && od.payType === 'deposit' && expectedFen > 0) {
+            expectedFen = od.status === 'deposit_paid'
+              ? expectedFen - Math.round((Number(od.paidAmount) || 0) * 100) // 尾款
+              : Math.round(expectedFen * 0.3)                                // 定金（全款 × 30%）
+          }
+          if (expectedFen > 0 && expectedFen !== Math.round(paidFen)) {
             logger.error('paymentNotify.amount_mismatch', {
               outTradeNo: out_trade_no, orderType, orderId: existingOrder._id,
-              paidFen, expectedFen: Math.round(expectedYuan * 100),
+              paidFen, expectedFen,
             })
             try {
               await recordAlert(
@@ -757,7 +772,7 @@ export async function paymentNotify(
                 '支付回调金额与订单金额不一致，订单未推进，需人工对账',
                 {
                   outTradeNo: out_trade_no, orderType, orderId: existingOrder._id,
-                  paidFen, expectedFen: Math.round(expectedYuan * 100),
+                  paidFen, expectedFen,
                 },
               )
             } catch { /* best-effort */ }

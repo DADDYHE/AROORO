@@ -694,21 +694,32 @@ export const confirmPayment: WrappedHandler<ConfirmPaymentResult> = withErrorHan
   }
 
   // P1 修复：实付金额一致性校验（微信查询响应 amount.total 为分）
+  // P0-2 修复（2026-09-11）：定金/尾款两段支付的应付金额 ≠ totalPrice。
+  //   推算逻辑必须与 createPayment 保持唯一一致（避免再次分叉）：
+  //   - deposit 单未付定金 → 本次应付 = totalPrice × 30%
+  //   - deposit 单已付定金（deposit_paid）→ 本次应付 = totalPrice - paidAmount（尾款）
+  //   - 其余 → 订单全额
   const amountObj = (result.amount || {}) as { total?: number }
   const paidAmountFen = typeof amountObj.total === 'number' ? amountObj.total : null
   if (paidAmountFen !== null && Number.isFinite(paidAmountFen)) {
     const amountField = ORDER_TYPE_AMOUNT_FIELD[orderType] || 'totalPrice'
     const expectedYuan = Number(existingOrder[amountField] || existingOrder.totalPrice || existingOrder.totalAmount || 0)
-    if (Number.isFinite(expectedYuan) && expectedYuan > 0 && Math.round(expectedYuan * 100) !== Math.round(paidAmountFen)) {
+    let expectedFen = Number.isFinite(expectedYuan) && expectedYuan > 0 ? Math.round(expectedYuan * 100) : -1
+    if (orderType === 'order' && existingOrder.payType === 'deposit' && expectedFen > 0) {
+      expectedFen = existingOrder.status === 'deposit_paid'
+        ? expectedFen - Math.round((Number(existingOrder.paidAmount) || 0) * 100) // 尾款
+        : Math.round(expectedFen * 0.3)                                           // 定金（全款 × 30%）
+    }
+    if (expectedFen > 0 && expectedFen !== Math.round(paidAmountFen)) {
       logger.error('confirmPayment.amount_mismatch', {
         outTradeNo, orderType, orderId: existingOrder._id,
-        paidFen: paidAmountFen, expectedFen: Math.round(expectedYuan * 100),
+        paidFen: paidAmountFen, expectedFen,
       })
       await recordAlert(
         'critical',
         'confirmPayment.amount_mismatch',
         '确认支付时微信实付金额与订单金额不一致，需人工对账',
-        { outTradeNo, orderType, orderId: existingOrder._id, paidFen: paidAmountFen, expectedFen: Math.round(expectedYuan * 100) },
+        { outTradeNo, orderType, orderId: existingOrder._id, paidFen: paidAmountFen, expectedFen },
       )
       // 金额不一致不确认成功（状态推进由回调负责；回调侧同样校验并告警）
       return { paid: false, tradeState: result.trade_state || 'SUCCESS' }
