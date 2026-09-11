@@ -45,7 +45,8 @@
 .pay-loading-ring {
   width: 68rpx;
   height: 68rpx;
-  border-radius: 50%;
+  /* Skyline：百分比圆角 + 多色 border 渲染异常（显示为旋转矩形）→ 用绝对值圆角 */
+  border-radius: 34rpx;
   border: 5rpx solid rgba(201, 162, 75, 0.25);
   border-top-color: #C9A24B;
   animation: pay-ring-spin 0.9s linear infinite;
