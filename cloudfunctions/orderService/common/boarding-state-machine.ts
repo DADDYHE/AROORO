@@ -69,7 +69,7 @@ export const boardingOrderStateMachine: StateMachine<BoardingState> & {
   getMetadata: (state: BoardingState) => Record<string, unknown> | null
 } = createStateMachine<BoardingState>({
   initial: 'pending_payment',
-  states: ['pending_payment', 'paid', 'confirmed', 'in_progress', 'completed', 'rejected', 'cancelled', 'refunded', 'deleted'],
+  states: ['pending_payment', 'deposit_paid', 'paid', 'confirmed', 'in_progress', 'completed', 'rejected', 'cancelled', 'refunded', 'deleted'],
   transitions: {
     pending_payment: ['paid', 'deposit_paid', 'cancelled'],
     deposit_paid: ['paid', 'cancelled'],
