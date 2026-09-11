@@ -918,10 +918,18 @@
   line-height: 80rpx;
   border-radius: var(--lux-radius-pill);
   font-size: 26rpx;
+  font-weight: 500;
   letter-spacing: var(--lux-ls-heading, 0.08em);
   margin: 0;
   padding: 0;
   width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* 微信 <button> 重置：默认边框来自 ::after 伪元素，UA 灰底/字号需显式覆盖 */
+.fill-btn::after {
+  border: none;
 }
 
 .fill-btn--primary {
