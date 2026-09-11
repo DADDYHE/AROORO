@@ -19,17 +19,19 @@
   opacity: 0;
   transform: translateY(8%);
   pointer-events: none;
-  transition:
-    opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    visibility 260ms;
 }
 
+/* Skyline 不支持 CSS transition（wxss warning 实锤）→ 出现动效用 animation：
+   --on 类挂上时播放（from 隐藏态 → to 显示态），forwards 保持 */
 .pay-loading-mask--on {
   visibility: visible;
-  opacity: 1;
-  transform: translateY(0);
   pointer-events: auto;
+  animation: pay-mask-show 260ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes pay-mask-show {
+  from { opacity: 0; transform: translateY(8%); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .pay-loading-inner {
