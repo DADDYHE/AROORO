@@ -34,6 +34,7 @@ Page({
     isLoadingMore: false,
     // 服务收入钱包（P2 修复：服务收入也支持提现）
     serviceBalanceText: '0.00',
+    serviceWithdrawnText: '0.00',
     withdrawBalance: 0,
     withdrawBalanceText: '0.00',
     showWithdrawModal: false,
@@ -136,8 +137,10 @@ Page({
     }
     if (wallet) {
       const balance = Number(wallet.balance) || 0
+      const withdrawn = Number(wallet.totalWithdrawn) || 0
       this.setData({
         serviceBalanceText: balance.toFixed(2),
+        serviceWithdrawnText: withdrawn.toFixed(2),
         withdrawBalance: balance,
         withdrawBalanceText: balance.toFixed(2),
       })
