@@ -12,8 +12,8 @@
   style="height: 100vh;"
 >
 <view class="lux-hero" style="padding-top: calc({{_navbarHeight}}px + 24rpx);">
-  <text class="lux-hero-eyebrow">INCOME</text>
-  <text class="lux-hero-title">收入统计</text>
+  <text class="lux-hero-eyebrow">COMMISSION</text>
+  <text class="lux-hero-title">佣金统计</text>
   <text class="lux-hero-sub">财务数据</text>
   <view class="lux-hero-sealline"></view>
 </view>
@@ -52,8 +52,8 @@
       <view wx:if="{{overview}}" class="gallery-card income-overview-card">
         <view class="card-body">
           <view class="overview-total">
-            <text class="overview-label">累计总收入</text>
-            <text class="overview-value">¥{{totalIncomeText}}</text>
+            <text class="overview-label">累计佣金</text>
+            <text class="overview-value">¥{{commissionText}}</text>
           </view>
           <view class="overview-divider"></view>
           <view class="overview-row overview-row-top">
@@ -65,16 +65,6 @@
             <view class="overview-stat">
               <text class="overview-stat-value">¥{{activityText}}</text>
               <text class="overview-stat-label">{{t.BIZ_J171}}</text>
-            </view>
-          </view>
-          <view class="overview-row overview-row-bottom">
-            <view class="overview-stat">
-              <text class="overview-stat-value">¥{{hostingText}}</text>
-              <text class="overview-stat-label">{{t.BIZ_G20N}}</text>
-            </view>
-            <view class="overview-stat">
-              <text class="overview-stat-value">¥{{feedingText}}</text>
-              <text class="overview-stat-label">{{t.BIZ_HZCK}}</text>
             </view>
           </view>
         </view>
