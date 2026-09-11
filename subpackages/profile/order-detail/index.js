@@ -296,7 +296,6 @@ Page({
     if (!prev || !prev._id) {return}
     /* 点击瞬间先显支付遮罩：前置的静默重拉（0.5~1.5s RTT）期间不能无反馈；
        pay() 内部再次 show 幂等，finally hide 兜底（金额异常等 return 路径也关闭） */
-    const { PaymentService } = require('../../services/PaymentService')
     PaymentService.showPayLoading()
     try {
       await this._loadOrder({ orderId: prev._id, silent: true })

@@ -4,7 +4,8 @@
  * 自管理：attached 时向 PaymentService 注册 loading 监听，
  * 页面只需挂 <pay-loading /> 一行，pay() 全程自动显隐。
  */
-const { PaymentService } = require('../../services/PaymentService')
+/* PaymentService 导出的是单例实例（module.exports = new PaymentService()），非命名键 */
+const PaymentService = require('../../services/PaymentService')
 
 Component({
   data: {
