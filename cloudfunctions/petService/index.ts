@@ -331,9 +331,23 @@ export function sanitizeHealthInfo(input: unknown): PetHealthInfo {
     'medicalHistory', 'allergies', 'medications',
     'supplements', 'dewormed', 'behaviorNotes',
   ] as const
+  // health-form 新结构：{ has: 'yes'|'no', detail: string } → 拍平为字符串存储
+  // （消费方 toYesNo 对字符串兼容：非空非"无"判「是」，空/"无"判「否」；
+  //   旧实现把该对象 String() 成 "[object Object]" 存档，回流即全选"是"+垃圾文本）
+  const structuredYesNo = new Set(['medicalHistory', 'medications', 'supplements'])
   for (const key of textKeys) {
     const v = raw[key]
     if (v === undefined || v === null || v === '') { continue }
+    if (structuredYesNo.has(key) && typeof v === 'object' && !Array.isArray(v)) {
+      const o = v as Record<string, unknown>
+      const isYes = o.has === 'yes'
+      const detailRaw = (o as { detail?: unknown }).detail
+      const detail = (detailRaw === undefined || detailRaw === null || detailRaw === '')
+        ? '' : validateTextField(detailRaw, MAX_HEALTH_TEXT_LEN, '健康信息')
+      if (!isYes && !detail) { continue }
+      result[key] = isYes ? (detail || '有') : '无'
+      continue
+    }
     result[key] = validateTextField(v, MAX_HEALTH_TEXT_LEN, '健康信息')
   }
   // 绝育情况
