@@ -229,7 +229,11 @@ Page({
       return { transform: `translateX(${tabPos.value * 100}%)` }
     }
 
-    wx.nextTick(() => {
+    /* 查询确认模式（同 _initCardEnterAnimation）：渲染线程布局完成后再绑定 */
+    const sliderQuery = this.createSelectorQuery()
+    sliderQuery.select('.tab-indicator-slider').boundingClientRect()
+    sliderQuery.exec(rects => {
+      if (!rects || !rects[0]) { return }
       try {
         this._cancelTabSlider = this.applyAnimatedStyle('.tab-indicator-slider', updateSliderStyle)
         // 标记启用 worklet，WXML 加 worklet-driven class 禁用 CSS transition

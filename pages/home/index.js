@@ -300,7 +300,12 @@ const { orderManager } = require('../../services/OrderManager')
       }
     }
 
-    wx.nextTick(() => {
+    /* 查询确认模式：exec 回调时渲染线程已完成该节点布局，apply 不会报
+       "can not find corresponding nodes"（nextTick 只保证 JS 侧挂载，渲染线程同步滞后） */
+    const query = this.createSelectorQuery()
+    query.select('.refresh-indicator').boundingClientRect()
+    query.exec(rects => {
+      if (!rects || !rects[0]) { return }
       try {
         this._cancelRefreshStyle = this.applyAnimatedStyle('.refresh-indicator', updateRefreshStyle)
       } catch (e) {

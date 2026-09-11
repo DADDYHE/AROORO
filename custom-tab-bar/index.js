@@ -66,7 +66,7 @@ Component({
 
     // 初始化 worklet 按压弹性动效（nextTick 等节点渲染就绪后再绑定，
     // 避免 Skyline 下 attached 时 .tab-scale-N 节点尚未挂载导致 applyAnimatedStyle 报 "can not find corresponding nodes" 噪声）
-    wx.nextTick(() => this._initTabPressAnimation())
+    wx.nextTick(() => this._initTabPressAnimation())  /* _initTabPressAnimation 内部走查询确认模式 */
   },
   detached() {
     this._isAttached = false
@@ -124,21 +124,29 @@ Component({
       this._tabScales = []
       this._tabCancels = []
 
-      // 为 5 个 tab item 各创建独立 SharedValue
+      /* 查询确认模式：先确认 5 个 tab 节点已在渲染线程挂载，再逐个绑定 */
+      const tabQuery = this.createSelectorQuery()
       for (let i = 0; i < 5; i++) {
-        const scale = shared(1)
-        this._tabScales[i] = scale
-        const scaleRef = scale
-        try {
-          const cancel = this.applyAnimatedStyle(`.tab-scale-${i}`, () => {
-            'worklet'
-            return { transform: `scale(${scaleRef.value})` }
-          })
-          this._tabCancels[i] = cancel
-        } catch (e) {
-          this._tabCancels[i] = null
-        }
+        tabQuery.select(`.tab-scale-${i}`).boundingClientRect()
       }
+      tabQuery.exec(rects => {
+        if (!rects) { return }
+        for (let i = 0; i < 5; i++) {
+          if (!rects[i]) { this._tabCancels[i] = null; continue }
+          const scale = shared(1)
+          this._tabScales[i] = scale
+          const scaleRef = scale
+          try {
+            const cancel = this.applyAnimatedStyle(`.tab-scale-${i}`, () => {
+              'worklet'
+              return { transform: `scale(${scaleRef.value})` }
+            })
+            this._tabCancels[i] = cancel
+          } catch (e) {
+            this._tabCancels[i] = null
+          }
+        }
+      })
       this._workletReady = true
     },
 

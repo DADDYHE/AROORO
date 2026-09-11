@@ -113,27 +113,29 @@ Component({
         //   （circular 或 spinner 仅其一存在），无条件对两个选择器都 apply 会报
         //   「applyAnimatedStyle can not find valid element」（try-catch 只兜异常，
         //   框架对找不到节点是先告警再抛，console 仍报错）
-        if (this.data.type === 'circular') {
+        // 2026-09-11 升级：setData 回调只保证 JS 侧 setData 完成，渲染线程节点树
+        //   同步可能滞后 → applyAnimatedStyle 在渲染线程查找仍会告警。改用
+        //   「查询确认模式」：exec 回调时渲染线程已完成该节点布局，再绑定。
+        const targetSelector =
+          this.data.type === 'circular'
+            ? '.zy-loading__circular'
+            : this.data.type === 'spinner'
+              ? '.zy-loading__spinner'
+              : null
+        if (!targetSelector) { this._startRotationLoop(); return }
+        const q = this.createSelectorQuery()
+        q.select(targetSelector).boundingClientRect()
+        q.exec(rects => {
+          if (!rects || !rects[0]) { this._startRotationLoop(); return }
           try {
-            this._cancelCircularStyle = this.applyAnimatedStyle(
-              '.zy-loading__circular',
-              updateStyle
-            )
-          } catch (e) {
-            this._cancelCircularStyle = null
-          }
-        } else if (this.data.type === 'spinner') {
-          try {
-            this._cancelSpinnerStyle = this.applyAnimatedStyle(
-              '.zy-loading__spinner',
-              updateStyle
-            )
-          } catch (e) {
-            this._cancelSpinnerStyle = null
-          }
-        }
-
-        this._startRotationLoop()
+            if (this.data.type === 'circular') {
+              this._cancelCircularStyle = this.applyAnimatedStyle(targetSelector, updateStyle)
+            } else {
+              this._cancelSpinnerStyle = this.applyAnimatedStyle(targetSelector, updateStyle)
+            }
+          } catch (e) { /* 渲染线程竞态，静默——CSS 兜底动画仍在 */ }
+          this._startRotationLoop()
+        })
       })
     },
 

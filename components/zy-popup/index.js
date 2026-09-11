@@ -124,12 +124,18 @@ Component({
         return { transform, opacity: p }
       }
 
-      try {
-        this._cancelContent = this.applyAnimatedStyle('.zy-popup', contentUpdater)
-      } catch (e) {
-        this._cancelContent = null
-      }
-      this._styleBound = true
+      /* 查询确认模式：visible 后组件节点已在渲染线程挂载，exec 确认再绑定 */
+      const q = this.createSelectorQuery()
+      q.select('.zy-popup').boundingClientRect()
+      q.exec(rects => {
+        if (!rects || !rects[0]) { return }
+        try {
+          this._cancelContent = this.applyAnimatedStyle('.zy-popup', contentUpdater)
+          this._styleBound = true
+        } catch (e) {
+          this._cancelContent = null
+        }
+      })
     },
 
     _unbindWorkletStyle() {
