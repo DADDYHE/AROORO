@@ -259,8 +259,28 @@ export async function getServiceIncomeDetails(
       'boarding': '寄养',
       'feeding': '上门服务'
     }
+    // 2026-09-11：对齐佣金明细的详细度——批量关联订单补「订单金额 + 买家昵称/头像」
+    const orderIds = ((incomesRes.data || []) as Array<Record<string, unknown>>)
+      .map(x => x.orderId as string).filter(Boolean)
+    const orderInfoMap: Record<string, { orderAmount?: number, buyerNickName?: string, buyerAvatarUrl?: string }> = {}
+    if (orderIds.length) {
+      const ordRes = await db.collection('orders')
+        .where({ _id: db.command.in(orderIds) })
+        .field({ _id: true, totalPrice: true, ownerInfo: true })
+        .get()
+      ;((ordRes.data || []) as Array<Record<string, unknown>>).forEach(o => {
+        const owner = (o.ownerInfo || {}) as Record<string, unknown>
+        orderInfoMap[o._id as string] = {
+          orderAmount: Number(o.totalPrice) || 0,
+          buyerNickName: (owner.nickName as string) || '',
+          buyerAvatarUrl: (owner.avatarUrl as string) || '',
+        }
+      })
+    }
     const list = ((incomesRes.data || []) as Array<Record<string, unknown>>).map(income => {
       const incomeType = (income.type as string) || ''
+      const incomeOrderId = (income.orderId as string) || ''
+      const orderInfo = orderInfoMap[incomeOrderId] || {}
       return {
         id: (income._id as string) || '',
         type: incomeType,
@@ -270,7 +290,10 @@ export async function getServiceIncomeDetails(
         description: (income.description as string) || `${typeNameMap[incomeType] || incomeType}收入`,
         status: (income.status as string) || '',
         createdAt: income.createdAt as Date,
-        orderId: (income.orderId as string) || '',
+        orderId: incomeOrderId,
+        orderAmount: orderInfo.orderAmount || 0,
+        buyerNickName: orderInfo.buyerNickName || '',
+        buyerAvatarUrl: orderInfo.buyerAvatarUrl || '',
       } as ServiceIncomeDetailItem
     })
 

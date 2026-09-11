@@ -766,3 +766,37 @@
   color: var(--text-on-primary);
   letter-spacing: 0.12em;
 }
+
+/* 明细元信息行：订单金额 + 买家（2026-09-11 对齐佣金明细详细度） */
+.content-meta {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 8rpx;
+  flex-wrap: wrap;
+}
+
+.content-meta-item {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.content-buyer {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.buyer-avatar {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  border: 1rpx solid rgba(26, 26, 23, 0.14);
+}
+
+.buyer-name {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}

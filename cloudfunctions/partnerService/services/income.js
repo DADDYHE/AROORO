@@ -173,8 +173,28 @@ async function getServiceIncomeDetails(event, context, auth) {
             'boarding': '寄养',
             'feeding': '上门服务'
         };
+        // 2026-09-11：对齐佣金明细的详细度——批量关联订单补「订单金额 + 买家昵称/头像」
+        const orderIds = (incomesRes.data || [])
+            .map(x => x.orderId).filter(Boolean);
+        const orderInfoMap = {};
+        if (orderIds.length) {
+            const ordRes = await db.collection('orders')
+                .where({ _id: db.command.in(orderIds) })
+                .field({ _id: true, totalPrice: true, ownerInfo: true })
+                .get();
+            (ordRes.data || []).forEach(o => {
+                const owner = (o.ownerInfo || {});
+                orderInfoMap[o._id] = {
+                    orderAmount: Number(o.totalPrice) || 0,
+                    buyerNickName: owner.nickName || '',
+                    buyerAvatarUrl: owner.avatarUrl || '',
+                };
+            });
+        }
         const list = (incomesRes.data || []).map(income => {
             const incomeType = income.type || '';
+            const incomeOrderId = income.orderId || '';
+            const orderInfo = orderInfoMap[incomeOrderId] || {};
             return {
                 id: income._id || '',
                 type: incomeType,
@@ -184,7 +204,10 @@ async function getServiceIncomeDetails(event, context, auth) {
                 description: income.description || `${typeNameMap[incomeType] || incomeType}收入`,
                 status: income.status || '',
                 createdAt: income.createdAt,
-                orderId: income.orderId || '',
+                orderId: incomeOrderId,
+                orderAmount: orderInfo.orderAmount || 0,
+                buyerNickName: orderInfo.buyerNickName || '',
+                buyerAvatarUrl: orderInfo.buyerAvatarUrl || '',
             };
         });
         // 计算总金额（所有符合条件的记录）

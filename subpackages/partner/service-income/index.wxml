@@ -198,8 +198,15 @@
                 <text class="content-title">{{item.description}}</text>
                 <text class="content-amount">+¥{{item.amount}}</text>
               </view>
+              <view class="content-meta" wx:if="{{item.orderAmount || item.buyerNickName}}">
+                <text class="content-meta-item" wx:if="{{item.orderAmount}}">订单金额：¥{{item.orderAmount}}</text>
+                <view class="content-buyer" wx:if="{{item.buyerNickName}}">
+                  <image wx:if="{{item.buyerAvatarUrl}}" class="buyer-avatar" src="{{item.buyerAvatarUrl}}" mode="aspectFill" lazy-load />
+                  <text class="buyer-name">{{item.buyerNickName}}</text>
+                </view>
+              </view>
               <view class="content-footer">
-                <text class="content-time">{{item.createdAt}}</text>
+                <text class="content-time">{{item.createdAtText}}</text>
                 <text class="content-status">{{item.status === 'completed' ? '已完成' : '待结算'}}</text>
               </view>
             </view>

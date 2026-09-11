@@ -9,6 +9,14 @@ const { ListBehavior } = require('../../../behaviors/listBehavior')
 const authGateBehavior = require('../../../behaviors/authGateBehavior')
 Page({
 
+  /** 本地时区格式化：YYYY-MM-DD HH:mm（iOS 兼容 ISO 解析） */
+  _formatDateTime(v) {
+    const d = new Date(v)
+    if (isNaN(d.getTime())) { return '' }
+    const p = n => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+  },
+
   stopBubble() {}, /* glass-easel 下 catchtap 需绑真实方法才阻断冒泡 */  ...pageI18n.mixin(),
   behaviors: [ListBehavior, authGateBehavior],
   data: {
@@ -179,7 +187,10 @@ Page({
       )
 
       if (res.code === 0 && res.data) {
-        const list = res.data.list || []
+        const list = (res.data.list || []).map(x => ({
+          ...x,
+          createdAtText: x.createdAt ? this._formatDateTime(x.createdAt) : '',
+        }))
         this.setData({
           details: append ? [...this.data.details, ...list] : list,
           detailTotal: res.data.total || 0,
