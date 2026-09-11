@@ -58,7 +58,7 @@
           <view class="overview-divider"></view>
           <view class="overview-row overview-row-top">
             <view class="overview-stat">
-              <text class="overview-stat-value">¥{{commissionText}}</text>
+              <text class="overview-stat-value">¥{{goodsText}}</text>
               <text class="overview-stat-label">带货</text>
               <text class="overview-stat-sub">（团购+商城）</text>
             </view>

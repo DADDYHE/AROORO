@@ -135,6 +135,7 @@ Page({
   _computeSummary(overview, wallet) {
     let totalIncomeText = ''
     let commissionText = ''
+    let goodsText = ''
     let activityText = ''
     let hostingText = ''
     let feedingText = ''
@@ -153,17 +154,17 @@ Page({
       const tuanMall = typeTotal('tuan') + typeTotal('mall')
       totalIncomeText = ct.toFixed(2)
       commissionText = ct.toFixed(2)
+      goodsText = tuanMall.toFixed(2)          /* 带货（团购+商城佣金）——独立于大卡 total */
       activityText = typeTotal('activity').toFixed(2)
       hostingText = typeTotal('boarding').toFixed(2)
       feedingText = typeTotal('feeding').toFixed(2)
       walletCardTotalIncome = totalIncomeText
-      void tuanMall
     }
     if (wallet) {
       walletBalanceText = (Number(wallet.balance) || 0).toFixed(2)
       walletTotalWithdrawnText = (Number(wallet.totalWithdrawn) || 0).toFixed(2)
     }
-    return { totalIncomeText, commissionText, activityText, hostingText, feedingText, walletCardTotalIncome, walletBalanceText, walletTotalWithdrawnText }
+    return { totalIncomeText, commissionText, goodsText, activityText, hostingText, feedingText, walletCardTotalIncome, walletBalanceText, walletTotalWithdrawnText }
   },
 
   _buildRates(ratesData) {
