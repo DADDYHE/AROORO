@@ -176,6 +176,9 @@ Page({
       items: Array.isArray(raw.items) ? raw.items : [],
       itemCount: Array.isArray(raw.items) ? raw.items.length : 0,
       totalAmount: raw.totalAmount || 0,
+      // 实付金额（折后）：商城订单带券时 totalAmount=原价、finalAmount=实付，
+      // 复支付必须用 finalAmount，否则后端金额校验 PAYMENT_AMOUNT_MISMATCH
+      finalAmount: raw.finalAmount || 0,
       receiverName: raw.receiverName || '',
       receiverPhone: raw.receiverPhone || '',
       receiverAddress: raw.receiverAddress || '',
@@ -258,10 +261,14 @@ Page({
     try {
       // P1-2: 团购订单按 type='tuan' 发起支付（pay.ts 按 orderId 查 orders，金额/前缀正确）
       const isTuan = order.type === 'group_buy'
+      // 金额口径与后端 ORDER_TYPE_AMOUNT_FIELD 对齐：
+      //   tuan 统一单 totalAmount=折后实付；mall 带券时 totalAmount=原价、finalAmount=实付，
+      //   复支付一律用实付金额，否则 PAYMENT_AMOUNT_MISMATCH
+      const payAmount = order.finalAmount || order.totalAmount || 0
       await PaymentService.pay({
         type: isTuan ? 'tuan' : 'mall',
         orderId: order._id,
-        amount: Math.round((order.totalAmount || 0) * 100),
+        amount: Math.round(payAmount * 100),
         description: isTuan ? '团购订单' : '商城订单',
       })
       this.toast('PAYMENT_SUCCESS')
