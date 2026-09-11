@@ -1268,19 +1268,32 @@ async function cancelExpiredOrderIfNeeded(order: { _id?: string, status?: string
      回调打到已取消订单会被 notify 拒绝 → 用户扣款但订单取消（资损）。
      关单成功（未支付）→ 安全取消；关单失败（已支付/状态异常）→ 不取消，等回调或人工。 */
   if (order.outTradeNo) {
+    /* 三态处理（对齐 orderTimeoutService cron 同款逻辑）：
+       - close=true（预付单已关，未支付）→ 安全取消
+       - tradeState=SUCCESS（用户已支付）→ 跳过取消，等 notify 置 paid 或人工恢复
+       - tradeState=UNKNOWN（查询失败）→ 保守跳过本轮
+       - CLOSED / NOTPAY → 继续取消 ✓
+       支付密钥/关单实现收敛在 orderTimeoutService（closePrepay action），本服务不持密钥 */
     try {
-      const closeRes = await cloud.callFunction({
-        name: 'paymentService',
-        data: { action: 'closePayment', outTradeNo: order.outTradeNo },
-      }) as { result?: { code?: number } }
-      if (closeRes && closeRes.result && closeRes.result.code !== 0) {
-        logger.warn('cancelExpiredOrder: 预付单关单未成功，暂不取消（可能已支付）', {
-          orderId: order._id, outTradeNo: order.outTradeNo, res: closeRes.result,
-        })
+      const res = await cloud.callFunction({
+        name: 'orderTimeoutService',
+        data: { action: 'closePrepay', outTradeNo: order.outTradeNo },
+      }) as { result?: { code?: number, data?: { close?: boolean, tradeState?: string } } }
+      const data = res && res.result && res.result.data
+      const tradeState = (data && data.tradeState) || 'UNKNOWN'
+      if (data && data.close) {
+        logger.info('cancelExpiredOrder: 预付单已关闭（未支付），安全取消', { orderId: order._id })
+      } else if (tradeState === 'SUCCESS') {
+        logger.warn('cancelExpiredOrder: 预付单已支付，跳过取消（等 notify 置 paid）', { orderId: order._id, outTradeNo: order.outTradeNo })
         return false
+      } else if (tradeState === 'UNKNOWN') {
+        logger.warn('cancelExpiredOrder: 关单/查单失败，保守跳过本轮', { orderId: order._id, outTradeNo: order.outTradeNo })
+        return false
+      } else {
+        logger.info('cancelExpiredOrder: 预付单未支付（' + tradeState + '），继续取消', { orderId: order._id })
       }
     } catch (e) {
-      logger.warn('cancelExpiredOrder: 关单调用失败，暂不取消', {
+      logger.warn('cancelExpiredOrder: 关单调用失败，保守跳过本轮', {
         orderId: order._id, outTradeNo: order.outTradeNo, msg: (e as Error)?.message,
       })
       return false

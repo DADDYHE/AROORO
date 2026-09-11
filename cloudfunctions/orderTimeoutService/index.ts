@@ -1594,9 +1594,20 @@ async function recycleCancelledPrepayOrders(result: TimeoutResult): Promise<void
 let _isRunning = false
 
 export async function main(
-  event: CloudEvent,
+  event: CloudEvent & { action?: string; outTradeNo?: string },
   _context: CloudContext
 ): Promise<unknown> {
+  /* 事件 action 分发：closePrepay —— 供 orderService 惰性取消跨函数调用
+     （微信支付配置/关单实现收敛在本服务，避免各服务重复持有支付密钥） */
+  if (event.action === 'closePrepay') {
+    const outTradeNo = event.outTradeNo || ''
+    if (!outTradeNo) { return handleSuccess({ close: false, tradeState: 'UNKNOWN' }, '缺少 outTradeNo') }
+    const closed = await closeWechatOrder(outTradeNo)
+    const tradeState = closed ? 'CLOSED' : await queryWechatOrderState(outTradeNo)
+    // close=true：预付单已关闭（未支付），取消安全；close=false：以查单状态为准
+    return handleSuccess({ close: closed, tradeState })
+  }
+
   logger.info('orderTimeoutService.start', {
     trigger: event.TriggerName || 'manual',
     message: event.Message,
