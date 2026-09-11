@@ -9,6 +9,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 形态 1：遮罩柔和淡入（Skyline 无 backwards → 初始态 + forwards） */
+  opacity: 0;
+  animation: pay-mask-in 180ms ease-out forwards;
+}
+
+@keyframes pay-mask-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .pay-loading-inner {
@@ -16,6 +24,20 @@
   flex-direction: column;
   align-items: center;
   gap: 28rpx;
+}
+
+/* ring-wrap：入场弹入（scale 0.6→1 轻回弹）；旋转在内层 ring，避免 transform 冲突 */
+.pay-loading-ring-wrap {
+  width: 68rpx;
+  height: 68rpx;
+  opacity: 0;
+  transform: scale(0.6);
+  animation: pay-ring-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes pay-ring-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .pay-loading-ring {
@@ -35,4 +57,12 @@
   font-size: 24rpx;
   color: #F7F5EF;
   letter-spacing: 3rpx;
+  opacity: 0;
+  transform: translateY(6rpx);
+  animation: pay-text-in 240ms ease-out 120ms forwards;
+}
+
+@keyframes pay-text-in {
+  from { opacity: 0; transform: translateY(6rpx); }
+  to { opacity: 1; transform: translateY(0); }
 }

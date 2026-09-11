@@ -1,7 +1,9 @@
 <root-portal>
   <view wx:if="{{visible}}" class="pay-loading-mask">
     <view class="pay-loading-inner">
-      <view class="pay-loading-ring"></view>
+      <view class="pay-loading-ring-wrap">
+        <view class="pay-loading-ring"></view>
+      </view>
       <text class="pay-loading-text">支付中，请稍等...</text>
     </view>
   </view>
