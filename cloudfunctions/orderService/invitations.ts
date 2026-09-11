@@ -295,15 +295,18 @@ async function getMyInvitations(event: EventLike, _context: ContextLike, auth: A
   const pageSizeNum = Math.min(50, Math.max(1, Math.floor(Number(pageSize) || 20)))
 
   const where: Record<string, unknown> = { hostId: hostProfile._id }
-  // 组合筛选（2026-09-08）：filled 邀请按关联订单状态细分——待付尾款（deposit_paid）/已完成（completed）
-  let orderStatusFilter: string | null = null
+  // 组合筛选（2026-09-11 语义修正）：按「开单」生命周期而非寄养订单生命周期——
+  //   「已完成」= 客户付款完成、订单自动接单（paid/confirmed/in_progress/completed 均算：
+  //   寄养服务本身进行到哪是订单的事，开单在客户付款+自动接单后即完成）
+  const COMPLETED_ORDER_STATUSES = ['paid', 'confirmed', 'in_progress', 'completed']
+  let orderStatusFilter: string | string[] | null = null
   if (status && status !== 'all') {
     if (status === 'deposit_pending') {
       where.status = 'filled'
       orderStatusFilter = 'deposit_paid'
     } else if (status === 'completed') {
       where.status = 'filled'
-      orderStatusFilter = 'completed'
+      orderStatusFilter = COMPLETED_ORDER_STATUSES
     } else if (INVITATION_STATUSES.has(status)) {
       where.status = status
     } else {
@@ -328,8 +331,9 @@ async function getMyInvitations(event: EventLike, _context: ContextLike, auth: A
         .get()
       ;((ordRes.data || []) as Array<{ _id: string, status?: string }>).forEach(o => { orderMap[o._id] = o.status || '' })
     }
+    const expected = Array.isArray(orderStatusFilter) ? orderStatusFilter : [orderStatusFilter]
     const filtered = filledList
-      .filter(x => x.orderId && orderMap[x.orderId as string] === orderStatusFilter)
+      .filter(x => x.orderId && expected.includes(orderMap[x.orderId as string] || ''))
       .map(x => ({ ...x, orderStatus: orderMap[x.orderId as string] }))
     const total = filtered.length
     const pageList = filtered.slice((pageNum - 1) * pageSizeNum, pageNum * pageSizeNum)
