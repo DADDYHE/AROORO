@@ -333,7 +333,6 @@
             <view class="option-arrow"></view>
           </view>
         </view>
-        <text class="paysheet-later" bindtap="onPaySheetClose">稍后支付 · 30 分钟内有效</text>
       </view>
     </view>
 

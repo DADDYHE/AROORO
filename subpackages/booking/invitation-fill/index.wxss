@@ -1113,7 +1113,7 @@
   width: 620rpx;
   background: var(--card-color, #FFFFFF);
   border-radius: 32rpx;
-  padding: 44rpx 44rpx 36rpx;
+  padding: 44rpx 44rpx 40rpx;
   box-shadow: 0 24rpx 64rpx rgba(15, 36, 16, 0.28);
   overflow: hidden;
 }
@@ -1238,12 +1238,3 @@
   transform: rotate(45deg);
 }
 
-/* 底部文字链接（替代按钮）：稍后支付 */
-.paysheet-later {
-  display: block;
-  text-align: center;
-  margin-top: 28rpx;
-  font-size: 24rpx;
-  color: var(--text-tertiary, #736D5F);
-  letter-spacing: 0.06em;
-}
