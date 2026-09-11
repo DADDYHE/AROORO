@@ -294,9 +294,13 @@ Page({
   async onGoPay(payType) {
     const prev = this.data.order
     if (!prev || !prev._id) {return}
-    /* 支付回调异步，页面快照可能陈旧（定金已付但 status 仍是 pending_payment）：
-       发起支付前先静默重拉服务端状态，金额/分支以最新数据计算 —— 防重复付全款 */
-    await this._loadOrder({ orderId: prev._id, silent: true })
+    /* 点击瞬间先显支付遮罩：前置的静默重拉（0.5~1.5s RTT）期间不能无反馈；
+       pay() 内部再次 show 幂等，finally hide 兜底（金额异常等 return 路径也关闭） */
+    const { PaymentService } = require('../../services/PaymentService')
+    PaymentService.showPayLoading()
+    try {
+      await this._loadOrder({ orderId: prev._id, silent: true })
+    } catch (e) { /* 重拉失败沿用快照继续（pay 侧仍有金额校验兜底） */ }
     const order = this.data.order
 
     const isTail = order.status === 'deposit_paid'
@@ -334,6 +338,9 @@ Page({
       } else {
         this.errorDynamic(err.message, 'PAYMENT_FAILED')
       }
+    } finally {
+      /* pay 内部 finally 已 hide；此处兜底金额异常等提前 return 的路径 */
+      PaymentService.hidePayLoading()
     }
   },
 

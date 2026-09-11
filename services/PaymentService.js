@@ -96,5 +96,14 @@ PaymentService.prototype._notifyPayLoading = function (visible) {
     try { _payLoadingListener(visible) } catch (e) { /* 组件销毁竞态，静默 */ }
   }
 }
+/* 手动触发：供「pay 之前有前置耗时」的路径使用（如 order-detail 发起支付前
+   先静默重拉订单——重拉 RTT 0.5~1.5s，若不先显遮罩，点击会长时间无反馈）。
+   pay() 内部再次 show 幂等；finally hide 统一兜底 */
+PaymentService.prototype.showPayLoading = function () {
+  this._notifyPayLoading(true)
+}
+PaymentService.prototype.hidePayLoading = function () {
+  this._notifyPayLoading(false)
+}
 
 module.exports = new PaymentService()
