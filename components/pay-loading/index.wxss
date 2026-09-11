@@ -1,3 +1,9 @@
+/* ================================================================
+   pay-loading · 全局支付 loading（变体 A：暖墨遮罩 + 金点波浪）
+   常驻节点 + visibility/opacity/transform 过渡（显示零重建延迟）；
+   非显示态 visibility:hidden + pointer-events:none（不挡页面）；
+   动效只用 opacity/transform（Skyline 兼容）
+   ================================================================ */
 .pay-loading-mask {
   position: fixed;
   top: 0;
@@ -9,16 +15,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 遮罩从底部浮升 + 淡入：支付按钮几乎总在页面底部，
-     整层自下浮升 ≈ "从按钮区域升起"的视觉连续性（零坐标，全局生效） */
+  visibility: hidden;
   opacity: 0;
   transform: translateY(8%);
-  animation: pay-mask-in 260ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  pointer-events: none;
+  transition:
+    opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 260ms;
 }
 
-@keyframes pay-mask-in {
-  from { opacity: 0; transform: translateY(8%); }
-  to { opacity: 1; transform: translateY(0); }
+.pay-loading-mask--on {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .pay-loading-inner {
@@ -28,44 +39,34 @@
   gap: 28rpx;
 }
 
-/* ring-wrap：入场弹入（scale 0.6→1 轻回弹）；旋转在内层 ring，避免 transform 冲突 */
-.pay-loading-ring-wrap {
-  width: 68rpx;
+/* 金点波浪（lux-cascade 同款，Skyline 已验证） */
+.pay-loading-dots {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
   height: 68rpx;
-  opacity: 0;
-  transform: scale(0.6);
-  animation: pay-ring-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@keyframes pay-ring-in {
-  from { opacity: 0; transform: scale(0.6); }
-  to { opacity: 1; transform: scale(1); }
+.pay-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 999rpx;
+  background: #C9A24B;
+  animation: pay-dot-wave 1.2s ease-in-out infinite;
 }
 
-.pay-loading-ring {
-  width: 68rpx;
-  height: 68rpx;
-  /* Skyline：百分比圆角 + 多色 border 渲染异常（显示为旋转矩形）→ 用绝对值圆角 */
-  border-radius: 34rpx;
-  border: 5rpx solid rgba(201, 162, 75, 0.25);
-  border-top-color: #C9A24B;
-  animation: pay-ring-spin 0.9s linear infinite;
-}
+.pay-dot:nth-child(2) { animation-delay: 150ms; }
+.pay-dot:nth-child(3) { animation-delay: 300ms; }
+.pay-dot:nth-child(4) { animation-delay: 450ms; }
+.pay-dot:nth-child(5) { animation-delay: 600ms; }
 
-@keyframes pay-ring-spin {
-  to { transform: rotate(360deg); }
+@keyframes pay-dot-wave {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-12rpx); opacity: 1; }
 }
 
 .pay-loading-text {
   font-size: 24rpx;
   color: #F7F5EF;
   letter-spacing: 3rpx;
-  opacity: 0;
-  transform: translateY(6rpx);
-  animation: pay-text-in 240ms ease-out 120ms forwards;
-}
-
-@keyframes pay-text-in {
-  from { opacity: 0; transform: translateY(6rpx); }
-  to { opacity: 1; transform: translateY(0); }
 }
