@@ -1259,11 +1259,33 @@ export async function cancelOrder(event: EventLike, _context: ContextLike, auth:
  * 微信预付单的关闭由 cron 兜底（预付单支付入口随支付页退出实际不可达，风险极低）。
  * 条件更新幂等——与 cron / 前端归零触发并发安全。返回 true 表示本次执行了取消。
  */
-async function cancelExpiredOrderIfNeeded(order: { _id?: string, status?: string, timeoutAt?: number, couponId?: string }): Promise<boolean> {
+async function cancelExpiredOrderIfNeeded(order: { _id?: string, status?: string, timeoutAt?: number, couponId?: string, outTradeNo?: string }): Promise<boolean> {
   if (!order || !order._id) {return false}
   if (order.status !== 'pending_payment') {return false}
   const timeoutAt = Number(order.timeoutAt)
   if (!Number.isFinite(timeoutAt) || timeoutAt <= 0 || timeoutAt >= Date.now()) {return false}
+  /* 取消前先关微信预付单（若拉起过支付）：预付单默认 2h 有效，取消后仍可付款，
+     回调打到已取消订单会被 notify 拒绝 → 用户扣款但订单取消（资损）。
+     关单成功（未支付）→ 安全取消；关单失败（已支付/状态异常）→ 不取消，等回调或人工。 */
+  if (order.outTradeNo) {
+    try {
+      const closeRes = await cloud.callFunction({
+        name: 'paymentService',
+        data: { action: 'closePayment', outTradeNo: order.outTradeNo },
+      }) as { result?: { code?: number } }
+      if (closeRes && closeRes.result && closeRes.result.code !== 0) {
+        logger.warn('cancelExpiredOrder: 预付单关单未成功，暂不取消（可能已支付）', {
+          orderId: order._id, outTradeNo: order.outTradeNo, res: closeRes.result,
+        })
+        return false
+      }
+    } catch (e) {
+      logger.warn('cancelExpiredOrder: 关单调用失败，暂不取消', {
+        orderId: order._id, outTradeNo: order.outTradeNo, msg: (e as Error)?.message,
+      })
+      return false
+    }
+  }
   const cancelRes = await db.collection('orders')
     .where({ _id: order._id, status: 'pending_payment' })
     .update({
