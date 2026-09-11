@@ -177,6 +177,7 @@
                 </view>
                 <view class="card-info">
                   <text class="card-info-item" wx:if="{{item.ownerName}}">宠物主人：{{item.ownerName}}</text>
+                  <text class="card-info-item" wx:if="{{item.petNames}}">寄养宠物：{{item.petNames}}</text>
                   <text class="card-info-item" wx:if="{{item.startDate || item.endDate}}">寄养日期：{{item.startDate || '-'}} 至 {{item.endDate || '-'}}</text>
                   <text class="card-info-item">金额：¥{{item.totalPrice || item.totalAmount || 0}}</text>
                 </view>

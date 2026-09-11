@@ -132,6 +132,9 @@ Page({
         const list = (res.data.list || []).map(o => ({
           ...o,
           statusText: ORDER_STATUS_TEXT[o.status] || o.status,
+          petNames: Array.isArray(o.petsInfo)
+            ? o.petsInfo.map(p => p && p.name).filter(Boolean).join('、') || (o.petNames || '')
+            : (o.petNames || ''),
         }))
         // 分页累积后按「有效 / 已取消」分组（2026-09-07：已取消单拆独立节）
         this._allOrders = this.data.page > 1 ? (this._allOrders || []).concat(list) : list
@@ -187,7 +190,12 @@ Page({
           timeText: `${o.startAt || '--:--'} - ${o.endAt || '--:--'}`,
           releasable: o.status === 'filled' && !o.orderId,
         })
-        const myInvitations = all.filter(o => o.status !== 'cancelled').map(decorate)
+        // 2026-09-11：已成单（filled 且已生成订单）的不再显示在「我的开单」——
+        //   已转化为寄养订单，在节2 展示；孤儿 filled（无 orderId，可释放）仍保留在此
+        const myInvitations = all
+          .filter(o => o.status !== 'cancelled')
+          .filter(o => !(o.status === 'filled' && o.orderId))
+          .map(decorate)
         // 取消的开单映射为节3 订单卡字段（复用渲染模板）
         const cancelledInvitations = all.filter(o => o.status === 'cancelled').map(o => ({
           ...o,
