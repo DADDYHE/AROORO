@@ -445,6 +445,12 @@ EXTRA = '''
   .pets-scroll { overflow-x: auto; overflow-y: hidden; }   /* 模拟 scroll-view 裁切（真机由组件承载） */
   /* 静态还原不播放入场动画（否则截图拍到 opacity:0 的帧） */
   .stagger-item, .stagger-item * { opacity: 1 !important; animation: none !important; }
+  /* 印章呼吸：?t=<秒> 定格到指定相位（负 delay + paused），放在上面之后以压过 animation:none */
+  body.freeze .lux-cover-ring {
+    animation: lux-seal-breathe 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite !important;
+    animation-delay: var(--seal-t, 0s) !important;   /* 必须 !important：上面的简写把 delay 也置为 !important 的 0 */
+    animation-play-state: paused !important;
+  }
   .sim-ico { font-size: 30px; line-height: 1; filter: grayscale(1) brightness(0.25); }
   .pet-avatar { border: 0; }
   /* 静态还原不播放入场动画（否则截图拍到 opacity:0 的帧） */
@@ -505,7 +511,12 @@ HTML = '''<!DOCTYPE html>
     document.getElementById('phone').style.setProperty('--seal-t', '-' + _t + 's');
   }
   const sc = document.getElementById('scroller');
-  requestAnimationFrame(() => {
+  const qt = new URLSearchParams(location.search).get('t');
+if (qt !== null) {
+  document.body.classList.add('freeze');
+  document.body.style.setProperty('--seal-t', '-' + qt + 's');
+}
+requestAnimationFrame(() => {
     const cv = getComputedStyle(document.querySelector('.lux-cover'));
     const card = document.querySelector('.lux-car-card').getBoundingClientRect();
     const hint = document.querySelector('.lux-car-hint');

@@ -1569,15 +1569,16 @@ page {
   position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 2rpx rgba(201, 162, 75, 0.42);
+  box-shadow: inset 0 0 0 2rpx rgba(201, 162, 75, 0.5);
   transform-origin: 50% 50%;       /* Skyline：动 scale 必须显式给 origin */
-  animation: lux-seal-breathe 4.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: lux-seal-breathe 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-/* 一个来回 4.8s ≈ 静息呼吸节律：扩到 1.05 并提亮为「吸」，收到 1 并压暗为「呼」 */
+/* 一个来回 4.2s ≈ 静息呼吸节律（加重版 2026-09-13）：扩到 1.12 并提亮为「吸」，
+   收到 1 并压暗为「呼」。印章上下余量 63px，1.12 只向外扩约 10px，不会贴住字标。 */
 @keyframes lux-seal-breathe {
-  0%, 100% { transform: scale(1);    opacity: 0.72; }
-  50%      { transform: scale(1.05); opacity: 1; }
+  0%, 100% { transform: scale(1);    opacity: 0.55; }
+  50%      { transform: scale(1.12); opacity: 1; }
 }
 
 .lux-cover-seal::after {
