@@ -18,19 +18,18 @@ const { UtilityService } = require('../services/CloudFunctionService')
 const homeBannerBehavior = Behavior({
   data: {
     bannerList: [],
-    // 时装屋开场 · 当期橱窗：手动横滑（无 autoplay / 无 circular）。
+    // 时装屋开场 · 当期橱窗：手动横滑（无 autoplay / 无 circular），banner 全宽占满区域。
     //   swiper 的 previous/next-margin 以 px 下发（属性单位歧义），由 _initCarousel 按 rpx 换算；
     //   默认值对应 375pt 屏（值 = rpx × r）：
-    //     卡高 600rpx＝300px（方案 B 的 .car-img 高 300px）
-    //     itemW 568rpx = 卡宽 536rpx（≈内容宽 654rpx 的 82%）+ 左右各 16rpx 卡外边距
-    //     previous-margin 32rpx → 卡左缘落 48rpx 页边距上
-    //     next-margin 150rpx = 750 - 32 - 568 → 下一张露边 134rpx
-    carouselHeight: 300,      // 600rpx
-    carPrevMargin: 16,        // 32rpx（= 48rpx 页边距 - 16rpx 卡外边距）
-    carNextMargin: 75,        // 150rpx（= 750rpx - previous 32rpx - itemW 568rpx）
+    //     全宽 750rpx × 16:9 → 卡高 422rpx ≈ 211px（DADDY 2026-09-12：图占满区域、16:9）
+    //     itemW = 卡宽 = 750rpx，previous/next-margin 0（无露边，整页切换）
+    carouselHeight: 211,      // 422rpx（全宽 750rpx 的 16:9）
+    carPrevMargin: 0,
+    carNextMargin: 0,
     carouselIndex: 0,
     carouselLabel: '01 / 01',
     carouselCurrent: { title: '当期橱窗', subtitle: 'CURRENT SELECTION' },
+    slideHintTouched: false,  // 「滑动」仪式感提示：首次手动横滑后永久隐去
     // scroll-view 布局参数
     scrollViewOffset: 64, // scroll-view 顶部偏移 = navbarHeight + topbarHeight
     scrollMarginTop: 0,   // scroll-view 负 margin，拉升至 banner 顶部
@@ -41,9 +40,9 @@ const homeBannerBehavior = Behavior({
       const windowWidth = wx.getWindowInfo().windowWidth
       const r = windowWidth / 750
       this.setData({
-        carouselHeight: Math.round(600 * r),
-        carPrevMargin: Math.round(32 * r),
-        carNextMargin: Math.round(150 * r),
+        carouselHeight: Math.round(750 * 9 / 16 * r),
+        carPrevMargin: 0,
+        carNextMargin: 0,
       })
       this._updateScrollLayout()
     },
@@ -103,9 +102,12 @@ const homeBannerBehavior = Behavior({
       })
     },
 
-    /** 手动横滑：swiper bindchange → 更新展签与页码 */
+    /** 手动横滑：swiper bindchange → 更新展签与页码；首次触摸后隐去「滑动」提示 */
     onCarouselChange(e) {
       this._syncCarousel(e.detail.current)
+      if (!this.data.slideHintTouched) {
+        this.setData({ slideHintTouched: true })
+      }
     },
   },
 })
