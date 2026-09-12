@@ -1592,8 +1592,9 @@ page {
 .lux-cover-mark { width: 176rpx; height: 176rpx; display: block; }
 
 /* ---------- 2. 当期橱窗：手动横滑（无 autoplay / 无 circular），banner 全宽占满区域 ---------- */
-/* banner 全宽 750rpx × 16:9 → 高 422rpx（211px），无页边距无露边，整页切换 */
-.lux-carousel { margin-top: 88rpx; position: relative; }
+/* banner 全宽 750rpx × 16:9 → 高 422rpx（211px），无页边距无露边，整页切换；
+   margin-top 0 —— banner 与封面直接相接（全出血连版；旧 88rpx 留白是橱窗小卡构图的遗留） */
+.lux-carousel { margin-top: 0; position: relative; }
 .lux-car-swiper { width: 100%; }
 
 .lux-car-card {
