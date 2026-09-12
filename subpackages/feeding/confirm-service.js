@@ -56,7 +56,7 @@ Page({
     timeMinuteOptions: TIME_MINUTE_OPTIONS,
     timePickerValue: [9, 0],
     showTimePicker: false,
-    iconService: '/images/icons/message-luxury-line.svg',
+    iconService: '/images/icons/concierge-bell.svg',
     familiarityValue: '',
     familiarityText: '',
     showFamiliarityPicker: false,
