@@ -227,7 +227,7 @@ BODY = r'''
 
         <div class="quick-services-wrapper">
           <div class="quick-services">
-            <div class="qs-item">
+            <div class="qs-item qs-item--pressed">
               <div class="qs-icon qs-icon-activity"><span class="sim-ico">📣</span></div>
               <span class="qs-title">宠团团活动</span>
               <span class="qs-subtitle">发现同城宠物聚会</span>
@@ -556,7 +556,7 @@ HTML = '''<!DOCTYPE html>
         ' hdr[mt=' + (hdr ? cs(hdr).marginTop : '-') + ']' +
         ' ttl[mt=' + (ttl ? cs(ttl).marginTop : '-') + ' lh=' + (ttl ? cs(ttl).lineHeight : '-') + ']' +
         ' sheetPT=' + cs(document.querySelector('.home-content-sheet')).paddingTop;
-    })() + '|petsScroll ' + (() => { const sc = document.querySelector('.pets-scroll'); const pg = document.querySelector('[data-role="petsgrid"]'); const c = document.querySelector('.pet-card'); return sc ? 'sw' + Math.ceil(pg.scrollWidth) + ' cardW=' + Math.round(c.getBoundingClientRect().width) : 'MISSING'; })() + '|petDbg ' + (() => { const c = document.querySelector('.pet-card'); const pv = document.querySelector('.pet-portrait'); const cs = el => el ? getComputedStyle(el) : null; return c ? 'card[op=' + cs(c).opacity + ' bg=' + cs(c).backgroundColor + ' vis=' + cs(c).visibility + ']' + ' portrait[' + (pv ? cs(pv).width + 'x' + cs(pv).height + ' bgimg=' + (cs(pv).backgroundImage.indexOf('gradient')>=0?'grad':'none') : 'MISSING') + ']' : 'NOCARD'; })() + '|pet ' + (pr ? Math.round(pr.width) + 'x' + Math.round(pr.height) + '@' + Math.round(pr.left) +
+    })() + '|portraits ' + (() => { const ps = document.querySelectorAll('.pet-portrait'); const cs = document.querySelectorAll('.pet-card'); return Array.from(ps).map((el,i) => { const r = el.getBoundingClientRect(); const cr = cs[i].getBoundingClientRect(); return 'p' + i + '[' + Math.round(r.width) + 'x' + Math.round(r.height) + ' card' + Math.round(cr.width) + ']' }).join(' '); })() + '|petsScroll ' + (() => { const sc = document.querySelector('.pets-scroll'); const pg = document.querySelector('[data-role="petsgrid"]'); const c = document.querySelector('.pet-card'); return sc ? 'sw' + Math.ceil(pg.scrollWidth) + ' cardW=' + Math.round(c.getBoundingClientRect().width) : 'MISSING'; })() + '|petDbg ' + (() => { const c = document.querySelector('.pet-card'); const pv = document.querySelector('.pet-portrait'); const cs = el => el ? getComputedStyle(el) : null; return c ? 'card[op=' + cs(c).opacity + ' bg=' + cs(c).backgroundColor + ' vis=' + cs(c).visibility + ']' + ' portrait[' + (pv ? cs(pv).width + 'x' + cs(pv).height + ' bgimg=' + (cs(pv).backgroundImage.indexOf('gradient')>=0?'grad':'none') : 'MISSING') + ']' : 'NOCARD'; })() + '|pet ' + (pr ? Math.round(pr.width) + 'x' + Math.round(pr.height) + '@' + Math.round(pr.left) +
         ',' + Math.round(pr.top + window.scrollY) : 'none') +
       // 价签块应完全落在商品图**下方**（mr.top >= mib.bottom）。若被丢弃 position 则会叠回图上。
       '|mallinfo ' + (mr ? Math.round(mr.width) + '+' + Math.round(mr.height) + '@' +

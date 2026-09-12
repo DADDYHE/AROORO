@@ -1773,7 +1773,13 @@ page {
   border-radius: 0;
   overflow: visible;
 }
+/* 按压反馈：整块微缩 + 章牌更实（圆形淡底，不产生方框轮廓，纸面语言安全） */
 .qs-item--pressed { transform: scale(0.97); }
+.qs-item--pressed .qs-icon {
+  transform: scale(0.95);
+  background: rgba(15, 36, 16, 0.06);
+}
+.qs-icon { transition: transform 180ms cubic-bezier(0.25, 0.1, 0.25, 1), background-color 180ms; }
 /* 刻印章牌：116rpx 双环，图标 60rpx */
 .qs-icon {
   width: 116rpx;                   /* 116rpx */
