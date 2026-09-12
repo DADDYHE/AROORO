@@ -1798,6 +1798,9 @@ page {
 .qs-item {
   flex: 1;
   width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;             /* 板块内容居中（原画廊左对齐导致两列视觉偏左） */
   padding: 0 0 52rpx;              /* 52rpx */
   background: transparent;
   background-image: none;
@@ -1834,8 +1837,9 @@ page {
   letter-spacing: 0.07em;
   color: var(--text-primary);
   margin-bottom: 0;
+  text-align: center;
 }
-.qs-subtitle { margin-top: 12rpx; font-size: 24rpx; color: rgba(26, 26, 23, 0.45); }
+.qs-subtitle { margin-top: 12rpx; font-size: 24rpx; color: rgba(26, 26, 23, 0.45); text-align: center; }
 
 /* ---------- 7. 待处理订单：行式去卡（mock 无此板块，按 c-gallery 语言自定） ---------- */
 .pending-list { gap: 0; }
