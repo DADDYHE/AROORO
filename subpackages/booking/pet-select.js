@@ -168,9 +168,10 @@ Page({
   setPetData(formattedPets) {
     const selectedPets = BookingData.get('selectedPets')
 
-    const petsWithChecked = formattedPets.map(pet => ({
+    const petsWithChecked = formattedPets.map((pet, idx) => ({
       ...pet,
       checked: selectedPets.some(id => String(id) === String(pet.id)),
+      noText: 'No.' + (idx < 9 ? '0' : '') + (idx + 1),
     }))
 
     this.setData({

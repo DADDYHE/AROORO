@@ -46,13 +46,16 @@
       <view class="wall-col wall-col-l">
         <block wx:for="{{pets}}" wx:key="id">
           <view wx:if="{{index % 2 === 0}}" class="wall-piece {{item.checked ? 'piece-selected' : ''}}" bindtap="openSelectPopup" data-id="{{item.id}}">
-            <view class="portrait-frame" catchtap="viewPetDetail" data-id="{{item.id}}">
+            <view class="portrait-frame">
               <image lazy-load class="portrait-image" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="pets[{{index}}].avatarUrl" data-index="{{index}}" />
               <view class="portrait-selected-ring" wx:if="{{item.checked}}"></view>
-              <view class="tag-no {{item.checked ? 'tag-picked' : ''}}">{{item.checked ? '已选' : 'No.' + ((index + 1) < 10 ? '0' : '') + (index + 1)}}</view>
+              <view class="tag-no {{item.checked ? 'tag-picked' : ''}}">{{item.checked ? '已选' : item.noText}}</view>
             </view>
             <view class="piece-label">
-              <text class="piece-name">{{item.name}}</text>
+              <view class="piece-name-row">
+                <text class="piece-name">{{item.name}}</text>
+                <text class="piece-archive" catchtap="viewPetDetail" data-id="{{item.id}}">档案 ›</text>
+              </view>
               <view class="piece-caption">
                 <text class="piece-bd">{{item.breed || item.type}}</text>
                 <text class="piece-bd" wx:if="{{item.birthday}}"> · {{item.birthday}}</text>
@@ -68,13 +71,16 @@
       <view class="wall-col wall-col-r">
         <block wx:for="{{pets}}" wx:key="id">
           <view wx:if="{{index % 2 === 1}}" class="wall-piece {{item.checked ? 'piece-selected' : ''}}" bindtap="openSelectPopup" data-id="{{item.id}}">
-            <view class="portrait-frame" catchtap="viewPetDetail" data-id="{{item.id}}">
+            <view class="portrait-frame">
               <image lazy-load class="portrait-image" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="pets[{{index}}].avatarUrl" data-index="{{index}}" />
               <view class="portrait-selected-ring" wx:if="{{item.checked}}"></view>
-              <view class="tag-no {{item.checked ? 'tag-picked' : ''}}">{{item.checked ? '已选' : 'No.' + ((index + 1) < 10 ? '0' : '') + (index + 1)}}</view>
+              <view class="tag-no {{item.checked ? 'tag-picked' : ''}}">{{item.checked ? '已选' : item.noText}}</view>
             </view>
             <view class="piece-label">
-              <text class="piece-name">{{item.name}}</text>
+              <view class="piece-name-row">
+                <text class="piece-name">{{item.name}}</text>
+                <text class="piece-archive" catchtap="viewPetDetail" data-id="{{item.id}}">档案 ›</text>
+              </view>
               <view class="piece-caption">
                 <text class="piece-bd">{{item.breed || item.type}}</text>
                 <text class="piece-bd" wx:if="{{item.birthday}}"> · {{item.birthday}}</text>
@@ -89,9 +95,11 @@
       </view>
     </view>
 
-    <view class="gallery-add" bindtap="addNewPet">
-      <view class="add-line"></view>
-      <text class="add-label">创建新的宠物档案</text>
+    <view class="gallery-add-wrap">
+      <view class="gallery-add" bindtap="addNewPet" hover-class="gallery-add--pressed" hover-stay-time="120">
+        <text class="add-plus">＋</text>
+        <text class="add-label">创建新的宠物档案</text>
+      </view>
     </view>
   </view>
 
@@ -107,9 +115,11 @@
           <text class="empty-subtitle">添加您的第一只宠物</text>
         </view>
       </view>
-      <view class="gallery-add" bindtap="addNewPet">
-        <view class="add-line"></view>
-        <text class="add-label">创建新的宠物档案</text>
+      <view class="gallery-add-wrap">
+        <view class="gallery-add" bindtap="addNewPet" hover-class="gallery-add--pressed" hover-stay-time="120">
+          <text class="add-plus">＋</text>
+          <text class="add-label">创建新的宠物档案</text>
+        </view>
       </view>
     </view>
   </view>
