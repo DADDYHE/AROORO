@@ -918,7 +918,7 @@ page {
 /* ===== Section 2.5: 我的宠物（极简头像行） ===== */
 .my-pets-section {
   margin: 0 0 var(--zy-space-lg);
-  padding: 64rpx var(--page-padding) 12rpx;
+  padding: 8rpx var(--page-padding) 12rpx;   /* 8rpx：紧贴橱窗页码行（DADDY 2026-09-12），原 64rpx */
   background: transparent;
 }
 
