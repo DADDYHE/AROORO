@@ -299,90 +299,42 @@
   border-left: 3rpx solid var(--border-color);
 }
 
-.neutral-icon-user {
-  background: var(--primary-wash);
-}
-
-.neutral-icon-user::before {
-  content: '';
-  position: absolute;
-  width: 14rpx;
-  height: 14rpx;
+/* ----- 刻印章牌（2026-09-12 重设计）：双环刻印 + 金墨蚀刻线稿 -----
+   外环 22% 墨 1rpx / 内环偏置 8% 墨 1rpx；纸面文字金一律金墨线稿（SVG 内置 --lux-gold-ink），#C9A24B 不上纸面 */
+.exhibit-medallion {
+  width: 80rpx;
+  height: 80rpx;
   border-radius: 50%;
-  background: var(--primary-soft);
-  top: 28%;
-  left: 50%;
-  transform: translateX(-50%);
+  border: 1rpx solid rgba(26, 26, 23, 0.22);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
-.neutral-icon-user::after {
+.exhibit-medallion::before {
   content: '';
   position: absolute;
-  bottom: 12rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 22rpx;
-  height: 12rpx;
-  border-radius: 50% 50% 0 0;
-  background: var(--primary-soft);
-}
-
-.neutral-icon-shop {
-  background: var(--accent-wash);
-}
-
-.neutral-icon-shop::before {
-  content: '';
-  position: absolute;
-  top: 14rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 14rpx solid transparent;
-  border-right: 14rpx solid transparent;
-  border-bottom: 9rpx solid var(--accent-deep);
-}
-
-.neutral-icon-shop::after {
-  content: '';
-  position: absolute;
-  top: 23rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 22rpx;
-  height: 14rpx;
-  background: var(--accent-deep);
-  border-radius: var(--zy-radius-xs);
-}
-
-/* ----- 合作伙伴/入驻（主色渐变 CTA 风格，保留但克制） ----- */
-.partner-icon {
-  background: var(--gradient-primary);
-}
-
-.partner-icon::before {
-  content: '';
-  position: absolute;
-  top: 16rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 18rpx;
-  height: 3rpx;
-  background: var(--text-on-primary);
-  border-radius: var(--zy-radius-xs);
-}
-
-.partner-icon::after {
-  content: '';
-  position: absolute;
-  top: 10rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 10rpx;
-  height: 10rpx;
-  border: 3rpx solid var(--text-on-primary);
+  top: 6rpx;
+  left: 6rpx;
+  right: 6rpx;
+  bottom: 6rpx;
   border-radius: 50%;
+  border: 1rpx solid rgba(26, 26, 23, 0.08);
+}
+
+.medallion-img {
+  width: 44rpx;
+  height: 44rpx;
+}
+
+.exhibit-medallion.gold {
+  border-color: rgba(201, 162, 75, 0.55);
+}
+
+.exhibit-medallion.gold::before {
+  border-color: rgba(201, 162, 75, 0.25);
 }
 
 .exhibit-row-card.partner {
@@ -417,94 +369,6 @@
 
 .contact-row-card button.contact-overlay-btn::after {
   border: none;
-}
-
-.neutral-icon-cs {
-  background: var(--activity-tint);
-}
-
-.neutral-icon-cs::before {
-  content: '';
-  position: absolute;
-  top: 16rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20rpx;
-  height: 14rpx;
-  border: 3rpx solid var(--activity-primary);
-  border-radius: var(--zy-radius-xs) var(--zy-radius-xs) var(--zy-radius-sm) var(--zy-radius-sm);
-  background: transparent;
-  box-sizing: border-box;
-}
-
-.neutral-icon-cs::after {
-  content: '';
-  position: absolute;
-  top: 26rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6rpx;
-  height: 6rpx;
-  border-radius: 50%;
-  background: var(--activity-primary);
-}
-
-.neutral-icon-lock {
-  background: var(--primary-wash);
-}
-
-.neutral-icon-lock::before {
-  content: '';
-  position: absolute;
-  top: 16rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 18rpx;
-  height: 10rpx;
-  border: 3rpx solid var(--primary-soft);
-  border-bottom: none;
-  border-radius: 10rpx 10rpx 0 0;
-  box-sizing: border-box;
-}
-
-.neutral-icon-lock::after {
-  content: '';
-  position: absolute;
-  top: 26rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24rpx;
-  height: 16rpx;
-  background: var(--primary-soft);
-  border-radius: var(--zy-radius-xs);
-}
-
-.neutral-icon-info {
-  background: var(--primary-wash);
-}
-
-.neutral-icon-info::before {
-  content: '';
-  position: absolute;
-  top: 18rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5rpx;
-  height: 5rpx;
-  border-radius: 50%;
-  background: var(--primary-soft);
-}
-
-.neutral-icon-info::after {
-  content: '';
-  position: absolute;
-  top: 30rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2rpx;
-  height: 16rpx;
-  background: var(--primary-soft);
-  border-radius: var(--zy-radius-xs);
 }
 
 .exhibit-row-info {

@@ -12,7 +12,6 @@ const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 
 const pageI18n = require('../../utils/page-i18n.js')
-const { CLOUD_ICONS } = require('../../utils/cloudIcons')
 
 Page({
 
@@ -34,10 +33,6 @@ Page({
     appVersion: '1.0.0',
     isHeaderScrolled: false,
     showHostModal: false,
-    iconShoppingCart: CLOUD_ICONS.SHOPPING_CART,
-    iconBell: CLOUD_ICONS.BELL,
-    iconDoorOpen: CLOUD_ICONS.DOOR_OPEN,
-    iconHomeHeart: CLOUD_ICONS.HOME_HEART,
   },
 
   onLoad() {

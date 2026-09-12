@@ -77,7 +77,7 @@
       <view class="exhibit-row-index">01</view>
       <view class="exhibit-row-card group">
         <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="/images/icons/discover-line.svg" mode="aspectFit" />
+          <image class="exhibit-icon-img" src="/images/icons/group-tag.svg" mode="aspectFit" />
         </view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_BJUOQM}}</text>
@@ -91,7 +91,7 @@
       <view class="exhibit-row-index">02</view>
       <view class="exhibit-row-card mall">
         <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="{{iconShoppingCart}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconShoppingCart}}" data-path="iconShoppingCart" />
+          <image class="exhibit-icon-img" src="/images/icons/mall-bag.svg" mode="aspectFit" />
         </view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_B4Q6UZ}}</text>
@@ -105,7 +105,7 @@
       <view class="exhibit-row-index">03</view>
       <view class="exhibit-row-card activity">
         <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="{{iconBell}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconBell}}" data-path="iconBell" />
+          <image class="exhibit-icon-img" src="/images/icons/activity-ticket.svg" mode="aspectFit" />
         </view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_E4R43K}}</text>
@@ -119,7 +119,7 @@
       <view class="exhibit-row-index">04</view>
       <view class="exhibit-row-card service">
         <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="{{iconDoorOpen}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconDoorOpen}}" data-path="iconDoorOpen" />
+          <image class="exhibit-icon-img" src="/images/icons/service-door.svg" mode="aspectFit" />
         </view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_DCOTNR}}</text>
@@ -133,7 +133,7 @@
       <view class="exhibit-row-index">05</view>
       <view class="exhibit-row-card hosting">
         <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="{{iconHomeHeart}}" mode="aspectFit" binderror="onCloudImageError" data-src="{{iconHomeHeart}}" data-path="iconHomeHeart" />
+          <image class="exhibit-icon-img" src="/images/icons/hosting-home-heart.svg" mode="aspectFit" />
         </view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_BXA2JU}}</text>
@@ -159,7 +159,7 @@
     <view class="exhibit-row" bindtap="onPersonalInfo">
       <view class="exhibit-row-index">01</view>
       <view class="exhibit-row-card neutral">
-        <view class="exhibit-row-icon neutral-icon-user"></view>
+        <view class="exhibit-medallion"><image class="medallion-img" src="/images/icons/profile-cameo.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">个人信息</text>
           <text class="exhibit-row-desc">编辑昵称、头像等资料</text>
@@ -171,7 +171,7 @@
     <view class="exhibit-row">
       <view class="exhibit-row-index">02</view>
       <view class="exhibit-row-card neutral contact-row-card">
-        <view class="exhibit-row-icon neutral-icon-cs"></view>
+        <view class="exhibit-medallion"><image class="medallion-img" src="/images/icons/concierge-bell.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">联系客服</text>
           <text class="exhibit-row-desc">在线咨询与帮助</text>
@@ -183,7 +183,7 @@
     <view class="exhibit-row" bindtap="onPrivacySettings">
       <view class="exhibit-row-index">03</view>
       <view class="exhibit-row-card neutral">
-        <view class="exhibit-row-icon neutral-icon-lock"></view>
+        <view class="exhibit-medallion"><image class="medallion-img" src="/images/icons/luxury-key.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">隐私设置</text>
           <text class="exhibit-row-desc">管理隐私与数据权限</text>
@@ -195,7 +195,7 @@
     <view class="exhibit-row" bindtap="onAboutUs">
       <view class="exhibit-row-index">04</view>
       <view class="exhibit-row-card neutral">
-        <view class="exhibit-row-icon neutral-icon-info"></view>
+        <view class="exhibit-medallion"><image class="medallion-img" src="/images/icons/info-seal.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">关于我们</text>
           <text class="exhibit-row-desc">了解团队与联系方式</text>
@@ -207,7 +207,7 @@
     <view class="exhibit-row" bindtap="onPartnerTap">
       <view class="exhibit-row-index">05</view>
       <view class="exhibit-row-card partner">
-        <view class="exhibit-row-icon partner-icon"></view>
+        <view class="exhibit-medallion gold"><image class="medallion-img" src="/images/icons/gem-diamond.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title" wx:if="{{userInfo.isPartner}}">管理中心</text>
           <text class="exhibit-row-title" wx:else>成为合作伙伴</text>

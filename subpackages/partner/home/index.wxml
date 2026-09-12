@@ -86,7 +86,7 @@
 
       <view class="module-grid">
         <view class="module-card" wx:for="{{modules}}" wx:key="id" bindtap="onModuleTap" data-id="{{item.id}}">
-          <view class="module-icon module-icon-{{item.icon}}">
+          <view class="module-icon">
             <image class="module-icon-img" src="{{item.iconPath}}" mode="aspectFit" />
           </view>
           <text class="module-title">{{item.title}}</text>
