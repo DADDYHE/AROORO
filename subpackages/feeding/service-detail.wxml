@@ -60,63 +60,38 @@
         
         <view class="service-grid">
           <view class="service-item">
-            <view class="service-icon-wrap blue">
-              <view class="service-icon bowl">
-                <view class="bowl-top"></view>
-                <view class="bowl-base"></view>
-                <view class="water-wave"></view>
-              </view>
+            <view class="service-icon-wrap">
+              <image class="medallion-img" src="/images/icons/svc-bowl.svg" mode="aspectFit" />
             </view>
             <text class="service-name">添新粮换水</text>
           </view>
           <view class="service-item">
-            <view class="service-icon-wrap purple">
-              <view class="service-icon clean">
-                <view class="trash-bin-new">
-                  <view class="bin-lid-new"></view>
-                  <view class="bin-body-new"></view>
-                </view>
-              </view>
+            <view class="service-icon-wrap">
+              <image class="medallion-img" src="/images/icons/svc-tidy.svg" mode="aspectFit" />
             </view>
             <text class="service-name">整理宠物区域</text>
           </view>
           <view class="service-item">
-            <view class="service-icon-wrap yellow">
-              <view class="service-icon sand">
-                <view class="litter-box"></view>
-                <view class="paw-print"></view>
-                <view class="litter-grain"></view>
-              </view>
+            <view class="service-icon-wrap">
+              <image class="medallion-img" src="/images/icons/svc-litter.svg" mode="aspectFit" />
             </view>
             <text class="service-name">清洁砂盆尿垫</text>
           </view>
           <view class="service-item">
-            <view class="service-icon-wrap orange">
-              <view class="service-icon heart">
-                <view class="heart-main"></view>
-                <view class="heart-accent"></view>
-                <view class="pet-nose"></view>
-              </view>
+            <view class="service-icon-wrap">
+              <image class="medallion-img" src="/images/icons/svc-report.svg" mode="aspectFit" />
             </view>
             <text class="service-name">反馈宠物状态</text>
           </view>
           <view class="service-item">
-            <view class="service-icon-wrap purple-light">
-              <view class="service-icon door">
-                <view class="door-frame"></view>
-                <view class="door-knob"></view>
-                <view class="check-mark"></view>
-              </view>
+            <view class="service-icon-wrap">
+              <image class="medallion-img" src="/images/icons/svc-door-check.svg" mode="aspectFit" />
             </view>
             <text class="service-name">检查关闭门窗</text>
           </view>
           <view class="service-item">
-            <view class="service-icon-wrap blue-light">
-              <view class="service-icon video">
-                <view class="camera-body"></view>
-                <view class="camera-lens"></view>
-                <view class="play-button"></view>
-              </view>
+            <view class="service-icon-wrap">
+              <image class="medallion-img" src="/images/icons/svc-camera.svg" mode="aspectFit" />
             </view>
             <text class="service-name">服务全程录像</text>
           </view>
@@ -230,7 +205,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon order"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-order.svg" mode="aspectFit" />
                 <text class="flow-title">宠主下单</text>
               </view>
               <text class="flow-desc">宠主预约下单后，平台通知喂养员接单；</text>
@@ -244,7 +219,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon accept"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-accept.svg" mode="aspectFit" />
                 <text class="flow-title">喂养员接单</text>
               </view>
               <text class="flow-desc">喂养员会先与宠主<text class="highlight">沟通服务事项</text>（如宠物性格、生活习性等），确认无误后接单；</text>
@@ -255,7 +230,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon key"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-key.svg" mode="aspectFit" />
                 <text class="flow-title">钥匙交接</text>
               </view>
               <text class="flow-desc">喂养员在服务前根据服务服务信息及宠物主要求交接钥匙；</text>
@@ -269,7 +244,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon prepare"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-prepare.svg" mode="aspectFit" />
                 <text class="flow-title">上门服务准备</text>
               </view>
               <text class="flow-desc">喂养员在服务前沟通预计上门时间，并提前备好录像支架，宠物消毒喷雾，消毒纸巾，手套，鞋套，垃圾袋等物品；</text>
@@ -283,7 +258,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon checkin"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-checkin.svg" mode="aspectFit" />
                 <text class="flow-title">服务打卡</text>
               </view>
               <text class="flow-desc">喂养员在预计上门时间前抵达<text class="highlight">服务地点并打卡</text>，需进行<text class="highlight">身份认证及位置定位</text>，均通过后才可打卡成功；</text>
@@ -297,7 +272,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon disinfection"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-disinfection.svg" mode="aspectFit" />
                 <text class="flow-title">消毒&录像</text>
               </view>
               <text class="flow-desc">喂养员在进门前穿戴手套鞋套并消毒，开始以第一视角进行录像；</text>
@@ -308,7 +283,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon comfort"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-comfort.svg" mode="aspectFit" />
                 <text class="flow-title">安抚宠物</text>
               </view>
               <text class="flow-desc">喂养员视情况与宠物友好接触，待宠物情绪稳定后开始服务；</text>
@@ -332,7 +307,7 @@
         <view class="dog-size-list">
           <view class="dog-size-item">
             <view class="dog-size-info">
-              <view class="dog-icon small"></view>
+              <image class="dog-icon-img dog-icon-small" src="/images/icons/dog-small.svg" mode="aspectFit" />
               <view class="dog-details">
                 <text class="dog-type">小型犬</text>
                 <text class="dog-condition">体重＜10kg或身高＜40cm</text>
@@ -343,7 +318,7 @@
           
           <view class="dog-size-item">
             <view class="dog-size-info">
-              <view class="dog-icon medium"></view>
+              <image class="dog-icon-img dog-icon-medium" src="/images/icons/dog-medium.svg" mode="aspectFit" />
               <view class="dog-details">
                 <text class="dog-type">中型犬</text>
                 <text class="dog-condition">体重11~30kg或身高40~60cm</text>
@@ -354,7 +329,7 @@
           
           <view class="dog-size-item">
             <view class="dog-size-info">
-              <view class="dog-icon large"></view>
+              <image class="dog-icon-img dog-icon-large" src="/images/icons/dog-large.svg" mode="aspectFit" />
               <view class="dog-details">
                 <text class="dog-type">大型犬</text>
                 <text class="dog-condition">体重＞30kg或身高＞60cm</text>
@@ -472,7 +447,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon order"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-order.svg" mode="aspectFit" />
                 <text class="flow-title">宠主下单</text>
               </view>
               <text class="flow-desc">宠主预约下单后，平台通知喂养员接单；</text>
@@ -486,7 +461,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon accept"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-accept.svg" mode="aspectFit" />
                 <text class="flow-title">喂养员接单</text>
               </view>
               <text class="flow-desc">喂养员会先与宠主<text class="highlight">沟通服务事项</text>（如狗狗性格、生活习惯等），确认无误后接单；</text>
@@ -497,7 +472,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon key"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-key.svg" mode="aspectFit" />
                 <text class="flow-title">钥匙交接</text>
               </view>
               <text class="flow-desc">喂养员在服务前根据服务信息及宠物主要求交接钥匙；</text>
@@ -511,7 +486,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon prepare"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-prepare.svg" mode="aspectFit" />
                 <text class="flow-title">上门服务准备</text>
               </view>
               <text class="flow-desc">喂养员在服务前沟通预计上门时间，并提前备好遛狗绳、拾便袋、零食、消毒纸巾、手套等物品；</text>
@@ -525,7 +500,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon checkin"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-checkin.svg" mode="aspectFit" />
                 <text class="flow-title">服务打卡</text>
               </view>
               <text class="flow-desc">喂养员在预计上门时间前抵达<text class="highlight">服务地点并打卡</text>，需进行<text class="highlight">身份认证及位置定位</text>，均通过后才可打卡成功；</text>
@@ -539,7 +514,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon disinfection"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-disinfection.svg" mode="aspectFit" />
                 <text class="flow-title">消毒</text>
               </view>
               <text class="flow-desc">喂养员在进门前穿戴手套鞋套并消毒；</text>
@@ -550,7 +525,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon comfort"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-comfort.svg" mode="aspectFit" />
                 <text class="flow-title">安抚宠物</text>
               </view>
               <text class="flow-desc">喂养员视情况与宠物友好接触，待宠物情绪稳定后开始服务；</text>
@@ -561,7 +536,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon start"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-start.svg" mode="aspectFit" />
                 <text class="flow-title">开始服务</text>
               </view>
               <text class="flow-desc">从宠物主家中接到狗狗，或与宠物主当面交接后，开始在指定区域遛狗</text>
@@ -572,7 +547,7 @@
             <view class="flow-number"><text></text></view>
             <view class="flow-content">
               <view class="flow-header">
-                <view class="flow-icon complete"></view>
+                <image class="flow-icon-img" src="/images/icons/flow-complete.svg" mode="aspectFit" />
                 <text class="flow-title">完成服务</text>
               </view>
               <text class="flow-desc">服务时长到达后，带狗狗返回家中，交还给宠物主，确认无误后完成服务；</text>

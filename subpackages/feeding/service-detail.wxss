@@ -75,7 +75,7 @@
 .tab-indicator-bar {
   width: 48rpx;
   height: 3rpx;
-  background: linear-gradient(90deg, var(--feeding-primary) 0%, var(--feeding-secondary) 100%);
+  background: var(--lux-gold-ink);
   border-radius: 2rpx;
 }
 
@@ -106,7 +106,19 @@
 }
 
 .service-tab.active {
-  background: linear-gradient(135deg, var(--feeding-primary) 0%, var(--feeding-secondary) 100%);
+  background: transparent;
+  position: relative;
+}
+
+.service-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 40rpx;
+  height: 2rpx;
+  margin-left: -20rpx;
+  background: var(--lux-gold-ink);
 }
 
 .service-tab-text {
@@ -119,7 +131,7 @@
 }
 
 .service-tab.active .service-tab-text {
-  color: var(--text-on-primary);
+  color: var(--lux-gold-ink);
   font-weight: 500;
 }
 
@@ -145,10 +157,9 @@
 }
 
 .section-accent {
-  width: 6rpx;
+  width: 4rpx;
   height: 32rpx;
-  background: linear-gradient(180deg, var(--feeding-primary) 0%, var(--feeding-secondary) 100%);
-  border-radius: 3rpx;
+  background: var(--lux-gold-ink);
   flex-shrink: 0;
 }
 
@@ -176,313 +187,35 @@
   gap: 16rpx;
 }
 
+/* 服务项图标：88rpx 刻印章牌（双环 22%/8% 墨）+ 金墨线稿 SVG */
 .service-icon-wrap {
   width: 88rpx;
   height: 88rpx;
-  border-radius: var(--zy-radius-md);
+  border-radius: 50%;
+  border: 1rpx solid rgba(26, 26, 23, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--feeding-tint);
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-}
-
-/* 所有图标统一为鼠尾草绿单色系 */
-.service-icon-wrap.blue,
-.service-icon-wrap.purple,
-.service-icon-wrap.yellow,
-.service-icon-wrap.orange,
-.service-icon-wrap.purple-light,
-.service-icon-wrap.blue-light {
-  background: var(--feeding-tint);
-}
-
-.service-icon {
-  width: 52rpx;
-  height: 52rpx;
   position: relative;
+  flex-shrink: 0;
 }
 
-/* ===== CSS 图标重绘为单色鼠尾草绿系 ===== */
-/* 1. 添新粮换水 */
-.bowl-top {
-  position: absolute;
-  width: 48rpx;
-  height: 24rpx;
-  background: linear-gradient(180deg, var(--feeding-primary) 0%, var(--primary-deep) 100%);
-  border-radius: 0 0 24rpx 24rpx;
-  top: 16rpx;
-  left: 2rpx;
-}
-.bowl-base {
-  position: absolute;
-  width: 20rpx;
-  height: 8rpx;
-  background: var(--primary-deep);
-  border-radius: 0 0 10rpx 10rpx;
-  bottom: 8rpx;
-  left: 16rpx;
-}
-.water-wave {
-  position: absolute;
-  width: 40rpx;
-  height: 12rpx;
-  top: 10rpx;
-  left: 6rpx;
-}
-.water-wave::before,
-.water-wave::after {
+.service-icon-wrap::before {
   content: '';
   position: absolute;
-  width: 60%;
-  height: 70%;
-  background: rgba(255, 255, 255, 0.5);
-  bottom: 0;
-  border-radius: 50% 50% 0 0;
-}
-.water-wave::before { left: -10%; }
-.water-wave::after { right: -10%; }
-
-/* 2. 整理宠物区域 */
-.trash-bin-new {
-  position: absolute;
-  width: 36rpx;
-  height: 40rpx;
-  top: 6rpx;
-  left: 8rpx;
-}
-.bin-body-new {
-  width: 32rpx;
-  height: 30rpx;
-  background: linear-gradient(180deg, var(--feeding-secondary) 0%, var(--feeding-primary) 100%);
-  border-radius: 4rpx 4rpx 8rpx 8rpx;
-  border: 2rpx solid var(--feeding-primary);
-  position: relative;
-}
-.bin-body-new::before {
-  content: '';
-  position: absolute;
-  width: 18rpx;
-  height: 3rpx;
-  background: var(--feeding-primary);
-  top: 8rpx;
-  left: 5rpx;
-  border-radius: 2rpx;
-  box-shadow: 0 8rpx 0 var(--feeding-primary), 0 16rpx 0 var(--feeding-primary);
-}
-.bin-lid-new {
-  width: 34rpx;
-  height: 8rpx;
-  background: linear-gradient(180deg, var(--feeding-secondary) 0%, var(--feeding-primary) 100%);
-  border-radius: 4rpx 4rpx 0 0;
-  border: 2rpx solid var(--feeding-primary);
-  border-bottom: none;
-}
-.bin-lid-new::before {
-  content: '';
-  position: absolute;
-  width: 10rpx;
-  height: 4rpx;
-  background: var(--feeding-primary);
-  top: -4rpx;
-  left: 10rpx;
-  border-radius: 2rpx 2rpx 0 0;
+  top: 7rpx;
+  left: 7rpx;
+  right: 7rpx;
+  bottom: 7rpx;
+  border-radius: 50%;
+  border: 1rpx solid rgba(26, 26, 23, 0.08);
 }
 
-/* 3. 清洁砂盆 */
-.litter-box {
-  position: absolute;
-  width: 44rpx;
-  height: 28rpx;
-  background: linear-gradient(180deg, var(--feeding-secondary) 0%, var(--feeding-primary) 100%);
-  border-radius: 4rpx 4rpx 12rpx 12rpx;
-  bottom: 8rpx;
-  left: 4rpx;
-  border: 2rpx solid var(--feeding-primary);
-}
-.litter-box::before {
-  content: '';
-  position: absolute;
-  width: 36rpx;
-  height: 10rpx;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4rpx;
-  top: 8rpx;
-  left: 4rpx;
-}
-.paw-print {
-  position: absolute;
-  width: 16rpx;
-  height: 16rpx;
-  top: 4rpx;
-  right: 8rpx;
-}
-.paw-print::before {
-  content: '';
-  position: absolute;
-  width: 10rpx;
-  height: 10rpx;
-  background: var(--feeding-primary);
-  border-radius: 50%;
-  bottom: 0;
-  left: 3rpx;
-}
-.paw-print::after {
-  content: '';
-  position: absolute;
-  width: 4rpx;
-  height: 6rpx;
-  background: var(--feeding-primary);
-  border-radius: 50%;
-  top: 0;
-  left: 1rpx;
-  box-shadow: 6rpx 0 0 var(--feeding-primary), 10rpx 2rpx 0 var(--feeding-primary);
-}
-.litter-grain {
-  position: absolute;
-  width: 4rpx;
-  height: 4rpx;
-  background: var(--feeding-secondary);
-  border-radius: 50%;
-  top: 20rpx;
-  left: 12rpx;
-  box-shadow: 8rpx -2rpx 0 var(--feeding-primary), -2rpx 6rpx 0 var(--feeding-primary), 10rpx 4rpx 0 var(--feeding-secondary);
+.medallion-img {
+  width: 46rpx;
+  height: 46rpx;
 }
 
-/* 4. 反馈宠物状态 */
-.heart-main {
-  position: absolute;
-  width: 28rpx;
-  height: 28rpx;
-  background: linear-gradient(135deg, var(--feeding-secondary) 0%, var(--feeding-primary) 100%);
-  top: 10rpx;
-  left: 12rpx;
-  border-radius: 50%;
-  transform: rotate(-45deg);
-}
-.heart-accent {
-  position: absolute;
-  width: 12rpx;
-  height: 12rpx;
-  background: rgba(255, 255, 255, 0.35);
-  border-radius: 50%;
-  top: 12rpx;
-  left: 16rpx;
-}
-.pet-nose {
-  position: absolute;
-  width: 12rpx;
-  height: 8rpx;
-  background: var(--primary-deep);
-  border-radius: 50%;
-  bottom: 10rpx;
-  left: 20rpx;
-}
-.pet-nose::before {
-  content: '';
-  position: absolute;
-  width: 4rpx;
-  height: 4rpx;
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 50%;
-  top: 1rpx;
-  left: 2rpx;
-}
-
-/* 5. 检查关闭门窗 */
-.door-frame {
-  position: absolute;
-  width: 32rpx;
-  height: 40rpx;
-  background: linear-gradient(135deg, var(--feeding-secondary) 0%, var(--feeding-primary) 100%);
-  border-radius: 4rpx 4rpx 0 0;
-  bottom: 4rpx;
-  left: 10rpx;
-  border: 2rpx solid var(--feeding-primary);
-}
-.door-frame::before {
-  content: '';
-  position: absolute;
-  width: 20rpx;
-  height: 24rpx;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2rpx;
-  top: 6rpx;
-  left: 4rpx;
-}
-.door-knob {
-  position: absolute;
-  width: 6rpx;
-  height: 6rpx;
-  background: var(--accent-color);
-  border-radius: 50%;
-  bottom: 20rpx;
-  right: 14rpx;
-  box-shadow: 0 0 0 2rpx var(--accent-deep);
-}
-.check-mark {
-  position: absolute;
-  width: 16rpx;
-  height: 12rpx;
-  top: 6rpx;
-  right: 6rpx;
-  border: 3rpx solid var(--success-color);
-  border-left: none;
-  border-top: none;
-  transform: rotate(45deg);
-  border-radius: 0 0 2rpx 0;
-}
-
-/* 6. 服务全程录像 */
-.camera-body {
-  position: absolute;
-  width: 40rpx;
-  height: 28rpx;
-  background: linear-gradient(135deg, var(--feeding-primary) 0%, var(--primary-deep) 100%);
-  border-radius: 6rpx;
-  bottom: 8rpx;
-  left: 6rpx;
-}
-.camera-body::before {
-  content: '';
-  position: absolute;
-  width: 12rpx;
-  height: 8rpx;
-  background: var(--primary-deep);
-  border-radius: 4rpx 4rpx 0 0;
-  top: -6rpx;
-  left: 14rpx;
-}
-.camera-lens {
-  position: absolute;
-  width: 18rpx;
-  height: 18rpx;
-  background: linear-gradient(135deg, var(--feeding-secondary) 0%, var(--feeding-primary) 100%);
-  border-radius: 50%;
-  bottom: 13rpx;
-  left: 17rpx;
-  border: 3rpx solid var(--feeding-primary);
-}
-.camera-lens::before {
-  content: '';
-  position: absolute;
-  width: 8rpx;
-  height: 8rpx;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  top: 2rpx;
-  left: 2rpx;
-}
-.play-button {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-left: 10rpx solid var(--text-on-primary);
-  border-top: 6rpx solid transparent;
-  border-bottom: 6rpx solid transparent;
-  top: 20rpx;
-  right: 10rpx;
-}
 
 .service-name {
   font-size: 24rpx;
@@ -496,10 +229,9 @@
 
 /* ===== 服务说明 ===== */
 .service-note {
-  background: var(--feeding-tint);
-  border-radius: var(--zy-radius-sm);
-  padding: 24rpx;
-  border-left: 4rpx solid var(--feeding-primary);
+  background: transparent;
+  padding: 0 0 0 24rpx;
+  border-left: 2rpx solid var(--lux-gold-ink);
 }
 
 .note-text {
@@ -510,7 +242,7 @@
 }
 
 .note-text .highlight {
-  color: var(--feeding-primary);
+  color: var(--lux-gold-ink);
   font-weight: 600;
 }
 
@@ -526,10 +258,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24rpx;
-  background: var(--card-cream);
-  border-radius: var(--zy-radius-sm);
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  padding: 24rpx 0;
+  background: transparent;
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
+}
+
+.dog-size-item:last-child {
+  border-bottom: none;
 }
 
 .dog-size-info {
@@ -538,15 +274,11 @@
   gap: 20rpx;
 }
 
-.dog-icon {
-  width: 36rpx;
-  height: 36rpx;
-  border-radius: 8rpx;
-}
-
-.dog-icon.small { background: var(--feeding-secondary); border-radius: 8rpx; }
-.dog-icon.medium { background: var(--feeding-primary); border-radius: 10rpx; }
-.dog-icon.large { background: var(--primary-deep); border-radius: 12rpx; }
+/* 犬型：金墨剪影三档（尺寸即语义） */
+.dog-icon-img { flex-shrink: 0; }
+.dog-icon-small { width: 40rpx; height: 40rpx; }
+.dog-icon-medium { width: 48rpx; height: 48rpx; }
+.dog-icon-large { width: 56rpx; height: 56rpx; }
 
 .dog-details {
   display: flex;
@@ -571,7 +303,7 @@
 .dog-duration {
   font-size: 28rpx;
   font-weight: 500;
-  color: var(--feeding-primary);
+  color: var(--lux-gold-ink);
   white-space: nowrap;
   font-family: var(--font-serif);
   letter-spacing: 0.04em;
@@ -579,15 +311,14 @@
 
 /* ===== 价格表格 ===== */
 .price-table {
-  background: var(--card-cream);
-  border-radius: var(--zy-radius-sm);
-  overflow: hidden;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  background: transparent;
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .table-header {
   display: flex;
-  background: var(--feeding-tint);
+  background: transparent;
   border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
@@ -609,7 +340,7 @@
 
 .table-row {
   display: flex;
-  border-bottom: 1rpx solid var(--divider-color);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .table-row:last-child {
@@ -656,7 +387,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 24rpx 0;
-  border-bottom: 1rpx solid var(--divider-color);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .extra-service-item:last-child {
@@ -699,7 +430,7 @@
 .ps-note {
   padding-top: 24rpx;
   margin-top: 8rpx;
-  border-top: 1rpx solid var(--divider-color);
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .ps-text {
@@ -710,7 +441,7 @@
 }
 
 .ps-text .highlight {
-  color: var(--feeding-primary);
+  color: var(--lux-gold-ink);
   font-weight: 500;
 }
 
@@ -727,7 +458,7 @@
   top: 48rpx;
   bottom: 48rpx;
   width: 2rpx;
-  background: linear-gradient(180deg, var(--feeding-primary) 0%, var(--feeding-secondary) 50%, var(--divider-color) 100%);
+  background: linear-gradient(180deg, rgba(122, 95, 42, 0.6) 0%, rgba(122, 95, 42, 0.3) 50%, rgba(122, 95, 42, 0) 100%);
 }
 
 .flow-item {
@@ -747,7 +478,7 @@
   border-radius: 50%;
   background: transparent;
   border: 2rpx solid var(--feeding-primary);
-  color: var(--feeding-primary);
+  color: var(--lux-gold-ink);
   font-size: 22rpx;
   font-weight: 500;
   display: flex;
@@ -762,10 +493,9 @@
 
 .flow-content {
   flex: 1;
-  background: var(--card-cream);
-  border-radius: var(--zy-radius-sm);
-  padding: 24rpx;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  background: transparent;
+  padding: 0 0 0 24rpx;
+  border-left: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .flow-header {
@@ -775,23 +505,13 @@
   margin-bottom: 12rpx;
 }
 
-.flow-icon {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  background: var(--feeding-primary);
+
+/* 流程节点：36rpx 金墨线稿（原 8rpx 彩色圆点） */
+.flow-icon-img {
+  width: 36rpx;
+  height: 36rpx;
   flex-shrink: 0;
 }
-
-.flow-icon.order { background: var(--feeding-primary); }
-.flow-icon.accept { background: var(--success-color); }
-.flow-icon.key { background: var(--accent-color); }
-.flow-icon.prepare { background: var(--feeding-secondary); }
-.flow-icon.checkin { background: var(--success-color); }
-.flow-icon.disinfection { background: var(--info-color); }
-.flow-icon.comfort { background: var(--feeding-primary); }
-.flow-icon.start { background: var(--success-color); }
-.flow-icon.complete { background: var(--info-color); }
 
 .flow-title {
   font-size: 28rpx;
@@ -810,15 +530,14 @@
 }
 
 .flow-desc .highlight {
-  color: var(--feeding-primary);
+  color: var(--lux-gold-ink);
   font-weight: 500;
 }
 
 .flow-tip {
-  background: var(--feeding-tint);
-  border-radius: var(--zy-radius-xs);
-  padding: 16rpx 20rpx;
-  border-left: 3rpx solid var(--feeding-primary);
+  background: transparent;
+  padding: 0 0 0 20rpx;
+  border-left: 2rpx solid var(--lux-gold-ink);
 }
 
 .flow-tip-text {
@@ -836,7 +555,7 @@
 }
 
 .highlight-red {
-  color: var(--feeding-primary);
+  color: var(--lux-gold-ink);
   font-weight: 500;
   font-family: var(--font-serif);
 }
@@ -857,7 +576,7 @@
   top: 0;
   bottom: 0;
   width: 4rpx;
-  background: linear-gradient(180deg, var(--feeding-primary) 0%, var(--feeding-secondary) 50%, transparent 100%);
+  background: var(--lux-gold-ink);
 }
 
 .gallery-entrance-content {
@@ -888,7 +607,7 @@
   left: var(--page-padding);
   right: var(--page-padding);
   height: 1rpx;
-  background: var(--divider-color);
+  background: rgba(26, 26, 23, 0.14);
 }
 
 /* 画廊展厅 */
@@ -907,7 +626,7 @@
 .gallery-hall-line {
   width: 48rpx;
   height: 1rpx;
-  background: var(--border-color);
+  background: rgba(26, 26, 23, 0.14);
 }
 
 .gallery-hall-text {
@@ -921,7 +640,7 @@
 .gallery-hall-divider {
   width: 48rpx;
   height: 2rpx;
-  background: linear-gradient(90deg, var(--feeding-primary) 0%, var(--feeding-secondary) 100%);
+  background: var(--lux-gold-ink);
   margin: 0 auto 32rpx;
   border-radius: 1rpx;
 }
@@ -936,7 +655,7 @@
   content: '';
   width: 48rpx;
   height: 2rpx;
-  background: linear-gradient(90deg, transparent 0%, var(--feeding-primary) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--lux-gold-ink) 50%, transparent 100%);
 }
 
 /* 画廊卡片 */
@@ -1000,16 +719,15 @@
 
 /* 画廊表格 */
 .gallery-table {
-  background: var(--card-cream);
-  border-radius: var(--zy-radius-xs);
-  overflow: hidden;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  background: transparent;
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
   margin-top: 16rpx;
 }
 
 .gallery-table-header {
   display: flex;
-  background: var(--feeding-tint);
+  background: transparent;
 }
 
 .gallery-table-subheader {
@@ -1023,20 +741,20 @@
   font-size: 22rpx;
   color: var(--text-primary);
   text-align: center;
-  border-bottom: 1rpx solid var(--divider-color);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
   line-height: 1.6;
   font-family: var(--font-sans);
 }
 
 .gallery-table-header .gallery-table-cell {
-  color: var(--feeding-primary);
+  color: var(--lux-gold-ink);
   font-weight: 500;
   font-family: var(--font-serif);
   letter-spacing: 0.04em;
 }
 
 .gallery-table-subheader .gallery-table-cell {
-  color: var(--feeding-primary);
+  color: var(--lux-gold-ink);
   font-weight: 500;
   font-size: 20rpx;
 }
@@ -1046,7 +764,7 @@
 }
 
 .gallery-table-row-alt {
-  background: var(--card-cream);
+  background: rgba(26, 26, 23, 0.035);
 }
 
 .gallery-table-row:last-child .gallery-table-cell {
@@ -1061,7 +779,7 @@
 
 .gallery-table-age-text {
   font-size: 22rpx;
-  color: var(--feeding-primary);
+  color: var(--lux-gold-ink);
   font-weight: 500;
   font-family: var(--font-serif);
 }
@@ -1095,10 +813,11 @@
   align-items: center;
   justify-content: center;
   padding: 4rpx 16rpx;
-  background: var(--feeding-tint);
-  color: var(--feeding-primary);
+  background: transparent;
+  color: var(--lux-gold-ink);
   font-size: 20rpx;
   font-weight: 500;
+  border: 1rpx solid rgba(122, 95, 42, 0.35);
   border-radius: var(--zy-radius-xs);
   font-family: var(--font-sans);
   letter-spacing: 0.02em;
@@ -1116,20 +835,32 @@
   gap: 40rpx;
   padding: 48rpx 0;
   margin-bottom: 32rpx;
-  background: var(--card-cream);
-  border-radius: var(--zy-radius-sm);
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  background: transparent;
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
+  border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .gallery-hexagon {
   width: 120rpx;
   height: 120rpx;
-  background: linear-gradient(135deg, var(--feeding-primary) 0%, var(--feeding-secondary) 100%);
-  border-radius: var(--zy-radius-md);
+  background: var(--lux-green-grad-rich);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-glow-primary-soft);
+  box-shadow: var(--lux-shadow-green);
+  position: relative;
+}
+
+.gallery-hexagon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  border: 1rpx solid rgba(201, 162, 75, 0.55);
 }
 
 .gallery-hexagon-inner {
@@ -1178,7 +909,7 @@
 .gallery-guarantee-rail {
   width: 4rpx;
   flex-shrink: 0;
-  background: linear-gradient(180deg, var(--feeding-primary) 0%, var(--feeding-secondary) 100%);
+  background: rgba(122, 95, 42, 0.45);
 }
 
 .gallery-guarantee-body {
@@ -1238,8 +969,8 @@
 .faq-toggle {
   width: 16rpx;
   height: 16rpx;
-  border-top: 3rpx solid var(--text-tertiary);
-  border-right: 3rpx solid var(--text-tertiary);
+  border-top: 3rpx solid var(--lux-gold-ink);
+  border-right: 3rpx solid var(--lux-gold-ink);
   transform: rotate(45deg);
   flex-shrink: 0;
   margin-right: 8rpx;
@@ -1248,13 +979,12 @@
 
 .faq-toggle.open {
   transform: rotate(135deg);
-  border-color: var(--feeding-primary);
 }
 
 .faq-a {
   padding: 0 24rpx 28rpx;
-  background: var(--card-cream);
-  border-top: 1rpx solid var(--divider-color);
+  background: transparent;
+  border-top: 1rpx solid rgba(26, 26, 23, 0.14);
 }
 
 .faq-a-text {
