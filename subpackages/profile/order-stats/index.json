@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "navigationBarTitleText": "订单统计",
   "navigationBarTextStyle": "white",
   "enablePullDownRefresh": false,

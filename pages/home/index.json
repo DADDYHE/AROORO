@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "usingComponents": {
     "activity-card": "../../components/activity-card/activity-card",
     "login-prompt": "../../components/login-prompt/login-prompt",

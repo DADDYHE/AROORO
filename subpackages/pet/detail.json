@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "navigationBarTitleText": "宠物详情",
   "usingComponents": {
     "login-prompt": "/components/login-prompt/login-prompt"

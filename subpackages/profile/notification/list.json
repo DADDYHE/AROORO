@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "usingComponents": {
     "zy-skeleton": "../../../components/zy-skeleton/index",
     "login-prompt": "/components/login-prompt/login-prompt"

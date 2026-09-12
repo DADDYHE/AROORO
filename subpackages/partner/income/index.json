@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "navigationBarTitleText": "佣金统计",
   "usingComponents": {
     "login-prompt": "/components/login-prompt/login-prompt"

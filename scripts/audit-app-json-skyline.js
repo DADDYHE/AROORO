@@ -74,12 +74,24 @@ function parseJson(file, abs) {
 
 function checkAppJson(file, obj) {
   // R1：渲染/组件框架配置被错放进 window
+  //   ※ glassEaselWebview 豁免：window 内配置是 2026-09-12 DADDY 的知情决策
+  //     （用 1 条 invalid app.json 日志换 Skyline「未配置」提示判定，见 R2）。
   for (const k of RENDER_KEYS) {
+    if (k === 'glassEaselWebview') { continue; }
     if (obj.window && Object.prototype.hasOwnProperty.call(obj.window, k)) {
       add('R1', 'BLOCK', file,
         `window["${k}"] 会被判 invalid 而**静默失效**（devtools 只给一行日志）。` +
         `该类键必须写在 JSON 顶层，与 componentFramework 同层。`);
     }
+  }
+  // glassEaselWebview 的决策位（app.json 的 window）与其余错误位置
+  if (obj.window && obj.window.glassEaselWebview === true) {
+    add('R2', 'INFO', file,
+      'window.glassEaselWebview=true（知情豁免）：基础库 3.17.2 校验器会打 1 条 invalid app.json 日志' +
+      '（预期噪音），换取 Skyline「未配置」提示判定；若提示仍在，控制台点「不再提示」。');
+  } else if (obj.glassEaselWebview !== undefined) {
+    add('R2', 'WARN', file,
+      'glassEaselWebview 出现在 app.json 顶层（决策位置是 window 内），请移入 window。');
   }
   // R3（R2 改为循环后全局判定，见下方「R2 全局判定」）
   if (obj.renderer === 'skyline' && obj.lazyCodeLoading !== 'requiredComponents') {
@@ -121,31 +133,25 @@ for (const t of targets) {
   const obj = parseJson(t.rel, t.abs);
   if (!obj) continue;
   if (t.rel === 'app.json') { appObj = obj; checkAppJson(t.rel, obj); }
-  if (obj.glassEaselWebview === true) anyGlassEaselWebview = true;
   // 页面/组件 json：同样查 window 误放（页面 json 合法键与 app.json 的 window 一致）
-  else for (const k of RENDER_KEYS) {
-    if (obj.window && Object.prototype.hasOwnProperty.call(obj.window, k)) {
-      add('R1', 'BLOCK', t.rel, `window["${k}"] 会被判 invalid 而静默失效，请移到该 json 顶层。`);
+  else {
+    for (const k of RENDER_KEYS) {
+      if (k === 'glassEaselWebview') { continue; }
+      if (obj.window && Object.prototype.hasOwnProperty.call(obj.window, k)) {
+        add('R1', 'BLOCK', t.rel, `window["${k}"] 会被判 invalid 而静默失效，请移到该 json 顶层。`);
+      }
+    }
+    if (obj.glassEaselWebview !== undefined) {
+      add('R2', 'WARN', t.rel,
+        '页面 json 出现 glassEaselWebview（决策位置已改 app.json 的 window；页面级会每页一条 invalid 噪音），请删除。');
     }
   }
 }
 
 /* ------------------------------- R2 全局判定 ------------------------------- */
-// 基础库 3.17.2 实测三连（2026-09-12）：app.json 顶层 / app.json window / 页面 json 放
-// glassEaselWebview 都会被校验器判 invalid。其中**页面级是知情决策**（DADDY 2026-09-12 拍板：
-// 全站页面 json 配置，用每页一条 invalid 日志换取 Skyline「未配置」提示静音），记 INFO 豁免；
-// 但 **app.json 里出现仍属配置错误**（该文件层面无意义且必 invalid），保持 WARN。
-if (appObj && (appObj.glassEaselWebview !== undefined)) {
-  add('R2', 'WARN', 'app.json',
-    'app.json 出现 glassEaselWebview（顶层/window 均必 invalid 且无意义）——页面级配置才是知情豁免位置，请从 app.json 移除。');
-} else if (anyGlassEaselWebview) {
-  const n = targets.filter((t) => {
-    try { return JSON.parse(fs.readFileSync(t.abs, 'utf8')).glassEaselWebview === true; } catch (e) { return false; }
-  }).length;
-  add('R2', 'INFO', 'glassEaselWebview',
-    `页面级 glassEaselWebview ×${n}（知情豁免）：基础库 3.17.2 会每页打一条 invalid page.json 日志，属预期噪音；` +
-    '换来 Skyline「未配置」提示静音。微信修复校验器后可整体 revert。');
-}
+// glassEaselWebview 的决策位 = app.json 的 window（2026-09-12 DADDY 知情决策，见
+// checkAppJson 内的 INFO 分支）；页面级 / app.json 顶层出现均已由上方分支告警，
+// 此处不再做全局判定（anyGlassEaselWebview 追踪随之废弃）。
 
 /* ------------------------------- 输出 ------------------------------- */
 const nB = findings.filter((f) => f.level === 'BLOCK').length;

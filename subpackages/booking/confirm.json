@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "navigationBarTitleText": "确认订单",
   "usingComponents": {
     "zy-calendar": "./components/zy-calendar/index",

@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "usingComponents": {
     "zy-action-sheet": "./components/zy-action-sheet/index",
     "health-form": "/components/health-form/index",

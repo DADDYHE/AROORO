@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "navigationBarTitleText": "我的开单",
   "usingComponents": {
     "login-prompt": "/components/login-prompt/login-prompt"

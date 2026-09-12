@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "navigationBarTitleText": "搜索",
   "renderer": "webview",
   "usingComponents": {

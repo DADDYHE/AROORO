@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "navigationBarTitleText": "一键报名",
   "usingComponents": {
     "login-prompt": "/components/login-prompt/login-prompt"

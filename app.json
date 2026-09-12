@@ -11,6 +11,7 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
+    "glassEaselWebview": true,
     "navigationBarBackgroundColor": "#fff",
     "navigationBarTitleText": "AROORO",
     "navigationBarTextStyle": "black",

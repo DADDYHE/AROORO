@@ -1,5 +1,4 @@
 {
-  "glassEaselWebview": true,
   "navigationBarTitleText": "提现记录",
   "usingComponents": {
     "login-prompt": "/components/login-prompt/login-prompt"
