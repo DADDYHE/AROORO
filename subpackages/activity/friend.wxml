@@ -41,7 +41,7 @@
       <text class="label">宠物性别 *</text>
       <view class="gender-options">
         <view 
-          class="gender-option {{petGender === 'male' ? 'active' : ''}}"
+          class="gender-option gender-option--male {{petGender === 'male' ? 'active' : ''}}"
           data-gender="male"
           bindtap="onSelectGender"
         >
@@ -49,7 +49,7 @@
           <view class="gender-decoration"></view>
         </view>
         <view 
-          class="gender-option {{petGender === 'female' ? 'active' : ''}}"
+          class="gender-option gender-option--female {{petGender === 'female' ? 'active' : ''}}"
           data-gender="female"
           bindtap="onSelectGender"
         >

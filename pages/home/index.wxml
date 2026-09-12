@@ -44,18 +44,43 @@
   <text class="refresh-text">{{_refresherTriggered ? '刷新中...' : '下拉刷新'}}</text>
 </view>
 
-<!-- ===== Banner 16:9（纯图，无 scrim / 无文案）—— 置于滚动容器内，随内容上滑 ===== -->
-<view class="hero-section" wx:if="{{bannerList.length}}">
-  <swiper class="hero-swiper" autoplay circular interval="5000" duration="600" style="height: {{bannerHeight}}px;">
+<!-- ===== 封面「落款封印」（B 版式，恒渲染勿进 wx:if）+ 当期橱窗（手动横滑）：均在滚动容器内随内容上滑 ===== -->
+<view class="lux-cover" style="{{gemCoverStyle}}">
+  <view class="lux-cover-top">
+    <text class="lux-cover-wm">AROORO</text>
+    <text class="lux-cover-tg">MAISON DE COMPAGNON</text>
+  </view>
+  <view class="lux-cover-seal">
+    <view class="lux-cover-ring"></view>
+    <image class="lux-cover-mark" src="/images/icons/chongtuantuan-logo-cream.svg" mode="aspectFit" />
+  </view>
+</view>
+
+<view class="lux-carousel">
+  <swiper
+    class="lux-car-swiper"
+    style="height: {{carouselHeight}}px;"
+    previous-margin="{{carPrevMargin}}px"
+    next-margin="{{carNextMargin}}px"
+    current="{{carouselIndex}}"
+    bindchange="onCarouselChange"
+  >
     <swiper-item wx:for="{{bannerList}}" wx:key="_id" data-action="{{item.actionType || 'none'}}" data-target="{{item.actionTarget || ''}}" bindtap="handleBannerTap">
-      <view class="hero-card">
-        <image class="hero-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load />
+      <view class="lux-car-card" hover-class="lux-car-card--pressed" hover-stay-time="120">
+        <image class="lux-car-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load />
       </view>
     </swiper-item>
   </swiper>
-</view>
-<view class="hero-section" wx:else>
-  <view class="hero-card hero-img-ph" style="height: {{bannerHeight}}px;"></view>
+  <view class="lux-car-cap">
+    <view class="lux-car-cap-l">
+      <text class="lux-car-t">{{carouselCurrent.title}}</text>
+      <text class="lux-car-en">{{carouselCurrent.subtitle}}</text>
+    </view>
+    <text class="lux-car-num">{{carouselLabel}}</text>
+  </view>
+  <view class="lux-car-dots">
+    <view wx:for="{{bannerList}}" wx:key="_id" class="lux-car-dot {{carouselIndex === index ? 'on' : ''}}"></view>
+  </view>
 </view>
 
 <view class="home-container">
@@ -75,6 +100,8 @@
         </view>
       </view>
       <text class="pet-view-all" wx:if="{{myPets.length > 0}}" bindtap="handleViewAllPets" hover-class="pet-view-all--pressed" hover-stay-time="120">查看全部 ›</text>
+      <text class="section-en">MY COMPANIONS</text>
+      <view class="section-rule"></view>
     </view>
 
     <view class="pets-grid" wx:if="{{myPets.length > 0}}">
@@ -103,6 +130,8 @@
     <view class="section-head">
       <text class="section-title">快速签到</text>
       <text class="section-link" bindtap="handleViewAllMyActivities" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
+      <text class="section-en">CHECK IN</text>
+      <view class="section-rule"></view>
     </view>
     <view class="my-act-list">
       <view class="my-act-card stagger-item stagger-scale" wx:for="{{signableActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap" hover-class="my-act-card--pressed" hover-stay-time="120" style="animation-delay: {{220 + index * 80}}ms;">
@@ -164,6 +193,8 @@
     <view class="section-head">
       <text class="section-title">待处理</text>
       <text class="section-link" bindtap="handleViewAllOrders" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
+      <text class="section-en">PENDING</text>
+      <view class="section-rule"></view>
     </view>
     <view class="pending-list">
       <view class="pending-card" wx:for="{{pendingOrders}}" wx:key="_id" data-id="{{item._id}}" bindtap="handlePendingOrderTap" hover-class="pending-card--pressed" hover-stay-time="120">
@@ -187,6 +218,8 @@
     <view class="section-head">
       <text class="section-title">寄养开单</text>
       <text class="section-link" bindtap="handleHostInviteManage" hover-class="section-link--pressed" hover-stay-time="120">管理开单 ›</text>
+      <text class="section-en">HOSTING</text>
+      <view class="section-rule"></view>
     </view>
     <view class="host-invite-card" bindtap="handleHostInviteTap" hover-class="host-invite-card--pressed" hover-stay-time="120">
       <view class="host-invite-glow"></view>
@@ -205,6 +238,8 @@
     <view class="section-head">
       <text class="section-title">商城好物</text>
       <text class="section-link" bindtap="handleViewAllMallProducts" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
+      <text class="section-en">BOUTIQUE</text>
+      <view class="section-rule"></view>
     </view>
     <scroll-view class="featured-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
       <view class="featured-list">
@@ -236,6 +271,8 @@
     <view class="section-head">
       <text class="section-title">团购好物</text>
       <text class="section-link" bindtap="handleViewAllTuan" hover-class="section-link--pressed" hover-stay-time="120">查看全部 ›</text>
+      <text class="section-en">GROUP BUY</text>
+      <view class="section-rule"></view>
     </view>
     <scroll-view class="featured-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
       <view class="featured-list">
@@ -264,6 +301,8 @@
     <view class="section-head">
       <text class="section-title">近期活动</text>
       <text class="section-link" bindtap="handleViewAllActivities" hover-class="section-link--pressed" hover-stay-time="120">更多 ›</text>
+      <text class="section-en">EVENTS</text>
+      <view class="section-rule"></view>
     </view>
     <view class="activity-list">
       <view class="activity-h-card" wx:for="{{latestActivities}}" wx:key="_id" data-id="{{item._id}}" bindtap="handleActivityTap" hover-class="activity-h-card--pressed" hover-stay-time="120" style="animation: rise-fade-in-short 420ms cubic-bezier(0.19,1,0.22,1) {{550 + index * 90}}ms forwards; opacity: 0;">

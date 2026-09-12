@@ -154,13 +154,13 @@
   font-weight: 500;
 }
 
-.gender-option.active[data-gender="male"] {
+.gender-option--male.active {
   background: var(--gender-male-tint, rgba(91, 184, 214, 0.10));
   color: var(--gender-male, #5BB8D6);
   border-color: var(--gender-male-border, rgba(91, 184, 214, 0.25));
 }
 
-.gender-option.active[data-gender="female"] {
+.gender-option--female.active {
   background: var(--gender-female-tint, rgba(255, 166, 201, 0.10));
   color: var(--gender-female, #FFA6C9);
   border-color: var(--gender-female-border, rgba(255, 166, 201, 0.25));

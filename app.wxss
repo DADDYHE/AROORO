@@ -149,7 +149,9 @@ label, form, block, canvas, video, map, movable-area, movable-view {
   color: var(--text-secondary);
   padding: var(--zy-space-sm2) var(--zy-space-lg);
   border-radius: var(--zy-radius-sm);
-  min-height: auto;
+  min-height: 0;                   /* 取消 .btn 的 88rpx 高度下限（文字按钮贴内容高）。
+                                      勿写 min-height: auto —— Skyline 的 min-height 只接受
+                                      <length>，关键字会被整条丢弃 → 88rpx 复活、按钮变胖且零报错。 */
   font-weight: 400;
   letter-spacing: var(--letter-spacing-normal);
 }

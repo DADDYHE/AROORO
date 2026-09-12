@@ -34,7 +34,6 @@
   overflow: visible;
   z-index: 1;
   flex: 0 1 auto;
-  min-width: auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

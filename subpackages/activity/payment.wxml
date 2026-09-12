@@ -152,7 +152,7 @@
 
     <root-portal>
     <view class="pay-section">
-      <button class="pay-btn" hover-class="pay-btn--pressed" bindtap="onConfirmPay" disabled="{{paying}}">
+      <button class="pay-btn {{paying ? 'pay-btn--disabled' : ''}}" hover-class="pay-btn--pressed" bindtap="onConfirmPay" disabled="{{paying}}">
         <text class="pay-btn-text">{{paying ? '处理中...' : '确认支付 ¥' + finalAmount}}</text>
       </button>
     </view>

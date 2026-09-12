@@ -217,8 +217,8 @@
   background: transparent;
   line-height: normal;
   width: auto;
-  min-width: unset;
-  max-width: unset;
+  min-width: 0;
+  max-width: 100%;
   box-sizing: border-box;
   color: var(--text-tertiary);
   transition: opacity 240ms cubic-bezier(0.25, 0.1, 0.25, 1);

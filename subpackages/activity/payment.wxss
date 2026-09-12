@@ -317,7 +317,7 @@
   border: none;
 }
 
-.pay-btn[disabled] {
+.pay-btn--disabled {
   background: var(--divider-color);
   box-shadow: none;
 }

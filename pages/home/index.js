@@ -30,6 +30,7 @@ Page({
     // 导航栏 + 顶部栏共用深绿宝石渐变带（白高光贯穿两栏）
     gemNavbarBg: 'linear-gradient(135deg, #2D4F2D 0%, #0F2410 100%)',
     gemTopbarStyle: '', // 空串 = 回落 wxss 兜底渐变（勿给默认值，否则会拼出 size:0 的空背景）
+    gemCoverStyle: '',  // 封面切片（极光帘幕）：空串 = 回落 wxss 165deg 兜底渐变
   },
 
   onLoad(options) {
@@ -73,7 +74,7 @@ Page({
     const locale = app && app.globalData ? app.globalData.locale : 'zh-CN'
     this.setData({ t: pageI18n.buildTMap(locale), locale })
     this._initToday()
-    this._initBanner()
+    this._initCarousel()
     this._initRefreshAnimation()
   },
 
@@ -88,9 +89,10 @@ Page({
     })
   },
 
-  // 导航栏 + 顶部栏共用同一条深绿宝石渐变带：用 background-size/position 偏移让白高光贯穿两栏。
-  // 导航栏(占位高度 navH px) 取长带 [0, navH]，顶部栏(96rpx) 取长带 [navH, navH+topbarH]，
-  // 两栏共用同一张渐变图 + 同一 background-size，靠 position 偏移对齐 => 极光帘幕跨接缝连续（仅 scroll=0 成立）。
+  // 极光绿统一帘幕：封面 + 导航栏 + 问候行共用同一条 165deg 长带，各取纵向切片。
+  // bandH = navH + 问候行 + 封面；t0 = (navH+问候行)·cos165°/L 为封面顶缘在帘幕中的纵深，
+  // 封面自身 s% 落在帘幕 t0 + s%·(1-t0)。三处共用同一张渐变图 + 同一 background-size（bandH），
+  // 靠 position 偏移对齐（导航栏 0 / 问候行 -navH / 封面 -(navH+问候行)）=> 跨接缝连续（仅 scroll=0 成立）。
   _initGemBand() {
     try {
       const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
@@ -99,37 +101,43 @@ Page({
       const navBarHeight = (menuButton.top - statusBarHeight) * 2 + menuButton.height
       const navH = statusBarHeight + navBarHeight
       const windowWidth = windowInfo.windowWidth || 375
-      const topbarH = 96 * windowWidth / 750 // 顶部栏高度 96rpx 换算为 px
-      const bandH = navH + topbarH
-      // 极光态(aurora)：单条 118deg 渐变模拟极光帘幕。
-      // Skyline 硬约束：① 不支持多背景层简写(逗号叠加)，整条声明会被丢弃导致元素全透明；
-      //   ② 简写里不追加 background-color 兜底(未验证语法)。故全部色标必须 opaque，禁用 rgba alpha。
-      // 层次：外帘辉光@48%(#39553F) -> 暗谷@60%(#0F2410) -> 主帘@67% + 热核@68.5%(#5A7C63) -> 尾焰@74%；
-      // 首尾回落深绿基底 #2D4F2D/#0F2410，色相始终锁在项目深绿族内，不新增色。
-      const gemGradient =
-        'linear-gradient(118deg,' +
-        ' #2D4F2D 0%,' +
-        ' #0F2410 16%,' +
-        ' #2D4F2D 28%,' +
-        ' #1A361F 40%,' +
-        ' #39553F 48%,' +
-        ' #142C18 56%,' +
-        ' #0F2410 60%,' +
-        ' #2E4C36 64%,' +
-        ' #4E6D56 67%,' +
-        ' #5A7C63 68.5%,' +
-        ' #4A6952 70%,' +
-        ' #35553E 74%,' +
-        ' #16301A 80%,' +
-        ' #0F2410 88%,' +
-        ' #2D4F2D 100%)'
+      const r = windowWidth / 750
+      const logged = !!this.data.isLoggedIn
+      const topbarH = 96 * r // 问候行 96rpx（wx:if=isLoggedIn，未登录不渲染）
+      const coverH = 800 * r // 封面 800rpx（与 wxss .lux-cover 高度一致，改其一必须同步）
+      const bandH = navH + topbarH + coverH
+      // Skyline 硬约束：不支持多背景层简写(逗号叠加)，整条声明会被丢弃导致元素全透明；
+      //   简写里不追加 background-color 兜底。故全部色标必须 opaque，禁用 rgba alpha。
+      // 帘顶色序(#142C18→#1F3A1F→#2D4F2D) → 光核 #5A7C63（165deg 斜线，左端落在封面左上角）→
+      // 回落 #1F3A1F → 深底 #0F2410。
+      const SIN_A = 0.258819 // sin165°
+      const COS_A = 0.965926 // cos165°
+      const len = windowWidth * SIN_A + bandH * COS_A
+      const t0 = (navH + topbarH) * COS_A / len
+      const at = (s) => Math.round((t0 + s / 100 * (1 - t0)) * 1000) / 10
+      const gem =
+        'linear-gradient(165deg,' +
+        ' #142C18 0%,' +
+        ' #1F3A1F ' + (t0 * 33).toFixed(1) + '%,' +
+        ' #2D4F2D ' + (t0 * 65).toFixed(1) + '%,' +
+        ' #5A7C63 ' + at(0) + '%,' +
+        ' #1F3A1F ' + at(55) + '%,' +
+        ' #0F2410 100%)'
       this.setData({
-        gemNavbarBg: gemGradient + ' 0 0 / 100% ' + bandH + 'px no-repeat',
+        gemNavbarBg: gem + ' 0 0 / 100% ' + bandH + 'px no-repeat',
         gemTopbarStyle:
-          'background: ' + gemGradient + ' 0 -' + navH + 'px / 100% ' + bandH + 'px no-repeat;',
+          'background: ' + gem + ' 0 -' + navH + 'px / 100% ' + bandH + 'px no-repeat;',
+        gemCoverStyle:
+          'background-image: ' + gem + ';' +
+          ' background-size: 100% ' + bandH + 'px;' +
+          ' background-position: 0 -' + (navH + topbarH) + 'px;' +
+          ' background-repeat: no-repeat;',
       })
+      // 登录态翻转时问候行显隐 => 帘幕总高变化；behaviors/_updateScrollLayout 用
+      // _gemBandLogged 做变更检测后回调本方法重算，此处必须记录当前登录态。
+      this._gemBandLogged = logged
     } catch (e) {
-      // 降级：gemNavbarBg 已用深绿兜底，顶部栏走 wxss 兜底
+      // 降级：gemNavbarBg 已用深绿兜底，问候行/封面走 wxss 兜底渐变
     }
   },
 
