@@ -29,7 +29,6 @@ const homeBannerBehavior = Behavior({
     carouselIndex: 0,
     carouselLabel: '01 / 01',
     carouselCurrent: { title: '当期橱窗', subtitle: 'CURRENT SELECTION' },
-    slideHintTouched: false,  // 「滑动」仪式感提示：首次手动横滑后永久隐去
     // scroll-view 布局参数
     scrollViewOffset: 64, // scroll-view 顶部偏移 = navbarHeight + topbarHeight
     scrollMarginTop: 0,   // scroll-view 负 margin，拉升至 banner 顶部
@@ -102,12 +101,9 @@ const homeBannerBehavior = Behavior({
       })
     },
 
-    /** 手动横滑：swiper bindchange → 更新展签与页码；首次触摸后隐去「滑动」提示 */
+    /** 手动横滑：swiper bindchange → 更新页码 */
     onCarouselChange(e) {
       this._syncCarousel(e.detail.current)
-      if (!this.data.slideHintTouched) {
-        this.setData({ slideHintTouched: true })
-      }
     },
   },
 })

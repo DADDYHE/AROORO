@@ -71,11 +71,6 @@
       </view>
     </swiper-item>
   </swiper>
-  <view class="lux-car-hint" wx:if="{{!slideHintTouched}}">
-    <view class="hint-line"></view>
-    <text class="hint-word">滑</text>
-    <text class="hint-word">动</text>
-  </view>
   <view class="lux-car-cap">
     <view class="lux-car-dots">
       <view wx:for="{{bannerList}}" wx:key="_id" class="lux-car-dot {{carouselIndex === index ? 'on' : ''}}"></view>

@@ -151,7 +151,6 @@ BODY = r'''
         <div class="sim-item"><div class="lux-car-card sim-car-1"></div></div>
         <div class="sim-item"><div class="lux-car-card sim-car-2"></div></div>
       </div>
-      <div class="lux-car-hint"><div class="hint-line"></div><span class="hint-word">滑</span><span class="hint-word">动</span></div>
       <div class="lux-car-cap">
         <div class="lux-car-dots">
           <div class="lux-car-dot on"></div><div class="lux-car-dot"></div><div class="lux-car-dot"></div>
@@ -557,8 +556,7 @@ HTML = '''<!DOCTYPE html>
         ' hdr[mt=' + (hdr ? cs(hdr).marginTop : '-') + ']' +
         ' ttl[mt=' + (ttl ? cs(ttl).marginTop : '-') + ' lh=' + (ttl ? cs(ttl).lineHeight : '-') + ']' +
         ' sheetPT=' + cs(document.querySelector('.home-content-sheet')).paddingTop;
-    })() + '|hint ' + (hint ? 'on anim=' + (hintStyle ? hintStyle.animationName : '?') + ' rect=' + Math.round(hint.getBoundingClientRect().left) + ',' + Math.round(hint.getBoundingClientRect().top + window.scrollY) + ' ' + Math.round(hint.getBoundingClientRect().width) + 'x' + Math.round(hint.getBoundingClientRect().height) : 'HIDDEN') +
-      '|petsScroll ' + (() => { const sc = document.querySelector('.pets-scroll'); const pg = document.querySelector('[data-role="petsgrid"]'); const c = document.querySelector('.pet-card'); return sc ? 'sw' + Math.ceil(pg.scrollWidth) + ' cardW=' + Math.round(c.getBoundingClientRect().width) : 'MISSING'; })() + '|petDbg ' + (() => { const c = document.querySelector('.pet-card'); const pv = document.querySelector('.pet-portrait'); const cs = el => el ? getComputedStyle(el) : null; return c ? 'card[op=' + cs(c).opacity + ' bg=' + cs(c).backgroundColor + ' vis=' + cs(c).visibility + ']' + ' portrait[' + (pv ? cs(pv).width + 'x' + cs(pv).height + ' bgimg=' + (cs(pv).backgroundImage.indexOf('gradient')>=0?'grad':'none') : 'MISSING') + ']' : 'NOCARD'; })() + '|pet ' + (pr ? Math.round(pr.width) + 'x' + Math.round(pr.height) + '@' + Math.round(pr.left) +
+    })() + '|petsScroll ' + (() => { const sc = document.querySelector('.pets-scroll'); const pg = document.querySelector('[data-role="petsgrid"]'); const c = document.querySelector('.pet-card'); return sc ? 'sw' + Math.ceil(pg.scrollWidth) + ' cardW=' + Math.round(c.getBoundingClientRect().width) : 'MISSING'; })() + '|petDbg ' + (() => { const c = document.querySelector('.pet-card'); const pv = document.querySelector('.pet-portrait'); const cs = el => el ? getComputedStyle(el) : null; return c ? 'card[op=' + cs(c).opacity + ' bg=' + cs(c).backgroundColor + ' vis=' + cs(c).visibility + ']' + ' portrait[' + (pv ? cs(pv).width + 'x' + cs(pv).height + ' bgimg=' + (cs(pv).backgroundImage.indexOf('gradient')>=0?'grad':'none') : 'MISSING') + ']' : 'NOCARD'; })() + '|pet ' + (pr ? Math.round(pr.width) + 'x' + Math.round(pr.height) + '@' + Math.round(pr.left) +
         ',' + Math.round(pr.top + window.scrollY) : 'none') +
       // 价签块应完全落在商品图**下方**（mr.top >= mib.bottom）。若被丢弃 position 则会叠回图上。
       '|mallinfo ' + (mr ? Math.round(mr.width) + '+' + Math.round(mr.height) + '@' +
