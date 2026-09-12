@@ -1,4 +1,5 @@
 {
+  "glassEaselWebview": true,
   "navigationBarTitleText": "寄养家庭相册",
   "usingComponents": {
     "login-prompt": "/components/login-prompt/login-prompt"

@@ -1,4 +1,5 @@
 {
+  "glassEaselWebview": true,
   "usingComponents": {
     "order-status-banner": "/components/order/order-status-banner/index",
     "order-card": "/components/order/order-card/index",

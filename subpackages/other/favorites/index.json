@@ -1,4 +1,5 @@
 {
+  "glassEaselWebview": true,
   "usingComponents": {
     "zy-icon": "../components/zy-icon/index",
     "login-prompt": "/components/login-prompt/login-prompt"

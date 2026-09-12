@@ -1,4 +1,5 @@
 {
+  "glassEaselWebview": true,
   "navigationBarTitleText": "申请状态",
   "usingComponents": {
     "login-prompt": "/components/login-prompt/login-prompt"

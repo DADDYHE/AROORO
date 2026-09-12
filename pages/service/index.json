@@ -1,4 +1,5 @@
 {
+  "glassEaselWebview": true,
   "usingComponents": {
     "login-prompt": "../../components/login-prompt/login-prompt"
   },

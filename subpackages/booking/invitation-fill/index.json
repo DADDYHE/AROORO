@@ -1,4 +1,5 @@
 {
+  "glassEaselWebview": true,
   "navigationBarTitleText": "寄养开单邀请",
   "usingComponents": {
     "health-form": "/components/health-form/index",
