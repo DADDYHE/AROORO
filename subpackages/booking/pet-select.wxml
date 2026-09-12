@@ -43,35 +43,49 @@
     </view>
 
     <view class="gallery-collection">
-      <view class="gallery-card {{item.checked ? 'card-selected' : ''}}" wx:for="{{pets}}" wx:key="id" data-id="{{item.id}}" data-index="{{index}}">
-        <view class="card-selected-badge" wx:if="{{item.checked}}">
-          <view class="badge-dot"></view>
-          <text class="badge-text">已选</text>
-        </view>
-        <view class="card-frame" bindtap="openSelectPopup" data-id="{{item.id}}">
-          <view class="card-portrait" catchtap="viewPetDetail" data-id="{{item.id}}">
-            <view class="portrait-selected-ring" wx:if="{{item.checked}}"></view>
-            <image lazy-load class="portrait-image" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="pets[{{index}}].avatarUrl" data-index="{{index}}" />
-          </view>
-          <view class="card-info">
-            <text class="card-name">{{item.name}}</text>
-            <view class="card-caption">
-              <text class="caption-text">{{item.breed || item.type}}</text>
-              <text class="caption-sep" wx:if="{{item.birthday}}">·</text>
-              <text class="caption-text" wx:if="{{item.birthday}}">{{item.birthday}}</text>
+      <view class="wall-col wall-col-l">
+        <block wx:for="{{pets}}" wx:key="id">
+          <view wx:if="{{index % 2 === 0}}" class="wall-piece {{item.checked ? 'piece-selected' : ''}}" bindtap="openSelectPopup" data-id="{{item.id}}">
+            <view class="portrait-frame" catchtap="viewPetDetail" data-id="{{item.id}}">
+              <image lazy-load class="portrait-image" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="pets[{{index}}].avatarUrl" data-index="{{index}}" />
+              <view class="portrait-selected-ring" wx:if="{{item.checked}}"></view>
+              <view class="tag-no {{item.checked ? 'tag-picked' : ''}}">{{item.checked ? '已选' : 'No.' + ((index + 1) < 10 ? '0' : '') + (index + 1)}}</view>
             </view>
-            <view class="card-service-date" wx:if="{{item.checked && item.serviceDatesText}}">
-              <view class="service-date-line"></view>
-              <text class="service-date-text">{{item.serviceDatesText}}</text>
+            <view class="piece-label">
+              <text class="piece-name">{{item.name}}</text>
+              <view class="piece-caption">
+                <text class="piece-bd">{{item.breed || item.type}}</text>
+                <text class="piece-bd" wx:if="{{item.birthday}}"> · {{item.birthday}}</text>
+              </view>
+              <view class="piece-dates" wx:if="{{item.checked && item.serviceDatesText}}">
+                <view class="dates-line"></view>
+                <text class="dates-text">{{item.serviceDatesText}}</text>
+              </view>
             </view>
           </view>
-          <view class="card-select">
-            <view class="select-indicator {{item.checked ? 'indicator-active' : 'indicator-idle'}}">
-              <view class="indicator-checkmark" wx:if="{{item.checked}}"></view>
+        </block>
+      </view>
+      <view class="wall-col wall-col-r">
+        <block wx:for="{{pets}}" wx:key="id">
+          <view wx:if="{{index % 2 === 1}}" class="wall-piece {{item.checked ? 'piece-selected' : ''}}" bindtap="openSelectPopup" data-id="{{item.id}}">
+            <view class="portrait-frame" catchtap="viewPetDetail" data-id="{{item.id}}">
+              <image lazy-load class="portrait-image" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onCloudImageError" data-src="{{item.avatarUrl}}" data-path="pets[{{index}}].avatarUrl" data-index="{{index}}" />
+              <view class="portrait-selected-ring" wx:if="{{item.checked}}"></view>
+              <view class="tag-no {{item.checked ? 'tag-picked' : ''}}">{{item.checked ? '已选' : 'No.' + ((index + 1) < 10 ? '0' : '') + (index + 1)}}</view>
+            </view>
+            <view class="piece-label">
+              <text class="piece-name">{{item.name}}</text>
+              <view class="piece-caption">
+                <text class="piece-bd">{{item.breed || item.type}}</text>
+                <text class="piece-bd" wx:if="{{item.birthday}}"> · {{item.birthday}}</text>
+              </view>
+              <view class="piece-dates" wx:if="{{item.checked && item.serviceDatesText}}">
+                <view class="dates-line"></view>
+                <text class="dates-text">{{item.serviceDatesText}}</text>
+              </view>
             </view>
           </view>
-        </view>
-        <view class="card-divider" wx:if="{{index < pets.length - 1}}"></view>
+        </block>
       </view>
     </view>
 

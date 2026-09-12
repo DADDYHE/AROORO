@@ -36,7 +36,7 @@ Page({
     defaultCalendarDates: [],
     calendarKey: 0,
     calendarFormatter: null,
-    iconService: '/images/icons/message-luxury-line.svg',
+    iconService: '/images/icons/concierge-bell.svg',
   },
 
   async onLoad(options) {

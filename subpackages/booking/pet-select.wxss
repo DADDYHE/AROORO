@@ -45,11 +45,11 @@
 }
 
 /* ===== 宠物列表容器 ===== */
+/* 沙龙挂墙（方案 P3）：双列错落，右列下沉，金墨细环为选中态 */
 .gallery-collection {
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  overflow: hidden;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
+  display: flex;
+  gap: 28rpx;
+  padding: 40rpx var(--page-padding) 0;
   animation-name: zy-fade-in-up;
   animation-duration: 480ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -57,67 +57,35 @@
   animation-fill-mode: forwards;
 }
 
-.gallery-card {
+.wall-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 52rpx;
+}
+
+.wall-col-r {
+  margin-top: 112rpx;
+}
+
+.wall-piece {
   position: relative;
-  transition: transform var(--transition-fast), background-color var(--transition-fast);
 }
 
-.gallery-card.pressed {
-  transform: scale(0.99);
-}
-
-.gallery-card.card-selected {
-  background: linear-gradient(135deg, var(--primary-tint) 0%, var(--primary-wash) 100%);
-}
-
-.gallery-card.card-selected .card-frame {
-  border-left: 4rpx solid var(--primary-color);
-}
-
-.card-selected-badge {
-  position: absolute;
-  top: 20rpx;
-  right: 20rpx;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  background: var(--gradient-primary);
-  padding: 6rpx 16rpx 6rpx 12rpx;
-  border-radius: var(--zy-radius-lg);
-  box-shadow: var(--shadow-glow-primary-btn);
-}
-
-.badge-dot {
-  width: 10rpx;
-  height: 10rpx;
-  border-radius: 50%;
-  background: var(--card-color);
-}
-
-.badge-text {
-  font-size: 20rpx;
-  color: var(--text-on-primary);
-  font-weight: 400;
-  letter-spacing: 0.06em;
-}
-
-/* ===== 卡片框架 ===== */
-.card-frame {
-  display: flex;
-  align-items: center;
-  padding: var(--zy-space-lg);
-  border-left: 4rpx solid transparent;
-}
-
-.card-portrait {
-  width: 112rpx;
-  height: 112rpx;
-  border-radius: 20rpx;
+.portrait-frame {
+  position: relative;
   overflow: hidden;
-  flex-shrink: 0;
-  border: 1rpx solid rgba(26, 26, 23, 0.14);
-  position: relative;
+  background: var(--zy-paper-fallback);
+}
+
+/* 左列 4:5 竖构图 / 右列 3:4 —— 比例交替即挂墙节奏 */
+.wall-col-l .portrait-frame {
+  height: 420rpx;
+}
+
+.wall-col-r .portrait-frame {
+  height: 300rpx;
 }
 
 .portrait-image {
@@ -126,99 +94,90 @@
   display: block;
 }
 
+/* 左上编号牌（选中时换「已选」刻印） */
+.tag-no {
+  position: absolute;
+  top: 16rpx;
+  left: 16rpx;
+  z-index: 2;
+  background: var(--zy-paper-fallback);
+  padding: 4rpx 12rpx;
+  font-family: var(--font-serif);
+  font-size: 20rpx;
+  letter-spacing: 0.12em;
+  color: var(--lux-gold-ink);
+  line-height: 1.4;
+}
+
+.tag-picked {
+  letter-spacing: 0.3em;
+}
+
+/* 选中态：金墨双环画框（内 hairline 外 2rpx）—— Skyline 安全，不用多值 box-shadow */
 .portrait-selected-ring {
   position: absolute;
-  top: -4rpx;
-  right: -4rpx;
-  bottom: -4rpx;
-  left: -4rpx;
-  border-radius: 22rpx;
-  border: 2rpx solid var(--primary-color);
+  top: 10rpx;
+  left: 10rpx;
+  right: 10rpx;
+  bottom: 10rpx;
+  border: 2rpx solid rgba(201, 162, 75, 0.85);
   z-index: 1;
-  opacity: 0.8;
 }
 
-.card-info {
-  flex: 1;
+.portrait-selected-ring::after {
+  content: '';
+  position: absolute;
+  top: 6rpx;
+  left: 6rpx;
+  right: 6rpx;
+  bottom: 6rpx;
+  border: 1rpx solid rgba(201, 162, 75, 0.35);
+}
+
+/* 展签：serif 名字 + 品种小字 */
+.piece-label {
+  padding: 18rpx 4rpx 0;
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
-  padding: 0 24rpx;
-  min-width: 0;
+  gap: 6rpx;
 }
 
-.card-name {
+.piece-name {
+  font-family: var(--font-serif);
   font-size: 32rpx;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.1em;
   line-height: 1.2;
 }
 
-.card-caption {
+.piece-caption {
   display: flex;
-  align-items: center;
-  gap: 8rpx;
 }
 
-.caption-text {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  letter-spacing: 0.02em;
-  font-weight: 400;
-}
-
-.caption-sep {
-  font-size: 24rpx;
+.piece-bd {
+  font-size: 20rpx;
   color: var(--text-tertiary);
+  letter-spacing: 0.06em;
 }
 
-/* ===== 选择指示器 ===== */
-.card-select {
-  flex-shrink: 0;
+.piece-dates {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 72rpx;
-  height: 72rpx;
+  gap: 10rpx;
+  margin-top: 6rpx;
 }
 
-.select-indicator {
-  width: 44rpx;
-  height: 44rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform var(--transition-fast), opacity var(--transition-fast);
-}
-
-.indicator-idle {
-  border: 2rpx solid var(--border-color);
-  background: var(--card-color);
-}
-
-.indicator-active {
-  background: var(--gradient-primary);
-  border: none;
-  box-shadow: var(--shadow-glow-primary-btn);
-}
-
-.indicator-checkmark {
-  width: 16rpx;
-  height: 10rpx;
-  border-left: 3rpx solid var(--card-color);
-  border-bottom: 3rpx solid var(--card-color);
-  transform: rotate(-45deg);
-  margin-top: -4rpx;
-}
-
-/* ===== 分割线 ===== */
-.card-divider {
+.dates-line {
+  width: 24rpx;
   height: 1rpx;
-  background: var(--divider-color);
-  margin-left: 168rpx;
-  margin-right: var(--zy-space-lg);
+  background: rgba(122, 95, 42, 0.5);
+}
+
+.dates-text {
+  font-size: 20rpx;
+  color: var(--lux-gold-ink);
+  letter-spacing: 0.06em;
 }
 
 /* ===== 添加宠物按钮 ===== */
@@ -227,42 +186,28 @@
   align-items: center;
   justify-content: center;
   gap: 16rpx;
-  padding: 36rpx var(--zy-space-lg);
-  margin-top: 24rpx;
-  background: var(--card-color);
-  border-radius: var(--zy-radius-lg);
-  border: 1rpx dashed var(--border-color);
-  transition: transform var(--transition-fast), background-color var(--transition-fast);
+  padding: 44rpx var(--zy-space-lg) 8rpx;
+  margin-top: 12rpx;
+  background: transparent;
+  border: none;
+  transition: opacity var(--transition-fast);
 }
 
 .gallery-add.pressed {
-  transform: scale(0.99);
-  background: var(--card-cream);
+  opacity: 0.6;
 }
 
 .add-line {
-  width: 32rpx;
-  height: 2rpx;
-  background: var(--primary-color);
-  position: relative;
-}
-
-.add-line::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 2rpx;
-  height: 32rpx;
-  background: var(--primary-color);
+  width: 36rpx;
+  height: 1rpx;
+  background: rgba(122, 95, 42, 0.45);
 }
 
 .add-label {
-  font-size: 26rpx;
-  color: var(--primary-color);
+  font-size: 22rpx;
+  color: var(--lux-gold-ink);
   font-weight: 400;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.22em;
 }
 
 /* ===== 空状态 ===== */
@@ -350,7 +295,7 @@
   right: 0;
   padding: 20rpx var(--page-padding);
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: var(--card-color);
+  background: var(--zy-paper-fallback);
   border-top: 1rpx solid rgba(26, 26, 23, 0.14);
   z-index: 1000;
 }
@@ -405,8 +350,12 @@
 }
 
 .bar-action-icon-img {
-  width: 40rpx;
-  height: 40rpx;
+  width: 60rpx;
+  height: 60rpx;
+  box-sizing: border-box;
+  padding: 12rpx;
+  border: 1rpx solid rgba(26, 26, 23, 0.22);
+  border-radius: 50%;
 }
 
 .bar-action-text {
@@ -423,11 +372,11 @@
 }
 
 .dot-idle {
-  background: var(--border-color);
+  background: rgba(26, 26, 23, 0.22);
 }
 
 .dot-active {
-  background: var(--primary-color);
+  background: var(--lux-gold-ink);
 }
 
 .status-text {
@@ -440,11 +389,11 @@
 .footer-action {
   flex: 1;
   min-width: 0;
-  border-radius: var(--zy-radius-lg);
+  border-radius: 999rpx;
   font-size: 28rpx;
   font-weight: 500;
   letter-spacing: 0.08em;
-  padding: 26rpx 0;
+  padding: 24rpx 0;
   text-align: center;
   border: none;
   transition: transform var(--transition-fast), opacity var(--transition-fast);
@@ -456,13 +405,13 @@
 }
 
 .action-active {
-  background: var(--gradient-primary);
+  background: var(--lux-green-grad);
   color: var(--text-on-primary);
-  box-shadow: var(--shadow-glow-primary-btn);
+  box-shadow: var(--lux-shadow-green);
 }
 
 .action-disabled {
-  background: var(--divider-color);
+  background: rgba(26, 26, 23, 0.08);
   color: var(--text-tertiary);
 }
 
@@ -485,28 +434,6 @@
   animation-timing-function: linear;
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
-}
-
-/* ===== 服务日期标识 ===== */
-.card-service-date {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  margin-top: 4rpx;
-}
-
-.service-date-line {
-  width: 24rpx;
-  height: 2rpx;
-  background: var(--primary-color);
-  border-radius: 1rpx;
-}
-
-.service-date-text {
-  font-size: 22rpx;
-  color: var(--primary-color);
-  letter-spacing: 0.02em;
-  font-weight: 400;
 }
 
 /* ===== 底部弹窗（服务选择） ===== */
