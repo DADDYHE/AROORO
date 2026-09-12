@@ -153,10 +153,6 @@ BODY = r'''
       </div>
       <div class="lux-car-hint"><div class="hint-line"></div><span class="hint-word">滑</span><span class="hint-word">动</span></div>
       <div class="lux-car-cap">
-        <div class="lux-car-cap-l">
-          <span class="lux-car-t">秋季新品尝鲜</span>
-          <span class="lux-car-en">AUTUMN SELECTION 2026</span>
-        </div>
         <span class="lux-car-num">01 / 03</span>
       </div>
       <div class="lux-car-dots">

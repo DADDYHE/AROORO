@@ -77,10 +77,6 @@
     <text class="hint-word">动</text>
   </view>
   <view class="lux-car-cap">
-    <view class="lux-car-cap-l">
-      <text class="lux-car-t">{{carouselCurrent.title}}</text>
-      <text class="lux-car-en">{{carouselCurrent.subtitle}}</text>
-    </view>
     <text class="lux-car-num">{{carouselLabel}}</text>
   </view>
   <view class="lux-car-dots">
