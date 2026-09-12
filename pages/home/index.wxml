@@ -105,23 +105,34 @@
       <view class="section-rule"></view>
     </view>
 
-    <view class="pets-grid" wx:if="{{myPets.length > 0}}">
-      <view class="pet-card pet-card-{{item.genderClass}} stagger-item stagger-scale" wx:for="{{myPets}}" wx:key="_id" data-id="{{item._id}}" bindtap="handlePetTap" hover-class="pet-card--pressed" hover-stay-time="120" style="animation-delay: {{220 + index * 80}}ms;">
-        <view class="aurora-edge"></view>
-        <image class="pet-avatar pet-avatar-{{item.genderClass}}" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load />
-        <view class="pet-info">
-          <view class="pet-name-row">
-            <text class="pet-name">{{item.name || '未命名'}}</text>
-            <text class="pet-gender-tag pet-gender-{{item.genderClass}}">{{item.genderSymbol}}</text>
+    <scroll-view class="pets-scroll" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{myPets.length > 0}}">
+      <view class="pets-grid">
+        <view class="pet-card pet-card-{{item.genderClass}} stagger-item stagger-scale" wx:for="{{myPets}}" wx:key="_id" data-id="{{item._id}}" bindtap="handlePetTap" hover-class="pet-card--pressed" hover-stay-time="120" style="animation-delay: {{220 + index * 80}}ms;">
+          <view class="aurora-edge"></view>
+          <view class="pet-portrait">
+            <image class="pet-portrait-img" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load />
           </view>
-          <text class="pet-breed" wx:if="{{item.breed}}">{{item.breed}}</text>
+          <view class="pet-info">
+            <view class="pet-name-row">
+              <text class="pet-name">{{item.name || '未命名'}}</text>
+              <text class="pet-gender-tag pet-gender-{{item.genderClass}}">{{item.genderSymbol}}</text>
+            </view>
+            <text class="pet-breed" wx:if="{{item.breed}}">{{item.breed}}</text>
+            <view class="pet-hint">
+              <text class="pet-hint-text">点击查看档案</text>
+              <text class="pet-hint-arrow">›</text>
+            </view>
+          </view>
         </view>
       </view>
-    </view>
+    </scroll-view>
 
-    <view class="pets-grid pets-grid-empty" wx:else>
-      <view class="pet-card pet-card-empty" wx:for="{{[1,2]}}" wx:key="*this" bindtap="handleAddPet" hover-class="pet-card-empty--pressed" hover-stay-time="120">
-        <text class="pet-empty-text">宠物档案待添加</text>
+    <view class="pets-scroll pets-scroll-empty" wx:else>
+      <view class="pets-grid">
+        <view class="pet-card pet-card-empty" wx:for="{{[1,2]}}" wx:key="*this" bindtap="handleAddPet" hover-class="pet-card-empty--pressed" hover-stay-time="120">
+          <text class="pet-empty-text">宠物档案待添加</text>
+          <text class="pet-hint-text">点击创建 ›</text>
+        </view>
       </view>
     </view>
   </view>

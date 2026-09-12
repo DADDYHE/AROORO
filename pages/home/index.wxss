@@ -1723,48 +1723,75 @@ page {
 }
 
 /* 「+ 添加」去纸药丸装帧，收成金墨文字（与标题同在首行） */
+/* 「添加」按钮：金墨描边 pill（可点击暗示） */
 .pet-add-btn {
-  padding: 0;
-  margin-left: 24rpx;
-  border: 0;
-  background: transparent;
+  display: flex;
+  align-items: center;
   gap: 4rpx;
+  padding: 8rpx 24rpx;
+  margin-left: 24rpx;
+  border: 1rpx solid rgba(122, 95, 42, 0.45);
+  border-radius: 999rpx;
 }
 .pet-add-btn--pressed { transform: none; opacity: 0.6; background: transparent; }
 .pet-add-icon,
 .pet-add-text { font-size: 24rpx; color: var(--lux-gold-ink); }
 
-/* ---------- 5. 我的宠物：c-gallery · 单列堆叠去纸卡 ---------- */
-.pets-grid { display: block; }
+/* ---------- 5. 我的宠物：半宽双卡同行 + 超出横滑（scroll-x 需显式高度，Skyline） ---------- */
+.pets-scroll { width: 100%; height: 500rpx; }
+.pets-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 24rpx;
+  padding-right: var(--page-padding);   /* 末卡滑到底仍留页边距 */
+}
 .pet-card,
 .pet-card-empty {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   flex: none;
-  width: 100%;
-  max-width: 100%;                 /* 抵消基础规则 .pet-card 的 calc(50% - 24rpx)（旧两列网格）。
-                                      勿写 max-width: none —— Skyline 不认 none、会整条丢弃，
-                                      于是 50% 上限留着、卡片变半宽且无任何报错。 */
+  width: 315rpx;                   /* (内容宽 654 - gap 24) / 2 */
+  max-width: 315rpx;
   margin: 0;
-  padding: 0 0 48rpx;              /* 48rpx */
+  padding: 0;
   background: transparent;
   background-image: none;
   border: 0;
   border-radius: 0;
-  box-shadow: none;                /* 去掉性别色条（属纸卡装帧；性别符号仍在名字旁） */
+  box-shadow: none;
   overflow: visible;
+  box-sizing: border-box;
 }
-.pet-card:nth-child(2),
-.pets-grid .pet-card + .pet-card { margin-left: 0; }
+.pet-portrait {
+  width: 100%;
+  height: 320rpx;
+  overflow: hidden;
+  background: var(--skeleton-base);
+}
+.pet-portrait-img { width: 100%; height: 100%; display: block; }
+.pet-info { padding: 16rpx 4rpx 0; }
+.pet-name { font-family: var(--font-serif); font-size: 30rpx; font-weight: 400; letter-spacing: 0.06em; }
 .pet-card-empty {
   justify-content: center;
-  min-height: 168rpx;
-  padding: 40rpx 0;
+  align-items: center;
+  gap: 10rpx;
+  min-height: 440rpx;
+  padding: 24rpx;
   border: 1rpx dashed rgba(26, 26, 23, 0.14);
 }
 .pet-card-empty--pressed { border-color: rgba(122, 95, 42, 0.45); background: transparent; }
-.pet-name { font-family: var(--font-serif); font-size: 30rpx; font-weight: 400; letter-spacing: 0.06em; }
+
+/* 可点击暗示：卡片底部金墨小字 + 箭头 */
+.pet-hint {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  margin-top: 12rpx;
+}
+.pet-hint-text { font-size: 20rpx; color: var(--lux-gold-ink); letter-spacing: 0.1em; }
+.pet-hint-arrow { font-size: 22rpx; color: var(--lux-gold-ink); line-height: 1; }
 
 /* ---------- 6. 快捷服务：c-gallery · 两列横排 + i-med 刻印章牌图标 ---------- */
 .quick-services { flex-direction: row; gap: 32rpx; }   /* mock .qs gap 32rpx */

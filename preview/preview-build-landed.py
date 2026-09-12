@@ -173,19 +173,29 @@ BODY = r'''
             <span class="section-en">MY COMPANIONS</span>
             <div class="section-rule"></div>
           </div>
-          <div class="pets-grid">
+          <div class="pets-scroll"><div class="pets-grid" data-role="petsgrid">
             <div class="pet-card pet-card-female">
-              <div class="pet-avatar sim-av-1"></div>
+              <div class="pet-portrait sim-av-1"></div>
               <div class="pet-info">
                 <div class="pet-name-row"><span class="pet-name">奶糖</span><span class="pet-gender-tag pet-gender-female">♀</span></div>
                 <span class="pet-breed">金毛 · 3 岁</span>
+                <div class="pet-hint"><span class="pet-hint-text">点击查看档案</span><span class="pet-hint-arrow">›</span></div>
               </div>
             </div>
             <div class="pet-card pet-card-male">
-              <div class="pet-avatar sim-av-2"></div>
+              <div class="pet-portrait sim-av-2"></div>
               <div class="pet-info">
                 <div class="pet-name-row"><span class="pet-name">布丁</span><span class="pet-gender-tag pet-gender-male">♂</span></div>
                 <span class="pet-breed">英国短毛猫 · 2 岁</span>
+                <div class="pet-hint"><span class="pet-hint-text">点击查看档案</span><span class="pet-hint-arrow">›</span></div>
+              </div>
+            </div>
+            <div class="pet-card pet-card-female">
+              <div class="pet-portrait sim-av-1"></div>
+              <div class="pet-info">
+                <div class="pet-name-row"><span class="pet-name">年糕</span><span class="pet-gender-tag pet-gender-female">♀</span></div>
+                <span class="pet-breed">柯基 · 1 岁</span>
+                <div class="pet-hint"><span class="pet-hint-text">点击查看档案</span><span class="pet-hint-arrow">›</span></div>
               </div>
             </div>
           </div>
@@ -433,6 +443,9 @@ EXTRA = '''
   .sim-mall-4 { background: linear-gradient(155deg, #4A6B4A, #172F1A); }
   .sim-mall-5 { background: linear-gradient(145deg, #35553E, #12240F); }
   .sim-mall-scroll { overflow-x: auto; overflow-y: hidden; }
+  .pets-scroll { overflow-x: auto; overflow-y: hidden; }   /* 模拟 scroll-view 裁切（真机由组件承载） */
+  /* 静态还原不播放入场动画（否则截图拍到 opacity:0 的帧） */
+  .stagger-item, .stagger-item * { opacity: 1 !important; animation: none !important; }
   .sim-ico { font-size: 30px; line-height: 1; filter: grayscale(1) brightness(0.25); }
   .pet-avatar { border: 0; }
   /* 静态还原不播放入场动画（否则截图拍到 opacity:0 的帧） */
@@ -527,8 +540,25 @@ HTML = '''<!DOCTYPE html>
       ' cover ' + cv.backgroundSize + ' @' + cv.backgroundPosition +
       '|card ' + Math.round(card.width) + '+' + Math.round(card.height) + '@' + Math.round(card.left) +
       '|ratio ' + (card.height / Math.round(card.width * 100) / 100 * 100).toFixed(1) + '%%(16:9=56.25)' +
-      '|hint ' + (hint ? 'on anim=' + (hintStyle ? hintStyle.animationName : '?') + ' rect=' + Math.round(hint.getBoundingClientRect().left) + ',' + Math.round(hint.getBoundingClientRect().top + window.scrollY) + ' ' + Math.round(hint.getBoundingClientRect().width) + 'x' + Math.round(hint.getBoundingClientRect().height) : 'HIDDEN') +
-      '|pet ' + (pr ? Math.round(pr.width) + 'x' + Math.round(pr.height) + '@' + Math.round(pr.left) +
+      '|capGap ' + (() => {
+      const cap = document.querySelector('.lux-car-cap');
+      const mps = document.querySelector('.my-pets-section');
+      const hdr = document.querySelector('.my-pets-header');
+      const ttl = document.querySelector('.section-title');
+      const cs = el => getComputedStyle(el);
+      if (!cap || !mps) return 'MISSING';
+      const cb = cap.getBoundingClientRect().bottom + window.scrollY;
+      const mt = mps.getBoundingClientRect().top + window.scrollY;
+      const ht = hdr ? hdr.getBoundingClientRect().top + window.scrollY : -1;
+      const tt = ttl ? ttl.getBoundingClientRect().top + window.scrollY : -1;
+      return 'capB=' + Math.round(cb) + ' mpsT=' + Math.round(mt) + ' hdrT=' + Math.round(ht) +
+        ' ttlT=' + Math.round(tt) +
+        ' mps[mt=' + cs(mps).marginTop + ' pt=' + cs(mps).paddingTop + ']' +
+        ' hdr[mt=' + (hdr ? cs(hdr).marginTop : '-') + ']' +
+        ' ttl[mt=' + (ttl ? cs(ttl).marginTop : '-') + ' lh=' + (ttl ? cs(ttl).lineHeight : '-') + ']' +
+        ' sheetPT=' + cs(document.querySelector('.home-content-sheet')).paddingTop;
+    })() + '|hint ' + (hint ? 'on anim=' + (hintStyle ? hintStyle.animationName : '?') + ' rect=' + Math.round(hint.getBoundingClientRect().left) + ',' + Math.round(hint.getBoundingClientRect().top + window.scrollY) + ' ' + Math.round(hint.getBoundingClientRect().width) + 'x' + Math.round(hint.getBoundingClientRect().height) : 'HIDDEN') +
+      '|petsScroll ' + (() => { const sc = document.querySelector('.pets-scroll'); const pg = document.querySelector('[data-role="petsgrid"]'); const c = document.querySelector('.pet-card'); return sc ? 'sw' + Math.ceil(pg.scrollWidth) + ' cardW=' + Math.round(c.getBoundingClientRect().width) : 'MISSING'; })() + '|petDbg ' + (() => { const c = document.querySelector('.pet-card'); const pv = document.querySelector('.pet-portrait'); const cs = el => el ? getComputedStyle(el) : null; return c ? 'card[op=' + cs(c).opacity + ' bg=' + cs(c).backgroundColor + ' vis=' + cs(c).visibility + ']' + ' portrait[' + (pv ? cs(pv).width + 'x' + cs(pv).height + ' bgimg=' + (cs(pv).backgroundImage.indexOf('gradient')>=0?'grad':'none') : 'MISSING') + ']' : 'NOCARD'; })() + '|pet ' + (pr ? Math.round(pr.width) + 'x' + Math.round(pr.height) + '@' + Math.round(pr.left) +
         ',' + Math.round(pr.top + window.scrollY) : 'none') +
       // 价签块应完全落在商品图**下方**（mr.top >= mib.bottom）。若被丢弃 position 则会叠回图上。
       '|mallinfo ' + (mr ? Math.round(mr.width) + '+' + Math.round(mr.height) + '@' +
