@@ -1941,7 +1941,7 @@ page {
 
 /* ---------- 12. 板块节奏：g-B = 88rpx = 88rpx（mock 每个 .sec 前一支） ---------- */
 .section { margin-top: 88rpx; }
-.my-pets-section { margin-top: 0; }   /* 紧贴橱窗页码行：豁免上方 88rpx 板块节奏（后声明需在此重新豁免） */
+.my-pets-section { margin-top: 40rpx; }   /* 橱窗页码行与板块的间距（0 太贴 / 88rpx 太宽，DADDY 2026-09-12 定 40rpx） */
 .quick-services-wrapper { margin-top: 88rpx; }
 .search-section { margin-top: 88rpx; }
 
