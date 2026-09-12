@@ -153,10 +153,10 @@ BODY = r'''
       </div>
       <div class="lux-car-hint"><div class="hint-line"></div><span class="hint-word">滑</span><span class="hint-word">动</span></div>
       <div class="lux-car-cap">
+        <div class="lux-car-dots">
+          <div class="lux-car-dot on"></div><div class="lux-car-dot"></div><div class="lux-car-dot"></div>
+        </div>
         <span class="lux-car-num">01 / 03</span>
-      </div>
-      <div class="lux-car-dots">
-        <div class="lux-car-dot on"></div><div class="lux-car-dot"></div><div class="lux-car-dot"></div>
       </div>
     </div>
 

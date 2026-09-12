@@ -77,10 +77,10 @@
     <text class="hint-word">动</text>
   </view>
   <view class="lux-car-cap">
+    <view class="lux-car-dots">
+      <view wx:for="{{bannerList}}" wx:key="_id" class="lux-car-dot {{carouselIndex === index ? 'on' : ''}}"></view>
+    </view>
     <text class="lux-car-num">{{carouselLabel}}</text>
-  </view>
-  <view class="lux-car-dots">
-    <view wx:for="{{bannerList}}" wx:key="_id" class="lux-car-dot {{carouselIndex === index ? 'on' : ''}}"></view>
   </view>
 </view>
 
