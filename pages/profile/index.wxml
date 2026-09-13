@@ -76,9 +76,7 @@
     <view class="exhibit-row" bindtap="onGroupOrders">
       <view class="exhibit-row-index">01</view>
       <view class="exhibit-row-card group">
-        <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="/images/icons/group-tag.svg" mode="aspectFit" />
-        </view>
+        <view class="exhibit-medallion"><image class="medallion-img" src="/images/icons/group-tag.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_BJUOQM}}</text>
           <text class="exhibit-row-desc">查看团购参与记录</text>
@@ -90,9 +88,7 @@
     <view class="exhibit-row" bindtap="onMallOrders">
       <view class="exhibit-row-index">02</view>
       <view class="exhibit-row-card mall">
-        <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="/images/icons/mall-bag.svg" mode="aspectFit" />
-        </view>
+        <view class="exhibit-medallion"><image class="medallion-img" src="/images/icons/mall-bag.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_B4Q6UZ}}</text>
           <text class="exhibit-row-desc">查看宠物商城购买记录</text>
@@ -104,9 +100,7 @@
     <view class="exhibit-row" bindtap="onActivityOrders">
       <view class="exhibit-row-index">03</view>
       <view class="exhibit-row-card activity">
-        <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="/images/icons/activity-ticket.svg" mode="aspectFit" />
-        </view>
+        <view class="exhibit-medallion"><image class="medallion-img" src="/images/icons/activity-ticket.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_E4R43K}}</text>
           <text class="exhibit-row-desc">查看活动报名记录</text>
@@ -118,9 +112,7 @@
     <view class="exhibit-row" bindtap="onServiceOrders">
       <view class="exhibit-row-index">04</view>
       <view class="exhibit-row-card service">
-        <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="/images/icons/service-door.svg" mode="aspectFit" />
-        </view>
+        <view class="exhibit-medallion"><image class="medallion-img" src="/images/icons/service-door.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_DCOTNR}}</text>
           <text class="exhibit-row-desc">查看服务预约记录</text>
@@ -132,9 +124,7 @@
     <view class="exhibit-row" bindtap="onHostingOrders">
       <view class="exhibit-row-index">05</view>
       <view class="exhibit-row-card hosting">
-        <view class="exhibit-row-icon">
-          <image class="exhibit-icon-img" src="/images/icons/hosting-home-heart.svg" mode="aspectFit" />
-        </view>
+        <view class="exhibit-medallion"><image class="medallion-img" src="/images/icons/hosting-home-heart.svg" mode="aspectFit" /></view>
         <view class="exhibit-row-info">
           <text class="exhibit-row-title">{{t.BIZ_BXA2JU}}</text>
           <text class="exhibit-row-desc">查看寄养服务记录</text>

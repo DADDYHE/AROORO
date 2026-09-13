@@ -218,34 +218,11 @@
   background: var(--card-cream);
 }
 
-/* 图标容器 */
-.exhibit-row-icon {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: var(--zy-radius-sm);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.exhibit-icon-img {
-  width: 36rpx;
-  height: 36rpx;
-  opacity: 0.75;
-}
-
 /* ----- 活动订单 — 深林绿左边框 ----- */
 .exhibit-row-card.activity {
   background: transparent;
   border: 1rpx solid rgba(26, 26, 23, 0.14);
   border-left: 3rpx solid var(--activity-primary);
-}
-
-.exhibit-row-card.activity .exhibit-row-icon {
-  background: var(--activity-tint);
 }
 
 /* ----- 服务订单 — 柔林绿左边框 ----- */
@@ -255,19 +232,11 @@
   border-left: 3rpx solid var(--feeding-primary);
 }
 
-.exhibit-row-card.service .exhibit-row-icon {
-  background: var(--feeding-tint);
-}
-
 /* ----- 团购订单 — 陶土红左边框 ----- */
 .exhibit-row-card.group {
   background: transparent;
   border: 1rpx solid rgba(26, 26, 23, 0.14);
   border-left: 3rpx solid var(--tuan-primary);
-}
-
-.exhibit-row-card.group .exhibit-row-icon {
-  background: var(--tuan-tint);
 }
 
 /* ----- 寄养订单 — 陶土棕左边框 ----- */
@@ -277,19 +246,11 @@
   border-left: 3rpx solid var(--boarding-primary);
 }
 
-.exhibit-row-card.hosting .exhibit-row-icon {
-  background: var(--boarding-tint);
-}
-
 /* ----- 商城订单 — 香槟金左边框 ----- */
 .exhibit-row-card.mall {
   background: transparent;
   border: 1rpx solid rgba(26, 26, 23, 0.14);
   border-left: 3rpx solid var(--mall-primary);
-}
-
-.exhibit-row-card.mall .exhibit-row-icon {
-  background: var(--mall-tint);
 }
 
 /* ----- 中性色卡片（账户设置类） ----- */
