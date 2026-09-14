@@ -385,10 +385,6 @@ Page({
 
     BookingData.set('selectedPetDetails', selectedPetDetails)
 
-    const app = getApp()
-    app.globalData.selectedPets = this.data.selectedPets
-    app.globalData.selectedPetDetails = selectedPetDetails
-
     if (this.data.fromPage === 'service') {
       wx.navigateTo({
         url: '/subpackages/feeding/confirm-service',

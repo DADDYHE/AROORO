@@ -32,15 +32,6 @@ App({
     authService: null,
     isLogout: false,
     serviceIconUrl: 'cloud://cloudbase-d7getcjqy33b13475.636c-cloudbase-d7getcjqy33b13475-1433773870/icons/service-bell-line.svg',
-    bookingData: {
-      selectedDates: null,
-      selectedDatesTimestamp: null,
-      selectedPets: [],
-      selectedPetDetails: [],
-      selectedHost: null,
-      bookingRequirements: {},
-      petFormData: null,
-    },
     selectedAddress: null,
     globalErrorManager: null,
     // Sprint 16：i18n 状态（由 utils/i18n 管理）
