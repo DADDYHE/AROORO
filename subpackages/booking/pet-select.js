@@ -61,9 +61,14 @@ Page({
       calendarFormatter: this._buildFormatter(0),
     })
 
-    // P0 隔离（2026-09-14）：标记当前数据流来源，供 confirm / confirm-service 读取前校验，
-    //   防止上门与寄养板块通过全局 BookingData 互相串扰
-    BookingData.set('flow', fromPage === 'service' ? 'feeding' : 'booking')
+    // P0 隔离（2026-09-14）：统一命名空间隔离——本页是流程起点，声明数据流归属：
+    //   from=service 上门流程（重置 feeding 命名空间），其余（confirm/分享等）寄养流程。
+    //   读写按当前命名空间自动隔离，页面无需再各自校验 flow。
+    if (fromPage === 'service') {
+      BookingData.startFlow('feeding')
+    } else {
+      BookingData.enter('booking')
+    }
 
     const isLoggedIn = authService.isLoggedIn()
     this.setData({ isLoggedIn })
@@ -98,16 +103,9 @@ Page({
   },
 
   resetSelectionStatus() {
+    // P0 隔离（2026-09-14）：命名空间已按板块隔离，无需再逐个字段清理
+    //   （上门 petServices/selectedPetDetails 存于 feeding 命名空间，不污染寄养）
     BookingData.set('selectedPets', [])
-
-    // P0 修复（2026-09-14）：BookingData 为全局内存单例，petServices/selectedPetDetails
-    //   被上门喂养流程（from=service）写入后，寄养入口不清理会残留 →
-    //   寄养确认页显示上门服务内容与价格（喂养/遛狗/服务日期）。
-    //   上门服务配置仅属 feeding 流程，寄养入口（booking/confirm）进入时彻底清理。
-    if (this.data.fromPage !== 'service') {
-      BookingData.set('petServices', {})
-      BookingData.set('selectedPetDetails', [])
-    }
 
     const updatedPets = this.data.pets.map(pet => ({
       ...pet,
