@@ -1,5 +1,5 @@
 {
-  "libVersion": "3.17.2",
+  "libVersion": "3.17.3",
   "projectname": "AROORO宠物服务",
   "condition": {
     "miniprogram": {
@@ -30,6 +30,7 @@
     "checkInvalidKey": true,
     "ignoreDevUnusedFiles": true,
     "bigPackageSizeSupport": true,
-    "useIsolateContext": true
+    "useIsolateContext": true,
+    "useGlassEaselForWxml": true
   }
 }
