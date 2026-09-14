@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "推荐用户明细",
+  "usingComponents": {
+    "login-prompt": "/components/login-prompt/login-prompt"
+  },
+  "navigationBarTextStyle": "white"
+}

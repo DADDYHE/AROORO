@@ -120,6 +120,21 @@ Page({
     this.setData({ [`users[${index}].avatarUrl`]: '/images/default-avatar.svg' })
   },
 
+  // 推荐用户 → 明细页：携带 ownerId 与展示信息（openid/昵称/头像/消费摘要）
+  onUserTap(e) {
+    const index = e.currentTarget.dataset.index
+    const user = this.data.users[index]
+    if (!user || !user._id) {return}
+    const q = [
+      `ownerId=${encodeURIComponent(user._id)}`,
+      `nickName=${encodeURIComponent(user.nickName || '')}`,
+      `avatarUrl=${encodeURIComponent(user.avatarUrl || '')}`,
+      `orderCount=${user.orderCount || 0}`,
+      `totalSpent=${user.totalSpent || 0}`,
+    ].join('&')
+    wx.navigateTo({ url: `/subpackages/partner/referral-user/index?${q}` })
+  },
+
   onReachBottom() {
     if (!this.data.hasMore || this.data.isLoading || this.data.isLoadingMore) {return}
     this.setData({ page: this.data.page + 1 })

@@ -184,6 +184,13 @@
   gap: 20rpx;
   padding: 26rpx 0;
   border-bottom: 1rpx solid rgba(26, 26, 23, 0.14);
+  /* 可点：仅 transform/opacity 按压 */
+  transition: transform 180ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 180ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.user-row--pressed {
+  transform: scale(0.99);
+  opacity: 0.86;
 }
 
 .user-row:last-child {

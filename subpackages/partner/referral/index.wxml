@@ -77,7 +77,7 @@
           <text class="head-label">推荐用户</text>
         </view>
         <view class="user-list">
-          <view wx:for="{{users}}" wx:key="_id" class="user-row">
+          <view wx:for="{{users}}" wx:key="_id" class="user-row" bindtap="onUserTap" data-index="{{index}}" hover-class="user-row--pressed" hover-stay-time="80">
             <image class="user-avatar" src="{{item.avatarUrl || '/images/default-avatar.svg'}}" mode="aspectFill" binderror="onAvatarError" data-index="{{index}}" lazy-load />
             <view class="user-info">
               <text class="user-name">{{item.nickName || '用户'}}</text>

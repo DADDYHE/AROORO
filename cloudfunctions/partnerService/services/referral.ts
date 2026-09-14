@@ -81,6 +81,8 @@ export interface CloudEvent {
   status?: string
   page?: number
   pageSize?: number
+  // 推荐用户详情：按具体被邀请消费用户 openid 过滤佣金记录（可选，缺省为合伙人全部）
+  ownerId?: string
   [k: string]: unknown
 }
 
@@ -107,6 +109,7 @@ export interface CommissionItem {
   _id: string
   orderNo: string
   orderType: string
+  ownerId: string
   commissionAmount: number
   orderAmount: number
   status: string
@@ -353,6 +356,8 @@ export async function getReferralOrders(
   const status = typeof event.status === 'string' && ALLOWED_STATUSES.includes(event.status) ? event.status : null
   const page = Math.max(1, Math.floor(Number(event.page) || 1))
   const pageSize = Math.min(100, Math.max(1, Math.floor(Number(event.pageSize) || 20)))
+  // 推荐用户详情：按具体被邀请消费用户 openid 过滤（可选；为空则返回合伙人全部佣金记录）
+  const ownerId = typeof event.ownerId === 'string' && event.ownerId ? event.ownerId : null
 
   try {
     let user: unknown = null
@@ -377,6 +382,7 @@ export async function getReferralOrders(
     const where: Record<string, unknown> = { inviterId: openid }
     // 寄养佣金双值归一：hosting / boarding 都映射为同一查询
     if (type !== 'all') { where.orderType = (type === 'hosting' || type === 'boarding') ? _.in(['hosting', 'boarding']) : type }
+    if (ownerId) { where.ownerId = ownerId }
     if (status) {
       where.status = status
     } else {
@@ -397,6 +403,7 @@ export async function getReferralOrders(
       _id: (c._id as string) || '',
       orderNo: (c.orderNo as string) || '',
       orderType: (c.orderType as string) || '',
+      ownerId: (c.ownerId as string) || '',
       commissionAmount: Number(c.commissionAmount) || 0,
       orderAmount: Number(c.orderAmount) || 0,
       status: (c.status as string) || 'pending',
@@ -423,6 +430,8 @@ export async function getReferralOrderStats(
     throw err('INVALID_PARAMS', `无效的 type，仅支持：${ALLOWED_TYPES.join(', ')}`)
   }
   const type = rawType
+  // 推荐用户详情：按具体被邀请消费用户 openid 过滤（可选；为空则统计合伙人全部佣金）
+  const ownerId = typeof event.ownerId === 'string' && event.ownerId ? event.ownerId : null
 
   try {
     let user: unknown = null
@@ -444,6 +453,7 @@ export async function getReferralOrderStats(
     const where: Record<string, unknown> = { inviterId: openid }
     // 寄养佣金双值归一：hosting / boarding 都映射为同一查询
     if (type !== 'all') { where.orderType = (type === 'hosting' || type === 'boarding') ? _.in(['hosting', 'boarding']) : type }
+    if (ownerId) { where.ownerId = ownerId }
 
     // M2: 改用 aggregate 在数据库侧统计，避免全量 get() 导致的 OOM 风险
     //   原：db.collection().where().get() 后内存累加（无 limit，大数据集会 OOM）

@@ -179,6 +179,7 @@
         "service-income/index",
         "application/index",
         "referral/index",
+        "referral-user/index",
         "withdrawal/index",
         "i18n-override/index",
         "invitation-create/index",

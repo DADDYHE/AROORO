@@ -39,6 +39,7 @@ export interface CloudEvent {
     status?: string;
     page?: number;
     pageSize?: number;
+    ownerId?: string;
     [k: string]: unknown;
 }
 export interface CloudContext {
@@ -57,6 +58,7 @@ export interface CommissionItem {
     _id: string;
     orderNo: string;
     orderType: string;
+    ownerId: string;
     commissionAmount: number;
     orderAmount: number;
     status: string;

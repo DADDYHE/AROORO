@@ -255,6 +255,8 @@ async function getReferralOrders(event, context, auth) {
     const status = typeof event.status === 'string' && ALLOWED_STATUSES.includes(event.status) ? event.status : null;
     const page = Math.max(1, Math.floor(Number(event.page) || 1));
     const pageSize = Math.min(100, Math.max(1, Math.floor(Number(event.pageSize) || 20)));
+    // 推荐用户详情：按具体被邀请消费用户 openid 过滤（可选；为空则返回合伙人全部佣金记录）
+    const ownerId = typeof event.ownerId === 'string' && event.ownerId ? event.ownerId : null;
     try {
         let user = null;
         try {
@@ -280,6 +282,9 @@ async function getReferralOrders(event, context, auth) {
         if (type !== 'all') {
             where.orderType = (type === 'hosting' || type === 'boarding') ? _.in(['hosting', 'boarding']) : type;
         }
+        if (ownerId) {
+            where.ownerId = ownerId;
+        }
         if (status) {
             where.status = status;
         }
@@ -298,6 +303,7 @@ async function getReferralOrders(event, context, auth) {
             _id: c._id || '',
             orderNo: c.orderNo || '',
             orderType: c.orderType || '',
+            ownerId: c.ownerId || '',
             commissionAmount: Number(c.commissionAmount) || 0,
             orderAmount: Number(c.orderAmount) || 0,
             status: c.status || 'pending',
@@ -320,6 +326,8 @@ async function getReferralOrderStats(event, context, auth) {
         throw err('INVALID_PARAMS', `无效的 type，仅支持：${ALLOWED_TYPES.join(', ')}`);
     }
     const type = rawType;
+    // 推荐用户详情：按具体被邀请消费用户 openid 过滤（可选；为空则统计合伙人全部佣金）
+    const ownerId = typeof event.ownerId === 'string' && event.ownerId ? event.ownerId : null;
     try {
         let user = null;
         try {
@@ -341,6 +349,9 @@ async function getReferralOrderStats(event, context, auth) {
         // 寄养佣金双值归一：hosting / boarding 都映射为同一查询
         if (type !== 'all') {
             where.orderType = (type === 'hosting' || type === 'boarding') ? _.in(['hosting', 'boarding']) : type;
+        }
+        if (ownerId) {
+            where.ownerId = ownerId;
         }
         // M2: 改用 aggregate 在数据库侧统计，避免全量 get() 导致的 OOM 风险
         //   原：db.collection().where().get() 后内存累加（无 limit，大数据集会 OOM）

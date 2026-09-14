@@ -1,0 +1,149 @@
+@import '../common.wxss';
+
+/* ================================================================
+   AROORO 合伙人 · 推荐用户明细（referral-user）
+   ----------------------------------------------------------------
+   头部：深绿 hero + 环形头像 + 昵称 + 消费摘要
+   统计带 + 佣金订单行线列表（状态徽章复用 common.wxss status-*）
+   ================================================================ */
+
+/* ---------- hero 内用户头像 ---------- */
+.ru-avatar-ring {
+  width: 116rpx;
+  height: 116rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--lux-gold-line);
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8rpx;
+}
+
+.ru-avatar {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ru-eyebrow {
+  font-size: 20rpx;
+  color: var(--lux-gold-500);
+  letter-spacing: var(--lux-ls-label, 0.24em);
+  font-weight: 400;
+  margin-top: 2rpx;
+}
+
+/* ---------- 统计带（纸面三列扩展为四列档） ---------- */
+.ru-stats-card {
+  opacity: 1;
+  animation: none;
+}
+
+.ru-stats-row {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.ru-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.ru-stat-value {
+  font-size: 30rpx;
+  font-weight: 300;
+  color: var(--primary-color);
+  font-feature-settings: 'tnum';
+  letter-spacing: 0.01em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ru-stat-label {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.16em;
+  font-weight: 400;
+}
+
+.ru-stat-divider {
+  width: 1rpx;
+  height: 52rpx;
+  background: rgba(26, 26, 23, 0.14);
+  flex-shrink: 0;
+}
+
+/* ---------- 佣金订单行线列表 ---------- */
+.ru-card {
+  opacity: 1;
+  animation: none;
+}
+
+.ru-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.ru-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  min-width: 0;
+  flex: 1;
+}
+
+.ru-type {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+
+.ru-order-no {
+  font-size: 21rpx;
+  color: var(--text-tertiary);
+  font-feature-settings: 'tnum';
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ru-time {
+  font-size: 21rpx;
+  color: var(--text-tertiary);
+  font-feature-settings: 'tnum';
+  letter-spacing: 0.02em;
+}
+
+.ru-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.ru-amount {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--lux-gold-ink, var(--primary-color));
+  font-feature-settings: 'tnum';
+}
+
+.ru-status {
+  font-size: 20rpx;
+  padding: 4rpx 16rpx;
+  border-radius: var(--zy-radius-sm);
+  letter-spacing: 0.06em;
+}

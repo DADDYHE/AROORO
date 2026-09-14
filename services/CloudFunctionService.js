@@ -750,6 +750,19 @@ class AdminService {
     return this.cloud.call('partnerService', { action: 'getReferralOrderStats', ...data }, { useCache: false, ...options })
   }
 
+  /**
+   * 推荐用户详情：按具体被邀请消费用户查询其佣金订单（分页）
+   * @param {{ ownerId: string, page?: number, pageSize?: number, type?: string, status?: string }} data
+   */
+  async getReferralUserOrders(data = {}) {
+    return this.cloud.call('partnerService', { action: 'getReferralOrders', ownerId: data.ownerId, type: data.type || 'all', page: data.page || 1, pageSize: data.pageSize || 20, ...(data.status ? { status: data.status } : {}) }, { useCache: false })
+  }
+
+  /** 推荐用户详情：按具体被邀请消费用户统计其佣金（totalOrders/totalCommission/pending/settled） */
+  async getReferralUserStats(data = {}) {
+    return this.cloud.call('partnerService', { action: 'getReferralOrderStats', ownerId: data.ownerId, type: data.type || 'all' }, { useCache: false })
+  }
+
   async getReferralStats(data = {}, options = {}) {
     return this.cloud.call('partnerService', { action: 'getReferralStats', ...data }, { useCache: false, ...options })
   }
