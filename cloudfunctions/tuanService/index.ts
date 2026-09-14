@@ -932,6 +932,7 @@ async function shipTuanOrder(event: CloudEvent, _context: CloudContext, auth: Au
       const wxRes = await uploadShippingInfo({
         transactionId,
         merchantTradeNo: orderId as string,
+        openid: (order as any).ownerId || '',
         shippingItem: {
           expressCompany,
           expressNo,

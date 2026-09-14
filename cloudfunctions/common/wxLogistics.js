@@ -71,36 +71,53 @@ function httpsPostJson(rawUrl, body) {
 }
 /**
  * 上传发货信息到微信「发货信息管理」。
- * - 必须在订单付款后 7 天内调用，否则会被微信侧判定为「发货超时」。
- * - 同一 transactionId 可重复上传，以最后一次为准。
+ * - 必须在订单付款后 48 小时内调用，否则微信推送「发货超时」提醒。
+ * - 同一支付单重复上报视为重新发货，每笔支付单仅 1 次重新发货机会，重复调用失败请容忍记录。
+ * - 服务类/虚拟商品订单（寄养/喂养/活动）应传 logisticsType=3（虚拟商品，无需物流单号）。
+ *
+ * P0-1 修复（2026-09-13，对照官方文档 /wxa/sec/order/upload_shipping_info）：
+ *   - order_key.order_number_type: 1 → 2（枚举 1=商户单号需 mchid+out_trade_no；2=微信支付单号 transaction_id）
+ *   - 补必填 payer.openid 与 upload_time（RFC3339）
+ *   - 新增 logisticsType 支持虚拟商品发货（logistics_type=3，shipping_list 免物流单号）
  */
 async function uploadShippingInfo(params) {
     if (!params.transactionId) {
         return { ok: false, error: 'missing transactionId' };
     }
-    if (!params.shippingItem || !params.shippingItem.expressNo) {
+    if (!params.openid) {
+        return { ok: false, error: 'missing openid' };
+    }
+    const logisticsType = params.logisticsType ?? 1;
+    if (logisticsType === 1 && (!params.shippingItem || !params.shippingItem.expressNo)) {
         return { ok: false, error: 'missing expressNo' };
+    }
+    if (logisticsType === 1 && (!params.shippingItem || !params.shippingItem.expressCompany)) {
+        return { ok: false, error: 'missing expressCompany' };
+    }
+    if (!params.shippingItem || !params.shippingItem.itemDesc) {
+        return { ok: false, error: 'missing itemDesc' };
     }
     try {
         const token = await (0, wxAccessToken_1.getMiniProgramAccessToken)();
         const url = `${UPLOAD_SHIPPING_URL}?access_token=${encodeURIComponent(token)}`;
+        const shippingItem = { item_desc: params.shippingItem.itemDesc };
+        if (logisticsType === 1) {
+            shippingItem.tracking_no = params.shippingItem.expressNo;
+            shippingItem.express_company = params.shippingItem.expressCompany;
+        }
         const body = {
             order_key: {
-                order_number_type: 1, // 1 = 使用微信支付订单号
+                order_number_type: 2, // 2 = 微信支付订单号
                 transaction_id: params.transactionId,
             },
-            logistics_type: 1, // 1 = 实物快递
+            logistics_type: logisticsType,
             delivery_mode: 1, // 1 = 统一发货
             is_all_delivered: true,
-            shipping_list: [
-                {
-                    tracking_no: params.shippingItem.expressNo,
-                    express_company: params.shippingItem.expressCompany,
-                    item_desc: params.shippingItem.itemDesc || '商品已发货',
-                },
-            ],
-            // uploader: 'AROORO小程序后台', // 可选
-            //payer_openid 不传，由微信侧根据 transactionId 自动反查
+            shipping_list: [shippingItem],
+            upload_time: new Date().toISOString(), // RFC 3339，如 2022-12-15T13:29:35.120+08:00
+            payer: {
+                openid: params.openid,
+            },
         };
         const result = await httpsPostJson(url, body);
         if (result && result.errcode === 0) {

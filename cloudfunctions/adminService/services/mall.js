@@ -887,6 +887,7 @@ async function shipMallOrder(event, context, auth) {
       const wxRes = await uploadShippingInfo({
         transactionId,
         merchantTradeNo: orderId,
+        openid: orderRes.data.ownerId || '',
         shippingItem: {
           expressCompany,
           expressNo,

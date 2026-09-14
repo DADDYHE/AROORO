@@ -44,6 +44,9 @@ const { WECHAT_PAY } = require('../common/config')
 // P0-6: 资金事务失败主动告警
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { recordAlert } = require('../common/alert')
+// P0-3: 服务类订单支付成功后上报微信「发货信息管理」（虚拟商品发货，logistics_type=3）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { uploadShippingInfo } = require('../common/wxLogistics')
 
 // =====================================================================
 // 类型定义
@@ -478,6 +481,71 @@ async function applyPaidStatus(
 }
 
 /**
+ * 服务类订单支付成功后上报微信「虚拟商品发货」（发货信息管理 logistics_type=3）。
+ *
+ * 背景（2026-09-13）：微信《商家自营类小程序运营规范》要求小程序内所有支付订单
+ * 完成「发货信息录入」后方可结算资金，支付后 48h 未录入会推送发货超时提醒。
+ * 寄养/喂养/活动为纯服务（无实物物流），以 logistics_type=3（虚拟商品）上报，
+ * shipping_list 免填物流单号；mall/tuan 实物订单由后台发货动作上报（logistics_type=1），不走此路径。
+ *
+ * best-effort：调用失败仅记日志，不抛出、不阻断回调 ACK。
+ * 注意：同一支付单重复上报视为「重新发货」，微信侧每笔支付单仅 1 次重新发货机会，
+ * 重复上报返回错误属预期，按 warn 记录即可（回调幂等重放场景）。
+ */
+async function reportVirtualShippingForServiceOrder(
+  orderType: OrderType,
+  existingOrder: NotifyOrderDoc,
+  transactionId: string | undefined
+): Promise<void> {
+  if (!transactionId || !existingOrder || !existingOrder._id) { return }
+  const ownerId = existingOrder.ownerId || existingOrder.openid || ''
+  if (!ownerId) { return }
+
+  const od = existingOrder as unknown as Record<string, unknown>
+  // 寄养定金/尾款为两笔独立支付单：本次回调对应哪一笔由支付前订单状态判定
+  //   - payType=deposit 且支付前 status=pending_payment → 定金单
+  //   - payType=deposit 且支付前 status=deposit_paid   → 尾款单
+  //   - 其余（full / feeding / activity）               → 全款单
+  let stage = ''
+  if (orderType === 'order') {
+    if (od.payType === 'deposit') {
+      stage = od.status === 'deposit_paid' ? '尾款' : '定金'
+    } else {
+      stage = '全款'
+    }
+  }
+  const descMap: Record<string, string> = {
+    order: `寄养服务${stage}`,
+    feeding: '上门喂养服务',
+    activity: '活动报名',
+  }
+  const itemDesc = descMap[orderType] || '服务订单'
+
+  const wxRes = await uploadShippingInfo({
+    transactionId,
+    merchantTradeNo: existingOrder._id,
+    logisticsType: 3, // 虚拟商品：无实体配送
+    openid: ownerId,
+    shippingItem: { itemDesc },
+  })
+  if (wxRes.ok) {
+    logger.info('paymentNotify.reportVirtualShipping.success', {
+      orderId: existingOrder._id,
+      orderType,
+      outTradeNo: existingOrder.outTradeNo,
+    })
+  } else {
+    // 重复上报（重新发货机会已用尽）或微信侧异常，best-effort 记录
+    logger.warn('paymentNotify.reportVirtualShipping.fail', {
+      orderId: existingOrder._id,
+      orderType,
+      outTradeNo: existingOrder.outTradeNo,
+      error: wxRes.error,
+    })
+  }
+}
+
+/**
  * 触发 commission 记录（best-effort）
  */
 async function triggerCommission(orderType: string, order: NotifyOrderDoc): Promise<void> {
@@ -812,6 +880,23 @@ export async function paymentNotify(
             const business = orderType === 'feeding' ? 'feeding'
               : (orderType === 'mall' ? 'mall' : (orderType === 'tuan' ? 'tuan' : (orderType === 'activity' ? 'activity' : 'boarding')))
             await triggerOrderCouponUse(existingOrder, business)
+          }
+
+          // P0-3（2026-09-13）：服务类订单（寄养/喂养/活动）支付成功后上报微信「虚拟商品发货」。
+          //   微信「发货信息管理」对小程序内所有支付订单要求 48h 内录入发货信息，否则资金冻结不结算。
+          //   服务类无实物物流，须以 logistics_type=3（虚拟商品）上报；mall/tuan 实物订单由发货动作上报，不走此路径。
+          //   best-effort：失败只记日志，不阻断回调（避免支付回调被 500 重试轰炸）。
+          //   寄养定金/尾款为两笔独立支付单，各自支付成功时分别上报。
+          if (orderType === 'order' || orderType === 'feeding' || orderType === 'activity') {
+            Promise.resolve()
+              .then(() => reportVirtualShippingForServiceOrder(orderType, existingOrder, transaction_id))
+              .catch((shipErr) => {
+                logger.warn('paymentNotify.reportVirtualShipping.exception', {
+                  orderId: existingOrder._id,
+                  orderType,
+                  msg: shipErr && (shipErr as Error).message,
+                })
+              })
           }
         }
       } else {

@@ -1,16 +1,20 @@
 export interface ShippingItem {
-    /** 微信快递公司编码，如 'ZTO' / 'SF' */
-    expressCompany: string;
-    /** 快递单号 */
-    expressNo: string;
-    /** 商品描述，例如 '宠物用品 ×1' */
-    itemDesc?: string;
+    /** 微信快递公司编码，如 'ZTO' / 'SF'；仅实体物流（logisticsType=1）必填 */
+    expressCompany?: string;
+    /** 快递单号；仅实体物流（logisticsType=1）必填 */
+    expressNo?: string;
+    /** 商品描述，例如 '宠物用品 ×1' / '寄养服务定金' */
+    itemDesc: string;
 }
 export interface UploadShippingInfoParams {
     /** 微信支付订单号 */
     transactionId: string;
     /** 商家内部订单号（订单 _id） */
     merchantTradeNo: string;
+    /** 物流模式：1=实体物流 2=同城配送 3=虚拟商品（无实体配送）4=用户自提；默认 1 */
+    logisticsType?: 1 | 2 | 3 | 4;
+    /** 购买用户 openid（订单 ownerId），payer.openid 为微信必填字段 */
+    openid: string;
     shippingItem: ShippingItem;
 }
 export interface UploadShippingInfoResult {
@@ -52,8 +56,14 @@ export interface TraceWaybillResult {
 }
 /**
  * 上传发货信息到微信「发货信息管理」。
- * - 必须在订单付款后 7 天内调用，否则会被微信侧判定为「发货超时」。
- * - 同一 transactionId 可重复上传，以最后一次为准。
+ * - 必须在订单付款后 48 小时内调用，否则微信推送「发货超时」提醒。
+ * - 同一支付单重复上报视为重新发货，每笔支付单仅 1 次重新发货机会，重复调用失败请容忍记录。
+ * - 服务类/虚拟商品订单（寄养/喂养/活动）应传 logisticsType=3（虚拟商品，无需物流单号）。
+ *
+ * P0-1 修复（2026-09-13，对照官方文档 /wxa/sec/order/upload_shipping_info）：
+ *   - order_key.order_number_type: 1 → 2（枚举 1=商户单号需 mchid+out_trade_no；2=微信支付单号 transaction_id）
+ *   - 补必填 payer.openid 与 upload_time（RFC3339）
+ *   - 新增 logisticsType 支持虚拟商品发货（logistics_type=3，shipping_list 免物流单号）
  */
 export declare function uploadShippingInfo(params: UploadShippingInfoParams): Promise<UploadShippingInfoResult>;
 export interface TraceWaybillResult {

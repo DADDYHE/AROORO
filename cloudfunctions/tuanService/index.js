@@ -730,6 +730,7 @@ async function shipTuanOrder(event, _context, auth) {
             const wxRes = await uploadShippingInfo({
                 transactionId,
                 merchantTradeNo: orderId,
+                openid: order.ownerId || '',
                 shippingItem: {
                     expressCompany,
                     expressNo,
