@@ -195,11 +195,23 @@ export async function login(
           // M3 修复：并发 login 竞态保护。两个并发请求都读到 user 不存在时会各自 set，
           // 后到的 set 会覆盖先到者的 inviterId/role。用事务 + 事务内重查避免覆盖。
           const transaction = await db.startTransaction()
+          // 事务内 doc().get() 对「不存在的文档」会抛 does-not-exist 错误，
+          // 与普通查询（返回 data:null）不同。若不加处理会被误判为事务冲突，
+          // 导致新用户创建失败（登录失败）。此处捕获该错误并视为「不存在」。
+          let createdUser: UserRecord
           try {
-            const existRes = await transaction.collection('users').doc(openid).get()
-            if (existRes.data) {
+            let existedUser: UserRecord | null = null
+            try {
+              const existRes = await transaction.collection('users').doc(openid).get()
+              existedUser = (existRes.data as UserRecord | null) ?? null
+            } catch (e) {
+              // does-not-exist：视为事务内不存在，继续走创建
+              existedUser = null
+            }
+
+            if (existedUser) {
               // 并发下被其他请求抢先创建，直接复用，不再覆盖
-              user = existRes.data as UserRecord
+              createdUser = existedUser
             } else {
               const userData: Record<string, unknown> = {
                 openid,
@@ -219,8 +231,9 @@ export async function login(
               }
 
               await transaction.collection('users').doc(openid).set({ data: userData })
-              user = { _id: openid, ...userData } as UserRecord
+              createdUser = { _id: openid, ...userData } as UserRecord
             }
+            user = createdUser
             await transaction.commit()
           } catch (txErr) {
             await transaction.rollback().catch(() => {})
