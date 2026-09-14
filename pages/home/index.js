@@ -394,7 +394,9 @@ const { orderManager } = require('../../services/OrderManager')
 
     const routes = {
       boarding: '/pages/boarding/index',
-      feeding: '/subpackages/feeding/confirm-service',
+      // P0 修复（2026-09-14）：上门喂养必须走 pet-select?from=service 先选宠物并配置上门服务，
+      //   直接跳 confirm-service 会误读 BookingData 中的寄养板块残留宠物/服务数据
+      feeding: '/subpackages/booking/pet-select?from=service',
       activity: '/subpackages/activity/list',
       mall: '/subpackages/mall/product-list',
       tuan: '/pages/discover/index',

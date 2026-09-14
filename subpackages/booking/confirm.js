@@ -118,6 +118,14 @@ Page({
 
   async loadOrderInfo() {
     try {
+      // P0 隔离（2026-09-14）：仅接受寄养流程（flow=booking）写入的数据；
+      //   直接进入本页（boarding tab / 家庭详情 / 收藏）时若 flow 为上门流程（feeding）残留，
+      //   先彻底清除，防止显示上门服务内容与价格
+      if (BookingData.get('flow') !== 'booking') {
+        BookingData.set('selectedPets', [])
+        BookingData.set('selectedPetDetails', [])
+        BookingData.set('petServices', {})
+      }
       const bookingData = BookingData.get()
       let selectedDates = bookingData.selectedDates
       const selectedPets = bookingData.selectedPets
@@ -563,9 +571,21 @@ Page({
   },
 
   onShow() {
-    const globalSelectedPets = BookingData.get('selectedPets')
-    const globalSelectedPetDetails = BookingData.get('selectedPetDetails')
-    const globalPetServices = BookingData.get('petServices')
+    // P0 隔离（2026-09-14）：仅寄养流程（flow=booking）的数据可被本页读取；
+    //   上门流程残留（flow=feeding）一律忽略，防止串扰
+    const flow = BookingData.get('flow')
+    const globalSelectedPets = flow === 'booking' ? BookingData.get('selectedPets') : null
+    const globalSelectedPetDetails = flow === 'booking' ? BookingData.get('selectedPetDetails') : null
+    const globalPetServices = flow === 'booking' ? BookingData.get('petServices') : null
+
+    // 兜底（2026-09-14）：无当前选中宠物却带上门服务配置（petServices）→
+    //   视为上门喂养流程残留（未提交/未走寄养 pet-select 直接进入本页），丢弃，
+    //   防止寄养确认页显示上门服务内容与价格。
+    if (globalPetServices && Object.keys(globalPetServices).length > 0 &&
+        (!globalSelectedPets || globalSelectedPets.length === 0)) {
+      BookingData.set('petServices', {})
+      this.setData({ petServices: {} })
+    }
 
     const updates = {}
 

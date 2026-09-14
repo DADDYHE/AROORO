@@ -348,6 +348,12 @@ Page({
       })
 
       if (payResult && payResult.paid) {
+        // P0 修复（2026-09-14）：提交成功后清理全局 BookingData，
+        //   防止上门服务配置残留到寄养流程（寄养确认页误显示上门服务内容与价格）
+        BookingData.set('flow', '')
+        BookingData.set('petServices', {})
+        BookingData.set('selectedPetDetails', [])
+        BookingData.set('selectedPets', [])
         wx.showToast({ title: '下单成功', icon: 'success' })
         setTimeout(() => {
           wx.redirectTo({
@@ -374,8 +380,29 @@ Page({
   },
 
   async _loadOrderInfo() {
-    const selectedPetDetails = BookingData.get('selectedPetDetails') || []
-    const petServices = BookingData.get('petServices') || {}
+    // P0 隔离（2026-09-14）：仅接受上门流程（flow=feeding）写入的数据；
+    //   寄养流程残留（flow=booking）或空数据一律不读取，防止上门订单错带寄养宠物/数据
+    if (BookingData.get('flow') !== 'feeding') {
+      this.setData({
+        selectedPetDetails: [],
+        petServices: {},
+        loading: false,
+      })
+      this._calculatePrice()
+      return
+    }
+
+    let selectedPetDetails = BookingData.get('selectedPetDetails') || []
+    let petServices = BookingData.get('petServices') || {}
+
+    // 防御（2026-09-14）：上门流程产生的数据是 selectedPetDetails + petServices 成对出现
+    //   （pet-select?from=service 的 confirmSelectPet 强制配服务日期后才写入）；
+    //   若读到宠物却无配套上门服务配置 → 数据不完整，丢弃
+    if (selectedPetDetails.length > 0 && Object.keys(petServices).length === 0) {
+      selectedPetDetails = []
+      petServices = {}
+      BookingData.set('selectedPetDetails', [])
+    }
 
     this.setData({
       selectedPetDetails,
