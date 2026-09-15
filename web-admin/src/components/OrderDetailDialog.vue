@@ -28,7 +28,29 @@
 
           <!-- 商城/团购：收货人 -->
           <template v-if="orderType === 'mall'">
-            <el-descriptions-item label="商品">{{ order.productName }}<el-tag v-if="order.items && order.items.length > 1" size="small" style="margin-left:8px">等{{ order.items.length }}件</el-tag></el-descriptions-item>
+            <el-descriptions-item label="商品明细" :span="2">
+              <div v-if="mallItems.length" class="mall-item-list">
+                <div v-for="(it, i) in mallItems" :key="i" class="mall-item-row">
+                  <el-image
+                    v-if="it.productImage"
+                    :src="resolveCloudUrl(it.productImage)"
+                    :preview-src-list="[resolveCloudUrl(it.productImage)]"
+                    preview-teleported
+                    fit="cover"
+                    class="mall-item-img"
+                  />
+                  <div class="mall-item-info">
+                    <div class="mall-item-name">{{ it.productName || '-' }}</div>
+                    <div v-if="it.skuText" class="mall-item-sku">规格：{{ it.skuText }}<span v-if="it.skuId" class="mall-item-skuid">（SKU: {{ it.skuId }}）</span></div>
+                  </div>
+                  <div class="mall-item-right">
+                    <div class="mall-item-calc">{{ formatMoney(it.unitPrice) }} × {{ it.quantity }}</div>
+                    <div class="mall-item-amount">小计 {{ formatMoney(it.amount) }}</div>
+                  </div>
+                </div>
+              </div>
+              <span v-else>{{ order.productName || '-' }}</span>
+            </el-descriptions-item>
             <el-descriptions-item label="金额">{{ formatMoney(order.totalAmount) }}</el-descriptions-item>
             <el-descriptions-item label="收货人">{{ order.receiverName }}</el-descriptions-item>
             <el-descriptions-item label="联系电话">{{ order.receiverPhone }}</el-descriptions-item>
@@ -160,6 +182,7 @@ import { getFeedingOrderDetail, handleFeedingOrder } from '@/api/feeding'
 import { getActivityOrderDetail } from '@/api/activity'
 import { adminRefund } from '@/api/refund'
 import { formatDate, formatMoney } from '@/utils/format'
+import { resolveCloudUrl } from '@/utils/cloudImage'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TAG_TYPE } from '@/constants/order'
 import { EXPRESS_COMPANY_OPTIONS, getExpressCompanyLabel } from '@/constants/expressCompany'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -223,6 +246,17 @@ const petNamesText = computed(() => {
     return details.map(p => p.name || p.petName || p.nickName || '').filter(Boolean).join('、') || '-'
   }
   return order.value.petName || order.value.petNames || '-'
+})
+
+// ============ 商城订单商品明细（含 SKU 与数量）============
+// 新订单 items 含每件商品 skuText/quantity；旧订单兜底顶层 productName/skuText/quantity
+const mallItems = computed(() => {
+  const o = order.value
+  if (Array.isArray(o.items) && o.items.length > 0) return o.items
+  if (o.productName) {
+    return [{ productName: o.productName, skuText: o.skuText || '', skuId: o.skuId || '', quantity: o.quantity || 1, unitPrice: o.unitPrice, amount: o.totalAmount }]
+  }
+  return []
 })
 
 // ============ 操作按钮 ============
@@ -430,4 +464,15 @@ async function openLogisticsDrawer() {
 <style scoped>
 .op-bar { margin-bottom: 16px; }
 .hint { margin-left: 10px; color: #999; font-size: 12px; }
+.mall-item-list { width: 100%; }
+.mall-item-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #ebeef5; }
+.mall-item-row:last-child { border-bottom: none; }
+.mall-item-img { width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0; }
+.mall-item-info { flex: 1; min-width: 0; }
+.mall-item-name { font-size: 14px; color: #303133; font-weight: 500; }
+.mall-item-sku { font-size: 12px; color: #909399; margin-top: 2px; }
+.mall-item-skuid { color: #c0c4cc; }
+.mall-item-right { text-align: right; flex-shrink: 0; }
+.mall-item-calc { font-size: 13px; color: #606266; }
+.mall-item-amount { font-size: 13px; color: #303133; font-weight: 600; margin-top: 2px; }
 </style>

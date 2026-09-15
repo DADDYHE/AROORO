@@ -4,7 +4,15 @@
       <StatusFilter :options="statusOptions" v-model="statusFilter" @change="onSearch" />
     </template>
     <el-table-column prop="orderNo" label="订单号" width="160" />
-    <el-table-column prop="productName" label="商品" min-width="180" show-overflow-tooltip />
+    <el-table-column label="商品明细" min-width="260">
+      <template #default="{ row }">
+        <div v-for="(it, i) in rowItems(row)" :key="i" class="order-item-line">
+          <span class="oi-name">{{ it.productName || '-' }}</span>
+          <span v-if="it.skuText" class="oi-sku">{{ it.skuText }}</span>
+          <span class="oi-qty">×{{ it.quantity }}</span>
+        </div>
+      </template>
+    </el-table-column>
     <el-table-column prop="receiverName" label="收货人" width="100" />
     <el-table-column label="联系电话" width="130">
       <template #default="{ row }">{{ row.contactPhone || row.receiverPhone || row.buyerPhone || '-' }}</template>
@@ -48,6 +56,12 @@ function openDetail(row) {
   detailVisible.value = true
 }
 
+// 商品明细：新订单 items 含每件 skuText/quantity；旧订单兜底顶层字段
+function rowItems(row) {
+  if (Array.isArray(row.items) && row.items.length > 0) return row.items
+  return [{ productName: row.productName, skuText: row.skuText || '', quantity: row.quantity || 1 }]
+}
+
 function fetchFn(params) {
   const p = { ...params }
   if (statusFilter.value) p.status = statusFilter.value
@@ -65,3 +79,10 @@ function onSearch() {
   tableRef.value?.onSearch()
 }
 </script>
+
+<style scoped>
+.order-item-line { display: flex; align-items: center; gap: 6px; line-height: 1.8; }
+.oi-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oi-sku { flex-shrink: 0; font-size: 12px; color: #909399; background: #f4f4f5; border-radius: 3px; padding: 0 4px; }
+.oi-qty { flex-shrink: 0; color: #606266; font-weight: 600; }
+</style>

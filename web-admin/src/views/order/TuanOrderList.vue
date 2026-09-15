@@ -8,7 +8,15 @@
     <el-table-column label="联系电话" width="130">
       <template #default="{ row }">{{ row.contactPhone || row.buyerPhone || row.phone || '-' }}</template>
     </el-table-column>
-    <el-table-column prop="productName" label="团购商品" min-width="180" show-overflow-tooltip />
+    <el-table-column label="团购商品" min-width="220">
+      <template #default="{ row }">
+        <div class="order-item-line">
+          <span class="oi-name">{{ row.productName || '-' }}</span>
+          <span v-if="row.skuText" class="oi-sku">{{ row.skuText }}</span>
+          <span class="oi-qty">×{{ row.quantity || 1 }}</span>
+        </div>
+      </template>
+    </el-table-column>
     <el-table-column prop="totalAmount" label="金额" width="100">
       <template #default="{ row }">{{ formatMoney(row.totalAmount || row.totalPrice) }}</template>
     </el-table-column>
@@ -62,3 +70,10 @@ function onSearch() {
   tableRef.value?.onSearch()
 }
 </script>
+
+<style scoped>
+.order-item-line { display: flex; align-items: center; gap: 6px; }
+.oi-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oi-sku { flex-shrink: 0; font-size: 12px; color: #909399; background: #f4f4f5; border-radius: 3px; padding: 0 4px; }
+.oi-qty { flex-shrink: 0; color: #606266; font-weight: 600; }
+</style>
