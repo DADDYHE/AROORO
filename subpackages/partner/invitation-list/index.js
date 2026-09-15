@@ -9,6 +9,7 @@
 
 const { OrderService } = require('../../../services/CloudFunctionService')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
+const { buildSharePath } = require('../../../utils/share.js')
 
 const authGateBehavior = require('../../../behaviors/authGateBehavior')
 const STATUS_TEXT = {
@@ -181,10 +182,10 @@ Page({
         title: inv.hostSnapshot && inv.hostSnapshot.hostName
           ? `寄养开单邀请 · ${inv.hostSnapshot.hostName} · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`
           : `寄养开单邀请 · ${inv.startDate} 至 ${inv.endDate} · ¥${inv.totalPrice}`,
-        path: `/subpackages/booking/invitation-fill/index?code=${pick.shareCode}`,
+        path: buildSharePath(`/subpackages/booking/invitation-fill/index?code=${pick.shareCode}`),
       }
     }
-    return { title: 'AROORO · 家庭寄养', path: '/subpackages/partner/invitation-create/index' }
+    return { title: 'AROORO · 家庭寄养', path: buildSharePath('/subpackages/partner/invitation-create/index') }
   },
 
   // ---------- 取消 ----------

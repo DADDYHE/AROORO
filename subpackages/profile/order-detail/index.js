@@ -7,6 +7,7 @@ const cloudImageBehavior = require('../../../behaviors/cloudImageBehavior')
 const countdownBehavior = require('../../../behaviors/countdownBehavior')
 const { STATUS_TEXT_MAP } = require('../utils/orderConstants')
 const { formatDate, formatDateTime } = require('../utils/dateUtils')
+const { buildSharePath } = require('../../../utils/share.js')
 
 const STATUS_DESC_MAP = {
   pending_payment: '请尽快完成付款，超时订单将自动取消',
@@ -81,7 +82,7 @@ Page({
     const order = this.data.order || {}
     return {
       title: `寄养订单待支付 · ${order.hostName || '家庭寄养'} · ¥${order.remainAmount > 0 ? order.remainAmount : order.totalPrice}`,
-      path: `/subpackages/profile/order-detail/index?id=${order._id || ''}&from=hostShare`,
+      path: buildSharePath(`/subpackages/profile/order-detail/index?id=${order._id || ''}&from=hostShare`),
     }
   },
 

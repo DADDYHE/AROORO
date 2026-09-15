@@ -14,6 +14,7 @@
 
 const { OrderService, PetService } = require('../../../services/CloudFunctionService')
 const PaymentService = require('../../../services/PaymentService')
+const { buildSharePath } = require('../../../utils/share.js')
 const { authService } = require('../../../services/AuthService')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 
@@ -193,7 +194,7 @@ Page({
       title: inv
         ? `寄养开单邀请 · ${inv.hostSnapshot && inv.hostSnapshot.hostName || '家庭寄养'} · ${inv.startDate} 至 ${inv.endDate}`
         : '寄养开单邀请',
-      path: `/subpackages/booking/invitation-fill/index?code=${code}`,
+      path: buildSharePath(`/subpackages/booking/invitation-fill/index?code=${code}`),
     }
   },
 

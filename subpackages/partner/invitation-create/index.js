@@ -9,6 +9,7 @@
 const { OrderService } = require('../../../services/CloudFunctionService')
 const authGateBehavior = require('../../../behaviors/authGateBehavior')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
+const { buildSharePath } = require('../../../utils/share.js')
 
 const PET_TYPE_TEXT = {
   dog: '狗狗',
@@ -294,10 +295,10 @@ Page({
     if (s && s.shareCode) {
       return {
         title: `寄养开单邀请 · ${s.startDate} 至 ${s.endDate} · ¥${s.totalPrice}`,
-        path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}`,
+        path: buildSharePath(`/subpackages/booking/invitation-fill/index?code=${s.shareCode}`),
       }
     }
-    return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' }
+    return { title: 'AROORO · 家庭寄养', path: buildSharePath('/pages/boarding/index') }
   },
 
   noop() { /* 弹层遮罩占位 */ },

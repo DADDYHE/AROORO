@@ -3,6 +3,7 @@ const __i18nT = (k) => __i18n.t(k, __i18n.getLocale())
 // 视频列表页面逻辑
 const authGateBehavior = require('../../../behaviors/authGateBehavior')
 const { ListBehavior } = require('../../../behaviors/listBehavior')
+const { buildSharePath } = require('../../../utils/share.js')
 
 Page({
   behaviors: [ListBehavior, authGateBehavior],
@@ -80,12 +81,9 @@ Page({
    * 用户点击右上角分享
    */
   onShareAppMessage () {
-    const app = getApp()
-    const userInfo = app?.globalData?.userInfo
-    const inviterId = ((userInfo?.isPartner || userInfo?.permissions?.length) && userInfo?.openid) ? userInfo.openid : ''
     return {
       title: __i18nT('BIZ_6RDYGY'),
-      path: inviterId ? `/subpackages/other/video-list/index?inviterId=${inviterId}` : '/subpackages/other/video-list/index',
+      path: buildSharePath('/subpackages/other/video-list/index'),
     }
   },
 })

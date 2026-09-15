@@ -6,6 +6,7 @@ const app = getApp()
 const { ListBehavior } = require('../../../behaviors/listBehavior')
 const pageI18n = require('../../../utils/page-i18n.js')
 const i18n = require('../../../utils/i18n.js')
+const { buildSharePath } = require('../../../utils/share.js')
 
 const authGateBehavior = require('../../../behaviors/authGateBehavior')
 // 档案状态 → 展示文案
@@ -273,7 +274,7 @@ Page({
       const inv = s.inv || {}
       return {
         title: `寄养开单邀请 · ${inv.hostSnapshot && inv.hostSnapshot.hostName || '家庭寄养'} · ${inv.startDate} 至 ${inv.endDate}`,
-        path: `/subpackages/booking/invitation-fill/index?code=${s.shareCode}`,
+        path: buildSharePath(`/subpackages/booking/invitation-fill/index?code=${s.shareCode}`),
         imageUrl: inv.hostSnapshot && inv.hostSnapshot.avatarUrl ? inv.hostSnapshot.avatarUrl : '',
       }
     }
@@ -281,7 +282,7 @@ Page({
       const ord = this.data.orders.find(o => o._id === s.orderId)
       return {
         title: ord ? `寄养订单 · ${ord.statusText} · ${ord.startDate || ''}` : '寄养订单',
-        path: `/subpackages/profile/order-detail/index?id=${s.orderId}`,
+        path: buildSharePath(`/subpackages/profile/order-detail/index?id=${s.orderId}`),
       }
     }
     // 无弹层上下文（右上角直达转发）：兜底最新一条待填写邀请
@@ -289,10 +290,10 @@ Page({
     if (latest) {
       return {
         title: `寄养开单邀请 · ${latest.startDate} 至 ${latest.endDate} · ¥${latest.totalPrice}`,
-        path: `/subpackages/booking/invitation-fill/index?code=${latest.shareCode}`,
+        path: buildSharePath(`/subpackages/booking/invitation-fill/index?code=${latest.shareCode}`),
       }
     }
-    return { title: 'AROORO · 家庭寄养', path: '/pages/boarding/index' }
+    return { title: 'AROORO · 家庭寄养', path: buildSharePath('/pages/boarding/index') }
   },
 
   onCancelInvitation(e) {
