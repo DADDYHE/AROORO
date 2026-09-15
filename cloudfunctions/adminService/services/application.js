@@ -11,8 +11,9 @@ const logger = createLogger('adminService.application')
 // 权限门禁与 ACTION_PERMISSIONS（super_admin）对齐：
 // 允许超级管理员（HTTP 路径 roles 含 super_admin / 小程序路径 isSuperAdmin）与合作伙伴审批。
 function canApproveApplications(auth) {
+  // A 收紧：审批（通过/拒绝）仅限 super_admin，与 ACTION_PERMISSIONS 动作表一致。
+  // 移除 isPartner 分支，避免普通合伙人越权批注他人成为合伙人（纵深防御）。
   return Boolean(auth && (
-    auth.isPartner === true ||
     auth.isSuperAdmin === true ||
     (Array.isArray(auth.roles) && auth.roles.includes('super_admin'))
   ))
@@ -106,6 +107,16 @@ async function rejectApplication(event, context, auth) {
   const { applicationId, rejectReason } = event
   if (!applicationId) {
     throw err('INVALID_PARAMS', '缺少申请ID')
+  }
+
+  // B 修复：拒绝同样要求申请处于 pending，避免把已批准的申请翻成 rejected
+  // （否则会出现「admins 已是 active 合伙人」与「admin_applications 显示 rejected」的状态分叉）。
+  const appRes = await db.collection('admin_applications').doc(applicationId).get()
+  if (!appRes.data) {
+    throw err('NOT_FOUND', '申请不存在')
+  }
+  if (appRes.data.status !== 'pending') {
+    throw err('BUSINESS_ERROR', '申请状态不是待审核')
   }
 
   await db.collection('admin_applications').doc(applicationId).update({
