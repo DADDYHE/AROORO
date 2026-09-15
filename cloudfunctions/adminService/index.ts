@@ -366,11 +366,13 @@ const ACTION_PERMISSIONS: Record<string, PermissionLevel> = {
   getTuanDealOrders: 'partner',
   getTuanDealOrderDetail: 'partner',
   handleTuanOrder: 'partner',
-  getTuanLeaderList: 'partner',
-  getTuanLeaderCommissions: 'partner',
-  getTuanCommissionStats: 'partner',
-  settleCommissions: 'partner',
-  getCommissionList: 'partner',
+  // 跨合伙人数据读取 + 结算：仅平台（super_admin）可执行。
+  // 合伙人无法登录 web 管理端，这些 action 无合伙人生成用途；收紧防止越权调用。
+  getTuanLeaderList: 'super_admin',
+  getTuanLeaderCommissions: 'super_admin',
+  getTuanCommissionStats: 'super_admin',
+  settleCommissions: 'super_admin',
+  getCommissionList: 'super_admin',
   settleCommissionLegacy: 'super_admin',
 
   // partner 自己的统计
