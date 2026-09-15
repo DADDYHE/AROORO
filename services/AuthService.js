@@ -196,7 +196,10 @@ class AuthService {
       })
 
       if (!res.result || res.result.code !== 0) {
-        throw new Error(res.result?.message || '云函数调用失败')
+        const bizErr = new Error(res.result?.message || '云函数调用失败')
+        // P3 修复：业务失败（如限流/参数校验）标记后不重试，仅网络/超时类错误重试
+        bizErr.isBusiness = true
+        throw bizErr
       }
 
       const { user, isNewUser } = res.result.data
@@ -224,8 +227,11 @@ class AuthService {
       return { success: true, user, isNewUser }
     } catch (error) {
       console.error('[AuthService] 云函数登录失败:', error)
-      if (retry < 1) {
-        console.log('[AuthService] 自动重试登录')
+      // P3 修复：仅对网络/超时等基础调用失败重试；业务失败（isBusiness）不重试，
+      //   避免在限流(429)/参数报错时重复重试烧掉登录配额或重复打库。
+      const isBusiness = Boolean(error && error.isBusiness)
+      if (retry < 1 && !isBusiness) {
+        console.log('[AuthService] 网络/超时类失败，自动重试登录')
         return this._doCloudLogin(app, options, retry + 1)
       }
       throw error
@@ -239,6 +245,20 @@ class AuthService {
     console.log('[AuthService] 已更新 globalData:', {
       hasUserInfo: Boolean(data.userInfo),
     })
+  }
+
+  // P3 修复：老用户静默恢复的心跳。只更新服务端 lastLoginAt，不做资料/邀请变更。
+  // 由 app.js 后台启动阶段在已登录时调用，修正「静默恢复不更新 lastLoginAt」的统计失真。
+  async _touchLogin() {
+    try {
+      await wx.cloud.callFunction({
+        name: 'userService',
+        data: { action: 'touchLogin' },
+        timeout: 15000,
+      })
+    } catch (e) {
+      console.warn('[AuthService] 刷新登录时间失败:', e.message)
+    }
   }
 
   async _refreshAdminStatus(app) {

@@ -56,6 +56,7 @@ exports.handlers = {
     getConfig: authHandlers.getConfig,
     checkAdminStatus: authHandlers.checkAdminStatus,
     getMyProfileSummary: authHandlers.getMyProfileSummary,
+    touchLogin: authHandlers.touchLogin,
     // 通知
     getNotificationList: notificationHandlers.getNotificationList,
     markNotificationRead: notificationHandlers.markNotificationRead,

@@ -238,6 +238,10 @@ App({
         authService._refreshAdminStatus(this).catch(e => {
           console.warn('[APP] 后台刷新合作伙伴状态失败:', e.message)
         })
+        // P3 修复：老用户静默恢复时刷新 lastLoginAt（含心跳），修正活跃/流失统计失真
+        authService._touchLogin().catch(e => {
+          console.warn('[APP] 后台刷新登录时间失败:', e.message)
+        })
       }
 
       await appStartupOptimizer.executeDeferredTasks()

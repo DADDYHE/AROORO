@@ -22,7 +22,7 @@
  *   npx --yes -p typescript@5.4.5 tsc -p tsconfig.userService.json
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMyProfileSummary = exports.checkAdminStatus = exports.getConfig = exports.getAllUserInfo = exports.getPhoneNumber = exports.updateUserInfo = exports.checkUserInfo = exports.syncIdentity = exports.getIdentity = exports.login = void 0;
+exports.touchLogin = exports.getMyProfileSummary = exports.checkAdminStatus = exports.getConfig = exports.getAllUserInfo = exports.getPhoneNumber = exports.updateUserInfo = exports.checkUserInfo = exports.syncIdentity = exports.getIdentity = exports.login = void 0;
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { err } = require('./common/errors');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -203,6 +203,28 @@ async function login(event, context, auth) {
     );
 }
 exports.login = login;
+// 老用户静默恢复的心跳（P3 修复）：仅刷新 lastLoginAt，不做任何资料/邀请/身份变更。
+// 修正「静默恢复不更新 lastLoginAt」导致的活跃/流失统计失真。
+async function touchLogin(event, context, auth) {
+    const { openid } = auth;
+    if (!openid) {
+        throw err('AUTH_REQUIRED', '未登录');
+    }
+    try {
+        // 文档不存在（被误删）时 update 报错，静默吞掉，不阻断心跳
+        await db.collection('users').doc(openid).update({
+            data: { lastLoginAt: db.serverDate(), updatedAt: db.serverDate() },
+        });
+    }
+    catch (error) {
+        logger.warn('touchLogin.update', {
+            openid: maskOpenid(openid),
+            msg: error.message,
+        });
+    }
+    return handleSuccess(null, 'success');
+}
+exports.touchLogin = touchLogin;
 async function getIdentity(event, context, auth) {
     const { openid } = auth;
     if (!openid) {
@@ -502,6 +524,7 @@ _mod.exports = {
     getConfig,
     checkAdminStatus,
     getMyProfileSummary,
+    touchLogin,
 };
 _mod.exports.default = _mod.exports;
 exports.default = {
@@ -515,5 +538,6 @@ exports.default = {
     getConfig,
     checkAdminStatus,
     getMyProfileSummary,
+    touchLogin,
 };
 // M2 已启用 getIdentity 缓存读取（auth.ts:299 调 getCache(cacheKey)），getCache 已被业务使用，无需 void 抑制

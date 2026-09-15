@@ -70,6 +70,7 @@ export interface UserHandlers {
   getConfig: UserActionHandler
   checkAdminStatus: UserActionHandler
   getMyProfileSummary: UserActionHandler
+  touchLogin: UserActionHandler
 
   // 通知
   getNotificationList: UserActionHandler
@@ -105,6 +106,7 @@ export const handlers: UserHandlers = {
   getConfig: authHandlers.getConfig,
   checkAdminStatus: authHandlers.checkAdminStatus,
   getMyProfileSummary: authHandlers.getMyProfileSummary,
+  touchLogin: authHandlers.touchLogin,
 
   // 通知
   getNotificationList: notificationHandlers.getNotificationList,

@@ -307,6 +307,25 @@ export async function login(
   )
 }
 
+// 老用户静默恢复的心跳（P3 修复）：仅刷新 lastLoginAt，不做任何资料/邀请/身份变更。
+// 修正「静默恢复不更新 lastLoginAt」导致的活跃/流失统计失真。
+export async function touchLogin(event: CloudEvent, context: CloudContext, auth: AuthLike): Promise<unknown> {
+  const { openid } = auth
+  if (!openid) { throw err('AUTH_REQUIRED', '未登录') }
+  try {
+    // 文档不存在（被误删）时 update 报错，静默吞掉，不阻断心跳
+    await db.collection('users').doc(openid).update({
+      data: { lastLoginAt: db.serverDate(), updatedAt: db.serverDate() },
+    })
+  } catch (error) {
+    logger.warn('touchLogin.update', {
+      openid: maskOpenid(openid),
+      msg: (error as Error).message,
+    })
+  }
+  return handleSuccess(null, 'success')
+}
+
 export async function getIdentity(
   event: CloudEvent,
   context: CloudContext,
@@ -637,6 +656,7 @@ _mod.exports = {
   getConfig,
   checkAdminStatus,
   getMyProfileSummary,
+  touchLogin,
 }
 _mod.exports.default = _mod.exports
 
@@ -651,6 +671,7 @@ export default {
   getConfig,
   checkAdminStatus,
   getMyProfileSummary,
+  touchLogin,
 }
 
 // M2 已启用 getIdentity 缓存读取（auth.ts:299 调 getCache(cacheKey)），getCache 已被业务使用，无需 void 抑制
