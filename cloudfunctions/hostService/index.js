@@ -47,7 +47,7 @@ const { createLogger } = require('./common/logger');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { verifyAuth } = require('./common/auth-middleware');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { getCache, setCache, deleteCache } = require('./common/cache');
+const { getCache, setCache, deleteCache, clearCache } = require('./common/cache');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { filterFields, FIELD_WHITELISTS } = require('./common/validator');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -375,7 +375,8 @@ async function updateHostProfile(event, _context, auth) {
     }
     if (Object.keys(updateData).length > 1) {
         await db.collection('hostProfiles').doc(openid).update({ data: updateData });
-        deleteCache('host_list');
+        // 列表缓存 key 实际为 host_list_p{page}_s{size}_{hash}，精确 deleteCache('host_list') 删不掉 → clearCache 全清
+        clearCache();
         deleteCache(`host_profile_${openid}`);
     }
     return handleSuccess({ status: updateData.status || existingStatus }, '更新成功');
@@ -528,7 +529,9 @@ async function updateHostAcceptingOrders(event, _context, auth) {
     await db.collection('hostProfiles').doc(openid).update({
         data: { isAcceptingOrders, updatedAt: db.serverDate() },
     });
-    deleteCache('host_list');
+    // H10 修复：列表缓存 key 是 host_list_p{page}_s{size}_{hash}，精确 deleteCache('host_list') 删不掉，
+    //   导致暂停接单最长 10 分钟内仍展示为可预约 → clearCache 全清，列表即时反映
+    clearCache();
     return handleSuccess(null, '更新成功');
 }
 exports.updateHostAcceptingOrders = updateHostAcceptingOrders;

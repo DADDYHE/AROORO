@@ -647,6 +647,15 @@ async function createOrder(event, _context, auth) {
         throw err('NOT_FOUND', '寄养家庭不存在');
     }
     const hostInfo = { ...host.data };
+    // H9 修复：服务端兜底校验「家庭可接单」，防止前端防线被绕过时仍为暂停家庭建单。
+    //   列表/详情均为 active/approved 才公开可见，这里保持同口径；isAcceptingOrders===false 时拒绝。
+    const hostStatus = hostInfo.status;
+    if (hostStatus && !['active', 'approved'].includes(hostStatus)) {
+        throw err('BUSINESS_ERROR', '该寄养家庭暂不可预约');
+    }
+    if (hostInfo.isAcceptingOrders === false) {
+        throw err('BUSINESS_ERROR', '该家庭已暂停接待，请选择其他寄养家庭');
+    }
     SENSITIVE_HOST_FIELDS.forEach(f => { delete hostInfo[f]; });
     const petList = [];
     if (petIds && petIds.length > 0) {

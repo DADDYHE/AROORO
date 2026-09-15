@@ -288,6 +288,12 @@ Page({
 
       if (result && result.code === 0 && result.data) {
         const host = result.data
+        // H10 防御：家庭已暂停接单时直接拦截，禁止进入下单（后端 createOrder 同样兜底拒绝）
+        if (host.isAcceptingOrders === false) {
+          wx.showToast({ title: '该家庭已暂停接待', icon: 'none' })
+          setTimeout(() => wx.navigateBack(), 600)
+          return
+        }
         const price = host.pricePerDay || host.price || 0
         this._batchUpdate({
           hostName: host.hostName || '寄养家庭',
