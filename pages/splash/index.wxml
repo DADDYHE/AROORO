@@ -1,5 +1,6 @@
 <login-prompt visible="{{showLoginPrompt}}" bind:close="onLoginPromptClose" />
-<!-- 启动首屏海报 · 独立全屏页（非 tab 页 + custom 导航栏 => 框架级全屏，100% 覆盖 navbar 与系统 tabBar） -->
+<!-- 启动首屏海报 · 纯底图模式：admin 下发什么图就全屏显示什么图，页面不叠加任何品牌元素。
+     底色深绿与品牌海报同色系，非 9:16 图的裁切边缘不突兀。 -->
 <view
   wx:if="{{visible}}"
   class="splash {{closing ? 'splash--closing' : ''}} {{reduceMotion ? 'splash--reduce' : ''}}"

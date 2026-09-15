@@ -102,3 +102,6 @@ images/icons/chongtuantuan-logo.svg.aurora
 
 # Engineering deliverables / design exports (already excluded from WeChat package via packOptions.ignore)
 deliverables/
+
+# Preview 产物（落地还原出图 / 探针脚本，历次 UI 迭代产物）
+preview/

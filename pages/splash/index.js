@@ -12,6 +12,7 @@ Page({
     visible: false,
     imageUrl: '',
     showHint: false,
+    // 纯底图模式：admin 下发什么图就全屏显示什么图，页面不叠加任何品牌元素
     closing: false,
     reduceMotion: false,
     _duration: 2500,
