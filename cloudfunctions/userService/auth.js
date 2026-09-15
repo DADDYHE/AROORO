@@ -144,10 +144,9 @@ async function login(event, context, auth) {
                 }
             }
             else {
+                // 设计约束：邀请关系只在首次注册时写死（inviterId 在创建分支写入），
+                // 已注册老用户登录一律不改动（保持原邀请人 / 原无邀请人），不补写。
                 const updateData = { lastLoginAt: db.serverDate(), updatedAt: db.serverDate() };
-                if (validInviterId && !user.inviterId) {
-                    updateData.inviterId = validInviterId;
-                }
                 if (userInfo && typeof userInfo === 'object') {
                     const filteredInfo = filterFields(FIELD_WHITELISTS.user, userInfo);
                     // 微信号格式的昵称替换为默认昵称

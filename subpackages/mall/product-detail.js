@@ -6,7 +6,7 @@ const { CartService } = require('./CartService')
 const { ListBehavior } = require('../../behaviors/listBehavior')
 const cloudImageBehavior = require('../../behaviors/cloudImageBehavior')
 const authGateBehavior = require('../../behaviors/authGateBehavior')
-const { buildSharePath } = require('../../utils/share')
+const { buildSharePath, buildShareQuery } = require('../../utils/share')
 const skuHelper = require('../../utils/skuHelper')
 const { requireLogin } = require('../../utils/require-login')
 
@@ -342,6 +342,8 @@ Page({
     const { product } = this.data
     return {
       title: product?.name || '宠物好物',
+      // 朋友圈分享必须带 query：id 供详情页恢复商品，inviterId 由 app._captureInviterId 全局捕获（与 activity/detail 对齐）
+      query: buildShareQuery(`id=${product?._id}`),
       imageUrl: product?.coverUrl || product?.coverImage,
     }
   },

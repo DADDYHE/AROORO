@@ -112,9 +112,13 @@ App({
 
   _captureInviterId(options) {
     const inviterId = options?.query?.inviterId || options?.query?.inviter_id || ''
+    // 设计约束：以本次进入为准——本次带 inviterId 才记录，否则清空残留。
+    // 避免「未走分享卡片的自然进入」误记陈旧邀请人（保持新用户无邀请人）。
+    this.globalData.pendingInviterId = inviterId || ''
     if (inviterId) {
-      this.globalData.pendingInviterId = inviterId
       wx.setStorageSync('pendingInviterId', inviterId)
+    } else {
+      wx.removeStorageSync('pendingInviterId')
     }
   },
 
